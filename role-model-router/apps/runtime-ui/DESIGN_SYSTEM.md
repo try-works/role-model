@@ -185,12 +185,17 @@ Charts inherit the same theme and typography system as the rest of runtime UI. T
 ### Chart behavior rules
 
 - legends display explicit human-readable labels for endpoint, model, provider, role, strategy, and source series
+- horizontal ranking charts place category labels in a bottom legend, not on the left axis, so long endpoint/model names do not compete with the bar plot area
+- ranked comparisons remain horizontal bars rather than pie charts because ordered bars preserve rank, magnitude, and outlier comparison more clearly for long technical labels
 - color assignment is deterministic where feasible so the same series identity keeps the same token across charts
 - a single chart must not reuse the same resolved visual color for different visible metrics or series
 - chart containers define explicit height or minimum-height values to prevent collapse on first render
 - tooltips, legends, axis labels, and helper copy inherit runtime caption/body roles
 - grids, axes, and separators use the runtime hairline family
 - loading, empty, and error states are distinct
+- telemetry chart states are canonical and shared across charted routes: `loading`, `refreshing`, `empty`, `unsupported`, `partial`, `truncated`, `error`, and `populated`
+- `unsupported`, `partial`, and `truncated` states come from backend analytics metadata, not frontend inference from zeroes or missing series
+- background refresh keeps the last populated chart visible and adds a calm refreshing affordance instead of replacing the chart with a loading skeleton
 - `/app` and charted Observe routes keep primary chart containers visible even when there is no data
 - no fake sample series may be rendered in production empty states
 

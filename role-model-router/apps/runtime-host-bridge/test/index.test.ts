@@ -14017,7 +14017,15 @@ describe("runtime-host-bridge", () => {
     ).resolves.toEqual(
       expect.objectContaining({
         totals: expect.objectContaining({
-          cacheHitTokenRate: null,
+          cacheHitTokenRate: 0.117647,
+        }),
+        metricSupport: expect.objectContaining({
+          cacheHitTokenRate: expect.objectContaining({
+            status: "partial",
+            supportedRowCount: 1,
+            unsupportedRowCount: 1,
+            reason: "1 row(s) in this slice do not support cacheHitTokenRate.",
+          }),
         }),
       }),
     );
@@ -14078,6 +14086,119 @@ describe("runtime-host-bridge", () => {
         costSavingsSupport: null,
       }),
     );
+  });
+
+  test("aggregates telemetry analytics over the full requested slice with contract metadata and aligned ledger filters", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-telemetry-contract-tests-"),
+    );
+    const scopeId = "runtime-host-telemetry-contract-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          queryTelemetryAnalytics?: (body: Record<string, unknown>) => Promise<unknown>;
+          listTelemetryRequests?: (query?: Record<string, unknown>) => Promise<readonly Record<string, unknown>[]>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+    });
+
+    const databasePath = resolveSqliteMemoryLocation({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const startAtMs = Date.now() - 1_000;
+    for (let index = 0; index < 65; index += 1) {
+      const sourceType = index % 2 === 0 ? "remote" : "local";
+      persistRuntimeTelemetryFailure({
+        databasePath,
+        requestId: `req-telemetry-contract-${String(index).padStart(3, "0")}`,
+        routingDecisionId: `decision-telemetry-contract-${String(index).padStart(3, "0")}`,
+        endpointId: `${sourceType}.contract.${index}`,
+        modelId: `${sourceType}/contract-model`,
+        statusCode: 503,
+        errorClass: "contract_probe",
+        latencyMs: 10 + index,
+        requestClass: "live_request",
+        sourceType,
+      });
+    }
+    const endAtMs = Date.now() + 1_000;
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs,
+        endAtMs,
+        granularity: "hour",
+        metrics: ["requestCount"],
+        breakdown: "sourceType",
+        filters: {
+          sourceTypes: ["remote"],
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        appliedQuery: expect.objectContaining({
+          startAtMs,
+          endAtMs,
+          filters: {
+            sourceTypes: ["remote"],
+          },
+        }),
+        metadata: expect.objectContaining({
+          scannedRowCount: 65,
+          matchedRowCount: 33,
+          aggregationRowCount: 33,
+          truncated: false,
+          truncationReason: null,
+        }),
+        metricSupport: expect.objectContaining({
+          requestCount: expect.objectContaining({
+            metric: "requestCount",
+            status: "supported",
+            matchedRowCount: 33,
+            supportedRowCount: 33,
+          }),
+        }),
+        dimensionSupport: expect.objectContaining({
+          sourceType: expect.objectContaining({
+            dimension: "sourceType",
+            status: "supported",
+            matchedRowCount: 33,
+            populatedRowCount: 33,
+          }),
+        }),
+        totals: expect.objectContaining({
+          requestCount: 33,
+        }),
+      }),
+    );
+
+    await expect(
+      backend.listTelemetryRequests?.({
+        startAtMs,
+        endAtMs,
+        limit: 200,
+        filters: {
+          sourceTypes: ["remote"],
+        },
+      }),
+    ).resolves.toSatisfy((requests: readonly Record<string, unknown>[]) => {
+      return requests.length === 33 && requests.every((request) => request.sourceType === "remote");
+    });
   });
 
   test("keeps duplicate caller request ids as separate canonical telemetry rows", async () => {

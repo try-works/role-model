@@ -245,3 +245,10 @@
   - 6 new tests added: registry unit test, executeToolCalls integration, buildCodexDynamicTools compatibility, no-FS-access invariant, non-tool regression guard, packaging regression guard.
   - All test suites green: lint 0 errors, build pass, full test pass, test:critical 80 tests.
   - Live benchmark on packaged runtime: 12/12 cases completed without ENOENT on `mcp-connectors.json`; tool-bearing cases executed successfully.
+- Run 53 (Runtime Telemetry Analytics Contract Hardening) completed on branch `recursive/53-runtime-telemetry-analytics-contract-hardening`:
+  - `/api/role-model/telemetry/query` now returns a backend-owned analytics contract with applied query metadata, slice metadata, metric support, dimension support, explicit empty arrays for valid empty slices, and full-slice aggregation that no longer inherits the request-ledger default 50-row cap.
+  - Runtime-host telemetry analytics and request-ledger reads now share overlapping filter semantics for date/source/provider/endpoint/model/role/operation/status/routing/difficulty where supported, while preserving separate ledger pagination semantics.
+  - Runtime UI telemetry charts now consume shared semantic chart states for loading, refreshing, empty, unsupported, partial, truncated, error, and populated cases instead of deriving truth from bucket length alone.
+  - Horizontal ranking charts now use bottom legends for long model/endpoint labels and a concrete 280px plot region so Recharts bars render reliably after the legend move.
+  - `/docs/architecture/11-runtime-ui-telemetry-graph-matrix.md` is the current graph matrix architecture reference for telemetry storage, analytics contract, metric/dimension semantics, frontend chart-state handling, and route ownership.
+  - Packaged-runtime manual QA passed on `2026-06-21`; temporary QA telemetry rows inserted for populated browser review were deleted after sign-off and verified at `remainingRows: 0`.

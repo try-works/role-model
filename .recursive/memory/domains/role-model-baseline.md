@@ -54,8 +54,9 @@ Source-Runs:
 - `47-runtime-persistence-rehydration-lifecycle`
 - `49-runtime-telemetry-analytics-charts`
 - `50-openai-codex-subscription`
+- `53-runtime-telemetry-analytics-contract-hardening`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-20T05:30:00Z`
+Last-Validated: `2026-06-21T19:25:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -117,7 +118,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - The runtime now has a first SEA packaging path through `/role-model-router/sea-config.json`, `/role-model-router/apps/runtime-host-bridge/src/package-sea.ts`, `runtime:package-sea`, `runtime:validate-packaging`, and `/.github/workflows/build-binaries.yml`; the packaged executable embeds platform-aware llama-swap assets and is validated by booting the SEA binary and exercising `/healthz` plus `/v1/models`
 - The runtime now also exposes a canonical unified telemetry baseline for mixed local and remote execution, including summary, ledger, request-detail, and `/api/role-model/telemetry/stream` SSE surfaces in `/role-model-router/apps/runtime-host-bridge/` and matching dashboard, requests, and request-detail consumers in `/role-model-router/apps/runtime-ui/`
 - Detailed runtime routing, provider-capability, alias-matrix, Codex Subscription lifecycle, and hosted-search/tool semantics now live in `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`.
-- Run 49 extended unified telemetry into backend-owned historical analytics, and run 50 extended the same runtime baseline into Codex Subscription plus routing/provider-capability truth; the detailed operator-routing and provider semantics for those runs are intentionally split into the dedicated routing/provider domain shard.
+- Run 49 extended unified telemetry into backend-owned historical analytics, run 50 extended the same runtime baseline into Codex Subscription plus routing/provider-capability truth, and run 53 hardened telemetry analytics into an explicit backend contract with applied query metadata, metric/dimension support, full-slice aggregation, shared semantic chart states, aligned ledger filters, and a current graph matrix architecture reference. Detailed operator-routing, provider, and telemetry semantics live in the dedicated routing/provider domain shard.
 - The runtime UI design baseline remains Apple-reference themed: shared typography/control roles, quiet rounded panels, themed keyboard-searchable listbox/dropdown controls, distinct same-chart series colors, compact fact-card values, and removal of redundant eyebrow/divider/context panels.
 - Failed execution rows in that canonical telemetry ledger now preserve caller correlation, request classification, source posture, and explicit failure-stage endpoint markers, so summary failures and request-ledger truth no longer diverge for new requests
 - The repo-owned control plane now includes mutable runtime-config read and write routes, `Control > Runtime Config`, live account save and Kimi device-OAuth state, endpoint activation, and honest zero-endpoint `decision_only` controller or models or runtime empty states instead of 500 or loading traps
@@ -175,7 +176,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - On Windows, CRLF-only worktree churn can make local status noisier than the real Linux CI content diff; use `git diff` to identify the actual files that need formatter commits
 - The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, `runtime:validate-packaging`, `runtime:validate-observability`, `runtime:validate-operations`, `runtime:validate-tools`, plus `smoke`
 - For models.dev metadata work, prefer the explicit refresh/export entrypoints (`corepack pnpm run catalog:refresh` and `corepack pnpm run catalog:export`) plus the focused runtime-ui/runtime-host suites and `runtime:validate-host`/`runtime:validate-packaging` before claiming the metadata layer is fully integrated
-- For Observe or other runtime-UI telemetry work that claims packaged-operator parity, prefer focused `runtime-ui` tests/builds plus the repository-root `corepack pnpm run runtime:package-sea`, then verify the rebuilt runtime in a browser on `http://127.0.0.1:3456` instead of relying on a dev-only preview
+- For Observe or other runtime-UI telemetry work that claims packaged-operator parity, prefer focused `runtime-ui` tests/builds plus the repository-root `corepack pnpm run runtime:package-sea`, then verify the rebuilt runtime in a browser on `http://127.0.0.1:3456` instead of relying on a dev-only preview. For chart primitives, verify both contract data and rendered geometry because legends can render while Recharts plots collapse without concrete dimensions.
 - When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` now fails on the unrelated `provider-acp` / `provider-cli` `endpoint_kind` mismatch, broader root `test` can still fail on the workspace-level `process-supervisor` crash-callback case while the isolated package rerun passes, and vendored proxy or full Go tests on Windows still reproduce the upstream `sleep` PATH assumption
 
 ## Scope Boundary

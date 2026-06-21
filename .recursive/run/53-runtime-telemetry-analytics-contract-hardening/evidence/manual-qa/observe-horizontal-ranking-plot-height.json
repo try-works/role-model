@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-06-21T19:14:25.448Z",
+  "pages": {
+    "requests": [
+      {
+        "barShapeCount": 3,
+        "hasBottomLegend": true,
+        "hasPlot": true,
+        "legendText": "qa-local-llama-8bqa-anthropic-claude-haikuqa-openai-gpt-4o-minirouting.failed.pre-execution",
+        "nonZeroBarShapeCount": 3,
+        "plotRect": {
+          "height": 280,
+          "width": 385
+        },
+        "title": "Ranked Comparison"
+      }
+    ],
+    "routing": [
+      {
+        "barShapeCount": 3,
+        "hasBottomLegend": true,
+        "hasPlot": true,
+        "legendText": "easyhardmedium",
+        "nonZeroBarShapeCount": 3,
+        "plotRect": {
+          "height": 280,
+          "width": 385
+        },
+        "title": "Difficulty Distribution"
+      },
+      {
+        "barShapeCount": 3,
+        "hasBottomLegend": true,
+        "hasPlot": true,
+        "legendText": "analysiscodingsummarization",
+        "nonZeroBarShapeCount": 3,
+        "plotRect": {
+          "height": 280,
+          "width": 385
+        },
+        "title": "Role Demand"
+      },
+      {
+        "barShapeCount": 8,
+        "hasBottomLegend": true,
+        "hasPlot": true,
+        "legendText": "anthropic/claude-3-5-haikulocal/llama-3.1-8bopenai/gpt-4o-minirun53/qa-alpharun53/qa-betaclaude-3-5-sonnetgpt-4.1-minirun53/qa-gamma",
+        "nonZeroBarShapeCount": 8,
+        "plotRect": {
+          "height": 280,
+          "width": 385
+        },
+        "title": "Model Selection"
+      }
+    ]
+  }
+}

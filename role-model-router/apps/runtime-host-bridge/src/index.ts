@@ -1626,6 +1626,7 @@ export interface BridgeTelemetryQuery {
   readonly limit?: number;
   readonly endAtMs?: number;
   readonly startAtMs?: number;
+  readonly filters?: BridgeTelemetryAnalyticsFilters;
 }
 
 export type BridgeTelemetryAnalyticsGranularity = "hour" | "day" | "week";
@@ -1700,6 +1701,28 @@ export interface BridgeTelemetryAnalyticsQuery {
   readonly ranking?: BridgeTelemetryAnalyticsRanking | null;
 }
 
+export type BridgeTelemetryAnalyticsSupportStatus = "supported" | "partial" | "unsupported";
+
+export interface BridgeTelemetryAnalyticsMetricSupport {
+  readonly metric: BridgeTelemetryAnalyticsMetric;
+  readonly status: BridgeTelemetryAnalyticsSupportStatus;
+  readonly aggregation: string;
+  readonly matchedRowCount: number;
+  readonly supportedRowCount: number;
+  readonly unsupportedRowCount: number;
+  readonly nullValueCount: number;
+  readonly reason: string | null;
+}
+
+export interface BridgeTelemetryAnalyticsDimensionSupport {
+  readonly dimension: BridgeTelemetryAnalyticsDimension;
+  readonly status: BridgeTelemetryAnalyticsSupportStatus;
+  readonly matchedRowCount: number;
+  readonly populatedRowCount: number;
+  readonly sparseRowCount: number;
+  readonly reason: string | null;
+}
+
 export interface BridgeTelemetryAnalyticsSeries {
   readonly key: string;
   readonly label: string;
@@ -1722,6 +1745,7 @@ export interface BridgeTelemetryAnalyticsRankingRow {
 export interface BridgeTelemetryAnalyticsResponse {
   readonly startAtMs: number;
   readonly endAtMs: number;
+  readonly appliedQuery: BridgeTelemetryAnalyticsQuery;
   readonly granularity: BridgeTelemetryAnalyticsGranularity;
   readonly metrics: readonly BridgeTelemetryAnalyticsMetric[];
   readonly breakdown: BridgeTelemetryAnalyticsDimension | null;
@@ -1733,6 +1757,20 @@ export interface BridgeTelemetryAnalyticsResponse {
     readonly rows: readonly BridgeTelemetryAnalyticsRankingRow[];
   } | null;
   readonly labels: Partial<Record<BridgeTelemetryAnalyticsDimension, Record<string, string>>>;
+  readonly metadata: {
+    readonly scannedRowCount: number;
+    readonly matchedRowCount: number;
+    readonly aggregationRowCount: number;
+    readonly truncated: boolean;
+    readonly truncationReason: string | null;
+    readonly generatedAtMs: number;
+  };
+  readonly metricSupport: Partial<
+    Record<BridgeTelemetryAnalyticsMetric, BridgeTelemetryAnalyticsMetricSupport>
+  >;
+  readonly dimensionSupport: Partial<
+    Record<BridgeTelemetryAnalyticsDimension, BridgeTelemetryAnalyticsDimensionSupport>
+  >;
 }
 
 function roundTelemetryUsd(value: number): number {
@@ -5708,14 +5746,69 @@ function readOptionalPositiveInteger(params: URLSearchParams, key: string): numb
   return value;
 }
 
+function readOptionalTelemetryStringList(
+  params: URLSearchParams,
+  key: string,
+): readonly string[] | undefined {
+  const values = params.getAll(key).flatMap((value) => value.split(","));
+  const normalized = values.map((value) => value.trim()).filter((value) => value.length > 0);
+  return normalized.length > 0 ? normalized : undefined;
+}
+
 function readTelemetryQuery(url: URL): BridgeTelemetryQuery {
   const windowMs = readOptionalPositiveInteger(url.searchParams, "windowMs");
   const limit = readOptionalPositiveInteger(url.searchParams, "limit");
   const endAtMs = readOptionalPositiveInteger(url.searchParams, "endAtMs");
+  const startAtMs = readOptionalPositiveInteger(url.searchParams, "startAtMs");
+  const sourceTypes = readOptionalTelemetryStringList(url.searchParams, "sourceTypes") as
+    | readonly ("local" | "remote")[]
+    | undefined;
+  const endpointIds = readOptionalTelemetryStringList(url.searchParams, "endpointIds");
+  const modelIds = readOptionalTelemetryStringList(url.searchParams, "modelIds");
+  const providerIds = readOptionalTelemetryStringList(url.searchParams, "providerIds");
+  const providerKinds = readOptionalTelemetryStringList(url.searchParams, "providerKinds");
+  const providerFamilies = readOptionalTelemetryStringList(url.searchParams, "providerFamilies");
+  const providerAccountIds = readOptionalTelemetryStringList(
+    url.searchParams,
+    "providerAccountIds",
+  );
+  const requestedRoleIds = readOptionalTelemetryStringList(url.searchParams, "requestedRoleIds");
+  const selectedStrategies = readOptionalTelemetryStringList(
+    url.searchParams,
+    "selectedStrategies",
+  );
+  const routingModes = readOptionalTelemetryStringList(url.searchParams, "routingModes") as
+    | readonly ("baseline" | "difficulty" | "controller" | "hybrid")[]
+    | undefined;
+  const difficultyBuckets = readOptionalTelemetryStringList(
+    url.searchParams,
+    "difficultyBuckets",
+  ) as readonly ("easy" | "medium" | "hard")[] | undefined;
+  const statusFamilies = readOptionalTelemetryStringList(url.searchParams, "statusFamilies") as
+    | readonly ("success" | "failure" | "unknown")[]
+    | undefined;
+  const requestOperations = readOptionalTelemetryStringList(url.searchParams, "requestOperations");
+  const filters = {
+    ...(sourceTypes ? { sourceTypes } : {}),
+    ...(endpointIds ? { endpointIds } : {}),
+    ...(modelIds ? { modelIds } : {}),
+    ...(providerIds ? { providerIds } : {}),
+    ...(providerKinds ? { providerKinds } : {}),
+    ...(providerFamilies ? { providerFamilies } : {}),
+    ...(providerAccountIds ? { providerAccountIds } : {}),
+    ...(requestedRoleIds ? { requestedRoleIds } : {}),
+    ...(selectedStrategies ? { selectedStrategies } : {}),
+    ...(routingModes ? { routingModes } : {}),
+    ...(difficultyBuckets ? { difficultyBuckets } : {}),
+    ...(statusFamilies ? { statusFamilies } : {}),
+    ...(requestOperations ? { requestOperations } : {}),
+  } satisfies BridgeTelemetryAnalyticsFilters;
   return {
     ...(typeof windowMs === "number" ? { windowMs } : {}),
     ...(typeof limit === "number" ? { limit } : {}),
     ...(typeof endAtMs === "number" ? { endAtMs } : {}),
+    ...(typeof startAtMs === "number" ? { startAtMs } : {}),
+    ...(Object.keys(filters).length > 0 ? { filters } : {}),
   };
 }
 
@@ -12139,6 +12232,7 @@ export async function createRuntimeBridgeBackend(
     limit: query?.limit ?? DEFAULT_TELEMETRY_LIMIT,
     ...(typeof query?.endAtMs === "number" ? { endAtMs: query.endAtMs } : {}),
     ...(typeof query?.startAtMs === "number" ? { startAtMs: query.startAtMs } : {}),
+    ...(query?.filters ? { filters: query.filters } : {}),
   });
   const TELEMETRY_ANALYTICS_GRANULARITY_MS: Record<BridgeTelemetryAnalyticsGranularity, number> = {
     hour: 60 * 60 * 1000,
@@ -12231,11 +12325,15 @@ export async function createRuntimeBridgeBackend(
               records.filter((record) => record.promptCacheUsed).length / records.length,
             );
       case "cacheHitTokenRate": {
-        if (records.some((record) => !record.cacheReadTokensSupported)) {
+        const supportedRecords = records.filter((record) => record.cacheReadTokensSupported);
+        if (supportedRecords.length === 0) {
           return null;
         }
-        const cacheReadTokens = records.reduce((sum, record) => sum + record.cacheReadTokens, 0);
-        const tokenDenominator = records.reduce(
+        const cacheReadTokens = supportedRecords.reduce(
+          (sum, record) => sum + record.cacheReadTokens,
+          0,
+        );
+        const tokenDenominator = supportedRecords.reduce(
           (sum, record) => sum + record.inputTokens + record.cacheReadTokens,
           0,
         );
@@ -12332,6 +12430,132 @@ export async function createRuntimeBridgeBackend(
       return key === "local" ? "Local" : key === "remote" ? "Remote" : key;
     }
     return key;
+  };
+  const getTelemetryMetricAggregation = (metric: BridgeTelemetryAnalyticsMetric): string => {
+    switch (metric) {
+      case "requestCount":
+      case "successCount":
+      case "failureCount":
+        return "count";
+      case "cacheBackedRequestRate":
+      case "cacheHitTokenRate":
+        return "rate";
+      case "averageLatencyMs":
+        return "average";
+      case "p95LatencyMs":
+        return "p95";
+      default:
+        return "sum";
+    }
+  };
+  const isTelemetryMetricSupportedForRecord = (
+    metric: BridgeTelemetryAnalyticsMetric,
+    record: BridgeTelemetryRequestRecord,
+  ): boolean => {
+    switch (metric) {
+      case "cacheHitTokens":
+      case "cacheReadTokens":
+      case "cacheHitTokenRate":
+        return record.cacheReadTokensSupported;
+      case "actualCostUsd":
+        return record.actualCostUsd !== null;
+      case "estimatedCostUsd":
+        return record.estimatedCostUsd !== null;
+      case "selectedUncachedCostUsd":
+        return record.selectedUncachedCostUsd !== null;
+      case "baselineMaxEligibleCostUsd":
+        return record.baselineMaxEligibleCostUsd !== null;
+      case "routingCostSavingsUsd":
+      case "cacheCostSavingsUsd":
+      case "totalAvoidedCostUsd":
+        return record.costSavingsSupport !== null;
+      case "averageLatencyMs":
+      case "p95LatencyMs":
+        return typeof record.latencyMs === "number";
+      default:
+        return true;
+    }
+  };
+  const describeTelemetryMetricUnsupported = (metric: BridgeTelemetryAnalyticsMetric): string => {
+    if (metric === "cacheHitTokenRate") {
+      return "No rows in this slice expose cache-read-token support.";
+    }
+    if (metric === "cacheHitTokens" || metric === "cacheReadTokens") {
+      return "No rows in this slice expose cache-read-token support.";
+    }
+    if (
+      metric === "routingCostSavingsUsd" ||
+      metric === "cacheCostSavingsUsd" ||
+      metric === "totalAvoidedCostUsd"
+    ) {
+      return "No rows in this slice expose cost-savings support.";
+    }
+    if (metric.endsWith("CostUsd") || metric === "selectedUncachedCostUsd") {
+      return "No rows in this slice expose cost telemetry support.";
+    }
+    if (metric === "averageLatencyMs" || metric === "p95LatencyMs") {
+      return "No rows in this slice expose latency telemetry.";
+    }
+    return `No rows in this slice support ${metric}.`;
+  };
+  const buildTelemetryMetricSupport = (
+    metric: BridgeTelemetryAnalyticsMetric,
+    records: readonly BridgeTelemetryRequestRecord[],
+  ): BridgeTelemetryAnalyticsMetricSupport => {
+    const supportedRows = records.filter((record) =>
+      isTelemetryMetricSupportedForRecord(metric, record),
+    );
+    const nullValueCount = records.filter(
+      (record) => computeTelemetryMetricValue(metric, [record]) === null,
+    ).length;
+    const status: BridgeTelemetryAnalyticsSupportStatus =
+      records.length === 0 || supportedRows.length === records.length
+        ? "supported"
+        : supportedRows.length === 0
+          ? "unsupported"
+          : "partial";
+    return {
+      metric,
+      status,
+      aggregation: getTelemetryMetricAggregation(metric),
+      matchedRowCount: records.length,
+      supportedRowCount: supportedRows.length,
+      unsupportedRowCount: records.length - supportedRows.length,
+      nullValueCount,
+      reason:
+        status === "unsupported"
+          ? describeTelemetryMetricUnsupported(metric)
+          : status === "partial"
+            ? `${records.length - supportedRows.length} row(s) in this slice do not support ${metric}.`
+            : null,
+    };
+  };
+  const buildTelemetryDimensionSupport = (
+    dimension: BridgeTelemetryAnalyticsDimension,
+    records: readonly BridgeTelemetryRequestRecord[],
+  ): BridgeTelemetryAnalyticsDimensionSupport => {
+    const populatedRowCount = records.filter((record) =>
+      Boolean(getTelemetryDimensionValue(record, dimension)),
+    ).length;
+    const status: BridgeTelemetryAnalyticsSupportStatus =
+      records.length === 0 || populatedRowCount === records.length
+        ? "supported"
+        : populatedRowCount === 0
+          ? "unsupported"
+          : "partial";
+    return {
+      dimension,
+      status,
+      matchedRowCount: records.length,
+      populatedRowCount,
+      sparseRowCount: records.length - populatedRowCount,
+      reason:
+        status === "unsupported"
+          ? `No rows in this slice include ${dimension}.`
+          : status === "partial"
+            ? `${records.length - populatedRowCount} row(s) in this slice do not include ${dimension}.`
+            : null,
+    };
   };
   const readTelemetryAnalyticsQuery = (
     body: Record<string, unknown>,
@@ -12732,10 +12956,35 @@ export async function createRuntimeBridgeBackend(
     query?: BridgeTelemetryQuery,
   ): readonly BridgeTelemetryRequestRecord[] => {
     const normalizedQuery = normalizeTelemetryQuery(query);
-    return listRuntimeTelemetryRecords({
+    const records = listRuntimeTelemetryRecords({
       databasePath: initialization.databasePath,
       ...normalizedQuery,
-    }).map((record) => {
+    });
+    return filterTelemetryRequestRecords(
+      records.map((record) => {
+        const observationMeta = readObservationTelemetryMeta(record.requestId);
+        const endpointMeta = getTelemetryEndpointMeta(record.endpointId);
+        return {
+          ...record,
+          clientRequestId: record.clientRequestId ?? observationMeta.clientRequestId,
+          requestClass: record.requestClass ?? observationMeta.requestClass,
+          ...endpointMeta,
+          sourceType: record.sourceType ?? endpointMeta.sourceType,
+          providerId: record.providerId ?? endpointMeta.providerId,
+          endpointKind: record.endpointKind ?? endpointMeta.endpointKind,
+          servingSource: record.servingSource ?? endpointMeta.servingSource,
+          healthStatus: record.healthStatusAtRequest ?? endpointMeta.healthStatus,
+          status: record.lifecycleStateAtRequest ?? endpointMeta.status,
+          roleIds: record.roleIds.length > 0 ? record.roleIds : endpointMeta.roleIds,
+        };
+      }),
+      normalizedQuery.filters,
+    );
+  };
+  const enrichTelemetryRequestRecords = (
+    records: readonly ReturnType<typeof listRuntimeTelemetryRecords>[number][],
+  ): readonly BridgeTelemetryRequestRecord[] =>
+    records.map((record) => {
       const observationMeta = readObservationTelemetryMeta(record.requestId);
       const endpointMeta = getTelemetryEndpointMeta(record.endpointId);
       return {
@@ -12752,7 +13001,6 @@ export async function createRuntimeBridgeBackend(
         roleIds: record.roleIds.length > 0 ? record.roleIds : endpointMeta.roleIds,
       };
     });
-  };
   const readTelemetrySummaryData = (query?: BridgeTelemetryQuery): BridgeTelemetrySummary => {
     const normalizedQuery = normalizeTelemetryQuery(query);
     const requestRecords = listTelemetryRequestRecords(normalizedQuery);
@@ -12803,14 +13051,24 @@ export async function createRuntimeBridgeBackend(
     const query = readTelemetryAnalyticsQuery(rawBody);
     const endAtMs = query.endAtMs ?? Date.now();
     const startAtMs = query.startAtMs ?? endAtMs - (query.windowMs ?? DEFAULT_TELEMETRY_WINDOW_MS);
-    const requestRecords = filterTelemetryRequestRecords(
-      listTelemetryRequestRecords({
+    const appliedQuery: BridgeTelemetryAnalyticsQuery = {
+      ...query,
+      startAtMs,
+      endAtMs,
+      windowMs: endAtMs - startAtMs,
+      breakdown: query.breakdown ?? null,
+      filters: query.filters ?? {},
+      ranking: query.ranking ?? null,
+    };
+    const scannedRequestRecords = enrichTelemetryRequestRecords(
+      listRuntimeTelemetryRecords({
+        databasePath: initialization.databasePath,
         startAtMs,
         endAtMs,
         windowMs: endAtMs - startAtMs,
       }),
-      query.filters,
     );
+    const requestRecords = filterTelemetryRequestRecords(scannedRequestRecords, query.filters);
     const bucketSizeMs = TELEMETRY_ANALYTICS_GRANULARITY_MS[query.granularity];
     const bucketCount = Math.max(1, Math.ceil(Math.max(1, endAtMs - startAtMs) / bucketSizeMs));
     const buckets: BridgeTelemetryAnalyticsBucket[] = [];
@@ -12862,6 +13120,36 @@ export async function createRuntimeBridgeBackend(
     const totals = Object.fromEntries(
       query.metrics.map((metric) => [metric, computeTelemetryMetricValue(metric, requestRecords)]),
     );
+    const metricSupport = Object.fromEntries(
+      query.metrics.map((metric) => [metric, buildTelemetryMetricSupport(metric, requestRecords)]),
+    ) as Partial<Record<BridgeTelemetryAnalyticsMetric, BridgeTelemetryAnalyticsMetricSupport>>;
+    const supportDimensions = new Set<BridgeTelemetryAnalyticsDimension>(
+      [
+        query.breakdown ?? undefined,
+        query.ranking?.dimension,
+        ...(query.filters?.sourceTypes ? (["sourceType"] as const) : []),
+        ...(query.filters?.endpointIds ? (["endpointId"] as const) : []),
+        ...(query.filters?.modelIds ? (["modelId"] as const) : []),
+        ...(query.filters?.providerIds ? (["providerId"] as const) : []),
+        ...(query.filters?.providerKinds ? (["providerKind"] as const) : []),
+        ...(query.filters?.providerFamilies ? (["providerFamily"] as const) : []),
+        ...(query.filters?.providerAccountIds ? (["providerAccountId"] as const) : []),
+        ...(query.filters?.requestedRoleIds ? (["requestedRoleId"] as const) : []),
+        ...(query.filters?.selectedStrategies ? (["selectedStrategy"] as const) : []),
+        ...(query.filters?.routingModes ? (["routingMode"] as const) : []),
+        ...(query.filters?.difficultyBuckets ? (["difficultyBucket"] as const) : []),
+        ...(query.filters?.statusFamilies ? (["statusFamily"] as const) : []),
+        ...(query.filters?.requestOperations ? (["requestOperation"] as const) : []),
+      ].filter((value): value is BridgeTelemetryAnalyticsDimension => Boolean(value)),
+    );
+    const dimensionSupport = Object.fromEntries(
+      [...supportDimensions].map((dimension) => [
+        dimension,
+        buildTelemetryDimensionSupport(dimension, requestRecords),
+      ]),
+    ) as Partial<
+      Record<BridgeTelemetryAnalyticsDimension, BridgeTelemetryAnalyticsDimensionSupport>
+    >;
     const labels: Partial<Record<BridgeTelemetryAnalyticsDimension, Record<string, string>>> = {};
     const labelDimensions = new Set<BridgeTelemetryAnalyticsDimension>(
       [
@@ -12920,6 +13208,7 @@ export async function createRuntimeBridgeBackend(
     return {
       startAtMs,
       endAtMs,
+      appliedQuery,
       granularity: query.granularity,
       metrics: query.metrics,
       breakdown: query.breakdown ?? null,
@@ -12927,6 +13216,16 @@ export async function createRuntimeBridgeBackend(
       totals,
       ranking,
       labels,
+      metadata: {
+        scannedRowCount: scannedRequestRecords.length,
+        matchedRowCount: requestRecords.length,
+        aggregationRowCount: requestRecords.length,
+        truncated: false,
+        truncationReason: null,
+        generatedAtMs: Date.now(),
+      },
+      metricSupport,
+      dimensionSupport,
     };
   };
   const emitTelemetryUpdate = (requestId: string): void => {

@@ -1,0 +1,8 @@
+{
+  "url": "http://127.0.0.1:3456/app/observe/requests",
+  "section": "Ranked Comparison",
+  "hasBottomLegend": true,
+  "legendText": "qa-local-llama-8b qa-anthropic-claude-haiku qa-openai-gpt-4o-mini routing.failed.pre-execution",
+  "yAxisTexts": [],
+  "screenshotNote": "Viewport/full-page screenshot capture timed out in the browser bridge; DOM verification was captured instead."
+}

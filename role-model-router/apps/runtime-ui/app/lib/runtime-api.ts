@@ -525,6 +525,28 @@ export interface RuntimeTelemetryAnalyticsQuery {
   readonly ranking?: RuntimeTelemetryAnalyticsRanking | null;
 }
 
+export type RuntimeTelemetryAnalyticsSupportStatus = "supported" | "partial" | "unsupported";
+
+export interface RuntimeTelemetryAnalyticsMetricSupport {
+  readonly metric: RuntimeTelemetryAnalyticsMetric;
+  readonly status: RuntimeTelemetryAnalyticsSupportStatus;
+  readonly aggregation: string;
+  readonly matchedRowCount: number;
+  readonly supportedRowCount: number;
+  readonly unsupportedRowCount: number;
+  readonly nullValueCount: number;
+  readonly reason: string | null;
+}
+
+export interface RuntimeTelemetryAnalyticsDimensionSupport {
+  readonly dimension: RuntimeTelemetryAnalyticsDimension;
+  readonly status: RuntimeTelemetryAnalyticsSupportStatus;
+  readonly matchedRowCount: number;
+  readonly populatedRowCount: number;
+  readonly sparseRowCount: number;
+  readonly reason: string | null;
+}
+
 export interface RuntimeTelemetryAnalyticsSeries {
   readonly key: string;
   readonly label: string;
@@ -547,6 +569,7 @@ export interface RuntimeTelemetryAnalyticsRankingRow {
 export interface RuntimeTelemetryAnalyticsResponse {
   readonly startAtMs: number;
   readonly endAtMs: number;
+  readonly appliedQuery?: RuntimeTelemetryAnalyticsQuery;
   readonly granularity: RuntimeTelemetryAnalyticsGranularity;
   readonly metrics: readonly RuntimeTelemetryAnalyticsMetric[];
   readonly breakdown: RuntimeTelemetryAnalyticsDimension | null;
@@ -558,6 +581,20 @@ export interface RuntimeTelemetryAnalyticsResponse {
     readonly rows: readonly RuntimeTelemetryAnalyticsRankingRow[];
   } | null;
   readonly labels: Partial<Record<RuntimeTelemetryAnalyticsDimension, Record<string, string>>>;
+  readonly metadata?: {
+    readonly scannedRowCount: number;
+    readonly matchedRowCount: number;
+    readonly aggregationRowCount: number;
+    readonly truncated: boolean;
+    readonly truncationReason: string | null;
+    readonly generatedAtMs?: number;
+  };
+  readonly metricSupport?: Partial<
+    Record<RuntimeTelemetryAnalyticsMetric, RuntimeTelemetryAnalyticsMetricSupport>
+  >;
+  readonly dimensionSupport?: Partial<
+    Record<RuntimeTelemetryAnalyticsDimension, RuntimeTelemetryAnalyticsDimensionSupport>
+  >;
 }
 
 export interface RuntimeEventSourceLike {
@@ -1092,6 +1129,7 @@ function buildTelemetryQueryString(input?: {
   readonly windowMs?: number;
   readonly endAtMs?: number;
   readonly startAtMs?: number;
+  readonly filters?: RuntimeTelemetryAnalyticsFilters;
 }): string {
   const params = new URLSearchParams();
   if (typeof input?.limit === "number") {
@@ -1106,6 +1144,24 @@ function buildTelemetryQueryString(input?: {
   if (typeof input?.startAtMs === "number") {
     params.set("startAtMs", String(input.startAtMs));
   }
+  const appendFilterValues = (key: string, values?: readonly string[]) => {
+    if (values && values.length > 0) {
+      params.set(key, values.join(","));
+    }
+  };
+  appendFilterValues("sourceTypes", input?.filters?.sourceTypes);
+  appendFilterValues("endpointIds", input?.filters?.endpointIds);
+  appendFilterValues("modelIds", input?.filters?.modelIds);
+  appendFilterValues("providerIds", input?.filters?.providerIds);
+  appendFilterValues("providerKinds", input?.filters?.providerKinds);
+  appendFilterValues("providerFamilies", input?.filters?.providerFamilies);
+  appendFilterValues("providerAccountIds", input?.filters?.providerAccountIds);
+  appendFilterValues("requestedRoleIds", input?.filters?.requestedRoleIds);
+  appendFilterValues("selectedStrategies", input?.filters?.selectedStrategies);
+  appendFilterValues("routingModes", input?.filters?.routingModes);
+  appendFilterValues("difficultyBuckets", input?.filters?.difficultyBuckets);
+  appendFilterValues("statusFamilies", input?.filters?.statusFamilies);
+  appendFilterValues("requestOperations", input?.filters?.requestOperations);
   const query = params.toString();
   return query.length > 0 ? `?${query}` : "";
 }
@@ -1132,6 +1188,7 @@ export async function fetchTelemetryRequests(
     readonly windowMs?: number;
     readonly endAtMs?: number;
     readonly startAtMs?: number;
+    readonly filters?: RuntimeTelemetryAnalyticsFilters;
   } = {},
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeTelemetryRequestRecord[]> {

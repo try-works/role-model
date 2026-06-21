@@ -18,9 +18,9 @@ import {
 import { cn } from "../lib/cn";
 import {
   bodyTextClassName,
-  chartAxisCategoryTickStyle,
   chartAxisTickStyle,
   chartBarRadius,
+  chartHorizontalRankingLegend,
   chartRankingBarRadius,
   eyebrowClassName,
   mutedPanelClassName,
@@ -293,27 +293,37 @@ export function TelemetryRankingBarChart({
   readonly model: TelemetryRankingChartModel;
 }) {
   return (
-    <div className="h-[280px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={[...model.rows]} layout="vertical" margin={{ left: 24 }}>
-          <CartesianGrid stroke="var(--rm-divider-soft)" horizontal={false} />
-          <XAxis axisLine={false} tick={chartAxisTickStyle} tickLine={false} type="number" />
-          <YAxis
-            axisLine={false}
-            dataKey="label"
-            tick={chartAxisCategoryTickStyle}
-            tickLine={false}
-            type="category"
-            width={128}
-          />
-          <Tooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--rm-panel)" }} />
-          <Bar dataKey="value" name={model.title} radius={chartRankingBarRadius}>
-            {model.rows.map((row) => (
-              <Cell key={row.key} fill={row.colorToken} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+    <div className="w-full">
+      <div data-chart-horizontal-plot="true" className="h-[280px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={[...model.rows]} layout="vertical" margin={{ left: 0, right: 8 }}>
+            <CartesianGrid stroke="var(--rm-divider-soft)" horizontal={false} />
+            <XAxis axisLine={false} tick={chartAxisTickStyle} tickLine={false} type="number" />
+            <YAxis
+              axisLine={false}
+              dataKey="label"
+              tick={false}
+              tickLine={false}
+              type="category"
+              width={chartHorizontalRankingLegend.axisCategoryWidth}
+            />
+            <Tooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--rm-panel)" }} />
+            <Bar dataKey="value" name={model.title} radius={chartRankingBarRadius}>
+              {model.rows.map((row) => (
+                <Cell key={row.key} fill={row.colorToken} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <div data-chart-horizontal-legend={chartHorizontalRankingLegend.placement}>
+        <ChartLegendContent
+          payload={model.rows.map((row) => ({
+            color: row.colorToken,
+            value: row.label,
+          }))}
+        />
+      </div>
     </div>
   );
 }
@@ -349,7 +359,7 @@ export function TelemetryAnalyticsChartCard({
       <TelemetryChartCard
         title={definition.title}
         description={definition.description}
-        emptyMessage={model.isEmpty ? definition.emptyMessage : undefined}
+        emptyMessage={model.isEmpty ? (model.state?.message ?? definition.emptyMessage) : undefined}
         minHeightClassName={definition.minHeightClassName}
         refreshing={refreshing}
       >
@@ -368,7 +378,7 @@ export function TelemetryAnalyticsChartCard({
     <TelemetryChartCard
       title={definition.title}
       description={definition.description}
-      emptyMessage={model.isEmpty ? definition.emptyMessage : undefined}
+      emptyMessage={model.isEmpty ? (model.state?.message ?? definition.emptyMessage) : undefined}
       minHeightClassName={definition.minHeightClassName}
       refreshing={refreshing}
     >

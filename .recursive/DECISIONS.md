@@ -1421,3 +1421,38 @@
 - Known issues / follow-ups:
   - some benchmark cases scored 0 due to model not producing expected tool calls (model quality issue, not a crash)
   - Codex app-server WebSocket thread id issue remains as a separate follow-up
+
+### Run `53-runtime-telemetry-analytics-contract-hardening`
+
+- Run folder: `/.recursive/run/53-runtime-telemetry-analytics-contract-hardening/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/00-worktree.upstream-gap.00-requirements.addendum-01.md`, `addenda/00-worktree.location-correction.addendum-02.md`, `addenda/05-manual-qa.horizontal-ranking-legend.addendum-03.md`, and `addenda/05-manual-qa.horizontal-ranking-plot-height.addendum-04.md`
+- What changed:
+  - hardened `/api/role-model/telemetry/query` into a backend-owned analytics contract with `appliedQuery`, slice metadata, metric support, dimension support, full-slice aggregation, and aligned shared filters
+  - separated analytics aggregation semantics from request-ledger pagination so chart aggregation no longer inherits the default 50-row ledger cap
+  - added shared runtime UI semantic chart-state handling for populated, loading, refreshing, empty, unsupported, partial, truncated, and error cases
+  - updated the runtime UI design system and telemetry chart primitives so horizontal ranking charts use bottom legends for long labels and a concrete plot height for Recharts rendering
+  - updated `/docs/architecture/11-runtime-ui-telemetry-graph-matrix.md` from audit matrix to the post-run telemetry architecture reference
+- Why:
+  - telemetry charts could show misleading empty shells, aggregate only recent ledger rows, hide sparse or unsupported metric truth, and diverge from request-ledger filters
+  - browser QA found horizontal ranking labels could not fit on the left axis and then found the bottom-legend change could leave charts visually blank without a concrete plot height
+- How:
+  - strict RED/GREEN TDD for backend analytics contract and UI semantic chart states, plus follow-up RED/GREEN coverage for horizontal ranking legend and plot-height regressions
+  - verified with focused backend/UI tests, runtime-ui critical tests, host TypeScript build, runtime UI production build, SEA packaging, packaged-runtime API checks, in-app browser DOM verification, and hybrid manual QA with operator approval on `2026-06-21`
+- What was not done:
+  - no separate analytics database or warehouse was introduced; telemetry remains backed by existing runtime SQLite state
+  - no fake chart data was shipped; temporary QA telemetry was inserted only into the isolated run-53 QA runtime state and removed after sign-off
+- Known issues / follow-ups:
+  - fresh successful live-completion telemetry was not generated in the decision-only QA runtime because no routable endpoints were configured; populated successful/cost/cache chart review used isolated temporary QA telemetry
+  - the pre-existing host-bridge validator timeout baseline in `test/validate-observability.test.ts` and `test/validate-ui.test.ts` remains outside Run 53 scope

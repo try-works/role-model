@@ -165,6 +165,7 @@ export default function RequestsRoute() {
           fetchTelemetryRequests({
             limit: 200,
             windowMs: getWindowMs(timeRange),
+            filters,
           }),
           ...definitions.map((definition) => fetchTelemetryAnalytics(definition.query)),
         ]);

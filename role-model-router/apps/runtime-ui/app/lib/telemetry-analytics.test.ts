@@ -308,6 +308,135 @@ describe("telemetry analytics view models", () => {
     });
   });
 
+  test("maps backend support metadata into semantic chart states", () => {
+    const response = {
+      startAtMs: Date.UTC(2026, 5, 10, 0, 0, 0),
+      endAtMs: Date.UTC(2026, 5, 17, 0, 0, 0),
+      granularity: "day",
+      metrics: ["cacheHitTokenRate"],
+      breakdown: null,
+      buckets: [
+        {
+          startAtMs: Date.UTC(2026, 5, 10, 0, 0, 0),
+          endAtMs: Date.UTC(2026, 5, 11, 0, 0, 0),
+          totals: {
+            cacheHitTokenRate: null,
+          },
+          series: [],
+        },
+      ],
+      totals: {
+        cacheHitTokenRate: null,
+      },
+      ranking: null,
+      labels: {},
+      metadata: {
+        matchedRowCount: 12,
+        scannedRowCount: 12,
+        aggregationRowCount: 12,
+        truncated: false,
+        truncationReason: null,
+      },
+      metricSupport: {
+        cacheHitTokenRate: {
+          metric: "cacheHitTokenRate",
+          status: "unsupported",
+          matchedRowCount: 12,
+          supportedRowCount: 0,
+          unsupportedRowCount: 12,
+          nullValueCount: 12,
+          reason: "No rows in this slice expose cache-read-token support.",
+        },
+      },
+      dimensionSupport: {},
+    } as unknown as RuntimeTelemetryAnalyticsResponse;
+
+    const model = buildTelemetryTimeSeriesChartModel(response, {
+      title: "Cache Efficiency Trend",
+      metrics: ["cacheHitTokenRate"],
+    });
+
+    expect(model).toEqual(
+      expect.objectContaining({
+        isEmpty: true,
+        state: expect.objectContaining({
+          kind: "unsupported",
+          message: "No rows in this slice expose cache-read-token support.",
+        }),
+      }),
+    );
+  });
+
+  test("marks breakdown charts sparse when totals exist but the requested dimension has no series", () => {
+    const response = {
+      startAtMs: Date.UTC(2026, 5, 10, 0, 0, 0),
+      endAtMs: Date.UTC(2026, 5, 17, 0, 0, 0),
+      granularity: "day",
+      metrics: ["requestCount"],
+      breakdown: "selectedStrategy",
+      buckets: [
+        {
+          startAtMs: Date.UTC(2026, 5, 10, 0, 0, 0),
+          endAtMs: Date.UTC(2026, 5, 11, 0, 0, 0),
+          totals: {
+            requestCount: 12,
+          },
+          series: [],
+        },
+      ],
+      totals: {
+        requestCount: 12,
+      },
+      ranking: null,
+      labels: {},
+      metadata: {
+        matchedRowCount: 12,
+        scannedRowCount: 12,
+        aggregationRowCount: 12,
+        truncated: false,
+        truncationReason: null,
+      },
+      metricSupport: {
+        requestCount: {
+          metric: "requestCount",
+          status: "supported",
+          matchedRowCount: 12,
+          supportedRowCount: 12,
+          unsupportedRowCount: 0,
+          nullValueCount: 0,
+          reason: null,
+        },
+      },
+      dimensionSupport: {
+        selectedStrategy: {
+          dimension: "selectedStrategy",
+          status: "unsupported",
+          matchedRowCount: 12,
+          populatedRowCount: 0,
+          sparseRowCount: 12,
+          reason: "No rows in this slice include selectedStrategy.",
+        },
+      },
+    } as unknown as RuntimeTelemetryAnalyticsResponse;
+
+    const model = buildTelemetryTimeSeriesChartModel(response, {
+      title: "Strategy Selection Trend",
+      metrics: ["requestCount"],
+      breakdown: "selectedStrategy",
+    });
+
+    expect(model).toEqual(
+      expect.objectContaining({
+        isEmpty: true,
+        series: [],
+        state: expect.objectContaining({
+          kind: "unsupported",
+          message: "No rows in this slice include selectedStrategy.",
+        }),
+      }),
+    );
+  });
+
   test("selects stable query granularity from approved time ranges", () => {
     expect(resolveTelemetryGranularity(24 * 60 * 60 * 1000)).toBe("hour");
     expect(resolveTelemetryGranularity(7 * 24 * 60 * 60 * 1000)).toBe("day");

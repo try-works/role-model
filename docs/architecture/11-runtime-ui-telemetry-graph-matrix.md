@@ -1,7 +1,7 @@
 # Runtime UI Telemetry Graph Matrix
 
-Status: audit draft  
-Last audited: 2026-06-21  
+Status: current architecture
+Last updated: 2026-06-21
 Scope: `role-model-router/apps/runtime-ui` telemetry graphs rendered through `TelemetryAnalyticsChartCard`.
 
 This document is the canonical matrix for runtime UI telemetry graphs. It records which graphs exist, how each graph asks for data, where that data is stored, how the telemetry is collected, and whether the current graph contract appears to display meaningful telemetry.
@@ -30,16 +30,18 @@ Excluded:
 5. Observation bundles are persisted by `persistRuntimeObservationBundle` in `role-model-router/packages/sqlite-memory/src/index.ts`.
 6. Structured graph facts are stored in the sqlite table `runtime_telemetry_records`; full observation JSON is stored in `runtime_observations`; observed profile samples are stored in `observed_performance_samples` and profile snapshot tables.
 7. Analytics reads `runtime_telemetry_records`, computes bucket totals, optional breakdown series, and optional ranking rows, then returns `RuntimeTelemetryAnalyticsResponse`.
-8. `TelemetryAnalyticsChartCard` converts the response into a Recharts model and renders one of: area time series, line time series, bar time series, or ranking bar chart.
+8. The response includes `appliedQuery`, `metadata`, `metricSupport`, and `dimensionSupport` so the UI does not infer support from zero, null, or missing series.
+9. `TelemetryAnalyticsChartCard` converts the response into a semantic chart model and renders one of: area time series, line time series, bar time series, ranking bar chart, or an explicit semantic state message.
 
 ## Shared Rendering Semantics
 
 All included graphs use `TelemetryAnalyticsChartCard`.
 
-- Time-series charts are considered empty only when `response.buckets.length === 0`.
-- Ranking charts are considered empty when `response.ranking.rows.length === 0`.
-- The analytics endpoint currently creates buckets for the full requested window, so a time-series graph with no matching data can still render axes, legend, and/or empty geometry rather than showing its configured empty message.
-- If a single-metric chart requests a breakdown and the response has totals but no breakdown series, the card is not marked empty, but Recharts receives no visible series to draw.
+- Time-series charts consume backend-owned `metadata`, `metricSupport`, and `dimensionSupport` before deciding whether a bucketed response is populated.
+- Ranking charts are empty when `response.ranking.rows.length === 0`.
+- The shared design-system state vocabulary is `loading`, `refreshing`, `empty`, `unsupported`, `partial`, `truncated`, `error`, and `populated`.
+- `unsupported`, `partial`, and `truncated` states are driven by backend analytics metadata. Route code does not infer support by checking whether a value is `0`, `null`, or a series array is missing.
+- If a single-metric chart requests a breakdown and matching rows have no populated values for that dimension, the chart renders an explicit sparse/unsupported state instead of an empty Recharts shell.
 
 ## Telemetry Storage and Collection Matrix
 
@@ -48,9 +50,9 @@ All included graphs use `TelemetryAnalyticsChartCard`.
 | Frontend routes | `app/routes/dashboard.tsx`, `app/routes/requests.tsx`, `app/routes/observe-routing.tsx` | Own page filters, build chart definitions, call analytics endpoint, subscribe to telemetry stream | Determines chart set, time window, filters, ranking target, and breakdown dimension |
 | Chart definitions | `app/lib/telemetry-route-models.ts` | Maps route state to metrics, breakdown, filters, ranking, and empty message | Canonical frontend graph inventory |
 | Chart models | `app/lib/telemetry-analytics.ts` | Converts analytics response into Recharts series and rows | Determines whether breakdown data becomes visible series |
-| Chart renderer | `app/components/telemetry-charts.tsx` | Renders Recharts area, line, bar, and ranking charts | Determines loading/empty/rendered states |
+| Chart renderer | `app/components/telemetry-charts.tsx` | Renders Recharts area, line, bar, ranking, and explicit semantic chart states | Determines loading/empty/unsupported/rendered states |
 | Frontend API client | `app/lib/runtime-api.ts` | Posts `RuntimeTelemetryAnalyticsQuery` to `/api/role-model/telemetry/query` | Runtime contract between UI and host |
-| Host bridge API | `apps/runtime-host-bridge/src/index.ts` | Validates metrics/dimensions, filters records, computes bucket totals, breakdowns, rankings | Computes all graph values |
+| Host bridge API | `apps/runtime-host-bridge/src/index.ts` | Validates metrics/dimensions, filters records, computes bucket totals, breakdowns, rankings, and support metadata | Computes all graph values and chart-state support metadata |
 | Observation creation | `packages/runtime-observability/src/index.ts` | Builds request observation bundles from routing, execution, usage, cache, tooling, and cost data | Source of request telemetry facts |
 | Persistence | `packages/sqlite-memory/src/index.ts` | Writes `runtime_observations`, `observed_performance_samples`, `observed_profile_snapshots`, and `runtime_telemetry_records` | Durable graph backing store |
 | Primary graph table | `runtime_telemetry_records` | Stores request id, endpoint/model/provider metadata, source, strategy, role, difficulty, tokens, latency, cache fields, cost fields, status, and tool counts | Direct source for analytics graphs |
@@ -86,7 +88,7 @@ Builder: `buildObserveRequestsChartDefinitions`
 | Failure Trend | Bar | `failureCount` | none | `/api/role-model/telemetry/query` | `error_class`, `status_family`, `status_code` | Displays meaningful failure count. |
 | Ranked Comparison | Ranking bar | user-selected metric, default `averageLatencyMs` | default rank by `endpointId` | `/api/role-model/telemetry/query` | selected dimension and metric columns | Displays meaningful ranking rows on live port 3462 for endpoint latency. |
 
-Note: the request ledger below the graphs uses `GET /api/role-model/telemetry/requests` and then applies some filters client-side. The graphs use the analytics endpoint with server-side filters. These can disagree.
+Note: the request ledger below the graphs uses `GET /api/role-model/telemetry/requests` with the same shared filter shape that analytics uses. The route still keeps client-side filtering as a defensive view-model guard, but server-side ledger filtering and analytics filtering now describe the same operator slice.
 
 ### Routing Analytics
 
@@ -102,31 +104,31 @@ Builder: `buildObserveRoutingChartDefinitions`
 | Role Demand | Ranking bar | `requestCount` | rank by `requestedRoleId` | `/api/role-model/telemetry/query` | `requested_role_id` | Empty in the audited default week: ranking rows are `[]`. |
 | Model Selection | Ranking bar | `requestCount` | rank by `modelId` | `/api/role-model/telemetry/query` | `model_id` | Displays meaningful ranking rows on live port 3462. |
 
-## Current Audit Findings
+## Current Contract Findings
 
-1. Analytics is capped to the latest 50 records before aggregation.
+1. Analytics aggregation is no longer capped by the request-ledger default.
 
-`normalizeTelemetryQuery` applies `DEFAULT_TELEMETRY_LIMIT = 50`, and `queryTelemetryAnalyticsData` calls `listTelemetryRequestRecords` through that normalized path. In live read-only checks on port 3462, `/api/role-model/telemetry/requests?limit=200&windowMs=604800000` returned 200 rows in the same week, while `/api/role-model/telemetry/query` aggregated only 50. This can cause charts to omit older rows that contain dimensions such as `selectedStrategy`, `difficultyBucket`, or `requestedRoleId`.
+`queryTelemetryAnalyticsData` reads `runtime_telemetry_records` for the full requested slice without applying `DEFAULT_TELEMETRY_LIMIT`. Ledger reads keep explicit limit behavior. The analytics response exposes `metadata.scannedRowCount`, `metadata.matchedRowCount`, `metadata.aggregationRowCount`, `metadata.truncated`, and `metadata.truncationReason`.
 
-2. Some time-series charts render despite having no meaningful graph data.
+2. Time-series chart states are metadata-driven.
 
-Because the backend emits buckets for the full window, a zero/null time-series response is not treated as empty. This affects cost, avoided cost, and cache efficiency in the audited live data. The user sees a chart shell rather than an empty-state explanation.
+The backend returns `metricSupport` for requested metrics. The frontend semantic view model uses that support metadata to distinguish populated values from `empty`, `unsupported`, `partial`, and `truncated` states.
 
-3. Breakdown charts can render no visible series even when totals exist.
+3. Sparse breakdowns are explicit.
 
-When a single-metric time-series chart requests a breakdown and the records in the capped analytics slice do not contain that dimension, `buildTelemetryTimeSeriesChartModel` builds no visible series. In the audited live default routing view, `Routing Decision Volume` and `Strategy Selection Trend` both reported request totals but no `selectedStrategy` series.
+The backend returns `dimensionSupport` for breakdown, ranking, and filtered dimensions. If totals exist but the requested breakdown dimension has no populated values, the frontend renders an explicit unsupported/sparse state instead of an empty chart shell.
 
-4. Cost telemetry is stored, but the audited live rows currently contain zero cost.
+4. Cost telemetry is stored, but live data may still have zero cost.
 
 The storage schema and observation flow support `actualCostUsd`, `estimatedCostUsd`, `effectiveCostUsd`, selected uncached cost, baseline eligible cost, and avoided-cost fields. The current live audited slice has token and latency data, but cost and avoided-cost totals are zero. This suggests either the active execution path is not supplying cost facts or the current benchmark/runtime rows are not cost-bearing.
 
-5. Cache-rate telemetry can become null across mixed support.
+5. Cache-rate telemetry uses supported-subset semantics.
 
-`cacheHitTokenRate` returns `null` if any record in the aggregation lacks cache-read-token support. This is intentional in the current backend tests, but it means the cache efficiency graph can go blank for mixed local/remote slices unless filtered to supported records.
+`cacheHitTokenRate` computes against the subset of matching rows that support cache-read-token telemetry and returns `metricSupport.cacheHitTokenRate.status: "partial"` when unsupported rows are present. If no matching row supports cache-read-token telemetry, the chart receives an explicit unsupported state.
 
-6. Request-list and graph filters are not equivalent.
+6. Request-list and graph filters use the same shared filter shape.
 
-Request graphs send filters to `/telemetry/query`; the request ledger fetches `/telemetry/requests` with time bounds and applies only a subset of filters in the client. The graph and ledger can therefore disagree in filtered views.
+`GET /api/role-model/telemetry/requests` now accepts the shared telemetry filter keys used by analytics queries, including source, endpoint, model, provider, role, operation, and status-family filters. The UI request analytics route sends the same filter object to both the ledger and chart queries.
 
 ## Verification Evidence
 

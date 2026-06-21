@@ -731,6 +731,54 @@ export const chartBarRadius: [number, number, number, number] = [8, 8, 0, 0];
 
 export const chartRankingBarRadius: [number, number, number, number] = [0, 8, 8, 0];
 
+export const chartHorizontalRankingLegend = {
+  placement: "bottom",
+  axisCategoryWidth: 0,
+} as const;
+
+export const telemetryChartStates = {
+  loading: {
+    label: "Loading",
+    tone: "muted",
+    copy: "Loading chart data.",
+  },
+  refreshing: {
+    label: "Refreshing",
+    tone: "muted",
+    copy: "Refreshing chart data while keeping the last populated view visible.",
+  },
+  empty: {
+    label: "Empty",
+    tone: "muted",
+    copy: "No telemetry rows match the current filters.",
+  },
+  unsupported: {
+    label: "Unsupported",
+    tone: "warning",
+    copy: "The selected metric or dimension is not supported by this telemetry slice.",
+  },
+  partial: {
+    label: "Partial",
+    tone: "warning",
+    copy: "Some matching rows do not carry the selected metric or dimension.",
+  },
+  truncated: {
+    label: "Truncated",
+    tone: "warning",
+    copy: "The backend explicitly limited the telemetry slice.",
+  },
+  error: {
+    label: "Error",
+    tone: "error",
+    copy: "Telemetry analytics could not be loaded.",
+  },
+  populated: {
+    label: "Populated",
+    tone: "neutral",
+    copy: "Chart values come from backend-owned telemetry analytics.",
+  },
+} as const;
+
 export const shellQuickLinks = [
   { label: "Controller JSON", href: "/api/role-model/controller" },
   { label: "Runtime JSON", href: "/api/role-model/runtime/summary" },

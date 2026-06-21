@@ -37,8 +37,9 @@ Source-Runs:
 - `49-runtime-telemetry-analytics-charts`
 - `50-openai-codex-subscription`
 - `51-runtime-testing-architecture-and-regression-matrix`
+- `53-runtime-telemetry-analytics-contract-hardening`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-20T12:40:00Z`
+Last-Validated: `2026-06-21T19:25:00Z`
 Tags:
 - `runtime`
 - `routing`
@@ -88,12 +89,18 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
   - unresolved env-backed credentials remain `credentials-missing`
   - Studio and related consumers must not imply execution readiness before credentials and endpoint activation are actually satisfied
 - The telemetry query path is backend-owned and powers Overview plus Observe analytics surfaces; setup and control pages should not regress into chart dashboards.
+- The telemetry analytics contract now returns applied query metadata, slice metadata, metric support, and dimension support. Analytics aggregation is full-slice by default and must not silently inherit request-ledger pagination caps.
+- Request-ledger reads and telemetry analytics reads share overlapping filter semantics for operator-visible dimensions while preserving separate ledger pagination behavior.
+- Runtime UI telemetry charts consume shared semantic states (`loading`, `refreshing`, `empty`, `unsupported`, `partial`, `truncated`, `error`, `populated`) instead of treating missing buckets as the only source of chart truth.
+- Horizontal ranking telemetry charts use bottom legends for long technical labels and a concrete plot height so Recharts has stable geometry.
+- The current runtime telemetry graph matrix architecture reference is `/docs/architecture/11-runtime-ui-telemetry-graph-matrix.md`.
 - `runtime:validate-ui` teardown must shut down cleanly after backend shutdown; validator cleanup is part of the durable runtime baseline, not a one-off test harness fix.
 
 ## Validation Path
 
 - For routing or provider-capability changes, prefer focused runtime-host and runtime-ui tests first, then the repo-owned validators such as `runtime:validate-host`, `runtime:validate-vendors`, and `runtime:validate-ui`.
 - When claims depend on rebuilt operator truth, verify against the rebuilt runtime in-browser instead of relying only on fixture tests or stale local ports.
+- For telemetry chart changes, include both contract-level tests and browser/runtime verification that chart primitives render non-empty geometry when data is present.
 - For alias-matrix or controller behavior changes, confirm both persisted config truth and live `/v1/models` exposure.
 - For provider capability changes, verify exact-model and alias-path behavior separately where the transport boundary can differ.
 

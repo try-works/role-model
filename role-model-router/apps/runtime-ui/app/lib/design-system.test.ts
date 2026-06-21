@@ -21,11 +21,13 @@ import StudioImagesRoute from "../routes/studio-images";
 import StudioRerankRoute from "../routes/studio-rerank";
 import SystemPeersRoute from "../routes/system-peers";
 import {
+  chartHorizontalRankingLegend,
   codeBlockClassName,
   getRuntimeRouteDefinition,
   runtimeNavigationSections,
   runtimeTheme,
   shellQuickLinks,
+  telemetryChartStates,
 } from "./design-system";
 import { ShellHeaderProvider } from "./shell-header-context";
 
@@ -1223,12 +1225,47 @@ describe("runtime design system", () => {
   test("chart primitives use shared design-system geometry and type tokens", () => {
     expect(designSystemSource).toContain("chartAxisTickStyle");
     expect(designSystemSource).toContain("chartBarRadius");
+    expect(chartHorizontalRankingLegend).toEqual({
+      placement: "bottom",
+      axisCategoryWidth: 0,
+    });
     expect(telemetryChartsSource).toContain("chartAxisTickStyle");
     expect(telemetryChartsSource).toContain("chartBarRadius");
+    expect(telemetryChartsSource).toContain("chartHorizontalRankingLegend");
+    expect(telemetryChartsSource).toContain(
+      "data-chart-horizontal-legend={chartHorizontalRankingLegend.placement}",
+    );
+    expect(telemetryChartsSource).toContain('data-chart-horizontal-plot="true"');
+    expect(telemetryChartsSource).toContain('className="h-[280px] w-full"');
+    expect(telemetryChartsSource).not.toContain("width={128}");
     expect(telemetryChartsSource).not.toContain("fontSize: 12");
     expect(telemetryChartsSource).not.toContain("fontSize: 13");
     expect(telemetryChartsSource).not.toContain("radius={[8, 8, 0, 0]}");
     expect(telemetryChartsSource).not.toContain("radius={[0, 8, 8, 0]}");
+  });
+
+  test("telemetry chart states are shared design-system vocabulary", () => {
+    expect(Object.keys(telemetryChartStates)).toEqual([
+      "loading",
+      "refreshing",
+      "empty",
+      "unsupported",
+      "partial",
+      "truncated",
+      "error",
+      "populated",
+    ]);
+    expect(telemetryChartStates.unsupported).toEqual(
+      expect.objectContaining({
+        tone: "warning",
+      }),
+    );
+    for (const stateName of Object.keys(telemetryChartStates)) {
+      expect(designSystemDocSource).toContain(`\`${stateName}\``);
+    }
+    expect(designSystemDocSource).toContain(
+      "background refresh keeps the last populated chart visible",
+    );
   });
 
   test("runtime route definitions stay slim and future scaffolds avoid duplicate header props", () => {

@@ -1,0 +1,105 @@
+
+ RUN  v3.2.4 D:/rm53/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/telemetry-analytics.test.ts (8 tests | 2 failed | 6 skipped) 26ms
+   ↓ telemetry analytics view models > builds semantic metric series when the backend response is not broken down by dimension
+   ↓ telemetry analytics view models > preserves all requested metrics when a query includes breakdown data that the chart does not directly compare
+   ↓ telemetry analytics view models > assigns distinct colors to each visible metric series in the same chart
+   ↓ telemetry analytics view models > collapses long breakdowns into top series plus Other using backend labels
+   ↓ telemetry analytics view models > builds ranked routing comparison rows from the analytics response
+   × telemetry analytics view models > maps backend support metadata into semantic chart states 21ms
+     → expected { …(4) } to deeply equal ObjectContaining{…}
+   × telemetry analytics view models > marks breakdown charts sparse when totals exist but the requested dimension has no series 3ms
+     → expected { …(4) } to deeply equal ObjectContaining{…}
+   ↓ telemetry analytics view models > selects stable query granularity from approved time ranges
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/telemetry-analytics.test.ts > telemetry analytics view models > maps backend support metadata into semantic chart states
+AssertionError: expected { …(4) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "isEmpty": true,
+-   "state": ObjectContaining {
+-     "kind": "unsupported",
+-     "message": "No rows in this slice expose cache-read-token support.",
++ {
++   "data": [
++     {
++       "bucketEndMs": 1781136000000,
++       "bucketLabel": "Jun 10",
++       "bucketStartMs": 1781049600000,
++       "cacheHitTokenRate": null,
++     },
++   ],
++   "isEmpty": false,
++   "series": [
++     {
++       "colorToken": "var(--rm-chart-cache-rate)",
++       "dataKey": "cacheHitTokenRate",
++       "fillOpacity": 0.16,
++       "key": "cacheHitTokenRate",
++       "label": "Cache hit token rate",
++       "strokeOpacity": 1,
+      },
++   ],
++   "title": "Cache Efficiency Trend",
+  }
+
+ ❯ app/lib/telemetry-analytics.test.ts:359:19
+    357|     });
+    358| 
+    359|     expect(model).toEqual(
+       |                   ^
+    360|       expect.objectContaining({
+    361|         isEmpty: true,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/lib/telemetry-analytics.test.ts > telemetry analytics view models > marks breakdown charts sparse when totals exist but the requested dimension has no series
+AssertionError: expected { …(4) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "isEmpty": true,
+-   "series": [],
+-   "state": ObjectContaining {
+-     "kind": "unsupported",
+-     "message": "No rows in this slice include selectedStrategy.",
++ {
++   "data": [
++     {
++       "bucketEndMs": 1781136000000,
++       "bucketLabel": "Jun 10",
++       "bucketStartMs": 1781049600000,
+      },
++   ],
++   "isEmpty": false,
++   "series": [],
++   "title": "Strategy Selection Trend",
+  }
+
+ ❯ app/lib/telemetry-analytics.test.ts:428:19
+    426|     });
+    427| 
+    428|     expect(model).toEqual(
+       |                   ^
+    429|       expect.objectContaining({
+    430|         isEmpty: true,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 skipped (8)
+   Start at  20:15:29
+   Duration  929ms (transform 73ms, setup 0ms, collect 125ms, tests 26ms, environment 0ms, prepare 283ms)
+
+undefined
+D:\rm53\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/telemetry-analytics.test.ts -t semantic chart states|breakdown charts sparse

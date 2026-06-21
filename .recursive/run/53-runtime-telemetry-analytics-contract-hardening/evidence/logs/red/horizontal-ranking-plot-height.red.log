@@ -1,0 +1,504 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/53/role-model-router/apps/runtime-ui
+
+ ❯ app/components/telemetry-charts.test.tsx (3 tests | 1 failed | 2 skipped) 34ms
+   ↓ TelemetryChartCard > keeps populated chart content visible while a background refresh is in progress
+   ↓ TelemetryChartCard > renders stable loading and empty states without fake chart data
+   × TelemetryRankingBarChart > places horizontal chart labels in a bottom legend instead of a left category axis 32ms
+     → expected '<div class="flex min-h-[320px] w-full…' to contain 'data-chart-horizontal-plot="true"'
+ ❯ app/lib/design-system.test.ts (53 tests | 1 failed | 52 skipped) 33ms
+   ↓ runtime design system > defines navigation groups and layout templates for every runtime route
+   ↓ runtime design system > uses analytics charts as the primary Observe entry point
+   ↓ runtime design system > keeps the shell on the Apple baseline with explicit chart tokens
+   ↓ runtime design system > chart tokens used together resolve to distinct visual colors in each theme
+   ↓ runtime design system > global shell chrome keeps legacy vendor ui out of the main runtime contract
+   ↓ runtime design system > studio implementation targets render repo-owned workspace sections instead of placeholder blueprints
+   ↓ runtime design system > integration and system implementation targets render live upstream and peer surfaces
+   ↓ runtime design system > router implementation targets render repo-owned routing explanation surfaces
+   ↓ runtime design system > router, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler
+   ↓ runtime design system > providers surface exposes explicit in-place maintenance actions for saved remote accounts
+   ↓ runtime design system > providers surface uses an explicit save-cancel modal for api-key maintenance
+   ↓ runtime design system > providers surface keeps oauth reconnect as a one-click saved-account action
+   ↓ runtime design system > providers maintenance flows call explicit repair APIs instead of generic account writes
+   ↓ runtime design system > providers saved-account cards use canonical lifecycle rows and bounded archived diagnostics
+   ↓ runtime design system > runtime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics
+   ↓ runtime design system > router routes preserve empty-state and observe-link affordances
+   ↓ runtime design system > merged router overview stays observational while routing strategy owns editing controls
+   ↓ runtime design system > router overview presents runtime-config posture as source of truth
+   ↓ runtime design system > router overview lists the concrete candidate endpoints behind routing posture
+   ↓ runtime design system > routing strategy benchmark advisory does not leak JSX control flow as page text
+   ↓ runtime design system > routing strategy settings separate saved posture from draft edits and refresh derived state after save
+   ↓ runtime design system > meta-guidance panels stay removed from overview and observe routes
+   ↓ runtime design system > design system doc marks the converted pages as live routes
+   ↓ runtime design system > control routes tolerate an unassigned controller before endpoint activation
+   ↓ runtime design system > applies the Apple palette, SF Pro / Inter typography, and explicit theme contract in shared app chrome
+   ↓ runtime design system > shared panels and provider selectors are owned by Apple-theme primitives
+   ↓ runtime design system > router strategy execution mode uses the themed select primitive
+   ↓ runtime design system > production UI dropdowns use themed select primitives instead of native selects
+   ↓ runtime design system > shared route effects avoid action identity loops and peer refresh feedback
+   ↓ runtime design system > keeps shared states calm: transparent status pills and no section divider chrome
+   ↓ runtime design system > remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy
+   ↓ runtime design system > runtime roles route preserves role-first drill-down language for task detail
+   ↓ runtime design system > local setup surfaces stay discoverable from navigation and empty registry states
+   ↓ runtime design system > observe and local log surfaces render structured ledgers rather than raw iframe placeholders
+   ↓ runtime design system > observe ownership keeps requests canonical and raw-host surfaces adjacent
+   ↓ runtime design system > requests and request detail stay telemetry-first while exposing raw-host handoffs
+   ↓ runtime design system > activity route frames raw-host metrics as adjacent to canonical telemetry
+   ↓ runtime design system > logs route exposes request-detail handoffs while preserving raw-host framing
+   ↓ runtime design system > registry and system layouts avoid redundant KPI strips and placeholder note panels
+   ↓ runtime design system > dashboard is chart-led and keeps routing analytics as a first-class handoff
+   ↓ runtime design system > overview metadata and design doc describe a telemetry-first summary with an interaction rail
+   ↓ runtime design system > workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces
+   ↓ runtime design system > request detail route renders authoritative stored cost metadata
+   ↓ runtime design system > shell header owns route metadata and page actions without duplicate page headers
+   ↓ runtime design system > shell headers do not render section eyebrow labels
+   ↓ runtime design system > routes do not register refresh controls as shell header actions
+   ↓ runtime design system > long fact-card values use compact text roles instead of display value typography
+   ↓ runtime design system > production UI sources do not bypass Apple theme token primitives
+   ↓ runtime design system > production UI sources keep the approved Apple radius grammar
+   ↓ runtime design system > production UI sources avoid unsupported Apple typography weight 500
+   × runtime design system > chart primitives use shared design-system geometry and type tokens 31ms
+     → expected 'import type { ReactNode } from "react…' to contain 'data-chart-horizontal-plot="true"'
+   ↓ runtime design system > telemetry chart states are shared design-system vocabulary
+   ↓ runtime design system > runtime route definitions stay slim and future scaffolds avoid duplicate header props
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/telemetry-charts.test.tsx > TelemetryRankingBarChart > places horizontal chart labels in a bottom legend instead of a left category axis
+AssertionError: expected '<div class="flex min-h-[320px] w-full…' to contain 'data-chart-horizontal-plot="true"'
+
+Expected: "data-chart-horizontal-plot="true""
+Received: "<div class="flex min-h-[320px] w-full flex-col"><div class="min-h-[240px] flex-1"><div class="recharts-responsive-container" style="width:100%;height:100%;min-width:0"></div></div><div data-chart-horizontal-legend="bottom"><div class="flex flex-wrap gap-x-4 gap-y-2 pt-4"><div class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background-color:var(--rm-chart-warning)"></span><span class="text-[14px] font-normal leading-[18px] tracking-[-0.016em] text-[var(--rm-secondary)]">qa-local-llama-8b</span></div><div class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background-color:var(--rm-chart-link-blue)"></span><span class="text-[14px] font-normal leading-[18px] tracking-[-0.016em] text-[var(--rm-secondary)]">anthropic-claude-haiku</span></div></div></div></div>"
+
+ ❯ app/components/telemetry-charts.test.tsx:68:20
+     66| 
+     67|     expect(markup).toContain('data-chart-horizontal-legend="bottom"');
+     68|     expect(markup).toContain('data-chart-horizontal-plot="true"');
+       |                    ^
+     69|     expect(markup).toContain("h-[280px]");
+     70|     expect(markup).toContain("qa-local-llama-8b");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > chart primitives use shared design-system geometry and type tokens
+AssertionError: expected 'import type { ReactNode } from "react…' to contain 'data-chart-horizontal-plot="true"'
+
+- Expected
++ Received
+
+- data-chart-horizontal-plot="true"
++ import type { ReactNode } from "react";
++ import {
++   Area,
++   AreaChart,
++   Bar,
++   BarChart,
++   CartesianGrid,
++   Cell,
++   Legend,
++   Line,
++   LineChart,
++   ResponsiveContainer,
++   Tooltip,
++   XAxis,
++   YAxis,
++ } from "recharts";
++
++ import { cn } from "../lib/cn";
++ import {
++   bodyTextClassName,
++   chartAxisTickStyle,
++   chartBarRadius,
++   chartHorizontalRankingLegend,
++   chartRankingBarRadius,
++   eyebrowClassName,
++   mutedPanelClassName,
++   sectionTitleClassName,
++   utilityLabelClassName,
++ } from "../lib/design-system";
++ import type { RuntimeTelemetryAnalyticsResponse } from "../lib/runtime-api";
++ import type {
++   TelemetryRankingChartModel,
++   TelemetryTimeSeriesChartModel,
++ } from "../lib/telemetry-analytics";
++ import {
++   buildTelemetryRankingChartModel,
++   buildTelemetryTimeSeriesChartModel,
++ } from "../lib/telemetry-analytics";
++ import type { TelemetryRouteChartDefinition } from "../lib/telemetry-route-models";
++
++ function ChartLegendContent(props: {
++   readonly payload?: ReadonlyArray<{
++     readonly color?: string;
++     readonly value?: string;
++   }>;
++ }) {
++   const items = props.payload ?? [];
++   if (items.length === 0) {
++     return null;
++   }
++   return (
++     <div className="flex flex-wrap gap-x-4 gap-y-2 pt-4">
++       {items.map((item) => (
++         <div key={`${item.value}:${item.color}`} className="inline-flex items-center gap-2">
++           <span
++             className="h-2.5 w-2.5 rounded-full"
++             style={{ backgroundColor: item.color ?? "var(--rm-chart-neutral-1)" }}
++           />
++           <span className={`${utilityLabelClassName} text-[var(--rm-secondary)]`}>
++             {item.value}
++           </span>
++         </div>
++       ))}
++     </div>
++   );
++ }
++
++ function ChartTooltipContent(props: {
++   readonly active?: boolean;
++   readonly label?: string;
++   readonly payload?: ReadonlyArray<{
++     readonly color?: string;
++     readonly dataKey?: string | number;
++     readonly name?: string;
++     readonly value?: number | string | null;
++   }>;
++ }) {
++   if (!props.active || !props.payload || props.payload.length === 0) {
++     return null;
++   }
++   return (
++     <div className="min-w-[180px] rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-3 py-2 shadow-[var(--rm-shadow-card)]">
++       {props.label ? <p className={eyebrowClassName}>{props.label}</p> : null}
++       <div className="mt-2 space-y-1.5">
++         {props.payload.map((entry) => (
++           <div
++             key={`${entry.name}:${entry.dataKey}`}
++             className="flex items-center justify-between gap-4"
++           >
++             <span className="inline-flex items-center gap-2 text-[var(--rm-secondary)]">
++               <span
++                 className="h-2.5 w-2.5 rounded-full"
++                 style={{ backgroundColor: entry.color ?? "var(--rm-chart-neutral-1)" }}
++               />
++               <span className={utilityLabelClassName}>{entry.name}</span>
++             </span>
++             <span className={`${utilityLabelClassName} text-[var(--rm-fg)]`}>
++               {entry.value ?? "n/a"}
++             </span>
++           </div>
++         ))}
++       </div>
++     </div>
++   );
++ }
++
++ function TelemetryChartSkeleton() {
++   return (
++     <div className="grid min-h-[240px] gap-3">
++       <div className="flex items-end gap-2">
++         <div className="h-24 w-1/6 rounded-[8px] bg-[var(--rm-panel)]" />
++         <div className="h-32 w-1/6 rounded-[8px] bg-[var(--rm-panel)]" />
++         <div className="h-20 w-1/6 rounded-[8px] bg-[var(--rm-panel)]" />
++         <div className="h-36 w-1/6 rounded-[8px] bg-[var(--rm-panel)]" />
++         <div className="h-28 w-1/6 rounded-[8px] bg-[var(--rm-panel)]" />
++       </div>
++       <p className={`${bodyTextClassName} text-[var(--rm-secondary)]`}>Loading chart data…</p>
++     </div>
++   );
++ }
++
++ export function TelemetryChartCard({
++   title,
++   description,
++   loading = false,
++   emptyMessage,
++   refreshing = false,
++   minHeightClassName = "min-h-[240px]",
++   children,
++ }: {
++   readonly title: string;
++   readonly description?: string;
++   readonly loading?: boolean;
++   readonly emptyMessage?: string;
++   readonly refreshing?: boolean;
++   readonly minHeightClassName?: string;
++   readonly children?: ReactNode;
++ }) {
++   return (
++     <section className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-5 py-5 md:px-6 md:py-6">
++       <div className="flex flex-wrap items-start justify-between gap-3">
++         <div className="space-y-2">
++           <h3 className={`text-[var(--rm-fg)] ${sectionTitleClassName}`}>{title}</h3>
++           {description ? (
++             <p className={`${bodyTextClassName} max-w-[65ch] text-[var(--rm-secondary)]`}>
++               {description}
++             </p>
++           ) : null}
++         </div>
++         {refreshing ? (
++           <span
++             className={cn(
++               "inline-flex min-h-[28px] items-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] px-3 py-1.5",
++               `${utilityLabelClassName} text-[var(--rm-secondary)]`,
++             )}
++           >
++             Refreshing…
++           </span>
++         ) : null}
++       </div>
++       <div className={cn("mt-5", minHeightClassName)}>
++         {loading ? (
++           <TelemetryChartSkeleton />
++         ) : emptyMessage ? (
++           <div
++             className={cn(
++               mutedPanelClassName,
++               `${minHeightClassName} flex items-center p-6 ${bodyTextClassName} text-[var(--rm-secondary)]`,
++             )}
++           >
++             {emptyMessage}
++           </div>
++         ) : (
++           children
++         )}
++       </div>
++     </section>
++   );
++ }
++
++ export function TelemetryAreaTimeSeriesChart({
++   model,
++ }: {
++   readonly model: TelemetryTimeSeriesChartModel;
++ }) {
++   return (
++     <div className="h-[280px] w-full">
++       <ResponsiveContainer width="100%" height="100%">
++         <AreaChart data={[...model.data]}>
++           <CartesianGrid stroke="var(--rm-divider-soft)" vertical={false} />
++           <XAxis
++             axisLine={false}
++             dataKey="bucketLabel"
++             tick={chartAxisTickStyle}
++             tickLine={false}
++           />
++           <YAxis axisLine={false} tick={chartAxisTickStyle} tickLine={false} />
++           <Tooltip content={<ChartTooltipContent />} cursor={{ stroke: "var(--rm-border)" }} />
++           <Legend content={<ChartLegendContent />} />
++           {model.series.map((series) => (
++             <Area
++               key={series.key}
++               dataKey={series.dataKey}
++               fill={series.colorToken}
++               fillOpacity={series.fillOpacity}
++               name={series.label}
++               stroke={series.colorToken}
++               strokeOpacity={series.strokeOpacity}
++               strokeWidth={2}
++               type="monotone"
++             />
++           ))}
++         </AreaChart>
++       </ResponsiveContainer>
++     </div>
++   );
++ }
++
++ export function TelemetryLineTimeSeriesChart({
++   model,
++ }: {
++   readonly model: TelemetryTimeSeriesChartModel;
++ }) {
++   return (
++     <div className="h-[280px] w-full">
++       <ResponsiveContainer width="100%" height="100%">
++         <LineChart data={[...model.data]}>
++           <CartesianGrid stroke="var(--rm-divider-soft)" vertical={false} />
++           <XAxis
++             axisLine={false}
++             dataKey="bucketLabel"
++             tick={chartAxisTickStyle}
++             tickLine={false}
++           />
++           <YAxis axisLine={false} tick={chartAxisTickStyle} tickLine={false} />
++           <Tooltip content={<ChartTooltipContent />} cursor={{ stroke: "var(--rm-border)" }} />
++           <Legend content={<ChartLegendContent />} />
++           {model.series.map((series) => (
++             <Line
++               key={series.key}
++               dataKey={series.dataKey}
++               dot={false}
++               name={series.label}
++               stroke={series.colorToken}
++               strokeOpacity={series.strokeOpacity}
++               strokeWidth={2}
++               type="monotone"
++             />
++           ))}
++         </LineChart>
++       </ResponsiveContainer>
++     </div>
++   );
++ }
++
++ export function TelemetryBarTimeSeriesChart({
++   model,
++ }: {
++   readonly model: TelemetryTimeSeriesChartModel;
++ }) {
++   return (
++     <div className="h-[280px] w-full">
++       <ResponsiveContainer width="100%" height="100%">
++         <BarChart data={[...model.data]}>
++           <CartesianGrid stroke="var(--rm-divider-soft)" vertical={false} />
++           <XAxis
++             axisLine={false}
++             dataKey="bucketLabel"
++             tick={chartAxisTickStyle}
++             tickLine={false}
++           />
++           <YAxis axisLine={false} tick={chartAxisTickStyle} tickLine={false} />
++           <Tooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--rm-panel)" }} />
++           <Legend content={<ChartLegendContent />} />
++           {model.series.map((series) => (
++             <Bar
++               key={series.key}
++               dataKey={series.dataKey}
++               fill={series.colorToken}
++               name={series.label}
++               radius={chartBarRadius}
++             />
++           ))}
++         </BarChart>
++       </ResponsiveContainer>
++     </div>
++   );
++ }
++
++ export function TelemetryRankingBarChart({
++   model,
++ }: {
++   readonly model: TelemetryRankingChartModel;
++ }) {
++   return (
++     <div className="flex min-h-[320px] w-full flex-col">
++       <div className="min-h-[240px] flex-1">
++         <ResponsiveContainer width="100%" height="100%">
++           <BarChart data={[...model.rows]} layout="vertical" margin={{ left: 0, right: 8 }}>
++             <CartesianGrid stroke="var(--rm-divider-soft)" horizontal={false} />
++             <XAxis axisLine={false} tick={chartAxisTickStyle} tickLine={false} type="number" />
++             <YAxis
++               axisLine={false}
++               dataKey="label"
++               tick={false}
++               tickLine={false}
++               type="category"
++               width={chartHorizontalRankingLegend.axisCategoryWidth}
++             />
++             <Tooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--rm-panel)" }} />
++             <Bar dataKey="value" name={model.title} radius={chartRankingBarRadius}>
++               {model.rows.map((row) => (
++                 <Cell key={row.key} fill={row.colorToken} />
++               ))}
++             </Bar>
++           </BarChart>
++         </ResponsiveContainer>
++       </div>
++       <div data-chart-horizontal-legend={chartHorizontalRankingLegend.placement}>
++         <ChartLegendContent
++           payload={model.rows.map((row) => ({
++             color: row.colorToken,
++             value: row.label,
++           }))}
++         />
++       </div>
++     </div>
++   );
++ }
++
++ export function TelemetryAnalyticsChartCard({
++   definition,
++   response,
++   loading = false,
++   refreshing = false,
++ }: {
++   readonly definition: TelemetryRouteChartDefinition;
++   readonly response?: RuntimeTelemetryAnalyticsResponse;
++   readonly loading?: boolean;
++   readonly refreshing?: boolean;
++ }) {
++   if (!response) {
++     return (
++       <TelemetryChartCard
++         title={definition.title}
++         description={definition.description}
++         loading={loading}
++         minHeightClassName={definition.minHeightClassName}
++       />
++     );
++   }
++
++   if (definition.kind === "ranking") {
++     const model = buildTelemetryRankingChartModel(response, {
++       title: definition.title,
++       metric: definition.metrics[0] ?? "requestCount",
++     });
++     return (
++       <TelemetryChartCard
++         title={definition.title}
++         description={definition.description}
++         emptyMessage={model.isEmpty ? (model.state?.message ?? definition.emptyMessage) : undefined}
++         minHeightClassName={definition.minHeightClassName}
++         refreshing={refreshing}
++       >
++         <TelemetryRankingBarChart model={model} />
++       </TelemetryChartCard>
++     );
++   }
++
++   const model = buildTelemetryTimeSeriesChartModel(response, {
++     title: definition.title,
++     metrics: definition.metrics,
++     breakdown: response.breakdown,
++   });
++
++   return (
++     <TelemetryChartCard
++       title={definition.title}
++       description={definition.description}
++       emptyMessage={model.isEmpty ? (model.state?.message ?? definition.emptyMessage) : undefined}
++       minHeightClassName={definition.minHeightClassName}
++       refreshing={refreshing}
++     >
++       {definition.kind === "area" ? (
++         <TelemetryAreaTimeSeriesChart model={model} />
++       ) : definition.kind === "line" ? (
++         <TelemetryLineTimeSeriesChart model={model} />
++       ) : (
++         <TelemetryBarTimeSeriesChart model={model} />
++       )}
++     </TelemetryChartCard>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:1238:35
+    1236|       "data-chart-horizontal-legend={chartHorizontalRankingLegend.plac…
+    1237|     );
+    1238|     expect(telemetryChartsSource).toContain('data-chart-horizontal-plo…
+       |                                   ^
+    1239|     expect(telemetryChartsSource).toContain('className="h-[280px] w-fu…
+    1240|     expect(telemetryChartsSource).not.toContain("width={128}");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 54 skipped (56)
+   Start at  21:09:48
+   Duration  2.59s (transform 971ms, setup 0ms, collect 2.77s, tests 68ms, environment 1ms, prepare 671ms)
+
+undefined
+D:\DEV\role-model\.worktrees\53\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/design-system.test.ts app/components/telemetry-charts.test.tsx -t chart primitives use shared|places horizontal chart labels
