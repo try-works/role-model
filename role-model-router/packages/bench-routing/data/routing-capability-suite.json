@@ -1,6 +1,6 @@
 {
   "suite_id": "routing-capability-v2",
-  "suite_version": "3.2",
+  "suite_version": "3.4",
   "description": "Capability benchmark v3: concrete code implementation, required tool calls, and multi-step prompts.",
   "task_type": "routing_capability",
   "capability_targets": [
@@ -159,6 +159,23 @@
       "expected_response": "{\"name\":\"\",\"value\":\"\"}",
       "grading_criteria": "Valid JSON with name and value keys only.",
       "accept_patterns": ["\"name\"", "\"value\""],
+      "answer_format": {
+        "kind": "json",
+        "instruction": "Return ONLY a ```json fence: {\"name\":\"...\",\"value\":\"...\"}. Do not wrap it in an `answer` field.",
+        "schema": {
+          "type": "object",
+          "required": ["name", "value"],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
       "quick_benchmark": false
     },
     {
@@ -210,9 +227,9 @@
         }
       ],
       "max_tokens": 32,
-      "expected_response": "Application Programming Interface",
-      "grading_criteria": "Defines API succinctly.",
-      "accept_patterns": ["Application Programming Interface", "programming interface"],
+      "expected_response": "A concise one-line definition or correct expansion of API.",
+      "grading_criteria": "Defines API in one concise line; either a correct expansion or a brief correct one-line definition is acceptable.",
+      "accept_patterns": ["Application Programming Interface", "programming interface", "software applications", "communicate"],
       "quick_benchmark": false
     },
     {
@@ -412,14 +429,33 @@
       "messages": [
         {
           "role": "user",
-          "content": "Analyze this code-edit workflow, produce a unified diff patch for src/router.ts, and explain the refactor."
+          "content": "Current `src/router.ts`:\n```ts\nexport function route(input: { strategy: string }) {\n  return input.strategy;\n}\n```\nRefactor it by renaming `route` to `routeRuntimeRequest` and normalizing `strategy` with `trim().toLowerCase()` before returning it. Return ONLY JSON with `diff` and `rationale`."
         }
       ],
       "max_tokens": 128,
       "expected_response": "unified diff patch for router.ts with refactor explanation",
-      "grading_criteria": "Must include unified diff with ---/+++ hunks for router.ts and brief refactor rationale.",
+      "grading_criteria": "Must include unified diff with ---/+++ hunks for router.ts and brief refactor rationale covering the rename and strategy normalization.",
       "accept_patterns": ["---|\\+\\+\\+|@@", "router", "diff|patch"],
-      "quick_benchmark": false
+      "quick_benchmark": false,
+      "answer_format": {
+        "kind": "json",
+        "instruction": "Return ONLY a ```json fence: {\"diff\":\"<unified diff>\",\"rationale\":\"<brief rationale>\"}.",
+        "schema": {
+          "type": "object",
+          "required": ["diff", "rationale"],
+          "properties": {
+            "diff": {
+              "type": "string",
+              "minLength": 20
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 12
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,4 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"rationale\": \"Renamed the entrypoint for clarity and normalized strategy values to avoid whitespace and casing bugs.\"\n}"
     },
     {
       "case_id": "p13-code-debug",
@@ -448,14 +484,43 @@
       "messages": [
         {
           "role": "user",
-          "content": "Validate this JSON schema contract for routing diagnostics and refactor the test suite if fields are missing."
+          "content": "Current schema and test excerpt:\n```json\n{\n  \"$id\": \"routingDiagnostics.difficultyRouting\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"difficultyBucket\": { \"type\": \"string\" },\n    \"chosenEndpointId\": { \"type\": \"string\" }\n  },\n  \"required\": [\"difficultyBucket\", \"chosenEndpointId\"],\n  \"additionalProperties\": false\n}\n```\n```ts\ntest('includes requestedRoleId when routing is controller-guided', () => {\n  expect(result.routingDiagnostics.difficultyRouting.requestedRoleId).toBe('coder.patch');\n});\n```\nValidate the schema contract for routing diagnostics and refactor the test suite if fields are missing. Return ONLY JSON with `analysis`, `missing_fields`, and `test_updates`."
         }
       ],
       "max_tokens": 128,
-      "expected_response": "Technical analysis referencing code, patch, schema, or tests.",
-      "grading_criteria": "Engages with code-edit or debugging request substantively.",
-      "accept_patterns": ["code|patch|schema|test|typescript|router"],
-      "quick_benchmark": false
+      "expected_response": "Schema analysis naming missing fields and concrete test updates.",
+      "grading_criteria": "Must identify that `requestedRoleId` is missing from the schema and propose concrete test updates.",
+      "accept_patterns": ["requestedRoleId|schema|test"],
+      "quick_benchmark": false,
+      "answer_format": {
+        "kind": "json",
+        "instruction": "Return ONLY a ```json fence: {\"analysis\":\"...\",\"missing_fields\":[\"...\"],\"test_updates\":[\"...\"]}.",
+        "schema": {
+          "type": "object",
+          "required": ["analysis", "missing_fields", "test_updates"],
+          "properties": {
+            "analysis": {
+              "type": "string",
+              "minLength": 16
+            },
+            "missing_fields": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "test_updates": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"analysis\": \"The schema omits `requestedRoleId`, so controller-guided routing diagnostics cannot satisfy the existing test expectation.\",\n  \"missing_fields\": [\n    \"requestedRoleId\"\n  ],\n  \"test_updates\": [\n    \"Add `requestedRoleId` to the schema properties and required list when controller-guided routing is emitted.\",\n    \"Keep the test assertion and extend fixtures to include `requestedRoleId: \\\"coder.patch\\\"`.\"\n  ]\n}"
     },
     {
       "case_id": "c01-full-refactor",
@@ -466,14 +531,50 @@
       "messages": [
         {
           "role": "user",
-          "content": "You are a senior engineer. Analyze the code-edit workflow for router.ts, produce a unified diff patch, validate the JSON schema contract for routingDiagnostics.difficultyRouting, refactor conformance tests, and explain each change with before/after examples."
+          "content": "You are a senior engineer. Current `src/router.ts`:\n```ts\nexport function route(input: { strategy: string }) {\n  return input.strategy;\n}\n```\nCurrent schema:\n```json\n{\n  \"$id\": \"routingDiagnostics.difficultyRouting\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"difficultyBucket\": { \"type\": \"string\" },\n    \"chosenEndpointId\": { \"type\": \"string\" }\n  },\n  \"required\": [\"difficultyBucket\", \"chosenEndpointId\"],\n  \"additionalProperties\": false\n}\n```\nCurrent test excerpt:\n```ts\ntest('includes requestedRoleId when routing is controller-guided', () => {\n  expect(result.routingDiagnostics.difficultyRouting.requestedRoleId).toBe('coder.patch');\n});\n```\nProduce a unified diff patch for `src/router.ts` that renames `route` to `routeRuntimeRequest` and normalizes `strategy` with `trim().toLowerCase()`. Validate the schema contract, identify any missing field, refactor the conformance test, and explain each change with before/after examples. Return ONLY JSON with `diff`, `schema_findings`, `test_updates`, and `before_after`."
         }
       ],
       "max_tokens": 200,
-      "expected_response": "Technical analysis referencing code, patch, schema, or tests.",
-      "grading_criteria": "Engages with code-edit or debugging request substantively.",
-      "accept_patterns": ["code|patch|schema|test|typescript|router"],
-      "quick_benchmark": false
+      "expected_response": "Diff, schema findings, test updates, and before/after explanations.",
+      "grading_criteria": "Must include a unified diff for router.ts, identify the missing `requestedRoleId` schema field, propose test updates, and include before/after explanations.",
+      "accept_patterns": ["requestedRoleId|schema|test|router|diff"],
+      "quick_benchmark": false,
+      "answer_format": {
+        "kind": "json",
+        "instruction": "Return ONLY a ```json fence: {\"diff\":\"<unified diff>\",\"schema_findings\":[\"...\"],\"test_updates\":[\"...\"],\"before_after\":[\"...\"]}.",
+        "schema": {
+          "type": "object",
+          "required": ["diff", "schema_findings", "test_updates", "before_after"],
+          "properties": {
+            "diff": {
+              "type": "string",
+              "minLength": 20
+            },
+            "schema_findings": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "test_updates": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "before_after": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,4 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"schema_findings\": [\n    \"`requestedRoleId` is missing from `routingDiagnostics.difficultyRouting` even though controller-guided tests expect it.\"\n  ],\n  \"test_updates\": [\n    \"Extend the schema fixture with `requestedRoleId`.\",\n    \"Keep the controller-guided conformance assertion and update fixture snapshots accordingly.\"\n  ],\n  \"before_after\": [\n    \"Before: `route` returned the raw strategy string. After: `routeRuntimeRequest` normalizes whitespace and casing.\",\n    \"Before: schema omitted `requestedRoleId`. After: controller-guided fixtures include it so tests and schema agree.\"\n  ]\n}"
     },
     {
       "case_id": "c02-ts-generics",
@@ -502,7 +603,7 @@
       "messages": [
         {
           "role": "user",
-          "content": "Read the runtime config file and tell me the routing strategy."
+          "content": "Read `state/runtime-config.yaml` and tell me the routing strategy."
         }
       ],
       "max_tokens": 96,
@@ -529,7 +630,22 @@
         }
       ],
       "required_tool_call": true,
-      "expected_tool_names": ["read_file"]
+      "expected_tool_names": ["read_file"],
+      "answer_format": {
+        "kind": "tool_calls_with_answer",
+        "instruction": "Step 1: emit the required read_file tool call for `state/runtime-config.yaml`. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<routing strategy>\"}.",
+        "schema": {
+          "type": "object",
+          "required": ["answer"],
+          "properties": {
+            "answer": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ],\n  \"answer\": \"controller\"\n}"
     },
     {
       "case_id": "p16-tools-search",
@@ -545,7 +661,7 @@
       ],
       "max_tokens": 128,
       "expected_response": "Coherent plan or summary addressing the tool-using task.",
-      "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
+      "grading_criteria": "Must call grep_search and summarize where throughputSla hard-deny happens from the provided grep results.",
       "accept_patterns": ["read|search|list|patch|tool|plan"],
       "quick_benchmark": false,
       "tools": [
@@ -565,7 +681,24 @@
             }
           }
         }
-      ]
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": ["grep_search"],
+      "answer_format": {
+        "kind": "tool_calls_with_answer",
+        "instruction": "Step 1: emit the required grep_search tool call. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<summary of where hard-deny happens>\"}.",
+        "schema": {
+          "type": "object",
+          "required": ["answer"],
+          "properties": {
+            "answer": {
+              "type": "string",
+              "minLength": 8
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ],\n  \"answer\": \"Hard-deny happens in the zero-eligible fast-fail branch and when a candidate is marked `hardDeniedBySla` because its throughput is below the threshold.\"\n}"
     },
     {
       "case_id": "t01-tools-list-dir",
@@ -581,7 +714,7 @@
       ],
       "max_tokens": 96,
       "expected_response": "Coherent plan or summary addressing the tool-using task.",
-      "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
+      "grading_criteria": "Must call list_dir and summarize routing-related filenames from the provided directory listing.",
       "accept_patterns": ["read|search|list|patch|tool|plan"],
       "quick_benchmark": false,
       "tools": [
@@ -601,7 +734,24 @@
             }
           }
         }
-      ]
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": ["list_dir"],
+      "answer_format": {
+        "kind": "tool_calls_with_answer",
+        "instruction": "Step 1: emit the required list_dir tool call. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<summary of routing-related filenames>\"}.",
+        "schema": {
+          "type": "object",
+          "required": ["answer"],
+          "properties": {
+            "answer": {
+              "type": "string",
+              "minLength": 8
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_dir\",\n      \"arguments\": {\n        \"path\": \"config\"\n      }\n    }\n  ],\n  \"answer\": \"The routing-related files are `router.yaml` and `routing-policy.json`; the other files are unrelated config assets.\"\n}"
     },
     {
       "case_id": "p17-tools-multi-hard",
@@ -670,7 +820,7 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"patch\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -12,3 +12,3 @@\\n export const MODE = \\\"difficulty\\\";\\n\"\n      }\n    }\n  ],\n  \"answer\": \"Validated MODE and throughput SLA schema fields; added guard regression test.\"\n}"
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -12,3 +12,3 @@\\n export const MODE = \\\"difficulty\\\";\\n\"\n      }\n    }\n  ],\n  \"answer\": \"Validated MODE and throughput SLA schema fields; added guard regression test.\"\n}"
     },
     {
       "case_id": "p18-tools-agent",
@@ -686,7 +836,7 @@
       ],
       "max_tokens": 160,
       "expected_response": "Coherent plan or summary addressing the tool-using task.",
-      "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
+      "grading_criteria": "Must call list_endpoints and get_metrics, then recommend routing changes using the provided endpoint and latency data.",
       "accept_patterns": ["read|search|list|patch|tool|plan"],
       "quick_benchmark": false,
       "tools": [
@@ -717,7 +867,24 @@
             }
           }
         }
-      ]
+      ],
+      "required_tool_call": true,
+      "expected_tool_names": ["list_endpoints", "get_metrics", "get_metrics"],
+      "answer_format": {
+        "kind": "tool_calls_with_answer",
+        "instruction": "Step 1: emit list_endpoints and get_metrics tool calls for both compared endpoints. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<routing recommendation>\"}.",
+        "schema": {
+          "type": "object",
+          "required": ["answer"],
+          "properties": {
+            "answer": {
+              "type": "string",
+              "minLength": 12
+            }
+          }
+        }
+      },
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"Keep local as the default for low-latency traffic, but retain remote deepseek-v4-flash as the fallback for harder requests where quality matters more than p95 latency.\"\n}"
     },
     {
       "case_id": "t02-tools-triple",
@@ -803,6 +970,37 @@
       "expected_response": "Coherent plan or summary addressing the tool-using task.",
       "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
       "accept_patterns": ["read|search|list|patch|tool|plan"],
+      "required_tool_call": true,
+      "expected_tool_names": ["read_file", "validate_schema", "apply_patch"],
+      "answer_format": {
+        "kind": "tool_calls_with_summary",
+        "instruction": "Step 1: emit the required API tool calls. Step 2: after tools, output ONLY a ```json fence: {\"plan\":[\"...\"],\"patch_summary\":\"...\",\"strategy_improvements\":[\"...\"]}.",
+        "schema": {
+          "type": "object",
+          "required": ["plan", "patch_summary", "strategy_improvements"],
+          "properties": {
+            "plan": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 3
+            },
+            "patch_summary": {
+              "type": "string",
+              "minLength": 12
+            },
+            "strategy_improvements": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 2
+            }
+          },
+          "additionalProperties": false
+        }
+      },
       "quick_benchmark": false,
       "tools": [
         {
@@ -1000,7 +1198,7 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"MODE\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"patch\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Read router config\",\n    \"Patch MODE to difficulty\",\n    \"Add SLA guard test\"\n  ],\n  \"patch_summary\": \"Switched MODE default to difficulty and documented throughput SLA guard.\",\n  \"test_snippet\": \"expect(guardSoleCandidate(...)).toAllowFallbackWhenHardDenied();\"\n}"
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"MODE\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Read router config\",\n    \"Patch MODE to difficulty\",\n    \"Add SLA guard test\"\n  ],\n  \"patch_summary\": \"Switched MODE default to difficulty and documented throughput SLA guard.\",\n  \"test_snippet\": \"expect(guardSoleCandidate(...)).toAllowFallbackWhenHardDenied();\"\n}"
     },
     {
       "case_id": "x02-max-context-tools",
@@ -1548,7 +1746,7 @@
         "kind": "tool_calls",
         "instruction": "Emit all required tool calls through the API in as few turns as needed. Do not write fake TOOL_CALL text. No final prose unless asked in a follow-up."
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"patch\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}"
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}"
     },
     {
       "case_id": "h07-multi-turn-sla-guard",
@@ -1612,7 +1810,7 @@
       ],
       "max_tokens": 320,
       "expected_response": "read_file runtime-config.yaml and routing.strategy value",
-      "grading_criteria": "Must call read_file on runtime-config.yaml after multi-turn context.",
+      "grading_criteria": "Must call read_file on runtime-config.yaml after multi-turn context and answer with the routing.strategy value from the provided tool result.",
       "accept_patterns": ["runtime-config|routing\\.strategy|strategy"],
       "required_tool_call": true,
       "expected_tool_names": ["read_file"],
@@ -1649,7 +1847,7 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"createRouter\"\n}"
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ],\n  \"answer\": \"controller\"\n}"
     },
     {
       "case_id": "h09-agent-metrics-chain",
@@ -1668,11 +1866,11 @@
         },
         {
           "role": "user",
-          "content": "Phase 1b: API get_metrics for a remote endpoint_id"
+          "content": "Phase 1b: API get_metrics for both the local and remote endpoint_ids returned by list_endpoints"
         },
         {
           "role": "assistant",
-          "content": "get_metrics emitted."
+          "content": "get_metrics emitted for both endpoints."
         },
         {
           "role": "user",
@@ -1680,11 +1878,11 @@
         }
       ],
       "max_tokens": 1024,
-      "expected_response": "list_endpoints then get_metrics tool calls and latency comparison",
-      "grading_criteria": "Must call list_endpoints and get_metrics before summarizing latency.",
+      "expected_response": "list_endpoints then get_metrics tool calls for both compared endpoints and a one-sentence remote-vs-local latency comparison",
+      "grading_criteria": "Must call list_endpoints and get_metrics for both compared endpoints before summarizing latency, and the answer must explicitly compare remote vs local p95 latency.",
       "accept_patterns": ["latency|p95|remote|local|endpoint"],
       "required_tool_call": true,
-      "expected_tool_names": ["list_endpoints", "get_metrics"],
+      "expected_tool_names": ["list_endpoints", "get_metrics", "get_metrics"],
       "tools": [
         {
           "type": "function",
@@ -1717,7 +1915,7 @@
       "quick_benchmark": true,
       "answer_format": {
         "kind": "tool_calls_with_answer",
-        "instruction": "Step 1: emit required API tool calls. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"...\"}. No reasoning inside the JSON.",
+        "instruction": "Step 1: emit list_endpoints and get_metrics tool calls for both compared endpoints. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<one sentence local-vs-remote latency comparison>\"}. No reasoning inside the JSON.",
         "schema": {
           "type": "object",
           "required": ["answer"],
@@ -1729,7 +1927,7 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.primary\"\n      }\n    }\n  ],\n  \"answer\": \"local.primary has lower p95 latency for this workload.\"\n}"
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"local.lfm2.5-8b-a1b has lower p95 latency than remote.deepseek-v4-flash for this workload.\"\n}"
     },
     {
       "case_id": "h10-agent-read-grep-patch",
@@ -1804,7 +2002,7 @@
         "kind": "tool_calls",
         "instruction": "Emit all required tool calls through the API in as few turns as needed. Do not write fake TOOL_CALL text. No final prose unless asked in a follow-up."
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"MODE\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"patch\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -4,3 +4,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}"
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"MODE\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -4,3 +4,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}"
     },
     {
       "case_id": "h11-decompose-code-verify",

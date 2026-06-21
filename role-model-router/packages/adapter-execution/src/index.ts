@@ -110,6 +110,18 @@ export interface ProviderResponseCapture {
   readonly endpointId: string;
   readonly statusCode: number;
   readonly body: unknown;
+  readonly dynamicToolExecutions?: readonly {
+    readonly toolCallId: string;
+    readonly toolName: string;
+    readonly connectorId: string;
+    readonly connectorKind: string;
+    readonly status: "succeeded" | "failed" | "rejected";
+    readonly output: unknown;
+    readonly diagnostics: readonly {
+      readonly code: string;
+      readonly message: string;
+    }[];
+  }[];
   readonly vendorMetadata?: {
     readonly vendorId: string;
     readonly resolvedModelId?: string;

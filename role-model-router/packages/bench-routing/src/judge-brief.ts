@@ -34,7 +34,7 @@ const GLOBAL_ANTI_PATTERNS = [
   "MUST NOT use diff placeholders (----/+++, [file header])",
   "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
   "MUST NOT submit reasoning prose as the graded code deliverable",
-  "MUST NOT leave apply_patch arguments as stub text without @@ hunks",
+  "MUST NOT leave apply_patch arguments as placeholder or malformed patch content",
 ] as const;
 
 export function formatQuestionTranscript(caseItem: JudgeBriefCaseRef): string {
@@ -52,6 +52,31 @@ function splitGradingCriteria(criteria: string): string[] {
     .split(/[.;]\s+/)
     .map((part) => part.trim())
     .filter((part) => part.length > 8);
+}
+
+function isTrivialAcceptPattern(pattern: string): boolean {
+  const trimmed = pattern.trim();
+  return (
+    trimmed === ".+" ||
+    /^\.\{\d+(,\d*)?\}$/.test(trimmed) ||
+    /^[\^\$\.\+\*\?\(\)\[\]\{\}\\|,\s]+$/.test(trimmed)
+  );
+}
+
+function describeAcceptPattern(pattern: string): string | null {
+  const trimmed = pattern.trim();
+  if (!trimmed || isTrivialAcceptPattern(trimmed)) {
+    return null;
+  }
+  const exactLiteralMatch = trimmed.match(/^\^([A-Za-z0-9 _:/.-]+)\$$/);
+  if (exactLiteralMatch) {
+    return `exact value ${exactLiteralMatch[1]}`;
+  }
+  return trimmed;
+}
+
+function summarizeAcceptPatternsForJudge(patterns: readonly string[]): string[] {
+  return [...new Set(patterns.map(describeAcceptPattern).filter((value): value is string => !!value))];
 }
 
 export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): string[] {
@@ -74,12 +99,15 @@ export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): st
   }
 
   if (caseItem.accept_patterns?.length) {
-    checklist.push(`[SHOULD] Match patterns: ${caseItem.accept_patterns.join(", ")}`);
+    const patternSummaries = summarizeAcceptPatternsForJudge(caseItem.accept_patterns);
+    if (patternSummaries.length > 0) {
+      checklist.push(`[SHOULD] Match clues: ${patternSummaries.join(", ")}`);
+    }
   }
 
   if (caseItem.expected_tool_names?.includes("apply_patch")) {
     checklist.push(
-      "[MUST] apply_patch diff must contain ---/+++ file headers and @@ hunk markers with real content",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable",
     );
   }
 
@@ -104,7 +132,9 @@ function deriveExemplarAnswer(caseItem: JudgeBriefCaseRef): string {
     parts.push(
       `Tool calls: ${toolNames
         .map((name) =>
-          name === "apply_patch" ? `${name} with valid unified diff (---/+++/@@)` : name,
+          name === "apply_patch"
+            ? `${name} with ---/+++ headers plus @@ hunk marker (line numbers optional) or Codex patch envelope`
+            : name,
         )
         .join(", ")}`,
     );

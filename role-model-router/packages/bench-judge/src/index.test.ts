@@ -15,7 +15,7 @@ const P17_BRIEF = {
   exemplarQuality: "authored" as const,
   deliverablesChecklist: [
     "[MUST] Must call read_file and apply_patch",
-    "[MUST] apply_patch diff must contain ---/+++ file headers and @@ hunk markers with real content",
+    "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable",
   ],
   antiPatterns: ["MUST NOT use diff placeholders (----/+++, [file header])"],
 };
@@ -24,7 +24,7 @@ const P17_LFM_DELIVERABLE = JSON.stringify(
   {
     tool_calls: [
       { name: "read_file", arguments: { path: "src/router.ts" } },
-      { name: "apply_patch", arguments: { patch: "----/+++" } },
+      { name: "apply_patch", arguments: { diff: "----/+++" } },
     ],
     answer: "what schema fields and tests you validated",
   },
@@ -49,7 +49,7 @@ describe("bench-judge grading prompts", () => {
     expect(prompt).toContain("## Original question");
     expect(prompt).toContain("## Example expected answer");
     expect(prompt).toContain("## Key deliverables");
-    expect(prompt).toContain("@@ hunk");
+    expect(prompt).toContain("bare @@");
     expect(prompt).not.toContain("Prompt summary:");
   });
 
@@ -96,5 +96,15 @@ describe("bench-judge grading prompts", () => {
     );
     expect(extracted).toContain('"score":0.25');
     expect(parseJudgeGradingResponse(extracted)?.score).toBe(0.25);
+  });
+
+  test("parseJudgeGradingResponse sanitizes runaway regex-noise rationale text", () => {
+    const parsed = parseJudgeGradingResponse(
+      '{"score":1,"rationale":"Good answer matching the checklist and the \'+\',\'+\',\'+\',\'+\',\'+\',\'+\',\'+\' pattern."}',
+    );
+    expect(parsed?.score).toBe(1);
+    expect(parsed?.rationale).toContain("Good answer");
+    expect(parsed?.rationale).not.toContain("'+','+','+'");
+    expect((parsed?.rationale?.length ?? 0)).toBeLessThan(200);
   });
 });

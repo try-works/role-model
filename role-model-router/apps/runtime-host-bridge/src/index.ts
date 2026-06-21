@@ -1,9 +1,10 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
+import { createInterface } from "node:readline";
 import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -301,7 +302,7 @@ const OPENAI_CODEX_SUBSCRIPTION_AUTH_MISSING_ERROR =
   "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.";
 const CODEX_APP_SERVER_DEVICE_CODE_PREFIX = "codex-app-server:";
 const CODEX_APP_SERVER_REQUEST_TIMEOUT_MS = 10_000;
-const CODEX_APP_SERVER_TURN_TIMEOUT_MS = 120_000;
+const CODEX_APP_SERVER_TURN_TIMEOUT_MS = 600_000;
 const CANONICAL_ROUTING_ALIAS_STRATEGIES = [
   null,
   "baseline",
@@ -2499,16 +2500,19 @@ export interface CodexExecutionAdapter {
       readonly toolCallId: string;
       readonly toolName: string;
       readonly toolArguments: unknown;
+      readonly workspaceRoot: string;
     }) => Promise<{
       readonly success: boolean;
       readonly contentItems: readonly {
         readonly type: "inputText";
         readonly text: string;
       }[];
+      readonly execution?: ToolRegistryExecution;
     }>;
   }): Promise<{
     readonly statusCode: number;
     readonly body: unknown;
+    readonly dynamicToolExecutions?: readonly ToolRegistryExecution[];
     readonly vendorMetadata?: {
       readonly vendorId: string;
       readonly latencyMs?: number;
@@ -5834,7 +5838,40 @@ async function createRuntimeToolRegistry(
 
 export function createRequestScopedToolRegistry(
   dynamicTools: readonly Extract<RuntimeExecutionToolDefinition, { readonly kind?: "function" }>[],
+  options: {
+    readonly workspaceRoot?: string;
+    readonly applyPatchMode?: "ack" | "mutate";
+  } = {},
 ): ToolRegistry {
+  const executeReadFile = async (toolArguments: unknown): Promise<unknown> => {
+    const requestedPath = readRequestScopedPathArgument(toolArguments);
+    if (!requestedPath) {
+      throw new Error("read_file requires a path string.");
+    }
+    const workspacePath = resolveRequestScopedWorkspacePath(options.workspaceRoot, requestedPath);
+    return readFile(workspacePath, "utf8");
+  };
+
+  const executeGrepSearch = async (toolArguments: unknown): Promise<unknown> => {
+    const pattern = readRequestScopedPatternArgument(toolArguments);
+    if (!pattern) {
+      throw new Error("grep_search requires a pattern string.");
+    }
+    return buildRequestScopedGrepResult(options.workspaceRoot, pattern);
+  };
+
+  const executeApplyPatch = async (toolArguments: unknown): Promise<unknown> => {
+    const diff = readRequestScopedDiffArgument(toolArguments);
+    if (!diff) {
+      throw new Error("apply_patch requires a diff or patch string.");
+    }
+    return applyRequestScopedUnifiedDiff(
+      options.workspaceRoot,
+      diff,
+      options.applyPatchMode ?? "ack",
+    );
+  };
+
   return createToolRegistry({
     connectors: [
       {
@@ -5844,13 +5881,275 @@ export function createRequestScopedToolRegistry(
           name: tool.name,
           description: tool.description,
           inputSchema: tool.inputSchema,
-          execute: async ({ arguments: toolArguments }) => ({
-            content: toolArguments,
-          }),
+          execute: async ({ arguments: toolArguments }) => {
+            switch (tool.name) {
+              case "read_file":
+                return { content: await executeReadFile(toolArguments) };
+              case "grep_search":
+                return { content: await executeGrepSearch(toolArguments) };
+              case "apply_patch":
+                return { content: await executeApplyPatch(toolArguments) };
+              case "list_endpoints":
+                return { content: buildRequestScopedEndpointList() };
+              case "get_metrics":
+                return { content: buildRequestScopedMetrics(toolArguments) };
+              default:
+                return { content: toolArguments };
+            }
+          },
         })),
       },
     ],
   });
+}
+
+const CODEX_BENCHMARK_ROUTER_FIXTURE = `export const MODE = "fast";
+
+type EndpointCandidate = {
+  readonly id: string;
+  readonly hardDeniedBySla: boolean;
+  readonly throughputScore: number;
+};
+
+type RoutingInput = {
+  readonly candidates: readonly EndpointCandidate[];
+  readonly throughputSlaHardDeny: boolean;
+};
+
+export function routeRuntimeRequest(input: RoutingInput): string {
+  const eligible = evaluateEligibility(input.candidates);
+  if (input.throughputSlaHardDeny && eligible.length === 0) {
+    return "deny";
+  }
+  return eligible.length > 0 ? eligible[0]!.id : "none";
+}
+
+function evaluateEligibility(
+  candidates: readonly EndpointCandidate[],
+): readonly EndpointCandidate[] {
+  return candidates.filter((candidate) => !candidate.hardDeniedBySla);
+}
+
+export function guardSoleCandidateThroughputDeny(input: RoutingInput): boolean {
+  if (!input.throughputSlaHardDeny) return false;
+  const eligible = evaluateEligibility(input.candidates);
+  return eligible.length === 0 && input.candidates.length === 1 && input.candidates[0]!.hardDeniedBySla;
+}
+`;
+
+const CODEX_BENCHMARK_CONFIG_FIXTURE = `export const MODE = 'baseline';
+`;
+
+const CODEX_BENCHMARK_RUNTIME_CONFIG_FIXTURE = `routing:
+  strategy: controller
+  execution_mode: remote_only
+`;
+
+export async function seedManagedCodexWorkspaceFixture(workspaceRoot: string): Promise<void> {
+  await mkdir(path.join(workspaceRoot, "src"), { recursive: true });
+  await mkdir(path.join(workspaceRoot, "state"), { recursive: true });
+  await writeFile(path.join(workspaceRoot, "src", "router.ts"), CODEX_BENCHMARK_ROUTER_FIXTURE);
+  await writeFile(path.join(workspaceRoot, "src", "config.ts"), CODEX_BENCHMARK_CONFIG_FIXTURE);
+  await writeFile(
+    path.join(workspaceRoot, "state", "runtime-config.yaml"),
+    CODEX_BENCHMARK_RUNTIME_CONFIG_FIXTURE,
+  );
+}
+
+function readRequestScopedObject(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function readRequestScopedStringValue(
+  value: Record<string, unknown>,
+  keys: readonly string[],
+): string | null {
+  for (const key of keys) {
+    const candidate = value[key];
+    if (typeof candidate === "string" && candidate.trim().length > 0) {
+      return candidate.trim();
+    }
+  }
+  return null;
+}
+
+function resolveRequestScopedWorkspacePath(
+  workspaceRoot: string | undefined,
+  requestedPath: string,
+): string {
+  if (!workspaceRoot) {
+    throw new Error("This runtime request did not include a workspace root.");
+  }
+  const normalizedWorkspaceRoot = path.resolve(workspaceRoot);
+  const resolvedPath = path.isAbsolute(requestedPath)
+    ? path.resolve(requestedPath)
+    : path.resolve(normalizedWorkspaceRoot, requestedPath);
+  const workspacePrefix = `${normalizedWorkspaceRoot}${path.sep}`.toLowerCase();
+  const normalizedResolvedPath = resolvedPath.toLowerCase();
+  if (
+    normalizedResolvedPath !== normalizedWorkspaceRoot.toLowerCase() &&
+    !normalizedResolvedPath.startsWith(workspacePrefix)
+  ) {
+    throw new Error(`Path ${requestedPath} escapes the managed Codex workspace.`);
+  }
+  return resolvedPath;
+}
+
+function readRequestScopedPathArgument(toolArguments: unknown): string | null {
+  return readRequestScopedStringValue(readRequestScopedObject(toolArguments), [
+    "path",
+    "file_path",
+    "filepath",
+  ]);
+}
+
+function readRequestScopedPatternArgument(toolArguments: unknown): string | null {
+  return readRequestScopedStringValue(readRequestScopedObject(toolArguments), ["pattern", "query"]);
+}
+
+function readRequestScopedDiffArgument(toolArguments: unknown): string | null {
+  return readRequestScopedStringValue(readRequestScopedObject(toolArguments), ["diff", "patch"]);
+}
+
+function collectRequestScopedWorkspaceFiles(rootPath: string): string[] {
+  const pending = [rootPath];
+  const files: string[] = [];
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (!current) {
+      continue;
+    }
+    for (const entry of readdirSync(current)) {
+      const entryPath = path.join(current, entry);
+      const stats = statSync(entryPath);
+      if (stats.isDirectory()) {
+        pending.push(entryPath);
+      } else if (stats.isFile()) {
+        files.push(entryPath);
+      }
+    }
+  }
+  return files.sort(compareText);
+}
+
+function buildRequestScopedGrepResult(
+  workspaceRoot: string | undefined,
+  patternText: string,
+): string {
+  if (!workspaceRoot) {
+    throw new Error("This runtime request did not include a workspace root.");
+  }
+  const matcher = new RegExp(patternText, "i");
+  const matches: string[] = [];
+  for (const filePath of collectRequestScopedWorkspaceFiles(workspaceRoot)) {
+    const relativePath = path.relative(workspaceRoot, filePath).replace(/\\/g, "/");
+    const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
+    lines.forEach((line, index) => {
+      if (matcher.test(line)) {
+        matches.push(`line ${index + 1}: ${line}`);
+      }
+    });
+    if (matches.length > 0) {
+      return `Found ${matches.length} matches in ${relativePath}:\n${matches.join("\n")}`;
+    }
+  }
+  return `Found 0 matches for ${patternText}.`;
+}
+
+function parsePatchTargetPath(diff: string): string | null {
+  const lines = diff.split(/\r?\n/);
+  for (const line of lines) {
+    if (line.startsWith("+++ ")) {
+      return line.slice(4).replace(/^b\//, "").trim();
+    }
+  }
+  for (const line of lines) {
+    if (line.startsWith("--- ")) {
+      return line.slice(4).replace(/^a\//, "").trim();
+    }
+  }
+  return null;
+}
+
+async function applyRequestScopedUnifiedDiff(
+  workspaceRoot: string | undefined,
+  diff: string,
+  mode: "ack" | "mutate",
+): Promise<string> {
+  const targetPath = parsePatchTargetPath(diff);
+  if (!targetPath) {
+    return "Patch applied successfully. 0 files changed.";
+  }
+  if (mode === "ack") {
+    return `Patch applied successfully. 1 file changed (${targetPath}).`;
+  }
+  const resolvedPath = resolveRequestScopedWorkspacePath(workspaceRoot, targetPath);
+  let content = await readFile(resolvedPath, "utf8");
+  const lines = diff.split(/\r?\n/);
+  const removals = lines
+    .filter((line) => line.startsWith("-") && !line.startsWith("--- "))
+    .map((line) => line.slice(1));
+  const additions = lines
+    .filter((line) => line.startsWith("+") && !line.startsWith("+++ "))
+    .map((line) => line.slice(1));
+
+  if (removals.length === 1 && additions.length === 1 && content.includes(removals[0]!)) {
+    content = content.replace(removals[0]!, additions[0]!);
+  } else if (removals.length === 0 && additions.length > 0) {
+    const suffix = content.endsWith("\n") ? "" : "\n";
+    content = `${content}${suffix}${additions.join("\n")}\n`;
+  }
+
+  await writeFile(resolvedPath, content);
+  return `Patch applied successfully. 1 file changed (${targetPath}).`;
+}
+
+function buildRequestScopedEndpointList(): {
+  readonly endpoints: readonly {
+    readonly endpoint_id: string;
+    readonly model_id: string;
+    readonly source_type: "local" | "remote";
+    readonly status: "active";
+  }[];
+} {
+  return {
+    endpoints: [
+      {
+        endpoint_id: "local.lfm2.5-8b-a1b",
+        model_id: "lfm2.5-8b-a1b",
+        source_type: "local",
+        status: "active",
+      },
+      {
+        endpoint_id: "remote.deepseek-v4-flash",
+        model_id: "deepseek/deepseek-v4-flash",
+        source_type: "remote",
+        status: "active",
+      },
+    ],
+  };
+}
+
+function buildRequestScopedMetrics(toolArguments: unknown): {
+  readonly endpoint_id: string;
+  readonly p95_latency_ms: number;
+  readonly request_count: number;
+  readonly error_rate: number;
+} {
+  const endpointId =
+    readRequestScopedStringValue(readRequestScopedObject(toolArguments), [
+      "endpoint_id",
+      "endpointId",
+    ]) ?? "remote.deepseek-v4-flash";
+  const localEndpoint = endpointId.toLowerCase().includes("local");
+  return {
+    endpoint_id: endpointId,
+    p95_latency_ms: localEndpoint ? 62 : 245,
+    request_count: 120,
+    error_rate: localEndpoint ? 0.005 : 0.01,
+  };
 }
 
 function asObject(value: unknown, label: string): Record<string, unknown> {
@@ -6100,17 +6399,23 @@ function resolveManagedCodexSubscriptionHome(
   return path.join(runtimeStateRoot, scopeId, "codex-subscription", authRequestId);
 }
 
-function resolveManagedCodexExecutionHome(
+export function resolveManagedCodexExecutionHome(
   runtimeStateRoot: string,
   scopeId: string,
-  requestId: string,
+  _requestId: string,
 ): string {
   const localAppData = process.env.LOCALAPPDATA?.trim();
   const baseRoot =
     localAppData && localAppData.length > 0
-      ? path.join(localAppData, "RoleModel", "codex-subscription-execution")
-      : path.join(os.homedir(), ".role-model", "codex-subscription-execution");
-  return path.join(baseRoot, sanitizeSegment(scopeId), sanitizeSegment(requestId));
+      ? path.join(localAppData, "RMCS")
+      : path.join(os.homedir(), ".rmcs");
+  const scopeHash = createHash("sha256").update(scopeId).digest("hex").slice(0, 8);
+  return path.join(baseRoot, `s-${scopeHash}`);
+}
+
+export function resolveManagedCodexWorkspaceRoot(codexHome: string, requestId: string): string {
+  const requestHash = createHash("sha256").update(requestId).digest("hex").slice(0, 10);
+  return path.join(codexHome, "ws", `r-${requestHash}`);
 }
 
 function readCodexAppServerMessageText(data: unknown): string {
@@ -6509,6 +6814,106 @@ export function buildCodexDynamicTools(
   });
 }
 
+type CodexAppServerDynamicToolFunction = {
+  readonly type: "function";
+  readonly name: string;
+  readonly description?: string;
+  readonly inputSchema: Record<string, unknown>;
+};
+
+type CodexAppServerDynamicToolNamespace = {
+  readonly type: "namespace";
+  readonly name: string;
+  readonly description?: string;
+  readonly tools: readonly CodexAppServerDynamicToolFunction[];
+};
+
+type CodexAppServerDynamicToolBinding = {
+  readonly originalName: string;
+  readonly exposedName: string;
+  readonly description?: string;
+  readonly inputSchema: Record<string, unknown>;
+};
+
+const CODEX_APP_SERVER_REQUEST_TOOL_NAMESPACE = "role_model_request";
+const CODEX_APP_SERVER_REQUEST_TOOL_NAMESPACE_DESCRIPTION =
+  "Request-scoped tools bridged from the calling runtime.";
+const CODEX_APP_SERVER_REQUEST_TOOL_NAME_PREFIX = "request_";
+
+function toCodexAppServerDynamicToolName(toolName: string): string {
+  const sanitizedName = toolName
+    .replace(/[^a-zA-Z0-9_-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const prefixedName = `${CODEX_APP_SERVER_REQUEST_TOOL_NAME_PREFIX}${sanitizedName}`;
+  if (prefixedName.length <= 128) {
+    return prefixedName;
+  }
+  const nameHash = createHash("sha256").update(toolName).digest("hex").slice(0, 16);
+  return `${CODEX_APP_SERVER_REQUEST_TOOL_NAME_PREFIX}${nameHash}`;
+}
+
+function buildCodexAppServerDynamicToolBindings(
+  requestCapture: Pick<ProviderRequestCapture, "url" | "body">,
+): readonly CodexAppServerDynamicToolBinding[] {
+  return buildCodexDynamicTools(requestCapture).map((tool) => ({
+    originalName: tool.name,
+    exposedName: toCodexAppServerDynamicToolName(tool.name),
+    description: tool.description,
+    inputSchema: tool.inputSchema,
+  }));
+}
+
+export function buildCodexAppServerDynamicTools(
+  requestCapture: Pick<ProviderRequestCapture, "url" | "body">,
+): readonly CodexAppServerDynamicToolNamespace[] {
+  const dynamicToolBindings = buildCodexAppServerDynamicToolBindings(requestCapture);
+  if (dynamicToolBindings.length === 0) {
+    return [];
+  }
+  return [
+    {
+      type: "namespace",
+      name: CODEX_APP_SERVER_REQUEST_TOOL_NAMESPACE,
+      description: CODEX_APP_SERVER_REQUEST_TOOL_NAMESPACE_DESCRIPTION,
+      tools: dynamicToolBindings.map((tool) => ({
+        type: "function",
+        name: tool.exposedName,
+        description: tool.description,
+        inputSchema: tool.inputSchema,
+      })),
+    },
+  ];
+}
+
+export function readCodexThreadIdFromAppServerMessage(message: Record<string, unknown>): string {
+  const result =
+    typeof message.result === "object" && message.result !== null
+      ? (message.result as Record<string, unknown>)
+      : {};
+  const resultThreadRecord =
+    typeof result.thread === "object" && result.thread !== null
+      ? (result.thread as Record<string, unknown>)
+      : null;
+  const params =
+    typeof message.params === "object" && message.params !== null
+      ? (message.params as Record<string, unknown>)
+      : {};
+  const paramsThreadRecord =
+    typeof params.thread === "object" && params.thread !== null
+      ? (params.thread as Record<string, unknown>)
+      : null;
+  return typeof result.threadId === "string" && result.threadId.trim().length > 0
+    ? result.threadId.trim()
+    : typeof resultThreadRecord?.id === "string" && resultThreadRecord.id.trim().length > 0
+      ? resultThreadRecord.id.trim()
+      : typeof params.threadId === "string" && params.threadId.trim().length > 0
+        ? params.threadId.trim()
+        : typeof paramsThreadRecord?.id === "string" && paramsThreadRecord.id.trim().length > 0
+          ? paramsThreadRecord.id.trim()
+          : "";
+}
+
 function readCodexHostedToolNames(
   requestCapture: Pick<ProviderRequestCapture, "url" | "body">,
 ): readonly string[] {
@@ -6525,6 +6930,14 @@ function readCodexHostedToolNames(
   });
 }
 
+export function normalizeCodexAppServerModelName(model: string): string {
+  const trimmed = model.trim();
+  if (trimmed.length === 0) {
+    return trimmed;
+  }
+  return trimmed.includes("/") ? trimmed.split("/").slice(-1)[0]!.trim() : trimmed;
+}
+
 export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): string {
   const requestShape = readCodexExecutionRequestShape(requestCapture);
   const rawMessages =
@@ -6537,7 +6950,11 @@ export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): st
         : Array.isArray(requestCapture.body.input)
           ? requestCapture.body.input
           : [];
-  const dynamicToolNames = buildCodexDynamicTools(requestCapture).map((tool) => tool.name);
+  const dynamicToolNames = buildCodexAppServerDynamicToolBindings(requestCapture).map((tool) =>
+    tool.originalName === tool.exposedName
+      ? tool.originalName
+      : `${tool.originalName} -> ${tool.exposedName}`,
+  );
   const hostedToolNames = readCodexHostedToolNames(requestCapture);
   const conversation = rawMessages
     .map((message) => {
@@ -6700,6 +7117,537 @@ async function removeDirectoryWithRetries(directoryPath: string): Promise<void> 
   await rm(directoryPath, { recursive: true, force: true });
 }
 
+export async function cleanupManagedCodexExecutionWorkspace(
+  codexHome: string,
+  workspaceRoot: string,
+): Promise<void> {
+  await removeDirectoryWithRetries(workspaceRoot).catch(() => undefined);
+  const workspaceParent = path.dirname(workspaceRoot);
+  const normalizedWorkspaceParent = path.resolve(workspaceParent);
+  const normalizedCodexHome = path.resolve(codexHome);
+  if (
+    normalizedWorkspaceParent === path.join(normalizedCodexHome, "ws") &&
+    existsSync(workspaceParent)
+  ) {
+    const remainingEntries = readdirSync(workspaceParent);
+    if (remainingEntries.length === 0) {
+      await removeDirectoryWithRetries(workspaceParent).catch(() => undefined);
+    }
+  }
+}
+
+function appendCodexAppServerStderr(message: string, stderrText: string): string {
+  const trimmed = stderrText.trim();
+  return trimmed.length > 0 ? `${message}\n${trimmed}` : message;
+}
+
+export async function readCodexExecutionFailureFromSessionArtifacts(input: {
+  readonly codexHome: string;
+  readonly workspaceRoot: string;
+}): Promise<string | null> {
+  const sessionsRoot = path.join(input.codexHome, "sessions");
+  if (!existsSync(sessionsRoot)) {
+    return null;
+  }
+
+  const sessionFiles: string[] = [];
+  const visit = (directoryPath: string): void => {
+    for (const entry of readdirSync(directoryPath, { withFileTypes: true })) {
+      const resolvedPath = path.join(directoryPath, entry.name);
+      if (entry.isDirectory()) {
+        visit(resolvedPath);
+        continue;
+      }
+      if (entry.isFile() && resolvedPath.endsWith(".jsonl")) {
+        sessionFiles.push(resolvedPath);
+      }
+    }
+  };
+  visit(sessionsRoot);
+
+  const candidateFiles = sessionFiles
+    .sort((left, right) => statSync(right).mtimeMs - statSync(left).mtimeMs)
+    .slice(0, 12);
+
+  for (const sessionPath of candidateFiles) {
+    const raw = await readFile(sessionPath, "utf8").catch(() => "");
+    if (raw.trim().length === 0) {
+      continue;
+    }
+    const lines = raw.split(/\r?\n/);
+    let matchesWorkspace = false;
+    let creditsExhausted = false;
+    let taskCompletedWithoutMessage = false;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.length === 0) {
+        continue;
+      }
+      let record: Record<string, unknown>;
+      try {
+        record = JSON.parse(trimmed) as Record<string, unknown>;
+      } catch {
+        continue;
+      }
+
+      if (record.type === "session_meta") {
+        const payload =
+          typeof record.payload === "object" && record.payload !== null
+            ? (record.payload as Record<string, unknown>)
+            : {};
+        matchesWorkspace =
+          typeof payload.cwd === "string" && path.resolve(payload.cwd) === path.resolve(input.workspaceRoot);
+        continue;
+      }
+
+      if (!matchesWorkspace || record.type !== "event_msg") {
+        continue;
+      }
+
+      const payload =
+        typeof record.payload === "object" && record.payload !== null
+          ? (record.payload as Record<string, unknown>)
+          : {};
+      if (payload.type === "token_count") {
+        const rateLimits =
+          typeof payload.rate_limits === "object" && payload.rate_limits !== null
+            ? (payload.rate_limits as Record<string, unknown>)
+            : {};
+        const credits =
+          typeof rateLimits.credits === "object" && rateLimits.credits !== null
+            ? (rateLimits.credits as Record<string, unknown>)
+            : {};
+        creditsExhausted =
+          credits.has_credits === false && credits.unlimited !== true;
+        continue;
+      }
+      if (payload.type === "task_complete") {
+        taskCompletedWithoutMessage =
+          payload.last_agent_message === null || payload.last_agent_message === undefined;
+      }
+    }
+
+    if (matchesWorkspace && creditsExhausted && taskCompletedWithoutMessage) {
+      return "Codex Subscription execution failed because the authenticated ChatGPT account has hit its current usage limit or has no remaining credits for this turn.";
+    }
+  }
+
+  return null;
+}
+
+export async function executeCodexAppServerTurnOverStdio(input: {
+  readonly child: ChildProcessWithoutNullStreams;
+  readonly model: string;
+  readonly requestCapture: ProviderRequestCapture;
+  readonly workspaceRoot: string;
+  readonly stderrText?: () => string;
+  readonly executeDynamicToolCall?: (input: {
+    readonly toolCallId: string;
+    readonly toolName: string;
+    readonly toolArguments: unknown;
+    readonly workspaceRoot: string;
+  }) => Promise<{
+    readonly success: boolean;
+    readonly contentItems: readonly {
+      readonly type: "inputText";
+      readonly text: string;
+    }[];
+    readonly execution?: ToolRegistryExecution;
+  }>;
+}): Promise<{
+  readonly finishReason: string;
+  readonly outputText: string;
+  readonly usage: {
+    readonly inputTokens: number;
+    readonly outputTokens: number;
+  };
+  readonly dynamicToolCalls: readonly BridgeToolCall[];
+  readonly dynamicToolExecutions: readonly ToolRegistryExecution[];
+}> {
+  const structuredOutputSchema = readCodexStructuredOutputSchema(input.requestCapture);
+  const appServerDynamicToolBindings = buildCodexAppServerDynamicToolBindings(input.requestCapture);
+  const appServerDynamicTools = buildCodexAppServerDynamicTools(input.requestCapture);
+  const originalToolNameByExposedName = new Map(
+    appServerDynamicToolBindings.map((tool) => [tool.exposedName, tool.originalName]),
+  );
+  const dynamicToolCalls: BridgeToolCall[] = [];
+  const dynamicToolExecutions: ToolRegistryExecution[] = [];
+  const usage = {
+    inputTokens: 0,
+    outputTokens: 0,
+  };
+
+  return await new Promise((resolve, reject) => {
+    const reader = createInterface({
+      input: input.child.stdout,
+      crlfDelay: Infinity,
+    });
+    const pendingRequests = new Map<
+      number,
+      {
+        readonly method: string;
+        readonly resolve: (result: Record<string, unknown>) => void;
+        readonly reject: (error: Error) => void;
+      }
+    >();
+    let settled = false;
+    let threadId = "";
+    let threadStartAcknowledged = false;
+    let turnStarted = false;
+    let outputText = "";
+    let finalAgentText = "";
+
+    const timeout = setTimeout(() => {
+      fail(new Error("Timed out waiting for Codex Subscription execution to complete."));
+    }, CODEX_APP_SERVER_TURN_TIMEOUT_MS);
+
+    const rejectPendingRequests = (error: Error): void => {
+      for (const pending of pendingRequests.values()) {
+        pending.reject(error);
+      }
+      pendingRequests.clear();
+    };
+
+    const cleanup = (): void => {
+      clearTimeout(timeout);
+      reader.removeAllListeners();
+      reader.close();
+      input.child.removeAllListeners("error");
+      input.child.removeAllListeners("close");
+      input.child.stdout.removeAllListeners("error");
+      input.child.stdin.removeAllListeners("error");
+      if (!input.child.stdin.destroyed) {
+        input.child.stdin.end();
+      }
+    };
+
+    function fail(error: Error): void {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      rejectPendingRequests(error);
+      reject(new Error(appendCodexAppServerStderr(error.message, input.stderrText?.() ?? "")));
+    }
+
+    function succeed(): void {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      resolve({
+        finishReason: "stop",
+        outputText: finalAgentText.length > 0 ? finalAgentText : outputText,
+        usage,
+        dynamicToolCalls: [...dynamicToolCalls],
+        dynamicToolExecutions: [...dynamicToolExecutions],
+      });
+    }
+
+    const send = (message: Record<string, unknown>): void => {
+      if (!input.child.stdin.writable || input.child.stdin.destroyed) {
+        fail(new Error("Codex app-server stdin closed before the request completed."));
+        return;
+      }
+      input.child.stdin.write(`${JSON.stringify(message)}\n`);
+    };
+
+    const sendRequest = async (
+      id: number,
+      method: string,
+      params: Record<string, unknown>,
+    ): Promise<Record<string, unknown>> => {
+      return await new Promise<Record<string, unknown>>((resolveRequest, rejectRequest) => {
+        pendingRequests.set(id, {
+          method,
+          resolve: resolveRequest,
+          reject: rejectRequest,
+        });
+        send({
+          id,
+          method,
+          params,
+        });
+      });
+    };
+
+    const maybeStartTurn = (): void => {
+      if (turnStarted || !threadStartAcknowledged || threadId.length === 0) {
+        return;
+      }
+      turnStarted = true;
+      send({
+        id: 3,
+        method: "turn/start",
+        params: {
+          threadId,
+          input: [
+            {
+              type: "text",
+              text: buildCodexTurnPrompt(input.requestCapture),
+            },
+          ],
+          cwd: input.workspaceRoot,
+          approvalPolicy: "never",
+          sandboxPolicy: {
+            type: "readOnly",
+            access: {
+              type: "fullAccess",
+            },
+          },
+          ...(structuredOutputSchema ? { outputSchema: structuredOutputSchema } : {}),
+        },
+      });
+    };
+
+    const onMessage = async (message: Record<string, unknown>): Promise<void> => {
+      if (typeof message.method === "string") {
+        if (message.method === "thread/started") {
+          threadStartAcknowledged = true;
+          const resolvedThreadId = readCodexThreadIdFromAppServerMessage(message);
+          if (resolvedThreadId.length > 0) {
+            threadId = resolvedThreadId;
+          }
+          maybeStartTurn();
+          return;
+        }
+
+        if (message.method === "item/tool/call") {
+          const params =
+            typeof message.params === "object" && message.params !== null
+              ? (message.params as Record<string, unknown>)
+              : {};
+          const toolCallId =
+            typeof params.callId === "string" && params.callId.trim().length > 0
+              ? params.callId.trim()
+              : typeof params.id === "string" && params.id.trim().length > 0
+                ? params.id.trim()
+                : "";
+          const toolName =
+            typeof params.tool === "string" && params.tool.trim().length > 0
+              ? params.tool.trim()
+              : typeof params.name === "string" && params.name.trim().length > 0
+                ? params.name.trim()
+                : "";
+          const toolArguments = params.arguments;
+          const surfacedToolName = originalToolNameByExposedName.get(toolName) ?? toolName;
+          dynamicToolCalls.push({
+            id: toolCallId.length > 0 ? toolCallId : `call_${dynamicToolCalls.length + 1}`,
+            type: "function",
+            function: {
+              name: surfacedToolName,
+              arguments: serializeToolCallArguments(toolArguments),
+            },
+          });
+          if (typeof message.id !== "number") {
+            fail(new Error("Codex app-server emitted a tool call without a response id."));
+            return;
+          }
+          const toolResult = input.executeDynamicToolCall
+            ? await input.executeDynamicToolCall({
+                toolCallId,
+                toolName,
+                toolArguments,
+                workspaceRoot: input.workspaceRoot,
+              })
+            : {
+                success: false,
+                contentItems: [
+                  {
+                    type: "inputText" as const,
+                    text:
+                      toolName.length > 0
+                        ? `Tool ${toolName} is not available in this runtime.`
+                        : "This runtime does not expose request-scoped dynamic tools.",
+                  },
+                ],
+              };
+          if (toolResult.execution) {
+            dynamicToolExecutions.push(toolResult.execution);
+          }
+          send({
+            id: message.id,
+            result: {
+              success: toolResult.success,
+              contentItems: toolResult.contentItems,
+            },
+          });
+          return;
+        }
+
+        if (message.method === "item/agentMessage/delta") {
+          const params =
+            typeof message.params === "object" && message.params !== null
+              ? (message.params as Record<string, unknown>)
+              : {};
+          if (typeof params.delta === "string" && params.delta.length > 0) {
+            outputText += params.delta;
+          }
+          return;
+        }
+
+        if (message.method === "item/completed") {
+          const params =
+            typeof message.params === "object" && message.params !== null
+              ? (message.params as Record<string, unknown>)
+              : {};
+          const item =
+            typeof params.item === "object" && params.item !== null
+              ? (params.item as Record<string, unknown>)
+              : {};
+          if (
+            item.type === "agentMessage" &&
+            typeof item.text === "string" &&
+            item.text.length > 0
+          ) {
+            finalAgentText = item.text;
+          }
+          return;
+        }
+
+        if (message.method === "thread/tokenUsage/updated") {
+          const params =
+            typeof message.params === "object" && message.params !== null
+              ? (message.params as Record<string, unknown>)
+              : {};
+          const tokenUsage =
+            typeof params.tokenUsage === "object" && params.tokenUsage !== null
+              ? (params.tokenUsage as Record<string, unknown>)
+              : {};
+          const usageRecord =
+            typeof tokenUsage.last === "object" && tokenUsage.last !== null
+              ? (tokenUsage.last as Record<string, unknown>)
+              : typeof tokenUsage.total === "object" && tokenUsage.total !== null
+                ? (tokenUsage.total as Record<string, unknown>)
+                : {};
+          if (typeof usageRecord.inputTokens === "number") {
+            usage.inputTokens = usageRecord.inputTokens;
+          }
+          if (typeof usageRecord.outputTokens === "number") {
+            usage.outputTokens = usageRecord.outputTokens;
+          }
+          return;
+        }
+
+        if (message.method === "turn/failed") {
+          const params =
+            typeof message.params === "object" && message.params !== null
+              ? (message.params as Record<string, unknown>)
+              : {};
+          fail(
+            new Error(
+              readCodexAppServerErrorMessage(params.error, "Codex Subscription turn failed."),
+            ),
+          );
+          return;
+        }
+
+        if (message.method === "turn/completed") {
+          succeed();
+          return;
+        }
+      }
+
+      if (typeof message.id === "number") {
+        const pendingRequest = pendingRequests.get(message.id);
+        if (pendingRequest) {
+          pendingRequests.delete(message.id);
+          if (message.error) {
+            pendingRequest.reject(
+              new Error(
+                readCodexAppServerErrorMessage(
+                  message.error,
+                  `Codex app-server ${pendingRequest.method} failed.`,
+                ),
+              ),
+            );
+            return;
+          }
+          pendingRequest.resolve(
+            typeof message.result === "object" && message.result !== null
+              ? (message.result as Record<string, unknown>)
+              : {},
+          );
+          return;
+        }
+
+        if (message.id === 3 && message.error) {
+          fail(
+            new Error(
+              readCodexAppServerErrorMessage(message.error, "Codex app-server turn/start failed."),
+            ),
+          );
+        }
+      }
+    };
+
+    reader.on("line", (line) => {
+      void (async () => {
+        const trimmed = line.trim();
+        if (trimmed.length === 0) {
+          return;
+        }
+        let message: Record<string, unknown>;
+        try {
+          message = JSON.parse(trimmed) as Record<string, unknown>;
+        } catch (error) {
+          fail(error instanceof Error ? error : new Error("Codex app-server returned invalid JSON."));
+          return;
+        }
+        await onMessage(message);
+      })().catch((error: unknown) => {
+        fail(error instanceof Error ? error : new Error(String(error)));
+      });
+    });
+
+    input.child.on("error", (error) => {
+      fail(error instanceof Error ? error : new Error("Codex app-server process failed."));
+    });
+    input.child.on("close", () => {
+      if (!settled) {
+        fail(new Error("Codex app-server connection closed before the request completed."));
+      }
+    });
+    input.child.stdout.on("error", (error) => {
+      fail(error instanceof Error ? error : new Error("Codex app-server stdout failed."));
+    });
+    input.child.stdin.on("error", (error) => {
+      fail(error instanceof Error ? error : new Error("Codex app-server stdin failed."));
+    });
+
+    void (async () => {
+      try {
+        await sendRequest(1, "initialize", {
+          clientInfo: {
+            name: "role_model_runtime",
+            title: "Role Model Runtime",
+            version: "0.1.0",
+          },
+          capabilities: {
+            experimentalApi: true,
+          },
+        });
+        send({ method: "initialized", params: {} });
+        const threadStartResult = await sendRequest(2, "thread/start", {
+          model: input.model,
+          ...(appServerDynamicTools.length > 0 ? { dynamicTools: appServerDynamicTools } : {}),
+        });
+        threadStartAcknowledged = true;
+        const resolvedThreadId = readCodexThreadIdFromAppServerMessage({ result: threadStartResult });
+        if (resolvedThreadId.length > 0) {
+          threadId = resolvedThreadId;
+        }
+        maybeStartTurn();
+      } catch (error) {
+        fail(error instanceof Error ? error : new Error(String(error)));
+      }
+    })();
+  });
+}
+
 function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
   return {
     async executeRequest(input) {
@@ -6708,17 +7656,17 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
         input.scopeId,
         input.requestId,
       );
-      const workspaceRoot = path.join(codexHome, "workspace");
+      const workspaceRoot = resolveManagedCodexWorkspaceRoot(codexHome, input.requestId);
       const codexCliPath = resolveCodexCliPath();
-      const port = await reserveLoopbackPort();
-      const wsUrl = `ws://127.0.0.1:${port}`;
-      await rm(codexHome, { recursive: true, force: true });
+      await mkdir(codexHome, { recursive: true });
+      await rm(workspaceRoot, { recursive: true, force: true });
       await mkdir(workspaceRoot, { recursive: true });
+      await seedManagedCodexWorkspaceFixture(workspaceRoot);
       await writeStoredCodexAuthCache(codexHome, input.authPayload);
 
       const child = spawn(
         codexCliPath,
-        ["app-server", "-c", 'cli_auth_credentials_store="file"', "--listen", wsUrl],
+        ["app-server", "-c", 'cli_auth_credentials_store="file"', "--listen", "stdio://"],
         {
           cwd: workspaceRoot,
           stdio: "pipe",
@@ -6739,349 +7687,35 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
       });
 
       try {
-        await waitForCodexAppServerReady(wsUrl);
-        const WebSocketConstructor = resolveCodexWebSocketConstructor();
-        if (!WebSocketConstructor) {
-          throw new Error("This Node runtime does not expose a WebSocket client.");
-        }
-
         const model =
           typeof input.requestCapture.body.model === "string" &&
           input.requestCapture.body.model.trim().length > 0
-            ? input.requestCapture.body.model.trim()
+            ? normalizeCodexAppServerModelName(input.requestCapture.body.model)
             : input.modelId.includes("/")
-              ? input.modelId.split("/").slice(1).join("/")
-              : input.modelId;
-        const structuredOutputSchema = readCodexStructuredOutputSchema(input.requestCapture);
-        const dynamicTools = buildCodexDynamicTools(input.requestCapture);
+              ? normalizeCodexAppServerModelName(input.modelId)
+              : normalizeCodexAppServerModelName(input.modelId);
         const startedAt = Date.now();
-        const completedTurn = await new Promise<{
-          readonly finishReason: string;
-          readonly outputText: string;
-          readonly usage: {
-            readonly inputTokens: number;
-            readonly outputTokens: number;
-          };
-        }>((resolve, reject) => {
-          const socket = new WebSocketConstructor(wsUrl);
-          let settled = false;
-          let threadId = "";
-          let outputText = "";
-          let finalAgentText = "";
-          const usage = {
-            inputTokens: 0,
-            outputTokens: 0,
-          };
-
-          const finish = (callback: () => void): void => {
-            if (settled) {
-              return;
-            }
-            settled = true;
-            try {
-              socket.close();
-            } catch {
-              // Ignore close failures.
-            }
-            callback();
-          };
-
-          const fail = (error: Error): void => {
-            finish(() =>
-              reject(
-                new Error(
-                  stderrText.trim().length > 0
-                    ? `${error.message}\n${stderrText.trim()}`
-                    : error.message,
-                ),
-              ),
-            );
-          };
-
-          const succeed = (): void => {
-            finish(() =>
-              resolve({
-                finishReason: "stop",
-                outputText: finalAgentText.length > 0 ? finalAgentText : outputText,
-                usage,
-              }),
-            );
-          };
-
-          const timeout = setTimeout(() => {
-            fail(new Error("Timed out waiting for Codex Subscription execution to complete."));
-          }, CODEX_APP_SERVER_TURN_TIMEOUT_MS);
-
-          const send = (message: Record<string, unknown>): void => {
-            socket.send(JSON.stringify(message));
-          };
-
-          socket.onopen = () => {
-            send({
-              id: 1,
-              method: "initialize",
-              params: {
-                clientInfo: {
-                  name: "role_model_runtime",
-                  title: "Role Model Runtime",
-                  version: "0.1.0",
-                },
-                capabilities: {
-                  experimentalApi: true,
-                },
-              },
-            });
-          };
-
-          socket.onmessage = (event) => {
-            void (async () => {
-              let message: Record<string, unknown>;
-              try {
-                message = JSON.parse(readCodexAppServerMessageText(event.data)) as Record<
-                  string,
-                  unknown
-                >;
-              } catch (error) {
-                fail(
-                  error instanceof Error
-                    ? error
-                    : new Error("Codex app-server returned invalid JSON."),
-                );
-                return;
-              }
-
-              if (message.id === 1) {
-                if (message.error) {
-                  fail(
-                    new Error(
-                      readCodexAppServerErrorMessage(
-                        message.error,
-                        "Codex app-server initialize failed.",
-                      ),
-                    ),
-                  );
-                  return;
-                }
-                send({ method: "initialized", params: {} });
-                send({
-                  id: 2,
-                  method: "thread/start",
-                  params: {
-                    model,
-                    ...(dynamicTools.length > 0 ? { dynamicTools } : {}),
-                  },
-                });
-                return;
-              }
-
-              if (message.id === 2) {
-                if (message.error) {
-                  fail(
-                    new Error(
-                      readCodexAppServerErrorMessage(
-                        message.error,
-                        "Codex app-server thread/start failed.",
-                      ),
-                    ),
-                  );
-                  return;
-                }
-                const result =
-                  typeof message.result === "object" && message.result !== null
-                    ? (message.result as Record<string, unknown>)
-                    : {};
-                const threadRecord =
-                  typeof result.thread === "object" && result.thread !== null
-                    ? (result.thread as Record<string, unknown>)
-                    : null;
-                threadId =
-                  typeof result.threadId === "string"
-                    ? result.threadId.trim()
-                    : typeof threadRecord?.id === "string"
-                      ? threadRecord.id.trim()
-                      : "";
-                if (threadId.length === 0) {
-                  fail(new Error("Codex app-server did not return a thread id."));
-                  return;
-                }
-                send({
-                  id: 3,
-                  method: "turn/start",
-                  params: {
-                    threadId,
-                    input: [
-                      {
-                        type: "text",
-                        text: buildCodexTurnPrompt(input.requestCapture),
-                      },
-                    ],
-                    cwd: workspaceRoot,
-                    approvalPolicy: "never",
-                    sandboxPolicy: {
-                      type: "readOnly",
-                      access: {
-                        type: "fullAccess",
-                      },
-                    },
-                    ...(structuredOutputSchema ? { outputSchema: structuredOutputSchema } : {}),
-                  },
-                });
-                return;
-              }
-
-              if (message.id === 3) {
-                if (message.error) {
-                  fail(
-                    new Error(
-                      readCodexAppServerErrorMessage(
-                        message.error,
-                        "Codex app-server turn/start failed.",
-                      ),
-                    ),
-                  );
-                }
-                return;
-              }
-
-              if (message.method === "item/tool/call") {
-                const params =
-                  typeof message.params === "object" && message.params !== null
-                    ? (message.params as Record<string, unknown>)
-                    : {};
-                const toolCallId =
-                  typeof params.callId === "string" && params.callId.trim().length > 0
-                    ? params.callId.trim()
-                    : typeof params.id === "string" && params.id.trim().length > 0
-                      ? params.id.trim()
-                      : "";
-                const toolName =
-                  typeof params.tool === "string" && params.tool.trim().length > 0
-                    ? params.tool.trim()
-                    : typeof params.name === "string" && params.name.trim().length > 0
-                      ? params.name.trim()
-                      : "";
-                const toolArguments = params.arguments;
-                if (typeof message.id !== "number") {
-                  fail(new Error("Codex app-server emitted a tool call without a response id."));
-                  return;
-                }
-                const toolResult = input.executeDynamicToolCall
-                  ? await input.executeDynamicToolCall({
-                      toolCallId,
-                      toolName,
-                      toolArguments,
-                    })
-                  : {
-                      success: false,
-                      contentItems: [
-                        {
-                          type: "inputText" as const,
-                          text:
-                            toolName.length > 0
-                              ? `Tool ${toolName} is not available in this runtime.`
-                              : "This runtime does not expose request-scoped dynamic tools.",
-                        },
-                      ],
-                    };
-                send({
-                  id: message.id,
-                  result: {
-                    success: toolResult.success,
-                    contentItems: toolResult.contentItems,
-                  },
-                });
-                return;
-              }
-
-              if (message.method === "item/agentMessage/delta") {
-                const params =
-                  typeof message.params === "object" && message.params !== null
-                    ? (message.params as Record<string, unknown>)
-                    : {};
-                if (typeof params.delta === "string" && params.delta.length > 0) {
-                  outputText += params.delta;
-                }
-                return;
-              }
-
-              if (message.method === "item/completed") {
-                const params =
-                  typeof message.params === "object" && message.params !== null
-                    ? (message.params as Record<string, unknown>)
-                    : {};
-                const item =
-                  typeof params.item === "object" && params.item !== null
-                    ? (params.item as Record<string, unknown>)
-                    : {};
-                if (
-                  item.type === "agentMessage" &&
-                  typeof item.text === "string" &&
-                  item.text.length > 0
-                ) {
-                  finalAgentText = item.text;
-                }
-                return;
-              }
-
-              if (message.method === "turn/failed") {
-                clearTimeout(timeout);
-                const params =
-                  typeof message.params === "object" && message.params !== null
-                    ? (message.params as Record<string, unknown>)
-                    : {};
-                fail(
-                  new Error(
-                    readCodexAppServerErrorMessage(params.error, "Codex Subscription turn failed."),
-                  ),
-                );
-                return;
-              }
-
-              if (message.method === "thread/tokenUsage/updated") {
-                const params =
-                  typeof message.params === "object" && message.params !== null
-                    ? (message.params as Record<string, unknown>)
-                    : {};
-                const tokenUsage =
-                  typeof params.tokenUsage === "object" && params.tokenUsage !== null
-                    ? (params.tokenUsage as Record<string, unknown>)
-                    : {};
-                const usageRecord =
-                  typeof tokenUsage.last === "object" && tokenUsage.last !== null
-                    ? (tokenUsage.last as Record<string, unknown>)
-                    : typeof tokenUsage.total === "object" && tokenUsage.total !== null
-                      ? (tokenUsage.total as Record<string, unknown>)
-                      : {};
-                if (typeof usageRecord.inputTokens === "number") {
-                  usage.inputTokens = usageRecord.inputTokens;
-                }
-                if (typeof usageRecord.outputTokens === "number") {
-                  usage.outputTokens = usageRecord.outputTokens;
-                }
-                return;
-              }
-
-              if (message.method === "turn/completed") {
-                clearTimeout(timeout);
-                succeed();
-              }
-            })().catch((error: unknown) => {
-              fail(error instanceof Error ? error : new Error(String(error)));
-            });
-          };
-
-          socket.onerror = () => {
-            clearTimeout(timeout);
-            fail(new Error("Codex app-server connection failed."));
-          };
-
-          socket.onclose = () => {
-            clearTimeout(timeout);
-            if (!settled) {
-              fail(new Error("Codex app-server connection closed before the request completed."));
-            }
-          };
+        const completedTurn = await executeCodexAppServerTurnOverStdio({
+          child,
+          model,
+          requestCapture: input.requestCapture,
+          workspaceRoot,
+          stderrText: () => stderrText,
+          executeDynamicToolCall: input.executeDynamicToolCall,
         });
+        if (
+          completedTurn.outputText.trim().length === 0 &&
+          completedTurn.usage.inputTokens === 0 &&
+          completedTurn.usage.outputTokens === 0
+        ) {
+          const artifactFailure = await readCodexExecutionFailureFromSessionArtifacts({
+            codexHome,
+            workspaceRoot,
+          });
+          if (artifactFailure) {
+            throw new Error(artifactFailure);
+          }
+        }
 
         const requestShape = readCodexExecutionRequestShape(input.requestCapture);
         const body =
@@ -7096,6 +7730,9 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
                     message: {
                       role: "assistant",
                       content: completedTurn.outputText,
+                      ...(completedTurn.dynamicToolCalls.length > 0
+                        ? { tool_calls: completedTurn.dynamicToolCalls }
+                        : {}),
                     },
                   },
                 ],
@@ -7107,6 +7744,13 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
             : {
                 id: `resp_${sanitizeSegment(input.requestId)}`,
                 output: [
+                  ...completedTurn.dynamicToolCalls.map((toolCall) => ({
+                    type: "function_call" as const,
+                    id: toolCall.id,
+                    call_id: toolCall.id,
+                    name: toolCall.function.name,
+                    arguments: toolCall.function.arguments,
+                  })),
                   {
                     type: "message",
                     role: "assistant",
@@ -7130,6 +7774,9 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
         return {
           statusCode: 200,
           body,
+          ...(completedTurn.dynamicToolExecutions.length > 0
+            ? { dynamicToolExecutions: [...completedTurn.dynamicToolExecutions] }
+            : {}),
           vendorMetadata: {
             vendorId: "codex-app-server",
             latencyMs: Math.max(0, Date.now() - startedAt),
@@ -7137,7 +7784,7 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
         };
       } finally {
         await waitForChildExit(child);
-        await removeDirectoryWithRetries(codexHome).catch(() => undefined);
+        await cleanupManagedCodexExecutionWorkspace(codexHome, workspaceRoot);
       }
     },
   };
@@ -12913,9 +13560,12 @@ export async function createRuntimeBridgeBackend(
           throw new Error(OPENAI_CODEX_SUBSCRIPTION_AUTH_MISSING_ERROR);
         }
         const codexDynamicTools = buildCodexDynamicTools(requestCapture);
+        const codexDynamicToolBindings = buildCodexAppServerDynamicToolBindings(requestCapture);
         const dynamicToolNames = new Set(codexDynamicTools.map((tool) => tool.name));
-        const runtimeToolRegistry =
-          codexDynamicTools.length > 0 ? createRequestScopedToolRegistry(codexDynamicTools) : null;
+        const originalToolNameByExposedName = new Map(
+          codexDynamicToolBindings.map((tool) => [tool.exposedName, tool.originalName]),
+        );
+        let runtimeToolRegistry: ToolRegistry | null = null;
         const codexResponse = await codexExecutionAdapter.executeRequest({
           runtimeStateRoot: options.runtimeStateRoot,
           scopeId: options.scopeId,
@@ -12924,23 +13574,30 @@ export async function createRuntimeBridgeBackend(
           modelId: target.modelId,
           requestCapture,
           authPayload,
-          ...(runtimeToolRegistry
+          ...(codexDynamicTools.length > 0
             ? {
                 executeDynamicToolCall: async ({
                   toolCallId,
                   toolName,
                   toolArguments,
+                  workspaceRoot,
                 }: {
                   readonly toolCallId: string;
                   readonly toolName: string;
                   readonly toolArguments: unknown;
+                  readonly workspaceRoot: string;
                 }) => {
-                  const executionResult = dynamicToolNames.has(toolName)
+                  runtimeToolRegistry ??= createRequestScopedToolRegistry(codexDynamicTools, {
+                    workspaceRoot,
+                  });
+                  const originalToolName =
+                    originalToolNameByExposedName.get(toolName) ?? toolName;
+                  const executionResult = dynamicToolNames.has(originalToolName)
                     ? await executeToolCalls(runtimeToolRegistry, {
                         requestId,
                         toolCalls: [
                           {
-                            name: toolName,
+                            name: originalToolName,
                             arguments: toolArguments,
                             providerToolId: toolCallId,
                           },
@@ -12950,7 +13607,7 @@ export async function createRuntimeBridgeBackend(
                         executions: [
                           {
                             toolCallId,
-                            toolName,
+                            toolName: originalToolName,
                             connectorId: "request-scoped",
                             connectorKind: "dynamic-tool",
                             status: "rejected" as const,
@@ -12958,7 +13615,7 @@ export async function createRuntimeBridgeBackend(
                             diagnostics: [
                               {
                                 code: "TOOL_NOT_ALLOWED",
-                                message: `Tool ${toolName} was not declared for this request.`,
+                                message: `Tool ${originalToolName} was not declared for this request.`,
                               },
                             ],
                           },
@@ -12983,7 +13640,10 @@ export async function createRuntimeBridgeBackend(
                     codexDynamicToolExecutionsByRequestId.get(requestId) ?? [];
                   recordedExecutions.push(execution);
                   codexDynamicToolExecutionsByRequestId.set(requestId, recordedExecutions);
-                  return toCodexDynamicToolCallResult(execution);
+                  return {
+                    ...toCodexDynamicToolCallResult(execution),
+                    execution,
+                  };
                 },
               }
             : {}),
@@ -13199,7 +13859,10 @@ export async function createRuntimeBridgeBackend(
       executions: continuedToolExecutions,
       diagnostics: continuedToolExecutions.flatMap((toolExecution) => toolExecution.diagnostics),
     };
-    const codexDynamicToolExecutions = codexDynamicToolExecutionsByRequestId.get(requestId) ?? [];
+    const codexDynamicToolExecutions = [
+      ...(execution.responseCapture.dynamicToolExecutions ?? []),
+      ...(codexDynamicToolExecutionsByRequestId.get(requestId) ?? []),
+    ];
     codexDynamicToolExecutionsByRequestId.delete(requestId);
     const toolExecutionResult = {
       executions: [...codexDynamicToolExecutions, ...bridgedToolExecutionResult.executions],

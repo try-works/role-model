@@ -24,7 +24,6 @@ export interface ExtractedBenchmarkAnswer {
     | "missing";
 }
 
-const JSON_FENCE_PATTERN = /```(?:json)?\s*([\s\S]*?)```/gi;
 const PLACEHOLDER_PATTERN =
   /^\.{3}$|^<[^>]+>$|^check\s*[12]$|complete typescript|your answer here|placeholder|todo|tbd|first bullet|second bullet|one sentence comparing|fenced code block|no reasoning|your final short answer|milestone 1|what changed|short test idea|what schema fields|tests you validated/i;
 
@@ -36,6 +35,45 @@ export interface AnswerFormatCaseRef {
   readonly expected_tool_names?: readonly string[];
   readonly answer_format?: BenchmarkAnswerFormat;
   readonly grading_criteria?: string;
+}
+
+function buildObservedToolCallCounts(input: {
+  readonly structuredToolNames: readonly string[];
+  readonly toolCalls?: readonly { function: { name: string; arguments: string } }[];
+}): Map<string, number> {
+  const counts = new Map<string, number>();
+  const names =
+    input.toolCalls?.map((toolCall) => toolCall.function.name).filter((name) => name.length > 0) ??
+    input.structuredToolNames;
+  for (const name of names) {
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function listMissingExpectedToolCalls(input: {
+  readonly caseItem: AnswerFormatCaseRef;
+  readonly structuredToolNames: readonly string[];
+  readonly toolCalls?: readonly { function: { name: string; arguments: string } }[];
+}): string[] {
+  const expected = input.caseItem.expected_tool_names ?? [];
+  if (expected.length === 0) {
+    return [];
+  }
+  const observedCounts = buildObservedToolCallCounts({
+    structuredToolNames: input.structuredToolNames,
+    toolCalls: input.toolCalls,
+  });
+  const missing: string[] = [];
+  for (const name of expected) {
+    const remaining = observedCounts.get(name) ?? 0;
+    if (remaining > 0) {
+      observedCounts.set(name, remaining - 1);
+    } else {
+      missing.push(name);
+    }
+  }
+  return missing;
 }
 
 function messageText(caseItem: AnswerFormatCaseRef): string {
@@ -169,10 +207,78 @@ function parseJsonCandidate(candidate: string): unknown | null {
   }
 }
 
+function stripBenchmarkToolCallLines(raw: string): string {
+  return raw
+    .split(/\r?\n/)
+    .filter((line) => !/^TOOL_CALL name=\S+\s+args=/.test(line.trim()))
+    .join("\n");
+}
+
+function isFenceLineStart(raw: string, index: number): boolean {
+  return index === 0 || raw[index - 1] === "\n";
+}
+
+function findClosingFenceIndex(raw: string, start: number): number {
+  for (let index = start; index < raw.length; index += 1) {
+    if (raw.startsWith("```", index) && isFenceLineStart(raw, index)) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+function collectFenceBodies(raw: string, languages?: readonly string[]): string[] {
+  const bodies: string[] = [];
+  let cursor = 0;
+  while (cursor < raw.length) {
+    const openIndex = raw.indexOf("```", cursor);
+    if (openIndex < 0) {
+      break;
+    }
+    let index = openIndex + 3;
+    const languageStart = index;
+    while (index < raw.length && /[a-z0-9_-]/i.test(raw[index] ?? "")) {
+      index += 1;
+    }
+    const language = raw.slice(languageStart, index).toLowerCase();
+    const languageAllowed =
+      !languages || languages.length === 0 || language.length === 0 || languages.includes(language);
+    while (index < raw.length && (raw[index] === " " || raw[index] === "\t")) {
+      index += 1;
+    }
+    const newlineLength =
+      raw[index] === "\r" && raw[index + 1] === "\n" ? 2 : raw[index] === "\n" ? 1 : 0;
+    if (newlineLength > 0) {
+      const bodyStart = index + newlineLength;
+      const closeIndex = findClosingFenceIndex(raw, bodyStart);
+      if (closeIndex < 0) {
+        break;
+      }
+      if (languageAllowed) {
+        bodies.push(raw.slice(bodyStart, closeIndex));
+      }
+      cursor = closeIndex + 3;
+      continue;
+    }
+    const closeIndex = raw.indexOf("```", index);
+    if (closeIndex < 0) {
+      break;
+    }
+    if (languageAllowed) {
+      const inlineBody = raw.slice(index, closeIndex).trim();
+      if (inlineBody) {
+        bodies.push(inlineBody);
+      }
+    }
+    cursor = closeIndex + 3;
+  }
+  return bodies;
+}
+
 function collectJsonFenceCandidates(raw: string): unknown[] {
   const candidates: unknown[] = [];
-  for (const match of raw.matchAll(JSON_FENCE_PATTERN)) {
-    const parsed = parseJsonCandidate(match[1] ?? "");
+  for (const body of collectFenceBodies(raw, ["json"])) {
+    const parsed = parseJsonCandidate(body);
     if (parsed !== null) {
       candidates.push(parsed);
     }
@@ -182,7 +288,7 @@ function collectJsonFenceCandidates(raw: string): unknown[] {
 
 function collectJsonObjectCandidates(raw: string): unknown[] {
   const candidates: unknown[] = [];
-  const trimmed = raw.trim();
+  const trimmed = stripBenchmarkToolCallLines(raw).trim();
   const start = trimmed.lastIndexOf("{");
   if (start >= 0) {
     for (let end = trimmed.length; end > start; end -= 1) {
@@ -213,17 +319,9 @@ function looksLikeReasoningProse(code: string): boolean {
 }
 
 function collectCodeFences(raw: string, language?: string): string[] {
-  const results: string[] = [];
-  for (const lang of [language ?? "typescript", "ts", "typescript"]) {
-    const pattern = new RegExp(`\`\`\`${lang}\\s*([\\s\\S]*?)\`\`\``, "gi");
-    for (const match of raw.matchAll(pattern)) {
-      const body = match[1]?.trim();
-      if (body) {
-        results.push(body);
-      }
-    }
-  }
-  return results;
+  return collectFenceBodies(raw, [language ?? "typescript", "ts", "typescript"])
+    .map((body) => body.trim())
+    .filter(Boolean);
 }
 
 function scoreCodeCandidate(code: string): number {
@@ -325,7 +423,7 @@ function extractTextJsonFields(
 ): Record<string, unknown> {
   const fenceCandidates = collectJsonFenceCandidates(raw);
   const objectCandidates = collectJsonObjectCandidates(raw);
-  const jsonPayload = pickJsonPayload([...fenceCandidates, ...objectCandidates], format);
+  const jsonPayload = pickJsonPayload([...objectCandidates, ...fenceCandidates], format);
   return jsonPayload && typeof jsonPayload === "object"
     ? (jsonPayload as Record<string, unknown>)
     : {};
@@ -366,22 +464,28 @@ export function deliverableCompleteness(input: {
   readonly caseItem: AnswerFormatCaseRef;
   readonly extracted: ExtractedBenchmarkAnswer;
   readonly structuredToolNames: readonly string[];
+  readonly toolCalls?: readonly { function: { name: string; arguments: string } }[];
 }): number {
   if (
     isValidDeliverable({
       caseItem: input.caseItem,
       extracted: input.extracted,
       structuredToolNames: input.structuredToolNames,
+      toolCalls: input.toolCalls,
     })
   ) {
     return 1000;
   }
   const expectedTools = input.caseItem.expected_tool_names ?? [];
+  const missingTools = listMissingExpectedToolCalls({
+    caseItem: input.caseItem,
+    structuredToolNames: input.structuredToolNames,
+    toolCalls: input.toolCalls,
+  });
   const toolScore =
     expectedTools.length === 0
       ? 1
-      : expectedTools.filter((name) => input.structuredToolNames.includes(name)).length /
-        expectedTools.length;
+      : (expectedTools.length - missingTools.length) / expectedTools.length;
   const payload =
     input.extracted.payload && typeof input.extracted.payload === "object"
       ? (input.extracted.payload as Record<string, unknown>)
@@ -445,7 +549,7 @@ export function extractFormattedAnswer(input: {
 
   const fenceCandidates = collectJsonFenceCandidates(input.rawContent);
   const objectCandidates = collectJsonObjectCandidates(input.rawContent);
-  const jsonPayload = pickJsonPayload([...fenceCandidates, ...objectCandidates], format);
+  const jsonPayload = pickJsonPayload([...objectCandidates, ...fenceCandidates], format);
 
   if (format.kind === "code_fence") {
     const codeFromFence = input.turnRawContents?.length
@@ -486,6 +590,7 @@ export function isValidDeliverable(input: {
   readonly caseItem: AnswerFormatCaseRef;
   readonly extracted: ExtractedBenchmarkAnswer;
   readonly structuredToolNames: readonly string[];
+  readonly toolCalls?: readonly { function: { name: string; arguments: string } }[];
 }): boolean {
   const { extracted, caseItem, structuredToolNames } = input;
   if (extracted.extractionMethod === "missing" || !extracted.serialized) {
@@ -501,7 +606,11 @@ export function isValidDeliverable(input: {
 
   const expectedTools = caseItem.expected_tool_names ?? [];
   if (expectedTools.length > 0) {
-    const missingTools = expectedTools.filter((name) => !structuredToolNames.includes(name));
+    const missingTools = listMissingExpectedToolCalls({
+      caseItem,
+      structuredToolNames,
+      toolCalls: input.toolCalls,
+    });
     if (missingTools.length > 0) {
       return false;
     }
@@ -624,12 +733,16 @@ export function buildTextDeliverableResponseFormat(
 export function shouldOmitToolsForTurn(
   caseItem: AnswerFormatCaseRef,
   structuredToolNames: readonly string[],
+  toolCalls?: readonly { function: { name: string; arguments: string } }[],
 ): boolean {
-  const expectedTools = caseItem.expected_tool_names ?? [];
-  if (expectedTools.length === 0) {
+  const missingTools = listMissingExpectedToolCalls({
+    caseItem,
+    structuredToolNames,
+    toolCalls,
+  });
+  if ((caseItem.expected_tool_names ?? []).length === 0) {
     return false;
   }
-  const missingTools = expectedTools.filter((name) => !structuredToolNames.includes(name));
   if (missingTools.length > 0) {
     return false;
   }
@@ -646,11 +759,78 @@ const MOCK_TOOL_CONTENT: Record<string, string> = {
   apply_patch: "Patch applied successfully. 1 file changed, 2 insertions(+), 1 deletion(-).",
 };
 
-function buildToolMessage(toolName: string, toolCallId: string): Record<string, unknown> {
+function buildMockToolContent(
+  caseItem: AnswerFormatCaseRef,
+  toolCall: { function: { name: string; arguments: string } },
+): string {
+  const toolName = toolCall.function.name;
+  const parsedArguments =
+    (parseJsonCandidate(toolCall.function.arguments) as Record<string, unknown> | null) ?? {};
+  const path = typeof parsedArguments.path === "string" ? parsedArguments.path : "";
+  const endpointId =
+    typeof parsedArguments.endpoint_id === "string" ? parsedArguments.endpoint_id : "";
+
+  switch (caseItem.case_id) {
+    case "p15-tools-read-one":
+    case "h08-multi-turn-tool-refine":
+      if (toolName === "read_file" && /runtime-config\.yaml$/i.test(path)) {
+        return ["routing:", "  strategy: controller", "  execution_mode: hybrid"].join("\n");
+      }
+      break;
+    case "p16-tools-search":
+      if (toolName === "grep_search") {
+        return [
+          "src/router.ts:16 if (input.throughputSlaHardDeny && eligible.length === 0) return deny('throughput_sla');",
+          "src/router.ts:44 const hardDenied = input.throughputSlaHardDeny && candidate.tokensPerSecond < 24;",
+        ].join("\n");
+      }
+      break;
+    case "t01-tools-list-dir":
+      if (toolName === "list_dir") {
+        return ["config/", "router.yaml", "routing-policy.json", "auth.env", "themes.css"].join(
+          "\n",
+        );
+      }
+      break;
+    case "p18-tools-agent":
+    case "h09-agent-metrics-chain":
+      if (toolName === "list_endpoints") {
+        return JSON.stringify(
+          {
+            endpoints: [
+              { endpoint_id: "local.lfm2.5-8b-a1b", model_id: "lfm2.5-8b-a1b", status: "active" },
+              {
+                endpoint_id: "remote.deepseek-v4-flash",
+                model_id: "deepseek/deepseek-v4-flash",
+                status: "active",
+              },
+            ],
+          },
+          null,
+          2,
+        );
+      }
+      if (toolName === "get_metrics" && endpointId === "local.lfm2.5-8b-a1b") {
+        return JSON.stringify({ p95_latency_ms: 62, request_count: 1200, error_rate: 0.005 });
+      }
+      if (toolName === "get_metrics" && endpointId === "remote.deepseek-v4-flash") {
+        return JSON.stringify({ p95_latency_ms: 245, request_count: 900, error_rate: 0.018 });
+      }
+      break;
+  }
+
+  return MOCK_TOOL_CONTENT[toolName] ?? `Mock response from ${toolName}.`;
+}
+
+function buildToolMessage(
+  caseItem: AnswerFormatCaseRef,
+  toolCall: { function: { name: string; arguments: string } },
+  toolCallId: string,
+): Record<string, unknown> {
   return {
     role: "tool",
     tool_call_id: toolCallId,
-    content: MOCK_TOOL_CONTENT[toolName] ?? `Mock response from ${toolName}.`,
+    content: buildMockToolContent(caseItem, toolCall),
   };
 }
 
@@ -661,14 +841,18 @@ export function buildScaffoldFollowUp(
   structuredToolNames: readonly string[],
   _extracted: ExtractedBenchmarkAnswer,
   toolCalls?: readonly { function: { name: string; arguments: string } }[],
+  allToolCalls?: readonly { function: { name: string; arguments: string } }[],
 ): Record<string, unknown>[] {
   const assistantMessage = buildAssistantScaffoldMessage(assistantOutput, toolCalls);
-  const expectedTools = caseItem.expected_tool_names ?? [];
-  const missingTools = expectedTools.filter((name) => !structuredToolNames.includes(name));
+  const missingTools = listMissingExpectedToolCalls({
+    caseItem,
+    structuredToolNames,
+    toolCalls: allToolCalls ?? toolCalls,
+  });
 
   // Build role:"tool" messages for all completed tool calls
-  const completedToolMsgs = (toolCalls ?? []).map((_tc, index) =>
-    buildToolMessage(toolCalls?.[index]?.function?.name ?? "unknown", `bench_scaffold_${index}`),
+  const completedToolMsgs = (toolCalls ?? []).map((toolCall, index) =>
+    buildToolMessage(caseItem, toolCall, `bench_scaffold_${index}`),
   );
 
   if (missingTools.length > 0) {

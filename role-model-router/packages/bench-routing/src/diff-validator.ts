@@ -7,6 +7,20 @@ const PLACEHOLDER_DIFF_MARKERS = [
   /^=======\s*$/,
 ];
 
+const CODEX_PATCH_BEGIN = /^\*\*\* Begin Patch$/m;
+const CODEX_PATCH_END = /^\*\*\* End Patch$/m;
+const CODEX_PATCH_FILE_OPERATION = /^\*\*\* (?:Update|Add|Delete) File: .+/m;
+const CODEX_PATCH_CONTENT = /^(?:@@|[+-][^\r\n]*)$/m;
+
+function isValidCodexPatchEnvelope(patch: string): boolean {
+  return (
+    CODEX_PATCH_BEGIN.test(patch) &&
+    CODEX_PATCH_END.test(patch) &&
+    CODEX_PATCH_FILE_OPERATION.test(patch) &&
+    CODEX_PATCH_CONTENT.test(patch)
+  );
+}
+
 export function isPlaceholderUnifiedDiff(diff: string): boolean {
   const trimmed = diff.trim();
   if (!trimmed) {
@@ -14,6 +28,9 @@ export function isPlaceholderUnifiedDiff(diff: string): boolean {
   }
   if (PLACEHOLDER_DIFF_MARKERS.some((pattern) => pattern.test(trimmed))) {
     return true;
+  }
+  if (isValidCodexPatchEnvelope(trimmed)) {
+    return false;
   }
   if (!trimmed.includes("@@")) {
     return true;
@@ -30,9 +47,11 @@ export function extractPatchArgumentsFromDeliverable(deliverable: string): strin
     const parsed = JSON.parse(deliverable) as unknown;
     collectPatchValues(parsed, patches);
   } catch {
-    const inline = deliverable.match(/"patch"\s*:\s*"((?:\\.|[^"\\])*)"/);
-    if (inline?.[1]) {
-      patches.push(JSON.parse(`"${inline[1]}"`) as string);
+    const inlineMatches = deliverable.matchAll(/"(?:diff|patch)"\s*:\s*"((?:\\.|[^"\\])*)"/g);
+    for (const inline of inlineMatches) {
+      if (inline[1]) {
+        patches.push(JSON.parse(`"${inline[1]}"`) as string);
+      }
     }
   }
   return patches;
@@ -49,11 +68,17 @@ function collectPatchValues(value: unknown, patches: string[]): void {
     return;
   }
   const record = value as Record<string, unknown>;
+  if (typeof record.diff === "string") {
+    patches.push(record.diff);
+  }
   if (typeof record.patch === "string") {
     patches.push(record.patch);
   }
   if (record.arguments && typeof record.arguments === "object") {
     const args = record.arguments as Record<string, unknown>;
+    if (typeof args.diff === "string") {
+      patches.push(args.diff);
+    }
     if (typeof args.patch === "string") {
       patches.push(args.patch);
     }
@@ -89,6 +114,6 @@ export function capJudgeScoreForInvalidDeliverable(input: {
   const capped = Math.min(input.score, 0.4);
   return {
     score: capped,
-    rationale: `${input.rationale} Invalid apply_patch diff (placeholder or missing @@ hunk); score capped.`,
+    rationale: `${input.rationale} Invalid apply_patch payload (placeholder or malformed unified diff / Codex patch envelope); score capped.`,
   };
 }
