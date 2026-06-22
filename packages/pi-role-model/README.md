@@ -5,7 +5,7 @@ Pi package for connecting Pi to an already-running Role-Model runtime.
 Install the public package:
 
 ```bash
-pi install @try-works/pi-role-model
+pi install npm:@try-works/pi-role-model
 ```
 
 For local development from this repository root:

@@ -36,12 +36,12 @@ describe("Pi installation docs, skill, and safety guardrails", () => {
     expect(readme).toContain("ROLE_MODEL_ENDPOINT");
     expect(readme).toContain("allowRemote");
     expect(readme).toContain("authentication.required");
-    expect(readme).toContain("pi install @try-works/pi-role-model");
+    expect(readme).toContain("pi install npm:@try-works/pi-role-model");
     expect(readme).toContain("pi install ./packages/pi-role-model");
     expect(readme).toContain("/role-model doctor");
     expect(readme).toContain("/role-model alias choose");
     expect(readme).toContain("/role-model alias use");
-    expect(packageReadme).toContain("pi install @try-works/pi-role-model");
+    expect(packageReadme).toContain("pi install npm:@try-works/pi-role-model");
     expect(packageReadme).toContain("pi install ./packages/pi-role-model");
     expect(packageReadme).toContain("/role-model alias recommended");
     expect(packageReadme).toContain("ROLE_MODEL_ENDPOINT");

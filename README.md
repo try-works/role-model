@@ -124,7 +124,7 @@ The `pi-role-model` package connects Pi to an externally running Role-Model runt
 Install the public package:
 
 ```bash
-pi install @try-works/pi-role-model
+pi install npm:@try-works/pi-role-model
 ```
 
 For local development from this repository root:
@@ -159,7 +159,7 @@ Use the package commands inside Pi:
 
 This package does not install, start, stop, or update Role-Model. It registers Role-Model as the `role-model` provider using the runtime discovery endpoint at `/api/role-model/downstream/openai`. Start the external runtime separately, then run `/role-model setup`.
 
-The public npm package name is `@try-works/pi-role-model`. The repository-local package install is intended for development and QA.
+The public npm package name is `@try-works/pi-role-model`; Pi installs npm packages with the `npm:` source prefix. The repository-local package install is intended for development and QA.
 
 ## Building from source
 
