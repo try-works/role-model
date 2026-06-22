@@ -66,7 +66,7 @@ If you do not want to use installer scripts, download the matching archive from 
 | macOS arm64 | `role-model-router-darwin-arm64.tar.gz` | `role-model-runtime` |
 | Linux x64 | `role-model-router-linux-x64.tar.gz` | `role-model-runtime` |
 
-## Use with Pi
+## Installation for Pi
 
 The `pi-role-model` package connects Pi to an externally running Role-Model runtime.
 
@@ -76,18 +76,28 @@ Start the Role-Model runtime first, then install the public Pi package:
 pi install npm:@try-works/pi-role-model
 ```
 
+For local checkout testing from this repository, install the package directly:
+
+```bash
+pi install ./packages/pi-role-model
+```
+
 Inside Pi, run:
 
 ```text
 /role-model setup
 /role-model doctor
 /role-model alias list
+/role-model alias choose
 /role-model alias use <alias>
 ```
 
 By default the package connects to `http://127.0.0.1:3456` and registers Role-Model as the
-`role-model` provider using `/api/role-model/downstream/openai`. For endpoint overrides,
-remote-runtime safety, local development installs, and the full command reference, see
+`role-model` provider using `/api/role-model/downstream/openai`. Set `ROLE_MODEL_ENDPOINT`
+before starting Pi to use a different local runtime. Remote endpoints require explicit
+trusted `allowRemote` behavior, and runtimes that report `authentication.required` fail
+closed unless a future supported token source is configured. For local development installs
+and the full command reference, see
 [`packages/pi-role-model/README.md`](packages/pi-role-model/README.md).
 
 ## Develop from source
