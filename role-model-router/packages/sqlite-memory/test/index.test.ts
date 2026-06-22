@@ -1,6 +1,6 @@
-import { mkdtemp, readFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -40,6 +40,15 @@ const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
 async function readJson<T>(relativePath: string): Promise<T> {
   const filePath = path.join(repoRoot, relativePath);
   return JSON.parse(await readFile(filePath, "utf8")) as T;
+}
+
+function requireChildStdout(
+  child: ReturnType<typeof spawn>,
+): NonNullable<ReturnType<typeof spawn>["stdout"]> {
+  if (!child.stdout) {
+    throw new Error("Expected child process stdout to be piped.");
+  }
+  return child.stdout;
 }
 
 describe("initializeSqliteMemory", () => {
@@ -2554,7 +2563,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
     );
 
     try {
-      await once(locker.stdout!, "data");
+      await once(requireChildStdout(locker), "data");
       persistObservedBenchmarkSample({
         databasePath: initialized.databasePath,
         sample: {
@@ -2648,7 +2657,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
     );
 
     try {
-      await once(locker.stdout!, "data");
+      await once(requireChildStdout(locker), "data");
       expect(() =>
         persistRuntimeObservationBundle({
           databasePath: initialized.databasePath,
@@ -2697,7 +2706,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
     );
 
     try {
-      await once(locker.stdout!, "data");
+      await once(requireChildStdout(locker), "data");
       expect(
         sqliteMemory.readDifficultyClassificationCache({
           databasePath: initialized.databasePath,
@@ -2746,7 +2755,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
     );
 
     try {
-      await once(locker.stdout!, "data");
+      await once(requireChildStdout(locker), "data");
       expect(() =>
         sqliteMemory.upsertDifficultyClassificationCache({
           databasePath: initialized.databasePath,
@@ -2818,7 +2827,7 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
     );
 
     try {
-      await once(locker.stdout!, "data");
+      await once(requireChildStdout(locker), "data");
       expect(
         sqliteMemory.readAdvisoryMaxDifficultyRecommendation({
           databasePath: initialized.databasePath,

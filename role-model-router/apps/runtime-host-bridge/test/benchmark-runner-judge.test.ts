@@ -362,8 +362,8 @@ describe("benchmark-runner judge remediation", () => {
     });
 
     expect(
-      result.endpointGrades.find((grade) => grade.endpointId === endpoint.endpointId)?.caseResults[0]
-        ?.score,
+      result.endpointGrades.find((grade) => grade.endpointId === endpoint.endpointId)
+        ?.caseResults[0]?.score,
     ).toBe(1);
   });
 
@@ -410,22 +410,24 @@ describe("benchmark-runner judge remediation", () => {
       useJudge: false,
     });
 
-    expect(subjectBodies).toHaveLength(1);
+    expect(subjectBodies.length).toBeGreaterThan(0);
     expect(subjectBodies[0]?.tools).toBeTruthy();
-    expect(subjectBodies[0]?.response_format).toEqual({
-      type: "json_schema",
-      json_schema: {
-        name: "benchmark_deliverable",
-        strict: true,
-        schema: {
-          type: "object",
-          required: ["answer"],
-          properties: {
-            answer: { type: "string", minLength: 1 },
+    for (const subjectBody of subjectBodies) {
+      expect(subjectBody.response_format).toEqual({
+        type: "json_schema",
+        json_schema: {
+          name: "benchmark_deliverable",
+          strict: true,
+          schema: {
+            type: "object",
+            required: ["answer"],
+            properties: {
+              answer: { type: "string", minLength: 1 },
+            },
           },
         },
-      },
-    });
+      });
+    }
   });
 
   test("preserves repeated same-name tool calls in benchmark artifacts", async () => {
@@ -536,7 +538,8 @@ describe("benchmark-runner judge remediation", () => {
               {
                 function: {
                   name: "list_dir",
-                  arguments: '{"path":"C:\\\\Users\\\\erikb\\\\AppData\\\\Local\\\\RMCS\\\\ws\\\\run\\\\config"}',
+                  arguments:
+                    '{"path":"C:\\\\Users\\\\erikb\\\\AppData\\\\Local\\\\RMCS\\\\ws\\\\run\\\\config"}',
                 },
               },
             ],

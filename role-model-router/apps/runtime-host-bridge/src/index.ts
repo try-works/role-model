@@ -4,9 +4,9 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
-import { createInterface } from "node:readline";
 import os from "node:os";
 import path from "node:path";
+import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { parse } from "yaml";
@@ -4807,11 +4807,7 @@ export function createModelListResponse(
     return {
       object: "list",
       data: discovery.models.map((record) =>
-        createCompactModelListRecord(
-          record,
-          discovery.freshness.runtimeInventoryRevision,
-          baseUrl,
-        ),
+        createCompactModelListRecord(record, discovery.freshness.runtimeInventoryRevision, baseUrl),
       ),
     };
   }
@@ -6497,8 +6493,16 @@ async function applyRequestScopedUnifiedDiff(
     .filter((line) => line.startsWith("+") && !line.startsWith("+++ "))
     .map((line) => line.slice(1));
 
-  if (removals.length === 1 && additions.length === 1 && content.includes(removals[0]!)) {
-    content = content.replace(removals[0]!, additions[0]!);
+  const [singleRemoval] = removals;
+  const [singleAddition] = additions;
+  if (
+    removals.length === 1 &&
+    additions.length === 1 &&
+    singleRemoval !== undefined &&
+    singleAddition !== undefined &&
+    content.includes(singleRemoval)
+  ) {
+    content = content.replace(singleRemoval, singleAddition);
   } else if (removals.length === 0 && additions.length > 0) {
     const suffix = content.endsWith("\n") ? "" : "\n";
     content = `${content}${suffix}${additions.join("\n")}\n`;
@@ -7337,7 +7341,7 @@ export function normalizeCodexAppServerModelName(model: string): string {
   if (trimmed.length === 0) {
     return trimmed;
   }
-  return trimmed.includes("/") ? trimmed.split("/").slice(-1)[0]!.trim() : trimmed;
+  return trimmed.includes("/") ? (trimmed.split("/").at(-1) ?? "").trim() : trimmed;
 }
 
 export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): string {
@@ -7599,7 +7603,8 @@ export async function readCodexExecutionFailureFromSessionArtifacts(input: {
             ? (record.payload as Record<string, unknown>)
             : {};
         matchesWorkspace =
-          typeof payload.cwd === "string" && path.resolve(payload.cwd) === path.resolve(input.workspaceRoot);
+          typeof payload.cwd === "string" &&
+          path.resolve(payload.cwd) === path.resolve(input.workspaceRoot);
         continue;
       }
 
@@ -7620,8 +7625,7 @@ export async function readCodexExecutionFailureFromSessionArtifacts(input: {
           typeof rateLimits.credits === "object" && rateLimits.credits !== null
             ? (rateLimits.credits as Record<string, unknown>)
             : {};
-        creditsExhausted =
-          credits.has_credits === false && credits.unlimited !== true;
+        creditsExhausted = credits.has_credits === false && credits.unlimited !== true;
         continue;
       }
       if (payload.type === "task_complete") {
@@ -7683,7 +7687,7 @@ export async function executeCodexAppServerTurnOverStdio(input: {
   return await new Promise((resolve, reject) => {
     const reader = createInterface({
       input: input.child.stdout,
-      crlfDelay: Infinity,
+      crlfDelay: Number.POSITIVE_INFINITY,
     });
     const pendingRequests = new Map<
       number,
@@ -7996,7 +8000,9 @@ export async function executeCodexAppServerTurnOverStdio(input: {
         try {
           message = JSON.parse(trimmed) as Record<string, unknown>;
         } catch (error) {
-          fail(error instanceof Error ? error : new Error("Codex app-server returned invalid JSON."));
+          fail(
+            error instanceof Error ? error : new Error("Codex app-server returned invalid JSON."),
+          );
           return;
         }
         await onMessage(message);
@@ -8038,7 +8044,9 @@ export async function executeCodexAppServerTurnOverStdio(input: {
           ...(appServerDynamicTools.length > 0 ? { dynamicTools: appServerDynamicTools } : {}),
         });
         threadStartAcknowledged = true;
-        const resolvedThreadId = readCodexThreadIdFromAppServerMessage({ result: threadStartResult });
+        const resolvedThreadId = readCodexThreadIdFromAppServerMessage({
+          result: threadStartResult,
+        });
         if (resolvedThreadId.length > 0) {
           threadId = resolvedThreadId;
         }
@@ -14216,8 +14224,7 @@ export async function createRuntimeBridgeBackend(
                   runtimeToolRegistry ??= createRequestScopedToolRegistry(codexDynamicTools, {
                     workspaceRoot,
                   });
-                  const originalToolName =
-                    originalToolNameByExposedName.get(toolName) ?? toolName;
+                  const originalToolName = originalToolNameByExposedName.get(toolName) ?? toolName;
                   const executionResult = dynamicToolNames.has(originalToolName)
                     ? await executeToolCalls(runtimeToolRegistry, {
                         requestId,

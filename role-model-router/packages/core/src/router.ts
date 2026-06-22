@@ -353,10 +353,7 @@ function supportsCapabilityRequirement(
   if (supportedCapabilities.some((capability) => capability.startsWith(`${requirement}.`))) {
     return true;
   }
-  if (
-    requirement.startsWith("reasoning.") &&
-    supportedCapabilities.includes("reasoning")
-  ) {
+  if (requirement.startsWith("reasoning.") && supportedCapabilities.includes("reasoning")) {
     return true;
   }
   if (

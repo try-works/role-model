@@ -370,9 +370,9 @@ describe("runtime-host-bridge", () => {
         structured_output: { supported: true },
       },
     });
-    expect(typeof (alias?.role_model as { capability_revision?: unknown })?.capability_revision).toBe(
-      "string",
-    );
+    expect(
+      typeof (alias?.role_model as { capability_revision?: unknown })?.capability_revision,
+    ).toBe("string");
   });
 
   test("builds request-time routing telemetry snapshots from live routing candidates", () => {
@@ -1120,9 +1120,7 @@ describe("runtime-host-bridge", () => {
         needsTools: true,
         strategy: "balanced",
         preferLocal: false,
-        allowEndpoints: [
-          "moonshot.personal.primary.global.kimi-k2.5",
-        ],
+        allowEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
       },
       executionRequest: {
         messages: [
@@ -1987,7 +1985,8 @@ describe("runtime-host-bridge", () => {
 
   test("seedManagedCodexWorkspaceFixture stages benchmark files for Codex tool-heavy cases", async () => {
     expect(
-      typeof (bridge as { seedManagedCodexWorkspaceFixture?: unknown }).seedManagedCodexWorkspaceFixture,
+      typeof (bridge as { seedManagedCodexWorkspaceFixture?: unknown })
+        .seedManagedCodexWorkspaceFixture,
     ).toBe("function");
 
     const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-codex-workspace-"));
@@ -2030,15 +2029,15 @@ describe("runtime-host-bridge", () => {
             dynamicTools: readonly {
               readonly name: string;
               readonly description?: string;
-            readonly inputSchema: Record<string, unknown>;
-          }[],
-          options?: {
-            readonly workspaceRoot?: string;
-            readonly applyPatchMode?: "ack" | "mutate";
-          },
-        ) => { connectors: readonly { tools: readonly { name: string }[] }[] };
-      }
-    ).createRequestScopedToolRegistry;
+              readonly inputSchema: Record<string, unknown>;
+            }[],
+            options?: {
+              readonly workspaceRoot?: string;
+              readonly applyPatchMode?: "ack" | "mutate";
+            },
+          ) => { connectors: readonly { tools: readonly { name: string }[] }[] };
+        }
+      ).createRequestScopedToolRegistry;
 
       const registry = createRequestScopedToolRegistry(
         [
@@ -2177,7 +2176,8 @@ describe("runtime-host-bridge", () => {
 
   test("buildCodexAppServerDynamicTools namespaces request-scoped tools for the app-server protocol", () => {
     expect(
-      typeof (bridge as { buildCodexAppServerDynamicTools?: unknown }).buildCodexAppServerDynamicTools,
+      typeof (bridge as { buildCodexAppServerDynamicTools?: unknown })
+        .buildCodexAppServerDynamicTools,
     ).toBe("function");
 
     const dynamicTools = (
@@ -2325,46 +2325,50 @@ describe("runtime-host-bridge", () => {
         .executeCodexAppServerTurnOverStdio,
     ).toBe("function");
 
-    const fakeAppServer = spawn(process.execPath, [
-      "-e",
+    const fakeAppServer = spawn(
+      process.execPath,
       [
-        "const readline = require('node:readline');",
-        "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
-        "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
-        "rl.on('line', (line) => {",
-        "  const message = JSON.parse(line);",
-        "  if (message.id === 1 && message.method === 'initialize') {",
-        "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
-        "    return;",
-        "  }",
-        "  if (message.method === 'initialized') {",
-        "    return;",
-        "  }",
-        "  if (message.id === 2 && message.method === 'thread/start') {",
-        "    send({ method: 'thread/started', params: { thread: { id: 'thr_test_stdio' } } });",
-        "    send({ id: 2, result: { thread: { id: 'thr_test_stdio' } } });",
-        "    return;",
-        "  }",
-        "  if (message.id === 3 && message.method === 'turn/start') {",
-        "    send({ id: 3, result: { accepted: true } });",
-        "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 11, outputTokens: 0 } } } });",
-        "    send({ id: 91, method: 'item/tool/call', params: { callId: 'call_stdio_1', tool: 'request_read_file', arguments: { path: 'README.md' } } });",
-        "    return;",
-        "  }",
-        "  if (message.id === 91) {",
-        "    send({ method: 'item/agentMessage/delta', params: { delta: 'HEL' } });",
-        "    send({ method: 'item/agentMessage/delta', params: { delta: 'LO' } });",
-        "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'HELLO' } } });",
-        "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 11, outputTokens: 5 } } } });",
-        "    send({ method: 'turn/completed', params: { turn: { id: 'turn_stdio_1' } } });",
-        "    setTimeout(() => process.exit(0), 0);",
-        "  }",
-        "});",
-      ].join(" "),
-    ], {
-      stdio: ["pipe", "pipe", "pipe"],
-      windowsHide: true,
-    });
+        "-e",
+        [
+          "const readline = require('node:readline');",
+          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
+          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
+          "rl.on('line', (line) => {",
+          "  const message = JSON.parse(line);",
+          "  if (message.id === 1 && message.method === 'initialize') {",
+          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
+          "    return;",
+          "  }",
+          "  if (message.method === 'initialized') {",
+          "    return;",
+          "  }",
+          "  if (message.id === 2 && message.method === 'thread/start') {",
+          "    send({ method: 'thread/started', params: { thread: { id: 'thr_test_stdio' } } });",
+          "    send({ id: 2, result: { thread: { id: 'thr_test_stdio' } } });",
+          "    return;",
+          "  }",
+          "  if (message.id === 3 && message.method === 'turn/start') {",
+          "    send({ id: 3, result: { accepted: true } });",
+          "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 11, outputTokens: 0 } } } });",
+          "    send({ id: 91, method: 'item/tool/call', params: { callId: 'call_stdio_1', tool: 'request_read_file', arguments: { path: 'README.md' } } });",
+          "    return;",
+          "  }",
+          "  if (message.id === 91) {",
+          "    send({ method: 'item/agentMessage/delta', params: { delta: 'HEL' } });",
+          "    send({ method: 'item/agentMessage/delta', params: { delta: 'LO' } });",
+          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'HELLO' } } });",
+          "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 11, outputTokens: 5 } } } });",
+          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_stdio_1' } } });",
+          "    setTimeout(() => process.exit(0), 0);",
+          "  }",
+          "});",
+        ].join(" "),
+      ],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+      },
+    );
 
     const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-turn-"));
 
@@ -2467,7 +2471,7 @@ describe("runtime-host-bridge", () => {
               type: "function",
               function: {
                 name: "read_file",
-                arguments: "{\"path\":\"README.md\"}",
+                arguments: '{"path":"README.md"}',
               },
             },
           ],
@@ -2554,7 +2558,8 @@ describe("runtime-host-bridge", () => {
 
   test("resolveManagedCodexExecutionHome keeps the shared Codex home short on Windows-style paths", () => {
     expect(
-      typeof (bridge as { resolveManagedCodexExecutionHome?: unknown }).resolveManagedCodexExecutionHome,
+      typeof (bridge as { resolveManagedCodexExecutionHome?: unknown })
+        .resolveManagedCodexExecutionHome,
     ).toBe("function");
 
     const result = (
@@ -2582,7 +2587,8 @@ describe("runtime-host-bridge", () => {
 
   test("resolveManagedCodexWorkspaceRoot keeps request workspaces short under the shared Codex home", () => {
     expect(
-      typeof (bridge as { resolveManagedCodexWorkspaceRoot?: unknown }).resolveManagedCodexWorkspaceRoot,
+      typeof (bridge as { resolveManagedCodexWorkspaceRoot?: unknown })
+        .resolveManagedCodexWorkspaceRoot,
     ).toBe("function");
 
     const codexHome = (
@@ -2615,7 +2621,8 @@ describe("runtime-host-bridge", () => {
 
   test("resolveManagedCodexWorkspaceRoot leaves enough room for deep plugin staging paths on Windows", () => {
     expect(
-      typeof (bridge as { resolveManagedCodexWorkspaceRoot?: unknown }).resolveManagedCodexWorkspaceRoot,
+      typeof (bridge as { resolveManagedCodexWorkspaceRoot?: unknown })
+        .resolveManagedCodexWorkspaceRoot,
     ).toBe("function");
 
     const codexHome = (
@@ -3134,9 +3141,7 @@ describe("runtime-host-bridge", () => {
       preferredCapabilities: ["reasoning.multi_step"],
       strategy: "quality",
       preferLocal: true,
-      allowEndpoints: [
-        "moonshot.personal.primary.global.kimi-k2.5",
-      ],
+      allowEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
     });
     expect(result.routingModel).toBeUndefined();
     expect(result.routingDiagnostics?.controllerRouting).toEqual({
@@ -3254,9 +3259,7 @@ describe("runtime-host-bridge", () => {
       preferredCapabilities: [],
       strategy: "balanced",
       preferLocal: false,
-      allowEndpoints: [
-        "moonshot.personal.primary.global.kimi-k2.5",
-      ],
+      allowEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
     });
     expect(result.routingModel).toBeUndefined();
     expect(result.routingDiagnostics).toEqual({
@@ -3264,9 +3267,7 @@ describe("runtime-host-bridge", () => {
         requestedModel: "gpt-5.4",
         aliasId: "gpt-5.4",
         resolvedModelIds: ["moonshot/kimi-k2.5"],
-        allowEndpoints: [
-          "moonshot.personal.primary.global.kimi-k2.5",
-        ],
+        allowEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
       },
       capabilityEligibility: {
         requiredInputModalities: ["text"],
@@ -3861,9 +3862,7 @@ describe("runtime-host-bridge", () => {
         requestedModel: "gpt-5.4",
         aliasId: "gpt-5.4",
         resolvedModelIds: ["moonshot/kimi-k2.5"],
-        allowEndpoints: [
-          "moonshot.personal.primary.global.kimi-k2.5",
-        ],
+        allowEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
       },
       capabilityEligibility: {
         requiredInputModalities: ["text"],
@@ -14270,7 +14269,9 @@ describe("runtime-host-bridge", () => {
           scopeId: string;
         }) => Promise<{
           queryTelemetryAnalytics?: (body: Record<string, unknown>) => Promise<unknown>;
-          listTelemetryRequests?: (query?: Record<string, unknown>) => Promise<readonly Record<string, unknown>[]>;
+          listTelemetryRequests?: (
+            query?: Record<string, unknown>,
+          ) => Promise<readonly Record<string, unknown>[]>;
         }>;
       }
     ).createRuntimeBridgeBackend({

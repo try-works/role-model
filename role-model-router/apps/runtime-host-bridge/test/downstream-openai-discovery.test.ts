@@ -14,7 +14,9 @@ const source = {
   schemaVersion: "models.dev.v1",
 };
 
-function model(overrides: Partial<NormalizedCatalogModel> & { modelId: string }): NormalizedCatalogModel {
+function model(
+  overrides: Partial<NormalizedCatalogModel> & { modelId: string },
+): NormalizedCatalogModel {
   return {
     modelId: overrides.modelId,
     providerId: overrides.providerId ?? overrides.modelId.split("/")[0] ?? "unknown",

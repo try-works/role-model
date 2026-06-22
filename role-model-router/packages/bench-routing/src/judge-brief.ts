@@ -76,7 +76,9 @@ function describeAcceptPattern(pattern: string): string | null {
 }
 
 function summarizeAcceptPatternsForJudge(patterns: readonly string[]): string[] {
-  return [...new Set(patterns.map(describeAcceptPattern).filter((value): value is string => !!value))];
+  return [
+    ...new Set(patterns.map(describeAcceptPattern).filter((value): value is string => !!value)),
+  ];
 }
 
 export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): string[] {

@@ -11,7 +11,9 @@ const source = {
   schemaVersion: "models.dev.v1",
 };
 
-function model(overrides: Partial<NormalizedCatalogModel> & { modelId: string }): NormalizedCatalogModel {
+function model(
+  overrides: Partial<NormalizedCatalogModel> & { modelId: string },
+): NormalizedCatalogModel {
   return {
     modelId: overrides.modelId,
     providerId: overrides.providerId ?? overrides.modelId.split("/")[0] ?? "unknown",
@@ -80,7 +82,12 @@ describe("resolveModelCapabilityProfile", () => {
     expect(profile.inputModalities).toEqual(expect.arrayContaining(["text", "image"]));
     expect(profile.outputModalities).toContain("text");
     expect(profile.capabilities).toEqual(
-      expect.arrayContaining(["text.chat", "tools.function_calling", "reasoning", "structured.output"]),
+      expect.arrayContaining([
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+      ]),
     );
     expect(profile.sources.limits).toBe("catalog:openai/gpt-5.4");
   });
@@ -111,6 +118,8 @@ describe("resolveModelCapabilityProfile", () => {
     expect(profile.canonicalModelId).toBeNull();
     expect(profile.limits.contextWindow).toBeNull();
     expect(profile.limits.maxOutputTokens).toBeNull();
-    expect(profile.unknown).toEqual(expect.arrayContaining(["limits", "modalities", "capabilities"]));
+    expect(profile.unknown).toEqual(
+      expect.arrayContaining(["limits", "modalities", "capabilities"]),
+    );
   });
 });
