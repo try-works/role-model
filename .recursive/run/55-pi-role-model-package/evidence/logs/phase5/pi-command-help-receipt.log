@@ -1,0 +1,4 @@
+Command: pi --no-builtin-tools --no-tools -p /role-model help
+ExitCode: 0
+Output:
+

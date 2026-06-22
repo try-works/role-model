@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "requestId": "req-30486965-42e8-4221-a36d-784910484281",
+  "routingDecisionId": "decision-req-30486965-42e8-4221-a36d-784910484281",
+  "telemetryModelId": "deepseek/deepseek-v4-flash",
+  "telemetryEndpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+  "telemetryStatus": "active",
+  "decisionFound": true,
+  "requestCreatedAtMs": 1782129091770
+}
+

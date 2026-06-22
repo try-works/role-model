@@ -1,0 +1,5 @@
+Command: pi --no-builtin-tools --no-tools --model role-model/default.decision-only -p Reply with exactly ROLE_MODEL_PI_SMOKE_OK
+ExitCode: 0
+Output:
+ROLE_MODEL_PI_SMOKE_OK
+

@@ -1,0 +1,3 @@
+Installing ./packages/pi-role-model...
+Installed ./packages/pi-role-model
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76

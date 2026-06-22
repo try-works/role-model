@@ -1,0 +1,146 @@
+GET http://127.0.0.1:3456/api/role-model/requests
+Status: PASS
+Body:
+[
+  {
+    "requestId": "req-30486965-42e8-4221-a36d-784910484281",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-30486965-42e8-4221-a36d-784910484281",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782129091770
+  },
+  {
+    "requestId": "req-9538f72b-ad91-476a-8be6-10f033ff83cb",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-9538f72b-ad91-476a-8be6-10f033ff83cb",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782128737959
+  },
+  {
+    "requestId": "req-918fc31b-7243-4400-bbeb-704fa2f666b3",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-918fc31b-7243-4400-bbeb-704fa2f666b3",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115201839
+  },
+  {
+    "requestId": "req-ea9bd8ae-c38e-46d1-aab3-eff06e8368d4",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-ea9bd8ae-c38e-46d1-aab3-eff06e8368d4",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115172227
+  },
+  {
+    "requestId": "req-67cefdf3-7994-4214-84e1-f9a804eaec19",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-67cefdf3-7994-4214-84e1-f9a804eaec19",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115130729
+  },
+  {
+    "requestId": "req-28e1f79d-40bc-4c0e-82a8-8c457c0e531e",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-28e1f79d-40bc-4c0e-82a8-8c457c0e531e",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115129473
+  },
+  {
+    "requestId": "req-7026debd-ad13-4496-8b1d-03f09cf79b52",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-7026debd-ad13-4496-8b1d-03f09cf79b52",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115117881
+  },
+  {
+    "requestId": "req-1e367121-09b6-4f6a-b8ec-1f1b248179f9",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-1e367121-09b6-4f6a-b8ec-1f1b248179f9",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115084163
+  },
+  {
+    "requestId": "req-1260292c-ab5a-47c5-9a8f-cbd4fb12a475",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-1260292c-ab5a-47c5-9a8f-cbd4fb12a475",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115083415
+  },
+  {
+    "requestId": "req-2dd075de-c706-4860-a70a-3f0c661d621d",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-2dd075de-c706-4860-a70a-3f0c661d621d",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115071642
+  },
+  {
+    "requestId": "req-e7c86bae-fcdc-4ddf-b446-22d202965882",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-e7c86bae-fcdc-4ddf-b446-22d202965882",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115022099
+  },
+  {
+    "requestId": "req-7d0483df-0855-43fd-865d-d36365b862aa",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-7d0483df-0855-43fd-865d-d36365b862aa",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115021407
+  },
+  {
+    "requestId": "req-501caab6-ee93-48eb-a0a5-b4b40d38623d",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-501caab6-ee93-48eb-a0a5-b4b40d38623d",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782115020728
+  },
+  {
+    "requestId": "req-4ab330bb-5f96-4753-9fdc-88de1e97b96d",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-4ab330bb-5f96-4753-9fdc-88de1e97b96d",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782114996379
+  },
+  {
+    "requestId": "req-52a7268a-aa25-4a06-9eb8-88c6ae117ee3",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-52a7268a-aa25-4a06-9eb8-88c6ae117ee3",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782114987389
+  },
+  {
+    "requestId": "req-3857574f-a20a-46ab-9063-cdeb29de5073",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-3857574f-a20a-46ab-9063-cdeb29de5073",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782114951795
+  },
+  {
+    "requestId": "req-ac648e95-ef4c-41a4-b619-c00d948e5a33",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-ac648e95-ef4c-41a4-b619-c00d948e5a33",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782114940397
+  },
+  {
+    "requestId": "req-45d71f57-e5ad-4102-b666-6221a745b9b9",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-45d71f57-e5ad-4102-b666-6221a745b9b9",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782114939704
+  },
+  {
+    "requestId": "req-1ac47122-ef06-4e38-8f34-c81c35aee12c",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-1ac47122-ef06-4e38-8f34-c81c35aee12c",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782114896124
+  },
+  {
+    "requestId": "req-4da55395-1a8d-47b1-9aee-7828a24504b7",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-4da55395-1a8d-47b1-9aee-7828a24504b7",
+    "endpointId": "deepseek.personal.<credential-label-redacted>.global.deepseek-v4-flash",
+    "createdAtMs": 1782114895436
+  }
+]
+

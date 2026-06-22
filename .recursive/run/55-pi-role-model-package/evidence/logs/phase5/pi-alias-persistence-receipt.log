@@ -1,0 +1,24 @@
+Command: pi install ./packages/pi-role-model
+ExitCode: -1073740791
+Output:
+Installing ./packages/pi-role-model...
+Installed ./packages/pi-role-model
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+
+
+Command: pi --no-builtin-tools --no-tools -p /role-model alias choose default.decision-only
+ExitCode: 0
+Output:
+
+
+Command: pi --no-builtin-tools --no-tools -p /role-model alias current
+ExitCode: 0
+Output:
+
+
+StatePath: C:\Users\erikb\.pi\agent\role-model.json
+State:
+{
+  "selectedAlias": "default.decision-only"
+}
+

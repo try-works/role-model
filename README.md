@@ -117,6 +117,39 @@ After extracting:
 - Windows: run `Role-Model.bat` or `role-model-runtime.exe`
 - macOS/Linux: run `role-model-runtime`
 
+## Installation for Pi
+
+Pi support is provided by the `pi-role-model` package in `packages/pi-role-model`.
+Install and start the Role-Model router/runtime first; the Pi package discovers an already-running runtime and does not install, launch, or manage it.
+
+For local source installs:
+
+```bash
+pi install ./packages/pi-role-model
+```
+
+Then configure and inspect the provider from Pi:
+
+```text
+/role-model setup
+/role-model status
+/role-model doctor
+/role-model ui
+/role-model alias list
+/role-model alias recommended
+/role-model alias use <alias>
+/role-model alias choose <alias>
+/role-model alias refresh
+```
+
+The package registers Role-Model as the `role-model` provider using the runtime discovery endpoint at
+`/api/role-model/downstream/openai`. By default it looks for the runtime at `http://127.0.0.1:3456`; use the
+`/role-model` commands to verify the configured endpoint before choosing an alias.
+
+This repository-local package install is intended for development and QA. Published npm or git installation instructions
+should be added when `pi-role-model` has a release distribution. The package is currently marked `"private": true`;
+remove that flag before publishing it to npm.
+
 ## Building from source
 
 ### Prerequisites

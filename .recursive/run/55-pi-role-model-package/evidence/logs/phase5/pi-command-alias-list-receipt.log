@@ -1,0 +1,4 @@
+Command: pi --no-builtin-tools --no-tools -p /role-model alias list
+ExitCode: 0
+Output:
+

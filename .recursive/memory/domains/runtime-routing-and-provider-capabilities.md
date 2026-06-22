@@ -19,6 +19,7 @@ Owns-Paths:
 - `/docs/architecture/09-runtime-routing-strategy-interactions.md`
 - `/docs/architecture/12-downstream-alias-capability-discovery.md`
 - `/testdata/catalog/**`
+- `/packages/pi-role-model/**`
 Watch-Paths:
 - `/.recursive/STATE.md`
 - `/.recursive/DECISIONS.md`
@@ -42,6 +43,7 @@ Source-Runs:
 - `51-runtime-testing-architecture-and-regression-matrix`
 - `53-runtime-telemetry-analytics-contract-hardening`
 - `54-alias-capability-discovery-contract`
+- `55-pi-role-model-package`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-06-22T08:02:33Z`
 Tags:
@@ -71,6 +73,9 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - Exact-model requests stay additive; alias requests resolve through the runtime-owned candidate pool before final routing.
 - `/api/role-model/downstream/openai` is the rich downstream OpenAI-compatible discovery contract for exact models and aliases. `/v1/models` remains the compact compatibility list, but now carries additive conservative capability metadata (`context_window`, `max_tokens`, Pi-compatible `input`, full modality lists, capability names, `role_model.discovery_url`, and `role_model.capability_revision`) so consumers can auto-discover from the standard model-list URL. Consumers that need declared versus routable layers, conditional target membership, provenance, cache posture detail, or alias composition should follow the rich route.
 - Pi can configure the role-model provider aliases from the compact `/v1/models` route. The current Run 54 QA baseline proved all `15` aliases list through `pi --provider role-model --list-models role-model` with `262.1K` context, `128K` max output, thinking enabled, and image support, while concrete DeepSeek models still correctly show no image input support.
+- The first repo-owned Pi package is `/packages/pi-role-model`. It uses the rich `/api/role-model/downstream/openai` contract to register a Pi provider named `role-model`, ships a `role-model` skill, and implements one `/role-model` command family. The verified first-release scope is external-runtime only: no managed runtime process, no Role-Model launcher call, no Pi credential copy/sync, no benchmark command, and no Pi-side routing logic.
+- For Pi package compatibility, provider model records need Pi renderer fields beyond id/limits: `input` and zeroed `cost` are required for `pi --list-models role-model` to render Role-Model models without a package-side TypeError.
+- Pi extension commands use `handler(args, ctx)`, not `run`; command output should use `ctx.ui.notify(...)`. Non-interactive `pi -p` command receipts may be silent for notifications, so package QA should also verify alias state, model registry output, package tests, and runtime request receipts.
 - Rich downstream discovery is derived on each read from the current registry, catalog, runtime alias config, and effective routable inventory. Endpoint/model onboarding, routing-strategy alias regeneration, execution-mode changes, endpoint readiness, and catalog updates should update those underlying inputs rather than writing separate alias metadata.
 - Every configured downstream alias should receive a rich discovery record. If the current endpoint pool is empty, the alias remains visible with empty `routable` sets and declared configured target metadata rather than disappearing from discovery.
 - Mixed-alias capability claims must distinguish guaranteed, available, conditional, declared, and currently routable support. Capability-constrained requests must filter incompatible targets before scoring.

@@ -1,0 +1,13 @@
+file:///D:/pi/node_modules/@earendil-works/pi-coding-agent/dist/cli/list-models.js:57
+        images: m.input.includes("image") ? "yes" : "no",
+                        ^
+
+TypeError: Cannot read properties of undefined (reading 'includes')
+    at file:///D:/pi/node_modules/@earendil-works/pi-coding-agent/dist/cli/list-models.js:57:25
+    at Array.map (<anonymous>)
+    at listModels (file:///D:/pi/node_modules/@earendil-works/pi-coding-agent/dist/cli/list-models.js:51:33)
+    at main (file:///D:/pi/node_modules/@earendil-works/pi-coding-agent/dist/main.js:602:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+Node.js v24.11.0
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76

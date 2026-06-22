@@ -2,6 +2,33 @@
 
 ## Recursive Run Index
 
+### Run `55-pi-role-model-package`
+
+- Run folder: `/.recursive/run/55-pi-role-model-package/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added the first repo-owned Pi package, `packages/pi-role-model`, with Pi package manifest, extension, role-model skill, command dispatcher, external runtime discovery, downstream OpenAI discovery parsing, provider registration, alias persistence, package README, and root README install guidance
+  - Phase 5 drove the real local Pi executable to install the package, load the skill, invoke setup/status/doctor/ui/alias commands, list `role-model` models, choose `default.decision-only`, send a no-tools prompt through the alias, and confirm the Role-Model runtime recorded the request
+- Why:
+  - to make Pi consume Role-Model as an externally running OpenAI-compatible provider without copying credentials, starting runtimes, or reimplementing routing inside Pi
+- How:
+  - implemented through strict TDD with late Phase 5 RED/GREEN repairs for Pi model-list fields, Pi command handler shape, alias persistence, command-surface coverage, and package README coverage
+- What was not done:
+  - managed runtime install/start/upgrade, Role-Model launcher invocation, credential sync, benchmark commands, npm publication, and Pi upstream changes remain deferred
+- Known issues / follow-ups:
+  - local Pi on Windows prints a libuv teardown assertion after successful `install`, `list`, and `--list-models` output; package command invocation and prompt smoke completed successfully
+  - command notification output is UI-facing and silent in non-interactive `pi -p` receipts, so Phase 5 relies on command exit codes, alias state, model listing, tests, and runtime request receipts for verification
+
 ### Run `00-baseline`
 
 - Run folder: `/.recursive/run/00-baseline/`

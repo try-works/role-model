@@ -1,0 +1,102 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/55-pi-role-model-package[39m
+
+ [31m❯[39m packages/pi-role-model/test/package-manifest.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 15[2mms[22m[39m
+[31m   [31m×[31m pi-role-model package manifest[2m > [22mdeclares a Pi package with the expected extension and skill paths[39m[32m 12[2mms[22m[39m
+[31m     → ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model\package.json'[39m
+ [31m❯[39m packages/pi-role-model/test/docs-and-safety.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 19[2mms[22m[39m
+[31m   [31m×[31m Pi installation docs, skill, and safety guardrails[2m > [22mships the role-model skill and README Installation for Pi section[39m[32m 14[2mms[22m[39m
+[31m     → ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model\skills\role-model\SKILL.md'[39m
+[31m   [31m×[31m Pi installation docs, skill, and safety guardrails[2m > [22mdoes not couple the package to auth storage, launchers, or managed runtime processes[39m[32m 2[2mms[22m[39m
+[31m     → ENOENT: no such file or directory, scandir 'D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model\src'[39m
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/pi-role-model/test/commands.test.ts [ packages/pi-role-model/test/commands.test.ts ]
+Error: Cannot find module '../src/commands' imported from 'D:/DEV/role-model/.worktrees/55-pi-role-model-package/packages/pi-role-model/test/commands.test.ts'
+ ❯ packages/pi-role-model/test/commands.test.ts:2:1
+      1| import { describe, expect, test } from "vitest";
+      2| import { createRoleModelCommandHandler } from "../src/commands";
+       | ^
+      3| 
+      4| const discovery = {
+
+Caused by: Error: Failed to load url ../src/commands (resolved id: ../src/commands) in D:/DEV/role-model/.worktrees/55-pi-role-model-package/packages/pi-role-model/test/commands.test.ts. Does the file exist?
+ ❯ loadAndTransform node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  packages/pi-role-model/test/downstream-openai.test.ts [ packages/pi-role-model/test/downstream-openai.test.ts ]
+Error: Cannot find module '../src/downstream-openai' imported from 'D:/DEV/role-model/.worktrees/55-pi-role-model-package/packages/pi-role-model/test/downstream-openai.test.ts'
+ ❯ packages/pi-role-model/test/downstream-openai.test.ts:2:1
+      1| import { describe, expect, test } from "vitest";
+      2| import {
+       | ^
+      3|   mapDiscoveryToProviderConfig,
+      4|   validateDownstreamOpenAIDiscovery,
+
+Caused by: Error: Failed to load url ../src/downstream-openai (resolved id: ../src/downstream-openai) in D:/DEV/role-model/.worktrees/55-pi-role-model-package/packages/pi-role-model/test/downstream-openai.test.ts. Does the file exist?
+ ❯ loadAndTransform node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  packages/pi-role-model/test/extension.test.ts [ packages/pi-role-model/test/extension.test.ts ]
+Error: Cannot find module '../src/extension' imported from 'D:/DEV/role-model/.worktrees/55-pi-role-model-package/packages/pi-role-model/test/extension.test.ts'
+ ❯ packages/pi-role-model/test/extension.test.ts:2:1
+      1| import { describe, expect, test } from "vitest";
+      2| import { createRoleModelExtension } from "../src/extension";
+       | ^
+      3| 
+      4| describe("Pi extension registration", () => {
+
+Caused by: Error: Failed to load url ../src/extension (resolved id: ../src/extension) in D:/DEV/role-model/.worktrees/55-pi-role-model-package/packages/pi-role-model/test/extension.test.ts. Does the file exist?
+ ❯ loadAndTransform node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/pi-role-model/test/docs-and-safety.test.ts > Pi installation docs, skill, and safety guardrails > ships the role-model skill and README Installation for Pi section
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model\skills\role-model\SKILL.md'
+ ❯ packages/pi-role-model/test/docs-and-safety.test.ts:27:19
+     25| describe("Pi installation docs, skill, and safety guardrails", () => {
+     26|   test("ships the role-model skill and README Installation for Pi sect…
+     27|     const skill = await readFile(join(packageRoot, "skills", "role-mod…
+       |                   ^
+     28|     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
+     29| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  packages/pi-role-model/test/docs-and-safety.test.ts > Pi installation docs, skill, and safety guardrails > does not couple the package to auth storage, launchers, or managed runtime processes
+Error: ENOENT: no such file or directory, scandir 'D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model\src'
+ ❯ readSources packages/pi-role-model/test/docs-and-safety.test.ts:9:19
+      7| 
+      8| async function readSources(dir: string): Promise<string> {
+      9|   const entries = await readdir(dir, { withFileTypes: true });
+       |                   ^
+     10|   const chunks = await Promise.all(
+     11|     entries.map(async (entry) => {
+ ❯ packages/pi-role-model/test/docs-and-safety.test.ts:39:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  packages/pi-role-model/test/package-manifest.test.ts > pi-role-model package manifest > declares a Pi package with the expected extension and skill paths
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model\package.json'
+ ❯ packages/pi-role-model/test/package-manifest.test.ts:9:33
+      7| describe("pi-role-model package manifest", () => {
+      8|   test("declares a Pi package with the expected extension and skill pa…
+      9|     const manifest = JSON.parse(await readFile(join(packageRoot, "pack…
+       |                                 ^
+     10|       name?: string;
+     11|       type?: string;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+[2m Test Files [22m [1m[31m5 failed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[90m (3)[39m
+[2m   Start at [22m 13:28:21
+[2m   Duration [22m 1.34s[2m (transform 426ms, setup 0ms, collect 213ms, tests 34ms, environment 2ms, prepare 1.88s)[22m
+
