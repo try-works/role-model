@@ -100,11 +100,11 @@ describe("bench-judge grading prompts", () => {
 
   test("parseJudgeGradingResponse sanitizes runaway regex-noise rationale text", () => {
     const parsed = parseJudgeGradingResponse(
-      '{"score":1,"rationale":"Good answer matching the checklist and the \'+\',\'+\',\'+\',\'+\',\'+\',\'+\',\'+\' pattern."}',
+      "{\"score\":1,\"rationale\":\"Good answer matching the checklist and the '+','+','+','+','+','+','+' pattern.\"}",
     );
     expect(parsed?.score).toBe(1);
     expect(parsed?.rationale).toContain("Good answer");
     expect(parsed?.rationale).not.toContain("'+','+','+'");
-    expect((parsed?.rationale?.length ?? 0)).toBeLessThan(200);
+    expect(parsed?.rationale?.length ?? 0).toBeLessThan(200);
   });
 });

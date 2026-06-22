@@ -3,9 +3,9 @@ import { describe, expect, test } from "vitest";
 import routingCapabilitySuite from "../data/routing-capability-suite.json" with { type: "json" };
 
 import {
-  buildScaffoldFollowUp,
   buildHeuristicCompareRanking,
   buildJudgeRequestMessages,
+  buildScaffoldFollowUp,
   capJudgeScoreForGroundedTruthMismatch,
   extractFormattedAnswer,
   gradeBenchmarkCase,
@@ -231,7 +231,9 @@ describe("bench-routing", () => {
   });
 
   test("p15 names the grounded runtime config path directly in the prompt", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "p15-tools-read-one");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "p15-tools-read-one",
+    );
     expect(caseItem).toBeTruthy();
     const combinedMessages = (caseItem?.messages ?? [])
       .map((message) => (typeof message.content === "string" ? message.content : ""))
@@ -240,17 +242,17 @@ describe("bench-routing", () => {
   });
 
   test("p18 encodes repeated get_metrics calls in its expected tool contract", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "p18-tools-agent");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "p18-tools-agent",
+    );
     expect(caseItem).toBeTruthy();
-    expect(caseItem?.expected_tool_names).toEqual([
-      "list_endpoints",
-      "get_metrics",
-      "get_metrics",
-    ]);
+    expect(caseItem?.expected_tool_names).toEqual(["list_endpoints", "get_metrics", "get_metrics"]);
   });
 
   test("e08 declares the top-level json schema it already grades against", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "e08-format-json");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "e08-format-json",
+    );
     expect(caseItem).toBeTruthy();
     expect(caseItem?.answer_format).toEqual({
       kind: "json",
@@ -363,7 +365,9 @@ describe("bench-routing", () => {
   });
 
   test("caps grounded tool-case score when p15 uses the wrong path and answer", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "p15-tools-read-one");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "p15-tools-read-one",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case p15-tools-read-one.");
@@ -389,7 +393,9 @@ describe("bench-routing", () => {
   });
 
   test("does not cap p15 when any repeated read_file call hits the grounded path", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "p15-tools-read-one");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "p15-tools-read-one",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case p15-tools-read-one.");
@@ -418,7 +424,9 @@ describe("bench-routing", () => {
   });
 
   test("does not cap p15 when the grounded runtime config path is absolute", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "p15-tools-read-one");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "p15-tools-read-one",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case p15-tools-read-one.");
@@ -432,7 +440,9 @@ describe("bench-routing", () => {
         tool_calls: [
           {
             name: "read_file",
-            arguments: { path: "C:\\Users\\erikb\\AppData\\Local\\RMCS\\ws\\run\\state\\runtime-config.yaml" },
+            arguments: {
+              path: "C:\\Users\\erikb\\AppData\\Local\\RMCS\\ws\\run\\state\\runtime-config.yaml",
+            },
           },
         ],
         answer: "controller",
@@ -443,7 +453,9 @@ describe("bench-routing", () => {
   });
 
   test("caps grounded tool-case score when t01 invents filenames not present in the scaffold listing", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "t01-tools-list-dir");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "t01-tools-list-dir",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case t01-tools-list-dir.");
@@ -469,7 +481,9 @@ describe("bench-routing", () => {
   });
 
   test("does not cap t01 when any repeated list_dir call inspects config", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "t01-tools-list-dir");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "t01-tools-list-dir",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case t01-tools-list-dir.");
@@ -498,7 +512,9 @@ describe("bench-routing", () => {
   });
 
   test("does not cap t01 when list_dir inspects an absolute config path", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "t01-tools-list-dir");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "t01-tools-list-dir",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case t01-tools-list-dir.");
@@ -523,7 +539,9 @@ describe("bench-routing", () => {
   });
 
   test("caps p18 when routing advice cites comparison data without fetching both metric sets", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "p18-tools-agent");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "p18-tools-agent",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case p18-tools-agent.");
@@ -548,7 +566,9 @@ describe("bench-routing", () => {
   });
 
   test("does not cap p18 when both metric calls are present", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "p18-tools-agent");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "p18-tools-agent",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case p18-tools-agent.");
@@ -573,7 +593,9 @@ describe("bench-routing", () => {
   });
 
   test("caps h09 when the answer does not compare local and remote latency", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "h09-agent-metrics-chain");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "h09-agent-metrics-chain",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case h09-agent-metrics-chain.");
@@ -598,7 +620,9 @@ describe("bench-routing", () => {
   });
 
   test("caps h09 when one side of the latency comparison was never fetched", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "h09-agent-metrics-chain");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "h09-agent-metrics-chain",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case h09-agent-metrics-chain.");
@@ -623,7 +647,9 @@ describe("bench-routing", () => {
   });
 
   test("does not cap h09 when both endpoint metrics support the grounded comparison", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "h09-agent-metrics-chain");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "h09-agent-metrics-chain",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case h09-agent-metrics-chain.");
@@ -648,7 +674,9 @@ describe("bench-routing", () => {
   });
 
   test("h09 encodes both compared get_metrics calls in its contract", () => {
-    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "h09-agent-metrics-chain");
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "h09-agent-metrics-chain",
+    );
     expect(caseItem).toBeTruthy();
     if (!caseItem) {
       throw new Error("Expected benchmark case h09-agent-metrics-chain.");

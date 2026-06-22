@@ -229,7 +229,12 @@
       "max_tokens": 32,
       "expected_response": "A concise one-line definition or correct expansion of API.",
       "grading_criteria": "Defines API in one concise line; either a correct expansion or a brief correct one-line definition is acceptable.",
-      "accept_patterns": ["Application Programming Interface", "programming interface", "software applications", "communicate"],
+      "accept_patterns": [
+        "Application Programming Interface",
+        "programming interface",
+        "software applications",
+        "communicate"
+      ],
       "quick_benchmark": false
     },
     {

@@ -199,15 +199,19 @@ describe("answer-format", () => {
     });
 
     expect(
-      shouldOmitToolsForTurn(caseItem, ["list_endpoints", "get_metrics"], [
-        { function: { name: "list_endpoints", arguments: "{}" } },
-        {
-          function: {
-            name: "get_metrics",
-            arguments: '{"endpoint_id":"local.lfm2.5-8b-a1b"}',
+      shouldOmitToolsForTurn(
+        caseItem,
+        ["list_endpoints", "get_metrics"],
+        [
+          { function: { name: "list_endpoints", arguments: "{}" } },
+          {
+            function: {
+              name: "get_metrics",
+              arguments: '{"endpoint_id":"local.lfm2.5-8b-a1b"}',
+            },
           },
-        },
-      ]),
+        ],
+      ),
     ).toBe(false);
 
     const followUp = buildScaffoldFollowUp(

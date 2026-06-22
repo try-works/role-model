@@ -225,7 +225,10 @@ function tryParseDeliverableJson(deliverable: string): Record<string, unknown> |
   }
 }
 
-function readNormalizedBinaryAnswer(caseItem: RoutingBenchmarkCase, deliverable: string): string | null {
+function readNormalizedBinaryAnswer(
+  caseItem: RoutingBenchmarkCase,
+  deliverable: string,
+): string | null {
   const expected = caseItem.expected_response.trim().toLowerCase();
   if (!["yes", "no", "true", "false"].includes(expected)) {
     return null;
@@ -269,8 +272,7 @@ function readToolCalls(deliverable: Record<string, unknown>): readonly Record<st
     return [];
   }
   return toolCalls.filter(
-    (toolCall): toolCall is Record<string, unknown> =>
-      !!toolCall && typeof toolCall === "object",
+    (toolCall): toolCall is Record<string, unknown> => !!toolCall && typeof toolCall === "object",
   );
 }
 
@@ -365,10 +367,14 @@ function groundedTruthMismatchDetails(
         !metricEndpointIds.includes("local.lfm2.5-8b-a1b") ||
         !metricEndpointIds.includes("remote.deepseek-v4-flash")
       ) {
-        return ["expected get_metrics calls for both local.lfm2.5-8b-a1b and remote.deepseek-v4-flash"];
+        return [
+          "expected get_metrics calls for both local.lfm2.5-8b-a1b and remote.deepseek-v4-flash",
+        ];
       }
       if (/not available|unavailable|unknown|missing/i.test(answer)) {
-        return ["expected explicit remote-vs-local latency comparison, not an unavailable-data answer"];
+        return [
+          "expected explicit remote-vs-local latency comparison, not an unavailable-data answer",
+        ];
       }
       const lowerAnswerText = answer.toLowerCase();
       const mentionsBothSides =
@@ -394,12 +400,12 @@ function groundedTruthMismatchDetails(
           lowerAnswerText.includes("worse")) &&
         comparisonConnector;
       const numericComparison =
-        lowerAnswerText.includes("62") &&
-        lowerAnswerText.includes("245") &&
-        comparisonConnector;
+        lowerAnswerText.includes("62") && lowerAnswerText.includes("245") && comparisonConnector;
       const comparesLocalLower = localBetter || remoteWorse || numericComparison;
       if (!comparesLocalLower) {
-        return ["expected grounded comparison that local.lfm2.5-8b-a1b has lower p95 latency than remote.deepseek-v4-flash"];
+        return [
+          "expected grounded comparison that local.lfm2.5-8b-a1b has lower p95 latency than remote.deepseek-v4-flash",
+        ];
       }
       return [];
     }
@@ -443,10 +449,7 @@ export function gradeBenchmarkCase(input: {
         method: "judge",
       };
     }
-    const normalizedBinaryAnswer = readNormalizedBinaryAnswer(
-      input.caseItem,
-      input.actualResponse,
-    );
+    const normalizedBinaryAnswer = readNormalizedBinaryAnswer(input.caseItem, input.actualResponse);
     if (normalizedBinaryAnswer) {
       return {
         ...input.judgeGrade,
