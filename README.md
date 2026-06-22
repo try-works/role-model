@@ -50,18 +50,6 @@ At a high level, `role-model` separates AI routing into a few stable pieces:
 
 That makes routing explainable and portable across different providers, hosts, and deployment shapes.
 
-## What role-model is not
-
-`role-model` is not:
-
-- a single provider SDK
-- a prompt-role library that permanently binds one persona to one model
-- a monolithic runtime host
-- a benchmark-only project with no routing contract
-
-The protocol is the canonical contract. The router in `role-model-router/` is the reference implementation
-of that contract.
-
 ## What you get in this repository
 
 - canonical schemas and fixtures under [`protocol/`](protocol/README.md)
@@ -69,15 +57,6 @@ of that contract.
 - shared tooling and generated types under `packages/`
 - a deterministic reference router under [`role-model-router/`](role-model-router/README.md)
 - a smoke flow that emits real routing artifacts under `runtime-output/gateway-smoke/`
-
-## Current baseline
-
-Today this repository is a **real baseline**, not only a design sketch:
-
-- the protocol and schemas are implemented
-- the router core and conformance coverage are implemented
-- the smoke path and emitted artifacts are implemented
-- some future host/runtime families are still architecture-stage rather than production-ready
 
 ## Install
 
