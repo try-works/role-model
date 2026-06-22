@@ -299,12 +299,12 @@ Not allowed under the root license without a separate commercial license from
 
 The full terms are in [LICENSE](LICENSE).
 
-Contributions are governed by [CLA.md](CLA.md), which gives `try-works` broad
-relicensing and sublicensing rights for future versions of the project.
+Contributions require acceptance of the [Contributor License Agreement](CLA.md)
+before they can be merged.
 
-Only individual contributions are accepted. If an employer, client, company,
-or other entity has rights in a proposed contribution, that contribution must
-not be submitted here.
+Only individual contributions are accepted. Please do not submit work owned by
+an employer, client, company, or other entity unless you personally have the
+right to contribute it under this project's terms.
 
 Commits published before 2026-06-16 remain under the license that applied
 when they were published, including the earlier `Apache-2.0` history.
