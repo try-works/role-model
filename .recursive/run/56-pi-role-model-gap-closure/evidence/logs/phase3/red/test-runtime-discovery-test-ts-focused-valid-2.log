@@ -1,0 +1,37 @@
+## corepack pnpm --filter pi-role-model exec vitest run test/runtime-discovery.test.ts
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/56-pi-role-model-gap-closure/packages/pi-role-model[39m
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/runtime-discovery.test.ts [ test/runtime-discovery.test.ts ]
+Error: Transform failed with 1 error:
+D:/DEV/role-model/.worktrees/56-pi-role-model-gap-closure/packages/pi-role-model/test/runtime-discovery.test.ts:113:0: ERROR: Expected ")" but found end of file
+  Plugin: vite:esbuild
+  File: D:/DEV/role-model/.worktrees/56-pi-role-model-gap-closure/packages/pi-role-model/test/runtime-discovery.test.ts:113:0
+  
+  Expected ")" but found end of file
+  111 |    });
+  112 |  }
+  113 |  
+      |  ^
+  
+ ❯ failureErrorWithLog ../../node_modules/.pnpm/esbuild@0.27.7/node_modules/esbuild/lib/main.js:1748:15
+ ❯ ../../node_modules/.pnpm/esbuild@0.27.7/node_modules/esbuild/lib/main.js:1017:50
+ ❯ responseCallbacks.<computed> ../../node_modules/.pnpm/esbuild@0.27.7/node_modules/esbuild/lib/main.js:884:9
+ ❯ handleIncomingPacket ../../node_modules/.pnpm/esbuild@0.27.7/node_modules/esbuild/lib/main.js:939:12
+ ❯ Socket.readFromStdout ../../node_modules/.pnpm/esbuild@0.27.7/node_modules/esbuild/lib/main.js:862:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 15:40:56
+[2m   Duration [22m 1.17s[2m (transform 26ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 291ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\56-pi-role-model-gap-closure\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/runtime-discovery.test.ts
+EXIT_CODE=1

@@ -1,0 +1,37 @@
+(node:48300) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"id":"commands","type":"response","command":"get_commands","success":true,"data":{"commands":[{"name":"role-model:1","description":"Configure and inspect the Role-Model provider for Pi.","source":"extension","sourceInfo":{"path":"D:\\DEV\\role-model\\.worktrees\\55-pi-role-model-package\\packages\\pi-role-model\\extensions\\role-model.ts","source":"..\\..\\DEV\\role-model\\.worktrees\\55-pi-role-model-package\\packages\\pi-role-model","scope":"user","origin":"package","baseDir":"D:\\DEV\\role-model\\.worktrees\\55-pi-role-model-package\\packages\\pi-role-model"}},{"name":"role-model:2","description":"Configure and inspect the Role-Model provider for Pi.","source":"extension","sourceInfo":{"path":"D:\\DEV\\role-model\\.worktrees\\56-pi-role-model-gap-closure\\packages\\pi-role-model\\extensions\\role-model.ts","source":"..\\..\\DEV\\role-model\\.worktrees\\56-pi-role-model-gap-closure\\packages\\pi-role-model","scope":"user","origin":"package","baseDir":"D:\\DEV\\role-model\\.worktrees\\56-pi-role-model-gap-closure\\packages\\pi-role-model"}},{"name":"skill:role-model","description":"Use when Pi should route model requests through a locally running Role-Model runtime, inspect Role-Model aliases, or diagnose Role-Model provider setup.","source":"skill","sourceInfo":{"path":"D:\\DEV\\role-model\\.worktrees\\55-pi-role-model-package\\packages\\pi-role-model\\skills\\role-model\\SKILL.md","source":"..\\..\\DEV\\role-model\\.worktrees\\55-pi-role-model-package\\packages\\pi-role-model","scope":"user","origin":"package","baseDir":"D:\\DEV\\role-model\\.worktrees\\55-pi-role-model-package\\packages\\pi-role-model"}}]}}
+COMMANDS=extension:role-model:1, extension:role-model:2, skill:skill:role-model
+
+## prompt /role-model setup
+{"id":"prompt-1","type":"response","command":"prompt","success":true}
+{"type":"agent_start"}
+{"type":"turn_start"}
+{"type":"message_start","message":{"role":"user","content":[{"type":"text","text":"/role-model setup"}],"timestamp":1782136546432}}
+{"type":"message_end","message":{"role":"user","content":[{"type":"text","text":"/role-model setup"}],"timestamp":1782136546432}}
+
+## prompt /role-model status
+{"id":"prompt-2","type":"response","command":"prompt","success":false,"error":"Agent is already processing. Specify streamingBehavior ('steer' or 'followUp') to queue the message."}
+
+## prompt /role-model doctor
+{"id":"prompt-3","type":"response","command":"prompt","success":false,"error":"Agent is already processing. Specify streamingBehavior ('steer' or 'followUp') to queue the message."}
+
+## prompt /role-model ui
+{"id":"prompt-4","type":"response","command":"prompt","success":false,"error":"Agent is already processing. Specify streamingBehavior ('steer' or 'followUp') to queue the message."}
+
+## prompt /role-model alias list
+{"id":"prompt-5","type":"response","command":"prompt","success":false,"error":"Agent is already processing. Specify streamingBehavior ('steer' or 'followUp') to queue the message."}
+
+## prompt /role-model alias recommended
+{"id":"prompt-6","type":"response","command":"prompt","success":false,"error":"Agent is already processing. Specify streamingBehavior ('steer' or 'followUp') to queue the message."}
+
+## prompt /role-model alias use baseline.decision-only
+{"id":"prompt-7","type":"response","command":"prompt","success":false,"error":"Agent is already processing. Specify streamingBehavior ('steer' or 'followUp') to queue the message."}
+
+## prompt /role-model alias refresh
+{"id":"prompt-8","type":"response","command":"prompt","success":false,"error":"Agent is already processing. Specify streamingBehavior ('steer' or 'followUp') to queue the message."}
+{"id":"state","type":"response","command":"get_state","success":true,"data":{"model":{"id":"controller.remote-only","name":"controller.remote-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:3456/v1","reasoning":true,"input":["text","image"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":262144,"maxTokens":128000},"thinkingLevel":"high","isStreaming":true,"isCompacting":false,"steeringMode":"one-at-a-time","followUpMode":"one-at-a-time","sessionFile":"D:\\pi\\agent\\sessions\\--D--DEV-role-model-.worktrees-56-pi-role-model-gap-closure--\\2026-06-22T13-55-45-798Z_019eef9d-a206-7137-9be1-6ee328f234ce.jsonl","sessionId":"019eef9d-a206-7137-9be1-6ee328f234ce","autoCompactionEnabled":true,"messageCount":1,"pendingMessageCount":0}}
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+EXIT_CODE=0

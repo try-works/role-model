@@ -2,6 +2,31 @@
 
 ## Recursive Run Index
 
+### Run `56-pi-role-model-gap-closure`
+
+- Run folder: `/.recursive/run/56-pi-role-model-gap-closure/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+- What changed:
+  - closed the audited proposal/addendum gaps in `packages/pi-role-model`: typed runtime discovery, endpoint trust checks, fail-closed auth-required handling, conservative provider metadata fallbacks, degraded model diagnostics, richer `/role-model status` and `/role-model doctor`, idempotent refresh/setup behavior, Pi `setModel` alias selection, expanded README/package README/skill guidance, and `pi-package` manifest metadata
+  - prepared and published the public npm package as `@try-works/pi-role-model@0.1.0`; docs now prefer `pi install @try-works/pi-role-model` while preserving local worktree install instructions
+  - Phase 5 found a real Pi/Role-Model prompt compatibility defect where Pi sent `developer` messages; the run returned to TDD and added `compat.supportsDeveloperRole: false` to provider and alias model objects before re-running real Pi prompts
+- Why:
+  - run 55 created the first package, but follow-up audit showed it was not yet proposal-complete for discovery, trust, auth, diagnostics, alias semantics, docs, and local-device Pi verification
+- How:
+  - implemented with strict TDD for code behavior and static tests for docs/metadata/safety; verified with package build/tests, proposal/addendum traceability, package safety scans, real Pi package install/list/load, RPC command execution, real Role-Model prompt traffic, remote-block checks, auth-required fake-runtime checks, and remove/reinstall runtime-boundary checks
+- What was not done:
+  - no managed runtime installation, launch, stop, upgrade, browser-opening launcher call, credential sync, Pi auth-file read, hidden benchmark command, or Pi upstream change was added
+- Known issues / follow-ups:
+  - local Pi on Windows still prints a libuv teardown assertion after some successful CLI commands (`install`, `list`, `--help`, `--list-models`, `remove`); run 56 records this as a Pi CLI caveat because package state changes, model output, RPC commands, and prompts all verified correctly
+  - `pi -p "/role-model status"` does not execute extension slash commands; Phase 5 used Pi RPC for extension command QA and `pi -p` for actual model prompts
+
 ### Run `55-pi-role-model-package`
 
 - Run folder: `/.recursive/run/55-pi-role-model-package/`

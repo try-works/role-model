@@ -14,8 +14,25 @@ export interface DownstreamOpenAIModelRecord {
     maxContextWindow?: number | null;
     maxOutputTokens?: number | null;
   };
-  modalities?: Record<string, unknown>;
-  capabilities?: Record<string, unknown>;
+  modalities?: {
+    guaranteedInput?: string[];
+    availableInput?: string[];
+    conditionalInput?: unknown;
+    output?: string[];
+  } & Record<string, unknown>;
+  capabilities?:
+    | boolean
+    | ({
+        guaranteed?: string[];
+        available?: string[];
+        conditional?: unknown;
+        tools?: { functionCalling?: boolean } | boolean;
+        reasoning?: { supported?: boolean; effortControl?: boolean } | boolean;
+        structuredOutput?: { supported?: boolean } | boolean;
+        caching?: unknown;
+      } & Record<string, unknown>);
+  declared?: { modelIds?: string[]; endpointIds?: string[] };
+  routable?: { modelIds?: string[]; endpointIds?: string[] };
   piMapping: {
     contextWindow: number | null;
     maxTokens: number | null;
@@ -58,6 +75,11 @@ export interface PiProviderModelConfig {
   contextWindow?: number;
   maxTokens?: number;
   reasoning?: boolean;
+  provider?: string;
+  api?: "openai-completions";
+  compat?: {
+    supportsDeveloperRole?: boolean;
+  };
 }
 
 export interface PiProviderConfig {
@@ -72,17 +94,21 @@ export interface ProviderRegistration {
   providerId: "role-model";
   config: PiProviderConfig;
   recommendedModel: string | null;
+  modelDiagnostics: RoleModelModelDiagnostic[];
 }
 
 export interface PiExtensionAPI {
   registerProvider(name: string, config: PiProviderConfig): void;
   registerCommand(name: string, config: { description: string; handler: PiCommandHandler }): void;
+  setModel?: (model: PiModelSelection) => Promise<boolean>;
 }
 
 export interface PiCommandContext {
   ui?: {
     notify?: (message: string, level?: "info" | "error") => void;
   };
+  isProjectTrusted?: () => boolean;
+  getModel?: () => PiModelSelection | undefined;
 }
 
 export type PiCommandHandler = (args?: string, context?: PiCommandContext) => Promise<void>;
@@ -90,9 +116,25 @@ export type PiCommandHandler = (args?: string, context?: PiCommandContext) => Pr
 export interface DiscoveryResult {
   discovery: DownstreamOpenAIDiscovery;
   version?: Record<string, unknown>;
+  health?: Record<string, unknown>;
+  state?: "ready" | "fallback";
+  warnings?: string[];
+  providerRegistered?: boolean;
+  modelDiagnostics?: RoleModelModelDiagnostic[];
 }
 
 export interface RoleModelCommandResult {
   ok: boolean;
   text: string;
+}
+
+export interface RoleModelModelDiagnostic {
+  id: string;
+  degraded: boolean;
+  reasons: string[];
+}
+
+export interface PiModelSelection extends PiProviderModelConfig {
+  provider: "role-model";
+  api: "openai-completions";
 }

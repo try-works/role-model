@@ -1,0 +1,12 @@
+(node:28192) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"id":"commands","type":"response","command":"get_commands","success":true,"data":{"commands":[{"name":"role-model","description":"Configure and inspect the Role-Model provider for Pi.","source":"extension","sourceInfo":{"path":"D:\\DEV\\role-model\\.worktrees\\56-pi-role-model-gap-closure\\packages\\pi-role-model\\extensions\\role-model.ts","source":"..\\..\\DEV\\role-model\\.worktrees\\56-pi-role-model-gap-closure\\packages\\pi-role-model","scope":"user","origin":"package","baseDir":"D:\\DEV\\role-model\\.worktrees\\56-pi-role-model-gap-closure\\packages\\pi-role-model"}},{"name":"skill:role-model","description":"Use when Pi should route model requests through a locally running Role-Model runtime, inspect Role-Model aliases, or diagnose Role-Model provider setup.","source":"skill","sourceInfo":{"path":"D:\\DEV\\role-model\\.worktrees\\56-pi-role-model-gap-closure\\packages\\pi-role-model\\skills\\role-model\\SKILL.md","source":"..\\..\\DEV\\role-model\\.worktrees\\56-pi-role-model-gap-closure\\packages\\pi-role-model","scope":"user","origin":"package","baseDir":"D:\\DEV\\role-model\\.worktrees\\56-pi-role-model-gap-closure\\packages\\pi-role-model"}}]}}
+COMMANDS=
+extension:role-model:D:\DEV\role-model\.worktrees\56-pi-role-model-gap-closure\packages\pi-role-model\extensions\role-model.ts
+skill:skill:role-model:D:\DEV\role-model\.worktrees\56-pi-role-model-gap-closure\packages\pi-role-model\skills\role-model\SKILL.md
+{"type":"extension_ui_request","id":"300d3e29-7af2-4100-901e-1afdad6906b4","method":"notify","message":"Role Model Runtime\nstate: ready\nendpoint: http://127.0.0.1:3456\nversion: 1.0\naliases: 15\nselected alias: default.decision-only\nprovider: registered\nauth: placeholder\nendpoint trust: local\nfallback: no\nwarnings: none","notifyType":"info"}
+{"id":"prompt-status","type":"response","command":"prompt","success":true}
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+EXIT_CODE=0

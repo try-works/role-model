@@ -4,6 +4,7 @@ import {
   validateDownstreamOpenAIDiscovery,
 } from "../src/downstream-openai.js";
 import type { DownstreamOpenAIDiscovery } from "../src/types.js";
+import { createDiscovery, createModelRecord } from "./fixtures.js";
 
 const discovery: DownstreamOpenAIDiscovery = {
   contractVersion: "role-model.downstream.openai.v1",
@@ -93,7 +94,121 @@ describe("downstream OpenAI discovery mapping", () => {
         reasoning: true,
         contextWindow: 120000,
         maxTokens: 8000,
+        compat: expect.objectContaining({
+          supportsDeveloperRole: false,
+        }),
       }),
     );
+  });
+
+  test("fails closed when the runtime says bearer auth is required", () => {
+    expect(() =>
+      validateDownstreamOpenAIDiscovery(
+        createDiscovery({
+          authentication: {
+            type: "bearer",
+            headerName: "Authorization",
+            required: true,
+            placeholderToken: "secret-placeholder",
+            note: "auth required",
+          },
+        }),
+      ),
+    ).toThrow(/auth.*required/i);
+  });
+
+  test("falls back from missing piMapping to safe limits and marks degraded records", () => {
+    const provider = mapDiscoveryToProviderConfig(
+      createDiscovery({
+        models: [
+          createModelRecord({
+            piMapping: { contextWindow: null, maxTokens: null },
+            limits: {
+              safeContextWindow: 64000,
+              safeMaxOutputTokens: 2048,
+              maxContextWindow: 128000,
+              maxOutputTokens: 4096,
+            },
+          }),
+        ],
+      }),
+    );
+
+    expect(provider.config.models[0]).toEqual(
+      expect.objectContaining({
+        contextWindow: 64000,
+        maxTokens: 2048,
+      }),
+    );
+    expect(provider.modelDiagnostics).toEqual([
+      expect.objectContaining({
+        id: "role-model/auto",
+        degraded: true,
+        reasons: expect.arrayContaining(["missing piMapping.contextWindow", "missing piMapping.maxTokens"]),
+      }),
+    ]);
+  });
+
+  test("uses explicit conservative defaults only when no Role-Model limits are available", () => {
+    const provider = mapDiscoveryToProviderConfig(
+      createDiscovery({
+        models: [
+          createModelRecord({
+            piMapping: { contextWindow: null, maxTokens: null },
+            limits: {
+              safeContextWindow: null,
+              safeMaxOutputTokens: null,
+              maxContextWindow: null,
+              maxOutputTokens: null,
+            },
+          }),
+        ],
+      }),
+    );
+
+    expect(provider.config.models[0]).toEqual(
+      expect.objectContaining({
+        contextWindow: 8192,
+        maxTokens: 2048,
+      }),
+    );
+    expect(provider.modelDiagnostics[0]?.reasons).toEqual(
+      expect.arrayContaining(["using conservative context window default", "using conservative max tokens default"]),
+    );
+  });
+
+  test("maps rich reasoning and image modality shapes without leaking diagnostics into Pi model config", () => {
+    const provider = mapDiscoveryToProviderConfig(
+      createDiscovery({
+        models: [
+          createModelRecord({
+            modalities: {
+              guaranteedInput: ["text"],
+              availableInput: ["text", "image"],
+              conditionalInput: {},
+              output: ["text"],
+            },
+            capabilities: {
+              guaranteed: [],
+              available: [],
+              conditional: {},
+              tools: { functionCalling: false },
+              reasoning: { supported: true, effortControl: false },
+              structuredOutput: { supported: false },
+              caching: { promptRead: null, promptWrite: null, source: "unknown" },
+            },
+          }),
+        ],
+      }),
+    );
+
+    expect(provider.config.models[0]).toEqual(
+      expect.objectContaining({
+        input: ["text", "image"],
+        reasoning: true,
+      }),
+    );
+    expect(provider.config.models[0]).not.toHaveProperty("degraded");
+    expect(provider.config.models[0]).not.toHaveProperty("reasons");
   });
 });

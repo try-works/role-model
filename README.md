@@ -119,16 +119,29 @@ After extracting:
 
 ## Installation for Pi
 
-Pi support is provided by the `pi-role-model` package in `packages/pi-role-model`.
-Install and start the Role-Model router/runtime first; the Pi package discovers an already-running runtime and does not install, launch, or manage it.
+The `pi-role-model` package connects Pi to an externally running Role-Model runtime.
 
-For local source installs:
+Install the public package:
+
+```bash
+pi install @try-works/pi-role-model
+```
+
+For local development from this repository root:
 
 ```bash
 pi install ./packages/pi-role-model
 ```
 
-Then configure and inspect the provider from Pi:
+By default it connects to `http://127.0.0.1:3456`. To use another local runtime endpoint, launch Pi with:
+
+```bash
+ROLE_MODEL_ENDPOINT=http://127.0.0.1:4567 pi
+```
+
+Remote endpoints are blocked by default. Only enable remote access for a trusted runtime and trusted project context with explicit `allowRemote` behavior, for example `ROLE_MODEL_ALLOW_REMOTE=1`. If Role-Model discovery reports `authentication.required`, the package fails closed unless a future explicit supported token source is configured; it does not read, print, copy, or sync Pi auth files.
+
+Use the package commands inside Pi:
 
 ```text
 /role-model setup
@@ -142,13 +155,11 @@ Then configure and inspect the provider from Pi:
 /role-model alias refresh
 ```
 
-The package registers Role-Model as the `role-model` provider using the runtime discovery endpoint at
-`/api/role-model/downstream/openai`. By default it looks for the runtime at `http://127.0.0.1:3456`; use the
-`/role-model` commands to verify the configured endpoint before choosing an alias.
+`/role-model alias use <alias>` stores the selected alias and asks Pi to make the corresponding Role-Model model active when Pi exposes active model selection. `/role-model ui` only reports the runtime URL; it does not launch or manage the runtime.
 
-This repository-local package install is intended for development and QA. Published npm or git installation instructions
-should be added when `pi-role-model` has a release distribution. The package is currently marked `"private": true`;
-remove that flag before publishing it to npm.
+This package does not install, start, stop, or update Role-Model. It registers Role-Model as the `role-model` provider using the runtime discovery endpoint at `/api/role-model/downstream/openai`. Start the external runtime separately, then run `/role-model setup`.
+
+The public npm package name is `@try-works/pi-role-model`. The repository-local package install is intended for development and QA.
 
 ## Building from source
 

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createRoleModelExtension } from "../src/extension.js";
+import { createDiscovery } from "./fixtures.js";
 
 describe("Pi extension registration", () => {
   test("registers the role-model provider and one role-model command", async () => {
@@ -70,5 +71,39 @@ describe("Pi extension registration", () => {
         run: expect.any(Function),
       }),
     );
+  });
+
+  test("passes Pi setModel into alias selection command dependencies", async () => {
+    const commands: Array<{ name: string; config: { handler: Function } }> = [];
+    const activeModels: unknown[] = [];
+    const extension = createRoleModelExtension({
+      discover: async () => ({ discovery: createDiscovery(), state: "ready", warnings: [], modelDiagnostics: [] }),
+      writeSelectedAlias: async () => undefined,
+    });
+
+    await extension({
+      registerProvider() {
+        // registered during setup and startup discovery
+      },
+      registerCommand(name: string, config: { handler: Function }) {
+        commands.push({ name, config });
+      },
+      async setModel(model: unknown) {
+        activeModels.push(model);
+        return true;
+      },
+    });
+
+    await commands[0]?.config.handler("alias use role-model/auto", {
+      ui: { notify: () => undefined },
+      isProjectTrusted: () => true,
+    });
+
+    expect(activeModels).toEqual([
+      expect.objectContaining({
+        provider: "role-model",
+        id: "role-model/auto",
+      }),
+    ]);
   });
 });

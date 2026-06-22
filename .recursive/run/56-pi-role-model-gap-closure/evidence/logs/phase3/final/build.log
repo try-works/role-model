@@ -1,0 +1,12 @@
+## corepack pnpm --filter pi-role-model build
+
+> pi-role-model@0.0.0 build D:\DEV\role-model\.worktrees\56-pi-role-model-gap-closure\packages\pi-role-model
+> tsc --noEmit -p tsconfig.json
+
+src/runtime-discovery.ts(127,5): error TS2353: Object literal may only specify known properties, and 'declared' does not exist in type 'DownstreamOpenAIModelRecord'.
+test/fixtures.ts(37,5): error TS2353: Object literal may only specify known properties, and 'declared' does not exist in type 'DownstreamOpenAIModelRecord'.
+test/runtime-discovery.test.ts(84,12): error TS18048: 'result.warnings' is possibly 'undefined'.
+D:\DEV\role-model\.worktrees\56-pi-role-model-gap-closure\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  pi-role-model@0.0.0 build: `tsc --noEmit -p tsconfig.json`
+Exit status 2
+EXIT_CODE=2

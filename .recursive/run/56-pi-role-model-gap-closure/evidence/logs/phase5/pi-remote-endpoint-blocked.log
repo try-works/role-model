@@ -1,0 +1,43 @@
+const { spawn } = require('node:child_process');
+const child = spawn('pi', ['--mode', 'rpc'], {
+  shell: true,
+  cwd: process.cwd(),
+  env: { ...process.env, ROLE_MODEL_ENDPOINT: 'https://role-model.example.test' },
+  stdio: ['pipe', 'pipe', 'pipe'],
+});
+let done = false;
+function line(prefix, data) {
+  for (const raw of data.toString().split(/\r?\n/)) {
+    if (!raw) continue;
+    console.log(prefix + raw);
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.type === 'response' && parsed.id === 'prompt') {
+        done = true;
+        child.kill('SIGTERM');
+      }
+    } catch {}
+  }
+}
+child.stdout.on('data', (d) => line('', d));
+child.stderr.on('data', (d) => line('STDERR ', d));
+child.on('exit', (code, signal) => {
+  console.log(`RPC_EXIT_CODE=${code}`);
+  console.log(`RPC_SIGNAL=${signal}`);
+});
+setTimeout(() => {
+  child.stdin.write(JSON.stringify({ id: 'prompt', type: 'prompt', message: '/role-model status' }) + '\n');
+}, 500);
+setTimeout(() => {
+  if (!done) {
+    console.log('TIMEOUT waiting for prompt response');
+    child.kill('SIGTERM');
+  }
+}, 12000);
+(node:19696) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"type":"extension_ui_request","id":"0853990b-4e0b-42bb-ae06-b7b67573f6f9","method":"notify","message":"Role-Model runtime unavailable: Remote Role-Model endpoints are blocked by default. Set allowRemote only for trusted runtimes.\nstate: blocked-remote\nendpoint: https://role-model.example.test\nremediation: Set allowRemote only for a trusted Role-Model endpoint and run from a trusted Pi project.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+EXIT_CODE=0

@@ -2,11 +2,25 @@
 
 Pi package for connecting Pi to an already-running Role-Model runtime.
 
-Install it from this repository root:
+Install the public package:
+
+```bash
+pi install @try-works/pi-role-model
+```
+
+For local development from this repository root:
 
 ```bash
 pi install ./packages/pi-role-model
 ```
+
+By default the package connects to `http://127.0.0.1:3456`. To point Pi at a different local Role-Model runtime, set `ROLE_MODEL_ENDPOINT` before starting Pi:
+
+```bash
+ROLE_MODEL_ENDPOINT=http://127.0.0.1:4567 pi
+```
+
+Remote endpoints are blocked by default. Enable remote runtime access only for a trusted endpoint and trusted project context with explicit `allowRemote` behavior, for example by setting `ROLE_MODEL_ALLOW_REMOTE=1` when launching Pi. A runtime whose downstream discovery reports `authentication.required` fails closed unless a future explicit supported token source is added; the package does not read Pi auth files.
 
 Then use these Pi commands:
 
@@ -24,6 +38,6 @@ Then use these Pi commands:
 
 The package registers a Pi provider named `role-model` from Role-Model's downstream OpenAI discovery endpoint at `/api/role-model/downstream/openai`.
 
-This first release does not install, start, stop, or update the Role-Model runtime. It also does not copy or sync Pi provider credentials. Start Role-Model outside Pi, then run `/role-model setup`.
+`/role-model alias use <alias>` stores the selected alias and asks Pi to make the corresponding `role-model/<alias>` model active when Pi exposes active model selection in the command context. If Pi rejects the model switch, the command reports that the active model was not changed.
 
-The package is currently `"private": true`; remove that before npm publication.
+This package does not install, start, stop, or update the Role-Model runtime. It also does not copy or sync Pi provider credentials. Start Role-Model outside Pi, then run `/role-model setup`.

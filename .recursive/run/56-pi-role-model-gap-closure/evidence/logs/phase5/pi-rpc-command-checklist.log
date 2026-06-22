@@ -1,0 +1,57 @@
+(node:44536) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+## /role-model setup
+{"type":"extension_ui_request","id":"5475b768-4986-415a-a22e-b710bc1606ca","method":"notify","message":"Role-Model provider configured at http://127.0.0.1:3456\nrecommended alias: default.decision-only","notifyType":"info"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model status
+{"type":"extension_ui_request","id":"59d58430-7696-4bf3-bb79-f868da3ff147","method":"notify","message":"Role Model Runtime\nstate: ready\nendpoint: http://127.0.0.1:3456\nversion: 1.0\naliases: 15\nselected alias: default.decision-only\nprovider: registered\nauth: placeholder\nendpoint trust: local\nfallback: no\nwarnings: none","notifyType":"info"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model doctor
+{"type":"extension_ui_request","id":"6f9c322c-3b7f-4de1-93a8-06a156daddd8","method":"notify","message":"doctor: ok\nendpoint: http://127.0.0.1:3456\nhealth: ok\nversion: ok\ndownstream discovery: ok\nfallback: no\nauth: ok\nendpoint trust: ok\nprovider: ok\naliases: ok\ndegraded models: none\nmodels: 19\nrecommended alias: default.decision-only","notifyType":"info"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model ui
+{"type":"extension_ui_request","id":"b2e2bc16-1ab4-49de-813a-af28d60ab75e","method":"notify","message":"Role-Model UI/runtime URL: http://127.0.0.1:3456","notifyType":"info"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias list
+{"type":"extension_ui_request","id":"e95315d8-af00-4dcb-99d5-64012595c881","method":"notify","message":"- baseline.decision-only [ready]\n- baseline.hybrid [ready]\n- baseline.remote-only [ready]\n- controller.decision-only [ready]\n- controller.hybrid [ready]\n- controller.remote-only [ready]\n- default.decision-only (recommended) [ready, recommended, selected]\n- default.hybrid [ready]\n- default.remote-only [ready]\n- difficulty.decision-only [ready]\n- difficulty.hybrid [ready]\n- difficulty.remote-only [ready]\n- hybrid.decision-only [ready]\n- hybrid.hybrid [ready]\n- hybrid.remote-only [ready]","notifyType":"info"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias recommended
+{"type":"extension_ui_request","id":"95cdb684-29da-4ad2-aeae-c27545ab431c","method":"notify","message":"Recommended Role-Model alias: default.decision-only","notifyType":"info"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias use baseline.decision-only
+{"type":"extension_ui_request","id":"c009cd99-2e31-461e-8d8b-21fe124b38c2","method":"notify","message":"selected alias: baseline.decision-only\nactive model: role-model/baseline.decision-only","notifyType":"info"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias refresh
+{"type":"extension_ui_request","id":"898deba8-e759-4f45-95ba-6da81eb77f92","method":"notify","message":"Refreshed Role-Model provider from http://127.0.0.1:3456\nmodels: 19\nrecommended alias: default.decision-only","notifyType":"info"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias current
+{"type":"extension_ui_request","id":"9f96ba01-0af2-49ca-baf1-19724df0da64","method":"notify","message":"Current Role-Model alias: baseline.decision-only","notifyType":"info"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+EXIT_CODE=0

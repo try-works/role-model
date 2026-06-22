@@ -6,6 +6,7 @@ import type { PiCommandContext, PiExtensionAPI } from "./types.js";
 
 export interface RoleModelExtensionOptions extends Partial<RoleModelCommandDependencies> {
   endpoint?: string;
+  allowRemote?: boolean;
   aliasStorePath?: string;
 }
 
@@ -14,7 +15,10 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
     const discover =
       options.discover ??
       (() => {
-        return discoverRoleModelRuntime(options.endpoint ? { endpoint: options.endpoint } : {});
+        return discoverRoleModelRuntime({
+          ...(options.endpoint ? { endpoint: options.endpoint } : {}),
+          ...(options.allowRemote === undefined ? {} : { allowRemote: options.allowRemote }),
+        });
       });
 
     try {
@@ -34,6 +38,7 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
       },
       readSelectedAlias: options.readSelectedAlias ?? aliasStore?.readSelectedAlias,
       writeSelectedAlias: options.writeSelectedAlias ?? aliasStore?.writeSelectedAlias,
+      setActiveModel: options.setActiveModel ?? (pi.setModel ? (model) => pi.setModel?.(model) ?? Promise.resolve(false) : undefined),
     });
 
     pi.registerCommand("role-model", {

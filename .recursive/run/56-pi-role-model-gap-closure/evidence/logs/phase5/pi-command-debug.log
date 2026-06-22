@@ -1,0 +1,17 @@
+## pi -p "/role-model status" --verbose
+EXIT_CODE=1
+## pi -p "role-model status" --verbose
+EXIT_CODE=1
+## pi -p "/help" --verbose
+EXIT_CODE=1
+## pi -p "/role-model help" --verbose --mode json
+{"type":"session","version":3,"id":"019eef9c-6a89-7267-85d3-4ad5689ad8d0","timestamp":"2026-06-22T13:54:26.058Z","cwd":"D:\\DEV\\role-model\\.worktrees\\56-pi-role-model-gap-closure"}
+{"type":"agent_start"}
+{"type":"turn_start"}
+{"type":"message_start","message":{"role":"user","content":[{"type":"text","text":"/role-model help"}],"timestamp":1782136466672}}
+{"type":"message_end","message":{"role":"user","content":[{"type":"text","text":"/role-model help"}],"timestamp":1782136466672}}
+{"type":"message_start","message":{"role":"assistant","content":[],"api":"openai-completions","provider":"role-model","model":"controller.remote-only","usage":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"totalTokens":0,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"error","timestamp":1782136466840,"errorMessage":"400 \"Failed to deserialize the JSON body into the target type: messages[1].role: unknown variant `developer`, expected one of `system`, `user`, `assistant`, `tool`, `latest_reminder` at line 1 column 114\""}}
+{"type":"message_end","message":{"role":"assistant","content":[],"api":"openai-completions","provider":"role-model","model":"controller.remote-only","usage":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"totalTokens":0,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"error","timestamp":1782136466840,"errorMessage":"400 \"Failed to deserialize the JSON body into the target type: messages[1].role: unknown variant `developer`, expected one of `system`, `user`, `assistant`, `tool`, `latest_reminder` at line 1 column 114\""}}
+{"type":"turn_end","message":{"role":"assistant","content":[],"api":"openai-completions","provider":"role-model","model":"controller.remote-only","usage":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"totalTokens":0,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"error","timestamp":1782136466840,"errorMessage":"400 \"Failed to deserialize the JSON body into the target type: messages[1].role: unknown variant `developer`, expected one of `system`, `user`, `assistant`, `tool`, `latest_reminder` at line 1 column 114\""},"toolResults":[]}
+{"type":"agent_end","messages":[{"role":"user","content":[{"type":"text","text":"/role-model help"}],"timestamp":1782136466672},{"role":"assistant","content":[],"api":"openai-completions","provider":"role-model","model":"controller.remote-only","usage":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"totalTokens":0,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"error","timestamp":1782136466840,"errorMessage":"400 \"Failed to deserialize the JSON body into the target type: messages[1].role: unknown variant `developer`, expected one of `system`, `user`, `assistant`, `tool`, `latest_reminder` at line 1 column 114\""}],"willRetry":false}
+EXIT_CODE=0
