@@ -1,8 +1,8 @@
-import { describe, expect, test } from "vitest";
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, expect, test } from "vitest";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -27,7 +27,9 @@ describe("pi-role-model package manifest", () => {
     expect(manifest.publishConfig?.access).toBe("public");
     expect(manifest.license).toBe("BUSL-1.1");
     expect(manifest.repository?.directory).toBe("packages/pi-role-model");
-    expect(manifest.keywords).toEqual(expect.arrayContaining(["pi-package", "pi-role-model", "role-model"]));
+    expect(manifest.keywords).toEqual(
+      expect.arrayContaining(["pi-package", "pi-role-model", "role-model"]),
+    );
     expect(manifest.type).toBe("module");
     expect(manifest.pi?.extensions).toEqual(["extensions/role-model.ts"]);
     expect(manifest.pi?.skills).toEqual(["skills"]);

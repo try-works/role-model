@@ -1,6 +1,11 @@
 import { describe, expect, test } from "vitest";
 import { createRoleModelExtension } from "../src/extension.js";
+import type { PiCommandContext, PiModelSelection } from "../src/types.js";
 import { createDiscovery } from "./fixtures.js";
+
+type RegisteredCommandConfig = {
+  handler: (args?: string, context?: PiCommandContext) => Promise<void>;
+};
 
 describe("Pi extension registration", () => {
   test("registers the role-model provider and one role-model command", async () => {
@@ -74,10 +79,15 @@ describe("Pi extension registration", () => {
   });
 
   test("passes Pi setModel into alias selection command dependencies", async () => {
-    const commands: Array<{ name: string; config: { handler: Function } }> = [];
+    const commands: Array<{ name: string; config: RegisteredCommandConfig }> = [];
     const activeModels: unknown[] = [];
     const extension = createRoleModelExtension({
-      discover: async () => ({ discovery: createDiscovery(), state: "ready", warnings: [], modelDiagnostics: [] }),
+      discover: async () => ({
+        discovery: createDiscovery(),
+        state: "ready",
+        warnings: [],
+        modelDiagnostics: [],
+      }),
       writeSelectedAlias: async () => undefined,
     });
 
@@ -85,10 +95,10 @@ describe("Pi extension registration", () => {
       registerProvider() {
         // registered during setup and startup discovery
       },
-      registerCommand(name: string, config: { handler: Function }) {
+      registerCommand(name: string, config: RegisteredCommandConfig) {
         commands.push({ name, config });
       },
-      async setModel(model: unknown) {
+      async setModel(model: PiModelSelection) {
         activeModels.push(model);
         return true;
       },

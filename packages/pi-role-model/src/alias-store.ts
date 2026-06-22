@@ -21,7 +21,9 @@ export function createFileAliasStore(statePath = getDefaultAliasStorePath()): Al
       try {
         const raw = await readFile(statePath, "utf8");
         const data = JSON.parse(raw) as AliasStoreFile;
-        return typeof data.selectedAlias === "string" && data.selectedAlias.length > 0 ? data.selectedAlias : null;
+        return typeof data.selectedAlias === "string" && data.selectedAlias.length > 0
+          ? data.selectedAlias
+          : null;
       } catch {
         return null;
       }

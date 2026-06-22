@@ -1,6 +1,11 @@
 import { createPiModelSelection } from "./downstream-openai.js";
 import { RoleModelDiscoveryError } from "./runtime-discovery.js";
-import type { DiscoveryResult, PiModelSelection, RoleModelCommandResult, RoleModelModelDiagnostic } from "./types.js";
+import type {
+  DiscoveryResult,
+  PiModelSelection,
+  RoleModelCommandResult,
+  RoleModelModelDiagnostic,
+} from "./types.js";
 
 export interface RoleModelCommandDependencies {
   discover(): Promise<DiscoveryResult>;
@@ -55,7 +60,10 @@ function versionText(result: DiscoveryResult): string {
   return typeof result.version?.version === "string" ? result.version.version : "unknown";
 }
 
-async function selectedAliasText(result: DiscoveryResult, readSelectedAlias?: () => Promise<string | null>): Promise<string> {
+async function selectedAliasText(
+  result: DiscoveryResult,
+  readSelectedAlias?: () => Promise<string | null>,
+): Promise<string> {
   return (await readSelectedAlias?.()) ?? result.discovery.setup.recommendedModel ?? "none";
 }
 
@@ -77,7 +85,9 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
     if (command === "setup") {
       await dependencies.refreshProvider?.(result.discovery);
       const recommended = result.discovery.setup.recommendedModel ?? "none";
-      return ok(`Role-Model provider configured at ${result.discovery.baseUrl}\nrecommended alias: ${recommended}`);
+      return ok(
+        `Role-Model provider configured at ${result.discovery.baseUrl}\nrecommended alias: ${recommended}`,
+      );
     }
 
     if (command === "ui") {
@@ -130,7 +140,8 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
       const selected = await dependencies.readSelectedAlias?.();
       const aliases = aliasRecords(result).map((model) => {
         const markers = ["ready"];
-        const recommended = model.id === result.discovery.setup.recommendedModel ? " (recommended)" : "";
+        const recommended =
+          model.id === result.discovery.setup.recommendedModel ? " (recommended)" : "";
         if (model.id === result.discovery.setup.recommendedModel) markers.push("recommended");
         if (model.id === selected) markers.push("selected");
         if (diagnosticsFor(result, model.id)?.degraded) markers.push("degraded");
@@ -141,7 +152,9 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
 
     if (command === "alias" && subcommand === "recommended") {
       const recommended = result.discovery.setup.recommendedModel;
-      return recommended ? ok(`Recommended Role-Model alias: ${recommended}`) : fail("No Role-Model alias recommendation is available.");
+      return recommended
+        ? ok(`Recommended Role-Model alias: ${recommended}`)
+        : fail("No Role-Model alias recommendation is available.");
     }
 
     if (command === "alias" && (subcommand === "choose" || subcommand === "use")) {
@@ -156,14 +169,20 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
       await dependencies.writeSelectedAlias?.(alias);
       const model = createPiModelSelection(result.discovery, alias);
       if (!model) {
-        return fail(`selected alias: ${alias}\nactive model: not changed (Role-Model alias metadata is unavailable)`);
+        return fail(
+          `selected alias: ${alias}\nactive model: not changed (Role-Model alias metadata is unavailable)`,
+        );
       }
       if (!dependencies.setActiveModel) {
-        return ok(`selected alias: ${alias}\nactive model: not changed (Pi active-model selection is unavailable in this context)`);
+        return ok(
+          `selected alias: ${alias}\nactive model: not changed (Pi active-model selection is unavailable in this context)`,
+        );
       }
       const switched = await dependencies.setActiveModel(model);
       if (!switched) {
-        return fail(`selected alias: ${alias}\nactive model: not changed (Pi rejected model selection; check provider auth)`);
+        return fail(
+          `selected alias: ${alias}\nactive model: not changed (Pi rejected model selection; check provider auth)`,
+        );
       }
       return ok(`selected alias: ${alias}\nactive model: role-model/${alias}`);
     }
@@ -176,7 +195,10 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
     }
 
     if (command === "alias" && subcommand === "current") {
-      const selected = (await dependencies.readSelectedAlias?.()) ?? result.discovery.setup.recommendedModel ?? "none";
+      const selected =
+        (await dependencies.readSelectedAlias?.()) ??
+        result.discovery.setup.recommendedModel ??
+        "none";
       return ok(`Current Role-Model alias: ${selected}`);
     }
 

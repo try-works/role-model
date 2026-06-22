@@ -10,9 +10,9 @@ describe("Role-Model package configuration and endpoint trust", () => {
     expect(createRoleModelConfig({ endpoint: "http://127.0.0.1:3456/" }, {}).endpoint).toBe(
       "http://127.0.0.1:3456",
     );
-    expect(createRoleModelConfig({}, { ROLE_MODEL_ENDPOINT: "http://localhost:4567/" }).endpoint).toBe(
-      "http://localhost:4567",
-    );
+    expect(
+      createRoleModelConfig({}, { ROLE_MODEL_ENDPOINT: "http://localhost:4567/" }).endpoint,
+    ).toBe("http://localhost:4567");
   });
 
   test("allows loopback endpoints by default", () => {

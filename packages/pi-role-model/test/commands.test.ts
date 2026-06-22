@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { createRoleModelCommandHandler } from "../src/commands.js";
-import type { DownstreamOpenAIDiscovery } from "../src/types.js";
 import { RoleModelDiscoveryError } from "../src/runtime-discovery.js";
+import type { DownstreamOpenAIDiscovery } from "../src/types.js";
 import { createDiscovery } from "./fixtures.js";
 
 const discovery: DownstreamOpenAIDiscovery = {
@@ -199,7 +199,9 @@ describe("role-model command dispatcher", () => {
         discovery: createDiscovery(),
         state: "fallback",
         warnings: ["using compact /v1/models fallback"],
-        modelDiagnostics: [{ id: "role-model/auto", degraded: true, reasons: ["missing piMapping.maxTokens"] }],
+        modelDiagnostics: [
+          { id: "role-model/auto", degraded: true, reasons: ["missing piMapping.maxTokens"] },
+        ],
       }),
       readSelectedAlias: async () => "role-model/auto",
     });
@@ -217,7 +219,12 @@ describe("role-model command dispatcher", () => {
     const activeSelections: unknown[] = [];
     let selectedAlias: string | null = null;
     const handler = createRoleModelCommandHandler({
-      discover: async () => ({ discovery: createDiscovery(), state: "ready", warnings: [], modelDiagnostics: [] }),
+      discover: async () => ({
+        discovery: createDiscovery(),
+        state: "ready",
+        warnings: [],
+        modelDiagnostics: [],
+      }),
       writeSelectedAlias: async (alias) => {
         selectedAlias = alias;
       },
@@ -241,7 +248,12 @@ describe("role-model command dispatcher", () => {
 
   test("alias use reports active-model failure without claiming Pi switched models", async () => {
     const handler = createRoleModelCommandHandler({
-      discover: async () => ({ discovery: createDiscovery(), state: "ready", warnings: [], modelDiagnostics: [] }),
+      discover: async () => ({
+        discovery: createDiscovery(),
+        state: "ready",
+        warnings: [],
+        modelDiagnostics: [],
+      }),
       writeSelectedAlias: async () => undefined,
       setActiveModel: async () => false,
     });

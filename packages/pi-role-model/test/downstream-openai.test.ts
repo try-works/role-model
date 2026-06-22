@@ -144,7 +144,10 @@ describe("downstream OpenAI discovery mapping", () => {
       expect.objectContaining({
         id: "role-model/auto",
         degraded: true,
-        reasons: expect.arrayContaining(["missing piMapping.contextWindow", "missing piMapping.maxTokens"]),
+        reasons: expect.arrayContaining([
+          "missing piMapping.contextWindow",
+          "missing piMapping.maxTokens",
+        ]),
       }),
     ]);
   });
@@ -173,7 +176,10 @@ describe("downstream OpenAI discovery mapping", () => {
       }),
     );
     expect(provider.modelDiagnostics[0]?.reasons).toEqual(
-      expect.arrayContaining(["using conservative context window default", "using conservative max tokens default"]),
+      expect.arrayContaining([
+        "using conservative context window default",
+        "using conservative max tokens default",
+      ]),
     );
   });
 

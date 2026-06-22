@@ -29,10 +29,18 @@ function isTruthy(value: string | undefined): boolean {
 }
 
 function isLoopbackHostname(hostname: string): boolean {
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname === "[::1]";
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]"
+  );
 }
 
-export function assessEndpointTrust(endpoint: string, options: EndpointTrustOptions = {}): EndpointTrustResult {
+export function assessEndpointTrust(
+  endpoint: string,
+  options: EndpointTrustOptions = {},
+): EndpointTrustResult {
   let url: URL;
   try {
     url = new URL(endpoint);
@@ -59,7 +67,8 @@ export function assessEndpointTrust(endpoint: string, options: EndpointTrustOpti
       allowed: false,
       remote: true,
       code: "remote-blocked",
-      message: "Remote Role-Model endpoints are blocked by default. Set allowRemote only for trusted runtimes.",
+      message:
+        "Remote Role-Model endpoints are blocked by default. Set allowRemote only for trusted runtimes.",
     };
   }
 

@@ -1,10 +1,18 @@
-import { assessEndpointTrust, createRoleModelConfig, type RoleModelPackageConfig } from "./config.js";
+import {
+  type RoleModelPackageConfig,
+  assessEndpointTrust,
+  createRoleModelConfig,
+} from "./config.js";
 import {
   CONSERVATIVE_CONTEXT_WINDOW,
   CONSERVATIVE_MAX_TOKENS,
   validateDownstreamOpenAIDiscovery,
 } from "./downstream-openai.js";
-import type { DiscoveryResult, DownstreamOpenAIDiscovery, DownstreamOpenAIModelRecord } from "./types.js";
+import type {
+  DiscoveryResult,
+  DownstreamOpenAIDiscovery,
+  DownstreamOpenAIModelRecord,
+} from "./types.js";
 
 export type RoleModelDiscoveryFailureState =
   | "unavailable"
@@ -44,7 +52,11 @@ class HttpStatusError extends Error {
   }
 }
 
-async function fetchJson(url: string, timeoutMs: number, fetchImpl: typeof fetch): Promise<unknown> {
+async function fetchJson(
+  url: string,
+  timeoutMs: number,
+  fetchImpl: typeof fetch,
+): Promise<unknown> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -73,8 +85,14 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function createFallbackModelRecord(record: Record<string, unknown>): DownstreamOpenAIModelRecord | undefined {
-  if (typeof record.id !== "string" || record.object !== "model" || record.owned_by !== "role-model") {
+function createFallbackModelRecord(
+  record: Record<string, unknown>,
+): DownstreamOpenAIModelRecord | undefined {
+  if (
+    typeof record.id !== "string" ||
+    record.object !== "model" ||
+    record.owned_by !== "role-model"
+  ) {
     return undefined;
   }
   const roleModel = isObject(record.role_model) ? record.role_model : {};
@@ -90,7 +108,9 @@ function createFallbackModelRecord(record: Record<string, unknown>): DownstreamO
       : typeof roleModel.max_tokens === "number"
         ? roleModel.max_tokens
         : null;
-  const input = Array.isArray(record.input) ? record.input.filter((item): item is string => typeof item === "string") : ["text"];
+  const input = Array.isArray(record.input)
+    ? record.input.filter((item): item is string => typeof item === "string")
+    : ["text"];
   const endpointIds = Array.isArray(record.endpoint_ids)
     ? record.endpoint_ids.filter((item): item is string => typeof item === "string")
     : [];
@@ -134,7 +154,10 @@ function createFallbackModelRecord(record: Record<string, unknown>): DownstreamO
   };
 }
 
-function createDiscoveryFromCompactModels(baseUrl: string, payload: unknown): DownstreamOpenAIDiscovery {
+function createDiscoveryFromCompactModels(
+  baseUrl: string,
+  payload: unknown,
+): DownstreamOpenAIDiscovery {
   if (!isObject(payload) || !Array.isArray(payload.data)) {
     throw new Error("Role-Model compact /v1/models response is invalid.");
   }
@@ -144,7 +167,8 @@ function createDiscoveryFromCompactModels(baseUrl: string, payload: unknown): Do
   if (models.length === 0) {
     throw new Error("Role-Model compact /v1/models response did not include usable models.");
   }
-  const recommendedModel = models.find((model) => model.type === "alias")?.id ?? models[0]?.id ?? null;
+  const recommendedModel =
+    models.find((model) => model.type === "alias")?.id ?? models[0]?.id ?? null;
   return {
     contractVersion: "role-model.downstream.openai.v1",
     kind: "openai-compatible",
@@ -167,7 +191,9 @@ function createDiscoveryFromCompactModels(baseUrl: string, payload: unknown): Do
     models: models as [DownstreamOpenAIModelRecord, ...DownstreamOpenAIModelRecord[]],
     setup: {
       recommendedModel,
-      notes: ["Using compact /v1/models fallback because rich downstream discovery was unavailable."],
+      notes: [
+        "Using compact /v1/models fallback because rich downstream discovery was unavailable.",
+      ],
     },
     freshness: { generatedAt: new Date().toISOString(), catalogVersion: "compact-fallback" },
   };
@@ -181,7 +207,8 @@ function toDiscoveryError(endpoint: string, error: unknown): RoleModelDiscoveryE
       state: "auth-required",
       endpoint,
       message,
-      remediation: "Use a Role-Model runtime that does not require inbound auth, or add an explicit supported token source.",
+      remediation:
+        "Use a Role-Model runtime that does not require inbound auth, or add an explicit supported token source.",
       cause: error,
     });
   }
@@ -189,7 +216,8 @@ function toDiscoveryError(endpoint: string, error: unknown): RoleModelDiscoveryE
     state: "incompatible",
     endpoint,
     message: "Role-Model downstream OpenAI discovery response is incompatible.",
-    remediation: "Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.",
+    remediation:
+      "Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.",
     cause: error,
   });
 }
@@ -207,7 +235,8 @@ export async function discoverRoleModelRuntime(
       state: "blocked-remote",
       endpoint: config.endpoint,
       message: trust.message,
-      remediation: "Set allowRemote only for a trusted Role-Model endpoint and run from a trusted Pi project.",
+      remediation:
+        "Set allowRemote only for a trusted Role-Model endpoint and run from a trusted Pi project.",
     });
   }
 
@@ -221,7 +250,9 @@ export async function discoverRoleModelRuntime(
   try {
     const healthPayload = await fetchJson(healthUrl, config.requestTimeoutMs, fetchImpl);
     health = isObject(healthPayload) ? healthPayload : undefined;
-    const versionPayload = await fetchJson(versionUrl, config.requestTimeoutMs, fetchImpl).catch(() => undefined);
+    const versionPayload = await fetchJson(versionUrl, config.requestTimeoutMs, fetchImpl).catch(
+      () => undefined,
+    );
     version = isObject(versionPayload) ? versionPayload : undefined;
   } catch (error) {
     if (error instanceof RoleModelDiscoveryError) throw error;
@@ -252,14 +283,20 @@ export async function discoverRoleModelRuntime(
   }
 
   try {
-    const compactPayload = await fetchJson(`${config.endpoint}/v1/models`, config.requestTimeoutMs, fetchImpl);
+    const compactPayload = await fetchJson(
+      `${config.endpoint}/v1/models`,
+      config.requestTimeoutMs,
+      fetchImpl,
+    );
     const discovery = createDiscoveryFromCompactModels(config.endpoint, compactPayload);
     return {
       discovery,
       version,
       health,
       state: "fallback",
-      warnings: ["Using compact /v1/models fallback because rich downstream discovery was unavailable."],
+      warnings: [
+        "Using compact /v1/models fallback because rich downstream discovery was unavailable.",
+      ],
       providerRegistered: true,
       modelDiagnostics: discovery.models.map((model) => ({
         id: model.id,
@@ -272,7 +309,8 @@ export async function discoverRoleModelRuntime(
       state: "unavailable",
       endpoint: config.endpoint,
       message: `Role-Model fallback discovery unavailable: ${error instanceof Error ? error.message : String(error)}`,
-      remediation: "Confirm /api/role-model/downstream/openai or /v1/models is exposed by the external Role-Model runtime.",
+      remediation:
+        "Confirm /api/role-model/downstream/openai or /v1/models is exposed by the external Role-Model runtime.",
       cause: error,
     });
   }

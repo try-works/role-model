@@ -45,7 +45,9 @@ export function validateDownstreamOpenAIDiscovery(value: unknown): DownstreamOpe
     !hasString(discovery.authentication.placeholderToken)
   ) {
     if (discovery.authentication?.required === true) {
-      throw new Error("Role-Model downstream OpenAI discovery says auth is required; no supported Pi token source is configured.");
+      throw new Error(
+        "Role-Model downstream OpenAI discovery says auth is required; no supported Pi token source is configured.",
+      );
     }
     throw new Error("Role-Model downstream OpenAI discovery response is invalid.");
   }
@@ -71,7 +73,10 @@ function mapInput(model: DownstreamOpenAIModelRecord): ("text" | "image")[] {
 }
 
 function isReasoningSupported(model: DownstreamOpenAIModelRecord): boolean {
-  const reasoning = typeof model.capabilities === "object" && model.capabilities !== null ? model.capabilities.reasoning : undefined;
+  const reasoning =
+    typeof model.capabilities === "object" && model.capabilities !== null
+      ? model.capabilities.reasoning
+      : undefined;
   if (typeof reasoning === "boolean") return reasoning;
   if (typeof reasoning === "object" && reasoning !== null) return reasoning.supported === true;
   return false;
@@ -86,13 +91,18 @@ function resolveLimit(
     return { value: piValue, reasons: [] };
   }
 
-  const safeValue = kind === "contextWindow" ? model.limits?.safeContextWindow : model.limits?.safeMaxOutputTokens;
+  const safeValue =
+    kind === "contextWindow" ? model.limits?.safeContextWindow : model.limits?.safeMaxOutputTokens;
   const reasons = [`missing piMapping.${kind}`];
   if (typeof safeValue === "number") {
     return { value: safeValue, reasons };
   }
 
-  reasons.push(kind === "contextWindow" ? "using conservative context window default" : "using conservative max tokens default");
+  reasons.push(
+    kind === "contextWindow"
+      ? "using conservative context window default"
+      : "using conservative max tokens default",
+  );
   return {
     value: kind === "contextWindow" ? CONSERVATIVE_CONTEXT_WINDOW : CONSERVATIVE_MAX_TOKENS,
     reasons,
@@ -121,7 +131,9 @@ export function createPiModelSelection(
   };
 }
 
-export function mapDiscoveryToProviderConfig(discovery: DownstreamOpenAIDiscovery): ProviderRegistration {
+export function mapDiscoveryToProviderConfig(
+  discovery: DownstreamOpenAIDiscovery,
+): ProviderRegistration {
   const modelDiagnostics: RoleModelModelDiagnostic[] = [];
   return {
     providerId: "role-model",

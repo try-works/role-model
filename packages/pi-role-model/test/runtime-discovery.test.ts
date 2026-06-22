@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { discoverRoleModelRuntime, RoleModelDiscoveryError } from "../src/runtime-discovery.js";
+import { RoleModelDiscoveryError, discoverRoleModelRuntime } from "../src/runtime-discovery.js";
 import { createDiscovery } from "./fixtures.js";
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -18,7 +18,8 @@ describe("Role-Model runtime discovery", () => {
         calls.push(String(url));
         if (String(url).endsWith("/healthz")) return jsonResponse({ status: "healthy" });
         if (String(url).endsWith("/api/version")) return jsonResponse({ version: "0.0.0-test" });
-        if (String(url).endsWith("/api/role-model/downstream/openai")) return jsonResponse(discovery);
+        if (String(url).endsWith("/api/role-model/downstream/openai"))
+          return jsonResponse(discovery);
         throw new Error(`unexpected url ${String(url)}`);
       },
     });
@@ -57,7 +58,8 @@ describe("Role-Model runtime discovery", () => {
         calls.push(String(url));
         if (String(url).endsWith("/healthz")) return jsonResponse({ status: "healthy" });
         if (String(url).endsWith("/api/version")) return jsonResponse({ version: "0.0.0-test" });
-        if (String(url).endsWith("/api/role-model/downstream/openai")) return jsonResponse({ error: "missing" }, 404);
+        if (String(url).endsWith("/api/role-model/downstream/openai"))
+          return jsonResponse({ error: "missing" }, 404);
         if (String(url).endsWith("/v1/models")) {
           return jsonResponse({
             object: "list",

@@ -1,7 +1,7 @@
 import { createFileAliasStore } from "./alias-store.js";
-import { discoverRoleModelRuntime } from "./runtime-discovery.js";
-import { createRoleModelCommandHandler, type RoleModelCommandDependencies } from "./commands.js";
+import { type RoleModelCommandDependencies, createRoleModelCommandHandler } from "./commands.js";
 import { registerRoleModelProvider } from "./provider-registration.js";
+import { discoverRoleModelRuntime } from "./runtime-discovery.js";
 import type { PiCommandContext, PiExtensionAPI } from "./types.js";
 
 export interface RoleModelExtensionOptions extends Partial<RoleModelCommandDependencies> {
@@ -29,7 +29,9 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
     }
 
     const aliasStore =
-      options.readSelectedAlias || options.writeSelectedAlias ? undefined : createFileAliasStore(options.aliasStorePath);
+      options.readSelectedAlias || options.writeSelectedAlias
+        ? undefined
+        : createFileAliasStore(options.aliasStorePath);
 
     const command = createRoleModelCommandHandler({
       discover,
@@ -38,7 +40,9 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
       },
       readSelectedAlias: options.readSelectedAlias ?? aliasStore?.readSelectedAlias,
       writeSelectedAlias: options.writeSelectedAlias ?? aliasStore?.writeSelectedAlias,
-      setActiveModel: options.setActiveModel ?? (pi.setModel ? (model) => pi.setModel?.(model) ?? Promise.resolve(false) : undefined),
+      setActiveModel:
+        options.setActiveModel ??
+        (pi.setModel ? (model) => pi.setModel?.(model) ?? Promise.resolve(false) : undefined),
     });
 
     pi.registerCommand("role-model", {
