@@ -1,6 +1,28 @@
 # Changelog
 
-The canonical per-release changelog is published in GitHub Releases.
+## v0.0.1-alpha.1 - 2026-06-22
+
+First alpha release of `role-model`.
+
+This release publishes the Role-Model router runtime together with the public Pi integration package. It is an
+early release intended for installation testing, Pi integration validation, and feedback on the runtime routing
+workflow.
+
+Highlights:
+
+- Released the packaged Role-Model router runtime for Windows, macOS, and Linux through GitHub Releases.
+- Added installer assets and checksums for the standalone runtime distribution.
+- Published the public `@try-works/pi-role-model` package for installing Role-Model support into Pi.
+- Added the Pi Role-Model skill and commands for setup, doctor checks, alias discovery, alias selection, and
+  routing through the Role-Model runtime.
+- Documented Pi installation from npm, local checkout installation, endpoint configuration with
+  `ROLE_MODEL_ENDPOINT`, and remote/authentication safety behavior.
+- Verified the Pi package can connect Pi to an externally running Role-Model runtime and route OpenAI-compatible
+  requests through the Role-Model downstream endpoint.
+
+## Release Notes
+
+The generated per-release changelog is also published in GitHub Releases.
 
 For tagged releases, the repo-authored release body is generated from recursive artifacts in the release commit
 range, especially:
