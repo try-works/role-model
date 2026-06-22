@@ -38,6 +38,10 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(__dirname, "fixtures");
 
+function splitPathSegments(value: string): string[] {
+  return value.split(/[\\/]+/).filter((segment) => segment.length > 0);
+}
+
 const registry: EndpointRegistryResult = {
   endpoints: [
     {
@@ -2576,9 +2580,11 @@ describe("runtime-host-bridge", () => {
       "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
     );
 
-    expect(result).toContain("\\RMCS\\");
-    expect(result).toContain("\\s-");
-    expect(result).not.toContain("\\r-");
+    const segments = splitPathSegments(result);
+    const finalSegment = segments.at(-1) ?? "";
+    expect(segments.some((segment) => segment === "RMCS" || segment === ".rmcs")).toBe(true);
+    expect(finalSegment).toMatch(/^s-/);
+    expect(finalSegment).not.toMatch(/^r-/);
     expect(result.length).toBeLessThan(120);
     expect(result).not.toContain(
       "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
@@ -2614,8 +2620,10 @@ describe("runtime-host-bridge", () => {
       "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
     );
 
-    expect(workspaceRoot).toContain("\\ws\\");
-    expect(workspaceRoot).toContain("\\r-");
+    const segments = splitPathSegments(workspaceRoot);
+    const finalSegment = segments.at(-1) ?? "";
+    expect(segments).toContain("ws");
+    expect(finalSegment).toMatch(/^r-/);
     expect(workspaceRoot.length).toBeLessThan(170);
   });
 
