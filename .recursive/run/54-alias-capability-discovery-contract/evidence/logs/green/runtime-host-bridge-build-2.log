@@ -1,0 +1,29 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+../../../packages/protocol-types/src/generated.ts(92,19): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(93,16): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(100,17): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(103,19): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(104,22): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(105,16): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(107,24): error TS2304: Cannot find name 'NullableNonNegativeInteger'.
+../../../packages/protocol-types/src/generated.ts(108,26): error TS2304: Cannot find name 'NullableNonNegativeInteger'.
+../../../packages/protocol-types/src/generated.ts(109,23): error TS2304: Cannot find name 'NullableNonNegativeInteger'.
+../../../packages/protocol-types/src/generated.ts(110,22): error TS2304: Cannot find name 'NullableNonNegativeInteger'.
+../../../packages/protocol-types/src/generated.ts(113,22): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(114,21): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(115,23): error TS2304: Cannot find name 'ConditionalSupportMap'.
+../../../packages/protocol-types/src/generated.ts(116,13): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(119,17): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(120,16): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(121,18): error TS2304: Cannot find name 'ConditionalSupportMap'.
+../../../packages/protocol-types/src/generated.ts(141,20): error TS2304: Cannot find name 'NullableNonNegativeInteger'.
+../../../packages/protocol-types/src/generated.ts(142,16): error TS2304: Cannot find name 'NullableNonNegativeInteger'.
+../../../packages/protocol-types/src/generated.ts(144,12): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(148,13): error TS2304: Cannot find name 'StringList'.
+../../../packages/protocol-types/src/generated.ts(149,16): error TS2304: Cannot find name 'StringList'.
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

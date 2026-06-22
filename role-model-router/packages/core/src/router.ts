@@ -343,6 +343,37 @@ function getSupportedCapabilitiesForCandidate(
   return unique([...candidate.declared.capabilities, ...roleBinding.effective_capabilities]);
 }
 
+function supportsCapabilityRequirement(
+  supportedCapabilities: readonly string[],
+  requirement: string,
+): boolean {
+  if (supportedCapabilities.includes(requirement)) {
+    return true;
+  }
+  if (supportedCapabilities.some((capability) => capability.startsWith(`${requirement}.`))) {
+    return true;
+  }
+  if (
+    requirement.startsWith("reasoning.") &&
+    supportedCapabilities.includes("reasoning")
+  ) {
+    return true;
+  }
+  if (
+    requirement === "structured.output" &&
+    supportedCapabilities.includes("response.json_schema")
+  ) {
+    return true;
+  }
+  if (
+    requirement === "response.json_schema" &&
+    supportedCapabilities.includes("structured.output")
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function getEffectiveLatency(candidate: EndpointCandidate): number {
   if (
     typeof candidate.observed?.latency_ms_p50 === "number" &&
@@ -671,7 +702,7 @@ function getPreferenceMetric(
   const preferredCapabilityMatches = effectivePreferredCapabilities.filter(
     (capability) =>
       !effectiveRequiredCapabilities.includes(capability) &&
-      supportedCapabilities.includes(capability),
+      supportsCapabilityRequirement(supportedCapabilities, capability),
   ).length;
   if (preferredCapabilityMatches > 0) {
     const delta = Math.min(0.25, preferredCapabilityMatches * 0.25);
@@ -963,7 +994,7 @@ function evaluateEligibility(
 
     if (
       effectiveRequiredCapabilities.some(
-        (capability) => !supportedCapabilities.includes(capability),
+        (capability) => !supportsCapabilityRequirement(supportedCapabilities, capability),
       )
     ) {
       reasons.push("CAPABILITY_MISSING");
@@ -1009,7 +1040,8 @@ function evaluateEligibility(
     if (
       roleBinding?.status === "active" &&
       effectiveRequiredCapabilities.some(
-        (capability) => !roleBinding.effective_capabilities.includes(capability),
+        (capability) =>
+          !supportsCapabilityRequirement(roleBinding.effective_capabilities, capability),
       )
     ) {
       reasons.push("ROLE_BINDING_CAPABILITY_MISSING");

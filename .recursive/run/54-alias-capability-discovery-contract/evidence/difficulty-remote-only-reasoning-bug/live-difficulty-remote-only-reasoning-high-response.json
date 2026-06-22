@@ -1,0 +1,5 @@
+{
+  "status": 400,
+  "body": "\r\n{\r\n  \"error\": \"Chosen endpoint  is not present in the registry result.\"\r\n}",
+  "message": "Response status code does not indicate success: 400 (Bad Request)."
+}

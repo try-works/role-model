@@ -503,11 +503,51 @@ For hosted-tool requests this means Observe should now show:
 - only the supported OpenAI endpoint in `eligibleEndpointIds`
 - normal multi-provider candidate pools again on ordinary chat or function-tool requests
 
+## Capability eligibility runs before scoring
+
+The bridge now infers hard request requirements before difficulty, controller, and final
+router scoring. This protects aliases whose backing models have different input or tool
+surfaces.
+
+Examples:
+
+- chat-completions `image_url` or responses `input_image` parts require `image`
+- video parts require `video`
+- function tools require `tools.function_calling`
+- JSON schema/object response formats require `structured.output`
+- reasoning controls require `reasoning.*`
+
+The inferred requirements narrow the alias endpoint pool before scoring. For example,
+an image request through `hybrid.hybrid` can still use the alias, but DeepSeek text-only
+targets are removed and only image-capable GPT/Kimi targets remain. If no target can
+satisfy the inferred requirements, the bridge returns `no_eligible_target` as a stable
+client error.
+
+The downstream-facing contract for interpreting alias capabilities is documented in
+`docs/architecture/12-downstream-alias-capability-discovery.md`.
+
+That rich discovery payload is derived when the endpoint is read, not stored as a
+separate alias-metadata artifact. Endpoint/model onboarding updates the registry and
+catalog inputs; routing-strategy changes regenerate the canonical alias matrix in
+runtime config; execution-mode and health changes update the effective routable
+inventory. The discovery response recomputes from those sources on each
+`GET /api/role-model/downstream/openai`, emits every configured downstream alias, and
+uses empty `routable` sets rather than dropping aliases whose current endpoint pool is
+empty.
+
+`GET /v1/models` also carries compact additive metadata for clients that begin with the
+OpenAI-compatible model-list URL: conservative `context_window` / `max_tokens`,
+Pi-compatible `input`, full modality lists, capability names, and a `role_model`
+extension with `discovery_url` plus `capability_revision`. Consumers should use the
+rich discovery URL for declared-versus-routable layers, conditional target membership,
+provenance, and detailed cache/tool/reasoning semantics.
+
 For controller-family requests, the most useful inspection matrix is:
 
 | Observe field | What it tells the operator |
 | --- | --- |
 | `routingDiagnostics.aliasResolution` | the exact alias slice after strict resolution, and after hosted-tool filtering when applicable |
+| `routingDiagnostics.capabilityEligibility` | the inferred hard input/capability requirements and any targets excluded before scoring |
 | `routingDiagnostics.controllerRouting` | the sanitized controller directives that were actually accepted |
 | `requestedRoleId` / `roleIds` | the role requested vs the roles present on the selected endpoint |
 | `eligibleEndpointIds` | the final eligible pool after execution mode, alias, request-surface, role, and capability constraints |

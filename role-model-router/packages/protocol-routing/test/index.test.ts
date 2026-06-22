@@ -215,6 +215,91 @@ describe("projectRuntimeRouteInput", () => {
 });
 
 describe("routeRuntimeRequest", () => {
+  test("treats generic reasoning capability as satisfying reasoning effort control requests", () => {
+    const result = routeRuntimeRequest({
+      request: {
+        requestId: "req-runtime-reasoning-effort-capability-1",
+        taskType: "text.chat",
+        requiredCapabilities: ["text.chat", "reasoning.effort_control"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 64,
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+        allowEndpoints: ["remote.reasoning"],
+      },
+      catalog: TEST_CATALOG,
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "remote.reasoning",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run07-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "remote.reasoning",
+              capabilities: ["text.chat", "reasoning"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 1,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      observedProfilesByEndpointId: {},
+      envelope: {
+        sessionId: "session-alpha",
+        conversationId: "conversation-main",
+        selectedTurns: [],
+        selectedArtifacts: [],
+        latestHandoff: null,
+        estimatedTokenCount: 0,
+        diagnostics: [],
+      },
+      retrievalReceipt: {
+        receiptId: "conversation-main-retrieval-receipt",
+        conversationId: "conversation-main",
+        summary: {
+          selectedTurns: 0,
+          selectedArtifacts: 0,
+          omittedTurns: 0,
+          omittedArtifacts: 0,
+          estimatedTokens: 0,
+        },
+        entries: [],
+      },
+      roleDefinitions: [],
+      taskDefinitions: [],
+      roleBindings: [],
+    });
+
+    expect(result.decision.chosen_endpoint_id).toBe("remote.reasoning");
+    expect(result.decision.eligibility).toEqual([
+      expect.objectContaining({
+        endpoint_id: "remote.reasoning",
+        eligible: true,
+      }),
+    ]);
+  });
+
   test("treats active role-binding effective capabilities as satisfying required task capabilities", () => {
     const result = routeRuntimeRequest({
       request: {

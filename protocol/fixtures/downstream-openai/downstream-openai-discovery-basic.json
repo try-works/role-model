@@ -1,0 +1,183 @@
+{
+  "contractVersion": "role-model.downstream.openai.v1",
+  "kind": "openai-compatible",
+  "providerId": "role-model-runtime",
+  "displayName": "Role Model Runtime",
+  "baseUrl": "http://127.0.0.1:3456",
+  "endpoints": {
+    "health": "http://127.0.0.1:3456/healthz",
+    "models": "http://127.0.0.1:3456/v1/models",
+    "chatCompletions": "http://127.0.0.1:3456/v1/chat/completions",
+    "responses": "http://127.0.0.1:3456/v1/responses"
+  },
+  "authentication": {
+    "type": "bearer",
+    "headerName": "Authorization",
+    "required": false,
+    "placeholderToken": "role-model-local",
+    "note": "Inbound bearer validation is not enforced for this local runtime."
+  },
+  "models": [
+    {
+      "id": "hybrid.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.primary.global.deepseek-v4-flash",
+        "moonshot.personal.kimi-code.global.kimi-k2-7-code",
+        "openai.personal.codex.global.gpt-5-4"
+      ],
+      "type": "alias",
+      "routingMode": "hybrid",
+      "targetModelIds": [
+        "chatgpt/gpt-5.4",
+        "deepseek/deepseek-v4-flash",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "canonicalModelIds": [
+        "deepseek/deepseek-v4-flash",
+        "moonshot/kimi-k2.7-code",
+        "openai/gpt-5.4"
+      ],
+      "providerIds": ["deepseek", "moonshot", "openai"],
+      "limits": {
+        "safeContextWindow": 262144,
+        "safeMaxOutputTokens": 128000,
+        "maxContextWindow": 1050000,
+        "maxOutputTokens": 384000
+      },
+      "modalities": {
+        "guaranteedInput": ["text"],
+        "availableInput": ["image", "text", "video"],
+        "conditionalInput": {
+          "image": {
+            "targetModelIds": ["chatgpt/gpt-5.4", "moonshot/kimi-k2.7-code"],
+            "endpointIds": [
+              "moonshot.personal.kimi-code.global.kimi-k2-7-code",
+              "openai.personal.codex.global.gpt-5-4"
+            ]
+          },
+          "video": {
+            "targetModelIds": ["moonshot/kimi-k2.7-code"],
+            "endpointIds": ["moonshot.personal.kimi-code.global.kimi-k2-7-code"]
+          }
+        },
+        "output": ["text"]
+      },
+      "capabilities": {
+        "guaranteed": ["reasoning", "structured.output", "text.chat", "tools.function_calling"],
+        "available": ["reasoning", "structured.output", "text.chat", "tools.function_calling"],
+        "conditional": {},
+        "tools": {
+          "functionCalling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effortControl": true
+        },
+        "structuredOutput": {
+          "supported": true
+        },
+        "caching": {
+          "promptRead": false,
+          "promptWrite": false,
+          "source": "catalog"
+        }
+      },
+      "declared": {
+        "modelIds": ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-flash", "moonshot/kimi-k2.7-code"],
+        "endpointIds": [
+          "deepseek.personal.primary.global.deepseek-v4-flash",
+          "moonshot.personal.kimi-code.global.kimi-k2-7-code",
+          "openai.personal.codex.global.gpt-5-4"
+        ]
+      },
+      "routable": {
+        "modelIds": ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-flash", "moonshot/kimi-k2.7-code"],
+        "endpointIds": [
+          "deepseek.personal.primary.global.deepseek-v4-flash",
+          "moonshot.personal.kimi-code.global.kimi-k2-7-code",
+          "openai.personal.codex.global.gpt-5-4"
+        ]
+      },
+      "piMapping": {
+        "contextWindow": 262144,
+        "maxTokens": 128000
+      },
+      "sources": [
+        "catalog:deepseek/deepseek-v4-flash",
+        "catalog:moonshot/kimi-k2.7-code",
+        "catalog:openai/gpt-5.4"
+      ]
+    },
+    {
+      "id": "catalog-only.openai",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "type": "alias",
+      "routingMode": "basic",
+      "targetModelIds": ["openai/gpt-5.4"],
+      "canonicalModelIds": ["openai/gpt-5.4"],
+      "providerIds": ["openai"],
+      "limits": {
+        "safeContextWindow": 1050000,
+        "safeMaxOutputTokens": 128000,
+        "maxContextWindow": 1050000,
+        "maxOutputTokens": 128000
+      },
+      "modalities": {
+        "guaranteedInput": ["image", "text"],
+        "availableInput": ["image", "text"],
+        "conditionalInput": {},
+        "output": ["text"]
+      },
+      "capabilities": {
+        "guaranteed": ["reasoning", "structured.output", "text.chat", "tools.function_calling"],
+        "available": ["reasoning", "structured.output", "text.chat", "tools.function_calling"],
+        "conditional": {},
+        "tools": {
+          "functionCalling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effortControl": true
+        },
+        "structuredOutput": {
+          "supported": true
+        },
+        "caching": {
+          "promptRead": false,
+          "promptWrite": false,
+          "source": "catalog"
+        }
+      },
+      "declared": {
+        "modelIds": ["openai/gpt-5.4"],
+        "endpointIds": []
+      },
+      "routable": {
+        "modelIds": [],
+        "endpointIds": []
+      },
+      "piMapping": {
+        "contextWindow": 1050000,
+        "maxTokens": 128000
+      },
+      "sources": ["catalog:openai/gpt-5.4"]
+    }
+  ],
+  "setup": {
+    "recommendedModel": "hybrid.hybrid",
+    "notes": [
+      "Use this document to configure aliases and request capability routing.",
+      "Use piMapping for conservative context and output limits."
+    ]
+  },
+  "freshness": {
+    "generatedAt": "2026-06-22T04:55:00.000Z",
+    "catalogVersion": "1",
+    "catalogCapturedAt": "2026-06-22T00:00:00.000Z",
+    "runtimeInventoryRevision": "fixture-revision"
+  }
+}

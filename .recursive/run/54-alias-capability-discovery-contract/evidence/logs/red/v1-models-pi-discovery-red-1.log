@@ -1,0 +1,18 @@
+file:///D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/node_modules/.pnpm/vitest@3.2.4_@types+debug@4_2a7065adef123b6d2ff51ff52cff6455/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:1267
+			throw new Error(`Expected a single value for option "${command}", received [${received}]`);
+			      ^
+
+Error: Expected a single value for option "-t, --testNamePattern <pattern>", received ["compact Pi-compatible|stale-only", "stale-only"]
+    at transform (file:///D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/node_modules/.pnpm/vitest@3.2.4_@types+debug@4_2a7065adef123b6d2ff51ff52cff6455/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:1267:10)
+    at setDotProp (file:///D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/node_modules/.pnpm/vitest@3.2.4_@types+debug@4_2a7065adef123b6d2ff51ff52cff6455/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:207:22)
+    at CAC.mri (file:///D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/node_modules/.pnpm/vitest@3.2.4_@types+debug@4_2a7065adef123b6d2ff51ff52cff6455/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:591:9)
+    at CAC.parse (file:///D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/node_modules/.pnpm/vitest@3.2.4_@types+debug@4_2a7065adef123b6d2ff51ff52cff6455/node_modules/vitest/dist/chunks/cac.Cb-PYCCB.js:508:27)
+    at file:///D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/node_modules/.pnpm/vitest@3.2.4_@types+debug@4_2a7065adef123b6d2ff51ff52cff6455/node_modules/vitest/dist/cli.js:27:13
+    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.11.0
+undefined
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts -t compact Pi-compatible|stale-only test/routable-inventory-bootstrap.test.ts -t stale-only

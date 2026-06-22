@@ -43,7 +43,14 @@ function getSchemaTitle(schema: unknown): string | null {
     ? schema.title
     : null;
 }
-export type FixtureFamily = "top-level" | "router" | "profile" | "trace" | "usage" | "role-task";
+export type FixtureFamily =
+  | "top-level"
+  | "router"
+  | "profile"
+  | "trace"
+  | "usage"
+  | "role-task"
+  | "downstream-openai";
 export type FixtureCategory = "example" | "basic" | "minimal" | "edge" | "invalid";
 export type FixtureExpectation = "valid" | "invalid";
 export type FixtureEntry = {
@@ -74,6 +81,24 @@ export const fixtureValidationManifest = [
     family: "top-level",
     category: "example",
     expectation: "valid",
+  },
+  {
+    filePath: path.join(fixtureRoot, "downstream-openai", "downstream-openai-discovery-basic.json"),
+    schemaFile: "downstream-openai-discovery.schema.json",
+    family: "downstream-openai",
+    category: "basic",
+    expectation: "valid",
+  },
+  {
+    filePath: path.join(
+      fixtureRoot,
+      "downstream-openai",
+      "downstream-openai-discovery-invalid-missing-contract-version.json",
+    ),
+    schemaFile: "downstream-openai-discovery.schema.json",
+    family: "downstream-openai",
+    category: "invalid",
+    expectation: "invalid",
   },
   {
     filePath: path.join(fixtureRoot, "router-golden", "router-decision-basic.json"),
@@ -413,8 +438,12 @@ export async function generateProtocolTypes(outputPath = protocolTypesOutput): P
         if (!definitionTitle || emittedTypeNames.has(definitionTitle)) {
           continue;
         }
+        const definitionWithSiblingRefs = {
+          ...definition,
+          $defs: schema.$defs,
+        };
         blocks.push(
-          await compile(definition, definitionTitle, {
+          await compile(definitionWithSiblingRefs, definitionTitle, {
             bannerComment: "",
             cwd: schemaDir,
             declareExternallyReferenced: false,

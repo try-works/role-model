@@ -12,9 +12,12 @@ Owns-Paths:
 - `/role-model-router/packages/adapter-execution/**`
 - `/packages/conformance/**`
 - `/packages/protocol-types/**`
+- `/protocol/fixtures/downstream-openai/**`
 - `/protocol/fixtures/router-golden/**`
+- `/protocol/schemas/downstream-openai-discovery.schema.json`
 - `/protocol/schemas/router-decision.schema.json`
 - `/docs/architecture/09-runtime-routing-strategy-interactions.md`
+- `/docs/architecture/12-downstream-alias-capability-discovery.md`
 - `/testdata/catalog/**`
 Watch-Paths:
 - `/.recursive/STATE.md`
@@ -38,8 +41,9 @@ Source-Runs:
 - `50-openai-codex-subscription`
 - `51-runtime-testing-architecture-and-regression-matrix`
 - `53-runtime-telemetry-analytics-contract-hardening`
+- `54-alias-capability-discovery-contract`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-21T19:25:00Z`
+Last-Validated: `2026-06-22T08:02:33Z`
 Tags:
 - `runtime`
 - `routing`
@@ -65,6 +69,11 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - The runtime owns a canonical strategy × execution-mode routing matrix, and alias materialization must reflect that matrix instead of ad hoc inventory fallback.
 - Legacy `craft-ask` strategy and alias ids are removed and should not reappear in config materialization, `/v1/models`, or operator documentation.
 - Exact-model requests stay additive; alias requests resolve through the runtime-owned candidate pool before final routing.
+- `/api/role-model/downstream/openai` is the rich downstream OpenAI-compatible discovery contract for exact models and aliases. `/v1/models` remains the compact compatibility list, but now carries additive conservative capability metadata (`context_window`, `max_tokens`, Pi-compatible `input`, full modality lists, capability names, `role_model.discovery_url`, and `role_model.capability_revision`) so consumers can auto-discover from the standard model-list URL. Consumers that need declared versus routable layers, conditional target membership, provenance, cache posture detail, or alias composition should follow the rich route.
+- Pi can configure the role-model provider aliases from the compact `/v1/models` route. The current Run 54 QA baseline proved all `15` aliases list through `pi --provider role-model --list-models role-model` with `262.1K` context, `128K` max output, thinking enabled, and image support, while concrete DeepSeek models still correctly show no image input support.
+- Rich downstream discovery is derived on each read from the current registry, catalog, runtime alias config, and effective routable inventory. Endpoint/model onboarding, routing-strategy alias regeneration, execution-mode changes, endpoint readiness, and catalog updates should update those underlying inputs rather than writing separate alias metadata.
+- Every configured downstream alias should receive a rich discovery record. If the current endpoint pool is empty, the alias remains visible with empty `routable` sets and declared configured target metadata rather than disappearing from discovery.
+- Mixed-alias capability claims must distinguish guaranteed, available, conditional, declared, and currently routable support. Capability-constrained requests must filter incompatible targets before scoring.
 - Routing semantics are split across `baseline`, `difficulty`, `controller`, and `hybrid`, with request-level overrides producing durable routing diagnostics rather than mutating saved operator config.
 - Difficulty routing, controller routing, rewrite behavior, hybrid arbitration, observed-profile selection, effective metrics, throughput penalties, and alias resolution are all runtime-owned diagnostics that should remain inspectable in request receipts.
 - The operator-facing routing interaction reference is `/docs/architecture/09-runtime-routing-strategy-interactions.md`; when routing semantics change, that doc must stay aligned with runtime truth.
@@ -101,7 +110,8 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - For routing or provider-capability changes, prefer focused runtime-host and runtime-ui tests first, then the repo-owned validators such as `runtime:validate-host`, `runtime:validate-vendors`, and `runtime:validate-ui`.
 - When claims depend on rebuilt operator truth, verify against the rebuilt runtime in-browser instead of relying only on fixture tests or stale local ports.
 - For telemetry chart changes, include both contract-level tests and browser/runtime verification that chart primitives render non-empty geometry when data is present.
-- For alias-matrix or controller behavior changes, confirm both persisted config truth and live `/v1/models` exposure.
+- For alias-matrix or controller behavior changes, confirm persisted config truth, live `/v1/models` exposure, and Pi-originated requests for every configured alias when Pi compatibility is in scope.
+- For downstream discovery changes, confirm both `/v1/models` compact metadata and the rich route against the current runtime config alias set, including empty-pool aliases where feasible, and validate the downstream OpenAI schema/fixtures.
 - For provider capability changes, verify exact-model and alias-path behavior separately where the transport boundary can differ.
 
 ## Scope Boundary

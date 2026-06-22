@@ -99,6 +99,13 @@ import {
   buildControllerSystemPrompt,
   parseAndSanitizeControllerRoutingGuidance,
 } from "./controller-routing-contract.js";
+import { createDownstreamOpenAIDiscovery } from "./downstream-openai-discovery.js";
+import { resolveModelCapabilityProfile } from "./model-capability-resolver.js";
+import {
+  filterEndpointsByCapabilityRequirements,
+  inferChatCompletionsCapabilityRequirements,
+  inferResponsesCapabilityRequirements,
+} from "./request-capability-inference.js";
 
 import {
   type ProviderRequestCapture,
@@ -360,6 +367,12 @@ type OpenAIChatCompletionsMessageContent =
   | readonly {
       readonly type?: string;
       readonly text?: string;
+      readonly image_url?: unknown;
+      readonly video_url?: unknown;
+      readonly image?: unknown;
+      readonly video?: unknown;
+      readonly file?: unknown;
+      readonly [key: string]: unknown;
     }[];
 
 interface OpenAIChatCompletionsMessage {
@@ -424,6 +437,37 @@ export interface BridgeModelRecord {
   readonly object: "model";
   readonly owned_by: "role-model";
   readonly endpoint_ids: readonly string[];
+  readonly context_window?: number | null;
+  readonly max_tokens?: number | null;
+  readonly input?: readonly string[];
+  readonly input_modalities?: readonly string[];
+  readonly output_modalities?: readonly string[];
+  readonly capabilities?: readonly string[];
+  readonly role_model?: {
+    readonly type: "model" | "alias";
+    readonly routing_mode?: UnifiedRuntimeModelAliasConfig["mode"];
+    readonly discovery_url: string;
+    readonly capability_revision: string;
+    readonly context_window: number | null;
+    readonly max_tokens: number | null;
+    readonly input_modalities: readonly string[];
+    readonly output_modalities: readonly string[];
+    readonly tools: {
+      readonly function_calling: boolean;
+    };
+    readonly reasoning: {
+      readonly supported: boolean;
+      readonly effort_control: boolean;
+    };
+    readonly structured_output: {
+      readonly supported: boolean;
+    };
+    readonly caching: {
+      readonly prompt_read: boolean | null;
+      readonly prompt_write: boolean | null;
+      readonly source: "catalog" | "unknown" | "mixed";
+    };
+  };
 }
 
 export interface BridgeRuntimeModelRecord extends BridgeModelRecord {
@@ -431,8 +475,8 @@ export interface BridgeRuntimeModelRecord extends BridgeModelRecord {
   readonly displayName: string;
   readonly capabilities: readonly string[];
   readonly modalities: readonly string[];
-  readonly contextWindow: number;
-  readonly maxOutputTokens: number;
+  readonly contextWindow: number | null;
+  readonly maxOutputTokens: number | null;
   readonly pricing: PricingHints | null;
 }
 
@@ -492,6 +536,7 @@ export interface BridgeExecutionPlan {
     | "hybridArbitration"
     | "routingMode"
     | "rolePolicy"
+    | "capabilityEligibility"
   >;
 }
 
@@ -1256,14 +1301,17 @@ function maybeApplyDifficultyRouting(input: {
   readonly contextTokens: number;
   readonly toolCount: number;
   readonly allowEndpoints: readonly string[];
-  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "aliasResolution" | "routingMode">;
+  readonly routingDiagnostics?: Pick<
+    RuntimeRoutingDiagnostics,
+    "aliasResolution" | "routingMode" | "capabilityEligibility"
+  >;
   readonly difficultyContext?: BridgeDifficultyRoutingContext;
 }): {
   readonly allowEndpoints: readonly string[];
   readonly strategy: "balanced" | "cost" | "quality";
   readonly routingDiagnostics?: Pick<
     RuntimeRoutingDiagnostics,
-    "aliasResolution" | "routingMode" | "difficultyRouting"
+    "aliasResolution" | "routingMode" | "capabilityEligibility" | "difficultyRouting"
   >;
 } {
   if (!shouldApplyDifficultyRouting(input.effectiveRoutingMode)) {
@@ -1399,7 +1447,7 @@ function maybeApplyControllerRouting(input: {
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
   readonly routingDiagnostics?: Pick<
     RuntimeRoutingDiagnostics,
-    "aliasResolution" | "routingMode" | "difficultyRouting"
+    "aliasResolution" | "routingMode" | "capabilityEligibility" | "difficultyRouting"
   >;
   readonly controllerContext?: BridgeControllerRoutingContext;
   readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
@@ -1411,6 +1459,7 @@ function maybeApplyControllerRouting(input: {
     RuntimeRoutingDiagnostics,
     | "aliasResolution"
     | "routingMode"
+    | "capabilityEligibility"
     | "difficultyRouting"
     | "controllerRouting"
     | "hybridArbitration"
@@ -1992,6 +2041,7 @@ export interface StartBridgeServerOptions {
   readonly port: number;
   readonly registry: EndpointRegistryResult;
   readonly getRegistry?: () => EndpointRegistryResult;
+  readonly getExecutionCatalog?: () => NormalizedCatalog;
   readonly executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
@@ -2176,6 +2226,7 @@ export interface RuntimeBridgeBackend {
       stages: SessionBootstrapState["stages"];
     };
   }>;
+  getExecutionCatalog(): NormalizedCatalog;
   getEffectiveRoutableInventory(): RoutableInventory | null;
   listProviders(): Promise<
     readonly {
@@ -2594,6 +2645,81 @@ class BridgeHttpError extends Error {
     this.statusCode = statusCode;
     this.body = body;
   }
+}
+
+function runtimeTelemetryErrorClassFor(error: unknown): string {
+  if (!(error instanceof BridgeHttpError)) {
+    return "execution_failed";
+  }
+  const bodyError = error.body.error;
+  if (typeof bodyError === "object" && bodyError !== null) {
+    const code = (bodyError as Record<string, unknown>).code;
+    if (typeof code === "string" && code.trim().length > 0) {
+      return code;
+    }
+    const type = (bodyError as Record<string, unknown>).type;
+    if (typeof type === "string" && type.trim().length > 0) {
+      return type;
+    }
+  }
+  if (typeof bodyError === "string" && bodyError.trim().length > 0) {
+    return bodyError;
+  }
+  return "execution_failed";
+}
+
+function stringArrayValue(value: unknown): readonly string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const strings = value.filter((entry): entry is string => typeof entry === "string");
+  return strings.length > 0 ? strings : undefined;
+}
+
+function runtimeTelemetryDimensionsFor(error: unknown): Record<string, unknown> | null {
+  if (!(error instanceof BridgeHttpError)) {
+    return null;
+  }
+  const bodyError = error.body.error;
+  if (typeof bodyError !== "object" || bodyError === null) {
+    return null;
+  }
+  const errorRecord = bodyError as Record<string, unknown>;
+  const capabilityEligibility: Record<string, unknown> = {};
+  if (typeof errorRecord.requestedModel === "string") {
+    capabilityEligibility.requestedModel = errorRecord.requestedModel;
+  }
+  const requiredInputModalities = stringArrayValue(errorRecord.requiredInputModalities);
+  if (requiredInputModalities) {
+    capabilityEligibility.requiredInputModalities = requiredInputModalities;
+  }
+  const requiredOutputModalities = stringArrayValue(errorRecord.requiredOutputModalities);
+  if (requiredOutputModalities) {
+    capabilityEligibility.requiredOutputModalities = requiredOutputModalities;
+  }
+  const requiredCapabilities = stringArrayValue(errorRecord.requiredCapabilities);
+  if (requiredCapabilities) {
+    capabilityEligibility.requiredCapabilities = requiredCapabilities;
+  }
+  if (Array.isArray(errorRecord.excludedTargets)) {
+    const excludedTargets = errorRecord.excludedTargets.flatMap((target) => {
+      if (typeof target !== "object" || target === null) {
+        return [];
+      }
+      const targetRecord = target as Record<string, unknown>;
+      const endpointId = targetRecord.endpointId;
+      const modelId = targetRecord.modelId;
+      const reasons = stringArrayValue(targetRecord.reasons);
+      if (typeof endpointId !== "string" || typeof modelId !== "string" || !reasons) {
+        return [];
+      }
+      return [{ endpointId, modelId, reasons }];
+    });
+    if (excludedTargets.length > 0) {
+      capabilityEligibility.excludedTargets = excludedTargets;
+    }
+  }
+  return Object.keys(capabilityEligibility).length > 0 ? { capabilityEligibility } : null;
 }
 
 function slugify(value: string): string {
@@ -4639,9 +4765,11 @@ function toResponsesInputMessages(
       typeof message !== "object" ||
       message === null ||
       typeof message.role !== "string" ||
-      typeof message.content !== "string"
+      (typeof message.content !== "string" && !Array.isArray(message.content))
     ) {
-      throw new Error("responses input messages must include string role and content fields");
+      throw new Error(
+        "responses input messages must include role and string or array content fields",
+      );
     }
     return {
       role: message.role,
@@ -4665,7 +4793,29 @@ export function createModelListResponse(
   registry: EndpointRegistryResult,
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
   inventory: RoutableInventory | null = null,
+  catalog?: NormalizedCatalog,
+  baseUrl = "",
 ): BridgeModelListResponse {
+  if (catalog) {
+    const discovery = createDownstreamOpenAIDiscovery({
+      baseUrl,
+      registry,
+      catalog,
+      modelAliases,
+      inventory,
+    });
+    return {
+      object: "list",
+      data: discovery.models.map((record) =>
+        createCompactModelListRecord(
+          record,
+          discovery.freshness.runtimeInventoryRevision,
+          baseUrl,
+        ),
+      ),
+    };
+  }
+
   const byModelId = new Map<string, string[]>();
 
   for (const endpoint of registry.endpoints) {
@@ -4684,9 +4834,6 @@ export function createModelListResponse(
               .map((endpoint) => endpoint.identity.endpoint_id),
           ),
         ].sort(compareText);
-    if (endpointIds.length === 0) {
-      continue;
-    }
     byModelId.set(alias.aliasId, [...endpointIds]);
   }
 
@@ -4705,6 +4852,53 @@ export function createModelListResponse(
   };
 }
 
+function createCompactModelListRecord(
+  record: ReturnType<typeof createDownstreamOpenAIDiscovery>["models"][number],
+  capabilityRevision: string,
+  baseUrl: string,
+): BridgeModelRecord {
+  const contextWindow = record.piMapping.contextWindow;
+  const maxTokens = record.piMapping.maxTokens;
+  const inputModalities = [...record.modalities.availableInput];
+  return {
+    id: record.id,
+    object: "model",
+    owned_by: "role-model",
+    endpoint_ids: [...record.endpoint_ids],
+    context_window: contextWindow,
+    max_tokens: maxTokens,
+    input: ["text", "image"].filter((modality) => inputModalities.includes(modality)),
+    input_modalities: inputModalities,
+    output_modalities: [...record.modalities.output],
+    capabilities: [...record.capabilities.available],
+    role_model: {
+      type: record.type,
+      ...(record.routingMode ? { routing_mode: record.routingMode } : {}),
+      discovery_url: `${baseUrl}/api/role-model/downstream/openai`,
+      capability_revision: capabilityRevision,
+      context_window: contextWindow,
+      max_tokens: maxTokens,
+      input_modalities: inputModalities,
+      output_modalities: [...record.modalities.output],
+      tools: {
+        function_calling: record.capabilities.tools.functionCalling,
+      },
+      reasoning: {
+        supported: record.capabilities.reasoning.supported,
+        effort_control: record.capabilities.reasoning.effortControl,
+      },
+      structured_output: {
+        supported: record.capabilities.structuredOutput.supported,
+      },
+      caching: {
+        prompt_read: record.capabilities.caching.promptRead,
+        prompt_write: record.capabilities.caching.promptWrite,
+        source: record.capabilities.caching.source,
+      },
+    },
+  };
+}
+
 export function createRuntimeModelRecords(
   registry: EndpointRegistryResult,
   catalog: NormalizedCatalog,
@@ -4720,20 +4914,19 @@ export function createRuntimeModelRecords(
   return [...byModelId.entries()]
     .sort(([left], [right]) => compareText(left, right))
     .map(([modelId, endpointIds]) => {
-      const model = catalog.models.find((entry) => entry.modelId === modelId);
+      const profile = resolveModelCapabilityProfile({ modelId, catalog });
       return {
         id: modelId,
         object: "model" as const,
         owned_by: "role-model" as const,
-        providerId:
-          model?.providerId ?? (modelId.includes("/") ? modelId.split("/")[0] : "unknown"),
-        displayName: model?.displayName ?? readDefaultDisplayNameFromModelId(modelId),
+        providerId: profile.providerId,
+        displayName: profile.displayName,
         endpoint_ids: [...endpointIds].sort(compareText),
-        capabilities: model?.capabilities ?? [],
-        modalities: model?.modalities ?? [],
-        contextWindow: model?.contextWindow ?? 0,
-        maxOutputTokens: model?.maxOutputTokens ?? 0,
-        pricing: model?.pricing ?? null,
+        capabilities: profile.capabilities,
+        modalities: profile.inputModalities,
+        contextWindow: profile.limits.contextWindow,
+        maxOutputTokens: profile.limits.maxOutputTokens,
+        pricing: profile.pricing,
       };
     });
 }
@@ -4896,6 +5089,74 @@ function applyAliasResolutionEndpointFilter(input: {
         : {}),
     },
   };
+}
+
+function filterAllowEndpointsForCapabilityRequirements(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly requestedModel: string;
+  readonly allowEndpoints: readonly string[];
+  readonly requirements: ReturnType<typeof inferChatCompletionsCapabilityRequirements>;
+  readonly routingDiagnostics?: Pick<
+    RuntimeRoutingDiagnostics,
+    "aliasResolution" | "routingMode" | "capabilityEligibility"
+  >;
+}): {
+  readonly allowEndpoints: readonly string[];
+  readonly routingDiagnostics?: Pick<
+    RuntimeRoutingDiagnostics,
+    "aliasResolution" | "routingMode" | "capabilityEligibility"
+  >;
+} {
+  const filtered = filterEndpointsByCapabilityRequirements({
+    registry: input.registry,
+    allowEndpoints: input.allowEndpoints,
+    requirements: input.requirements,
+  });
+  const aliasResolution = applyAliasResolutionEndpointFilter({
+    registry: input.registry,
+    allowEndpoints: filtered.allowEndpoints,
+    routingDiagnostics: input.routingDiagnostics,
+  })?.aliasResolution;
+
+  return {
+    allowEndpoints: filtered.allowEndpoints,
+    routingDiagnostics: {
+      ...input.routingDiagnostics,
+      ...(aliasResolution ? { aliasResolution } : {}),
+      capabilityEligibility: filtered.diagnostics,
+    },
+  };
+}
+
+function toPublicDiagnosticEndpointId(endpointId: string): string {
+  return endpointId
+    .replace(/api[-_]?key/gi, "credential")
+    .replace(/credentialRef/gi, "credential")
+    .replace(/[a-zA-Z]:[\\/][^.\s"]+/g, "[local-path]");
+}
+
+function throwNoEligibleCapabilityTarget(input: {
+  readonly requestedModel: string;
+  readonly requirements: ReturnType<typeof inferChatCompletionsCapabilityRequirements>;
+  readonly routingDiagnostics?: Pick<RuntimeRoutingDiagnostics, "capabilityEligibility">;
+}): never {
+  const excludedTargets =
+    input.routingDiagnostics?.capabilityEligibility?.excludedTargets.map((target) => ({
+      ...target,
+      endpointId: toPublicDiagnosticEndpointId(target.endpointId),
+    })) ?? [];
+  throw new BridgeHttpError(400, {
+    error: {
+      type: "capability_eligibility_error",
+      code: "no_eligible_target",
+      message: `no_eligible_target: no targets for model ${input.requestedModel} satisfy the inferred request capabilities.`,
+      requestedModel: input.requestedModel,
+      requiredInputModalities: input.requirements.requiredInputModalities,
+      requiredOutputModalities: input.requirements.requiredOutputModalities,
+      requiredCapabilities: input.requirements.requiredCapabilities,
+      excludedTargets,
+    },
+  });
 }
 
 function filterAllowEndpointsForResponsesHostedTools(input: {
@@ -5196,7 +5457,21 @@ export function createDownstreamOpenAIProviderConfig(
   registry: EndpointRegistryResult,
   baseUrl: string,
   modelAliases: readonly UnifiedRuntimeModelAliasConfig[] = [],
+  options: {
+    readonly catalog?: NormalizedCatalog;
+    readonly inventory?: RoutableInventory | null;
+  } = {},
 ): BridgeDownstreamOpenAIProviderConfig {
+  if (options.catalog) {
+    return createDownstreamOpenAIDiscovery({
+      baseUrl,
+      registry,
+      catalog: options.catalog,
+      modelAliases,
+      inventory: options.inventory ?? null,
+    }) as unknown as BridgeDownstreamOpenAIProviderConfig;
+  }
+
   const models = createModelListResponse(registry, modelAliases).data;
   const recommendedModel = modelAliases[0]?.aliasId ?? models[0]?.id ?? null;
 
@@ -5411,6 +5686,23 @@ export function mapChatCompletionsRequest(
           routingMode: configuredDefaultRoutingMode,
         }
       : routingDiagnostics;
+  const capabilityRequirements = inferChatCompletionsCapabilityRequirements(
+    body as unknown as Record<string, unknown>,
+  );
+  const capabilityFiltered = filterAllowEndpointsForCapabilityRequirements({
+    registry,
+    requestedModel: body.model,
+    allowEndpoints,
+    requirements: capabilityRequirements,
+    routingDiagnostics: baseRoutingDiagnostics,
+  });
+  if (capabilityFiltered.allowEndpoints.length === 0) {
+    throwNoEligibleCapabilityTarget({
+      requestedModel: body.model,
+      requirements: capabilityRequirements,
+      routingDiagnostics: capabilityFiltered.routingDiagnostics,
+    });
+  }
   const difficultyRouting = maybeApplyDifficultyRouting({
     effectiveRoutingMode,
     requestedModel: body.model,
@@ -5418,8 +5710,8 @@ export function mapChatCompletionsRequest(
     messages: body.messages,
     contextTokens,
     toolCount: body.tools?.length ?? 0,
-    allowEndpoints,
-    routingDiagnostics: baseRoutingDiagnostics,
+    allowEndpoints: capabilityFiltered.allowEndpoints,
+    routingDiagnostics: capabilityFiltered.routingDiagnostics,
     difficultyContext,
   });
 
@@ -5436,9 +5728,9 @@ export function mapChatCompletionsRequest(
     routingRequest: {
       requestId,
       taskType: "text.chat",
-      requiredCapabilities: ["text.chat"],
+      requiredCapabilities: capabilityRequirements.requiredCapabilities,
       preferredCapabilities: [],
-      requiredModalities: ["text"],
+      requiredModalities: capabilityRequirements.requiredInputModalities,
       contextTokens,
       needsTools: Boolean(tools?.length),
       strategy: difficultyRouting.strategy,
@@ -5491,6 +5783,9 @@ export function mapResponsesRequest(
 ): BridgeExecutionPlan {
   const messages = toResponsesInputMessages(body.input);
   const contextTokens = estimateContextTokens(messages, body.tools?.length ?? 0);
+  const capabilityRequirements = inferResponsesCapabilityRequirements(
+    body as unknown as Record<string, unknown>,
+  );
   const { allowEndpoints: modelAllowEndpoints, routingDiagnostics } = resolveRequestedModelPool(
     registry,
     body.model,
@@ -5538,6 +5833,20 @@ export function mapResponsesRequest(
           routingMode: configuredDefaultRoutingMode,
         }
       : toolExecutionPlan.routingDiagnostics;
+  const capabilityFiltered = filterAllowEndpointsForCapabilityRequirements({
+    registry,
+    requestedModel: body.model,
+    allowEndpoints: toolExecutionPlan.allowEndpoints,
+    requirements: capabilityRequirements,
+    routingDiagnostics: baseRoutingDiagnostics,
+  });
+  if (capabilityFiltered.allowEndpoints.length === 0) {
+    throwNoEligibleCapabilityTarget({
+      requestedModel: body.model,
+      requirements: capabilityRequirements,
+      routingDiagnostics: capabilityFiltered.routingDiagnostics,
+    });
+  }
   const difficultyRouting = maybeApplyDifficultyRouting({
     effectiveRoutingMode,
     requestedModel: body.model,
@@ -5545,8 +5854,8 @@ export function mapResponsesRequest(
     messages,
     contextTokens,
     toolCount: body.tools?.length ?? 0,
-    allowEndpoints: toolExecutionPlan.allowEndpoints,
-    routingDiagnostics: baseRoutingDiagnostics,
+    allowEndpoints: capabilityFiltered.allowEndpoints,
+    routingDiagnostics: capabilityFiltered.routingDiagnostics,
     difficultyContext,
   });
 
@@ -5567,9 +5876,9 @@ export function mapResponsesRequest(
     routingRequest: {
       requestId,
       taskType: "text.chat",
-      requiredCapabilities: ["text.chat"],
+      requiredCapabilities: capabilityRequirements.requiredCapabilities,
       preferredCapabilities: [],
-      requiredModalities: ["text"],
+      requiredModalities: capabilityRequirements.requiredInputModalities,
       contextTokens,
       needsTools: Boolean(tools?.length),
       strategy: difficultyRouting.strategy,
@@ -9131,7 +9440,20 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     if (request.method === "GET" && url.pathname === "/v1/models") {
       const modelAliases = await resolveConfiguredModelAliases(options.readRuntimeConfig);
       const inventory = options.getRoutableInventory?.() ?? null;
-      writeJson(response, 200, createModelListResponse(registry, modelAliases, inventory));
+      writeJson(
+        response,
+        200,
+        createModelListResponse(
+          registry,
+          modelAliases,
+          inventory,
+          options.getExecutionCatalog?.(),
+          resolveExternalBaseUrl(request, {
+            host: options.host,
+            port: options.port,
+          }),
+        ),
+      );
       return;
     }
 
@@ -9487,6 +9809,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
 
     if (request.method === "GET" && url.pathname === "/api/role-model/downstream/openai") {
       const modelAliases = await resolveConfiguredModelAliases(options.readRuntimeConfig);
+      const inventory = options.getRoutableInventory?.() ?? null;
       writeJson(
         response,
         200,
@@ -9497,6 +9820,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             port: options.port,
           }),
           modelAliases,
+          {
+            catalog: options.getExecutionCatalog?.(),
+            inventory,
+          },
         ),
       );
       return;
@@ -14704,9 +15031,12 @@ export async function createRuntimeBridgeBackend(
           sourceType: fallbackFailureSourceType,
           endpointId: fallbackFailureEndpointId,
           modelId: body.model,
+          requestedModelId: body.model,
+          requestOperation: "chat",
           statusCode,
-          errorClass: "execution_failed",
+          errorClass: runtimeTelemetryErrorClassFor(error),
           latencyMs: Math.max(0, Date.now() - executionStartedAtMs),
+          dimensions: runtimeTelemetryDimensionsFor(error),
         });
       };
       try {
@@ -15053,6 +15383,9 @@ export async function createRuntimeBridgeBackend(
     },
     getRoutableInventory(): RoutableInventory | null {
       return currentRoutableInventory.endpointIds.length > 0 ? currentRoutableInventory : null;
+    },
+    getExecutionCatalog(): NormalizedCatalog {
+      return getCurrentExecutionCatalog();
     },
     getEffectiveRoutableInventory(): RoutableInventory | null {
       const inventory = getRouterEffectiveRoutableInventory();
@@ -16517,6 +16850,7 @@ export async function createRuntimeBridgeBackend(
             totalAvoidedCostUsd: telemetryRecord.totalAvoidedCostUsd,
             costBaselineSource: telemetryRecord.costBaselineSource,
             costSavingsSupport: telemetryRecord.costSavingsSupport,
+            ...(telemetryRecord.dimensions ? { dimensions: telemetryRecord.dimensions } : {}),
           },
           effectiveCostUsd: telemetryRecord.effectiveCostUsd,
           costCalculationBasis: telemetryRecord.costCalculationBasis,

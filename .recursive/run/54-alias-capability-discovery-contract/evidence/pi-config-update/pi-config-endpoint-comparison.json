@@ -1,0 +1,57 @@
+[
+  {
+    "id": "hybrid.hybrid",
+    "endpointContext": 262144,
+    "piContext": 262144,
+    "endpointMaxTokens": 128000,
+    "piMaxTokens": 128000,
+    "endpointInput": "text,image",
+    "piInput": "text,image",
+    "endpointReasoning": true,
+    "piReasoning": true
+  },
+  {
+    "id": "chatgpt/gpt-5.4",
+    "endpointContext": 1050000,
+    "piContext": 1000000,
+    "endpointMaxTokens": 128000,
+    "piMaxTokens": 128000,
+    "endpointInput": "text,image",
+    "piInput": "text,image",
+    "endpointReasoning": true,
+    "piReasoning": true
+  },
+  {
+    "id": "deepseek/deepseek-v4-flash",
+    "endpointContext": 1000000,
+    "piContext": 1000000,
+    "endpointMaxTokens": 384000,
+    "piMaxTokens": 384000,
+    "endpointInput": "text",
+    "piInput": "text",
+    "endpointReasoning": true,
+    "piReasoning": true
+  },
+  {
+    "id": "deepseek/deepseek-v4-pro",
+    "endpointContext": 1000000,
+    "piContext": 1000000,
+    "endpointMaxTokens": 384000,
+    "piMaxTokens": 384000,
+    "endpointInput": "text",
+    "piInput": "text",
+    "endpointReasoning": true,
+    "piReasoning": true
+  },
+  {
+    "id": "moonshot/kimi-k2.7-code",
+    "endpointContext": 262144,
+    "piContext": 262144,
+    "endpointMaxTokens": 262144,
+    "piMaxTokens": 262144,
+    "endpointInput": "text,image",
+    "piInput": "text,image",
+    "endpointReasoning": true,
+    "piReasoning": true
+  }
+]

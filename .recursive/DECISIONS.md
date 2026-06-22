@@ -1456,3 +1456,38 @@
 - Known issues / follow-ups:
   - fresh successful live-completion telemetry was not generated in the decision-only QA runtime because no routable endpoints were configured; populated successful/cost/cache chart review used isolated temporary QA telemetry
   - the pre-existing host-bridge validator timeout baseline in `test/validate-observability.test.ts` and `test/validate-ui.test.ts` remains outside Run 53 scope
+
+### Run `54-alias-capability-discovery-contract`
+
+- Run folder: `/.recursive/run/54-alias-capability-discovery-contract/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added a shared model capability resolver so runtime-specific IDs such as `chatgpt/gpt-5.4` resolve through canonical GPT metadata while preserving the public runtime ID
+  - added a versioned rich downstream discovery contract at `/api/role-model/downstream/openai` with exact model and alias records, safe/max limits, declared versus routable layers, modalities, tool/function-calling, structured output, reasoning, advisory caching, freshness, sanitization, and Pi-style mapping hints
+  - added request capability inference and alias endpoint filtering before scoring, so image/video/tool/structured-output/reasoning-control requests route only to compatible targets or return stable `no_eligible_target`
+  - added schema, fixtures, generated protocol types, focused tests, and architecture docs for downstream alias and endpoint capability resolution
+  - repaired a Phase 4 clarification gap so every configured downstream alias is discoverable even when its current routable endpoint pool is empty
+  - enriched `/v1/models` with compact additive capability metadata (`context_window`, `max_tokens`, Pi-compatible `input`, full modalities, capability names, `role_model.discovery_url`, and `role_model.capability_revision`) so downstream consumers that start from an OpenAI-compatible model list can auto-discover conservative alias capabilities before following the rich contract
+- Why:
+  - Pi and other OpenAI-compatible downstream consumers need accurate role-model alias capabilities instead of stale static defaults such as `128000 / 16384`
+  - mixed aliases such as `hybrid.hybrid` can contain models with different modalities and capability controls, so discovery and routing must distinguish guaranteed, available, conditional, declared, and currently routable support
+- How:
+  - strict TDD with RED/GREEN evidence for resolver, discovery, request inference, routing eligibility, compact `/v1/models` metadata, and the all-alias empty-pool regression
+  - verified via focused runtime-host tests, schema validation, generated type/build checks, docs build, updated worktree runtime probes on `127.0.0.1:3456`, Pi configured-endpoint mapping evidence for both `/v1/models` and `/api/role-model/downstream/openai`, and agent-operated Pi alias-matrix QA with at least three successful prompts per alias
+- What was not done:
+  - Pi itself was not changed in this repository; the role-model endpoint now exposes enough compact `/v1/models` metadata for Pi alias configuration, while richer downstream consumers can still follow `role_model.discovery_url`
+  - role-model was not expanded into a generic hosted browser/tool executor
+- Known issues / follow-ups:
+  - Pi noninteractive smoke processes can remain alive after role-model completes the backend request; role-model telemetry is the authoritative backend receipt for this QA path
+  - inherited `runtime-host-bridge` validator timeouts in `test/validate-observability.test.ts` and `test/validate-ui.test.ts` remain outside Run 54 scope

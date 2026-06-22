@@ -1,0 +1,131 @@
+{
+  "capturedAt": "2026-06-22T10:02:33+02:00",
+  "runtimeBaseUrl": "http://127.0.0.1:3456",
+  "piCommand": "D:\\pi\\node_modules\\.bin\\pi.cmd --provider role-model --list-models role-model",
+  "runtimeTelemetrySource": "GET http://127.0.0.1:3456/api/role-model/telemetry/requests?limit=700",
+  "runtimeListener": {
+    "address": "127.0.0.1",
+    "port": 3456,
+    "pid": 43932
+  },
+  "piDiscovery": {
+    "result": "PASS",
+    "aliasCount": 15,
+    "contextWindowShownByPi": "262.1K",
+    "maxOutputShownByPi": "128K",
+    "thinkingShownByPi": "yes",
+    "imagesShownByPi": "yes",
+    "notes": [
+      "Pi listed all role-model aliases from the configured provider.",
+      "Concrete DeepSeek models were listed with images=no while alias and multimodal concrete models were listed with images=yes."
+    ]
+  },
+  "aliasPromptMatrix": {
+    "result": "PASS",
+    "minimumSuccessfulPiOriginatedRequestsPerAlias": 3,
+    "noAliasBelowMinimum": true,
+    "noAliasFailuresObserved": true,
+    "leftoverSmokeProcesses": 0,
+    "counts": [
+      {
+        "alias": "baseline.decision-only",
+        "success": 6,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      },
+      {
+        "alias": "baseline.hybrid",
+        "success": 4,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      },
+      {
+        "alias": "baseline.remote-only",
+        "success": 8,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash", "deepseek/deepseek-v4-pro"]
+      },
+      {
+        "alias": "controller.decision-only",
+        "success": 3,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      },
+      {
+        "alias": "controller.hybrid",
+        "success": 3,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      },
+      {
+        "alias": "controller.remote-only",
+        "success": 7,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash", "deepseek/deepseek-v4-pro"]
+      },
+      {
+        "alias": "default.decision-only",
+        "success": 6,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      },
+      {
+        "alias": "default.hybrid",
+        "success": 6,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      },
+      {
+        "alias": "default.remote-only",
+        "success": 6,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      },
+      {
+        "alias": "difficulty.decision-only",
+        "success": 6,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      },
+      {
+        "alias": "difficulty.hybrid",
+        "success": 6,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      },
+      {
+        "alias": "difficulty.remote-only",
+        "success": 97,
+        "failure": 0,
+        "selectedModels": [
+          "deepseek/deepseek-v4-flash",
+          "moonshot/kimi-k2.7-code",
+          "deepseek/deepseek-v4-pro"
+        ]
+      },
+      {
+        "alias": "hybrid.decision-only",
+        "success": 5,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      },
+      {
+        "alias": "hybrid.hybrid",
+        "success": 10,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash", "moonshot/kimi-k2.7-code"]
+      },
+      {
+        "alias": "hybrid.remote-only",
+        "success": 4,
+        "failure": 0,
+        "selectedModels": ["deepseek/deepseek-v4-flash"]
+      }
+    ]
+  },
+  "notes": [
+    "Pi noninteractive processes may remain alive after role-model completes the backend request; verification uses role-model telemetry as the authoritative backend receipt.",
+    "Only marker-specific Pi smoke processes spawned for this QA were terminated.",
+    "The role-model runtime remained running on 127.0.0.1:3456 after QA."
+  ]
+}

@@ -1,0 +1,401 @@
+
+> role-model@0.0.0 docs:build D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract
+> corepack pnpm --filter @role-model/docs-site build
+
+
+> @role-model/docs-site@ build D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\apps\docs-site
+> react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs
+
+[MDX] generated files in 4.2258999999999105ms
+[MDX] generated files in 2.8613000000000284ms
+[MDX] generated files in 2.896299999999883ms
+vite v8.0.10 building client environment for production...
+[MDX] generated files in 2.203400000000329ms
+[2K
+transforming...✓ 2241 modules transformed.
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                                       26.84 kB │ gzip:  2.89 kB
+build/client/assets/root-B7Fn2Ts0.css                                  80.28 kB │ gzip: 13.36 kB
+build/client/assets/full-ZUGm99_m.js                                    0.00 kB │ gzip:  0.02 kB
+build/client/assets/index-BeW4qblQ.js                                   0.00 kB │ gzip:  0.02 kB
+build/client/assets/mdx-BNRw8oVt.js                                     0.00 kB │ gzip:  0.02 kB
+build/client/assets/search-CSZo5aTn.js                                  0.00 kB │ gzip:  0.02 kB
+build/client/assets/remove-undefined-CTqT55E9-FGRZbaf6.js               0.20 kB │ gzip:  0.16 kB
+build/client/assets/jsx-runtime-B37CQREX.js                             0.42 kB │ gzip:  0.29 kB
+build/client/assets/fetch-DGnOyXjG.js                                   0.44 kB │ gzip:  0.29 kB
+build/client/assets/chunk-bqFK08oC.js                                   0.69 kB │ gzip:  0.42 kB
+build/client/assets/algolia-CFZ923Fo.js                                 0.77 kB │ gzip:  0.49 kB
+build/client/assets/search-GXOQ8cJo.js                                  0.99 kB │ gzip:  0.53 kB
+build/client/assets/orama-cloud-legacy-DUGrrNQL.js                      1.11 kB │ gzip:  0.58 kB
+build/client/assets/search-default-BQUAqqJQ.js                          1.15 kB │ gzip:  0.63 kB
+build/client/assets/orama-cloud-BzzG-WKQ.js                             1.17 kB │ gzip:  0.60 kB
+build/client/assets/install-D0uBP4qU.js                                 4.87 kB │ gzip:  1.21 kB
+build/client/assets/policy-and-observability-BhOZSXix.js                5.63 kB │ gzip:  1.31 kB
+build/client/assets/roles-tasks-and-capabilities-DCWoJk2E.js            6.39 kB │ gzip:  1.45 kB
+build/client/assets/overview-DbeQC7lC.js                                6.65 kB │ gzip:  1.42 kB
+build/client/assets/endpoints-and-profiles-DZ-ej84O.js                  6.65 kB │ gzip:  1.44 kB
+build/client/assets/models-and-role-activation-Cj20PVpu.js              7.41 kB │ gzip:  1.64 kB
+build/client/assets/first-request-and-decision-BccIaoF-.js              8.29 kB │ gzip:  1.68 kB
+build/client/assets/quickstart-119tDmm7.js                              8.37 kB │ gzip:  1.93 kB
+build/client/assets/protocol-lifecycle-B6jXTove.js                      9.15 kB │ gzip:  2.05 kB
+build/client/assets/runtime-ui-tour-BlM3_hox.js                         9.78 kB │ gzip:  2.07 kB
+build/client/assets/run-full-benchmark-AWxdNziL.js                     11.24 kB │ gzip:  2.23 kB
+build/client/assets/first-launch-and-connect-models-BU0KTsZn.js        11.65 kB │ gzip:  2.56 kB
+build/client/assets/mixedbread-0q_--Ga_.js                             11.95 kB │ gzip:  5.37 kB
+build/client/assets/preload-helper-CzZtDwiq.js                         12.18 kB │ gzip:  4.43 kB
+build/client/assets/overview-XKKi8NIF.js                               12.39 kB │ gzip:  2.35 kB
+build/client/assets/trace-and-usage-artifacts-CAQmFdbY.js              12.52 kB │ gzip:  2.17 kB
+build/client/assets/capability-taxonomy-DBOGYTiZ.js                    12.65 kB │ gzip:  2.33 kB
+build/client/assets/protocol-BYaoVihX.js                               13.37 kB │ gzip:  2.43 kB
+build/client/assets/router-decision-artifact-Ds32ZrPl.js               13.37 kB │ gzip:  2.41 kB
+build/client/assets/install-CZA1G5gP.js                                13.49 kB │ gzip:  2.87 kB
+build/client/assets/declared-capability-profiles-BabnGxxb.js           13.60 kB │ gzip:  2.43 kB
+build/client/assets/routing-controls-and-decision-review-0rp1rdRM.js   14.26 kB │ gzip:  2.63 kB
+build/client/assets/benchmarks-and-evaluation-CQPRH-Eo.js              14.68 kB │ gzip:  2.70 kB
+build/client/assets/protocol-to-router-mapping-BSp9sR2R.js             15.40 kB │ gzip:  2.79 kB
+build/client/assets/routing-policy-CNFdDG6M.js                         15.60 kB │ gzip:  2.80 kB
+build/client/assets/how-routing-works-end-to-end-BA9FxMXA.js           16.81 kB │ gzip:  3.13 kB
+build/client/assets/protocol-object-model-B_JX5M-K.js                  17.59 kB │ gzip:  3.09 kB
+build/client/assets/reason-codes-and-rejection-taxonomy-Bucof3YY.js    18.10 kB │ gzip:  2.72 kB
+build/client/assets/canonical-schemas-reference-BIidvxGK.js            18.29 kB │ gzip:  2.80 kB
+build/client/assets/routing-overview-3jk8I1v5.js                       18.40 kB │ gzip:  3.32 kB
+build/client/assets/how-role-model-works-vjffjlbq.js                   18.51 kB │ gzip:  3.33 kB
+build/client/assets/core-vocabulary-B7ObQJMj.js                        18.62 kB │ gzip:  3.17 kB
+build/client/assets/protocol-overview-DtxgGIRm.js                      19.08 kB │ gzip:  3.41 kB
+build/client/assets/observed-performance-profiles-gsGnRGT7.js          19.57 kB │ gzip:  3.26 kB
+build/client/assets/docs-CyVmojiP.js                                   19.72 kB │ gzip:  3.61 kB
+build/client/assets/endpoint-identity-DHQDQcDf.js                      22.26 kB │ gzip:  3.45 kB
+build/client/assets/fallbacks-failures-and-observability-CW75lQP0.js   24.19 kB │ gzip:  4.04 kB
+build/client/assets/root-faFFT4h2.js                                   24.91 kB │ gzip:  8.40 kB
+build/client/assets/choose-routing-strategy-B92PTyf6.js                26.41 kB │ gzip:  4.25 kB
+build/client/assets/roles-and-tasks-B_vuNO9S.js                        27.54 kB │ gzip:  4.19 kB
+build/client/assets/candidate-selection-and-eligibility-CR7ePR2W.js    29.07 kB │ gzip:  4.44 kB
+build/client/assets/introduction-CoDOZZjH.js                           29.46 kB │ gzip:  4.86 kB
+build/client/assets/scoring-tie-breaks-and-decisions-BVDl3AKv.js       30.07 kB │ gzip:  4.87 kB
+build/client/assets/routing-modes-locality-and-execution-eHOc3glJ.js   39.32 kB │ gzip:  5.65 kB
+build/client/assets/strategy-modes-and-tradeoffs-iHSrEF_y.js           48.70 kB │ gzip:  7.07 kB
+build/client/assets/es2015-B692ofsD.js                                 61.65 kB │ gzip: 21.10 kB
+build/client/assets/orama-static-0yW-cdKP.js                           62.73 kB │ gzip: 21.59 kB
+build/client/assets/docs-it41EiFe.js                                   63.57 kB │ gzip: 21.49 kB
+build/client/assets/dist-D-xxxXck.js                                   82.94 kB │ gzip: 27.42 kB
+build/client/assets/remark-CW-4A0sf.js                                 89.89 kB │ gzip: 25.74 kB
+build/client/assets/chunk-EVOBXE3Y-BVHgNXQf.js                        118.01 kB │ gzip: 38.59 kB
+build/client/assets/entry.client-Ci5FUk0_.js                          183.20 kB │ gzip: 58.03 kB
+build/client/assets/search-NRaKxE5R.js                                227.67 kB │ gzip: 70.51 kB
+
+[PLUGIN_TIMINGS] Warning: Your build spent significant time in plugins. Here is a breakdown:
+  - react-router:dot-server (41%)
+  - react-router:virtual-modules (24%)
+  - react-router:inject-hmr-runtime (14%)
+  - react-router:hmr-runtime (10%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+
+✓ built in 4.94s
+[MDX] generated files in 2.5751000000000204ms
+vite v8.0.10 building ssr environment for production...
+[MDX] generated files in 2.5881999999983236ms
+[2K
+transforming...✓ 478 modules transformed.
+rendering chunks...
+✓ 1 asset cleaned from React Router server build.
+build\server\assets\server-build-B7Fn2Ts0.css
+
+Prerender (data): / -> build\client\_root.data
+Prerender (html): / -> build\client\index.html
+Prerender (data): /api/search -> build\client\api\search.data
+Prerender (resource): /api/search -> build\client\api\search
+Prerender (data): /llms.txt -> build\client\llms.txt.data
+Prerender (resource): /llms.txt -> build\client\llms.txt
+Prerender (data): /llms-full.txt -> build\client\llms-full.txt.data
+Prerender (resource): /llms-full.txt -> build\client\llms-full.txt
+Prerender (data): /core-vocabulary -> build\client\core-vocabulary.data
+Prerender (html): /core-vocabulary -> build\client\core-vocabulary\index.html
+Prerender (data): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\content.md.data
+Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\content.md
+Prerender (data): / -> build\client\_root.data
+Prerender (html): / -> build\client\index.html
+Prerender (data): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md.data
+Prerender (resource): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md
+Prerender (data): /install -> build\client\install.data
+Prerender (html): /install -> build\client\install\index.html
+Prerender (data): /llms.mdx/docs/install/content.md -> build\client\llms.mdx\docs\install\content.md.data
+Prerender (resource): /llms.mdx/docs/install/content.md -> build\client\llms.mdx\docs\install\content.md
+Prerender (data): /introduction -> build\client\introduction.data
+Prerender (html): /introduction -> build\client\introduction\index.html
+Prerender (data): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md.data
+Prerender (resource): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md
+Prerender (data): /protocol-lifecycle -> build\client\protocol-lifecycle.data
+Prerender (html): /protocol-lifecycle -> build\client\protocol-lifecycle\index.html
+Prerender (data): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle\content.md
+Prerender (data): /protocol-object-model -> build\client\protocol-object-model.data
+Prerender (html): /protocol-object-model -> build\client\protocol-object-model\index.html
+Prerender (data): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object-model\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object-model\content.md
+Prerender (data): /quickstart -> build\client\quickstart.data
+Prerender (html): /quickstart -> build\client\quickstart\index.html
+Prerender (data): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md.data
+Prerender (resource): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md
+Prerender (data): /runtime/benchmarks-and-evaluation -> build\client\runtime\benchmarks-and-evaluation.data
+Prerender (html): /runtime/benchmarks-and-evaluation -> build\client\runtime\benchmarks-and-evaluation\index.html
+Prerender (data): /llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md -> build\client\llms.mdx\docs\runtime\benchmarks-and-evaluation\content.md.data
+Prerender (resource): /llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md -> build\client\llms.mdx\docs\runtime\benchmarks-and-evaluation\content.md
+Prerender (data): /runtime/models-and-role-activation -> build\client\runtime\models-and-role-activation.data
+Prerender (html): /runtime/models-and-role-activation -> build\client\runtime\models-and-role-activation\index.html
+Prerender (data): /llms.mdx/docs/runtime/models-and-role-activation/content.md -> build\client\llms.mdx\docs\runtime\models-and-role-activation\content.md.data
+Prerender (resource): /llms.mdx/docs/runtime/models-and-role-activation/content.md -> build\client\llms.mdx\docs\runtime\models-and-role-activation\content.md
+Prerender (data): /runtime/routing-controls-and-decision-review -> build\client\runtime\routing-controls-and-decision-review.data
+Prerender (html): /runtime/routing-controls-and-decision-review -> build\client\runtime\routing-controls-and-decision-review\index.html
+Prerender (data): /llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md -> build\client\llms.mdx\docs\runtime\routing-controls-and-decision-review\content.md.data
+Prerender (resource): /llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md -> build\client\llms.mdx\docs\runtime\routing-controls-and-decision-review\content.md
+Prerender (data): /runtime/runtime-ui-tour -> build\client\runtime\runtime-ui-tour.data
+Prerender (html): /runtime/runtime-ui-tour -> build\client\runtime\runtime-ui-tour\index.html
+Prerender (data): /llms.mdx/docs/runtime/runtime-ui-tour/content.md -> build\client\llms.mdx\docs\runtime\runtime-ui-tour\content.md.data
+Prerender (resource): /llms.mdx/docs/runtime/runtime-ui-tour/content.md -> build\client\llms.mdx\docs\runtime\runtime-ui-tour\content.md
+Prerender (data): /router/candidate-selection-and-eligibility -> build\client\router\candidate-selection-and-eligibility.data
+Prerender (html): /router/candidate-selection-and-eligibility -> build\client\router\candidate-selection-and-eligibility\index.html
+Prerender (data): /llms.mdx/docs/router/candidate-selection-and-eligibility/content.md -> build\client\llms.mdx\docs\router\candidate-selection-and-eligibility\content.md.data
+Prerender (resource): /llms.mdx/docs/router/candidate-selection-and-eligibility/content.md -> build\client\llms.mdx\docs\router\candidate-selection-and-eligibility\content.md
+Prerender (data): /router/fallbacks-failures-and-observability -> build\client\router\fallbacks-failures-and-observability.data
+Prerender (html): /router/fallbacks-failures-and-observability -> build\client\router\fallbacks-failures-and-observability\index.html
+Prerender (data): /llms.mdx/docs/router/fallbacks-failures-and-observability/content.md -> build\client\llms.mdx\docs\router\fallbacks-failures-and-observability\content.md.data
+Prerender (resource): /llms.mdx/docs/router/fallbacks-failures-and-observability/content.md -> build\client\llms.mdx\docs\router\fallbacks-failures-and-observability\content.md
+Prerender (data): /router/how-routing-works-end-to-end -> build\client\router\how-routing-works-end-to-end.data
+Prerender (html): /router/how-routing-works-end-to-end -> build\client\router\how-routing-works-end-to-end\index.html
+Prerender (data): /llms.mdx/docs/router/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\router\how-routing-works-end-to-end\content.md.data
+Prerender (resource): /llms.mdx/docs/router/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\router\how-routing-works-end-to-end\content.md
+Prerender (data): /router/overview -> build\client\router\overview.data
+Prerender (html): /router/overview -> build\client\router\overview\index.html
+Prerender (data): /llms.mdx/docs/router/overview/content.md -> build\client\llms.mdx\docs\router\overview\content.md.data
+Prerender (resource): /llms.mdx/docs/router/overview/content.md -> build\client\llms.mdx\docs\router\overview\content.md
+Prerender (data): /router/protocol-to-router-mapping -> build\client\router\protocol-to-router-mapping.data
+Prerender (html): /router/protocol-to-router-mapping -> build\client\router\protocol-to-router-mapping\index.html
+Prerender (data): /llms.mdx/docs/router/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\router\protocol-to-router-mapping\content.md.data
+Prerender (resource): /llms.mdx/docs/router/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\router\protocol-to-router-mapping\content.md
+Prerender (data): /router/routing-modes-locality-and-execution -> build\client\router\routing-modes-locality-and-execution.data
+Prerender (html): /router/routing-modes-locality-and-execution -> build\client\router\routing-modes-locality-and-execution\index.html
+Prerender (data): /llms.mdx/docs/router/routing-modes-locality-and-execution/content.md -> build\client\llms.mdx\docs\router\routing-modes-locality-and-execution\content.md.data
+Prerender (resource): /llms.mdx/docs/router/routing-modes-locality-and-execution/content.md -> build\client\llms.mdx\docs\router\routing-modes-locality-and-execution\content.md
+Prerender (data): /router/scoring-tie-breaks-and-decisions -> build\client\router\scoring-tie-breaks-and-decisions.data
+Prerender (html): /router/scoring-tie-breaks-and-decisions -> build\client\router\scoring-tie-breaks-and-decisions\index.html
+Prerender (data): /llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md -> build\client\llms.mdx\docs\router\scoring-tie-breaks-and-decisions\content.md.data
+Prerender (resource): /llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md -> build\client\llms.mdx\docs\router\scoring-tie-breaks-and-decisions\content.md
+Prerender (data): /router/strategy-modes-and-tradeoffs -> build\client\router\strategy-modes-and-tradeoffs.data
+Prerender (html): /router/strategy-modes-and-tradeoffs -> build\client\router\strategy-modes-and-tradeoffs\index.html
+Prerender (data): /llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md -> build\client\llms.mdx\docs\router\strategy-modes-and-tradeoffs\content.md.data
+Prerender (resource): /llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md -> build\client\llms.mdx\docs\router\strategy-modes-and-tradeoffs\content.md
+Prerender (data): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference.data
+Prerender (html): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference\index.html
+Prerender (data): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs\reference\canonical-schemas-reference\content.md.data
+Prerender (resource): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs\reference\canonical-schemas-reference\content.md
+Prerender (data): /reference/overview -> build\client\reference\overview.data
+Prerender (html): /reference/overview -> build\client\reference\overview\index.html
+Prerender (data): /llms.mdx/docs/reference/overview/content.md -> build\client\llms.mdx\docs\reference\overview\content.md.data
+Prerender (resource): /llms.mdx/docs/reference/overview/content.md -> build\client\llms.mdx\docs\reference\overview\content.md
+Prerender (data): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejection-taxonomy.data
+Prerender (html): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejection-taxonomy\index.html
+Prerender (data): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.mdx\docs\reference\reason-codes-and-rejection-taxonomy\content.md.data
+Prerender (resource): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.mdx\docs\reference\reason-codes-and-rejection-taxonomy\content.md
+Prerender (data): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy.data
+Prerender (html): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy\index.html
+Prerender (data): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol\capability-taxonomy\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol\capability-taxonomy\content.md
+Prerender (data): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles.data
+Prerender (html): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles\index.html
+Prerender (data): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs\protocol\declared-capability-profiles\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs\protocol\declared-capability-profiles\content.md
+Prerender (data): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity.data
+Prerender (html): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity\index.html
+Prerender (data): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\endpoint-identity\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\endpoint-identity\content.md
+Prerender (data): /protocol -> build\client\protocol.data
+Prerender (html): /protocol -> build\client\protocol\index.html
+Prerender (data): /llms.mdx/docs/protocol/content.md -> build\client\llms.mdx\docs\protocol\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol/content.md -> build\client\llms.mdx\docs\protocol\content.md
+Prerender (data): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles.data
+Prerender (html): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles\index.html
+Prerender (data): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\docs\protocol\observed-performance-profiles\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\docs\protocol\observed-performance-profiles\content.md
+Prerender (data): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks.data
+Prerender (html): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks\index.html
+Prerender (data): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\roles-and-tasks\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\roles-and-tasks\content.md
+Prerender (data): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact.data
+Prerender (html): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact\index.html
+Prerender (data): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\protocol\router-decision-artifact\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\protocol\router-decision-artifact\content.md
+Prerender (data): /protocol/routing-policy -> build\client\protocol\routing-policy.data
+Prerender (html): /protocol/routing-policy -> build\client\protocol\routing-policy\index.html
+Prerender (data): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\routing-policy\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\routing-policy\content.md
+Prerender (data): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts.data
+Prerender (html): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts\index.html
+Prerender (data): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> build\client\llms.mdx\docs\protocol\trace-and-usage-artifacts\content.md.data
+Prerender (resource): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> build\client\llms.mdx\docs\protocol\trace-and-usage-artifacts\content.md
+Prerender (data): /get-started/choose-routing-strategy -> build\client\get-started\choose-routing-strategy.data
+Prerender (html): /get-started/choose-routing-strategy -> build\client\get-started\choose-routing-strategy\index.html
+Prerender (data): /llms.mdx/docs/get-started/choose-routing-strategy/content.md -> build\client\llms.mdx\docs\get-started\choose-routing-strategy\content.md.data
+Prerender (resource): /llms.mdx/docs/get-started/choose-routing-strategy/content.md -> build\client\llms.mdx\docs\get-started\choose-routing-strategy\content.md
+Prerender (data): /get-started/first-launch-and-connect-models -> build\client\get-started\first-launch-and-connect-models.data
+Prerender (html): /get-started/first-launch-and-connect-models -> build\client\get-started\first-launch-and-connect-models\index.html
+Prerender (data): /llms.mdx/docs/get-started/first-launch-and-connect-models/content.md -> build\client\llms.mdx\docs\get-started\first-launch-and-connect-models\content.md.data
+Prerender (resource): /llms.mdx/docs/get-started/first-launch-and-connect-models/content.md -> build\client\llms.mdx\docs\get-started\first-launch-and-connect-models\content.md
+Prerender (data): /get-started/first-request-and-decision -> build\client\get-started\first-request-and-decision.data
+Prerender (html): /get-started/first-request-and-decision -> build\client\get-started\first-request-and-decision\index.html
+Prerender (data): /llms.mdx/docs/get-started/first-request-and-decision/content.md -> build\client\llms.mdx\docs\get-started\first-request-and-decision\content.md.data
+Prerender (resource): /llms.mdx/docs/get-started/first-request-and-decision/content.md -> build\client\llms.mdx\docs\get-started\first-request-and-decision\content.md
+Prerender (data): /get-started/install -> build\client\get-started\install.data
+Prerender (html): /get-started/install -> build\client\get-started\install\index.html
+Prerender (data): /llms.mdx/docs/get-started/install/content.md -> build\client\llms.mdx\docs\get-started\install\content.md.data
+Prerender (resource): /llms.mdx/docs/get-started/install/content.md -> build\client\llms.mdx\docs\get-started\install\content.md
+Prerender (data): /get-started/run-full-benchmark -> build\client\get-started\run-full-benchmark.data
+Prerender (html): /get-started/run-full-benchmark -> build\client\get-started\run-full-benchmark\index.html
+Prerender (data): /llms.mdx/docs/get-started/run-full-benchmark/content.md -> build\client\llms.mdx\docs\get-started\run-full-benchmark\content.md.data
+Prerender (resource): /llms.mdx/docs/get-started/run-full-benchmark/content.md -> build\client\llms.mdx\docs\get-started\run-full-benchmark\content.md
+Prerender (data): /concepts/endpoints-and-profiles -> build\client\concepts\endpoints-and-profiles.data
+Prerender (html): /concepts/endpoints-and-profiles -> build\client\concepts\endpoints-and-profiles\index.html
+Prerender (data): /llms.mdx/docs/concepts/endpoints-and-profiles/content.md -> build\client\llms.mdx\docs\concepts\endpoints-and-profiles\content.md.data
+Prerender (resource): /llms.mdx/docs/concepts/endpoints-and-profiles/content.md -> build\client\llms.mdx\docs\concepts\endpoints-and-profiles\content.md
+Prerender (data): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works.data
+Prerender (html): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works\index.html
+Prerender (data): /llms.mdx/docs/concepts/how-role-model-works/content.md -> build\client\llms.mdx\docs\concepts\how-role-model-works\content.md.data
+Prerender (resource): /llms.mdx/docs/concepts/how-role-model-works/content.md -> build\client\llms.mdx\docs\concepts\how-role-model-works\content.md
+Prerender (data): /concepts/policy-and-observability -> build\client\concepts\policy-and-observability.data
+Prerender (html): /concepts/policy-and-observability -> build\client\concepts\policy-and-observability\index.html
+Prerender (data): /llms.mdx/docs/concepts/policy-and-observability/content.md -> build\client\llms.mdx\docs\concepts\policy-and-observability\content.md.data
+Prerender (resource): /llms.mdx/docs/concepts/policy-and-observability/content.md -> build\client\llms.mdx\docs\concepts\policy-and-observability\content.md
+Prerender (data): /concepts/protocol-overview -> build\client\concepts\protocol-overview.data
+Prerender (html): /concepts/protocol-overview -> build\client\concepts\protocol-overview\index.html
+Prerender (data): /llms.mdx/docs/concepts/protocol-overview/content.md -> build\client\llms.mdx\docs\concepts\protocol-overview\content.md.data
+Prerender (resource): /llms.mdx/docs/concepts/protocol-overview/content.md -> build\client\llms.mdx\docs\concepts\protocol-overview\content.md
+Prerender (data): /concepts/roles-tasks-and-capabilities -> build\client\concepts\roles-tasks-and-capabilities.data
+Prerender (html): /concepts/roles-tasks-and-capabilities -> build\client\concepts\roles-tasks-and-capabilities\index.html
+Prerender (data): /llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md -> build\client\llms.mdx\docs\concepts\roles-tasks-and-capabilities\content.md.data
+Prerender (resource): /llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md -> build\client\llms.mdx\docs\concepts\roles-tasks-and-capabilities\content.md
+Prerender (data): /concepts/routing-overview -> build\client\concepts\routing-overview.data
+Prerender (html): /concepts/routing-overview -> build\client\concepts\routing-overview\index.html
+Prerender (data): /llms.mdx/docs/concepts/routing-overview/content.md -> build\client\llms.mdx\docs\concepts\routing-overview\content.md.data
+Prerender (resource): /llms.mdx/docs/concepts/routing-overview/content.md -> build\client\llms.mdx\docs\concepts\routing-overview\content.md
+Prerender (html): SPA Fallback -> build\client\__spa-fallback.html
+Removing the server build in D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\apps\docs-site\build\server due to ssr:false
+computing gzip size...
+build/server/.vite/manifest.json                                       31.73 kB │ gzip:   3.50 kB
+build/server/assets/server-build-B7Fn2Ts0.css                          80.28 kB │ gzip:  13.36 kB
+build/server/assets/docs-DteSbGko.js                                    0.19 kB │ gzip:   0.14 kB
+build/server/assets/install-B6qQr2ge.js                                 0.20 kB │ gzip:   0.15 kB
+build/server/assets/install-bjSVtJGc.js                                 0.20 kB │ gzip:   0.15 kB
+build/server/assets/overview-DG983NVD.js                                0.20 kB │ gzip:   0.15 kB
+build/server/assets/overview-uG5YsRpM.js                                0.20 kB │ gzip:   0.15 kB
+build/server/assets/protocol-CuPl987r.js                                0.20 kB │ gzip:   0.15 kB
+build/server/assets/quickstart-G943PYnW.js                              0.20 kB │ gzip:   0.15 kB
+build/server/assets/introduction-BKIAJ0m6.js                            0.20 kB │ gzip:   0.15 kB
+build/server/assets/routing-policy-DKhzm_i5.js                          0.20 kB │ gzip:   0.15 kB
+build/server/assets/core-vocabulary-BEK9kDVe.js                         0.20 kB │ gzip:   0.15 kB
+build/server/assets/roles-and-tasks-D2KoCxPr.js                         0.20 kB │ gzip:   0.15 kB
+build/server/assets/runtime-ui-tour-HStCrpzV.js                         0.20 kB │ gzip:   0.15 kB
+build/server/assets/routing-overview-trOZnul3.js                        0.21 kB │ gzip:   0.15 kB
+build/server/assets/endpoint-identity-DSKHZ0FL.js                       0.21 kB │ gzip:   0.15 kB
+build/server/assets/protocol-overview-CxiJEsBy.js                       0.21 kB │ gzip:   0.16 kB
+build/server/assets/protocol-lifecycle-7DQXoMj0.js                      0.21 kB │ gzip:   0.15 kB
+build/server/assets/run-full-benchmark-BPIlcsi_.js                      0.21 kB │ gzip:   0.16 kB
+build/server/assets/capability-taxonomy-BsBUn1LH.js                     0.21 kB │ gzip:   0.16 kB
+build/server/assets/how-role-model-works-CMTTpGQR.js                    0.21 kB │ gzip:   0.16 kB
+build/server/assets/protocol-object-model-UXxwk7zP.js                   0.21 kB │ gzip:   0.16 kB
+build/server/assets/endpoints-and-profiles-CZ5MZANL.js                  0.21 kB │ gzip:   0.16 kB
+build/server/assets/choose-routing-strategy-WrCfbkqs.js                 0.21 kB │ gzip:   0.16 kB
+build/server/assets/policy-and-observability-urw6o3YH.js                0.21 kB │ gzip:   0.16 kB
+build/server/assets/router-decision-artifact-f1koitoH.js                0.21 kB │ gzip:   0.16 kB
+build/server/assets/benchmarks-and-evaluation-CYtf9e0x.js               0.21 kB │ gzip:   0.16 kB
+build/server/assets/trace-and-usage-artifacts-D_rMRkuA.js               0.21 kB │ gzip:   0.16 kB
+build/server/assets/first-request-and-decision-C8xcJczr.js              0.22 kB │ gzip:   0.16 kB
+build/server/assets/models-and-role-activation-dzLIcy-_.js              0.22 kB │ gzip:   0.16 kB
+build/server/assets/protocol-to-router-mapping-CQoH8hBN.js              0.22 kB │ gzip:   0.16 kB
+build/server/assets/canonical-schemas-reference-B9lA6TPY.js             0.22 kB │ gzip:   0.16 kB
+build/server/assets/declared-capability-profiles-uqUOUt7k.js            0.22 kB │ gzip:   0.16 kB
+build/server/assets/how-routing-works-end-to-end-CpqZCu9u.js            0.22 kB │ gzip:   0.16 kB
+build/server/assets/roles-tasks-and-capabilities-BjVOzjzQ.js            0.22 kB │ gzip:   0.16 kB
+build/server/assets/strategy-modes-and-tradeoffs-Bz62yxEb.js            0.22 kB │ gzip:   0.16 kB
+build/server/assets/observed-performance-profiles-MQBzamdk.js           0.22 kB │ gzip:   0.16 kB
+build/server/assets/first-launch-and-connect-models-B55EA2Qb.js         0.22 kB │ gzip:   0.16 kB
+build/server/assets/scoring-tie-breaks-and-decisions-CECoTco-.js        0.22 kB │ gzip:   0.16 kB
+build/server/assets/candidate-selection-and-eligibility-5CaUF5Pg.js     0.22 kB │ gzip:   0.17 kB
+build/server/assets/reason-codes-and-rejection-taxonomy-B9RVyuy7.js     0.22 kB │ gzip:   0.16 kB
+build/server/assets/fallbacks-failures-and-observability-C1P7oK1B.js    0.23 kB │ gzip:   0.17 kB
+build/server/assets/routing-controls-and-decision-review-BGE2U8mR.js    0.23 kB │ gzip:   0.17 kB
+build/server/assets/routing-modes-locality-and-execution-BF6QVXt1.js    0.23 kB │ gzip:   0.17 kB
+build/server/assets/remove-undefined-CTqT55E9-CKRKPwVm.js               0.59 kB │ gzip:   0.35 kB
+build/server/assets/fetch-BU74wzCf.js                                   0.89 kB │ gzip:   0.51 kB
+build/server/assets/chunk-CYJPkc-J-DLR1VvR-.js                          1.25 kB │ gzip:   0.65 kB
+build/server/assets/chunk-BGC-wIje.js                                   1.40 kB │ gzip:   0.66 kB
+build/server/assets/algolia-BlINksn6.js                                 1.55 kB │ gzip:   0.78 kB
+build/server/assets/search-CVRykT9K.js                                  2.15 kB │ gzip:   0.94 kB
+build/server/assets/search-default-B-r5_0XO.js                          2.18 kB │ gzip:   0.90 kB
+build/server/assets/orama-cloud-legacy-k6Rg4LF0.js                      2.28 kB │ gzip:   0.91 kB
+build/server/assets/orama-cloud-Bw1Cjw3l.js                             2.33 kB │ gzip:   0.93 kB
+build/server/assets/orama-static-CNHelsIZ.js                            3.90 kB │ gzip:   1.56 kB
+build/server/assets/install-iBT4G3MR.js                                 6.27 kB │ gzip:   1.48 kB
+build/server/assets/policy-and-observability-DqsFsLRD.js                7.25 kB │ gzip:   1.57 kB
+build/server/assets/roles-tasks-and-capabilities-Du5o_vus.js            8.19 kB │ gzip:   1.74 kB
+build/server/assets/overview-DPK-WsAT.js                                8.29 kB │ gzip:   1.70 kB
+build/server/assets/endpoints-and-profiles-D1vz45RN.js                  8.37 kB │ gzip:   1.72 kB
+build/server/assets/models-and-role-activation-Q5BbAP9T.js              9.18 kB │ gzip:   1.90 kB
+build/server/assets/first-request-and-decision-C5B76bmz.js             10.27 kB │ gzip:   1.98 kB
+build/server/assets/quickstart-CQ1pbpWo.js                             10.89 kB │ gzip:   2.30 kB
+build/server/assets/protocol-lifecycle-D5-OP5uu.js                     11.26 kB │ gzip:   2.33 kB
+build/server/assets/runtime-ui-tour-C4CVTCi4.js                        12.42 kB │ gzip:   2.41 kB
+build/server/assets/run-full-benchmark-02I44X6R.js                     13.70 kB │ gzip:   2.57 kB
+build/server/assets/first-launch-and-connect-models-zMJjwVmW.js        14.43 kB │ gzip:   2.94 kB
+build/server/assets/overview-Diap2kO1.js                               15.16 kB │ gzip:   2.62 kB
+build/server/assets/mixedbread-Dyw_CFtR.js                             15.17 kB │ gzip:   6.26 kB
+build/server/assets/capability-taxonomy-Bb7o6gKG.js                    15.48 kB │ gzip:   2.58 kB
+build/server/assets/trace-and-usage-artifacts-iFKsYC_C.js              15.70 kB │ gzip:   2.48 kB
+build/server/assets/protocol-Bluf7jCu.js                               16.28 kB │ gzip:   2.72 kB
+build/server/assets/router-decision-artifact-Dms8HiI4.js               16.49 kB │ gzip:   2.67 kB
+build/server/assets/declared-capability-profiles-BW_-X6la.js           16.52 kB │ gzip:   2.72 kB
+build/server/assets/routing-controls-and-decision-review-0gbg4OFf.js   17.12 kB │ gzip:   2.89 kB
+build/server/assets/install-ByzPcLKN.js                                17.24 kB │ gzip:   3.16 kB
+build/server/assets/benchmarks-and-evaluation-B44FTqZT.js              17.63 kB │ gzip:   3.03 kB
+build/server/assets/protocol-to-router-mapping-kvrt-JgK.js             18.15 kB │ gzip:   2.99 kB
+build/server/assets/routing-policy-C6d49QW8.js                         19.24 kB │ gzip:   2.99 kB
+build/server/assets/how-routing-works-end-to-end-BL-fDbpQ.js           20.50 kB │ gzip:   3.43 kB
+build/server/assets/protocol-object-model-COWhA7-G.js                  21.39 kB │ gzip:   3.46 kB
+build/server/assets/core-vocabulary-C8M9Xyrv.js                        21.63 kB │ gzip:   3.46 kB
+build/server/assets/canonical-schemas-reference-DfVKAzJy.js            22.25 kB │ gzip:   3.13 kB
+build/server/assets/reason-codes-and-rejection-taxonomy-Cw7PXw5b.js    22.27 kB │ gzip:   3.06 kB
+build/server/assets/how-role-model-works-pAZ7nWyp.js                   22.42 kB │ gzip:   3.62 kB
+build/server/assets/routing-overview-DPnNBcz0.js                       22.54 kB │ gzip:   3.61 kB
+build/server/assets/protocol-overview-BQWGGN4G.js                      22.99 kB │ gzip:   3.71 kB
+build/server/assets/observed-performance-profiles-BmDE_LhH.js          23.74 kB │ gzip:   3.48 kB
+build/server/assets/docs-C2pVtG-_.js                                   23.78 kB │ gzip:   3.98 kB
+build/server/assets/endpoint-identity-WtfhpbKu.js                      27.36 kB │ gzip:   3.79 kB
+build/server/assets/fallbacks-failures-and-observability-DgGQa3Ay.js   28.99 kB │ gzip:   4.38 kB
+build/server/assets/choose-routing-strategy-DX5Y4L0I.js                31.35 kB │ gzip:   4.52 kB
+build/server/assets/roles-and-tasks-DP7tjeq1.js                        33.62 kB │ gzip:   4.57 kB
+build/server/assets/candidate-selection-and-eligibility-CJpMyubO.js    34.33 kB │ gzip:   4.74 kB
+build/server/assets/introduction-Dvra_edG.js                           34.76 kB │ gzip:   5.26 kB
+build/server/assets/scoring-tie-breaks-and-decisions-pXAgfTsC.js       36.71 kB │ gzip:   5.23 kB
+build/server/assets/routing-modes-locality-and-execution-CoTUmZL2.js   46.46 kB │ gzip:   5.96 kB
+build/server/assets/strategy-modes-and-tradeoffs-B2vMOyNC.js           57.94 kB │ gzip:   7.42 kB
+build/server/index.js                                                 370.95 kB │ gzip:  89.01 kB
+build/server/assets/remark-DmD561_2.js                                383.60 kB │ gzip:  81.28 kB
+build/server/assets/search-JRWGeUkr.js                                509.64 kB │ gzip: 122.51 kB
+
+[PLUGIN_TIMINGS] Warning: Your build spent significant time in plugins. Here is a breakdown:
+  - fumadocs-mdx (35%)
+  - react-router:build-client-route (20%)
+  - react-router:hmr-runtime (7%)
+  - react-router:split-route-modules (5%)
+  - react-router:inject-hmr-runtime (5%)
+See https://rolldown.rs/options/checks#plugintimings for more details.
+
+✓ built in 3.88s
+npm warn Unknown env config "recursive". This will stop working in the next major version of npm.
+npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+
+> types:check
+> react-router typegen && fumadocs-mdx && tsc --noEmit
+
+[MDX] generated files in 4.063499999999749ms
+[MDX] generated files in 5.223500000000058ms
+Materialized search index at D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\apps\docs-site\build\client\api\search.json

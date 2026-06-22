@@ -1,0 +1,15 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge
+
+ ↓ test/downstream-openai-discovery.test.ts (2 tests | 2 skipped)
+(node:38556) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:16260) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ↓ test/routable-inventory-bootstrap.test.ts (3 tests | 3 skipped)
+ ✓ test/index.test.ts (138 tests | 132 skipped) 149ms
+
+ Test Files  1 passed | 2 skipped (3)
+      Tests  6 passed | 137 skipped (143)
+   Start at  07:48:00
+   Duration  3.27s (transform 2.13s, setup 0ms, collect 4.12s, tests 149ms, environment 1ms, prepare 1.09s)

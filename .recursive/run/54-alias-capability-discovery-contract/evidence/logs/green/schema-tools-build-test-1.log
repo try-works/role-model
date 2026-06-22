@@ -1,0 +1,2157 @@
+
+> @role-model/schema-tools@0.0.0 build D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\packages\schema-tools
+> tsc -p tsconfig.json
+
+
+> @role-model/schema-tools@0.0.0 test D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\packages\schema-tools
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/packages/schema-tools
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for benchmark-run.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for benchmark-suite.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for capability-taxonomy.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for declared-capability-profile.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for downstream-openai-discovery.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for endpoint-identity.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for judge-score.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for model-pack-manifest.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for observed-performance-profile.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for package-manifest.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for planspec.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for role-binding.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for role-definition.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for router-decision.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for routing-policy.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for task-definition.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for task-execution-profile.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for trace-event.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for trace-span.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+Generated types for usage-event.schema.json
+
+ ✓ test/recursive-evidence-json.test.ts (1 test) 1290ms
+   ✓ tracked recursive JSON evidence > requires tracked recursive JSON files to contain parseable JSON payloads  1287ms
+Formatted 1 file in 60ms. Fixed 1 file.
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for benchmark-run.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for benchmark-suite.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for capability-taxonomy.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for declared-capability-profile.schema.json
+
+ ✓ test/recursive-biome-local-provider-config-format.test.ts (1 test) 2320ms
+   ✓ run31 bounded Biome regression for local provider config format batch > requires the local provider config format blocker set to pass under repository config  2315ms
+ ✓ test/validate-schemas.test.ts (5 tests) 1834ms
+   ✓ loadSchemas > treats manifest expectations as authoritative for valid and invalid fixtures  1307ms
+   ✓ loadSchemas > validates the full fixture manifest through the schema-tool entrypoint  489ms
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for downstream-openai-discovery.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for endpoint-identity.schema.json
+
+ ✓ test/recursive-biome-local-runtime-package-format.test.ts (1 test) 2397ms
+   ✓ run31 bounded Biome regression for local runtime package format batch > requires the local runtime package format blocker set to pass under repository config  2394ms
+ ✓ test/recursive-biome-local-router-config-format.test.ts (1 test) 2283ms
+   ✓ run31 bounded Biome regression for local router config format batch > requires the local router config format blocker set to pass under repository config  2279ms
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for judge-score.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for model-pack-manifest.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for observed-performance-profile.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for package-manifest.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for planspec.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for role-binding.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for role-definition.schema.json
+
+ ❯ test/recursive-biome-run75.test.ts (1 test | 1 failed) 2368ms
+   × run31 bounded Biome regression for run75 > requires the run75 Biome blocker set to pass under repository config 2365ms
+     → Command failed: cmd.exe /c corepack pnpm exec biome check packages/conformance/src/router-fixture-conformance.test.ts packages/schema-tools/src/validate-schemas.ts protocol/fixtures/router-golden/cases/advisory-vs-hard-budget.json protocol/fixtures/router-golden/cases/latency-strategy-prefers-faster.json protocol/fixtures/router-golden/cases/measured-profile-partial-coverage.json protocol/schemas/router-decision.schema.json role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts role-model-router/apps/gateway-smoke/src/index.ts role-model-router/apps/runtime-host-bridge/src/litellm-catalog.ts role-model-router/apps/runtime-host-bridge/src/package-sea.ts role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts role-model-router/apps/runtime-host-bridge/src/validate-host.ts role-model-router/apps/runtime-host-bridge/src/validate-operations.ts role-model-router/apps/runtime-host-bridge/src/validate-packaging.ts role-model-router/apps/runtime-host-bridge/src/validate-tools.ts
+packages/schema-tools/src/validate-schemas.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     84  84 │     },
+     85  85 │     {
+     86     │ - ····filePath:·path.join(
+     87     │ - ······fixtureRoot,
+     88     │ - ······"downstream-openai",
+     89     │ - ······"downstream-openai-discovery-basic.json",
+     90     │ - ····),
+         86 │ + ····filePath:·path.join(fixtureRoot,·"downstream-openai",·"downstream-openai-discovery-basic.json"),
+     91  87 │       schemaFile: "downstream-openai-discovery.schema.json",
+     92  88 │       family: "downstream-openai",
+
+
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for router-decision.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for routing-policy.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for task-definition.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for task-execution-profile.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for trace-event.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for trace-span.schema.json
+
+stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+Generated types for usage-event.schema.json
+
+ ✓ test/recursive-biome-run78.test.ts (1 test) 2368ms
+   ✓ run31 bounded Biome regression for run78 > requires the run78 Biome blocker set to pass under repository config  2365ms
+ ✓ test/recursive-biome-local-config-format.test.ts (1 test) 2438ms
+   ✓ run31 bounded Biome regression for local config format batch > requires the local config format blocker set to pass under repository config  2434ms
+ ✓ test/recursive-biome-run80.test.ts (1 test) 2456ms
+   ✓ run31 bounded Biome regression for run80 > requires the run80 Biome blocker set to pass under repository config  2452ms
+ ✓ test/recursive-biome-run79.test.ts (1 test) 2446ms
+   ✓ run31 bounded Biome regression for run79 > requires the run79 Biome blocker set to pass under repository config  2443ms
+ ✓ test/recursive-biome-semantic-remainder.test.ts (1 test) 2692ms
+   ✓ run31 bounded Biome regression for semantic remainder > requires the remaining 7-file semantic lint batch to pass under repository config  2689ms
+Formatted 1 file in 49ms. Fixed 1 file.
+ ✓ test/generate-protocol-types.test.ts (2 tests) 2597ms
+   ✓ generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas  1554ms
+   ✓ generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol  1040ms
+ ✓ test/recursive-biome-run74.test.ts (1 test) 3046ms
+   ✓ run31 bounded Biome regression > requires the run74 Biome blocker set to pass under repository config  3043ms
+ ❯ test/recursive-biome-run76.test.ts (1 test | 1 failed) 3332ms
+   × run31 bounded Biome regression for run76 > requires the run76 Biome blocker set to pass under repository config 3328ms
+     → Command failed: cmd.exe /c corepack pnpm exec biome check role-model-router/apps/runtime-host-bridge/src/validate-ui.ts role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts role-model-router/apps/runtime-host-bridge/test/executable.test.ts role-model-router/apps/runtime-host-bridge/test/index.test.ts role-model-router/apps/runtime-host-bridge/test/litellm-catalog.test.ts role-model-router/apps/runtime-host-bridge/test/local-policy.test.ts role-model-router/apps/runtime-host-bridge/test/runtime-assets.test.ts role-model-router/apps/runtime-host-bridge/test/unified-runtime-config.test.ts role-model-router/apps/runtime-host-bridge/test/validate-operations.test.ts role-model-router/apps/runtime-host-bridge/test/validate-tools.test.ts role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts role-model-router/apps/runtime-ui/app/app.css role-model-router/apps/runtime-ui/app/components/app-shell.tsx
+role-model-router/apps/runtime-host-bridge/test/index.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     1879  1879 │     test("seedManagedCodexWorkspaceFixture stages benchmark files for Codex tool-heavy cases", async () => {
+     1880  1880 │       expect(
+     1881       │ - ······typeof·(bridge·as·{·seedManagedCodexWorkspaceFixture?:·unknown·}).seedManagedCodexWorkspaceFixture,
+           1881 │ + ······typeof·(bridge·as·{·seedManagedCodexWorkspaceFixture?:·unknown·})
+           1882 │ + ········.seedManagedCodexWorkspaceFixture,
+     1882  1883 │       ).toBe("function");
+     1883  1884 │
+    ··········· │
+     1922  1923 │                 readonly name: string;
+     1923  1924 │                 readonly description?: string;
+     1924       │ - ············readonly·inputSchema:·Record<string,·unknown>;
+     1925       │ - ··········}[],
+     1926       │ - ··········options?:·{
+     1927       │ - ············readonly·workspaceRoot?:·string;
+     1928       │ - ············readonly·applyPatchMode?:·"ack"·|·"mutate";
+     1929       │ - ··········},
+     1930       │ - ········)·=>·{·connectors:·readonly·{·tools:·readonly·{·name:·string·}[]·}[]·};
+     1931       │ - ······}
+     1932       │ - ····).createRequestScopedToolRegistry;
+           1925 │ + ··············readonly·inputSchema:·Record<string,·unknown>;
+           1926 │ + ············}[],
+           1927 │ + ············options?:·{
+           1928 │ + ··············readonly·workspaceRoot?:·string;
+           1929 │ + ··············readonly·applyPatchMode?:·"ack"·|·"mutate";
+           1930 │ + ············},
+           1931 │ + ··········)·=>·{·connectors:·readonly·{·tools:·readonly·{·name:·string·}[]·}[]·};
+           1932 │ + ········}
+           1933 │ + ······).createRequestScopedToolRegistry;
+     1933  1934 │
+     1934  1935 │         const registry = createRequestScopedToolRegistry(
+    ··········· │
+     2069  2070 │     test("buildCodexAppServerDynamicTools namespaces request-scoped tools for the app-server protocol", () => {
+     2070  2071 │       expect(
+     2071       │ - ······typeof·(bridge·as·{·buildCodexAppServerDynamicTools?:·unknown·}).buildCodexAppServerDynamicTools,
+           2072 │ + ······typeof·(bridge·as·{·buildCodexAppServerDynamicTools?:·unknown·})
+           2073 │ + ········.buildCodexAppServerDynamicTools,
+     2072  2074 │       ).toBe("function");
+     2073  2075 │
+    ··········· │
+     2217  2219 │       ).toBe("function");
+     2218  2220 │
+     2219       │ - ····const·fakeAppServer·=·spawn(process.execPath,·[
+     2220       │ - ······"-e",
+     2221       │ - ······[
+     2222       │ - ········"const·readline·=·require('node:readline');",
+     2223       │ - ········"const·rl·=·readline.createInterface({·input:·process.stdin,·crlfDelay:·Infinity·});",
+     2224       │ - ········"const·send·=·(message)·=>·process.stdout.write(JSON.stringify(message)·+·'\\n');",
+     2225       │ - ········"rl.on('line',·(line)·=>·{",
+     2226       │ - ········"··const·message·=·JSON.parse(line);",
+     2227       │ - ········"··if·(message.id·===·1·&&·message.method·===·'initialize')·{",
+     2228       │ - ········"····send({·id:·1,·result:·{·serverInfo:·{·name:·'fake-codex'·}·}·});",
+     2229       │ - ········"····return;",
+     2230       │ - ········"··}",
+     2231       │ - ········"··if·(message.method·===·'initialized')·{",
+     2232       │ - ········"····return;",
+     2233       │ - ········"··}",
+     2234       │ - ········"··if·(message.id·===·2·&&·message.method·===·'thread/start')·{",
+     2235       │ - ········"····send({·method:·'thread/started',·params:·{·thread:·{·id:·'thr_test_stdio'·}·}·});",
+     2236       │ - ········"····send({·id:·2,·result:·{·thread:·{·id:·'thr_test_stdio'·}·}·});",
+     2237       │ - ········"····return;",
+     2238       │ - ········"··}",
+     2239       │ - ········"··if·(message.id·===·3·&&·message.method·===·'turn/start')·{",
+     2240       │ - ········"····send({·id:·3,·result:·{·accepted:·true·}·});",
+     2241       │ - ········"····send({·method:·'thread/tokenUsage/updated',·params:·{·tokenUsage:·{·last:·{·inputTokens:·11,·outputTokens:·0·}·}·}·});",
+     2242       │ - ········"····send({·id:·91,·method:·'item/tool/call',·params:·{·callId:·'call_stdio_1',·tool:·'request_read_file',·arguments:·{·path:·'README.md'·}·}·});",
+     2243       │ - ········"····return;",
+     2244       │ - ········"··}",
+     2245       │ - ········"··if·(message.id·===·91)·{",
+     2246       │ - ········"····send({·method:·'item/agentMessage/delta',·params:·{·delta:·'HEL'·}·});",
+     2247       │ - ········"····send({·method:·'item/agentMessage/delta',·params:·{·delta:·'LO'·}·});",
+     2248       │ - ········"····send({·method:·'item/completed',·params:·{·item:·{·type:·'agentMessage',·text:·'HELLO'·}·}·});",
+     2249       │ - ········"····send({·method:·'thread/tokenUsage/updated',·params:·{·tokenUsage:·{·last:·{·inputTokens:·11,·outputTokens:·5·}·}·}·});",
+     2250       │ - ········"····send({·method:·'turn/completed',·params:·{·turn:·{·id:·'turn_stdio_1'·}·}·});",
+     2251       │ - ········"····setTimeout(()·=>·process.exit(0),·0);",
+     2252       │ - ········"··}",
+     2253       │ - ········"});",
+     2254       │ - ······].join("·"),
+     2255       │ - ····],·{
+     2256       │ - ······stdio:·["pipe",·"pipe",·"pipe"],
+     2257       │ - ······windowsHide:·true,
+     2258       │ - ····});
+           2221 │ + ····const·fakeAppServer·=·spawn(
+           2222 │ + ······process.execPath,
+           2223 │ + ······[
+           2224 │ + ········"-e",
+           2225 │ + ········[
+           2226 │ + ··········"const·readline·=·require('node:readline');",
+           2227 │ + ··········"const·rl·=·readline.createInterface({·input:·process.stdin,·crlfDelay:·Infinity·});",
+           2228 │ + ··········"const·send·=·(message)·=>·process.stdout.write(JSON.stringify(message)·+·'\\n');",
+           2229 │ + ··········"rl.on('line',·(line)·=>·{",
+           2230 │ + ··········"··const·message·=·JSON.parse(line);",
+           2231 │ + ··········"··if·(message.id·===·1·&&·message.method·===·'initialize')·{",
+           2232 │ + ··········"····send({·id:·1,·result:·{·serverInfo:·{·name:·'fake-codex'·}·}·});",
+           2233 │ + ··········"····return;",
+           2234 │ + ··········"··}",
+           2235 │ + ··········"··if·(message.method·===·'initialized')·{",
+           2236 │ + ··········"····return;",
+           2237 │ + ··········"··}",
+           2238 │ + ··········"··if·(message.id·===·2·&&·message.method·===·'thread/start')·{",
+           2239 │ + ··········"····send({·method:·'thread/started',·params:·{·thread:·{·id:·'thr_test_stdio'·}·}·});",
+           2240 │ + ··········"····send({·id:·2,·result:·{·thread:·{·id:·'thr_test_stdio'·}·}·});",
+           2241 │ + ··········"····return;",
+           2242 │ + ··········"··}",
+           2243 │ + ··········"··if·(message.id·===·3·&&·message.method·===·'turn/start')·{",
+           2244 │ + ··········"····send({·id:·3,·result:·{·accepted:·true·}·});",
+           2245 │ + ··········"····send({·method:·'thread/tokenUsage/updated',·params:·{·tokenUsage:·{·last:·{·inputTokens:·11,·outputTokens:·0·}·}·}·});",
+           2246 │ + ··········"····send({·id:·91,·method:·'item/tool/call',·params:·{·callId:·'call_stdio_1',·tool:·'request_read_file',·arguments:·{·path:·'README.md'·}·}·});",
+           2247 │ + ··········"····return;",
+           2248 │ + ··········"··}",
+           2249 │ + ··········"··if·(message.id·===·91)·{",
+           2250 │ + ··········"····send({·method:·'item/agentMessage/delta',·params:·{·delta:·'HEL'·}·});",
+           2251 │ + ··········"····send({·method:·'item/agentMessage/delta',·params:·{·delta:·'LO'·}·});",
+           2252 │ + ··········"····send({·method:·'item/completed',·params:·{·item:·{·type:·'agentMessage',·text:·'HELLO'·}·}·});",
+           2253 │ + ··········"····send({·method:·'thread/tokenUsage/updated',·params:·{·tokenUsage:·{·last:·{·inputTokens:·11,·outputTokens:·5·}·}·}·});",
+           2254 │ + ··········"····send({·method:·'turn/completed',·params:·{·turn:·{·id:·'turn_stdio_1'·}·}·});",
+           2255 │ + ··········"····setTimeout(()·=>·process.exit(0),·0);",
+           2256 │ + ··········"··}",
+           2257 │ + ··········"});",
+           2258 │ + ········].join("·"),
+           2259 │ + ······],
+           2260 │ + ······{
+           2261 │ + ········stdio:·["pipe",·"pipe",·"pipe"],
+           2262 │ + ········windowsHide:·true,
+           2263 │ + ······},
+           2264 │ + ····);
+     2259  2265 │
+     2260  2266 │       const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-turn-"));
+    ··········· │
+     2359  2365 │                 function: {
+     2360  2366 │                   name: "read_file",
+     2361       │ - ················arguments:·"{\"path\":\"README.md\"}",
+           2367 │ + ················arguments:·'{"path":"README.md"}',
+     2362  2368 │                 },
+     2363  2369 │               },
+    ··········· │
+     2446  2452 │     test("resolveManagedCodexExecutionHome keeps the shared Codex home short on Windows-style paths", () => {
+     2447  2453 │       expect(
+     2448       │ - ······typeof·(bridge·as·{·resolveManagedCodexExecutionHome?:·unknown·}).resolveManagedCodexExecutionHome,
+           2454 │ + ······typeof·(bridge·as·{·resolveManagedCodexExecutionHome?:·unknown·})
+           2455 │ + ········.resolveManagedCodexExecutionHome,
+     2449  2456 │       ).toBe("function");
+     2450  2457 │
+    ··········· │
+     2474  2481 │     test("resolveManagedCodexWorkspaceRoot keeps request workspaces short under the shared Codex home", () => {
+     2475  2482 │       expect(
+     2476       │ - ······typeof·(bridge·as·{·resolveManagedCodexWorkspaceRoot?:·unknown·}).resolveManagedCodexWorkspaceRoot,
+           2483 │ + ······typeof·(bridge·as·{·resolveManagedCodexWorkspaceRoot?:·unknown·})
+           2484 │ + ········.resolveManagedCodexWorkspaceRoot,
+     2477  2485 │       ).toBe("function");
+     2478  2486 │
+    ··········· │
+     2507  2515 │     test("resolveManagedCodexWorkspaceRoot leaves enough room for deep plugin staging paths on Windows", () => {
+     2508  2516 │       expect(
+     2509       │ - ······typeof·(bridge·as·{·resolveManagedCodexWorkspaceRoot?:·unknown·}).resolveManagedCodexWorkspaceRoot,
+           2517 │ + ······typeof·(bridge·as·{·resolveManagedCodexWorkspaceRoot?:·unknown·})
+           2518 │ + ········.resolveManagedCodexWorkspaceRoot,
+     2510  2519 │       ).toBe("function");
+  9 more lines truncated
+
+
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+
+
+ ❯ test/recursive-biome-run77.test.ts (1 test | 1 failed) 4094ms
+   × run31 bounded Biome regression for run77 > requires the run77 Biome blocker set to pass under repository config 4090ms
+     → Command failed: cmd.exe /c corepack pnpm exec biome check role-model-router/vendor/llama-swap/ui-svelte/src/main.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/speechApi.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/sdApi.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/rerankApi.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/modelUtils.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.test.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/imageApi.ts role-model-router/apps/runtime-host-bridge/src/index.ts
+role-model-router/apps/runtime-host-bridge/src/index.ts:6314:75 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    6312 │     .map((line) => line.slice(1));
+    6313 │
+  > 6314 │   if (removals.length === 1 && additions.length === 1 && content.includes(removals[0]!)) {
+         │                                                                           ^^^^^^^^^^^^
+    6315 │     content = content.replace(removals[0]!, additions[0]!);
+    6316 │   } else if (removals.length === 0 && additions.length > 0) {
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts:6315:31 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    6314 │   if (removals.length === 1 && additions.length === 1 && content.includes(removals[0]!)) {
+  > 6315 │     content = content.replace(removals[0]!, additions[0]!);
+         │                               ^^^^^^^^^^^^
+    6316 │   } else if (removals.length === 0 && additions.length > 0) {
+    6317 │     const suffix = content.endsWith("\n") ? "" : "\n";
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts:6315:45 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    6314 │   if (removals.length === 1 && additions.length === 1 && content.includes(removals[0]!)) {
+  > 6315 │     content = content.replace(removals[0]!, additions[0]!);
+         │                                             ^^^^^^^^^^^^^
+    6316 │   } else if (removals.length === 0 && additions.length > 0) {
+    6317 │     const suffix = content.endsWith("\n") ? "" : "\n";
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts:7154:34 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    7152 │     return trimmed;
+    7153 │   }
+  > 7154 │   return trimmed.includes("/") ? trimmed.split("/").slice(-1)[0]!.trim() : trimmed;
+         │                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    7155 │ }
+    7156 │
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+     7152  7152 │       return trimmed;
+     7153  7153 │     }
+     7154       │ - ··return·trimmed.includes("/")·?·trimmed.split("/").slice(-1)[0]!.trim()·:·trimmed;
+           7154 │ + ··return·trimmed.includes("/")·?·trimmed.split("/").slice(-1)[0]?.trim()·:·trimmed;
+     7155  7155 │   }
+     7156  7156 │
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts:7500:18 lint/style/useNumberNamespace  FIXABLE  ━━━━━━━━━━
+
+  × Use Number.POSITIVE_INFINITY instead of the equivalent global.
+
+    7498 │     const reader = createInterface({
+    7499 │       input: input.child.stdout,
+  > 7500 │       crlfDelay: Infinity,
+         │                  ^^^^^^^^
+    7501 │     });
+    7502 │     const pendingRequests = new Map<
+
+  i ES2015 moved some globals into the Number namespace for consistency.
+
+  i Safe fix: Use Number.POSITIVE_INFINITY instead.
+
+     7498  7498 │       const reader = createInterface({
+     7499  7499 │         input: input.child.stdout,
+     7500       │ - ······crlfDelay:·Infinity,
+           7500 │ + ······crlfDelay:·Number.POSITIVE_INFINITY,
+     7501  7501 │       });
+     7502  7502 │       const pendingRequests = new Map<
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts organizeImports ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Import statements could be sorted:
+
+        5     5 │   import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
+        6     6 │   import { createServer as createNetServer } from "node:net";
+        7       │ - import·{·createInterface·}·from·"node:readline";
+        8       │ - import·os·from·"node:os";
+        9       │ - import·path·from·"node:path";
+              7 │ + import·os·from·"node:os";
+              8 │ + import·path·from·"node:path";
+              9 │ + import·{·createInterface·}·from·"node:readline";
+       10    10 │   import { DatabaseSync } from "node:sqlite";
+       11    11 │   import { setTimeout as delay } from "node:timers/promises";
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     4662  4662 │         (typeof message.content !== "string" && !Array.isArray(message.content))
+     4663  4663 │       ) {
+     4664       │ - ······throw·new·Error("responses·input·messages·must·include·role·and·string·or·array·content·fields");
+           4664 │ + ······throw·new·Error(
+           4665 │ + ········"responses·input·messages·must·include·role·and·string·or·array·content·fields",
+           4666 │ + ······);
+     4665  4667 │       }
+     4666  4668 │       return {
+    ··········· │
+     5496  5498 │         }
+     5497  5499 │       : configuredDefaultRoutingMode
+     5498       │ - ········?·{
+     5499       │ - ············...routingDiagnostics,
+     5500       │ - ············routingMode:·configuredDefaultRoutingMode,
+     5501       │ - ··········}
+     5502       │ - ········:·routingDiagnostics;
+           5500 │ + ······?·{
+           5501 │ + ··········...routingDiagnostics,
+           5502 │ + ··········routingMode:·configuredDefaultRoutingMode,
+           5503 │ + ········}
+           5504 │ + ······:·routingDiagnostics;
+     5503  5505 │     const capabilityRequirements = inferChatCompletionsCapabilityRequirements(
+     5504  5506 │       body as unknown as Record<string, unknown>,
+    ··········· │
+     5643  5645 │         }
+     5644  5646 │       : configuredDefaultRoutingMode
+     5645       │ - ········?·{
+     5646       │ - ············...toolExecutionPlan.routingDiagnostics,
+     5647       │ - ············routingMode:·configuredDefaultRoutingMode,
+     5648       │ - ··········}
+     5649       │ - ········:·toolExecutionPlan.routingDiagnostics;
+           5647 │ + ······?·{
+           5648 │ + ··········...toolExecutionPlan.routingDiagnostics,
+           5649 │ + ··········routingMode:·configuredDefaultRoutingMode,
+           5650 │ + ········}
+           5651 │ + ······:·toolExecutionPlan.routingDiagnostics;
+     5650  5652 │     const capabilityFiltered = filterAllowEndpointsForCapabilityRequirements({
+     5651  5653 │       registry,
+    ··········· │
+     7414  7416 │               : {};
+     7415  7417 │           matchesWorkspace =
+     7416       │ - ··········typeof·payload.cwd·===·"string"·&&·path.resolve(payload.cwd)·===·path.resolve(input.workspaceRoot);
+           7418 │ + ··········typeof·payload.cwd·===·"string"·&&
+           7419 │ + ··········path.resolve(payload.cwd)·===·path.resolve(input.workspaceRoot);
+     7417  7420 │           continue;
+     7418  7421 │         }
+    ··········· │
+     7435  7438 │               ? (rateLimits.credits as Record<string, unknown>)
+     7436  7439 │               : {};
+     7437       │ - ········creditsExhausted·=
+     7438       │ - ··········credits.has_credits·===·false·&&·credits.unlimited·!==·true;
+           7440 │ + ········creditsExhausted·=·credits.has_credits·===·false·&&·credits.unlimited·!==·true;
+     7439  7441 │           continue;
+     7440  7442 │         }
+    ··········· │
+     7811  7813 │             message = JSON.parse(trimmed) as Record<string, unknown>;
+     7812  7814 │           } catch (error) {
+     7813       │ - ··········fail(error·instanceof·Error·?·error·:·new·Error("Codex·app-server·returned·invalid·JSON."));
+           7815 │ + ··········fail(
+           7816 │ + ············error·instanceof·Error·?·error·:·new·Error("Codex·app-server·returned·invalid·JSON."),
+           7817 │ + ··········);
+     7814  7818 │             return;
+     7815  7819 │           }
+    ··········· │
+     7853  7857 │           });
+     7854  7858 │           threadStartAcknowledged = true;
+     7855       │ - ········const·resolvedThreadId·=·readCodexThreadIdFromAppServerMessage({·result:·threadStartResult·});
+           7859 │ + ········const·resolvedThreadId·=·readCodexThreadIdFromAppServerMessage({
+           7860 │ + ··········result:·threadStartResult,
+           7861 │ + ········});
+     7856  7862 │           if (resolvedThreadId.length > 0) {
+     7857  7863 │             threadId = resolvedThreadId;
+    ··········· │
+    14018 14024 │                       workspaceRoot,
+    14019 14025 │                     });
+    14020       │ - ··················const·originalToolName·=
+    14021       │ - ····················originalToolNameByExposedName.get(toolName)·??·toolName;
+          14026 │ + ··················const·originalToolName·=·originalToolNameByExposedName.get(toolName)·??·toolName;
+    14022 14027 │                     const executionResult = dynamicToolNames.has(originalToolName)
+    14023 14028 │                       ? await executeToolCalls(runtimeToolRegistry, {
+
+
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+
+
+ ❯ test/recursive-biome-repo-wide.test.ts (1 test | 1 failed) 2689ms
+   × run31 repo-wide Biome parity > requires repo-wide biome check to pass under repository config 2686ms
+     → Command failed: cmd.exe /c corepack pnpm exec biome check .
+.\role-model-router\apps\runtime-host-bridge\src\model-capability-resolver.ts format ━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     73  73 │
+     74  74 │   function providerIdFromModelId(modelId: string): string {
+     75     │ - ··return·modelId.includes("/")·?·modelId.split("/",·1)[0]·??·"unknown"·:·"unknown";
+         75 │ + ··return·modelId.includes("/")·?·(modelId.split("/",·1)[0]·??·"unknown")·:·"unknown";
+     76  76 │   }
+     77  77 │
+    ······· │
+    200 200 │       },
+    201 201 │       unknown: [
+    202     │ - ······...(positiveNumber(model.contextWindow)·===·null·||·positiveNumber(model.maxOutputTokens)·===·null
+        202 │ + ······...(positiveNumber(model.contextWindow)·===·null·||
+        203 │ + ······positiveNumber(model.maxOutputTokens)·===·null
+    203 204 │           ? (["limits"] as const)
+    204 205 │           : []),
+
+
+.\packages\schema-tools\src\validate-schemas.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     84  84 │     },
+     85  85 │     {
+     86     │ - ····filePath:·path.join(
+     87     │ - ······fixtureRoot,
+     88     │ - ······"downstream-openai",
+     89     │ - ······"downstream-openai-discovery-basic.json",
+     90     │ - ····),
+         86 │ + ····filePath:·path.join(fixtureRoot,·"downstream-openai",·"downstream-openai-discovery-basic.json"),
+     91  87 │       schemaFile: "downstream-openai-discovery.schema.json",
+     92  88 │       family: "downstream-openai",
+
+
+.\role-model-router\apps\runtime-host-bridge\src\downstream-openai-discovery.ts format ━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+      8   8 │     resolveModelCapabilityProfile,
+      9   9 │   } from "./model-capability-resolver.js";
+     10     │ - import·{
+     11     │ - ··type·RoutableInventory,
+     12     │ - ··resolveAliasAllowEndpoints,
+     13     │ - }·from·"./routable-inventory.js";
+         10 │ + import·{·type·RoutableInventory,·resolveAliasAllowEndpoints·}·from·"./routable-inventory.js";
+     14  11 │   import type { UnifiedRuntimeModelAliasConfig } from "./unified-runtime-config.js";
+     15  12 │
+    ······· │
+    292 289 │       sources: uniqueSorted(
+    293 290 │         input.rows.flatMap((row) =>
+    294     │ - ········[row.profile.sources.limits,·row.profile.sources.modalities,·row.profile.sources.capabilities].filter(
+    295     │ - ··········(source):·source·is·string·=>·source·!==·null,
+    296     │ - ········),
+        291 │ + ········[
+        292 │ + ··········row.profile.sources.limits,
+        293 │ + ··········row.profile.sources.modalities,
+        294 │ + ··········row.profile.sources.capabilities,
+        295 │ + ········].filter((source):·source·is·string·=>·source·!==·null),
+    297 296 │         ),
+    298 297 │       ),
+    ······· │
+    300 299 │   }
+    301 300 │
+    302     │ - function·aggregateCaching(profiles:·readonly·ModelCapabilityProfile[]):·DownstreamOpenAIModelCapabilities["caching"]·{
+        301 │ + function·aggregateCaching(
+        302 │ + ··profiles:·readonly·ModelCapabilityProfile[],
+        303 │ + ):·DownstreamOpenAIModelCapabilities["caching"]·{
+    303 304 │     if (profiles.length === 0) {
+    304 305 │       return {
+    ······· │
+    445 446 │
+    446 447 │     const models = modelRecords.sort((left, right) => compareText(left.id, right.id));
+    447     │ - ··const·recommendedModel·=·modelAliases.find((alias)·=>
+    448     │ - ····models.some((model)·=>·model.id·===·alias.aliasId),
+    449     │ - ··)?.aliasId·??·models[0]?.id·??·null;
+        448 │ + ··const·recommendedModel·=
+        449 │ + ····modelAliases.find((alias)·=>·models.some((model)·=>·model.id·===·alias.aliasId))?.aliasId·??
+        450 │ + ····models[0]?.id·??
+        451 │ + ····null;
+    450 452 │
+    451 453 │     return {
+    ······· │
+    482 484 │         catalogVersion: input.catalog.catalogVersion,
+    483 485 │         catalogCapturedAt:
+    484     │ - ········typeof·input.catalog.source.capturedAt·===·"string"·?·input.catalog.source.capturedAt·:·null,
+        486 │ + ········typeof·input.catalog.source.capturedAt·===·"string"
+        487 │ + ··········?·input.catalog.source.capturedAt
+        488 │ + ··········:·null,
+    485 489 │         runtimeInventoryRevision: buildRuntimeInventoryRevision({
+    486 490 │           registry: input.registry,
+
+
+.\role-model-router\apps\runtime-host-bridge\src\benchmark-runner.ts organizeImports ━━━━━━━━━━━━━━━
+
+  × Import statements could be sorted:
+
+       8    8 │     type RoutingBenchmarkCase,
+       9    9 │     augmentCaseMessages,
+      10      │ - ··buildTextDeliverableResponseFormat,
+      11      │ - ··buildCompareRequestMessages,
+           10 │ + ··buildCompareRequestMessages,
+      12   11 │     buildHeuristicCompareRanking,
+      13   12 │     buildJudgeGradingBrief,
+      14   13 │     buildJudgeRequestMessages,
+      15   14 │     buildScaffoldFollowUp,
+      16      │ - ··capJudgeScoreForInvalidDeliverable,
+           15 │ + ··buildTextDeliverableResponseFormat,
+           16 │ + ··capJudgeScoreForInvalidDeliverable,
+      17   17 │     deliverableCompleteness,
+      18   18 │     extractFormattedAnswer,
+
+
+.\role-model-router\apps\runtime-host-bridge\src\request-capability-inference.ts format ━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    115 115 │   }
+    116 116 │
+    117     │ - function·inferToolCapabilities(tools:·unknown,·mode:·"chat"·|·"responses"):·{
+        117 │ + function·inferToolCapabilities(
+        118 │ + ··tools:·unknown,
+        119 │ + ··mode:·"chat"·|·"responses",
+        120 │ + ):·{
+    118 121 │     readonly required: readonly string[];
+    119 122 │     readonly advisory: readonly string[];
+    ······· │
+    280 283 │         advisoryCapabilities: input.requirements.advisoryCapabilities,
+    281 284 │         includedEndpoints: includedEndpoints.sort(compareText),
+    282     │ - ······excludedTargets:·excludedTargets.sort((left,·right)·=>·compareText(left.endpointId,·right.endpointId)),
+        285 │ + ······excludedTargets:·excludedTargets.sort((left,·right)·=>
+        286 │ + ········compareText(left.endpointId,·right.endpointId),
+        287 │ + ······),
+    283 288 │       },
+    284 289 │     };
+
+
+.\protocol\fixtures\downstream-openai\downstream-openai-discovery-basic.json format ━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     86  86 │         },
+     87  87 │         "declared": {
+     88     │ - ········"modelIds":·[
+     89     │ - ··········"chatgpt/gpt-5.4",
+     90     │ - ··········"deepseek/deepseek-v4-flash",
+     91     │ - ··········"moonshot/kimi-k2.7-code"
+     92     │ - ········],
+         88 │ + ········"modelIds":·["chatgpt/gpt-5.4",·"deepseek/deepseek-v4-flash",·"moonshot/kimi-k2.7-code"],
+     93  89 │           "endpointIds": [
+     94  90 │             "deepseek.personal.primary.global.deepseek-v4-flash",
+    ······· │
+     98  94 │         },
+     99  95 │         "routable": {
+    100     │ - ········"modelIds":·[
+    101     │ - ··········"chatgpt/gpt-5.4",
+    102     │ - ··········"deepseek/deepseek-v4-flash",
+    103     │ - ··········"moonshot/kimi-k2.7-code"
+    104     │ - ········],
+         96 │ + ········"modelIds":·["chatgpt/gpt-5.4",·"deepseek/deepseek-v4-flash",·"moonshot/kimi-k2.7-code"],
+    105  97 │           "endpointIds": [
+    106  98 │             "deepseek.personal.primary.global.deepseek-v4-flash",
+
+
+.\role-model-router\apps\runtime-host-bridge\test\downstream-openai-discovery.test.ts format ━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     15  15 │   };
+     16  16 │
+     17     │ - function·model(overrides:·Partial<NormalizedCatalogModel>·&·{·modelId:·string·}):·NormalizedCatalogModel·{
+         17 │ + function·model(
+         18 │ + ··overrides:·Partial<NormalizedCatalogModel>·&·{·modelId:·string·},
+         19 │ + ):·NormalizedCatalogModel·{
+     18  20 │     return {
+     19  21 │       modelId: overrides.modelId,
+
+
+.\role-model-router\apps\runtime-host-bridge\test\model-capability-resolver.test.ts format ━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     12  12 │   };
+     13  13 │
+     14     │ - function·model(overrides:·Partial<NormalizedCatalogModel>·&·{·modelId:·string·}):·NormalizedCatalogModel·{
+         14 │ + function·model(
+         15 │ + ··overrides:·Partial<NormalizedCatalogModel>·&·{·modelId:·string·},
+         16 │ + ):·NormalizedCatalogModel·{
+     15  17 │     return {
+     16  18 │       modelId: overrides.modelId,
+    ······· │
+     81  83 │       expect(profile.outputModalities).toContain("text");
+     82  84 │       expect(profile.capabilities).toEqual(
+     83     │ - ······expect.arrayContaining(["text.chat",·"tools.function_calling",·"reasoning",·"structured.output"]),
+         85 │ + ······expect.arrayContaining([
+         86 │ + ········"text.chat",
+         87 │ + ········"tools.function_calling",
+         88 │ + ········"reasoning",
+         89 │ + ········"structured.output",
+         90 │ + ······]),
+     84  91 │       );
+     85  92 │       expect(profile.sources.limits).toBe("catalog:openai/gpt-5.4");
+    ······· │
+    112 119 │       expect(profile.limits.contextWindow).toBeNull();
+    113 120 │       expect(profile.limits.maxOutputTokens).toBeNull();
+    114     │ - ····expect(profile.unknown).toEqual(expect.arrayContaining(["limits",·"modalities",·"capabilities"]));
+        121 │ + ····expect(profile.unknown).toEqual(
+        122 │ + ······expect.arrayContaining(["limits",·"modalities",·"capabilities"]),
+        123 │ + ····);
+    115 124 │     });
+    116 125 │   });
+
+
+.\role-model-router\apps\runtime-host-bridge\test\benchmark-runner-judge.test.ts format ━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    363 363 │
+    364 364 │       expect(
+    365     │ - ······result.endpointGrades.find((grade)·=>·grade.endpointId·===·endpoint.endpointId)?.caseResults[0]
+    366     │ - ········?.score,
+        365 │ + ······result.endpointGrades.find((grade)·=>·grade.endpointId·===·endpoint.endpointId)
+        366 │ + ········?.caseResults[0]?.score,
+    367 367 │       ).toBe(1);
+    368 368 │     });
+    ······· │
+    537 537 │                   function: {
+    538 538 │                     name: "list_dir",
+    539     │ - ··················arguments:·'{"path":"C:\\\\Users\\\\erikb\\\\AppData\\\\Local\\\\RMCS\\\\ws\\\\run\\\\config"}',
+        539 │ + ··················arguments:
+        540 │ + ····················'{"path":"C:\\\\Users\\\\erikb\\\\AppData\\\\Local\\\\RMCS\\\\ws\\\\run\\\\config"}',
+    540 541 │                   },
+    541 542 │                 },
+
+
+.\role-model-router\packages\bench-judge\src\index.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    101 101 │     test("parseJudgeGradingResponse sanitizes runaway regex-noise rationale text", () => {
+    102 102 │       const parsed = parseJudgeGradingResponse(
+    103     │ - ······'{"score":1,"rationale":"Good·answer·matching·the·checklist·and·the·\'+\',\'+\',\'+\',\'+\',\'+\',\'+\',\'+\'·pattern."}',
+        103 │ + ······"{\"score\":1,\"rationale\":\"Good·answer·matching·the·checklist·and·the·'+','+','+','+','+','+','+'·pattern.\"}",
+    104 104 │       );
+    105 105 │       expect(parsed?.score).toBe(1);
+    106 106 │       expect(parsed?.rationale).toContain("Good answer");
+    107 107 │       expect(parsed?.rationale).not.toContain("'+','+','+'");
+    108     │ - ····expect((parsed?.rationale?.length·??·0)).toBeLessThan(200);
+        108 │ + ····expect(parsed?.rationale?.length·??·0).toBeLessThan(200);
+    109 109 │     });
+    110 110 │   });
+
+
+.\role-model-router\packages\bench-routing\src\answer-format.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    200 200 │
+    201 201 │       expect(
+    202     │ - ······shouldOmitToolsForTurn(caseItem,·["list_endpoints",·"get_metrics"],·[
+    203     │ - ········{·function:·{·name:·"list_endpoints",·arguments:·"{}"·}·},
+    204     │ - ········{
+    205     │ - ··········function:·{
+    206     │ - ············name:·"get_metrics",
+    207     │ - ············arguments:·'{"endpoint_id":"local.lfm2.5-8b-a1b"}',
+        202 │ + ······shouldOmitToolsForTurn(
+        203 │ + ········caseItem,
+        204 │ + ········["list_endpoints",·"get_metrics"],
+        205 │ + ········[
+        206 │ + ··········{·function:·{·name:·"list_endpoints",·arguments:·"{}"·}·},
+        207 │ + ··········{
+        208 │ + ············function:·{
+        209 │ + ··············name:·"get_metrics",
+        210 │ + ··············arguments:·'{"endpoint_id":"local.lfm2.5-8b-a1b"}',
+        211 │ + ············},
+    208 212 │             },
+    209     │ - ········},
+    210     │ - ······]),
+        213 │ + ········],
+        214 │ + ······),
+    211 215 │       ).toBe(false);
+    212 216 │
+
+
+.\role-model-router\packages\bench-routing\data\routing-capability-suite.json format ━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     230  230 │         "expected_response": "A concise one-line definition or correct expansion of API.",
+     231  231 │         "grading_criteria": "Defines API in one concise line; either a correct expansion or a brief correct one-line definition is acceptable.",
+     232      │ - ······"accept_patterns":·["Application·Programming·Interface",·"programming·interface",·"software·applications",·"communicate"],
+          232 │ + ······"accept_patterns":·[
+          233 │ + ········"Application·Programming·Interface",
+          234 │ + ········"programming·interface",
+          235 │ + ········"software·applications",
+          236 │ + ········"communicate"
+          237 │ + ······],
+     233  238 │         "quick_benchmark": false
+     234  239 │       },
+
+
+.\role-model-router\packages\bench-routing\src\index.test.ts organizeImports ━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Import statements could be sorted:
+
+      4   4 │
+      5   5 │   import {
+      6     │ - ··buildScaffoldFollowUp,
+      7     │ - ··buildHeuristicCompareRanking,
+      8     │ - ··buildJudgeRequestMessages,
+          6 │ + ··buildHeuristicCompareRanking,
+          7 │ + ··buildJudgeRequestMessages,
+          8 │ + ··buildScaffoldFollowUp,
+      9   9 │     capJudgeScoreForGroundedTruthMismatch,
+     10  10 │     extractFormattedAnswer,
+
+
+.\role-model-router\packages\bench-routing\src\judge-brief.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     77  77 │
+     78  78 │   function summarizeAcceptPatternsForJudge(patterns: readonly string[]): string[] {
+     79     │ - ··return·[...new·Set(patterns.map(describeAcceptPattern).filter((value):·value·is·string·=>·!!value))];
+         79 │ + ··return·[
+         80 │ + ····...new·Set(patterns.map(describeAcceptPattern).filter((value):·value·is·string·=>·!!value)),
+         81 │ + ··];
+     80  82 │   }
+     81  83 │
+
+
+.\role-model-router\packages\bench-routing\src\index.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    232 232 │
+    233 233 │     test("p15 names the grounded runtime config path directly in the prompt", () => {
+    234     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p15-tools-read-one");
+        234 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        235 │ + ······(item)·=>·item.case_id·===·"p15-tools-read-one",
+        236 │ + ····);
+    235 237 │       expect(caseItem).toBeTruthy();
+    236 238 │       const combinedMessages = (caseItem?.messages ?? [])
+    ······· │
+    241 243 │
+    242 244 │     test("p18 encodes repeated get_metrics calls in its expected tool contract", () => {
+    243     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p18-tools-agent");
+        245 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        246 │ + ······(item)·=>·item.case_id·===·"p18-tools-agent",
+        247 │ + ····);
+    244 248 │       expect(caseItem).toBeTruthy();
+    245     │ - ····expect(caseItem?.expected_tool_names).toEqual([
+    246     │ - ······"list_endpoints",
+    247     │ - ······"get_metrics",
+    248     │ - ······"get_metrics",
+    249     │ - ····]);
+        249 │ + ····expect(caseItem?.expected_tool_names).toEqual(["list_endpoints",·"get_metrics",·"get_metrics"]);
+    250 250 │     });
+    251 251 │
+    252 252 │     test("e08 declares the top-level json schema it already grades against", () => {
+    253     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"e08-format-json");
+        253 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        254 │ + ······(item)·=>·item.case_id·===·"e08-format-json",
+        255 │ + ····);
+    254 256 │       expect(caseItem).toBeTruthy();
+    255 257 │       expect(caseItem?.answer_format).toEqual({
+    ······· │
+    364 366 │
+    365 367 │     test("caps grounded tool-case score when p15 uses the wrong path and answer", () => {
+    366     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p15-tools-read-one");
+        368 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        369 │ + ······(item)·=>·item.case_id·===·"p15-tools-read-one",
+        370 │ + ····);
+    367 371 │       expect(caseItem).toBeTruthy();
+    368 372 │       if (!caseItem) {
+    ······· │
+    390 394 │
+    391 395 │     test("does not cap p15 when any repeated read_file call hits the grounded path", () => {
+    392     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p15-tools-read-one");
+        396 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        397 │ + ······(item)·=>·item.case_id·===·"p15-tools-read-one",
+        398 │ + ····);
+    393 399 │       expect(caseItem).toBeTruthy();
+    394 400 │       if (!caseItem) {
+    ······· │
+    419 425 │
+    420 426 │     test("does not cap p15 when the grounded runtime config path is absolute", () => {
+    421     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p15-tools-read-one");
+        427 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        428 │ + ······(item)·=>·item.case_id·===·"p15-tools-read-one",
+        429 │ + ····);
+    422 430 │       expect(caseItem).toBeTruthy();
+    423 431 │       if (!caseItem) {
+    ······· │
+    433 441 │             {
+    434 442 │               name: "read_file",
+    435     │ - ············arguments:·{·path:·"C:\\Users\\erikb\\AppData\\Local\\RMCS\\ws\\run\\state\\runtime-config.yaml"·},
+        443 │ + ············arguments:·{
+        444 │ + ··············path:·"C:\\Users\\erikb\\AppData\\Local\\RMCS\\ws\\run\\state\\runtime-config.yaml",
+        445 │ + ············},
+    436 446 │             },
+    437 447 │           ],
+    ······· │
+    444 454 │
+    445 455 │     test("caps grounded tool-case score when t01 invents filenames not present in the scaffold listing", () => {
+    446     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"t01-tools-list-dir");
+        456 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        457 │ + ······(item)·=>·item.case_id·===·"t01-tools-list-dir",
+        458 │ + ····);
+    447 459 │       expect(caseItem).toBeTruthy();
+    448 460 │       if (!caseItem) {
+    ······· │
+    470 482 │
+    471 483 │     test("does not cap t01 when any repeated list_dir call inspects config", () => {
+    472     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"t01-tools-list-dir");
+        484 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        485 │ + ······(item)·=>·item.case_id·===·"t01-tools-list-dir",
+        486 │ + ····);
+    473 487 │       expect(caseItem).toBeTruthy();
+    474 488 │       if (!caseItem) {
+    ······· │
+    499 513 │
+    500 514 │     test("does not cap t01 when list_dir inspects an absolute config path", () => {
+    501     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"t01-tools-list-dir");
+        515 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        516 │ + ······(item)·=>·item.case_id·===·"t01-tools-list-dir",
+        517 │ + ····);
+    502 518 │       expect(caseItem).toBeTruthy();
+    503 519 │       if (!caseItem) {
+    ······· │
+    524 540 │
+    525 541 │     test("caps p18 when routing advice cites comparison data without fetching both metric sets", () => {
+    526     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p18-tools-agent");
+        542 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        543 │ + ······(item)·=>·item.case_id·===·"p18-tools-agent",
+        544 │ + ····);
+    527 545 │       expect(caseItem).toBeTruthy();
+    528 546 │       if (!caseItem) {
+    ······· │
+    549 567 │
+    550 568 │     test("does not cap p18 when both metric calls are present", () => {
+    551     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p18-tools-agent");
+        569 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        570 │ + ······(item)·=>·item.case_id·===·"p18-tools-agent",
+        571 │ + ····);
+    552 572 │       expect(caseItem).toBeTruthy();
+    553 573 │       if (!caseItem) {
+    ······· │
+    574 594 │
+    575 595 │     test("caps h09 when the answer does not compare local and remote latency", () => {
+    576     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"h09-agent-metrics-chain");
+        596 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        597 │ + ······(item)·=>·item.case_id·===·"h09-agent-metrics-chain",
+        598 │ + ····);
+    577 599 │       expect(caseItem).toBeTruthy();
+    578 600 │       if (!caseItem) {
+    ······· │
+    599 621 │
+    600 622 │     test("caps h09 when one side of the latency comparison was never fetched", () => {
+    601     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"h09-agent-metrics-chain");
+        623 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        624 │ + ······(item)·=>·item.case_id·===·"h09-agent-metrics-chain",
+        625 │ + ····);
+    602 626 │       expect(caseItem).toBeTruthy();
+    603 627 │       if (!caseItem) {
+    ······· │
+    624 648 │
+    625 649 │     test("does not cap h09 when both endpoint metrics support the grounded comparison", () => {
+    626     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"h09-agent-metrics-chain");
+        650 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        651 │ + ······(item)·=>·item.case_id·===·"h09-agent-metrics-chain",
+        652 │ + ····);
+    627 653 │       expect(caseItem).toBeTruthy();
+    628 654 │       if (!caseItem) {
+    ······· │
+    649 675 │
+    650 676 │     test("h09 encodes both compared get_metrics calls in its contract", () => {
+    651     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"h09-agent-metrics-chain");
+        677 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        678 │ + ······(item)·=>·item.case_id·===·"h09-agent-metrics-chain",
+        679 │ + ····);
+    652 680 │       expect(caseItem).toBeTruthy();
+    653 681 │       if (!caseItem) {
+
+
+.\role-model-router\packages\bench-routing\src\index.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    226 226 │   }
+    227 227 │
+    228     │ - function·readNormalizedBinaryAnswer(caseItem:·RoutingBenchmarkCase,·deliverable:·string):·string·|·null·{
+        228 │ + function·readNormalizedBinaryAnswer(
+        229 │ + ··caseItem:·RoutingBenchmarkCase,
+        230 │ + ··deliverable:·string,
+        231 │ + ):·string·|·null·{
+    229 232 │     const expected = caseItem.expected_response.trim().toLowerCase();
+    230 233 │     if (!["yes", "no", "true", "false"].includes(expected)) {
+    ······· │
+    270 273 │     }
+    271 274 │     return toolCalls.filter(
+    272     │ - ····(toolCall):·toolCall·is·Record<string,·unknown>·=>
+    273     │ - ······!!toolCall·&&·typeof·toolCall·===·"object",
+        275 │ + ····(toolCall):·toolCall·is·Record<string,·unknown>·=>·!!toolCall·&&·typeof·toolCall·===·"object",
+    274 276 │     );
+    275 277 │   }
+    ······· │
+    366 368 │           !metricEndpointIds.includes("remote.deepseek-v4-flash")
+    367 369 │         ) {
+    368     │ - ········return·["expected·get_metrics·calls·for·both·local.lfm2.5-8b-a1b·and·remote.deepseek-v4-flash"];
+        370 │ + ········return·[
+        371 │ + ··········"expected·get_metrics·calls·for·both·local.lfm2.5-8b-a1b·and·remote.deepseek-v4-flash",
+        372 │ + ········];
+    369 373 │         }
+    370 374 │         if (/not available|unavailable|unknown|missing/i.test(answer)) {
+    371     │ - ········return·["expected·explicit·remote-vs-local·latency·comparison,·not·an·unavailable-data·answer"];
+        375 │ + ········return·[
+        376 │ + ··········"expected·explicit·remote-vs-local·latency·comparison,·not·an·unavailable-data·answer",
+        377 │ + ········];
+    372 378 │         }
+    373 379 │         const lowerAnswerText = answer.toLowerCase();
+    ······· │
+    395 401 │           comparisonConnector;
+    396 402 │         const numericComparison =
+    397     │ - ········lowerAnswerText.includes("62")·&&
+    398     │ - ········lowerAnswerText.includes("245")·&&
+    399     │ - ········comparisonConnector;
+        403 │ + ········lowerAnswerText.includes("62")·&&·lowerAnswerText.includes("245")·&&·comparisonConnector;
+    400 404 │         const comparesLocalLower = localBetter || remoteWorse || numericComparison;
+    401 405 │         if (!comparesLocalLower) {
+    402     │ - ········return·["expected·grounded·comparison·that·local.lfm2.5-8b-a1b·has·lower·p95·latency·than·remote.deepseek-v4-flash"];
+        406 │ + ········return·[
+        407 │ + ··········"expected·grounded·comparison·that·local.lfm2.5-8b-a1b·has·lower·p95·latency·than·remote.deepseek-v4-flash",
+        408 │ + ········];
+    403 409 │         }
+    404 410 │         return [];
+    ······· │
+    444 450 │         };
+    445 451 │       }
+    446     │ - ····const·normalizedBinaryAnswer·=·readNormalizedBinaryAnswer(
+    447     │ - ······input.caseItem,
+    448     │ - ······input.actualResponse,
+    449     │ - ····);
+        452 │ + ····const·normalizedBinaryAnswer·=·readNormalizedBinaryAnswer(input.caseItem,·input.actualResponse);
+    450 453 │       if (normalizedBinaryAnswer) {
+    451 454 │         return {
+
+
+.\role-model-router\packages\sqlite-memory\test\index.test.ts:2557:18 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    2556 │     try {
+  > 2557 │       await once(locker.stdout!, "data");
+         │                  ^^^^^^^^^^^^^^
+    2558 │       persistObservedBenchmarkSample({
+    2559 │         databasePath: initialized.databasePath,
+
+
+.\role-model-router\packages\sqlite-memory\test\index.test.ts:2651:18 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    2650 │     try {
+  > 2651 │       await once(locker.stdout!, "data");
+         │                  ^^^^^^^^^^^^^^
+    2652 │       expect(() =>
+    2653 │         persistRuntimeObservationBundle({
+
+
+.\role-model-router\packages\sqlite-memory\test\index.test.ts:2700:18 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    2699 │     try {
+  > 2700 │       await once(locker.stdout!, "data");
+         │                  ^^^^^^^^^^^^^^
+    2701 │       expect(
+    2702 │         sqliteMemory.readDifficultyClassificationCache({
+
+
+.\role-model-router\packages\sqlite-memory\test\index.test.ts:2749:18 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    2748 │     try {
+  > 2749 │       await once(locker.stdout!, "data");
+         │                  ^^^^^^^^^^^^^^
+    2750 │       expect(() =>
+    2751 │         sqliteMemory.upsertDifficultyClassificationCache({
+
+
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+
+
+ ✓ test/recursive-core-run81-typecheck.test.ts (1 test) 3364ms
+   ✓ run31 core build regression for run81 > requires @role-model-router/core to build cleanly under repository config  3361ms
+ ✓ test/recursive-runtime-host-bridge-build.test.ts (1 test) 8304ms
+   ✓ run31 runtime-host-bridge build regression > requires @role-model-router/runtime-host-bridge to build cleanly under repository config  8301ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/recursive-biome-repo-wide.test.ts > run31 repo-wide Biome parity > requires repo-wide biome check to pass under repository config
+Error: Command failed: cmd.exe /c corepack pnpm exec biome check .
+.\role-model-router\apps\runtime-host-bridge\src\model-capability-resolver.ts format ━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     73  73 │
+     74  74 │   function providerIdFromModelId(modelId: string): string {
+     75     │ - ··return·modelId.includes("/")·?·modelId.split("/",·1)[0]·??·"unknown"·:·"unknown";
+         75 │ + ··return·modelId.includes("/")·?·(modelId.split("/",·1)[0]·??·"unknown")·:·"unknown";
+     76  76 │   }
+     77  77 │
+    ······· │
+    200 200 │       },
+    201 201 │       unknown: [
+    202     │ - ······...(positiveNumber(model.contextWindow)·===·null·||·positiveNumber(model.maxOutputTokens)·===·null
+        202 │ + ······...(positiveNumber(model.contextWindow)·===·null·||
+        203 │ + ······positiveNumber(model.maxOutputTokens)·===·null
+    203 204 │           ? (["limits"] as const)
+    204 205 │           : []),
+
+
+.\packages\schema-tools\src\validate-schemas.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     84  84 │     },
+     85  85 │     {
+     86     │ - ····filePath:·path.join(
+     87     │ - ······fixtureRoot,
+     88     │ - ······"downstream-openai",
+     89     │ - ······"downstream-openai-discovery-basic.json",
+     90     │ - ····),
+         86 │ + ····filePath:·path.join(fixtureRoot,·"downstream-openai",·"downstream-openai-discovery-basic.json"),
+     91  87 │       schemaFile: "downstream-openai-discovery.schema.json",
+     92  88 │       family: "downstream-openai",
+
+
+.\role-model-router\apps\runtime-host-bridge\src\downstream-openai-discovery.ts format ━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+      8   8 │     resolveModelCapabilityProfile,
+      9   9 │   } from "./model-capability-resolver.js";
+     10     │ - import·{
+     11     │ - ··type·RoutableInventory,
+     12     │ - ··resolveAliasAllowEndpoints,
+     13     │ - }·from·"./routable-inventory.js";
+         10 │ + import·{·type·RoutableInventory,·resolveAliasAllowEndpoints·}·from·"./routable-inventory.js";
+     14  11 │   import type { UnifiedRuntimeModelAliasConfig } from "./unified-runtime-config.js";
+     15  12 │
+    ······· │
+    292 289 │       sources: uniqueSorted(
+    293 290 │         input.rows.flatMap((row) =>
+    294     │ - ········[row.profile.sources.limits,·row.profile.sources.modalities,·row.profile.sources.capabilities].filter(
+    295     │ - ··········(source):·source·is·string·=>·source·!==·null,
+    296     │ - ········),
+        291 │ + ········[
+        292 │ + ··········row.profile.sources.limits,
+        293 │ + ··········row.profile.sources.modalities,
+        294 │ + ··········row.profile.sources.capabilities,
+        295 │ + ········].filter((source):·source·is·string·=>·source·!==·null),
+    297 296 │         ),
+    298 297 │       ),
+    ······· │
+    300 299 │   }
+    301 300 │
+    302     │ - function·aggregateCaching(profiles:·readonly·ModelCapabilityProfile[]):·DownstreamOpenAIModelCapabilities["caching"]·{
+        301 │ + function·aggregateCaching(
+        302 │ + ··profiles:·readonly·ModelCapabilityProfile[],
+        303 │ + ):·DownstreamOpenAIModelCapabilities["caching"]·{
+    303 304 │     if (profiles.length === 0) {
+    304 305 │       return {
+    ······· │
+    445 446 │
+    446 447 │     const models = modelRecords.sort((left, right) => compareText(left.id, right.id));
+    447     │ - ··const·recommendedModel·=·modelAliases.find((alias)·=>
+    448     │ - ····models.some((model)·=>·model.id·===·alias.aliasId),
+    449     │ - ··)?.aliasId·??·models[0]?.id·??·null;
+        448 │ + ··const·recommendedModel·=
+        449 │ + ····modelAliases.find((alias)·=>·models.some((model)·=>·model.id·===·alias.aliasId))?.aliasId·??
+        450 │ + ····models[0]?.id·??
+        451 │ + ····null;
+    450 452 │
+    451 453 │     return {
+    ······· │
+    482 484 │         catalogVersion: input.catalog.catalogVersion,
+    483 485 │         catalogCapturedAt:
+    484     │ - ········typeof·input.catalog.source.capturedAt·===·"string"·?·input.catalog.source.capturedAt·:·null,
+        486 │ + ········typeof·input.catalog.source.capturedAt·===·"string"
+        487 │ + ··········?·input.catalog.source.capturedAt
+        488 │ + ··········:·null,
+    485 489 │         runtimeInventoryRevision: buildRuntimeInventoryRevision({
+    486 490 │           registry: input.registry,
+
+
+.\role-model-router\apps\runtime-host-bridge\src\benchmark-runner.ts organizeImports ━━━━━━━━━━━━━━━
+
+  × Import statements could be sorted:
+
+       8    8 │     type RoutingBenchmarkCase,
+       9    9 │     augmentCaseMessages,
+      10      │ - ··buildTextDeliverableResponseFormat,
+      11      │ - ··buildCompareRequestMessages,
+           10 │ + ··buildCompareRequestMessages,
+      12   11 │     buildHeuristicCompareRanking,
+      13   12 │     buildJudgeGradingBrief,
+      14   13 │     buildJudgeRequestMessages,
+      15   14 │     buildScaffoldFollowUp,
+      16      │ - ··capJudgeScoreForInvalidDeliverable,
+           15 │ + ··buildTextDeliverableResponseFormat,
+           16 │ + ··capJudgeScoreForInvalidDeliverable,
+      17   17 │     deliverableCompleteness,
+      18   18 │     extractFormattedAnswer,
+
+
+.\role-model-router\apps\runtime-host-bridge\src\request-capability-inference.ts format ━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    115 115 │   }
+    116 116 │
+    117     │ - function·inferToolCapabilities(tools:·unknown,·mode:·"chat"·|·"responses"):·{
+        117 │ + function·inferToolCapabilities(
+        118 │ + ··tools:·unknown,
+        119 │ + ··mode:·"chat"·|·"responses",
+        120 │ + ):·{
+    118 121 │     readonly required: readonly string[];
+    119 122 │     readonly advisory: readonly string[];
+    ······· │
+    280 283 │         advisoryCapabilities: input.requirements.advisoryCapabilities,
+    281 284 │         includedEndpoints: includedEndpoints.sort(compareText),
+    282     │ - ······excludedTargets:·excludedTargets.sort((left,·right)·=>·compareText(left.endpointId,·right.endpointId)),
+        285 │ + ······excludedTargets:·excludedTargets.sort((left,·right)·=>
+        286 │ + ········compareText(left.endpointId,·right.endpointId),
+        287 │ + ······),
+    283 288 │       },
+    284 289 │     };
+
+
+.\protocol\fixtures\downstream-openai\downstream-openai-discovery-basic.json format ━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     86  86 │         },
+     87  87 │         "declared": {
+     88     │ - ········"modelIds":·[
+     89     │ - ··········"chatgpt/gpt-5.4",
+     90     │ - ··········"deepseek/deepseek-v4-flash",
+     91     │ - ··········"moonshot/kimi-k2.7-code"
+     92     │ - ········],
+         88 │ + ········"modelIds":·["chatgpt/gpt-5.4",·"deepseek/deepseek-v4-flash",·"moonshot/kimi-k2.7-code"],
+     93  89 │           "endpointIds": [
+     94  90 │             "deepseek.personal.primary.global.deepseek-v4-flash",
+    ······· │
+     98  94 │         },
+     99  95 │         "routable": {
+    100     │ - ········"modelIds":·[
+    101     │ - ··········"chatgpt/gpt-5.4",
+    102     │ - ··········"deepseek/deepseek-v4-flash",
+    103     │ - ··········"moonshot/kimi-k2.7-code"
+    104     │ - ········],
+         96 │ + ········"modelIds":·["chatgpt/gpt-5.4",·"deepseek/deepseek-v4-flash",·"moonshot/kimi-k2.7-code"],
+    105  97 │           "endpointIds": [
+    106  98 │             "deepseek.personal.primary.global.deepseek-v4-flash",
+
+
+.\role-model-router\apps\runtime-host-bridge\test\downstream-openai-discovery.test.ts format ━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     15  15 │   };
+     16  16 │
+     17     │ - function·model(overrides:·Partial<NormalizedCatalogModel>·&·{·modelId:·string·}):·NormalizedCatalogModel·{
+         17 │ + function·model(
+         18 │ + ··overrides:·Partial<NormalizedCatalogModel>·&·{·modelId:·string·},
+         19 │ + ):·NormalizedCatalogModel·{
+     18  20 │     return {
+     19  21 │       modelId: overrides.modelId,
+
+
+.\role-model-router\apps\runtime-host-bridge\test\model-capability-resolver.test.ts format ━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     12  12 │   };
+     13  13 │
+     14     │ - function·model(overrides:·Partial<NormalizedCatalogModel>·&·{·modelId:·string·}):·NormalizedCatalogModel·{
+         14 │ + function·model(
+         15 │ + ··overrides:·Partial<NormalizedCatalogModel>·&·{·modelId:·string·},
+         16 │ + ):·NormalizedCatalogModel·{
+     15  17 │     return {
+     16  18 │       modelId: overrides.modelId,
+    ······· │
+     81  83 │       expect(profile.outputModalities).toContain("text");
+     82  84 │       expect(profile.capabilities).toEqual(
+     83     │ - ······expect.arrayContaining(["text.chat",·"tools.function_calling",·"reasoning",·"structured.output"]),
+         85 │ + ······expect.arrayContaining([
+         86 │ + ········"text.chat",
+         87 │ + ········"tools.function_calling",
+         88 │ + ········"reasoning",
+         89 │ + ········"structured.output",
+         90 │ + ······]),
+     84  91 │       );
+     85  92 │       expect(profile.sources.limits).toBe("catalog:openai/gpt-5.4");
+    ······· │
+    112 119 │       expect(profile.limits.contextWindow).toBeNull();
+    113 120 │       expect(profile.limits.maxOutputTokens).toBeNull();
+    114     │ - ····expect(profile.unknown).toEqual(expect.arrayContaining(["limits",·"modalities",·"capabilities"]));
+        121 │ + ····expect(profile.unknown).toEqual(
+        122 │ + ······expect.arrayContaining(["limits",·"modalities",·"capabilities"]),
+        123 │ + ····);
+    115 124 │     });
+    116 125 │   });
+
+
+.\role-model-router\apps\runtime-host-bridge\test\benchmark-runner-judge.test.ts format ━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    363 363 │
+    364 364 │       expect(
+    365     │ - ······result.endpointGrades.find((grade)·=>·grade.endpointId·===·endpoint.endpointId)?.caseResults[0]
+    366     │ - ········?.score,
+        365 │ + ······result.endpointGrades.find((grade)·=>·grade.endpointId·===·endpoint.endpointId)
+        366 │ + ········?.caseResults[0]?.score,
+    367 367 │       ).toBe(1);
+    368 368 │     });
+    ······· │
+    537 537 │                   function: {
+    538 538 │                     name: "list_dir",
+    539     │ - ··················arguments:·'{"path":"C:\\\\Users\\\\erikb\\\\AppData\\\\Local\\\\RMCS\\\\ws\\\\run\\\\config"}',
+        539 │ + ··················arguments:
+        540 │ + ····················'{"path":"C:\\\\Users\\\\erikb\\\\AppData\\\\Local\\\\RMCS\\\\ws\\\\run\\\\config"}',
+    540 541 │                   },
+    541 542 │                 },
+
+
+.\role-model-router\packages\bench-judge\src\index.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    101 101 │     test("parseJudgeGradingResponse sanitizes runaway regex-noise rationale text", () => {
+    102 102 │       const parsed = parseJudgeGradingResponse(
+    103     │ - ······'{"score":1,"rationale":"Good·answer·matching·the·checklist·and·the·\'+\',\'+\',\'+\',\'+\',\'+\',\'+\',\'+\'·pattern."}',
+        103 │ + ······"{\"score\":1,\"rationale\":\"Good·answer·matching·the·checklist·and·the·'+','+','+','+','+','+','+'·pattern.\"}",
+    104 104 │       );
+    105 105 │       expect(parsed?.score).toBe(1);
+    106 106 │       expect(parsed?.rationale).toContain("Good answer");
+    107 107 │       expect(parsed?.rationale).not.toContain("'+','+','+'");
+    108     │ - ····expect((parsed?.rationale?.length·??·0)).toBeLessThan(200);
+        108 │ + ····expect(parsed?.rationale?.length·??·0).toBeLessThan(200);
+    109 109 │     });
+    110 110 │   });
+
+
+.\role-model-router\packages\bench-routing\src\answer-format.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    200 200 │
+    201 201 │       expect(
+    202     │ - ······shouldOmitToolsForTurn(caseItem,·["list_endpoints",·"get_metrics"],·[
+    203     │ - ········{·function:·{·name:·"list_endpoints",·arguments:·"{}"·}·},
+    204     │ - ········{
+    205     │ - ··········function:·{
+    206     │ - ············name:·"get_metrics",
+    207     │ - ············arguments:·'{"endpoint_id":"local.lfm2.5-8b-a1b"}',
+        202 │ + ······shouldOmitToolsForTurn(
+        203 │ + ········caseItem,
+        204 │ + ········["list_endpoints",·"get_metrics"],
+        205 │ + ········[
+        206 │ + ··········{·function:·{·name:·"list_endpoints",·arguments:·"{}"·}·},
+        207 │ + ··········{
+        208 │ + ············function:·{
+        209 │ + ··············name:·"get_metrics",
+        210 │ + ··············arguments:·'{"endpoint_id":"local.lfm2.5-8b-a1b"}',
+        211 │ + ············},
+    208 212 │             },
+    209     │ - ········},
+    210     │ - ······]),
+        213 │ + ········],
+        214 │ + ······),
+    211 215 │       ).toBe(false);
+    212 216 │
+
+
+.\role-model-router\packages\bench-routing\data\routing-capability-suite.json format ━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     230  230 │         "expected_response": "A concise one-line definition or correct expansion of API.",
+     231  231 │         "grading_criteria": "Defines API in one concise line; either a correct expansion or a brief correct one-line definition is acceptable.",
+     232      │ - ······"accept_patterns":·["Application·Programming·Interface",·"programming·interface",·"software·applications",·"communicate"],
+          232 │ + ······"accept_patterns":·[
+          233 │ + ········"Application·Programming·Interface",
+          234 │ + ········"programming·interface",
+          235 │ + ········"software·applications",
+          236 │ + ········"communicate"
+          237 │ + ······],
+     233  238 │         "quick_benchmark": false
+     234  239 │       },
+
+
+.\role-model-router\packages\bench-routing\src\index.test.ts organizeImports ━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Import statements could be sorted:
+
+      4   4 │
+      5   5 │   import {
+      6     │ - ··buildScaffoldFollowUp,
+      7     │ - ··buildHeuristicCompareRanking,
+      8     │ - ··buildJudgeRequestMessages,
+          6 │ + ··buildHeuristicCompareRanking,
+          7 │ + ··buildJudgeRequestMessages,
+          8 │ + ··buildScaffoldFollowUp,
+      9   9 │     capJudgeScoreForGroundedTruthMismatch,
+     10  10 │     extractFormattedAnswer,
+
+
+.\role-model-router\packages\bench-routing\src\judge-brief.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     77  77 │
+     78  78 │   function summarizeAcceptPatternsForJudge(patterns: readonly string[]): string[] {
+     79     │ - ··return·[...new·Set(patterns.map(describeAcceptPattern).filter((value):·value·is·string·=>·!!value))];
+         79 │ + ··return·[
+         80 │ + ····...new·Set(patterns.map(describeAcceptPattern).filter((value):·value·is·string·=>·!!value)),
+         81 │ + ··];
+     80  82 │   }
+     81  83 │
+
+
+.\role-model-router\packages\bench-routing\src\index.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    232 232 │
+    233 233 │     test("p15 names the grounded runtime config path directly in the prompt", () => {
+    234     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p15-tools-read-one");
+        234 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        235 │ + ······(item)·=>·item.case_id·===·"p15-tools-read-one",
+        236 │ + ····);
+    235 237 │       expect(caseItem).toBeTruthy();
+    236 238 │       const combinedMessages = (caseItem?.messages ?? [])
+    ······· │
+    241 243 │
+    242 244 │     test("p18 encodes repeated get_metrics calls in its expected tool contract", () => {
+    243     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p18-tools-agent");
+        245 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        246 │ + ······(item)·=>·item.case_id·===·"p18-tools-agent",
+        247 │ + ····);
+    244 248 │       expect(caseItem).toBeTruthy();
+    245     │ - ····expect(caseItem?.expected_tool_names).toEqual([
+    246     │ - ······"list_endpoints",
+    247     │ - ······"get_metrics",
+    248     │ - ······"get_metrics",
+    249     │ - ····]);
+        249 │ + ····expect(caseItem?.expected_tool_names).toEqual(["list_endpoints",·"get_metrics",·"get_metrics"]);
+    250 250 │     });
+    251 251 │
+    252 252 │     test("e08 declares the top-level json schema it already grades against", () => {
+    253     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"e08-format-json");
+        253 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        254 │ + ······(item)·=>·item.case_id·===·"e08-format-json",
+        255 │ + ····);
+    254 256 │       expect(caseItem).toBeTruthy();
+    255 257 │       expect(caseItem?.answer_format).toEqual({
+    ······· │
+    364 366 │
+    365 367 │     test("caps grounded tool-case score when p15 uses the wrong path and answer", () => {
+    366     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p15-tools-read-one");
+        368 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        369 │ + ······(item)·=>·item.case_id·===·"p15-tools-read-one",
+        370 │ + ····);
+    367 371 │       expect(caseItem).toBeTruthy();
+    368 372 │       if (!caseItem) {
+    ······· │
+    390 394 │
+    391 395 │     test("does not cap p15 when any repeated read_file call hits the grounded path", () => {
+    392     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p15-tools-read-one");
+        396 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        397 │ + ······(item)·=>·item.case_id·===·"p15-tools-read-one",
+        398 │ + ····);
+    393 399 │       expect(caseItem).toBeTruthy();
+    394 400 │       if (!caseItem) {
+    ······· │
+    419 425 │
+    420 426 │     test("does not cap p15 when the grounded runtime config path is absolute", () => {
+    421     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p15-tools-read-one");
+        427 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        428 │ + ······(item)·=>·item.case_id·===·"p15-tools-read-one",
+        429 │ + ····);
+    422 430 │       expect(caseItem).toBeTruthy();
+    423 431 │       if (!caseItem) {
+    ······· │
+    433 441 │             {
+    434 442 │               name: "read_file",
+    435     │ - ············arguments:·{·path:·"C:\\Users\\erikb\\AppData\\Local\\RMCS\\ws\\run\\state\\runtime-config.yaml"·},
+        443 │ + ············arguments:·{
+        444 │ + ··············path:·"C:\\Users\\erikb\\AppData\\Local\\RMCS\\ws\\run\\state\\runtime-config.yaml",
+        445 │ + ············},
+    436 446 │             },
+    437 447 │           ],
+    ······· │
+    444 454 │
+    445 455 │     test("caps grounded tool-case score when t01 invents filenames not present in the scaffold listing", () => {
+    446     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"t01-tools-list-dir");
+        456 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        457 │ + ······(item)·=>·item.case_id·===·"t01-tools-list-dir",
+        458 │ + ····);
+    447 459 │       expect(caseItem).toBeTruthy();
+    448 460 │       if (!caseItem) {
+    ······· │
+    470 482 │
+    471 483 │     test("does not cap t01 when any repeated list_dir call inspects config", () => {
+    472     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"t01-tools-list-dir");
+        484 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        485 │ + ······(item)·=>·item.case_id·===·"t01-tools-list-dir",
+        486 │ + ····);
+    473 487 │       expect(caseItem).toBeTruthy();
+    474 488 │       if (!caseItem) {
+    ······· │
+    499 513 │
+    500 514 │     test("does not cap t01 when list_dir inspects an absolute config path", () => {
+    501     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"t01-tools-list-dir");
+        515 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        516 │ + ······(item)·=>·item.case_id·===·"t01-tools-list-dir",
+        517 │ + ····);
+    502 518 │       expect(caseItem).toBeTruthy();
+    503 519 │       if (!caseItem) {
+    ······· │
+    524 540 │
+    525 541 │     test("caps p18 when routing advice cites comparison data without fetching both metric sets", () => {
+    526     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p18-tools-agent");
+        542 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        543 │ + ······(item)·=>·item.case_id·===·"p18-tools-agent",
+        544 │ + ····);
+    527 545 │       expect(caseItem).toBeTruthy();
+    528 546 │       if (!caseItem) {
+    ······· │
+    549 567 │
+    550 568 │     test("does not cap p18 when both metric calls are present", () => {
+    551     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"p18-tools-agent");
+        569 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        570 │ + ······(item)·=>·item.case_id·===·"p18-tools-agent",
+        571 │ + ····);
+    552 572 │       expect(caseItem).toBeTruthy();
+    553 573 │       if (!caseItem) {
+    ······· │
+    574 594 │
+    575 595 │     test("caps h09 when the answer does not compare local and remote latency", () => {
+    576     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"h09-agent-metrics-chain");
+        596 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        597 │ + ······(item)·=>·item.case_id·===·"h09-agent-metrics-chain",
+        598 │ + ····);
+    577 599 │       expect(caseItem).toBeTruthy();
+    578 600 │       if (!caseItem) {
+    ······· │
+    599 621 │
+    600 622 │     test("caps h09 when one side of the latency comparison was never fetched", () => {
+    601     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"h09-agent-metrics-chain");
+        623 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        624 │ + ······(item)·=>·item.case_id·===·"h09-agent-metrics-chain",
+        625 │ + ····);
+    602 626 │       expect(caseItem).toBeTruthy();
+    603 627 │       if (!caseItem) {
+    ······· │
+    624 648 │
+    625 649 │     test("does not cap h09 when both endpoint metrics support the grounded comparison", () => {
+    626     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"h09-agent-metrics-chain");
+        650 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        651 │ + ······(item)·=>·item.case_id·===·"h09-agent-metrics-chain",
+        652 │ + ····);
+    627 653 │       expect(caseItem).toBeTruthy();
+    628 654 │       if (!caseItem) {
+    ······· │
+    649 675 │
+    650 676 │     test("h09 encodes both compared get_metrics calls in its contract", () => {
+    651     │ - ····const·caseItem·=·routingCapabilitySuite.cases.find((item)·=>·item.case_id·===·"h09-agent-metrics-chain");
+        677 │ + ····const·caseItem·=·routingCapabilitySuite.cases.find(
+        678 │ + ······(item)·=>·item.case_id·===·"h09-agent-metrics-chain",
+        679 │ + ····);
+    652 680 │       expect(caseItem).toBeTruthy();
+    653 681 │       if (!caseItem) {
+
+
+.\role-model-router\packages\bench-routing\src\index.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    226 226 │   }
+    227 227 │
+    228     │ - function·readNormalizedBinaryAnswer(caseItem:·RoutingBenchmarkCase,·deliverable:·string):·string·|·null·{
+        228 │ + function·readNormalizedBinaryAnswer(
+        229 │ + ··caseItem:·RoutingBenchmarkCase,
+        230 │ + ··deliverable:·string,
+        231 │ + ):·string·|·null·{
+    229 232 │     const expected = caseItem.expected_response.trim().toLowerCase();
+    230 233 │     if (!["yes", "no", "true", "false"].includes(expected)) {
+    ······· │
+    270 273 │     }
+    271 274 │     return toolCalls.filter(
+    272     │ - ····(toolCall):·toolCall·is·Record<string,·unknown>·=>
+    273     │ - ······!!toolCall·&&·typeof·toolCall·===·"object",
+        275 │ + ····(toolCall):·toolCall·is·Record<string,·unknown>·=>·!!toolCall·&&·typeof·toolCall·===·"object",
+    274 276 │     );
+    275 277 │   }
+    ······· │
+    366 368 │           !metricEndpointIds.includes("remote.deepseek-v4-flash")
+    367 369 │         ) {
+    368     │ - ········return·["expected·get_metrics·calls·for·both·local.lfm2.5-8b-a1b·and·remote.deepseek-v4-flash"];
+        370 │ + ········return·[
+        371 │ + ··········"expected·get_metrics·calls·for·both·local.lfm2.5-8b-a1b·and·remote.deepseek-v4-flash",
+        372 │ + ········];
+    369 373 │         }
+    370 374 │         if (/not available|unavailable|unknown|missing/i.test(answer)) {
+    371     │ - ········return·["expected·explicit·remote-vs-local·latency·comparison,·not·an·unavailable-data·answer"];
+        375 │ + ········return·[
+        376 │ + ··········"expected·explicit·remote-vs-local·latency·comparison,·not·an·unavailable-data·answer",
+        377 │ + ········];
+    372 378 │         }
+    373 379 │         const lowerAnswerText = answer.toLowerCase();
+    ······· │
+    395 401 │           comparisonConnector;
+    396 402 │         const numericComparison =
+    397     │ - ········lowerAnswerText.includes("62")·&&
+    398     │ - ········lowerAnswerText.includes("245")·&&
+    399     │ - ········comparisonConnector;
+        403 │ + ········lowerAnswerText.includes("62")·&&·lowerAnswerText.includes("245")·&&·comparisonConnector;
+    400 404 │         const comparesLocalLower = localBetter || remoteWorse || numericComparison;
+    401 405 │         if (!comparesLocalLower) {
+    402     │ - ········return·["expected·grounded·comparison·that·local.lfm2.5-8b-a1b·has·lower·p95·latency·than·remote.deepseek-v4-flash"];
+        406 │ + ········return·[
+        407 │ + ··········"expected·grounded·comparison·that·local.lfm2.5-8b-a1b·has·lower·p95·latency·than·remote.deepseek-v4-flash",
+        408 │ + ········];
+    403 409 │         }
+    404 410 │         return [];
+    ······· │
+    444 450 │         };
+    445 451 │       }
+    446     │ - ····const·normalizedBinaryAnswer·=·readNormalizedBinaryAnswer(
+    447     │ - ······input.caseItem,
+    448     │ - ······input.actualResponse,
+    449     │ - ····);
+        452 │ + ····const·normalizedBinaryAnswer·=·readNormalizedBinaryAnswer(input.caseItem,·input.actualResponse);
+    450 453 │       if (normalizedBinaryAnswer) {
+    451 454 │         return {
+
+
+.\role-model-router\packages\sqlite-memory\test\index.test.ts:2557:18 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    2556 │     try {
+  > 2557 │       await once(locker.stdout!, "data");
+         │                  ^^^^^^^^^^^^^^
+    2558 │       persistObservedBenchmarkSample({
+    2559 │         databasePath: initialized.databasePath,
+
+
+.\role-model-router\packages\sqlite-memory\test\index.test.ts:2651:18 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    2650 │     try {
+  > 2651 │       await once(locker.stdout!, "data");
+         │                  ^^^^^^^^^^^^^^
+    2652 │       expect(() =>
+    2653 │         persistRuntimeObservationBundle({
+
+
+.\role-model-router\packages\sqlite-memory\test\index.test.ts:2700:18 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    2699 │     try {
+  > 2700 │       await once(locker.stdout!, "data");
+         │                  ^^^^^^^^^^^^^^
+    2701 │       expect(
+    2702 │         sqliteMemory.readDifficultyClassificationCache({
+
+
+.\role-model-router\packages\sqlite-memory\test\index.test.ts:2749:18 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    2748 │     try {
+  > 2749 │       await once(locker.stdout!, "data");
+         │                  ^^^^^^^^^^^^^^
+    2750 │       expect(() =>
+    2751 │         sqliteMemory.upsertDifficultyClassificationCache({
+
+
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/recursive-biome-run75.test.ts > run31 bounded Biome regression for run75 > requires the run75 Biome blocker set to pass under repository config
+Error: Command failed: cmd.exe /c corepack pnpm exec biome check packages/conformance/src/router-fixture-conformance.test.ts packages/schema-tools/src/validate-schemas.ts protocol/fixtures/router-golden/cases/advisory-vs-hard-budget.json protocol/fixtures/router-golden/cases/latency-strategy-prefers-faster.json protocol/fixtures/router-golden/cases/measured-profile-partial-coverage.json protocol/schemas/router-decision.schema.json role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts role-model-router/apps/gateway-smoke/src/index.ts role-model-router/apps/runtime-host-bridge/src/litellm-catalog.ts role-model-router/apps/runtime-host-bridge/src/package-sea.ts role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts role-model-router/apps/runtime-host-bridge/src/validate-host.ts role-model-router/apps/runtime-host-bridge/src/validate-operations.ts role-model-router/apps/runtime-host-bridge/src/validate-packaging.ts role-model-router/apps/runtime-host-bridge/src/validate-tools.ts
+packages/schema-tools/src/validate-schemas.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     84  84 │     },
+     85  85 │     {
+     86     │ - ····filePath:·path.join(
+     87     │ - ······fixtureRoot,
+     88     │ - ······"downstream-openai",
+     89     │ - ······"downstream-openai-discovery-basic.json",
+     90     │ - ····),
+         86 │ + ····filePath:·path.join(fixtureRoot,·"downstream-openai",·"downstream-openai-discovery-basic.json"),
+     91  87 │       schemaFile: "downstream-openai-discovery.schema.json",
+     92  88 │       family: "downstream-openai",
+
+
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/recursive-biome-run76.test.ts > run31 bounded Biome regression for run76 > requires the run76 Biome blocker set to pass under repository config
+Error: Command failed: cmd.exe /c corepack pnpm exec biome check role-model-router/apps/runtime-host-bridge/src/validate-ui.ts role-model-router/apps/runtime-host-bridge/src/validate-vendors.ts role-model-router/apps/runtime-host-bridge/test/executable.test.ts role-model-router/apps/runtime-host-bridge/test/index.test.ts role-model-router/apps/runtime-host-bridge/test/litellm-catalog.test.ts role-model-router/apps/runtime-host-bridge/test/local-policy.test.ts role-model-router/apps/runtime-host-bridge/test/runtime-assets.test.ts role-model-router/apps/runtime-host-bridge/test/unified-runtime-config.test.ts role-model-router/apps/runtime-host-bridge/test/validate-operations.test.ts role-model-router/apps/runtime-host-bridge/test/validate-tools.test.ts role-model-router/apps/runtime-host-bridge/test/validate-ui.test.ts role-model-router/apps/runtime-host-bridge/test/validate-vendors.test.ts role-model-router/apps/runtime-ui/app/app.css role-model-router/apps/runtime-ui/app/components/app-shell.tsx
+role-model-router/apps/runtime-host-bridge/test/index.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     1879  1879 │     test("seedManagedCodexWorkspaceFixture stages benchmark files for Codex tool-heavy cases", async () => {
+     1880  1880 │       expect(
+     1881       │ - ······typeof·(bridge·as·{·seedManagedCodexWorkspaceFixture?:·unknown·}).seedManagedCodexWorkspaceFixture,
+           1881 │ + ······typeof·(bridge·as·{·seedManagedCodexWorkspaceFixture?:·unknown·})
+           1882 │ + ········.seedManagedCodexWorkspaceFixture,
+     1882  1883 │       ).toBe("function");
+     1883  1884 │
+    ··········· │
+     1922  1923 │                 readonly name: string;
+     1923  1924 │                 readonly description?: string;
+     1924       │ - ············readonly·inputSchema:·Record<string,·unknown>;
+     1925       │ - ··········}[],
+     1926       │ - ··········options?:·{
+     1927       │ - ············readonly·workspaceRoot?:·string;
+     1928       │ - ············readonly·applyPatchMode?:·"ack"·|·"mutate";
+     1929       │ - ··········},
+     1930       │ - ········)·=>·{·connectors:·readonly·{·tools:·readonly·{·name:·string·}[]·}[]·};
+     1931       │ - ······}
+     1932       │ - ····).createRequestScopedToolRegistry;
+           1925 │ + ··············readonly·inputSchema:·Record<string,·unknown>;
+           1926 │ + ············}[],
+           1927 │ + ············options?:·{
+           1928 │ + ··············readonly·workspaceRoot?:·string;
+           1929 │ + ··············readonly·applyPatchMode?:·"ack"·|·"mutate";
+           1930 │ + ············},
+           1931 │ + ··········)·=>·{·connectors:·readonly·{·tools:·readonly·{·name:·string·}[]·}[]·};
+           1932 │ + ········}
+           1933 │ + ······).createRequestScopedToolRegistry;
+     1933  1934 │
+     1934  1935 │         const registry = createRequestScopedToolRegistry(
+    ··········· │
+     2069  2070 │     test("buildCodexAppServerDynamicTools namespaces request-scoped tools for the app-server protocol", () => {
+     2070  2071 │       expect(
+     2071       │ - ······typeof·(bridge·as·{·buildCodexAppServerDynamicTools?:·unknown·}).buildCodexAppServerDynamicTools,
+           2072 │ + ······typeof·(bridge·as·{·buildCodexAppServerDynamicTools?:·unknown·})
+           2073 │ + ········.buildCodexAppServerDynamicTools,
+     2072  2074 │       ).toBe("function");
+     2073  2075 │
+    ··········· │
+     2217  2219 │       ).toBe("function");
+     2218  2220 │
+     2219       │ - ····const·fakeAppServer·=·spawn(process.execPath,·[
+     2220       │ - ······"-e",
+     2221       │ - ······[
+     2222       │ - ········"const·readline·=·require('node:readline');",
+     2223       │ - ········"const·rl·=·readline.createInterface({·input:·process.stdin,·crlfDelay:·Infinity·});",
+     2224       │ - ········"const·send·=·(message)·=>·process.stdout.write(JSON.stringify(message)·+·'\\n');",
+     2225       │ - ········"rl.on('line',·(line)·=>·{",
+     2226       │ - ········"··const·message·=·JSON.parse(line);",
+     2227       │ - ········"··if·(message.id·===·1·&&·message.method·===·'initialize')·{",
+     2228       │ - ········"····send({·id:·1,·result:·{·serverInfo:·{·name:·'fake-codex'·}·}·});",
+     2229       │ - ········"····return;",
+     2230       │ - ········"··}",
+     2231       │ - ········"··if·(message.method·===·'initialized')·{",
+     2232       │ - ········"····return;",
+     2233       │ - ········"··}",
+     2234       │ - ········"··if·(message.id·===·2·&&·message.method·===·'thread/start')·{",
+     2235       │ - ········"····send({·method:·'thread/started',·params:·{·thread:·{·id:·'thr_test_stdio'·}·}·});",
+     2236       │ - ········"····send({·id:·2,·result:·{·thread:·{·id:·'thr_test_stdio'·}·}·});",
+     2237       │ - ········"····return;",
+     2238       │ - ········"··}",
+     2239       │ - ········"··if·(message.id·===·3·&&·message.method·===·'turn/start')·{",
+     2240       │ - ········"····send({·id:·3,·result:·{·accepted:·true·}·});",
+     2241       │ - ········"····send({·method:·'thread/tokenUsage/updated',·params:·{·tokenUsage:·{·last:·{·inputTokens:·11,·outputTokens:·0·}·}·}·});",
+     2242       │ - ········"····send({·id:·91,·method:·'item/tool/call',·params:·{·callId:·'call_stdio_1',·tool:·'request_read_file',·arguments:·{·path:·'README.md'·}·}·});",
+     2243       │ - ········"····return;",
+     2244       │ - ········"··}",
+     2245       │ - ········"··if·(message.id·===·91)·{",
+     2246       │ - ········"····send({·method:·'item/agentMessage/delta',·params:·{·delta:·'HEL'·}·});",
+     2247       │ - ········"····send({·method:·'item/agentMessage/delta',·params:·{·delta:·'LO'·}·});",
+     2248       │ - ········"····send({·method:·'item/completed',·params:·{·item:·{·type:·'agentMessage',·text:·'HELLO'·}·}·});",
+     2249       │ - ········"····send({·method:·'thread/tokenUsage/updated',·params:·{·tokenUsage:·{·last:·{·inputTokens:·11,·outputTokens:·5·}·}·}·});",
+     2250       │ - ········"····send({·method:·'turn/completed',·params:·{·turn:·{·id:·'turn_stdio_1'·}·}·});",
+     2251       │ - ········"····setTimeout(()·=>·process.exit(0),·0);",
+     2252       │ - ········"··}",
+     2253       │ - ········"});",
+     2254       │ - ······].join("·"),
+     2255       │ - ····],·{
+     2256       │ - ······stdio:·["pipe",·"pipe",·"pipe"],
+     2257       │ - ······windowsHide:·true,
+     2258       │ - ····});
+           2221 │ + ····const·fakeAppServer·=·spawn(
+           2222 │ + ······process.execPath,
+           2223 │ + ······[
+           2224 │ + ········"-e",
+           2225 │ + ········[
+           2226 │ + ··········"const·readline·=·require('node:readline');",
+           2227 │ + ··········"const·rl·=·readline.createInterface({·input:·process.stdin,·crlfDelay:·Infinity·});",
+           2228 │ + ··········"const·send·=·(message)·=>·process.stdout.write(JSON.stringify(message)·+·'\\n');",
+           2229 │ + ··········"rl.on('line',·(line)·=>·{",
+           2230 │ + ··········"··const·message·=·JSON.parse(line);",
+           2231 │ + ··········"··if·(message.id·===·1·&&·message.method·===·'initialize')·{",
+           2232 │ + ··········"····send({·id:·1,·result:·{·serverInfo:·{·name:·'fake-codex'·}·}·});",
+           2233 │ + ··········"····return;",
+           2234 │ + ··········"··}",
+           2235 │ + ··········"··if·(message.method·===·'initialized')·{",
+           2236 │ + ··········"····return;",
+           2237 │ + ··········"··}",
+           2238 │ + ··········"··if·(message.id·===·2·&&·message.method·===·'thread/start')·{",
+           2239 │ + ··········"····send({·method:·'thread/started',·params:·{·thread:·{·id:·'thr_test_stdio'·}·}·});",
+           2240 │ + ··········"····send({·id:·2,·result:·{·thread:·{·id:·'thr_test_stdio'·}·}·});",
+           2241 │ + ··········"····return;",
+           2242 │ + ··········"··}",
+           2243 │ + ··········"··if·(message.id·===·3·&&·message.method·===·'turn/start')·{",
+           2244 │ + ··········"····send({·id:·3,·result:·{·accepted:·true·}·});",
+           2245 │ + ··········"····send({·method:·'thread/tokenUsage/updated',·params:·{·tokenUsage:·{·last:·{·inputTokens:·11,·outputTokens:·0·}·}·}·});",
+           2246 │ + ··········"····send({·id:·91,·method:·'item/tool/call',·params:·{·callId:·'call_stdio_1',·tool:·'request_read_file',·arguments:·{·path:·'README.md'·}·}·});",
+           2247 │ + ··········"····return;",
+           2248 │ + ··········"··}",
+           2249 │ + ··········"··if·(message.id·===·91)·{",
+           2250 │ + ··········"····send({·method:·'item/agentMessage/delta',·params:·{·delta:·'HEL'·}·});",
+           2251 │ + ··········"····send({·method:·'item/agentMessage/delta',·params:·{·delta:·'LO'·}·});",
+           2252 │ + ··········"····send({·method:·'item/completed',·params:·{·item:·{·type:·'agentMessage',·text:·'HELLO'·}·}·});",
+           2253 │ + ··········"····send({·method:·'thread/tokenUsage/updated',·params:·{·tokenUsage:·{·last:·{·inputTokens:·11,·outputTokens:·5·}·}·}·});",
+           2254 │ + ··········"····send({·method:·'turn/completed',·params:·{·turn:·{·id:·'turn_stdio_1'·}·}·});",
+           2255 │ + ··········"····setTimeout(()·=>·process.exit(0),·0);",
+           2256 │ + ··········"··}",
+           2257 │ + ··········"});",
+           2258 │ + ········].join("·"),
+           2259 │ + ······],
+           2260 │ + ······{
+           2261 │ + ········stdio:·["pipe",·"pipe",·"pipe"],
+           2262 │ + ········windowsHide:·true,
+           2263 │ + ······},
+           2264 │ + ····);
+     2259  2265 │
+     2260  2266 │       const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-turn-"));
+    ··········· │
+     2359  2365 │                 function: {
+     2360  2366 │                   name: "read_file",
+     2361       │ - ················arguments:·"{\"path\":\"README.md\"}",
+           2367 │ + ················arguments:·'{"path":"README.md"}',
+     2362  2368 │                 },
+     2363  2369 │               },
+    ··········· │
+     2446  2452 │     test("resolveManagedCodexExecutionHome keeps the shared Codex home short on Windows-style paths", () => {
+     2447  2453 │       expect(
+     2448       │ - ······typeof·(bridge·as·{·resolveManagedCodexExecutionHome?:·unknown·}).resolveManagedCodexExecutionHome,
+           2454 │ + ······typeof·(bridge·as·{·resolveManagedCodexExecutionHome?:·unknown·})
+           2455 │ + ········.resolveManagedCodexExecutionHome,
+     2449  2456 │       ).toBe("function");
+     2450  2457 │
+    ··········· │
+     2474  2481 │     test("resolveManagedCodexWorkspaceRoot keeps request workspaces short under the shared Codex home", () => {
+     2475  2482 │       expect(
+     2476       │ - ······typeof·(bridge·as·{·resolveManagedCodexWorkspaceRoot?:·unknown·}).resolveManagedCodexWorkspaceRoot,
+           2483 │ + ······typeof·(bridge·as·{·resolveManagedCodexWorkspaceRoot?:·unknown·})
+           2484 │ + ········.resolveManagedCodexWorkspaceRoot,
+     2477  2485 │       ).toBe("function");
+     2478  2486 │
+    ··········· │
+     2507  2515 │     test("resolveManagedCodexWorkspaceRoot leaves enough room for deep plugin staging paths on Windows", () => {
+     2508  2516 │       expect(
+     2509       │ - ······typeof·(bridge·as·{·resolveManagedCodexWorkspaceRoot?:·unknown·}).resolveManagedCodexWorkspaceRoot,
+           2517 │ + ······typeof·(bridge·as·{·resolveManagedCodexWorkspaceRoot?:·unknown·})
+           2518 │ + ········.resolveManagedCodexWorkspaceRoot,
+     2510  2519 │       ).toBe("function");
+  9 more lines truncated
+
+
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/recursive-biome-run77.test.ts > run31 bounded Biome regression for run77 > requires the run77 Biome blocker set to pass under repository config
+Error: Command failed: cmd.exe /c corepack pnpm exec biome check role-model-router/vendor/llama-swap/ui-svelte/src/main.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/speechApi.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/sdApi.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/rerankApi.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/modelUtils.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/markdown.test.ts role-model-router/vendor/llama-swap/ui-svelte/src/lib/imageApi.ts role-model-router/apps/runtime-host-bridge/src/index.ts
+role-model-router/apps/runtime-host-bridge/src/index.ts:6314:75 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    6312 │     .map((line) => line.slice(1));
+    6313 │
+  > 6314 │   if (removals.length === 1 && additions.length === 1 && content.includes(removals[0]!)) {
+         │                                                                           ^^^^^^^^^^^^
+    6315 │     content = content.replace(removals[0]!, additions[0]!);
+    6316 │   } else if (removals.length === 0 && additions.length > 0) {
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts:6315:31 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    6314 │   if (removals.length === 1 && additions.length === 1 && content.includes(removals[0]!)) {
+  > 6315 │     content = content.replace(removals[0]!, additions[0]!);
+         │                               ^^^^^^^^^^^^
+    6316 │   } else if (removals.length === 0 && additions.length > 0) {
+    6317 │     const suffix = content.endsWith("\n") ? "" : "\n";
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts:6315:45 lint/style/noNonNullAssertion ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    6314 │   if (removals.length === 1 && additions.length === 1 && content.includes(removals[0]!)) {
+  > 6315 │     content = content.replace(removals[0]!, additions[0]!);
+         │                                             ^^^^^^^^^^^^^
+    6316 │   } else if (removals.length === 0 && additions.length > 0) {
+    6317 │     const suffix = content.endsWith("\n") ? "" : "\n";
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts:7154:34 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━
+
+  × Forbidden non-null assertion.
+
+    7152 │     return trimmed;
+    7153 │   }
+  > 7154 │   return trimmed.includes("/") ? trimmed.split("/").slice(-1)[0]!.trim() : trimmed;
+         │                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    7155 │ }
+    7156 │
+
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+
+     7152  7152 │       return trimmed;
+     7153  7153 │     }
+     7154       │ - ··return·trimmed.includes("/")·?·trimmed.split("/").slice(-1)[0]!.trim()·:·trimmed;
+           7154 │ + ··return·trimmed.includes("/")·?·trimmed.split("/").slice(-1)[0]?.trim()·:·trimmed;
+     7155  7155 │   }
+     7156  7156 │
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts:7500:18 lint/style/useNumberNamespace  FIXABLE  ━━━━━━━━━━
+
+  × Use Number.POSITIVE_INFINITY instead of the equivalent global.
+
+    7498 │     const reader = createInterface({
+    7499 │       input: input.child.stdout,
+  > 7500 │       crlfDelay: Infinity,
+         │                  ^^^^^^^^
+    7501 │     });
+    7502 │     const pendingRequests = new Map<
+
+  i ES2015 moved some globals into the Number namespace for consistency.
+
+  i Safe fix: Use Number.POSITIVE_INFINITY instead.
+
+     7498  7498 │       const reader = createInterface({
+     7499  7499 │         input: input.child.stdout,
+     7500       │ - ······crlfDelay:·Infinity,
+           7500 │ + ······crlfDelay:·Number.POSITIVE_INFINITY,
+     7501  7501 │       });
+     7502  7502 │       const pendingRequests = new Map<
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts organizeImports ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Import statements could be sorted:
+
+        5     5 │   import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
+        6     6 │   import { createServer as createNetServer } from "node:net";
+        7       │ - import·{·createInterface·}·from·"node:readline";
+        8       │ - import·os·from·"node:os";
+        9       │ - import·path·from·"node:path";
+              7 │ + import·os·from·"node:os";
+              8 │ + import·path·from·"node:path";
+              9 │ + import·{·createInterface·}·from·"node:readline";
+       10    10 │   import { DatabaseSync } from "node:sqlite";
+       11    11 │   import { setTimeout as delay } from "node:timers/promises";
+
+
+role-model-router/apps/runtime-host-bridge/src/index.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     4662  4662 │         (typeof message.content !== "string" && !Array.isArray(message.content))
+     4663  4663 │       ) {
+     4664       │ - ······throw·new·Error("responses·input·messages·must·include·role·and·string·or·array·content·fields");
+           4664 │ + ······throw·new·Error(
+           4665 │ + ········"responses·input·messages·must·include·role·and·string·or·array·content·fields",
+           4666 │ + ······);
+     4665  4667 │       }
+     4666  4668 │       return {
+    ··········· │
+     5496  5498 │         }
+     5497  5499 │       : configuredDefaultRoutingMode
+     5498       │ - ········?·{
+     5499       │ - ············...routingDiagnostics,
+     5500       │ - ············routingMode:·configuredDefaultRoutingMode,
+     5501       │ - ··········}
+     5502       │ - ········:·routingDiagnostics;
+           5500 │ + ······?·{
+           5501 │ + ··········...routingDiagnostics,
+           5502 │ + ··········routingMode:·configuredDefaultRoutingMode,
+           5503 │ + ········}
+           5504 │ + ······:·routingDiagnostics;
+     5503  5505 │     const capabilityRequirements = inferChatCompletionsCapabilityRequirements(
+     5504  5506 │       body as unknown as Record<string, unknown>,
+    ··········· │
+     5643  5645 │         }
+     5644  5646 │       : configuredDefaultRoutingMode
+     5645       │ - ········?·{
+     5646       │ - ············...toolExecutionPlan.routingDiagnostics,
+     5647       │ - ············routingMode:·configuredDefaultRoutingMode,
+     5648       │ - ··········}
+     5649       │ - ········:·toolExecutionPlan.routingDiagnostics;
+           5647 │ + ······?·{
+           5648 │ + ··········...toolExecutionPlan.routingDiagnostics,
+           5649 │ + ··········routingMode:·configuredDefaultRoutingMode,
+           5650 │ + ········}
+           5651 │ + ······:·toolExecutionPlan.routingDiagnostics;
+     5650  5652 │     const capabilityFiltered = filterAllowEndpointsForCapabilityRequirements({
+     5651  5653 │       registry,
+    ··········· │
+     7414  7416 │               : {};
+     7415  7417 │           matchesWorkspace =
+     7416       │ - ··········typeof·payload.cwd·===·"string"·&&·path.resolve(payload.cwd)·===·path.resolve(input.workspaceRoot);
+           7418 │ + ··········typeof·payload.cwd·===·"string"·&&
+           7419 │ + ··········path.resolve(payload.cwd)·===·path.resolve(input.workspaceRoot);
+     7417  7420 │           continue;
+     7418  7421 │         }
+    ··········· │
+     7435  7438 │               ? (rateLimits.credits as Record<string, unknown>)
+     7436  7439 │               : {};
+     7437       │ - ········creditsExhausted·=
+     7438       │ - ··········credits.has_credits·===·false·&&·credits.unlimited·!==·true;
+           7440 │ + ········creditsExhausted·=·credits.has_credits·===·false·&&·credits.unlimited·!==·true;
+     7439  7441 │           continue;
+     7440  7442 │         }
+    ··········· │
+     7811  7813 │             message = JSON.parse(trimmed) as Record<string, unknown>;
+     7812  7814 │           } catch (error) {
+     7813       │ - ··········fail(error·instanceof·Error·?·error·:·new·Error("Codex·app-server·returned·invalid·JSON."));
+           7815 │ + ··········fail(
+           7816 │ + ············error·instanceof·Error·?·error·:·new·Error("Codex·app-server·returned·invalid·JSON."),
+           7817 │ + ··········);
+     7814  7818 │             return;
+     7815  7819 │           }
+    ··········· │
+     7853  7857 │           });
+     7854  7858 │           threadStartAcknowledged = true;
+     7855       │ - ········const·resolvedThreadId·=·readCodexThreadIdFromAppServerMessage({·result:·threadStartResult·});
+           7859 │ + ········const·resolvedThreadId·=·readCodexThreadIdFromAppServerMessage({
+           7860 │ + ··········result:·threadStartResult,
+           7861 │ + ········});
+     7856  7862 │           if (resolvedThreadId.length > 0) {
+     7857  7863 │             threadId = resolvedThreadId;
+    ··········· │
+    14018 14024 │                       workspaceRoot,
+    14019 14025 │                     });
+    14020       │ - ··················const·originalToolName·=
+    14021       │ - ····················originalToolNameByExposedName.get(toolName)·??·toolName;
+          14026 │ + ··················const·originalToolName·=·originalToolNameByExposedName.get(toolName)·??·toolName;
+    14022 14027 │                     const executionResult = dynamicToolNames.has(originalToolName)
+    14023 14028 │                       ? await executeToolCalls(runtimeToolRegistry, {
+
+
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  4 failed | 14 passed (18)
+      Tests  4 failed | 19 passed (23)
+   Start at  07:01:26
+   Duration  12.65s (transform 751ms, setup 0ms, collect 2.44s, tests 52.32s, environment 10ms, prepare 8.00s)
+
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\packages\schema-tools:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model/schema-tools@0.0.0 test: `vitest run`
+Exit status 1

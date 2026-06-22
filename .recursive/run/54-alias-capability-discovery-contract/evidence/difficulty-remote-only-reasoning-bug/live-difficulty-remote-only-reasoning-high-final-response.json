@@ -1,0 +1,11 @@
+{
+  "status": 200,
+  "model": "deepseek/deepseek-v4-flash",
+  "finish_reason": "stop",
+  "content": "Cool, I'm here whenever you're ready. Got a coding question or something you want to work on? Just let me know what you're thinking about.",
+  "usage": {
+    "prompt_tokens": 57,
+    "completion_tokens": 120,
+    "total_tokens": 177
+  }
+}

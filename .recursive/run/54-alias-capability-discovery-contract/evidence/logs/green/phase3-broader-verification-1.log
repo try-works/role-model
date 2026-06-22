@@ -1,0 +1,103 @@
+
+> role-model@0.0.0 schemas:validate D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate
+
+Validated 20 schema file(s).
+Validated 30 fixture file(s).
+
+> @role-model/protocol-types@0.0.0 build D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\packages\protocol-types
+> tsc -p tsconfig.json
+
+
+> @role-model/schema-tools@0.0.0 build D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\packages\schema-tools
+> tsc -p tsconfig.json
+
+
+> @role-model-router/runtime-host-bridge@0.0.0 test:critical D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge
+> vitest run test/account-repair.test.ts test/unified-runtime-config.test.ts test/provider-overlap-metadata.test.ts test/benchmark-summary.test.ts test/validate-observability.test.ts test/validate-ui.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/benchmark-summary.test.ts (5 tests) 66ms
+(node:47580) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2436) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/unified-runtime-config.test.ts (24 tests) 109ms
+(node:33664) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29100) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/account-repair.test.ts (4 tests) 1749ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  440ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  379ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  403ms
+   ✓ account repair mutations > codex subscription start returns a real device-code session and poll connects through managed Codex auth  525ms
+ ✓ test/provider-overlap-metadata.test.ts (45 tests) 12644ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for baseten  641ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cerebras  525ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cohere  510ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for databricks  553ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepinfra  574ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepseek  531ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for groq  520ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for minimax  506ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for mistral  508ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for morph  527ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for nebius  503ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for openrouter  555ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for ovhcloud  538ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for perplexity  553ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for sarvam  551ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for v0  501ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for wandb  496ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for xai  719ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for zai  528ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes one OpenAI provider with API Key and Codex Subscription variants  440ms
+ ❯ test/validate-observability.test.ts (1 test | 1 failed) 60015ms
+   × runRuntimeObservabilityValidation > proves structured request, capture, metrics, and otel observability over the real host path 60012ms
+     → Test timed out in 60000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/validate-ui.test.ts (1 test | 1 failed) 60029ms
+   × runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations 60027ms
+     → Test timed out in 60000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-observability.test.ts > runRuntimeObservabilityValidation > proves structured request, capture, metrics, and otel observability over the real host path
+Error: Test timed out in 60000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/validate-observability.test.ts:6:3
+      4|
+      5| describe("runRuntimeObservabilityValidation", () => {
+      6|   test("proves structured request, capture, metrics, and otel observab…
+       |   ^
+      7|     const result = await runRuntimeObservabilityValidation();
+      8|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+Error: Test timed out in 60000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ test/validate-ui.test.ts:16:3
+     14|
+     15| describe("runRuntimeUiValidation", () => {
+     16|   test("validates runtime config reads and the main control-plane muta…
+       |   ^
+     17|     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "rol…
+     18|     const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runt…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 4 passed (6)
+      Tests  2 failed | 78 passed (80)
+   Start at  07:03:15
+   Duration  62.51s (transform 1.90s, setup 0ms, collect 7.14s, tests 134.61s, environment 3ms, prepare 2.21s)
+
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 test:critical: `vitest run test/account-repair.test.ts test/unified-runtime-config.test.ts test/provider-overlap-metadata.test.ts test/benchmark-summary.test.ts test/validate-observability.test.ts test/validate-ui.test.ts`
+Exit status 1

@@ -1,0 +1,14 @@
+Done. Here's a summary of the two changes:
+
+### 1. Provider-level compat: `supportsUsageInStreaming` → `false`
+Local proxies and non-OpenAI servers typically don't support `stream_options: { include_usage: true }` in streaming responses. When `true`, pi expects usage stats in stream chunks and may fail to parse responses that don't include them.
+
+### 2. Model-level compat for DeepSeek models
+Both `deepseek/deepseek-v4-flash` and `deepseek/deepseek-v4-pro` now have:
+
+| Field | Value | Reason |
+|---|---|---|
+| `thinkingFormat` | `"deepseek"` | DeepSeek uses a non-standard reasoning parameter format instead of `reasoning_effort` |
+| `requiresReasoningContentOnAssistantMessages` | `true` | DeepSeek requires empty `reasoning_content` on replayed assistant messages during multi-turn conversations |
+
+These model-level settings merge with the provider-level compat (so those models still inherit `supportsDeveloperRole: false`, `supportsUsageInStreaming: false`, etc.).

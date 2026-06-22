@@ -2343,12 +2343,12 @@ function toFailureRuntimeTelemetryRecord(
     region: null,
     lifecycleStateAtRequest: null,
     healthStatusAtRequest: null,
-    requestedModelId: null,
+    requestedModelId: input.requestedModelId ?? input.modelId ?? null,
     difficultyBucket: null,
     routingMode: null,
     requestedRoleId: null,
     selectedStrategy: null,
-    requestOperation: null,
+    requestOperation: input.requestOperation ?? null,
     statusFamily: "failure",
     toolingUsed: false,
     cacheState: null,
@@ -2393,7 +2393,7 @@ function toFailureRuntimeTelemetryRecord(
     costBaselineSource: null,
     costSavingsSupport: null,
     currency: null,
-    dimensions: null,
+    dimensions: input.dimensions ?? null,
   };
 }
 
@@ -2950,12 +2950,15 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly routingDecisionId?: string;
   readonly endpointId?: string;
   readonly modelId?: string;
+  readonly requestedModelId?: string | null;
+  readonly requestOperation?: string | null;
   readonly statusCode: number;
   readonly errorClass: string;
   readonly latencyMs?: number;
   readonly clientRequestId?: string | null;
   readonly requestClass?: "benchmark" | "live_request" | "unknown";
   readonly sourceType?: "local" | "remote" | null;
+  readonly dimensions?: Record<string, unknown> | null;
 }
 
 export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFailureInput): void {

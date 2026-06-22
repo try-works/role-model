@@ -1,0 +1,116 @@
+{
+  "generatedAt": "2026-06-22T08:20:35.3293290+02:00",
+  "endpointModelCount": 19,
+  "piRoleModelCount": 19,
+  "comparison": [
+    {
+      "id": "hybrid.hybrid",
+      "contextMatches": true,
+      "maxMatches": true,
+      "inputMatches": true,
+      "reasoningMatches": true,
+      "endpointContext": 262144,
+      "piContext": 262144,
+      "endpointMaxTokens": 128000,
+      "piMaxTokens": 128000,
+      "endpointInput": [
+        "text",
+        "image"
+      ],
+      "piInput": [
+        "text",
+        "image"
+      ],
+      "endpointReasoning": true,
+      "piReasoning": true
+    },
+    {
+      "id": "chatgpt/gpt-5.4",
+      "contextMatches": true,
+      "maxMatches": true,
+      "inputMatches": true,
+      "reasoningMatches": true,
+      "endpointContext": 1050000,
+      "piContext": 1050000,
+      "endpointMaxTokens": 128000,
+      "piMaxTokens": 128000,
+      "endpointInput": [
+        "text",
+        "image"
+      ],
+      "piInput": [
+        "text",
+        "image"
+      ],
+      "endpointReasoning": true,
+      "piReasoning": true
+    },
+    {
+      "id": "deepseek/deepseek-v4-flash",
+      "contextMatches": true,
+      "maxMatches": true,
+      "inputMatches": true,
+      "reasoningMatches": true,
+      "endpointContext": 1000000,
+      "piContext": 1000000,
+      "endpointMaxTokens": 384000,
+      "piMaxTokens": 384000,
+      "endpointInput": [
+        "text"
+      ],
+      "piInput": [
+        "text"
+      ],
+      "endpointReasoning": true,
+      "piReasoning": true
+    },
+    {
+      "id": "deepseek/deepseek-v4-pro",
+      "contextMatches": true,
+      "maxMatches": true,
+      "inputMatches": true,
+      "reasoningMatches": true,
+      "endpointContext": 1000000,
+      "piContext": 1000000,
+      "endpointMaxTokens": 384000,
+      "piMaxTokens": 384000,
+      "endpointInput": [
+        "text"
+      ],
+      "piInput": [
+        "text"
+      ],
+      "endpointReasoning": true,
+      "piReasoning": true
+    },
+    {
+      "id": "moonshot/kimi-k2.7-code",
+      "contextMatches": true,
+      "maxMatches": true,
+      "inputMatches": true,
+      "reasoningMatches": true,
+      "endpointContext": 262144,
+      "piContext": 262144,
+      "endpointMaxTokens": 262144,
+      "piMaxTokens": 262144,
+      "endpointInput": [
+        "text",
+        "image"
+      ],
+      "piInput": [
+        "text",
+        "image"
+      ],
+      "endpointReasoning": true,
+      "piReasoning": true
+    }
+  ],
+  "compat": {
+    "supportsDeveloperRole": false,
+    "supportsReasoningEffort": true,
+    "supportsUsageInStreaming": true,
+    "maxTokensField": "max_tokens",
+    "supportsStrictMode": true
+  },
+  "allCoreFieldsMatch": true
+}

@@ -1,0 +1,30 @@
+{
+  "kind": "openai-compatible",
+  "providerId": "role-model-runtime",
+  "displayName": "Role Model Runtime",
+  "baseUrl": "http://127.0.0.1:3456",
+  "endpoints": {
+    "health": "http://127.0.0.1:3456/healthz",
+    "models": "http://127.0.0.1:3456/v1/models",
+    "chatCompletions": "http://127.0.0.1:3456/v1/chat/completions",
+    "responses": "http://127.0.0.1:3456/v1/responses"
+  },
+  "authentication": {
+    "type": "bearer",
+    "headerName": "Authorization",
+    "required": false,
+    "placeholderToken": "role-model-local",
+    "note": "No contract version is present."
+  },
+  "models": [],
+  "setup": {
+    "recommendedModel": null,
+    "notes": []
+  },
+  "freshness": {
+    "generatedAt": "2026-06-22T04:55:00.000Z",
+    "catalogVersion": "1",
+    "catalogCapturedAt": null,
+    "runtimeInventoryRevision": "fixture-revision"
+  }
+}

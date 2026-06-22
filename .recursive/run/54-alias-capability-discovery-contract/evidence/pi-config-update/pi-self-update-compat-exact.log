@@ -1,0 +1,1 @@
+Fixed the `chatgpt/gpt-5.4` model object in `D:\pi\agent\models.json` — changed `contextWindow` from `1050000` to `1000000` (1M tokens), which matches the standard round value used by the DeepSeek models and other large-context entries in the file.

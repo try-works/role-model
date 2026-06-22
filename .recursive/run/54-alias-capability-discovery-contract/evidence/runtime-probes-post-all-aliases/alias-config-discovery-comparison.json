@@ -1,0 +1,40 @@
+{
+  "configAliasIds": [
+    "baseline.decision-only",
+    "baseline.hybrid",
+    "baseline.remote-only",
+    "controller.decision-only",
+    "controller.hybrid",
+    "controller.remote-only",
+    "default.decision-only",
+    "default.hybrid",
+    "default.remote-only",
+    "difficulty.decision-only",
+    "difficulty.hybrid",
+    "difficulty.remote-only",
+    "hybrid.decision-only",
+    "hybrid.hybrid",
+    "hybrid.remote-only"
+  ],
+  "discoveryAliasIds": [
+    "baseline.decision-only",
+    "baseline.hybrid",
+    "baseline.remote-only",
+    "controller.decision-only",
+    "controller.hybrid",
+    "controller.remote-only",
+    "default.decision-only",
+    "default.hybrid",
+    "default.remote-only",
+    "difficulty.decision-only",
+    "difficulty.hybrid",
+    "difficulty.remote-only",
+    "hybrid.decision-only",
+    "hybrid.hybrid",
+    "hybrid.remote-only"
+  ],
+  "missingFromDiscovery": [],
+  "unexpectedInDiscovery": [],
+  "countsMatch": true,
+  "setsMatch": true
+}

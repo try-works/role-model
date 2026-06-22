@@ -129,7 +129,7 @@ describe("routable inventory bootstrap", () => {
     expect(plan.routingDiagnostics?.aliasResolution?.poolEmptyReason).toBeUndefined();
   });
 
-  test("omits stale-only aliases from model list responses when no hint-backed endpoints resolve", () => {
+  test("keeps stale-only aliases in model list responses with an empty endpoint pool", () => {
     const inventory = buildRoutableInventory(registry, sources);
     const models = createModelListResponse(
       registry,
@@ -144,7 +144,12 @@ describe("routable inventory bootstrap", () => {
     );
     const aliasEntry = models.data.find((entry) => entry.id === "mixed.local-remote");
 
-    expect(aliasEntry).toBeUndefined();
+    expect(aliasEntry).toEqual({
+      id: "mixed.local-remote",
+      object: "model",
+      owned_by: "role-model",
+      endpoint_ids: [],
+    });
   });
 
   test("exposes inventory summary and inventory bootstrap stage after startup", async () => {

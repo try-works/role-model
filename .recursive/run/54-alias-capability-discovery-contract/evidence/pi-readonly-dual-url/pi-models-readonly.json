@@ -1,0 +1,27 @@
+{
+  "providers": {
+    "role-model": {
+      "baseUrl": "http://127.0.0.1:3456/v1",
+      "api": "openai-completions",
+      "apiKey": "local",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsUsageInStreaming": true,
+        "maxTokensField": "max_tokens"
+      },
+      "models": [
+        {
+          "id": "hybrid.hybrid",
+          "name": "Hybrid (Local)",
+          "input": [
+            "text"
+          ],
+          "contextWindow": 128000,
+          "maxTokens": 16384,
+          "reasoning": false
+        }
+      ]
+    }
+  }
+}

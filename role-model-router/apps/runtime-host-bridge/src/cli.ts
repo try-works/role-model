@@ -87,6 +87,7 @@ type CliBackend = Pick<
   | "checkPeerHealth"
   | "getRoutableInventory"
   | "effectiveRegistry"
+  | "getExecutionCatalog"
   | "getEffectiveRoutableInventory"
   | "shutdown"
 >;
@@ -109,6 +110,7 @@ export function createCliServerOptions(
     staticRoot: options.staticRoot,
     registry: backend.effectiveRegistry,
     getRegistry: () => backend.effectiveRegistry,
+    getExecutionCatalog: backend.getExecutionCatalog,
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readVersionInfo: backend.readVersionInfo,

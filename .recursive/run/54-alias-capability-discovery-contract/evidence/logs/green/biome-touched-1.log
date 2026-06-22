@@ -1,0 +1,134 @@
+protocol/fixtures/downstream-openai/downstream-openai-discovery-basic.json format ━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     86  86 │         },
+     87  87 │         "declared": {
+     88     │ - ········"modelIds":·[
+     89     │ - ··········"chatgpt/gpt-5.4",
+     90     │ - ··········"deepseek/deepseek-v4-flash",
+     91     │ - ··········"moonshot/kimi-k2.7-code"
+     92     │ - ········],
+         88 │ + ········"modelIds":·["chatgpt/gpt-5.4",·"deepseek/deepseek-v4-flash",·"moonshot/kimi-k2.7-code"],
+     93  89 │           "endpointIds": [
+     94  90 │             "deepseek.personal.primary.global.deepseek-v4-flash",
+    ······· │
+     98  94 │         },
+     99  95 │         "routable": {
+    100     │ - ········"modelIds":·[
+    101     │ - ··········"chatgpt/gpt-5.4",
+    102     │ - ··········"deepseek/deepseek-v4-flash",
+    103     │ - ··········"moonshot/kimi-k2.7-code"
+    104     │ - ········],
+         96 │ + ········"modelIds":·["chatgpt/gpt-5.4",·"deepseek/deepseek-v4-flash",·"moonshot/kimi-k2.7-code"],
+    105  97 │           "endpointIds": [
+    106  98 │             "deepseek.personal.primary.global.deepseek-v4-flash",
+
+
+role-model-router/apps/runtime-host-bridge/src/model-capability-resolver.ts format ━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     73  73 │
+     74  74 │   function providerIdFromModelId(modelId: string): string {
+     75     │ - ··return·modelId.includes("/")·?·modelId.split("/",·1)[0]·??·"unknown"·:·"unknown";
+         75 │ + ··return·modelId.includes("/")·?·(modelId.split("/",·1)[0]·??·"unknown")·:·"unknown";
+     76  76 │   }
+     77  77 │
+    ······· │
+    200 200 │       },
+    201 201 │       unknown: [
+    202     │ - ······...(positiveNumber(model.contextWindow)·===·null·||·positiveNumber(model.maxOutputTokens)·===·null
+        202 │ + ······...(positiveNumber(model.contextWindow)·===·null·||
+        203 │ + ······positiveNumber(model.maxOutputTokens)·===·null
+    203 204 │           ? (["limits"] as const)
+    204 205 │           : []),
+
+
+role-model-router/apps/runtime-host-bridge/src/request-capability-inference.ts format ━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    115 115 │   }
+    116 116 │
+    117     │ - function·inferToolCapabilities(tools:·unknown,·mode:·"chat"·|·"responses"):·{
+        117 │ + function·inferToolCapabilities(
+        118 │ + ··tools:·unknown,
+        119 │ + ··mode:·"chat"·|·"responses",
+        120 │ + ):·{
+    118 121 │     readonly required: readonly string[];
+    119 122 │     readonly advisory: readonly string[];
+    ······· │
+    280 283 │         advisoryCapabilities: input.requirements.advisoryCapabilities,
+    281 284 │         includedEndpoints: includedEndpoints.sort(compareText),
+    282     │ - ······excludedTargets:·excludedTargets.sort((left,·right)·=>·compareText(left.endpointId,·right.endpointId)),
+        285 │ + ······excludedTargets:·excludedTargets.sort((left,·right)·=>
+        286 │ + ········compareText(left.endpointId,·right.endpointId),
+        287 │ + ······),
+    283 288 │       },
+    284 289 │     };
+
+
+role-model-router/apps/runtime-host-bridge/src/downstream-openai-discovery.ts format ━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+      8   8 │     resolveModelCapabilityProfile,
+      9   9 │   } from "./model-capability-resolver.js";
+     10     │ - import·{
+     11     │ - ··type·RoutableInventory,
+     12     │ - ··resolveAliasAllowEndpoints,
+     13     │ - }·from·"./routable-inventory.js";
+         10 │ + import·{·type·RoutableInventory,·resolveAliasAllowEndpoints·}·from·"./routable-inventory.js";
+     14  11 │   import type { UnifiedRuntimeModelAliasConfig } from "./unified-runtime-config.js";
+     15  12 │
+    ······· │
+    292 289 │       sources: uniqueSorted(
+    293 290 │         input.rows.flatMap((row) =>
+    294     │ - ········[row.profile.sources.limits,·row.profile.sources.modalities,·row.profile.sources.capabilities].filter(
+    295     │ - ··········(source):·source·is·string·=>·source·!==·null,
+    296     │ - ········),
+        291 │ + ········[
+        292 │ + ··········row.profile.sources.limits,
+        293 │ + ··········row.profile.sources.modalities,
+        294 │ + ··········row.profile.sources.capabilities,
+        295 │ + ········].filter((source):·source·is·string·=>·source·!==·null),
+    297 296 │         ),
+    298 297 │       ),
+    ······· │
+    300 299 │   }
+    301 300 │
+    302     │ - function·aggregateCaching(profiles:·readonly·ModelCapabilityProfile[]):·DownstreamOpenAIModelCapabilities["caching"]·{
+        301 │ + function·aggregateCaching(
+        302 │ + ··profiles:·readonly·ModelCapabilityProfile[],
+        303 │ + ):·DownstreamOpenAIModelCapabilities["caching"]·{
+    303 304 │     if (profiles.length === 0) {
+    304 305 │       return {
+    ······· │
+    445 446 │
+    446 447 │     const models = modelRecords.sort((left, right) => compareText(left.id, right.id));
+    447     │ - ··const·recommendedModel·=·modelAliases.find((alias)·=>
+    448     │ - ····models.some((model)·=>·model.id·===·alias.aliasId),
+    449     │ - ··)?.aliasId·??·models[0]?.id·??·null;
+        448 │ + ··const·recommendedModel·=
+        449 │ + ····modelAliases.find((alias)·=>·models.some((model)·=>·model.id·===·alias.aliasId))?.aliasId·??
+        450 │ + ····models[0]?.id·??
+        451 │ + ····null;
+    450 452 │
+    451 453 │     return {
+    ······· │
+    482 484 │         catalogVersion: input.catalog.catalogVersion,
+    483 485 │         catalogCapturedAt:
+    484     │ - ········typeof·input.catalog.source.capturedAt·===·"string"·?·input.catalog.source.capturedAt·:·null,
+        486 │ + ········typeof·input.catalog.source.capturedAt·===·"string"
+        487 │ + ··········?·input.catalog.source.capturedAt
+        488 │ + ··········:·null,
+    485 489 │         runtimeInventoryRevision: buildRuntimeInventoryRevision({
+    486 490 │           registry: input.registry,
+
+
+Checked 9 files in 51ms. No fixes applied.
+Found 4 errors.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.

@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 import { stringify } from "yaml";
 
+import type { NormalizedCatalog } from "@role-model-router/catalog";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
 import {
@@ -279,6 +280,99 @@ describe("runtime-host-bridge", () => {
         },
       ],
     });
+  });
+
+  test("adds compact Pi-compatible capability metadata to v1 model-list records", () => {
+    const catalog = {
+      catalogVersion: "test-catalog",
+      source: {
+        vendor: "test",
+        commit: "test",
+        capturedAt: "2026-06-22T00:00:00.000Z",
+        schemaVersion: "test.v1",
+      },
+      providers: [],
+      models: [
+        {
+          modelId: "moonshot/kimi-k2.5",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          authFamily: "api-key",
+          displayName: "Kimi K2.5",
+          version: "test",
+          capabilities: ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+          modalities: ["text", "image", "video"],
+          contextWindow: 262_144,
+          maxOutputTokens: 262_144,
+          pricing: null,
+          requestShapeHints: null,
+          experimentalModes: [],
+          extendsProvenance: { baseModelId: null, chain: [] },
+          localOverrideApplied: false,
+          localNotes: [],
+          upstreamProvenance: {
+            vendor: "test",
+            commit: "test",
+            capturedAt: "2026-06-22T00:00:00.000Z",
+            schemaVersion: "test.v1",
+          },
+        },
+      ],
+    } as NormalizedCatalog;
+
+    const result = (
+      bridge as {
+        createModelListResponse: (
+          value: EndpointRegistryResult,
+          modelAliases: readonly {
+            aliasId: string;
+            mode?: string;
+            modelIds: readonly string[];
+          }[],
+          inventory: null,
+          catalog: NormalizedCatalog,
+          baseUrl: string,
+        ) => {
+          data: readonly Array<Record<string, unknown>>;
+        };
+      }
+    ).createModelListResponse(
+      registry,
+      [
+        {
+          aliasId: "hybrid.hybrid",
+          mode: "hybrid",
+          modelIds: ["moonshot/kimi-k2.5"],
+        },
+      ],
+      null,
+      catalog,
+      "http://127.0.0.1:3456",
+    );
+
+    const alias = result.data.find((entry) => entry.id === "hybrid.hybrid");
+    expect(alias).toMatchObject({
+      id: "hybrid.hybrid",
+      context_window: 262_144,
+      max_tokens: 262_144,
+      input: ["text", "image"],
+      input_modalities: ["image", "text", "video"],
+      output_modalities: ["text"],
+      role_model: {
+        type: "alias",
+        routing_mode: "hybrid",
+        discovery_url: "http://127.0.0.1:3456/api/role-model/downstream/openai",
+        context_window: 262_144,
+        max_tokens: 262_144,
+        input_modalities: ["image", "text", "video"],
+        tools: { function_calling: true },
+        reasoning: { supported: true, effort_control: true },
+        structured_output: { supported: true },
+      },
+    });
+    expect(typeof (alias?.role_model as { capability_revision?: unknown })?.capability_revision).toBe(
+      "string",
+    );
   });
 
   test("builds request-time routing telemetry snapshots from live routing candidates", () => {
@@ -1019,7 +1113,7 @@ describe("runtime-host-bridge", () => {
       routingRequest: {
         requestId: "req-host-001",
         taskType: "text.chat",
-        requiredCapabilities: ["text.chat"],
+        requiredCapabilities: ["text.chat", "tools.function_calling"],
         preferredCapabilities: [],
         requiredModalities: ["text"],
         contextTokens: 15,
@@ -1027,7 +1121,6 @@ describe("runtime-host-bridge", () => {
         strategy: "balanced",
         preferLocal: false,
         allowEndpoints: [
-          "moonshot.personal.kimi-code.global.kimi-k2.5",
           "moonshot.personal.primary.global.kimi-k2.5",
         ],
       },
@@ -1054,6 +1147,22 @@ describe("runtime-host-bridge", () => {
         stream: true,
         maxOutputTokens: 256,
         temperature: 0.2,
+      },
+      routingDiagnostics: {
+        capabilityEligibility: {
+          requiredInputModalities: ["text"],
+          requiredOutputModalities: ["text"],
+          requiredCapabilities: ["text.chat", "tools.function_calling"],
+          advisoryCapabilities: [],
+          includedEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
+          excludedTargets: [
+            {
+              endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
+              modelId: "moonshot/kimi-k2.5",
+              reasons: ["missing_capability.tools.function_calling"],
+            },
+          ],
+        },
       },
     });
   });
@@ -2827,6 +2936,17 @@ describe("runtime-host-bridge", () => {
           "moonshot.personal.primary.global.kimi-k2.5",
         ],
       },
+      capabilityEligibility: {
+        requiredInputModalities: ["text"],
+        requiredOutputModalities: ["text"],
+        requiredCapabilities: ["text.chat"],
+        advisoryCapabilities: [],
+        includedEndpoints: [
+          "moonshot.personal.kimi-code.global.kimi-k2.5",
+          "moonshot.personal.primary.global.kimi-k2.5",
+        ],
+        excludedTargets: [],
+      },
     });
   });
 
@@ -3015,14 +3135,10 @@ describe("runtime-host-bridge", () => {
       strategy: "quality",
       preferLocal: true,
       allowEndpoints: [
-        "moonshot.personal.kimi-code.global.kimi-k2.5",
         "moonshot.personal.primary.global.kimi-k2.5",
       ],
     });
-    expect(result.routingModel).toEqual({
-      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
-      preferredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
-    });
+    expect(result.routingModel).toBeUndefined();
     expect(result.routingDiagnostics?.controllerRouting).toEqual({
       active: true,
       acceptedDirectives: {
@@ -3032,7 +3148,6 @@ describe("runtime-host-bridge", () => {
         preferredCapabilities: ["reasoning.multi_step"],
         strategy: "quality",
         preferLocal: true,
-        preferredEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
       },
     });
   });
@@ -3135,12 +3250,11 @@ describe("runtime-host-bridge", () => {
 
     expect(result.routingRequest).toMatchObject({
       taskType: "text.chat",
-      requiredCapabilities: ["text.chat"],
+      requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       strategy: "balanced",
       preferLocal: false,
       allowEndpoints: [
-        "moonshot.personal.kimi-code.global.kimi-k2.5",
         "moonshot.personal.primary.global.kimi-k2.5",
       ],
     });
@@ -3151,8 +3265,21 @@ describe("runtime-host-bridge", () => {
         aliasId: "gpt-5.4",
         resolvedModelIds: ["moonshot/kimi-k2.5"],
         allowEndpoints: [
-          "moonshot.personal.kimi-code.global.kimi-k2.5",
           "moonshot.personal.primary.global.kimi-k2.5",
+        ],
+      },
+      capabilityEligibility: {
+        requiredInputModalities: ["text"],
+        requiredOutputModalities: ["text"],
+        requiredCapabilities: ["text.chat", "tools.function_calling"],
+        advisoryCapabilities: [],
+        includedEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
+        excludedTargets: [
+          {
+            endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            reasons: ["missing_capability.tools.function_calling"],
+          },
         ],
       },
     });
@@ -3255,7 +3382,7 @@ describe("runtime-host-bridge", () => {
     expect(result.routingRequest).toMatchObject({
       requestedRoleId: "qa.reviewer",
       taskType: "text.chat",
-      requiredCapabilities: ["text.chat"],
+      requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       needsTools: true,
     });
@@ -3533,12 +3660,26 @@ describe("runtime-host-bridge", () => {
       difficulty: "medium",
       strategy: "balanced",
       fallbackApplied: false,
-      excludedEndpointIds: ["moonshot.personal.kimi-code.global.kimi-k2.5"],
       rubricSignals: expect.objectContaining({
         toolCount: 0,
         historyTurnCount: 2,
         codeOrSchemaBurden: true,
       }),
+    });
+    expect(result.routingDiagnostics).toMatchObject({
+      capabilityEligibility: {
+        requiredInputModalities: ["text"],
+        requiredOutputModalities: ["text"],
+        requiredCapabilities: ["text.chat", "tools.function_calling"],
+        includedEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
+        excludedTargets: [
+          {
+            endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            reasons: ["missing_capability.tools.function_calling"],
+          },
+        ],
+      },
     });
   });
 
@@ -3713,7 +3854,6 @@ describe("runtime-host-bridge", () => {
 
     expect(result.routingRequest.strategy).toBe("balanced");
     expect(result.routingRequest.allowEndpoints).toEqual([
-      "moonshot.personal.kimi-code.global.kimi-k2.5",
       "moonshot.personal.primary.global.kimi-k2.5",
     ]);
     expect(result.routingDiagnostics).toEqual({
@@ -3722,8 +3862,21 @@ describe("runtime-host-bridge", () => {
         aliasId: "gpt-5.4",
         resolvedModelIds: ["moonshot/kimi-k2.5"],
         allowEndpoints: [
-          "moonshot.personal.kimi-code.global.kimi-k2.5",
           "moonshot.personal.primary.global.kimi-k2.5",
+        ],
+      },
+      capabilityEligibility: {
+        requiredInputModalities: ["text"],
+        requiredOutputModalities: ["text"],
+        requiredCapabilities: ["text.chat", "tools.function_calling"],
+        advisoryCapabilities: [],
+        includedEndpoints: ["moonshot.personal.primary.global.kimi-k2.5"],
+        excludedTargets: [
+          {
+            endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            reasons: ["missing_capability.tools.function_calling"],
+          },
         ],
       },
     });
@@ -3870,6 +4023,17 @@ describe("runtime-host-bridge", () => {
           "moonshot.personal.kimi-code.global.kimi-k2.5",
           "moonshot.personal.primary.global.kimi-k2.5",
         ],
+      },
+      capabilityEligibility: {
+        requiredInputModalities: ["text"],
+        requiredOutputModalities: ["text"],
+        requiredCapabilities: ["text.chat"],
+        advisoryCapabilities: [],
+        includedEndpoints: [
+          "moonshot.personal.kimi-code.global.kimi-k2.5",
+          "moonshot.personal.primary.global.kimi-k2.5",
+        ],
+        excludedTargets: [],
       },
     });
   });
@@ -4032,7 +4196,7 @@ describe("runtime-host-bridge", () => {
     expect(result.routingRequest).toMatchObject({
       requestedRoleId: "qa.reviewer",
       taskType: "text.chat",
-      requiredCapabilities: ["text.chat"],
+      requiredCapabilities: ["text.chat", "tools.function_calling"],
       preferredCapabilities: [],
       needsTools: true,
     });
@@ -14400,17 +14564,116 @@ describe("runtime-host-bridge", () => {
       });
       expect(response.status).toBe(400);
 
+      const capabilityClientRequestId = "req-client-capability-failure-001";
+      const capabilityResponse = await fetch(
+        `http://127.0.0.1:${server.port}/v1/chat/completions`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-request-id": capabilityClientRequestId,
+          },
+          body: JSON.stringify({
+            model: "deepseek/chat-capture-v1",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: "Describe this image." },
+                  { type: "image_url", image_url: { url: "data:image/png;base64,abc" } },
+                ],
+              },
+            ],
+          }),
+        },
+      );
+      expect(capabilityResponse.status).toBe(400);
+      await expect(capabilityResponse.json()).resolves.toEqual(
+        expect.objectContaining({
+          error: expect.objectContaining({
+            code: "no_eligible_target",
+            requestedModel: "deepseek/chat-capture-v1",
+          }),
+        }),
+      );
+
       const telemetryRequestsResponse = await fetch(
         `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
       );
       expect(telemetryRequestsResponse.status).toBe(200);
-      expect(await telemetryRequestsResponse.json()).toEqual(
+      const telemetryRows = (await telemetryRequestsResponse.json()) as Array<{
+        clientRequestId?: string | null;
+        dimensions?: Record<string, unknown> | null;
+        errorClass?: string | null;
+        modelId?: string | null;
+        requestClass?: string | null;
+        requestId?: string;
+        requestedModelId?: string | null;
+        requestOperation?: string | null;
+      }>;
+      expect(telemetryRows).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             clientRequestId,
             requestClass: "live_request",
           }),
+          expect.objectContaining({
+            clientRequestId: capabilityClientRequestId,
+            errorClass: "no_eligible_target",
+            modelId: "deepseek/chat-capture-v1",
+            requestClass: "live_request",
+            requestedModelId: "deepseek/chat-capture-v1",
+            requestOperation: "chat",
+            dimensions: expect.objectContaining({
+              capabilityEligibility: expect.objectContaining({
+                requestedModel: "deepseek/chat-capture-v1",
+                requiredInputModalities: ["image", "text"],
+                requiredOutputModalities: ["text"],
+                requiredCapabilities: ["text.chat"],
+                excludedTargets: expect.arrayContaining([
+                  expect.objectContaining({
+                    modelId: "deepseek/chat-capture-v1",
+                    reasons: ["missing_input.image"],
+                  }),
+                ]),
+              }),
+            }),
+          }),
         ]),
+      );
+
+      const capabilityRow = telemetryRows.find(
+        (row) => row.clientRequestId === capabilityClientRequestId,
+      );
+      expect(capabilityRow?.requestId).toBeDefined();
+      const capabilityObservationResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/requests/${capabilityRow?.requestId}`,
+      );
+      expect(capabilityObservationResponse.status).toBe(200);
+      await expect(capabilityObservationResponse.json()).resolves.toEqual(
+        expect.objectContaining({
+          telemetrySnapshot: expect.objectContaining({
+            requestedModelId: "deepseek/chat-capture-v1",
+            requestOperation: "chat",
+            dimensions: expect.objectContaining({
+              capabilityEligibility: expect.objectContaining({
+                requestedModel: "deepseek/chat-capture-v1",
+                requiredInputModalities: ["image", "text"],
+                requiredOutputModalities: ["text"],
+                requiredCapabilities: ["text.chat"],
+                excludedTargets: expect.arrayContaining([
+                  expect.objectContaining({
+                    modelId: "deepseek/chat-capture-v1",
+                    reasons: ["missing_input.image"],
+                  }),
+                ]),
+              }),
+            }),
+          }),
+          usageEvent: expect.objectContaining({
+            error_class: "no_eligible_target",
+          }),
+        }),
       );
     } finally {
       await server.close();

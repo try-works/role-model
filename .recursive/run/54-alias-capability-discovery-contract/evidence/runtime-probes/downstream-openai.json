@@ -1,0 +1,36 @@
+{
+  "contractVersion": "role-model.downstream.openai.v1",
+  "kind": "openai-compatible",
+  "providerId": "role-model-runtime",
+  "displayName": "Role Model Runtime",
+  "baseUrl": "http://127.0.0.1:3456",
+  "endpoints": {
+    "health": "http://127.0.0.1:3456/healthz",
+    "models": "http://127.0.0.1:3456/v1/models",
+    "chatCompletions": "http://127.0.0.1:3456/v1/chat/completions",
+    "responses": "http://127.0.0.1:3456/v1/responses"
+  },
+  "authentication": {
+    "type": "bearer",
+    "headerName": "Authorization",
+    "required": false,
+    "placeholderToken": "role-model-local",
+    "note": "Inbound bearer validation is not enforced yet. If a downstream client requires a token field, use this placeholder value."
+  },
+  "models": [],
+  "setup": {
+    "recommendedModel": null,
+    "notes": [
+      "Configure downstream tooling as an OpenAI-compatible provider.",
+      "Use /api/role-model/downstream/openai for alias capability metadata.",
+      "Use GET /v1/models for the compact OpenAI-compatible model list.",
+      "Use conservative piMapping limits unless the request is routed with explicit conditional capability support."
+    ]
+  },
+  "freshness": {
+    "generatedAt": "2026-06-22T05:06:10.973Z",
+    "catalogVersion": "1",
+    "catalogCapturedAt": "2026-06-14T20:00:43.505Z",
+    "runtimeInventoryRevision": "b2ed067064933b35"
+  }
+}

@@ -1,0 +1,110 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge
+
+(node:22196) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/alias-capability-routing.test.ts (2 tests | 2 failed) 45ms
+   × alias capability routing > filters image requests to image-capable alias targets before scoring 37ms
+     → expected [ 'text' ] to deeply equal [ 'image', 'text' ]
+   × alias capability routing > returns a stable no-eligible-target error when alias targets cannot satisfy image input 6ms
+     → expected [Function] to throw an error
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/downstream-openai-discovery.test.ts [ test/downstream-openai-discovery.test.ts ]
+Error: Cannot find module '../src/downstream-openai-discovery.js' imported from 'D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge/test/downstream-openai-discovery.test.ts'
+ ❯ test/downstream-openai-discovery.test.ts:7:1
+      5| import type { NormalizedCatalog, NormalizedCatalogModel } from "@role-…
+      6|
+      7| import { createDownstreamOpenAIDiscovery } from "../src/downstream-ope…
+       | ^
+      8| import { buildRoutableInventory } from "../src/routable-inventory.js";
+      9|
+
+Caused by: Error: Failed to load url ../src/downstream-openai-discovery.js (resolved id: ../src/downstream-openai-discovery.js) in D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge/test/downstream-openai-discovery.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  test/model-capability-resolver.test.ts [ test/model-capability-resolver.test.ts ]
+Error: Cannot find module '../src/model-capability-resolver.js' imported from 'D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge/test/model-capability-resolver.test.ts'
+ ❯ test/model-capability-resolver.test.ts:5:1
+      3| import type { NormalizedCatalog, NormalizedCatalogModel } from "@role-…
+      4|
+      5| import { resolveModelCapabilityProfile } from "../src/model-capability…
+       | ^
+      6|
+      7| const source = {
+
+Caused by: Error: Failed to load url ../src/model-capability-resolver.js (resolved id: ../src/model-capability-resolver.js) in D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge/test/model-capability-resolver.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/request-capability-inference.test.ts [ test/request-capability-inference.test.ts ]
+Error: Cannot find module '../src/request-capability-inference.js' imported from 'D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge/test/request-capability-inference.test.ts'
+ ❯ test/request-capability-inference.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2|
+      3| import {
+       | ^
+      4|   inferChatCompletionsCapabilityRequirements,
+      5|   inferResponsesCapabilityRequirements,
+
+Caused by: Error: Failed to load url ../src/request-capability-inference.js (resolved id: ../src/request-capability-inference.js) in D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge/test/request-capability-inference.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/alias-capability-routing.test.ts > alias capability routing > filters image requests to image-capable alias targets before scoring
+AssertionError: expected [ 'text' ] to deeply equal [ 'image', 'text' ]
+
+- Expected
++ Received
+
+  [
+-   "image",
+    "text",
+  ]
+
+ ❯ test/alias-capability-routing.test.ts:74:52
+     72|     );
+     73|
+     74|     expect(plan.routingRequest.requiredModalities).toEqual(["image", "…
+       |                                                    ^
+     75|     expect(plan.routingRequest.allowEndpoints).toEqual([
+     76|       "moonshot.personal.kimi-code.global.kimi-k2-7-code",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/alias-capability-routing.test.ts > alias capability routing > returns a stable no-eligible-target error when alias targets cannot satisfy image input
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ test/alias-capability-routing.test.ts:115:7
+    113|         ],
+    114|       ),
+    115|     ).toThrow(/no_eligible_target/i);
+       |       ^
+    116|   });
+    117| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  2 failed (2)
+   Start at  06:42:31
+   Duration  2.73s (transform 1.29s, setup 0ms, collect 1.70s, tests 45ms, environment 1ms, prepare 1.63s)
+
+undefined
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/model-capability-resolver.test.ts test/request-capability-inference.test.ts test/downstream-openai-discovery.test.ts test/alias-capability-routing.test.ts

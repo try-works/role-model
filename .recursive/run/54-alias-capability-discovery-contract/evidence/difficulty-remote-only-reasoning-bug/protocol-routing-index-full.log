@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/packages/protocol-routing
+
+(node:43760) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (10 tests) 293ms
+
+ Test Files  1 passed (1)
+      Tests  10 passed (10)
+   Start at  08:39:12
+   Duration  3.65s (transform 1.09s, setup 0ms, collect 1.17s, tests 293ms, environment 0ms, prepare 1.05s)

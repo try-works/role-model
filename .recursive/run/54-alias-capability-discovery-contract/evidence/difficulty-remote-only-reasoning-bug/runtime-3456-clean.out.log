@@ -1,0 +1,8 @@
+{
+  "status": "listening",
+  "host": "127.0.0.1",
+  "port": 3456
+}
+undefined
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 4294967295: tsx src/cli-entry.ts --host 127.0.0.1 --port 3456 --repo-root D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract --runtime-state-root C:\Users\erikb\AppData\Local\Role Model Runtime\state --scope-id runtime-host-bridge --unified-runtime-config C:\Users\erikb\AppData\Local\Role Model Runtime\runtime-config.yaml

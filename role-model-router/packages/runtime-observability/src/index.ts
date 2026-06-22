@@ -23,6 +23,18 @@ export interface RuntimeRoutingDiagnostics {
       readonly message: string;
     }[];
   };
+  readonly capabilityEligibility?: {
+    readonly requiredInputModalities: readonly string[];
+    readonly requiredOutputModalities: readonly string[];
+    readonly requiredCapabilities: readonly string[];
+    readonly advisoryCapabilities: readonly string[];
+    readonly includedEndpoints: readonly string[];
+    readonly excludedTargets: readonly {
+      readonly endpointId: string;
+      readonly modelId: string;
+      readonly reasons: readonly string[];
+    }[];
+  };
   readonly difficultyRouting?: {
     readonly difficulty: "easy" | "medium" | "hard";
     readonly strategy: string;

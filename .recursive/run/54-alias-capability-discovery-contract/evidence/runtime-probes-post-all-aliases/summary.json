@@ -1,0 +1,56 @@
+{
+  "contractVersion": "role-model.downstream.openai.v1",
+  "modelCount": 19,
+  "aliasCount": 15,
+  "aliasIds": [
+    "baseline.decision-only",
+    "baseline.hybrid",
+    "baseline.remote-only",
+    "controller.decision-only",
+    "controller.hybrid",
+    "controller.remote-only",
+    "default.decision-only",
+    "default.hybrid",
+    "default.remote-only",
+    "difficulty.decision-only",
+    "difficulty.hybrid",
+    "difficulty.remote-only",
+    "hybrid.decision-only",
+    "hybrid.hybrid",
+    "hybrid.remote-only"
+  ],
+  "emptyAliasIds": [],
+  "runtimeInventoryRevision": "6724b58e69412806",
+  "recommendedModel": "default.decision-only",
+  "hybrid": {
+    "safeContextWindow": 262144,
+    "safeMaxOutputTokens": 128000,
+    "maxContextWindow": 1050000,
+    "maxOutputTokens": 384000,
+    "guaranteedInput": [
+      "text"
+    ],
+    "availableInput": [
+      "image",
+      "pdf",
+      "text",
+      "video"
+    ],
+    "declaredModelIds": [
+      "chatgpt/gpt-5.4",
+      "deepseek/deepseek-v4-flash",
+      "deepseek/deepseek-v4-pro",
+      "moonshot/kimi-k2.7-code"
+    ],
+    "routableModelIds": [
+      "chatgpt/gpt-5.4",
+      "deepseek/deepseek-v4-flash",
+      "deepseek/deepseek-v4-pro",
+      "moonshot/kimi-k2.7-code"
+    ],
+    "routableEndpointCount": 4,
+    "toolsFunctionCalling": true,
+    "reasoningSupported": true,
+    "structuredOutput": true
+  }
+}

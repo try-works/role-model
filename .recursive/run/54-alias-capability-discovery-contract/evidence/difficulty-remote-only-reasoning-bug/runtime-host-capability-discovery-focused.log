@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/request-capability-inference.test.ts (2 tests) 49ms
+ ✓ test/model-capability-resolver.test.ts (3 tests) 46ms
+ ✓ test/downstream-openai-discovery.test.ts (2 tests) 56ms
+
+ Test Files  3 passed (3)
+      Tests  7 passed (7)
+   Start at  08:39:12
+   Duration  2.79s (transform 400ms, setup 0ms, collect 557ms, tests 152ms, environment 2ms, prepare 2.50s)

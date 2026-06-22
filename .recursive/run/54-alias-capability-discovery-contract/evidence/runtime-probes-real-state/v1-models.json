@@ -1,0 +1,202 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "baseline.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "baseline.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "baseline.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "chatgpt/gpt-5.4",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "controller.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "controller.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "controller.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "deepseek/deepseek-v4-flash",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash"
+      ]
+    },
+    {
+      "id": "deepseek/deepseek-v4-pro",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro"
+      ]
+    },
+    {
+      "id": "default.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "default.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "default.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "difficulty.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "difficulty.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "difficulty.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "hybrid.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "hybrid.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "hybrid.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    {
+      "id": "moonshot/kimi-k2.7-code",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/downstream-openai-discovery.test.ts (2 tests | 1 failed) 51ms
+   ✓ createDownstreamOpenAIDiscovery > exposes rich, sanitized alias capabilities for hybrid.hybrid 31ms
+   × createDownstreamOpenAIDiscovery > keeps every configured alias visible even when its current routable pool is empty 17ms
+     → expected undefined to match object { id: 'catalog-only.openai', …(7) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/downstream-openai-discovery.test.ts > createDownstreamOpenAIDiscovery > keeps every configured alias visible even when its current routable pool is empty
+AssertionError: expected undefined to match object { id: 'catalog-only.openai', …(7) }
+
+- Expected:
+{
+  "declared": {
+    "endpointIds": [],
+    "modelIds": [
+      "openai/gpt-5.4",
+    ],
+  },
+  "endpoint_ids": [],
+  "id": "catalog-only.openai",
+  "limits": {
+    "safeContextWindow": 1050000,
+    "safeMaxOutputTokens": 128000,
+  },
+  "modalities": {
+    "availableInput": ArrayContaining [
+      "text",
+      "image",
+    ],
+  },
+  "routable": {
+    "endpointIds": [],
+    "modelIds": [],
+  },
+  "targetModelIds": [
+    "openai/gpt-5.4",
+  ],
+  "type": "alias",
+}
+
++ Received:
+undefined
+
+ ❯ test/downstream-openai-discovery.test.ts:216:19
+    214|
+    215|     const alias = discovery.models.find((entry) => entry.id === "catal…
+    216|     expect(alias).toMatchObject({
+       |                   ^
+    217|       id: "catalog-only.openai",
+    218|       type: "alias",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  07:21:56
+   Duration  1.02s (transform 112ms, setup 0ms, collect 135ms, tests 51ms, environment 0ms, prepare 277ms)
+
+undefined
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/downstream-openai-discovery.test.ts
