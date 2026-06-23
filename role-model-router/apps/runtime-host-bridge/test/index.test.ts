@@ -13,9 +13,13 @@ import type { NormalizedCatalog } from "@role-model-router/catalog";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
 import {
+  initializeSqliteMemory,
+  listProviderAccounts,
+  listRuntimeEndpoints,
   persistRuntimeObservationBundle,
   persistRuntimeTelemetryFailure,
   resolveSqliteMemoryLocation,
+  upsertRuntimeEndpoint,
   upsertProviderAccount as upsertSqliteProviderAccount,
 } from "@role-model-router/sqlite-memory";
 import { executeToolCalls } from "@role-model-router/tool-registry";
@@ -1004,6 +1008,102 @@ describe("runtime-host-bridge", () => {
         expect(accounts.map((account) => account.providerAccountId)).not.toEqual(
           expect.arrayContaining(["openai.personal.primary", "anthropic.team.shared"]),
         );
+      } finally {
+        await backend.shutdown();
+      }
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("purges stale runtime-config LiteLLM endpoints when startup has no runtime config", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-stale-litellm-"),
+    );
+    const scopeId = "runtime-host-stale-litellm";
+
+    try {
+      const { databasePath } = initializeSqliteMemory({ runtimeStateRoot, scopeId });
+      upsertSqliteProviderAccount({
+        databasePath,
+        account: {
+          providerAccountId: "openai.litellm",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          orgScope: "runtime-config",
+          accountScope: "runtime-config",
+          credentialRef: {
+            backend: "env",
+            ref: "OPENAI_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "http://127.0.0.1:45679/v1",
+          allowedModels: ["openai/gpt-4.1-mini-fast"],
+          modelRoleBindings: [],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.runtime-config",
+          quotaPolicyRef: "quota.runtime-config",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      });
+      upsertRuntimeEndpoint({
+        databasePath,
+        endpoint: {
+          endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          providerAccountId: "openai.litellm",
+          modelId: "openai/gpt-4.1-mini-fast",
+          region: "global",
+          endpointKind: "remote-openai-compatible",
+          servingSource: "remote-service",
+          lifecycleState: "active",
+          healthStatus: "healthy",
+        },
+      });
+
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            listAccounts: () => Promise<Array<{ providerAccountId: string }>>;
+            listEndpoints: () => Promise<Array<{ endpointId: string }>>;
+            shutdown: () => Promise<void>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        runtimeStateRoot,
+        scopeId,
+      });
+
+      try {
+        await expect(backend.listAccounts()).resolves.not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ providerAccountId: "openai.litellm" }),
+          ]),
+        );
+        await expect(backend.listEndpoints()).resolves.not.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            }),
+          ]),
+        );
+        expect(
+          listProviderAccounts({ databasePath }).map((account) => account.providerAccountId),
+        ).not.toContain("openai.litellm");
+        expect(
+          listRuntimeEndpoints({ databasePath }).map((endpoint) => endpoint.endpointId),
+        ).not.toContain("openai.litellm.global.openai-gpt-4-1-mini-fast");
       } finally {
         await backend.shutdown();
       }

@@ -249,7 +249,8 @@ describe("runtime-host-bridge executable packaging", () => {
         },
         {
           sourceRelativePath: "testdata/catalog/litellm-model-prices.json",
-          destinationRelativePath: "testdata/catalog/litellm-model-prices.json",
+          destinationRelativePath:
+            "role-model-router/packages/vendor-litellm/data/model-prices.json",
         },
         {
           sourceRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
@@ -260,6 +261,9 @@ describe("runtime-host-bridge executable packaging", () => {
     );
     expect(copies).not.toEqual(
       expect.arrayContaining([
+        expect.objectContaining({
+          destinationRelativePath: expect.stringContaining("testdata/"),
+        }),
         {
           sourceRelativePath: "testdata/router-runtime",
           destinationRelativePath: "testdata/router-runtime",
@@ -402,6 +406,31 @@ describe("runtime-host-bridge executable packaging", () => {
 
       await expect(packageSea.assertProductionReleaseHasNoQaArtifacts(releaseDir)).rejects.toThrow(
         /QA fixture artifacts|QA\/mock data markers/,
+      );
+    } finally {
+      await rm(releaseDir, { recursive: true, force: true });
+    }
+  });
+
+  test("production release guard rejects persisted LiteLLM fixture endpoint markers", async () => {
+    const releaseDir = await mkdtemp(path.join(os.tmpdir(), "role-model-litellm-fixture-release-"));
+    try {
+      await mkdir(path.join(releaseDir, "state"), { recursive: true });
+      await writeFile(
+        path.join(releaseDir, "state", "runtime-endpoints.json"),
+        JSON.stringify({
+          endpoints: [
+            {
+              endpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              modelId: "openai/gpt-4.1-mini-fast",
+            },
+          ],
+        }),
+        "utf8",
+      );
+
+      await expect(packageSea.assertProductionReleaseHasNoQaArtifacts(releaseDir)).rejects.toThrow(
+        /QA\/mock data markers/,
       );
     } finally {
       await rm(releaseDir, { recursive: true, force: true });

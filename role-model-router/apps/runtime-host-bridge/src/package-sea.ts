@@ -79,7 +79,7 @@ const standaloneReleaseCopies = [
   },
   {
     sourceRelativePath: "testdata/catalog/litellm-model-prices.json",
-    destinationRelativePath: "testdata/catalog/litellm-model-prices.json",
+    destinationRelativePath: "role-model-router/packages/vendor-litellm/data/model-prices.json",
   },
   {
     sourceRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
@@ -88,6 +88,7 @@ const standaloneReleaseCopies = [
 ] as const satisfies readonly StandaloneReleaseCopy[];
 
 const forbiddenProductionReleasePathFragments = [
+  "testdata/",
   "testdata/router-runtime",
   ".recursive",
   "fixtures/provider-accounts.json",

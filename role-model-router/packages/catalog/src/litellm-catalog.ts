@@ -348,7 +348,6 @@ export async function loadLiteLLMModelPrices(repoRoot: string): Promise<unknown>
   const liteLLMPath = path.join(repoRoot, "role-model-router", "vendor", "litellm");
   const candidates = [
     path.join(liteLLMPath, "model_prices_and_context_window.json"),
-    path.join(repoRoot, "testdata", "catalog", "litellm-model-prices.json"),
     path.join(
       repoRoot,
       "role-model-router",
@@ -357,6 +356,7 @@ export async function loadLiteLLMModelPrices(repoRoot: string): Promise<unknown>
       "data",
       "model-prices.json",
     ),
+    path.join(repoRoot, "testdata", "catalog", "litellm-model-prices.json"),
   ];
 
   for (const candidate of candidates) {

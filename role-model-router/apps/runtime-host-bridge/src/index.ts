@@ -3433,6 +3433,24 @@ function createUnifiedProviderAccounts(
 function deleteRuntimeConfigProviderAccounts(databasePath: string): void {
   const database = new DatabaseSync(databasePath);
   try {
+    const accountRows = database
+      .prepare(
+        "SELECT provider_account_id FROM provider_accounts WHERE org_scope = ? OR account_scope = ?",
+      )
+      .all("runtime-config", "runtime-config") as Array<{ provider_account_id: string }>;
+    const providerAccountIds = accountRows.map((row) => row.provider_account_id);
+    if (providerAccountIds.length > 0) {
+      const deleteEndpoint = database.prepare(
+        "DELETE FROM runtime_endpoints WHERE provider_account_id = ?",
+      );
+      const deleteDeviceAuthorization = database.prepare(
+        "DELETE FROM provider_device_auth_sessions WHERE provider_account_id = ?",
+      );
+      for (const providerAccountId of providerAccountIds) {
+        deleteEndpoint.run(providerAccountId);
+        deleteDeviceAuthorization.run(providerAccountId);
+      }
+    }
     database
       .prepare("DELETE FROM provider_accounts WHERE org_scope = ? OR account_scope = ?")
       .run("runtime-config", "runtime-config");
@@ -10810,30 +10828,12 @@ export async function createRuntimeBridgeBackend(
   const fixtureProviderPresets = useFixtures
     ? await readJson<ProviderPresetCatalog>(path.join(fixtureBasePath, "provider-presets.json"))
     : { providers: {} };
-  const repoProviderPresets = await readJson<ProviderPresetCatalog>(
-    path.join(options.repoRoot, "testdata", "router-runtime", "provider-presets.json"),
-  ).catch(() => ({ providers: {} }) as ProviderPresetCatalog);
-  const legacyPlaceholderFixturePaths = useFixtures
-    ? [
-        path.join(options.repoRoot, "testdata", "router-runtime", "provider-accounts.json"),
-        path.join(
-          options.repoRoot,
-          "testdata",
-          "router-runtime",
-          "fixtures",
-          "provider-accounts.json",
-        ),
-      ]
-    : [];
-  const legacyPlaceholderAccounts = (
-    await Promise.all(
-      legacyPlaceholderFixturePaths.map((fixturePath) =>
-        readJson<{ accounts: ProviderAccountRecord[] }>(fixturePath).catch(() => ({
-          accounts: [],
-        })),
-      ),
-    )
-  ).flatMap((fixture) => fixture.accounts);
+  const repoProviderPresets = useFixtures
+    ? await readJson<ProviderPresetCatalog>(
+        path.join(options.repoRoot, "testdata", "router-runtime", "provider-presets.json"),
+      ).catch(() => ({ providers: {} }) as ProviderPresetCatalog)
+    : ({ providers: {} } as ProviderPresetCatalog);
+  const legacyPlaceholderAccounts = fixtureAccounts;
   const legacyPlaceholderProviderAccountIds = [
     ...new Set(
       legacyPlaceholderAccounts.map((account) => account.providerAccountId).filter(Boolean),
@@ -10855,7 +10855,14 @@ export async function createRuntimeBridgeBackend(
   };
   let operatorIntentDiagnostic: OperatorIntentDiagnostic =
     readOperatorIntentResult(operatorIntentLocation).diagnostic;
+  if (initialUnifiedRuntimeConfig === null) {
+    deleteRuntimeConfigProviderAccounts(initialization.databasePath);
+  }
   deleteProviderDeviceAuthorizationsByAccountId(
+    initialization.databasePath,
+    legacyPlaceholderProviderAccountIds,
+  );
+  deleteRuntimeEndpointsByProviderAccountId(
     initialization.databasePath,
     legacyPlaceholderProviderAccountIds,
   );

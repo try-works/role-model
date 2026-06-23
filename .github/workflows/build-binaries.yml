@@ -76,7 +76,7 @@ jobs:
             "$packageDir/role-model-launcher.exe",
             "$packageDir/Role-Model.bat",
             "$packageDir/build/client/index.html",
-            "$packageDir/testdata/catalog/litellm-model-prices.json",
+            "$packageDir/role-model-router/packages/vendor-litellm/data/model-prices.json",
             "$packageDir/role-model-router/packages/catalog/data/normalized-catalog.json"
           ) | ForEach-Object {
             if (-not (Test-Path $_)) {
@@ -89,6 +89,7 @@ jobs:
         run: |
           $packageDir = "role-model-router/dist/release/${{ matrix.target }}"
           $forbiddenPaths = @(
+            "$packageDir/testdata",
             "$packageDir/testdata/router-runtime",
             "$packageDir/.recursive"
           )
