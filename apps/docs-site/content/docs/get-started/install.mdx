@@ -55,6 +55,26 @@ After extracting:
 - Windows: run `Role-Model.bat` or `role-model-runtime.exe`
 - macOS/Linux: run `role-model-runtime`
 
+## Using Pi
+
+If you want Pi to route through Role-Model, install and launch the runtime first, then install the public Pi
+package:
+
+```bash
+pi install npm:@try-works/pi-role-model
+```
+
+Inside Pi, run:
+
+```text
+/role-model setup
+/role-model doctor
+/role-model alias choose
+```
+
+For endpoint overrides, remote-runtime trust, auth behavior, and the full command list, read
+[Pi integration](/integrations/pi).
+
 ## Source builds
 
 Use a source build when you want to:

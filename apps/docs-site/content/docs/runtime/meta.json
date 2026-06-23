@@ -4,8 +4,10 @@
   "defaultOpen": true,
   "pages": [
     "runtime-ui-tour",
+    "provider-connections",
     "models-and-role-activation",
     "benchmarks-and-evaluation",
+    "observe-and-telemetry-analytics",
     "routing-controls-and-decision-review"
   ]
 }

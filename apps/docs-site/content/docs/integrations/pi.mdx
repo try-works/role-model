@@ -1,0 +1,102 @@
+---
+title: Pi integration
+description: Install the public Pi package, connect it to a running Role-Model runtime, and choose Role-Model aliases from Pi.
+---
+
+# Pi integration
+
+The `@try-works/pi-role-model` package connects Pi to an already-running Role-Model runtime.
+
+It does not install, start, stop, update, or own the runtime process. Start `role-model-router` first, then
+install the package into Pi.
+
+## Install the package
+
+For normal use, install the public package from npm:
+
+```bash
+pi install npm:@try-works/pi-role-model
+```
+
+For local checkout testing from this repository:
+
+```bash
+pi install ./packages/pi-role-model
+```
+
+## Connect Pi to the runtime
+
+By default the package connects to the local runtime at `http://127.0.0.1:3456`.
+
+To use a different local runtime endpoint, set `ROLE_MODEL_ENDPOINT` before starting Pi:
+
+```bash
+ROLE_MODEL_ENDPOINT=http://127.0.0.1:4567 pi
+```
+
+Remote endpoints are blocked by default. Only enable remote runtime access for a trusted endpoint and trusted
+project context with explicit `allowRemote` behavior, such as launching Pi with `ROLE_MODEL_ALLOW_REMOTE=1`
+when that is the intended trust boundary.
+
+If the runtime reports `authentication.required`, the package fails closed. The current package does not read,
+copy, print, or sync Pi auth files.
+
+## Setup commands
+
+Inside Pi, run:
+
+```text
+/role-model setup
+/role-model status
+/role-model doctor
+```
+
+`/role-model setup` discovers the runtime and registers the `role-model` provider from Role-Model's
+downstream OpenAI discovery endpoint.
+
+`/role-model doctor` checks runtime health, version discovery, downstream discovery, alias discovery, and
+provider registration state.
+
+## Alias commands
+
+Use aliases to select the Role-Model routing posture Pi should use:
+
+```text
+/role-model alias list
+/role-model alias recommended
+/role-model alias choose
+/role-model alias use <alias>
+```
+
+`/role-model alias use <alias>` stores the selected alias and asks Pi to switch the active model to the
+matching `role-model/<alias>` model when Pi exposes active model selection to the package.
+
+## What gets registered
+
+The package registers:
+
+- provider id: `role-model`
+- model ids shaped as `role-model/<alias>`
+- OpenAI-compatible downstream base URL from `/api/role-model/downstream/openai`
+
+Role-Model remains the routing authority. Pi sends model requests to the Role-Model downstream endpoint, and
+the runtime uses its current aliases, roles, tasks, endpoint capability metadata, and routing policy to choose
+the actual endpoint.
+
+## Runtime ownership boundary
+
+The Pi package is intentionally narrow:
+
+- it discovers an externally running runtime
+- it registers the Role-Model provider with Pi
+- it provides setup, diagnostics, and alias-selection commands
+- it ships a Pi skill that points users back to the Role-Model runtime documentation
+
+It does not manage runtime lifecycle, install runtime binaries, copy Pi credentials, run benchmarks, or change
+Role-Model provider account setup.
+
+## Read next
+
+- [Install the runtime](/get-started/install)
+- [Downstream OpenAI discovery](/integrations/downstream-openai-discovery)
+- [Routing controls and decision review](/runtime/routing-controls-and-decision-review)

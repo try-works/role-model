@@ -1,0 +1,59 @@
+---
+title: Provider connections
+description: Connect local and remote execution paths, understand OpenAI connection methods, and keep provider setup separate from routing strategy.
+---
+
+# Provider connections
+
+Provider setup is where the runtime learns which local and remote execution paths are available.
+
+This is separate from role assignment, benchmarking, and routing strategy. A provider connection makes an
+execution path possible; it does not mean every model from that provider should automatically compete for
+every role.
+
+## Local and remote surfaces
+
+The runtime UI separates setup into:
+
+- **Local** for local backends, local model inventory, and local endpoint state
+- **Remote** for provider accounts, remote connection methods, and remote execution posture
+- **Models** for active models, role activation, and benchmark context
+
+Configure the provider or local backend first, then activate only the models or endpoints that should be
+eligible for routing.
+
+## OpenAI connection methods
+
+The runtime presents one OpenAI provider with multiple connection methods when available:
+
+- `API Key`
+- `Codex Subscription`
+
+The API-key path preserves ordinary OpenAI-compatible provider behavior.
+
+The Codex Subscription path is transport-aware. It uses the supported subscription model matrix and the
+runtime's OpenAI transport handling for the current GPT 5.3+ subscription path.
+
+## Hosted tools are transport-specific
+
+Hosted-tool support is not one universal flag across every provider.
+
+For example, OpenAI Responses hosted `web_search` support is different from provider-native hosted search on
+other transports, and different again from ordinary runtime-executed function tools.
+
+When a request asks for a hosted tool, the runtime narrows eligibility to endpoints that support the exact
+requested transport contract. Ordinary chat or generic function-tool requests can still keep a broader
+multi-provider candidate pool.
+
+## Current alias family
+
+Use the current runtime routing modes and execution modes described in
+[Routing modes, locality, and execution](/router/routing-modes-locality-and-execution).
+
+The legacy `craft-ask` alias family is no longer part of the supported runtime alias surface.
+
+## Read next
+
+- [Models and role activation](/runtime/models-and-role-activation)
+- [Routing modes, locality, and execution](/router/routing-modes-locality-and-execution)
+- [Downstream OpenAI discovery](/integrations/downstream-openai-discovery)
