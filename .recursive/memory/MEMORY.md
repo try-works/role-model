@@ -45,6 +45,7 @@ This codebase maintains a clean split — external/wire uses snake_case (proposa
 - All test suites green: pi-role-model 71, core 23, host-bridge 446, schemas 33+30.
 - Benchmark: routing-capability-v2 v3.4, 12 hard coding cases, judge: deepseek-v4-flash.
 - 34 addenda total, 10 authoritative addenda locked, Phase 5 QA marked PASS.
+- **⚠️ Anti-pattern recorded:** Run 57 was merged via direct local merge + push to main (`git checkout main && git merge && git push origin main`) instead of the PR workflow. Main is force-push protected so this cannot be reverted. Pattern documented in `patterns/git-push-merge-workflow.md`.
 
 **Domains updated:**
 - `domains/runtime-routing-and-provider-capabilities.md`: benchmark quality feeds routing. `MetricSource` includes `"benchmark"`. v4-pro 0.925, kimi 1.0, v4-flash 0.833.
@@ -56,6 +57,7 @@ This codebase maintains a clean split — external/wire uses snake_case (proposa
 - Pi package classifier, metadata injection flow, context signals, runtime override, safety boundaries: `/.recursive/memory/domains/pi-role-model-package.md`
 - Benchmark routing display and env credential lessons: `/.recursive/memory/episodes/run-43-benchmark-routing-display.md`
 - GitHub Actions validation, docs deploy, binary release publication, and recursive-artifact changelog generation: `/.recursive/memory/patterns/github-ci-and-release-workflow.md`
+- Git push and merge workflow (PR-only, no direct main pushes): `/.recursive/memory/patterns/git-push-merge-workflow.md`
 - Prefer `Status: CURRENT` docs for planning and execution.
 - `Status: SUSPECT` docs may be used as leads, but revalidate them before trust.
 - Exclude `STALE` and `DEPRECATED` docs from default retrieval unless doing historical analysis.
