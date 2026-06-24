@@ -1,0 +1,83 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+ [31m❯[39m test/taxonomy-data-files.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 44[2mms[22m[39m
+[31m   [31m×[31m taxonomy data and schema files[2m > [22mships proposal-shaped schema files for every taxonomy resource kind[39m[32m 16[2mms[22m[39m
+[31m     → taxonomy.schema.json: expected false to be true // Object.is equality[39m
+   [32m✓[39m taxonomy data and schema files[2m > [22mships canonical JSON data that matches the runtime taxonomy source[32m 24[2mms[22m[39m
+ [31m❯[39m test/taxonomy-catalog.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 44[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mdeclares approved taxonomy versions and counts[32m 5[2mms[22m[39m
+[31m   [31m×[31m canonical taxonomy catalog[2m > [22muses real manifest content hashes for canonical JSON files[39m[32m 17[2mms[22m[39m
+[31m     → groups: expected 'sha256:000000000000000000000000000000…' to be 'sha256:8eb4a2b56707fc9286586cbee46602…' // Object.is equality[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mdeclares exact groups, roles, and role group membership[32m 4[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mgives every role at least ten native task types[32m 3[2mms[22m[39m
+[31m   [31m×[31m canonical taxonomy catalog[2m > [22mvalidates task naming, references, and classifier guidance[39m[32m 8[2mms[22m[39m
+[31m     → coder.refactor: expected 'Refactor work for the coder role.' not to match /\bwork for the .+ role\.$/i[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mreturns no structural validation diagnostics for the canonical catalog[32m 2[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mmatches proposal semantics for cross-role task routing examples[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/taxonomy-catalog.test.ts > canonical taxonomy catalog > uses real manifest content hashes for canonical JSON files
+AssertionError: groups: expected 'sha256:000000000000000000000000000000…' to be 'sha256:8eb4a2b56707fc9286586cbee46602…' // Object.is equality
+
+Expected: "sha256:8eb4a2b56707fc9286586cbee46602da303c7c8b8c6e4f94e0752009daa14462"
+Received: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+
+ ❯ test/taxonomy-catalog.test.ts:126:25
+    124|         .update(readFileSync(path.join(dataRoot, fileName)))
+    125|         .digest("hex");
+    126|       expect(hash, key).toBe(`sha256:${digest}`);
+       |                         ^
+    127|       expect(hash.replace(/^sha256:/, ""), key).not.toMatch(/^([a-f0-9…
+    128|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/taxonomy-catalog.test.ts > canonical taxonomy catalog > validates task naming, references, and classifier guidance
+AssertionError: coder.refactor: expected 'Refactor work for the coder role.' not to match /\bwork for the .+ role\.$/i
+
+- Expected: 
+/\bwork for the .+ role\.$/i
+
++ Received: 
+"Refactor work for the coder role."
+
+ ❯ test/taxonomy-catalog.test.ts:169:45
+    167|       expect(task.classifier.useWhen).not.toHaveLength(0);
+    168|       expect(task.classifier.doNotUseWhen).not.toHaveLength(0);
+    169|       expect(task.description, task.id).not.toMatch(/\bwork for the .+…
+       |                                             ^
+    170|       expect(task.classifier.useWhen, task.id).not.toMatch(
+    171|         /^Use for .+ requests assigned to .+ work\.$/i,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/taxonomy-data-files.test.ts > taxonomy data and schema files > ships proposal-shaped schema files for every taxonomy resource kind
+AssertionError: taxonomy.schema.json: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/taxonomy-data-files.test.ts:30:69
+     28|       "effective-taxonomy.schema.json",
+     29|     ]) {
+     30|       expect(existsSync(path.join(schemaRoot, fileName)), fileName).to…
+       |                                                                     ^
+     31|     }
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (9)[39m
+[2m   Start at [22m 17:31:13
+[2m   Duration [22m 1.07s[2m (transform 225ms, setup 0ms, collect 321ms, tests 87ms, environment 1ms, prepare 610ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/taxonomy-catalog.test.ts test/taxonomy-data-files.test.ts

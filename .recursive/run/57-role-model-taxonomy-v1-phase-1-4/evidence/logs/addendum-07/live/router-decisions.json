@@ -1,0 +1,68 @@
+[
+  {
+    "requestId": "req-d7a39e51-0d0d-4292-ae58-6614e15936ce",
+    "routingDecisionId": "decision-req-d7a39e51-0d0d-4292-ae58-6614e15936ce",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782269167914,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-37427c92-959f-410e-b4be-1e07d746675c",
+    "routingDecisionId": "decision-req-37427c92-959f-410e-b4be-1e07d746675c",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782269164164,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-3dd04d0a-4d17-4bb4-972d-6289cf77737d",
+    "routingDecisionId": "decision-req-3dd04d0a-4d17-4bb4-972d-6289cf77737d",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782269160737,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-99ba8d27-9461-40b3-8c02-b4d271f58130",
+    "routingDecisionId": "decision-req-99ba8d27-9461-40b3-8c02-b4d271f58130",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782269157300,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-c31b74ac-d6f7-4199-a68b-483c0964c98c",
+    "routingDecisionId": "decision-req-c31b74ac-d6f7-4199-a68b-483c0964c98c",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782269153839,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-21ba8e21-e2fa-4a6d-8297-f78c8bd58e1a",
+    "routingDecisionId": "decision-req-21ba8e21-e2fa-4a6d-8297-f78c8bd58e1a",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782269150133,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  }
+]

@@ -1,0 +1,47 @@
+(node:49272) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+## /role-model setup
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model status
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model doctor
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model ui
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias list
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias recommended
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias use default.decision-only
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias refresh
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias current
+
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM

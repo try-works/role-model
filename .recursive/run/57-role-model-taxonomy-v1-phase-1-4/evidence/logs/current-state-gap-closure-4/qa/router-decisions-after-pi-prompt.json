@@ -1,0 +1,90 @@
+[
+  {
+    "requestId": "req-4ef3e14f-3ef1-4ef6-af8f-1c30b8e8a64b",
+    "routingDecisionId": "decision-req-4ef3e14f-3ef1-4ef6-af8f-1c30b8e8a64b",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782261224831,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-e7173c0f-9784-46d5-9236-83b3ecabc06f",
+    "routingDecisionId": "decision-req-e7173c0f-9784-46d5-9236-83b3ecabc06f",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782261129914,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-34533f0d-d3f9-4d19-b3a3-105591701042",
+    "routingDecisionId": "decision-req-34533f0d-d3f9-4d19-b3a3-105591701042",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782261129632,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-76e3989c-e1ee-4973-9fb3-d5d0d9de5a04",
+    "routingDecisionId": "decision-req-76e3989c-e1ee-4973-9fb3-d5d0d9de5a04",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782261129381,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-fd9a693e-cdb6-489b-94be-c8c70e9c9e21",
+    "routingDecisionId": "decision-req-fd9a693e-cdb6-489b-94be-c8c70e9c9e21",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782261129168,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-00ee2419-b6ca-4fa6-9d81-0d91242f9316",
+    "routingDecisionId": "decision-req-00ee2419-b6ca-4fa6-9d81-0d91242f9316",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782261128987,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-115df10c-5539-4808-a581-9ce65912c34e",
+    "routingDecisionId": "decision-req-115df10c-5539-4808-a581-9ce65912c34e",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782261128825,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-89a93e7c-adbd-4826-ad6f-b5c9fb4c4c7e",
+    "routingDecisionId": "decision-req-89a93e7c-adbd-4826-ad6f-b5c9fb4c4c7e",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782261128684,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  }
+]

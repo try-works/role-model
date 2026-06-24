@@ -1,0 +1,52 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+ [31m❯[39m test/taxonomy-data-files.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 19[2mms[22m[39m
+[31m   [31m×[31m taxonomy data and schema files[2m > [22mships proposal-shaped schema files for every taxonomy resource kind[39m[32m 15[2mms[22m[39m
+[31m     → manifest.schema.json: expected false to be true // Object.is equality[39m
+[31m   [31m×[31m taxonomy data and schema files[2m > [22mships canonical JSON data that matches the runtime taxonomy source[39m[32m 2[2mms[22m[39m
+[31m     → ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\data\taxonomy\manifest.json'[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/taxonomy-data-files.test.ts > taxonomy data and schema files > ships proposal-shaped schema files for every taxonomy resource kind
+AssertionError: manifest.schema.json: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/taxonomy-data-files.test.ts:28:69
+     26|       "effective-taxonomy.schema.json",
+     27|     ]) {
+     28|       expect(existsSync(path.join(schemaRoot, fileName)), fileName).to…
+       |                                                                     ^
+     29|     }
+     30|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/taxonomy-data-files.test.ts > taxonomy data and schema files > ships canonical JSON data that matches the runtime taxonomy source
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\data\taxonomy\manifest.json'
+ ❯ readJson test/taxonomy-data-files.test.ts:12:57
+     10| const schemaRoot = path.join(repoRoot, "schemas", "role-model", "taxon…
+     11| 
+     12| const readJson = <T>(filePath: string): T => JSON.parse(readFileSync(f…
+       |                                                         ^
+     13| 
+     14| describe("taxonomy data and schema files", () => {
+ ❯ test/taxonomy-data-files.test.ts:33:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m   Start at [22m 12:34:17
+[2m   Duration [22m 1.73s[2m (transform 188ms, setup 0ms, collect 197ms, tests 19ms, environment 0ms, prepare 646ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/taxonomy-data-files.test.ts

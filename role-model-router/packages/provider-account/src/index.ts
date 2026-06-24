@@ -55,6 +55,13 @@ export interface RegionPolicy {
 export interface ProviderAccountModelRoleBinding {
   readonly modelId: string;
   readonly roleIds: readonly string[];
+  readonly roleAssignmentMode?: "all" | "include" | "exclude" | "custom";
+  readonly enabledRoleIds?: readonly string[];
+  readonly disabledRoleIds?: readonly string[];
+  readonly taskOverrides?: Readonly<Record<string, unknown>>;
+  readonly capabilityOverrides?: Readonly<Record<string, readonly string[]>>;
+  readonly modalityOverrides?: Readonly<Record<string, readonly string[]>>;
+  readonly toolClassOverrides?: Readonly<Record<string, readonly string[]>>;
 }
 
 export interface ProviderAccountRecord {
@@ -149,10 +156,39 @@ function readModelRoleBindings(
 
   return value.map((entry, index) => {
     const binding = asRecord(entry, `${label}.modelRoleBindings[${index}]`);
-    const roleIds = readStringArray(binding, "roleIds", `${label}.modelRoleBindings[${index}]`);
+    const roleAssignmentMode =
+      typeof binding.roleAssignmentMode === "string"
+        ? assertEnumValue(
+            binding.roleAssignmentMode,
+            ["all", "include", "exclude", "custom"] as const,
+            `${label}.modelRoleBindings[${index}].roleAssignmentMode`,
+          )
+        : undefined;
+    const roleIds = Array.isArray(binding.roleIds)
+      ? readStringArray(binding, "roleIds", `${label}.modelRoleBindings[${index}]`)
+      : [];
     return {
       modelId: readString(binding, "modelId", `${label}.modelRoleBindings[${index}]`),
       roleIds,
+      ...(roleAssignmentMode ? { roleAssignmentMode } : {}),
+      ...(Array.isArray(binding.enabledRoleIds)
+        ? {
+            enabledRoleIds: readStringArray(
+              binding,
+              "enabledRoleIds",
+              `${label}.modelRoleBindings[${index}]`,
+            ),
+          }
+        : {}),
+      ...(Array.isArray(binding.disabledRoleIds)
+        ? {
+            disabledRoleIds: readStringArray(
+              binding,
+              "disabledRoleIds",
+              `${label}.modelRoleBindings[${index}]`,
+            ),
+          }
+        : {}),
     };
   });
 }
@@ -342,7 +378,7 @@ export function validateProviderAccounts(
       }
       seenModelRoleBindings.add(binding.modelId);
 
-      if (binding.roleIds.length === 0) {
+      if (!binding.roleAssignmentMode && binding.roleIds.length === 0) {
         diagnostics.push({
           providerAccountId: account.providerAccountId,
           severity: "error",
@@ -362,7 +398,16 @@ export function validateProviderAccounts(
         return;
       }
 
-      if (allowedRoleIds && binding.roleIds.some((roleId) => !allowedRoleIds.has(roleId))) {
+      const referencedRoleIds = [
+        ...binding.roleIds,
+        ...(binding.enabledRoleIds ?? []),
+        ...(binding.disabledRoleIds ?? []),
+      ];
+
+      if (
+        allowedRoleIds &&
+        referencedRoleIds.some((roleId) => !allowedRoleIds.has(roleId))
+      ) {
         diagnostics.push({
           providerAccountId: account.providerAccountId,
           severity: "error",

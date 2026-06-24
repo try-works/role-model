@@ -2,6 +2,64 @@
 
 ## Recursive Run Index
 
+### Run `57-role-model-taxonomy-v1-phase-1-4`
+
+- Run folder: `/.recursive/run/57-role-model-taxonomy-v1-phase-1-4/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+- What changed:
+  - added Role-Model Taxonomy V1 for proposal phases 1-4: versioned canonical groups, roles, task types, capabilities, modalities, tool classes, schemas, generated docs, runtime taxonomy APIs, role/task metadata validation, and router/controller use of hard versus advisory request intent
+  - updated the runtime UI's existing Models, Roles, Router, and Observe surfaces so model role assignment defaults to all roles with group-aware controls and task drill-down instead of creating a separate taxonomy app
+  - updated `@try-works/pi-role-model` with compact taxonomy data, progressive group/role/task classification, runtime taxonomy discovery, package snapshot fallback, and `role_model.intent` injection into real Pi provider requests for known Role-Model aliases
+  - Phase 5 found and repaired real integration defects: QA fallback downstream discovery lacked the rich Pi-compatible contract, Pi short-lived RPC discovery needed close-connection fetches, and Pi classification metadata was not wired into provider transport
+- Why:
+  - the router and consumers need a shared, versioned, human-readable taxonomy so Pi and other agents can classify request intent consistently and the runtime can use that metadata to filter and score routing candidates
+  - How:
+  - implemented with strict TDD, proposal-derived golden taxonomy parity, schema/data tests, runtime discovery/routing tests, runtime UI tests, Pi package tests, docs/static checks, rebuilt runtime packaging, and real local Pi QA against a rebuilt runtime
+- What was not done:
+  - proposal Phase 5 taxonomy-aware benchmarks and Phase 6 taxonomy-aware telemetry/observability rollups remain deferred; only reserved schema/link points and current surface reachability were verified
+  - `pi-role-model` still does not start, stop, install, update, or own the Role-Model runtime process, call the launcher path, or read/sync Pi provider credentials
+- Known issues / follow-ups:
+  - Phase 5 QA addendum 01 closed the original QA-runtime backend limitation: managed local and remote mock vendors now start healthy, advertise canonical taxonomy capabilities, and the real local Pi prompt completed through the runtime with `requestedRoleId=security`, `roleIds=[security]`, `ROLE_POLICY_APPLIED`, and `TASK_POLICY_APPLIED` in telemetry/request detail
+  - run 58 remains draft for proposal phases 5 and 6: taxonomy-aware benchmark scoring and taxonomy-level telemetry/observability
+
+### Session `260624-clever-seal` — Post-Implementation Audit, Gap Closure, and E2E Verification
+
+- Date: 2026-06-24
+- What was done:
+  - **Addendum 08 (F6-F10 closure):** Rewired classifier to always use group-first scoring (28/28 roles). Added context signals (tools, images, files) wired through entire classification pipeline. Fixed `normalizedIntent` not appearing in decision detail API. Captured browser UI screenshots. Created one-to-one E2E coverage table.
+  - **Addendum 09 (R4.1-R12.1 closure):** Added `replacement`/`deprecationReason` to all 7 entity schemas. Added `role_model` snake_case wire contract to decision detail API alongside existing camelCase `normalizedIntent`. Deepened classifier context (tool name→role mapping, file extension→role mapping). Generated classification guide from taxonomy data. Added docs consistency validation.
+  - **Addendum 10 (benchmark quality fix):** Found and fixed `getQualityMetric` ignoring `benchmarkCapability.overallScore`. Before fix: all models got quality 0.500 default. After fix: v4-pro 0.925, kimi 1.000, v4-flash 0.833. Routing shifted from v4-flash 89% → v4-pro 90%.
+  - **Addendum 11 (providers role display):** Fixed "No roles assigned" bug on providers page where `binding.roleIds` was read directly instead of using `buildModelRoleSelection` for all assignment modes.
+  - **R10.1 (docs generation):** Created `scripts/generate-taxonomy-docs.ts` that produces 6 markdown tables from canonical JSON. Added auto-generation markers to `taxonomy-v1.md`.
+  - **E2E verification:** 88-prompt Pi→Role-Model routing test across all 28 roles, 5 aliases. 184,946 tokens, 83/88 successful. Benchmark run with v4-pro 1.0, kimi 1.0, v4-flash 0.75 across 12 hard coding cases.
+- Why:
+  - Post-implementation audit (addendum 15) found 5 gaps (F6-F10). Addendum 17 found 7 more (R4.1-R12.1). All 12 gaps closed with strict TDD.
+  - Benchmark quality not feeding routing was causing all models to appear equal, neutralizing the value of benchmark runs.
+- How:
+  - Strict TDD: RED → GREEN evidence for all changes. 71 pi-role-model tests, 23 core tests, 446 host-bridge tests all green.
+  - Live verification: rebuilt runtime on :3456, ran benchmarks against DeepSeek v4-flash/v4-pro and Kimi k2.7, verified routing with 88 prompts.
+- Decisions recorded:
+  - camelCase vs snake_case: codebase maintains clean split — external/wire = snake_case (proposal contract, schemas, HTTP body), internal/TypeScript = camelCase. `toProposalWireContract()` adapter bridges both in API responses.
+  - `MetricSource` type extended with `"benchmark"` for quality metric provenance.
+  - `EndpointCandidate` type extended with `benchmarkCapability?: { overallScore?: number }`.
+  - Classification fields (`positiveSignals`, `negativeSignals`, `summary`) added to all 28 roles in canonical data.
+  - Compact chunk size guardrail raised from 16KB to 20KB to accommodate classification data.
+- What was deferred:
+  - P2.1: Effective taxonomy lacks caller-scoped RBAC filtering (acceptable for V1).
+  - P2.2: No explicit unsupported taxonomy version rejection logic (minor).
+  - Pi CLI crashes on Windows (libuv assertion, pre-existing).
+- Artifacts created:
+  - 10 new addenda (08-11, 16-19, closeout-01)
+  - 1 generation script (`scripts/generate-taxonomy-docs.ts`)
+  - Multiple evidence logs, screenshots, and routing analysis reports
+
 ### Run `56-pi-role-model-gap-closure`
 
 - Run folder: `/.recursive/run/56-pi-role-model-gap-closure/`

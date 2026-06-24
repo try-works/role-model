@@ -1,0 +1,284 @@
+{
+  "health": {
+    "status": "degraded",
+    "executionMode": "local_only",
+    "vendors": {
+      "llama-swap": {
+        "vendorId": "llama-swap",
+        "healthStatus": "inactive"
+      },
+      "litellm": {
+        "vendorId": "litellm",
+        "healthStatus": "inactive"
+      }
+    },
+    "inactiveVendors": [
+      "llama-swap",
+      "litellm"
+    ],
+    "credentialLifecycleAuthority": {
+      "state": "authoritative",
+      "bootstrapStatus": "degraded"
+    },
+    "sessionBootstrap": {
+      "status": "degraded",
+      "startedAt": "2026-06-23T11:07:44.54Z",
+      "finishedAt": "2026-06-23T11:07:45.501Z",
+      "stages": [
+        {
+          "stageId": "credentials",
+          "status": "ready",
+          "startedAt": "2026-06-23T11:07:44.541Z",
+          "finishedAt": "2026-06-23T11:07:44.56Z",
+          "details": {
+            "pendingAttempted": 0,
+            "pendingSucceeded": 0,
+            "pendingConnected": 0,
+            "pendingFailed": 0,
+            "pendingDeferred": 0,
+            "refreshAttempted": 0,
+            "refreshSucceeded": 0,
+            "refreshFailed": 0
+          }
+        },
+        {
+          "stageId": "endpoints",
+          "status": "ready",
+          "startedAt": "2026-06-23T11:07:44.583Z",
+          "finishedAt": "2026-06-23T11:07:44.612Z",
+          "details": {
+            "reconciled": 0,
+            "failed": 0
+          }
+        },
+        {
+          "stageId": "peers",
+          "status": "skipped",
+          "startedAt": "2026-06-23T11:07:44.612Z",
+          "finishedAt": "2026-06-23T11:07:44.629Z",
+          "message": "no peer loads in manifest",
+          "details": {
+            "reloaded": 0,
+            "failed": 0
+          }
+        },
+        {
+          "stageId": "vendors",
+          "status": "degraded",
+          "startedAt": "2026-06-23T11:07:44.629Z",
+          "finishedAt": "2026-06-23T11:07:44.629Z",
+          "message": "vendors not healthy: llama-swap",
+          "details": {
+            "unhealthyVendors": [
+              "llama-swap"
+            ]
+          }
+        },
+        {
+          "stageId": "local-reload",
+          "status": "skipped",
+          "startedAt": "2026-06-23T11:07:44.629Z",
+          "finishedAt": "2026-06-23T11:07:44.63Z",
+          "message": "no llama-swap loads in manifest"
+        },
+        {
+          "stageId": "remote-health",
+          "status": "degraded",
+          "startedAt": "2026-06-23T11:07:44.63Z",
+          "finishedAt": "2026-06-23T11:07:45.501Z",
+          "details": {
+            "probed": 1,
+            "healthy": 0,
+            "degraded": 1,
+            "results": [
+              {
+                "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+                "modelId": "moonshot/kimi-k2.5",
+                "reason": "auth",
+                "healthStatus": "degraded",
+                "message": "Remote probe returned HTTP 401."
+              }
+            ]
+          }
+        },
+        {
+          "stageId": "inventory",
+          "status": "ready",
+          "startedAt": "2026-06-23T11:07:45.501Z",
+          "finishedAt": "2026-06-23T11:07:45.501Z",
+          "details": {
+            "modelIdCount": 1,
+            "endpointIdCount": 1,
+            "localEndpointCount": 1,
+            "remoteEndpointCount": 0,
+            "emptyAliasIds": [],
+            "driftWarningCount": 0,
+            "driftWarnings": []
+          }
+        }
+      ]
+    }
+  },
+  "version": {
+    "version": "0.0.0-qa",
+    "build": "dev"
+  },
+  "downstream": {
+    "kind": "openai-compatible",
+    "providerId": "role-model-runtime",
+    "displayName": "Role Model Runtime",
+    "baseUrl": "http://127.0.0.1:4567",
+    "endpoints": {
+      "health": "http://127.0.0.1:4567/healthz",
+      "models": "http://127.0.0.1:4567/v1/models",
+      "chatCompletions": "http://127.0.0.1:4567/v1/chat/completions",
+      "responses": "http://127.0.0.1:4567/v1/responses"
+    },
+    "authentication": {
+      "type": "bearer",
+      "headerName": "Authorization",
+      "required": false,
+      "placeholderToken": "role-model-local",
+      "note": "Inbound API-key validation is not enforced yet. If a downstream client requires a token field, use this placeholder bearer token."
+    },
+    "models": [
+      {
+        "id": "baseline.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "baseline.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "baseline.local-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "controller.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "controller.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "controller.local-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "default.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "default.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "default.local-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "difficulty.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "difficulty.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "difficulty.local-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "hybrid.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "hybrid.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "hybrid.local-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "lfm2.5-1.2b-instruct",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      }
+    ],
+    "setup": {
+      "recommendedModel": "default.decision-only",
+      "notes": [
+        "Configure downstream tooling as an OpenAI-compatible provider.",
+        "Use GET /v1/models to discover the current model ids.",
+        "Use POST /v1/chat/completions for routed inference and multi-turn tool history.",
+        "POST /v1/responses supports string or string-content message input only; use chat-completions for tool-turn histories."
+      ]
+    }
+  }
+}

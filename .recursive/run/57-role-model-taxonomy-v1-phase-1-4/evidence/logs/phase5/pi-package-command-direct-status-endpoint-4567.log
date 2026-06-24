@@ -1,0 +1,4 @@
+{
+  "ok": true,
+  "text": "Role Model Runtime\nstate: ready\nendpoint: http://127.0.0.1:4567\nversion: 0.0.0-qa\naliases: 15\nselected alias: default.decision-only\nprovider: registered\nauth: placeholder\nendpoint trust: local\nfallback: no\nwarnings: none"
+}

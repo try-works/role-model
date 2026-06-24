@@ -1,0 +1,14 @@
+
+> @role-model-router/roles@0.0.0 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\roles
+> vitest run "--" "test/default-roles-taxonomy.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/roles[39m
+
+ [32m✓[39m test/default-roles-taxonomy.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 12:08:27
+[2m   Duration [22m 1.36s[2m (transform 209ms, setup 0ms, collect 252ms, tests 9ms, environment 0ms, prepare 432ms)[22m
+

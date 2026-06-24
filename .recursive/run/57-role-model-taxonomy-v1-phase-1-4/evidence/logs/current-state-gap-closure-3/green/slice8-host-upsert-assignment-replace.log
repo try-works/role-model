@@ -1,0 +1,13 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/apps/runtime-host-bridge[39m
+
+(node:48328) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/index.test.ts [2m([22m[2m155 tests[22m[2m | [22m[33m154 skipped[39m[2m)[22m[33m 402[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mupsertProviderAccount replaces existing model role assignments for the same model [33m 398[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[2m | [22m[33m154 skipped[39m[90m (155)[39m
+[2m   Start at [22m 20:56:32
+[2m   Duration [22m 3.49s[2m (transform 1.59s, setup 0ms, collect 2.22s, tests 402ms, environment 0ms, prepare 311ms)[22m
+

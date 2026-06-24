@@ -1,0 +1,152 @@
+[
+  {
+    "id": "engineering",
+    "kind": "group",
+    "label": "Engineering",
+    "description": "Software, systems, runtime, testing, security, and data implementation work.",
+    "primaryRoleIds": [
+      "coder",
+      "architect",
+      "operator",
+      "tester",
+      "security",
+      "data"
+    ],
+    "secondaryRoleIds": [],
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable",
+    "ui": {
+      "sortOrder": 10,
+      "recommendedIcon": "code",
+      "recommendedAccent": "blue"
+    }
+  },
+  {
+    "id": "product_design",
+    "kind": "group",
+    "label": "Product And Design",
+    "description": "Product planning, requirements, user workflows, interface design, and structured analysis.",
+    "primaryRoleIds": [
+      "product",
+      "designer",
+      "planner",
+      "analyst"
+    ],
+    "secondaryRoleIds": [],
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable",
+    "ui": {
+      "sortOrder": 20,
+      "recommendedIcon": "layout",
+      "recommendedAccent": "purple"
+    }
+  },
+  {
+    "id": "knowledge_research",
+    "kind": "group",
+    "label": "Knowledge And Research",
+    "description": "Research, learning, memory, scientific reasoning, mathematical reasoning, and evidence synthesis.",
+    "primaryRoleIds": [
+      "researcher",
+      "knowledge",
+      "scientist",
+      "mathematician",
+      "educator"
+    ],
+    "secondaryRoleIds": [
+      "health"
+    ],
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable",
+    "ui": {
+      "sortOrder": 30,
+      "recommendedIcon": "book-open",
+      "recommendedAccent": "green"
+    }
+  },
+  {
+    "id": "business",
+    "kind": "group",
+    "label": "Business",
+    "description": "Strategy, marketing, sales, finance, procurement, and commercial work.",
+    "primaryRoleIds": [
+      "strategist",
+      "marketer",
+      "seller",
+      "finance",
+      "procurement"
+    ],
+    "secondaryRoleIds": [
+      "legal",
+      "recruiter"
+    ],
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable",
+    "ui": {
+      "sortOrder": 40,
+      "recommendedIcon": "briefcase",
+      "recommendedAccent": "amber"
+    }
+  },
+  {
+    "id": "communication",
+    "kind": "group",
+    "label": "Communication",
+    "description": "Writing, translation, creative work, user support, coordination, and follow-up communication.",
+    "primaryRoleIds": [
+      "writer",
+      "translator",
+      "creative",
+      "support",
+      "coordinator"
+    ],
+    "secondaryRoleIds": [],
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable",
+    "ui": {
+      "sortOrder": 50,
+      "recommendedIcon": "message-square",
+      "recommendedAccent": "cyan"
+    }
+  },
+  {
+    "id": "governance_safety",
+    "kind": "group",
+    "label": "Governance And Safety",
+    "description": "Legal, health, recruiting, safety, risk, compliance, and governance-sensitive work.",
+    "primaryRoleIds": [
+      "legal",
+      "health",
+      "recruiter"
+    ],
+    "secondaryRoleIds": [
+      "security",
+      "finance"
+    ],
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable",
+    "ui": {
+      "sortOrder": 60,
+      "recommendedIcon": "shield",
+      "recommendedAccent": "red"
+    }
+  }
+]

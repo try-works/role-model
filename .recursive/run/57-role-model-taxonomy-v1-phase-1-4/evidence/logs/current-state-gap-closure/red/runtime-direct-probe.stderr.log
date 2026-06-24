@@ -1,0 +1,20 @@
+(node:25856) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-runtime --trace-warnings ...` to show where the warning was created)
+node:internal/fs/promises:642
+  return new FileHandle(await PromisePrototypeThen(
+                        ^
+
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\dist\release\win32-x64\testdata\router-runtime\adapter-openai-response.json'
+    at async open (node:internal/fs/promises:642:25)
+    at async readFile (node:internal/fs/promises:1279:14)
+    at async readJson (./dist/sea/cli.cjs:25332:21)
+    at async loadResponseCaptures (./dist/sea/cli.cjs:25338:13)
+    at async createRuntimeBridgeBackend (./dist/sea/cli.cjs:30188:20)
+    at async main (./dist/sea/cli.cjs:34352:19) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'D:\\DEV\\role-model\\.worktrees\\57-role-model-taxonomy-v1-phase-1-4\\role-model-router\\dist\\release\\win32-x64\\testdata\\router-runtime\\adapter-openai-response.json'
+}
+
+Node.js v24.11.0

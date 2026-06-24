@@ -135,6 +135,8 @@ importers:
 
   packages/packaging: {}
 
+  packages/pi-role-model: {}
+
   packages/protocol-types: {}
 
   packages/schema-tools: {}
@@ -203,6 +205,9 @@ importers:
       '@role-model-router/context-envelope':
         specifier: workspace:*
         version: link:../../packages/context-envelope
+      '@role-model-router/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@role-model-router/endpoint-registry':
         specifier: workspace:*
         version: link:../../packages/endpoint-registry
@@ -486,7 +491,11 @@ importers:
         specifier: workspace:*
         version: link:../context-envelope
 
-  role-model-router/packages/roles: {}
+  role-model-router/packages/roles:
+    dependencies:
+      '@role-model-router/core':
+        specifier: workspace:*
+        version: link:../core
 
   role-model-router/packages/runtime-observability:
     dependencies:
@@ -526,7 +535,11 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/protocol-types
 
-  role-model-router/packages/tasks: {}
+  role-model-router/packages/tasks:
+    dependencies:
+      '@role-model-router/core':
+        specifier: workspace:*
+        version: link:../core
 
   role-model-router/packages/tool-registry: {}
 

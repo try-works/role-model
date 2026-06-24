@@ -1,0 +1,86 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [31m❯[39m test/taxonomy-classification.test.ts [2m([22m[2m8 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m7 skipped[39m[2m)[22m[32m 39[2mms[22m[39m
+   [2m[90m↓[39m[22m compact taxonomy and progressive classification[2m > [22mloads a compact group-first taxonomy snapshot
+   [2m[90m↓[39m[22m compact taxonomy and progressive classification[2m > [22mclassifies Review this diff for security risks and likely regressions.
+   [2m[90m↓[39m[22m compact taxonomy and progressive classification[2m > [22mclassifies Implement this small bug fix and add a regression test.
+   [2m[90m↓[39m[22m compact taxonomy and progressive classification[2m > [22mclassifies Compare current public documentation for this API and cite differences.
+   [2m[90m↓[39m[22m compact taxonomy and progressive classification[2m > [22mclassifies Turn these support notes into a clear customer reply.
+   [2m[90m↓[39m[22m compact taxonomy and progressive classification[2m > [22mclassifies Inspect this schema and propose a migration plan.
+   [2m[90m↓[39m[22m compact taxonomy and progressive classification[2m > [22mclassifies Create product requirements and acceptance criteria for this workflow.
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22memits the complete stable advisory classification contract[39m[32m 35[2mms[22m[39m
+[31m     → expected { …(15) } to match object { …(5) }
+(15 matching properties omitted from actual)[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/taxonomy-classification.test.ts > compact taxonomy and progressive classification > emits the complete stable advisory classification contract
+AssertionError: expected { …(15) } to match object { …(5) }
+(15 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "classification_version": "role-model.pi-classifier.v1",
+-   "confidence": Any<Number>,
+-   "context_tokens_estimate": Any<Number>,
+-   "output_modalities": [
++   "alternatives": [
++     {
++       "role_hint_id": "coder",
++       "task_type": "coder.review",
++     },
++     {
++       "role_hint_id": "coder",
++       "task_type": "coder.debug.root_cause",
++     },
++   ],
++   "classification_contract_version": "role-model.classification.v1",
++   "content_revision": "taxonomy-v1-alpha.1",
++   "evidence": [
++     "implementation/fix signal",
++   ],
++   "preferred_capabilities": [
++     "code.read",
++     "code.write",
++   ],
++   "required_modalities": [
+      "text",
+    ],
+-   "source": "heuristic",
++   "role_hint_id": "coder",
++   "role_source": "heuristic",
++   "task_action": "edit",
++   "task_confidence": 0.72,
++   "task_source": "heuristic",
++   "task_type": "coder.edit",
++   "task_variant": null,
++   "taxonomy_version": "1.0.0-alpha.1",
++   "tool_classes": [
++     "filesystem.read",
++     "filesystem.write",
++     "shell.execute",
++   ],
+  }
+
+ ❯ test/taxonomy-classification.test.ts:73:46
+     71|     });
+     72| 
+     73|     expect(classification.role_model.intent).toMatchObject({
+       |                                              ^
+     74|       classification_version: "role-model.pi-classifier.v1",
+     75|       source: "heuristic",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m7 skipped[39m[90m (8)[39m
+[2m   Start at [22m 17:39:40
+[2m   Duration [22m 1.26s[2m (transform 138ms, setup 0ms, collect 145ms, tests 39ms, environment 0ms, prepare 405ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/taxonomy-classification.test.ts -t complete stable

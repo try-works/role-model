@@ -56,19 +56,17 @@ The reference router follows a stable flow:
 
 The result is deterministic enough to inspect later, not just a hidden runtime guess.
 
-## Baseline roles
+## Taxonomy V1 examples
 
-The current baseline role set includes:
+The runtime taxonomy V1 catalog starts with groups, then roles, then task types. Examples:
 
-| Role ID | Primary task types | Typical use |
+| Group | Role | Task examples |
 | --- | --- | --- |
-| `general.chat` | `text.chat` | general conversational responses |
-| `coder.patch` | `code.edit` | patch-oriented code editing |
-| `coder.review` | `code.edit`, `json.schema_adherence` | review, critique, and structured verdicts |
-| `tool.agent` | `tools.function_calling` | tool orchestration and structured tool calls |
-| `embedder` | `embeddings.text` | retrieval and vector generation |
-| `classifier` | `text.classification` | labeling and taxonomy selection |
-| `language.detector` | `text.language_detection` | language identification |
+| `engineering` | `coder` | `coder.edit`, `coder.review` |
+| `engineering` / `governance_safety` | `security` | `security.audit`, `security.threat_model` |
+| `product_design` | `product` | `product.requirements`, `product.acceptance` |
+| `knowledge_research` | `researcher` | `researcher.web_research.current`, `researcher.fact_check` |
+| `communication` | `support` | `support.ticket.reply`, `support.triage` |
 
 For the full role and task mental model, read
 [Roles, tasks, and capabilities](/concepts/roles-tasks-and-capabilities). The deeper protocol contract

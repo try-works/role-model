@@ -73,6 +73,31 @@ async function waitForOk(url: string, timeoutMs: number): Promise<Response> {
   throw new Error(`Timed out waiting for ${url}`);
 }
 
+async function waitForStructuredRequest(
+  hostBaseUrl: string,
+  clientRequestId: string,
+  timeoutMs: number,
+): Promise<{ request: { requestId: string; endpointId: string }; count: number }> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const recentRequestsResponse = await waitForOk(`${hostBaseUrl}/api/role-model/requests`, 5000);
+    const recentRequests = (await recentRequestsResponse.json()) as Array<{
+      requestId: string;
+      endpointId: string;
+      clientRequestId?: string | null;
+    }>;
+    const recentRequest = recentRequests.find(
+      (entry) =>
+        entry.requestId === clientRequestId || entry.clientRequestId === clientRequestId,
+    );
+    if (recentRequest) {
+      return { request: recentRequest, count: recentRequests.length };
+    }
+    await delay(250);
+  }
+  throw new Error(`Structured request list did not include client request ${clientRequestId}.`);
+}
+
 export async function runRuntimeHostValidation(): Promise<RuntimeHostValidationResult> {
   const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-host-"));
   const stdoutChunks: string[] = [];
@@ -147,18 +172,12 @@ export async function runRuntimeHostValidation(): Promise<RuntimeHostValidationR
       usage: { total_tokens: number };
     };
 
-    const recentRequestsResponse = await waitForOk(`${hostBaseUrl}/api/role-model/requests`, 10000);
-    const recentRequests = (await recentRequestsResponse.json()) as Array<{
-      requestId: string;
-      endpointId: string;
-    }>;
-    const recentRequest = recentRequests.find((entry) => entry.requestId === requestId);
-    if (!recentRequest) {
-      throw new Error(`Structured request list did not include ${requestId}.`);
-    }
+    const recentRequestResult = await waitForStructuredRequest(hostBaseUrl, requestId, 10000);
+    const recentRequest = recentRequestResult.request;
+    const runtimeRequestId = recentRequest.requestId;
 
     const requestDetailResponse = await waitForOk(
-      `${hostBaseUrl}/api/role-model/requests/${requestId}`,
+      `${hostBaseUrl}/api/role-model/requests/${runtimeRequestId}`,
       10000,
     );
     const requestDetail = (await requestDetailResponse.json()) as {
@@ -236,10 +255,10 @@ export async function runRuntimeHostValidation(): Promise<RuntimeHostValidationR
       host_base_url: hostBaseUrl,
       model_count: models.data.length,
       returned_model: completion.model,
-      request_id: requestId,
+      request_id: runtimeRequestId,
       output_text: completion.choices[0]?.message?.content ?? "",
       total_tokens: completion.usage.total_tokens,
-      structured_recent_count: recentRequests.length,
+      structured_recent_count: recentRequestResult.count,
       structured_endpoint_id: endpointProfile.endpointId,
       structured_profile_sample_size: endpointProfile.latestProfile?.sample_size ?? 0,
       otel_trace_id: otelExport.traceId,

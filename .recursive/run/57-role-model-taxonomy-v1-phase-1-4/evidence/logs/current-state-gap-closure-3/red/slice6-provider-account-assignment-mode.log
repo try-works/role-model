@@ -1,0 +1,51 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/provider-account[39m
+
+ [31m❯[39m test/index.test.ts [2m([22m[2m8 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m7 skipped[39m[2m)[22m[32m 20[2mms[22m[39m
+   [2m[90m↓[39m[22m SUPPORTED_AUTH_MODES[2m > [22mcovers the roadmap-required auth modes explicitly
+   [2m[90m↓[39m[22m validateProviderAccounts[2m > [22mvalidates provider-account fixtures against catalog provider metadata without exposing raw secrets
+   [2m[90m↓[39m[22m validateProviderAccounts[2m > [22mreports incompatible auth modes for api-key-only catalog providers
+   [2m[90m↓[39m[22m validateProviderAccounts[2m > [22maccepts kimi device oauth when the provider explicitly supports it
+   [2m[90m↓[39m[22m validateProviderAccounts[2m > [22maccepts model role assignments for allowed models and known runtime roles
+   [2m[90m↓[39m[22m validateProviderAccounts[2m > [22mrejects model role assignments that target models outside the allowed model set
+   [2m[90m↓[39m[22m validateProviderAccounts[2m > [22maccepts model role bindings when allowedModels is empty (wildcard peer accounts)
+[31m   [31m×[31m validateProviderAccounts[2m > [22maccepts explicit all and exclude model role assignments without legacy non-empty roleIds[39m[32m 18[2mms[22m[39m
+[31m     → expected [ { …(4) } ] to deeply equal [][39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > validateProviderAccounts > accepts explicit all and exclude model role assignments without legacy non-empty roleIds
+AssertionError: expected [ { …(4) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "code": "MODEL_ROLE_EMPTY",
++     "message": "Model role binding local/all-default must include at least one role id.",
++     "providerAccountId": "local-openai-compatible.personal.local-main",
++     "severity": "error",
++   },
++ ]
+
+ ❯ test/index.test.ts:544:32
+    542|     });
+    543| 
+    544|     expect(result.diagnostics).toEqual([]);
+       |                                ^
+    545|     expect(result.accounts[0]?.modelRoleBindings).toEqual([
+    546|       {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m7 skipped[39m[90m (8)[39m
+[2m   Start at [22m 20:52:58
+[2m   Duration [22m 1.03s[2m (transform 135ms, setup 0ms, collect 151ms, tests 20ms, environment 0ms, prepare 260ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\provider-account:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts -t explicit all

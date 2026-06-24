@@ -1,0 +1,33 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [31m❯[39m test/taxonomy-data-files.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m2 skipped[39m[2m)[22m[32m 17[2mms[22m[39m
+   [2m[90m↓[39m[22m packaged compact taxonomy data files[2m > [22mships compact taxonomy files for offline progressive disclosure
+   [2m[90m↓[39m[22m packaged compact taxonomy data files[2m > [22mincludes compact taxonomy data in the published package files
+[31m   [31m×[31m packaged compact taxonomy data files[2m > [22mstays in sync with the proposal golden taxonomy fixture[39m[32m 15[2mms[22m[39m
+[31m     → ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\testdata\taxonomy\proposal-v1-golden.json'[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/taxonomy-data-files.test.ts > packaged compact taxonomy data files > stays in sync with the proposal golden taxonomy fixture
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\testdata\taxonomy\proposal-v1-golden.json'
+ ❯ readJson test/taxonomy-data-files.test.ts:22:57
+     20|   "proposal-v1-golden.json",
+     21| );
+     22| const readJson = <T>(filePath: string): T => JSON.parse(readFileSync(f…
+       |                                                         ^
+     23| 
+     24| describe("packaged compact taxonomy data files", () => {
+ ❯ test/taxonomy-data-files.test.ts:70:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m2 skipped[39m[90m (3)[39m
+[2m   Start at [22m 20:49:44
+[2m   Duration [22m 1.94s[2m (transform 282ms, setup 0ms, collect 284ms, tests 17ms, environment 0ms, prepare 762ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/taxonomy-data-files.test.ts -t golden

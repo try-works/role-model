@@ -60,7 +60,11 @@ async function fetchJson(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetchImpl(url, { signal: controller.signal });
+    const response = await fetchImpl(url, {
+      signal: controller.signal,
+      keepalive: false,
+      headers: { connection: "close" },
+    });
     if (!response.ok) {
       throw new HttpStatusError(response.status, `Request failed with HTTP ${response.status}`);
     }

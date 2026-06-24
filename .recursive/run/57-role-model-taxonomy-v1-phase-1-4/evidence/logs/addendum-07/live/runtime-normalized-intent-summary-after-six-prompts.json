@@ -1,0 +1,752 @@
+[
+  {
+    "route": "/api/role-model/requests/req-d7a39e51-0d0d-4292-ae58-6614e15936ce",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "requirements",
+      "taskVariant": null,
+      "evidence": [
+        "product requirements signal",
+        "Selected taxonomy task product.requirements."
+      ],
+      "alternatives": [
+        {
+          "roleId": "planner",
+          "taskType": "planner.requirements"
+        },
+        {
+          "roleId": "product",
+          "taskType": "product.workflow.review"
+        },
+        {
+          "roleId": "product",
+          "taskType": "product.release_notes"
+        }
+      ],
+      "role": {
+        "id": "product",
+        "hard": false
+      },
+      "task": {
+        "id": "product.requirements",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "json.schema_adherence",
+          "reasoning.multi_step"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      }
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/router/decisions/req-d7a39e51-0d0d-4292-ae58-6614e15936ce",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "requirements",
+      "taskVariant": null,
+      "evidence": [
+        "product requirements signal",
+        "Selected taxonomy task product.requirements."
+      ],
+      "alternatives": [
+        {
+          "roleId": "planner",
+          "taskType": "planner.requirements"
+        },
+        {
+          "roleId": "product",
+          "taskType": "product.workflow.review"
+        },
+        {
+          "roleId": "product",
+          "taskType": "product.release_notes"
+        }
+      ],
+      "role": {
+        "id": "product",
+        "hard": false
+      },
+      "task": {
+        "id": "product.requirements",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "json.schema_adherence",
+          "reasoning.multi_step"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      }
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/requests/req-37427c92-959f-410e-b4be-1e07d746675c",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "migration",
+      "taskVariant": "strategy",
+      "evidence": [
+        "architecture/schema migration signal",
+        "Selected taxonomy task architect.migration.strategy."
+      ],
+      "alternatives": [
+        {
+          "roleId": "data",
+          "taskType": "data.schema.review"
+        },
+        {
+          "roleId": "architect",
+          "taskType": "architect.design"
+        },
+        {
+          "roleId": "architect",
+          "taskType": "architect.review"
+        }
+      ],
+      "role": {
+        "id": "architect",
+        "hard": false
+      },
+      "task": {
+        "id": "architect.migration.strategy",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "data.schema",
+          "json.schema_adherence",
+          "reasoning.multi_step"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      }
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/router/decisions/req-37427c92-959f-410e-b4be-1e07d746675c",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "migration",
+      "taskVariant": "strategy",
+      "evidence": [
+        "architecture/schema migration signal",
+        "Selected taxonomy task architect.migration.strategy."
+      ],
+      "alternatives": [
+        {
+          "roleId": "data",
+          "taskType": "data.schema.review"
+        },
+        {
+          "roleId": "architect",
+          "taskType": "architect.design"
+        },
+        {
+          "roleId": "architect",
+          "taskType": "architect.review"
+        }
+      ],
+      "role": {
+        "id": "architect",
+        "hard": false
+      },
+      "task": {
+        "id": "architect.migration.strategy",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "data.schema",
+          "json.schema_adherence",
+          "reasoning.multi_step"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      }
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/requests/req-3dd04d0a-4d17-4bb4-972d-6289cf77737d",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "ticket",
+      "taskVariant": "reply",
+      "evidence": [
+        "support communication signal",
+        "Selected taxonomy task support.ticket.reply."
+      ],
+      "alternatives": [
+        {
+          "roleId": "writer",
+          "taskType": "writer.email.write"
+        },
+        {
+          "roleId": "support",
+          "taskType": "support.triage"
+        },
+        {
+          "roleId": "support",
+          "taskType": "support.explain"
+        }
+      ],
+      "role": {
+        "id": "support",
+        "hard": false
+      },
+      "task": {
+        "id": "support.ticket.reply",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "communication.user_facing",
+          "reasoning.multi_step",
+          "text.chat"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      }
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/router/decisions/req-3dd04d0a-4d17-4bb4-972d-6289cf77737d",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "ticket",
+      "taskVariant": "reply",
+      "evidence": [
+        "support communication signal",
+        "Selected taxonomy task support.ticket.reply."
+      ],
+      "alternatives": [
+        {
+          "roleId": "writer",
+          "taskType": "writer.email.write"
+        },
+        {
+          "roleId": "support",
+          "taskType": "support.triage"
+        },
+        {
+          "roleId": "support",
+          "taskType": "support.explain"
+        }
+      ],
+      "role": {
+        "id": "support",
+        "hard": false
+      },
+      "task": {
+        "id": "support.ticket.reply",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "communication.user_facing",
+          "reasoning.multi_step",
+          "text.chat"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      }
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/requests/req-99ba8d27-9461-40b3-8c02-b4d271f58130",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "web_research",
+      "taskVariant": "current",
+      "evidence": [
+        "current research/citation signal",
+        "Selected taxonomy task researcher.web_research.current."
+      ],
+      "alternatives": [
+        {
+          "roleId": "researcher",
+          "taskType": "researcher.compare_sources"
+        },
+        {
+          "roleId": "researcher",
+          "taskType": "researcher.web_research"
+        },
+        {
+          "roleId": "researcher",
+          "taskType": "researcher.compare_sources"
+        }
+      ],
+      "role": {
+        "id": "researcher",
+        "hard": false
+      },
+      "task": {
+        "id": "researcher.web_research.current",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "citation.synthesis",
+          "text.chat",
+          "web.search"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": [
+        "web.search",
+        "http.fetch"
+      ]
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/router/decisions/req-99ba8d27-9461-40b3-8c02-b4d271f58130",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "web_research",
+      "taskVariant": "current",
+      "evidence": [
+        "current research/citation signal",
+        "Selected taxonomy task researcher.web_research.current."
+      ],
+      "alternatives": [
+        {
+          "roleId": "researcher",
+          "taskType": "researcher.compare_sources"
+        },
+        {
+          "roleId": "researcher",
+          "taskType": "researcher.web_research"
+        },
+        {
+          "roleId": "researcher",
+          "taskType": "researcher.compare_sources"
+        }
+      ],
+      "role": {
+        "id": "researcher",
+        "hard": false
+      },
+      "task": {
+        "id": "researcher.web_research.current",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "citation.synthesis",
+          "text.chat",
+          "web.search"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": [
+        "web.search",
+        "http.fetch"
+      ]
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/requests/req-c31b74ac-d6f7-4199-a68b-483c0964c98c",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "edit",
+      "taskVariant": null,
+      "evidence": [
+        "implementation/fix signal",
+        "Selected taxonomy task coder.edit."
+      ],
+      "alternatives": [
+        {
+          "roleId": "coder",
+          "taskType": "coder.test.write"
+        },
+        {
+          "roleId": "coder",
+          "taskType": "coder.review"
+        },
+        {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause"
+        }
+      ],
+      "role": {
+        "id": "coder",
+        "hard": false
+      },
+      "task": {
+        "id": "coder.edit",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "code.read",
+          "code.write",
+          "reasoning.multi_step",
+          "tools.command_execution"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.execute"
+      ]
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/router/decisions/req-c31b74ac-d6f7-4199-a68b-483c0964c98c",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "edit",
+      "taskVariant": null,
+      "evidence": [
+        "implementation/fix signal",
+        "Selected taxonomy task coder.edit."
+      ],
+      "alternatives": [
+        {
+          "roleId": "coder",
+          "taskType": "coder.test.write"
+        },
+        {
+          "roleId": "coder",
+          "taskType": "coder.review"
+        },
+        {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause"
+        }
+      ],
+      "role": {
+        "id": "coder",
+        "hard": false
+      },
+      "task": {
+        "id": "coder.edit",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "code.read",
+          "code.write",
+          "reasoning.multi_step",
+          "tools.command_execution"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.execute"
+      ]
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/requests/req-21ba8e21-e2fa-4a6d-8297-f78c8bd58e1a",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "audit",
+      "taskVariant": null,
+      "evidence": [
+        "security/risk/diff signal",
+        "Selected taxonomy task security.audit."
+      ],
+      "alternatives": [
+        {
+          "roleId": "coder",
+          "taskType": "coder.review"
+        },
+        {
+          "roleId": "security",
+          "taskType": "security.audit.supply_chain"
+        },
+        {
+          "roleId": "security",
+          "taskType": "security.threat_model"
+        }
+      ],
+      "role": {
+        "id": "security",
+        "hard": false
+      },
+      "task": {
+        "id": "security.audit",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "code.read",
+          "security.analysis"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": [
+        "filesystem.read"
+      ]
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "route": "/api/role-model/router/decisions/req-21ba8e21-e2fa-4a6d-8297-f78c8bd58e1a",
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contentRevision": "taxonomy-v1-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "taskAction": "audit",
+      "taskVariant": null,
+      "evidence": [
+        "security/risk/diff signal",
+        "Selected taxonomy task security.audit."
+      ],
+      "alternatives": [
+        {
+          "roleId": "coder",
+          "taskType": "coder.review"
+        },
+        {
+          "roleId": "security",
+          "taskType": "security.audit.supply_chain"
+        },
+        {
+          "roleId": "security",
+          "taskType": "security.threat_model"
+        }
+      ],
+      "role": {
+        "id": "security",
+        "hard": false
+      },
+      "task": {
+        "id": "security.audit",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "code.read",
+          "security.analysis"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": [
+        "filesystem.read"
+      ]
+    },
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  }
+]

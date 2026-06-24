@@ -1,0 +1,60 @@
+
+> @role-model-router/core@0.0.0 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core
+> vitest run "--" "--runInBand"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+ [32m✓[39m test/taxonomy-docs.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m test/routing-intent.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [31m❯[39m test/taxonomy-catalog.test.ts [2m([22m[2m8 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 191[2mms[22m[39m
+[31m   [31m×[31m canonical taxonomy catalog[2m > [22mdeclares approved taxonomy versions and counts[39m[32m 16[2mms[22m[39m
+[31m     → expected { …(9) } to not have property "counts"[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22muses real manifest content hashes for canonical JSON files[32m 6[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mdeclares exact groups, roles, and role group membership[32m 4[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mgives every role at least ten native task types[32m 2[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mvalidates task naming, references, and classifier guidance[32m 141[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mreturns no structural validation diagnostics for the canonical catalog[32m 2[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mmatches the proposal-derived golden taxonomy fixture exactly[32m 15[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mmatches proposal semantics for cross-role task routing examples[32m 2[2mms[22m[39m
+ [32m✓[39m test/taxonomy-data-files.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 423[2mms[22m[39m
+   [33m[2m✓[22m[39m taxonomy data and schema files[2m > [22mtaxonomy schemas validate canonical data and reject proposal-contract drift [33m 390[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/taxonomy-catalog.test.ts > canonical taxonomy catalog > declares approved taxonomy versions and counts
+AssertionError: expected { …(9) } to not have property "counts"
+
+- Expected: 
+undefined
+
++ Received: 
+{
+  "capabilities": 46,
+  "groups": 6,
+  "intentPresets": 0,
+  "modalities": 9,
+  "roles": 28,
+  "tasks": 280,
+  "toolClasses": 15,
+}
+
+ ❯ test/taxonomy-catalog.test.ts:98:34
+     96|     expect(taxonomyManifest.databaseVersion).toBe(1);
+     97|     expect(taxonomyManifest.classificationContractVersion).toBe("role-…
+     98|     expect(taxonomyManifest).not.toHaveProperty("counts");
+       |                                  ^
+     99|     expect(taxonomyManifest.entryCounts.groups).toBe(6);
+    100|     expect(taxonomyManifest.entryCounts.roles).toBe(28);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m15 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 03:27:00
+[2m   Duration [22m 1.59s[2m (transform 467ms, setup 0ms, collect 713ms, tests 657ms, environment 1ms, prepare 1.35s)[22m
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/core@0.0.0 test: `vitest run "--" "--runInBand"`
+Exit status 1

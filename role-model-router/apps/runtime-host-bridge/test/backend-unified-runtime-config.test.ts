@@ -81,7 +81,7 @@ litellm_proxy:
       modelRoleBindings: [
         {
           modelId: "moonshot/kimi-k2.6",
-          roleIds: ["general.chat"],
+          roleIds: ["writer"],
         },
       ],
       deniedModels: [],
@@ -181,7 +181,7 @@ litellm_proxy:
       modelRoleBindings: [
         {
           modelId: "moonshot/kimi-k2.6",
-          roleIds: ["general.chat"],
+          roleIds: ["writer"],
         },
       ],
       deniedModels: [],
@@ -1730,7 +1730,7 @@ version: "1.0"
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.6",
-            roleIds: ["general.chat"],
+            roleIds: ["writer"],
           },
         ],
         deniedModels: [],
@@ -1792,7 +1792,7 @@ version: "1.0"
             modelRoleBindings: expect.arrayContaining([
               expect.objectContaining({
                 modelId: "moonshot/kimi-k2.6",
-                roleIds: ["general.chat"],
+                roleIds: ["writer"],
               }),
             ]),
           }),

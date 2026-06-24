@@ -15,6 +15,7 @@
     "docs:preview": "corepack pnpm --filter @role-model/docs-site pages:dev",
     "docs:pages:create": "corepack pnpm --filter @role-model/docs-site pages:create",
     "docs:deploy": "corepack pnpm --filter @role-model/docs-site pages:deploy",
+    "docs:taxonomy-v1-check": "node ./scripts/check-public-taxonomy-v1-docs.mjs && corepack pnpm --filter @role-model/docs-site run docs:taxonomy-v1-check",
     "docs:upstream-sync": "corepack pnpm --filter @role-model/docs-site upstream:sync",
     "docs:upstream-sync:latest": "corepack pnpm --filter @role-model/docs-site upstream:sync:latest",
     "lint": "biome check . && corepack pnpm run lint:rust",

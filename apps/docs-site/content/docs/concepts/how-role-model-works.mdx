@@ -42,8 +42,8 @@ The current smoke baseline is a good small example.
 
 The request asks for:
 
-- task type `code.edit`
-- required capability `code.edit`
+- task type `coder.edit`
+- required capability `coder.edit`
 - preferred capability `reasoning.multi_step`
 - required modality `text`
 - tool support
@@ -54,14 +54,14 @@ The sample endpoints are:
 
 | Endpoint | Capabilities |
 | --- | --- |
-| `cli.local.coder` | `code.edit`, `reasoning.multi_step`, `tools.function_calling` |
+| `cli.local.coder` | `code.write`, `reasoning.multi_step`, `tools.function_calling` |
 | `acp.remote.general` | `text.chat`, `tools.function_calling` |
 | `mcp.remote.embedder` | `embeddings.text`, `tools.function_calling` |
 
 The router then proceeds in order:
 
 1. `cli.local.coder` remains eligible because it satisfies the required capability and modality.
-2. `acp.remote.general` is excluded with `CAPABILITY_MISSING` because it does not satisfy `code.edit`.
+2. `acp.remote.general` is excluded with `CAPABILITY_MISSING` because it does not satisfy `code.write`.
 3. `mcp.remote.embedder` is excluded with `CAPABILITY_MISSING` for the same reason.
 4. The remaining eligible endpoint is scored using declared and measured evidence.
 5. The router chooses `cli.local.coder` and records why.

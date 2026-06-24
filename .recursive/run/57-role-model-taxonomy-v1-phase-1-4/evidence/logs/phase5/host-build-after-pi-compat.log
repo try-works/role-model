@@ -1,0 +1,13 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+src/index.ts(5502,28): error TS2304: Cannot find name 'uniqueSorted'.
+src/index.ts(5503,23): error TS2304: Cannot find name 'uniqueSorted'.
+src/index.ts(5507,33): error TS2304: Cannot find name 'uniqueSorted'.
+src/index.ts(5510,31): error TS2304: Cannot find name 'uniqueSorted'.
+src/index.ts(5532,5): error TS2322: Type '{ guaranteed: any; available: any; conditional: {}; tools: { functionCalling: boolean; }; reasoning: { supported: false; effortControl: false; }; structuredOutput: { supported: false; }; caching: { promptRead: null; promptWrite: null; source: string; }; }' is not assignable to type 'readonly string[] & Record<string, unknown>'.
+  Type '{ guaranteed: any; available: any; conditional: {}; tools: { functionCalling: boolean; }; reasoning: { supported: false; effortControl: false; }; structuredOutput: { supported: false; }; caching: { promptRead: null; promptWrite: null; source: string; }; }' is missing the following properties from type 'readonly string[]': length, concat, join, slice, and 20 more.
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

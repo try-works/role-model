@@ -53,7 +53,7 @@ describe("account repair mutations", () => {
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.5",
-            roleIds: ["general.chat"],
+            roleIds: ["writer"],
           },
         ],
         deniedModels: [],
@@ -117,7 +117,7 @@ describe("account repair mutations", () => {
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.5",
-            roleIds: ["general.chat"],
+            roleIds: ["writer"],
           },
         ],
         deniedModels: [],
@@ -153,7 +153,7 @@ describe("account repair mutations", () => {
           modelRoleBindings: [
             {
               modelId: "moonshot/kimi-k2.5",
-              roleIds: ["general.chat"],
+              roleIds: ["writer"],
             },
           ],
         }),
@@ -171,7 +171,7 @@ describe("account repair mutations", () => {
             modelRoleBindings: [
               {
                 modelId: "moonshot/kimi-k2.5",
-                roleIds: ["general.chat"],
+                roleIds: ["writer"],
               },
             ],
           }),
@@ -265,7 +265,7 @@ describe("account repair mutations", () => {
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.5",
-            roleIds: ["general.chat"],
+            roleIds: ["writer"],
           },
         ],
         deniedModels: [],
@@ -328,7 +328,7 @@ describe("account repair mutations", () => {
             modelRoleBindings: [
               {
                 modelId: "moonshot/kimi-k2.5",
-                roleIds: ["general.chat"],
+                roleIds: ["writer"],
               },
             ],
           }),

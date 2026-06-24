@@ -42,6 +42,12 @@ import {
   updateRuntimeAccountApiKey,
   updateRuntimeConfig,
   updateTaskDefinitions,
+  explicitAssignmentToRoleIds,
+  loadLlamaSwapModel,
+  loadPeerModel,
+  roleIdsToExplicitAssignment,
+  setLlamaSwapModelRoles,
+  setPeerModelRoles,
 } from "./runtime-api";
 
 function jsonResponse(body: unknown): Response {
@@ -2030,5 +2036,94 @@ describe("benchmark display endpoints", () => {
       affectedEndpointCount: 2,
       clearedRunCount: 3,
     });
+  });
+});
+describe("role assignment helpers", () => {
+  test("represent default all roles separately from explicit none", () => {
+    expect(roleIdsToExplicitAssignment([], true)).toEqual({
+      roleAssignmentMode: "all",
+      enabledRoleIds: [],
+      disabledRoleIds: [],
+    });
+    expect(roleIdsToExplicitAssignment([], false)).toEqual({
+      roleAssignmentMode: "include",
+      enabledRoleIds: [],
+      disabledRoleIds: [],
+    });
+    expect(
+      explicitAssignmentToRoleIds({
+        roleAssignmentMode: "include",
+        enabledRoleIds: ["coder"],
+        disabledRoleIds: [],
+      }),
+    ).toEqual(["coder"]);
+  });
+
+  test("posts default-all assignment metadata for peer and llama-swap model registration", async () => {
+    const requests: Array<{ url: string; body: unknown }> = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      requests.push({ url, body: JSON.parse(String(init?.body ?? "{}")) });
+      return jsonResponse({ success: true });
+    });
+
+    await loadPeerModel("local-peer-model", [], fetcher);
+    await loadLlamaSwapModel("local-llama-model", [], fetcher);
+
+    expect(requests).toEqual([
+      {
+        url: "/api/role-model/local/peer/models/local-peer-model/load",
+        body: {
+          roleIds: [],
+          roleAssignmentMode: "all",
+          enabledRoleIds: [],
+          disabledRoleIds: [],
+        },
+      },
+      {
+        url: "/api/role-model/local/llama-swap/models/local-llama-model/load",
+        body: {
+          roleIds: [],
+          roleAssignmentMode: "all",
+          enabledRoleIds: [],
+          disabledRoleIds: [],
+        },
+      },
+    ]);
+  });
+
+  test("puts explicit empty include assignment metadata when saving no-role local bindings", async () => {
+    const requests: Array<{ url: string; body: unknown }> = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      requests.push({ url, body: JSON.parse(String(init?.body ?? "{}")) });
+      return jsonResponse({ success: true });
+    });
+
+    await setPeerModelRoles("local-peer-model", [], fetcher);
+    await setLlamaSwapModelRoles("local-llama-model", [], fetcher);
+
+    expect(requests).toEqual([
+      {
+        url: "/api/role-model/local/peer/models/local-peer-model/roles",
+        body: {
+          roleIds: [],
+          roleAssignmentMode: "include",
+          enabledRoleIds: [],
+          disabledRoleIds: [],
+        },
+      },
+      {
+        url: "/api/role-model/local/llama-swap/models/local-llama-model/roles",
+        body: {
+          roleIds: [],
+          roleAssignmentMode: "include",
+          enabledRoleIds: [],
+          disabledRoleIds: [],
+        },
+      },
+    ]);
   });
 });

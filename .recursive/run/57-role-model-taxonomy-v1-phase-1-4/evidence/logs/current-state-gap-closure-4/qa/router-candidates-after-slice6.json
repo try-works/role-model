@@ -1,0 +1,392 @@
+[
+  {
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "providerId": "openai",
+    "sourceType": "remote",
+    "endpointKind": "remote_api",
+    "servingSource": "vendor-litellm",
+    "region": "global",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [
+      "analyst",
+      "architect",
+      "coder",
+      "coordinator",
+      "creative",
+      "data",
+      "designer",
+      "educator",
+      "finance",
+      "health",
+      "knowledge",
+      "legal",
+      "marketer",
+      "mathematician",
+      "operator",
+      "planner",
+      "procurement",
+      "product",
+      "recruiter",
+      "researcher",
+      "scientist",
+      "security",
+      "seller",
+      "strategist",
+      "support",
+      "tester",
+      "translator",
+      "writer"
+    ],
+    "capabilities": [
+      "calendar.planning",
+      "citation.synthesis",
+      "code.read",
+      "code.write",
+      "communication.follow_up",
+      "communication.user_facing",
+      "coordination.workflow",
+      "data.query",
+      "data.schema",
+      "data.transform",
+      "education.assessment",
+      "education.tutoring",
+      "finance.analysis",
+      "health.general_info",
+      "health.safety",
+      "json.schema_adherence",
+      "knowledge.organization",
+      "knowledge.retrieval",
+      "language.localization",
+      "language.translation",
+      "legal.analysis",
+      "long_context",
+      "market.analysis",
+      "marketing.analysis",
+      "marketing.copy",
+      "math.modeling",
+      "math.solve",
+      "math.verify",
+      "memory.write",
+      "procurement.analysis",
+      "reasoning.divergent",
+      "reasoning.multi_step",
+      "recruiting.analysis",
+      "sales.analysis",
+      "sales.communication",
+      "science.analysis",
+      "science.method",
+      "security.analysis",
+      "strategy.analysis",
+      "text.chat",
+      "tools.browser_control",
+      "tools.command_execution",
+      "tools.function_calling",
+      "vision.input",
+      "vision.output",
+      "web.search"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "webSearchSupport": {
+      "mode": "runtime-fallback",
+      "currentRuntimeContract": null,
+      "documentedProviderContract": null
+    },
+    "executionModeEligible": true,
+    "controllerEligible": true,
+    "preferred": false,
+    "ignored": false,
+    "latestProfile": null,
+    "recentSamples": [],
+    "difficultyProfiles": {
+      "easy": null,
+      "medium": null,
+      "hard": null
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        }
+      }
+    }
+  },
+  {
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "modelId": "lfm2.5-1.2b-instruct",
+    "providerId": null,
+    "sourceType": "local",
+    "endpointKind": "local_engine",
+    "servingSource": "vendor-llama-swap",
+    "region": "local",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [
+      "analyst",
+      "architect",
+      "coder",
+      "coordinator",
+      "creative",
+      "data",
+      "designer",
+      "educator",
+      "finance",
+      "health",
+      "knowledge",
+      "legal",
+      "marketer",
+      "mathematician",
+      "operator",
+      "planner",
+      "procurement",
+      "product",
+      "recruiter",
+      "researcher",
+      "scientist",
+      "security",
+      "seller",
+      "strategist",
+      "support",
+      "tester",
+      "translator",
+      "writer"
+    ],
+    "capabilities": [
+      "calendar.planning",
+      "citation.synthesis",
+      "code.read",
+      "code.write",
+      "communication.follow_up",
+      "communication.user_facing",
+      "coordination.workflow",
+      "data.query",
+      "data.schema",
+      "data.transform",
+      "education.assessment",
+      "education.tutoring",
+      "finance.analysis",
+      "health.general_info",
+      "health.safety",
+      "json.schema_adherence",
+      "knowledge.organization",
+      "knowledge.retrieval",
+      "language.localization",
+      "language.translation",
+      "legal.analysis",
+      "long_context",
+      "market.analysis",
+      "marketing.analysis",
+      "marketing.copy",
+      "math.modeling",
+      "math.solve",
+      "math.verify",
+      "memory.write",
+      "procurement.analysis",
+      "reasoning.divergent",
+      "reasoning.multi_step",
+      "recruiting.analysis",
+      "sales.analysis",
+      "sales.communication",
+      "science.analysis",
+      "science.method",
+      "security.analysis",
+      "strategy.analysis",
+      "text.chat",
+      "tools.browser_control",
+      "tools.command_execution",
+      "tools.function_calling",
+      "vision.input",
+      "vision.output",
+      "web.search"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "webSearchSupport": {
+      "mode": "runtime-fallback",
+      "currentRuntimeContract": null,
+      "documentedProviderContract": null
+    },
+    "executionModeEligible": true,
+    "controllerEligible": false,
+    "preferred": false,
+    "ignored": false,
+    "latestProfile": {
+      "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "endpoint_version": "run07-registry-v1:default",
+      "measured_at_ms": 1782261129914,
+      "measurement_window": {
+        "started_at_ms": 1782261128684,
+        "ended_at_ms": 1782261129914
+      },
+      "sample_size": 7,
+      "sources": {
+        "live_request_samples": 7,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 19,
+      "latency_ms_p95": 92.79999999999993,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.5288743031666463,
+      "tokens_per_sec": 211,
+      "cost_per_1k_tokens_est": 0,
+      "currency": "USD"
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1782261128684,
+        "latency_ms": 6,
+        "latency_ms_p95": 6,
+        "tokens_per_sec": 667,
+        "failure": false,
+        "request_id": "req-89a93e7c-adbd-4826-ad6f-b5c9fb4c4c7e",
+        "routing_decision_id": "decision-req-89a93e7c-adbd-4826-ad6f-b5c9fb4c4c7e"
+      },
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1782261128825,
+        "latency_ms": 2,
+        "latency_ms_p95": 2,
+        "tokens_per_sec": 2000,
+        "cost_per_1k_tokens_est": 0,
+        "failure": false,
+        "request_id": "req-115df10c-5539-4808-a581-9ce65912c34e",
+        "routing_decision_id": "decision-req-115df10c-5539-4808-a581-9ce65912c34e"
+      },
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1782261128987,
+        "latency_ms": 14,
+        "latency_ms_p95": 14,
+        "tokens_per_sec": 286,
+        "cost_per_1k_tokens_est": 0,
+        "failure": false,
+        "request_id": "req-00ee2419-b6ca-4fa6-9d81-0d91242f9316",
+        "routing_decision_id": "decision-req-00ee2419-b6ca-4fa6-9d81-0d91242f9316"
+      },
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1782261129168,
+        "latency_ms": 19,
+        "latency_ms_p95": 19,
+        "tokens_per_sec": 211,
+        "cost_per_1k_tokens_est": 0,
+        "failure": false,
+        "request_id": "req-fd9a693e-cdb6-489b-94be-c8c70e9c9e21",
+        "routing_decision_id": "decision-req-fd9a693e-cdb6-489b-94be-c8c70e9c9e21"
+      },
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1782261129381,
+        "latency_ms": 24,
+        "latency_ms_p95": 24,
+        "tokens_per_sec": 167,
+        "cost_per_1k_tokens_est": 0,
+        "failure": false,
+        "request_id": "req-76e3989c-e1ee-4973-9fb3-d5d0d9de5a04",
+        "routing_decision_id": "decision-req-76e3989c-e1ee-4973-9fb3-d5d0d9de5a04"
+      },
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1782261129632,
+        "latency_ms": 27,
+        "latency_ms_p95": 27,
+        "tokens_per_sec": 148,
+        "cost_per_1k_tokens_est": 0,
+        "failure": false,
+        "request_id": "req-34533f0d-d3f9-4d19-b3a3-105591701042",
+        "routing_decision_id": "decision-req-34533f0d-d3f9-4d19-b3a3-105591701042"
+      },
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1782261129914,
+        "latency_ms": 121,
+        "latency_ms_p95": 121,
+        "tokens_per_sec": 33,
+        "cost_per_1k_tokens_est": 0,
+        "failure": false,
+        "request_id": "req-e7173c0f-9784-46d5-9236-83b3ecabc06f",
+        "routing_decision_id": "decision-req-e7173c0f-9784-46d5-9236-83b3ecabc06f"
+      }
+    ],
+    "difficultyProfiles": {
+      "easy": null,
+      "medium": null,
+      "hard": null
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        }
+      }
+    }
+  }
+]

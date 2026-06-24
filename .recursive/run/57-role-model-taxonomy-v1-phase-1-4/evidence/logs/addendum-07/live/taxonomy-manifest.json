@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "role-model.taxonomy.schema.v1",
+  "taxonomyVersion": "1.0.0-alpha.1",
+  "databaseVersion": 1,
+  "contentRevision": "taxonomy-v1-alpha.1",
+  "classificationContractVersion": "role-model.classification.v1",
+  "generatedAt": "2026-06-23T00:00:00Z",
+  "entryFiles": {
+    "groups": "groups.json",
+    "roles": "roles.json",
+    "taskTypes": "task-types.json",
+    "capabilities": "capabilities.json",
+    "modalities": "modalities.json",
+    "toolClasses": "tool-classes.json",
+    "intentPresets": "intent-presets.json"
+  },
+  "contentHashes": {
+    "groups": "sha256:3166564d260afced40bbab0088916e18a8e6b37c733b307a596ab4acc3ca3da9",
+    "roles": "sha256:fe9e258288bcc550324719ab7113387aab2c2d5945f3e0e0ee9499d785479233",
+    "taskTypes": "sha256:9e8492e30d3136b9a31473c89ec5e38ddb97c0238ba11900796d428cacaa29a1",
+    "capabilities": "sha256:8318320ad8d755bd6ea0709adbafbc545f1526dce92e7389a74384998c66f68e",
+    "modalities": "sha256:6de4f8ed64d14c567bbc725d29db1519b7a9e4462764114cfec48435685a9018",
+    "toolClasses": "sha256:7b1bcd382124d7a7c0cac2689caabb7bfcda6a8d27c45cbcdbae6e6eec28749f",
+    "intentPresets": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "entryCounts": {
+    "groups": 6,
+    "roles": 28,
+    "capabilities": 46,
+    "modalities": 9,
+    "toolClasses": 15,
+    "intentPresets": 0,
+    "taskTypes": 280
+  },
+  "links": {
+    "full": "/api/role-model/taxonomy",
+    "version": "/api/role-model/taxonomy/version",
+    "summary": "/api/role-model/taxonomy/summary",
+    "effective": "/api/role-model/taxonomy/effective",
+    "classificationGuide": "/api/role-model/taxonomy/classification-guide",
+    "groups": "/api/role-model/taxonomy/groups",
+    "roles": "/api/role-model/taxonomy/roles",
+    "roleSummaries": "/api/role-model/taxonomy/roles?view=summary",
+    "groupRoles": "/api/role-model/taxonomy/groups/{groupId}/roles",
+    "roleDetail": "/api/role-model/taxonomy/roles/{roleId}",
+    "roleTaskTypes": "/api/role-model/taxonomy/roles/{roleId}/task-types",
+    "taskTypes": "/api/role-model/taxonomy/task-types",
+    "taskTypeDetail": "/api/role-model/taxonomy/task-types/{taskType}",
+    "capabilities": "/api/role-model/taxonomy/capabilities",
+    "modalities": "/api/role-model/taxonomy/modalities",
+    "toolClasses": "/api/role-model/taxonomy/tool-classes",
+    "compactGroups": "/api/role-model/taxonomy/compact/groups",
+    "compactRoleSummaries": "/api/role-model/taxonomy/compact/roles",
+    "roleTaskChunk": "/api/role-model/taxonomy/roles/{roleId}/tasks.compact",
+    "validate": "/api/role-model/taxonomy/validate"
+  }
+}

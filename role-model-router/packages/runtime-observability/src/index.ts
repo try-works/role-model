@@ -35,6 +35,15 @@ export interface RuntimeRoutingDiagnostics {
       readonly reasons: readonly string[];
     }[];
   };
+  readonly roleModelIntent?: {
+    readonly diagnostics: readonly {
+      readonly code: string;
+      readonly severity: "info" | "warning" | "error";
+      readonly field: string;
+      readonly id: string;
+      readonly message: string;
+    }[];
+  };
   readonly difficultyRouting?: {
     readonly difficulty: "easy" | "medium" | "hard";
     readonly strategy: string;
@@ -264,6 +273,7 @@ export interface RuntimeObservationBundleInput {
     readonly org_id?: string | null;
   };
   readonly clientRequestId?: string;
+  readonly normalizedIntent?: Readonly<Record<string, unknown>>;
   readonly routingDiagnostics?: RuntimeRoutingDiagnostics;
   readonly retrievalReceipt: RuntimeRetrievalReceipt;
   readonly contextEnvelope: RuntimeContextEnvelopeSummary;
@@ -306,6 +316,7 @@ export interface RuntimeObservationBundle {
   readonly endpointId: string;
   readonly conversationId: string;
   readonly decision: RuntimeObservationBundleInput["decision"];
+  readonly normalizedIntent?: RuntimeObservationBundleInput["normalizedIntent"];
   readonly routingDiagnostics: RuntimeRoutingDiagnostics;
   readonly retrievalReceipt: RuntimeRetrievalReceipt;
   readonly contextEnvelope: RuntimeContextEnvelopeSummary;
@@ -691,6 +702,7 @@ export function createRuntimeObservationBundle(
     endpointId: input.decision.chosen_endpoint_id,
     conversationId: input.contextEnvelope.conversationId,
     decision: input.decision,
+    ...(input.normalizedIntent ? { normalizedIntent: input.normalizedIntent } : {}),
     routingDiagnostics: input.routingDiagnostics ?? {},
     retrievalReceipt: input.retrievalReceipt,
     contextEnvelope: input.contextEnvelope,

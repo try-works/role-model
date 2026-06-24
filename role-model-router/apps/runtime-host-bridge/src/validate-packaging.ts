@@ -7,6 +7,8 @@ import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
+import { canonicalTaxonomy, taxonomyManifest } from "@role-model-router/core";
+
 import { packageSeaRuntime } from "./package-sea.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -107,6 +109,37 @@ function extractResponsesOutputText(payload: unknown): string {
       Boolean(entry) && typeof entry === "object" && "text" in entry,
   );
   return typeof outputTextPart?.text === "string" ? outputTextPart.text : "";
+}
+
+function assertEqual(actual: unknown, expected: unknown, label: string): void {
+  if (actual !== expected) {
+    throw new Error(`${label} mismatch: expected ${String(expected)}, got ${String(actual)}`);
+  }
+}
+
+function assertArrayIncludes<TValue>(
+  values: readonly TValue[],
+  expected: TValue,
+  label: string,
+): void {
+  if (!values.includes(expected)) {
+    throw new Error(`${label} is missing ${String(expected)}`);
+  }
+}
+
+function assertArrayEqual<TValue>(
+  actual: readonly TValue[],
+  expected: readonly TValue[],
+  label: string,
+): void {
+  if (
+    actual.length !== expected.length ||
+    actual.some((value, index) => value !== expected[index])
+  ) {
+    throw new Error(
+      `${label} mismatch: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+    );
+  }
 }
 
 async function startMockOpenAICompatibleServer(): Promise<{
@@ -306,11 +339,141 @@ async function exercisePackagedExecutionValidation(input: {
   };
 }
 
+async function exercisePackagedTaxonomyValidation(input: {
+  readonly baseUrl: string;
+}): Promise<{
+  readonly taxonomyVersion: string;
+  readonly contentRevision: string;
+  readonly securityTaskCount: number;
+}> {
+  const manifest = await fetchJson<{
+    schemaVersion: string;
+    taxonomyVersion: string;
+    databaseVersion: string;
+    contentRevision: string;
+    classificationContractVersion: string;
+    entryCounts: Record<string, number>;
+    contentHashes: Record<string, string>;
+  }>(`${input.baseUrl}/api/role-model/taxonomy/manifest`);
+  const version = await fetchJson<{
+    schemaVersion: string;
+    taxonomyVersion: string;
+    databaseVersion: string;
+    contentRevision: string;
+    classificationContractVersion: string;
+  }>(`${input.baseUrl}/api/role-model/taxonomy/version`);
+  const summary = await fetchJson<{
+    entryCounts: Record<string, number>;
+  }>(`${input.baseUrl}/api/role-model/taxonomy/summary`);
+  const securityTasks = await fetchJson<{
+    roleId: string;
+    tasks: {
+      id: string;
+      description?: string;
+      classifier?: { useWhen?: string; doNotUseWhen?: string };
+      requiredCapabilities?: string[];
+      preferredCapabilities?: string[];
+      requiredModalities?: string[];
+      toolClasses?: string[];
+    }[];
+  }>(`${input.baseUrl}/api/role-model/taxonomy/roles/security/tasks.compact`);
+
+  assertEqual(manifest.schemaVersion, taxonomyManifest.schemaVersion, "taxonomy schemaVersion");
+  assertEqual(manifest.taxonomyVersion, taxonomyManifest.taxonomyVersion, "taxonomyVersion");
+  assertEqual(
+    manifest.databaseVersion,
+    taxonomyManifest.databaseVersion,
+    "taxonomy databaseVersion",
+  );
+  assertEqual(
+    manifest.contentRevision,
+    taxonomyManifest.contentRevision,
+    "taxonomy contentRevision",
+  );
+  assertEqual(
+    manifest.classificationContractVersion,
+    taxonomyManifest.classificationContractVersion,
+    "taxonomy classificationContractVersion",
+  );
+  assertEqual(version.taxonomyVersion, taxonomyManifest.taxonomyVersion, "version taxonomyVersion");
+  assertEqual(version.contentRevision, taxonomyManifest.contentRevision, "version contentRevision");
+
+  for (const [key, expected] of Object.entries(taxonomyManifest.entryCounts)) {
+    assertEqual(manifest.entryCounts[key], expected, `manifest entryCounts.${key}`);
+    assertEqual(summary.entryCounts[key], expected, `summary entryCounts.${key}`);
+  }
+  for (const [key, expected] of Object.entries(taxonomyManifest.contentHashes)) {
+    assertEqual(manifest.contentHashes[key], expected, `manifest contentHashes.${key}`);
+  }
+
+  assertEqual(securityTasks.roleId, "security", "security task chunk roleId");
+  if (securityTasks.tasks.length < 10) {
+    throw new Error(
+      `security task chunk expected at least 10 tasks, got ${securityTasks.tasks.length}`,
+    );
+  }
+  const securityAudit = securityTasks.tasks.find((task) => task.id === "security.audit");
+  const canonicalSecurityAudit = canonicalTaxonomy.tasks.find(
+    (task) => task.id === "security.audit",
+  );
+  if (!securityAudit) {
+    throw new Error("security task chunk is missing security.audit");
+  }
+  if (!canonicalSecurityAudit) {
+    throw new Error("canonical taxonomy is missing security.audit");
+  }
+  assertArrayIncludes(
+    securityAudit.requiredCapabilities ?? [],
+    "security.analysis",
+    "security.audit requiredCapabilities",
+  );
+  assertArrayEqual(
+    securityAudit.preferredCapabilities ?? [],
+    canonicalSecurityAudit.preferredCapabilities,
+    "security.audit preferredCapabilities",
+  );
+  assertArrayEqual(
+    securityAudit.requiredModalities ?? [],
+    canonicalSecurityAudit.requiredModalities,
+    "security.audit modalities",
+  );
+  assertArrayEqual(
+    securityAudit.toolClasses ?? [],
+    canonicalSecurityAudit.toolClasses,
+    "security.audit tools",
+  );
+  if (
+    typeof securityAudit.description !== "string" ||
+    typeof securityAudit.classifier?.useWhen !== "string" ||
+    typeof securityAudit.classifier.doNotUseWhen !== "string"
+  ) {
+    throw new Error("security.audit packaged task chunk is missing classifier guidance");
+  }
+
+  const canonicalSecurityTaskCount = canonicalTaxonomy.tasks.filter(
+    (task) => task.primaryRole === "security",
+  ).length;
+  assertEqual(
+    securityTasks.tasks.length,
+    canonicalSecurityTaskCount,
+    "security compact task count",
+  );
+
+  return {
+    taxonomyVersion: manifest.taxonomyVersion,
+    contentRevision: manifest.contentRevision,
+    securityTaskCount: securityTasks.tasks.length,
+  };
+}
+
 export async function runRuntimePackagingValidation(): Promise<{
   readonly packagedExecutable: string;
   readonly healthStatus: string;
   readonly modelCount: number;
   readonly roleDefinitionCount: number;
+  readonly taxonomyVersion: string;
+  readonly contentRevision: string;
+  readonly securityTaskCount: number;
   readonly endpointId: string;
   readonly chatOutputText: string;
   readonly responsesOutputText: string;
@@ -366,6 +529,9 @@ export async function runRuntimePackagingValidation(): Promise<{
         readonly healthStatus: string;
         readonly modelCount: number;
         readonly roleDefinitionCount: number;
+        readonly taxonomyVersion: string;
+        readonly contentRevision: string;
+        readonly securityTaskCount: number;
         readonly endpointId: string;
         readonly chatOutputText: string;
         readonly responsesOutputText: string;
@@ -381,11 +547,17 @@ export async function runRuntimePackagingValidation(): Promise<{
       apiBaseUrl: `${mockUpstream.baseUrl}/v1`,
       credentialRef: packagingValidationCredentialRef,
     });
+    const packagedTaxonomy = await exercisePackagedTaxonomyValidation({
+      baseUrl: `http://127.0.0.1:${port}`,
+    });
     return {
       packagedExecutable: packaged.outputPath,
       healthStatus: healthJson.status,
       modelCount: packagedExecution.modelCount,
       roleDefinitionCount: packagedExecution.roleDefinitionCount,
+      taxonomyVersion: packagedTaxonomy.taxonomyVersion,
+      contentRevision: packagedTaxonomy.contentRevision,
+      securityTaskCount: packagedTaxonomy.securityTaskCount,
       endpointId: packagedExecution.endpointId,
       chatOutputText: packagedExecution.chatOutputText,
       responsesOutputText: packagedExecution.responsesOutputText,

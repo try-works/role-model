@@ -1,0 +1,135 @@
+ M .agents/skills/recursive-mode/scripts/__pycache__/lint-recursive-run.cpython-314.pyc
+ M .recursive/DECISIONS.md
+ M .recursive/STATE.md
+ M .recursive/memory/domains/runtime-routing-and-provider-capabilities.md
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/00-requirements.md
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/00-worktree.md
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/01-as-is.md
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/02-to-be-plan.md
+AM .recursive/run/57-role-model-taxonomy-v1-phase-1-4/03-implementation-summary.md
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice1-default-roles-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice1-default-roles.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice1-default-tasks-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice1-default-tasks.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice1-taxonomy-catalog-rerun-2.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice1-taxonomy-catalog-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice1-taxonomy-catalog.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice2-taxonomy-discovery-after-policy.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice2-taxonomy-discovery-light.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice3-routing-intent-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice3-routing-intent.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice4-local-model-role-picker.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice5-pi-taxonomy-classification-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice5-pi-taxonomy-classification.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice7-pi-docs-taxonomy-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/green/slice7-pi-docs-taxonomy.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice1-default-roles-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice1-default-roles.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice1-default-tasks-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice1-default-tasks.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice1-taxonomy-catalog-rerun-2.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice1-taxonomy-catalog-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice1-taxonomy-catalog.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice2-taxonomy-discovery-after-policy.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice2-taxonomy-discovery-light.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice3-routing-intent-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice3-routing-intent.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice4-local-model-role-picker.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice5-pi-taxonomy-classification-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice5-pi-taxonomy-classification.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice7-pi-docs-taxonomy-rerun.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/green/slice7-pi-docs-taxonomy.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/red/slice1-default-roles.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/red/slice1-default-tasks.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/red/slice1-taxonomy-catalog.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/red/slice2-taxonomy-discovery-light.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/red/slice2-taxonomy-discovery.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/red/slice3-routing-intent.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/red/slice4-local-model-role-picker.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/red/slice5-pi-taxonomy-classification.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase3/red/slice7-pi-docs-taxonomy.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/red/slice1-default-roles.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/red/slice1-default-tasks.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/red/slice1-taxonomy-catalog.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/red/slice2-taxonomy-discovery-light.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/red/slice2-taxonomy-discovery.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/red/slice3-routing-intent.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/red/slice4-local-model-role-picker.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/red/slice5-pi-taxonomy-classification.log
+A  .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/red/slice7-pi-docs-taxonomy.log
+ M README.md
+ M packages/pi-role-model/package.json
+M  packages/pi-role-model/skills/role-model/SKILL.md
+ M packages/pi-role-model/src/extension.ts
+ M packages/pi-role-model/src/runtime-discovery.ts
+AM packages/pi-role-model/src/taxonomy/classify-with-progressive-disclosure.ts
+AM packages/pi-role-model/src/taxonomy/compact-data.ts
+AM packages/pi-role-model/src/taxonomy/load-compact-taxonomy.ts
+ M packages/pi-role-model/src/types.ts
+M  packages/pi-role-model/test/docs-and-safety.test.ts
+ M packages/pi-role-model/test/extension.test.ts
+ M packages/pi-role-model/test/runtime-discovery.test.ts
+AM packages/pi-role-model/test/taxonomy-classification.test.ts
+ M packages/schema-tools/src/validate-schemas.ts
+ M packages/schema-tools/test/validate-schemas.test.ts
+M  pnpm-lock.yaml
+M  role-model-router/apps/runtime-host-bridge/package.json
+ M role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts
+MM role-model-router/apps/runtime-host-bridge/src/index.ts
+ M role-model-router/apps/runtime-host-bridge/src/local-model-role-bindings.test.ts
+ M role-model-router/apps/runtime-host-bridge/src/local-model-role-bindings.ts
+ M role-model-router/apps/runtime-host-bridge/src/package-sea.ts
+ M role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts
+ M role-model-router/apps/runtime-host-bridge/src/validate-host.ts
+ M role-model-router/apps/runtime-host-bridge/test/index.test.ts
+AM role-model-router/apps/runtime-host-bridge/test/taxonomy-discovery.test.ts
+AM role-model-router/apps/runtime-ui/app/components/local-model-role-picker.test.tsx
+MM role-model-router/apps/runtime-ui/app/components/local-model-role-picker.tsx
+ M role-model-router/apps/runtime-ui/app/lib/role-task-hierarchy.test.tsx
+ M role-model-router/apps/runtime-ui/app/lib/role-task-hierarchy.tsx
+ M role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts
+MM role-model-router/apps/runtime-ui/app/lib/runtime-api.ts
+MM role-model-router/packages/core/package.json
+M  role-model-router/packages/core/src/index.ts
+MM role-model-router/packages/core/src/router.ts
+AM role-model-router/packages/core/src/taxonomy/index.ts
+MM role-model-router/packages/core/src/types.ts
+AM role-model-router/packages/core/test/routing-intent.test.ts
+AM role-model-router/packages/core/test/taxonomy-catalog.test.ts
+ M role-model-router/packages/provider-account/src/index.ts
+M  role-model-router/packages/roles/package.json
+M  role-model-router/packages/roles/src/index.ts
+A  role-model-router/packages/roles/test/default-roles-taxonomy.test.ts
+ M role-model-router/packages/runtime-observability/src/index.ts
+M  role-model-router/packages/tasks/package.json
+M  role-model-router/packages/tasks/src/index.ts
+A  role-model-router/packages/tasks/test/default-tasks-taxonomy.test.ts
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/04-test-summary.md
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/05-manual-qa-addendum-01-healthy-backends.md
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/05-manual-qa.md
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/06-decisions-update.md
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/07-state-update.md
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/08-memory-impact.md
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/addenda/
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/addendum-qa-backends/
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/current-state-gap-closure-2/
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/current-state-gap-closure/
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/gap-closure/
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase4/
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase5/
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase6/
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase7/
+?? .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase8/
+?? docs/protocol/taxonomy-v1.md
+?? packages/pi-role-model/data/
+?? packages/pi-role-model/src/request-intent.ts
+?? packages/pi-role-model/src/taxonomy/resolve-effective-taxonomy.ts
+?? packages/pi-role-model/test/effective-taxonomy.test.ts
+?? packages/pi-role-model/test/request-intent.test.ts
+?? packages/pi-role-model/test/taxonomy-data-files.test.ts
+?? packages/pi-role-model/try-works-pi-role-model-0.1.1.tgz
+?? role-model-router/packages/core/data/
+?? role-model-router/packages/core/test/taxonomy-data-files.test.ts
+?? role-model-router/packages/core/test/taxonomy-docs.test.ts
+?? role-model-router/vendor/llama-swap/dist-assets/
+?? schemas/

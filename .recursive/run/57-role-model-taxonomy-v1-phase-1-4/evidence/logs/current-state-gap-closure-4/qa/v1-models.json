@@ -1,0 +1,191 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "baseline.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "baseline.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "baseline.local-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct"
+      ]
+    },
+    {
+      "id": "baseline.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "controller.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "controller.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "controller.local-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct"
+      ]
+    },
+    {
+      "id": "controller.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "default.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "default.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "default.local-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct"
+      ]
+    },
+    {
+      "id": "default.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "difficulty.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "difficulty.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "difficulty.local-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct"
+      ]
+    },
+    {
+      "id": "difficulty.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "hybrid.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "hybrid.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "hybrid.local-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct"
+      ]
+    },
+    {
+      "id": "hybrid.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    {
+      "id": "lfm2.5-1.2b-instruct",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "llama-swap.local.lfm2-5-1-2b-instruct"
+      ]
+    },
+    {
+      "id": "openai/gpt-4.1-mini-fast",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    }
+  ]
+}

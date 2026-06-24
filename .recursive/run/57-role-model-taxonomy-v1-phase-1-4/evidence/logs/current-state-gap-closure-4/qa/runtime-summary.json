@@ -1,0 +1,189 @@
+{
+  "lifecycleSummary": {
+    "active": 2,
+    "degraded": 0,
+    "offline": 0
+  },
+  "providerCount": 232,
+  "accountCount": 1,
+  "endpointCount": 2,
+  "scopeId": "runtime-qa",
+  "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa",
+  "readinessSummary": {
+    "pendingDeviceAuthorizationCount": 0,
+    "credentialsMissingAccountCount": 0,
+    "connectedWithoutEndpointCount": 1,
+    "readyAccountCount": 0
+  },
+  "credentialLifecycle": {
+    "version": 1,
+    "authority": {
+      "state": "authoritative",
+      "bootstrapStatus": "ready"
+    },
+    "counts": {
+      "executionReady": 0,
+      "connectedNoEndpoint": 1,
+      "pendingAuthorization": 0,
+      "expiredAuth": 0,
+      "credentialsMissing": 0,
+      "envUnresolved": 0,
+      "archivedStale": 0
+    },
+    "accounts": [
+      {
+        "logicalAccountId": "openai.litellm",
+        "providerAccountId": "openai.litellm",
+        "providerId": "openai",
+        "sourceProvenance": [
+          "runtime-config"
+        ],
+        "authMode": "api-key-static",
+        "credentialStorageMode": "env-ref",
+        "credentialBackendCanonical": "env",
+        "lifecycleState": "connected-no-endpoint",
+        "reasonCode": "active-without-endpoint",
+        "blocking": true,
+        "activeEndpointIds": [],
+        "configuredModelIds": [
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "availableActions": [
+          "activate-endpoint",
+          "update-api-key"
+        ]
+      }
+    ],
+    "providerRollups": [
+      {
+        "providerId": "openai",
+        "accountIds": [
+          "openai.litellm"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 0,
+          "connectedNoEndpoint": 1,
+          "pendingAuthorization": 0,
+          "expiredAuth": 0,
+          "credentialsMissing": 0,
+          "envUnresolved": 0,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [],
+        "attentionAccountIds": [
+          "openai.litellm"
+        ],
+        "hasArchivedArtifacts": false
+      }
+    ],
+    "archivedArtifacts": []
+  },
+  "executionMode": "hybrid",
+  "unifiedConfig": {
+    "enabled": true,
+    "path": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa\\runtime-config.yaml"
+  },
+  "sessionBootstrap": {
+    "status": "ready",
+    "startedAt": "2026-06-24T00:23:57.811Z",
+    "finishedAt": "2026-06-24T00:23:57.888Z",
+    "stages": [
+      {
+        "stageId": "credentials",
+        "status": "ready",
+        "startedAt": "2026-06-24T00:23:57.812Z",
+        "finishedAt": "2026-06-24T00:23:57.833Z",
+        "details": {
+          "pendingAttempted": 0,
+          "pendingSucceeded": 0,
+          "pendingConnected": 0,
+          "pendingFailed": 0,
+          "pendingDeferred": 0,
+          "refreshAttempted": 0,
+          "refreshSucceeded": 0,
+          "refreshFailed": 0
+        }
+      },
+      {
+        "stageId": "endpoints",
+        "status": "ready",
+        "startedAt": "2026-06-24T00:23:57.833Z",
+        "finishedAt": "2026-06-24T00:23:57.837Z",
+        "details": {
+          "reconciled": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "peers",
+        "status": "skipped",
+        "startedAt": "2026-06-24T00:23:57.837Z",
+        "finishedAt": "2026-06-24T00:23:57.838Z",
+        "message": "no peer loads in manifest",
+        "details": {
+          "reloaded": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "vendors",
+        "status": "ready",
+        "startedAt": "2026-06-24T00:23:57.838Z",
+        "finishedAt": "2026-06-24T00:23:57.838Z"
+      },
+      {
+        "stageId": "local-reload",
+        "status": "skipped",
+        "startedAt": "2026-06-24T00:23:57.838Z",
+        "finishedAt": "2026-06-24T00:23:57.838Z",
+        "message": "no llama-swap loads in manifest"
+      },
+      {
+        "stageId": "remote-health",
+        "status": "ready",
+        "startedAt": "2026-06-24T00:23:57.838Z",
+        "finishedAt": "2026-06-24T00:23:57.887Z",
+        "details": {
+          "probed": 1,
+          "healthy": 1,
+          "degraded": 0,
+          "results": [
+            {
+              "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              "modelId": "openai/gpt-4.1-mini-fast",
+              "reason": "healthy",
+              "healthStatus": "healthy"
+            }
+          ]
+        }
+      },
+      {
+        "stageId": "inventory",
+        "status": "ready",
+        "startedAt": "2026-06-24T00:23:57.887Z",
+        "finishedAt": "2026-06-24T00:23:57.888Z",
+        "details": {
+          "modelIdCount": 2,
+          "endpointIdCount": 2,
+          "localEndpointCount": 1,
+          "remoteEndpointCount": 1,
+          "emptyAliasIds": [],
+          "driftWarningCount": 0,
+          "driftWarnings": []
+        }
+      }
+    ]
+  },
+  "inventorySummary": {
+    "modelIdCount": 2,
+    "endpointIdCount": 2,
+    "localEndpointCount": 1,
+    "remoteEndpointCount": 1,
+    "emptyAliasIds": []
+  },
+  "aliasDrift": [],
+  "operatorIntent": {
+    "path": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa\\runtime-qa\\operator-intent.json",
+    "status": "missing"
+  }
+}

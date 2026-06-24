@@ -17,6 +17,7 @@
     "@role-model-router/bench-routing": "workspace:*",
     "@role-model-router/catalog": "workspace:*",
     "@role-model-router/context-envelope": "workspace:*",
+    "@role-model-router/core": "workspace:*",
     "@role-model-router/endpoint-registry": "workspace:*",
     "@role-model-router/profile-aggregator": "workspace:*",
     "@role-model-router/provider-mcp": "workspace:*",

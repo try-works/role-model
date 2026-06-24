@@ -1,0 +1,53 @@
+
+> @role-model-router/core@0.0.0 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core
+> vitest run "--" "test/routing-intent.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+ [31m❯[39m test/routing-intent.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 53[2mms[22m[39m
+[31m   [31m×[31m routing intent metadata[2m > [22muses hard role/task/capability intent as eligibility filters[39m[32m 50[2mms[22m[39m
+[31m     → expected { endpoint_id: 'text-model', …(2) } to match object { eligible: false, …(1) }
+(1 matching property omitted from actual)[39m
+   [32m✓[39m routing intent metadata[2m > [22mkeeps advisory intent out of hard eligibility while still influencing preference[32m 1[2mms[22m[39m
+ [32m✓[39m test/taxonomy-catalog.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 138[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/routing-intent.test.ts > routing intent metadata > uses hard role/task/capability intent as eligibility filters
+AssertionError: expected { endpoint_id: 'text-model', …(2) } to match object { eligible: false, …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "eligible": false,
+-   "exclusions": ArrayContaining [
+-     {
+-       "code": "CAPABILITY_MISSING",
+-     },
+-   ],
++   "eligible": true,
++   "exclusions": [],
+  }
+
+ ❯ test/routing-intent.test.ts:108:86
+    106| 
+    107|     expect(decision.chosen_endpoint_id).toBe("code-model");
+    108|     expect(decision.eligibility.find((entry) => entry.endpoint_id === …
+       |                                                                                      ^
+    109|       eligible: false,
+    110|       exclusions: expect.arrayContaining([{ code: "CAPABILITY_MISSING"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 12:15:33
+[2m   Duration [22m 1.26s[2m (transform 317ms, setup 0ms, collect 410ms, tests 192ms, environment 1ms, prepare 793ms)[22m
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/core@0.0.0 test: `vitest run "--" "test/routing-intent.test.ts"`
+Exit status 1

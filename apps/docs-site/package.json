@@ -25,6 +25,7 @@
   },
   "scripts": {
     "build": "react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs",
+    "docs:taxonomy-v1-check": "node ./scripts/check-taxonomy-v1-docs.mjs",
     "dev": "react-router dev",
     "pages:create": "wrangler pages project create role-model-dev --production-branch main --compatibility-date 2026-05-04",
     "pages:dev": "npm run build && wrangler pages dev ./build/client",

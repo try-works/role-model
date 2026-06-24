@@ -1,0 +1,27 @@
+===== /role-model status =====
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+EXIT=-1073740791
+===== /role-model setup =====
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+EXIT=-1073740791
+===== /role-model doctor =====
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+EXIT=-1073740791
+===== /role-model ui =====
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+EXIT=-1073740791
+===== /role-model alias list =====
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+EXIT=-1073740791
+===== /role-model alias recommended =====
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+EXIT=-1073740791
+===== /role-model alias use default.decision-only =====
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+EXIT=-1073740791
+===== /role-model alias refresh =====
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+EXIT=-1073740791
+===== /role-model alias current =====
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+EXIT=-1073740791

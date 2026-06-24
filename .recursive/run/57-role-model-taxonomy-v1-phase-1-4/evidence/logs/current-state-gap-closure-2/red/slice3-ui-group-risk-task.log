@@ -1,0 +1,56 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/components/local-model-role-picker.test.tsx [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 42[2mms[22m[39m
+[31m   [31m×[31m LocalModelRolePicker[2m > [22mshows grouped roles with an all-roles default checkbox[39m[32m 36[2mms[22m[39m
+[31m     → expected '<div class="rounded-[var(--rm-radius-…' to contain 'High risk'[39m
+   [32m✓[39m LocalModelRolePicker[2m > [22mderives explicit role assignment states without treating empty as all[32m 3[2mms[22m[39m
+ [31m❯[39m app/lib/role-task-hierarchy.test.tsx [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 70[2mms[22m[39m
+   [32m✓[39m role task hierarchy[2m > [22mkeeps task content hidden until the role task detail view is expanded[32m 28[2mms[22m[39m
+   [32m✓[39m role task hierarchy[2m > [22mreveals grouped task detail only for the expanded role[32m 2[2mms[22m[39m
+[31m   [31m×[31m role task hierarchy[2m > [22mrenders role catalog as group-first sections with secondary memberships visible[39m[32m 38[2mms[22m[39m
+[31m     → expected '<div class="grid gap-4 xl:grid-cols-2…' to contain 'Engineering'[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/local-model-role-picker.test.tsx > LocalModelRolePicker > shows grouped roles with an all-roles default checkbox
+AssertionError: expected '<div class="rounded-[var(--rm-radius-…' to contain 'High risk'
+
+Expected: "High risk"
+Received: "<div class="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] space-y-3 p-4"><div class="flex flex-wrap items-center justify-between gap-2"><p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]">Runtime roles</p><a class="text-xs text-[var(--rm-accent)] underline-offset-2 hover:underline" href="/app/models/roles" data-discover="true">Manage role definitions</a></div><p class="text-sm text-[var(--rm-secondary)]">Roles control which routing tasks can select this model.</p><div class="space-y-4"><label class="flex cursor-pointer items-center gap-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-fg)]"><input type="checkbox" class="mt-0" aria-checked="true" checked=""/><span class="font-semibold">All roles</span></label><section class="space-y-2"><p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">Engineering</p><ul class="space-y-2"><li><label class="flex cursor-pointer items-start gap-3 text-sm text-[var(--rm-fg)]"><input type="checkbox" class="mt-1" checked=""/><span><span class="font-semibold">Coder</span><span class="mt-1 block text-[var(--rm-secondary)]">Code work.</span></span></label></li><li><label class="flex cursor-pointer items-start gap-3 text-sm text-[var(--rm-fg)]"><input type="checkbox" class="mt-1" checked=""/><span><span class="font-semibold">Security</span><span class="mt-1 block text-[var(--rm-secondary)]">Security-sensitive review work.</span></span></label></li></ul></section><section class="space-y-2"><p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">Communication</p><ul class="space-y-2"><li><label class="flex cursor-pointer items-start gap-3 text-sm text-[var(--rm-fg)]"><input type="checkbox" class="mt-1" checked=""/><span><span class="font-semibold">Writer</span><span class="mt-1 block text-[var(--rm-secondary)]">Writing work.</span></span></label></li></ul></section></div></div>"
+
+ ❯ app/components/local-model-role-picker.test.tsx:80:20
+     78|     expect(markup).toContain("Coder");
+     79|     expect(markup).toContain("Security");
+     80|     expect(markup).toContain("High risk");
+       |                    ^
+     81|     expect(markup).toContain("Governance Safety");
+     82|     expect(markup).toContain("Writer");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/lib/role-task-hierarchy.test.tsx > role task hierarchy > renders role catalog as group-first sections with secondary memberships visible
+AssertionError: expected '<div class="grid gap-4 xl:grid-cols-2…' to contain 'Engineering'
+
+Expected: "Engineering"
+Received: "<div class="grid gap-4 xl:grid-cols-2"><article class="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] space-y-4 p-4 "><div class="flex flex-wrap items-start justify-between gap-3"><div><p class="text-sm font-semibold text-[var(--rm-fg)]">Coder Patch</p><p class="mt-1 break-all text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">coder.patch</p></div><span class="inline-flex items-center rounded-[var(--rm-radius-pill)] border px-3 py-1.5 text-[12px] font-normal uppercase tracking-[0.16em] leading-3 border-[var(--rm-success)] bg-transparent text-[var(--rm-success)]">allowed</span></div><p class="text-sm leading-6 text-[var(--rm-secondary)]">Code editing and patch generation tasks.</p><div class="flex flex-wrap gap-3"><button class="inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60" type="button">Select role</button><button class="inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60" type="button">Task detail</button></div></article><article class="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] space-y-4 p-4 "><div class="flex flex-wrap items-start justify-between gap-3"><div><p class="text-sm font-semibold text-[var(--rm-fg)]">Security</p><p class="mt-1 break-all text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">security</p></div><span class="inline-flex items-center rounded-[var(--rm-radius-pill)] border px-3 py-1.5 text-[12px] font-normal uppercase tracking-[0.16em] leading-3 border-[var(--rm-success)] bg-transparent text-[var(--rm-success)]">allowed</span></div><p class="text-sm leading-6 text-[var(--rm-secondary)]">Policy-sensitive security review.</p><div class="flex flex-wrap gap-3"><button class="inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60" type="button">Select role</button><button class="inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60" type="button">Task detail</button></div></article></div>"
+
+ ❯ app/lib/role-task-hierarchy.test.tsx:107:20
+    105|     );
+    106| 
+    107|     expect(markup).toContain("Engineering");
+       |                    ^
+    108|     expect(markup).toContain("Secondary: Governance Safety");
+    109|     expect(markup).toContain("High risk");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 19:17:01
+[2m   Duration [22m 1.50s[2m (transform 163ms, setup 0ms, collect 753ms, tests 112ms, environment 1ms, prepare 572ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/components/local-model-role-picker.test.tsx app/lib/role-task-hierarchy.test.tsx

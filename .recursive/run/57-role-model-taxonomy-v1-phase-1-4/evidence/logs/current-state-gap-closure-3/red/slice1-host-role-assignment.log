@@ -1,0 +1,74 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/apps/runtime-host-bridge[39m
+
+ [31m❯[39m src/local-model-role-bindings.test.ts [2m([22m[2m10 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 30[2mms[22m[39m
+   [32m✓[39m local-model-role-bindings[2m > [22mbuilds peer account bindings for wildcard allowedModels[32m 5[2mms[22m[39m
+   [32m✓[39m local-model-role-bindings[2m > [22mtreats missing model role assignment as all roles for configured runtime endpoints[32m 1[2mms[22m[39m
+   [32m✓[39m local-model-role-bindings[2m > [22mhonors include and exclude role assignment modes while preserving legacy roleIds[32m 1[2mms[22m[39m
+   [32m✓[39m local-model-role-bindings[2m > [22mbuilds llama-swap registry bindings from overrides[32m 1[2mms[22m[39m
+[31m   [31m×[31m local-model-role-bindings[2m > [22mtreats missing llama-swap overrides as all roles for loaded local models[39m[32m 16[2mms[22m[39m
+[31m     → expected [] to deeply equal [ 'classifier', …(2) ][39m
+   [32m✓[39m local-model-role-bindings[2m > [22mmerges bindings without duplicate endpoint-role pairs[32m 1[2mms[22m[39m
+   [32m✓[39m local-model-role-bindings[2m > [22mresolves peer and llama-swap role ids by endpoint[32m 1[2mms[22m[39m
+[31m   [31m×[31m local-model-role-bindings[2m > [22mresolves missing endpoint assignments as all roles in readback paths[39m[32m 2[2mms[22m[39m
+[31m     → expected [] to deeply equal [ 'classifier', …(2) ][39m
+   [32m✓[39m local-model-role-bindings[2m > [22mreads llama-swap role ids from overrides[32m 1[2mms[22m[39m
+   [32m✓[39m local-model-role-bindings[2m > [22mprojects task-required capabilities into effective role bindings[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/local-model-role-bindings.test.ts > local-model-role-bindings > treats missing llama-swap overrides as all roles for loaded local models
+AssertionError: expected [] to deeply equal [ 'classifier', …(2) ]
+
+- Expected
++ Received
+
+- [
+-   "classifier",
+-   "coder.assistant",
+-   "general.chat",
+- ]
++ []
+
+ ❯ src/local-model-role-bindings.test.ts:237:63
+    235|     });
+    236| 
+    237|     expect(bindings.map((binding) => binding.role_id).sort()).toEqual([
+       |                                                               ^
+    238|       "classifier",
+    239|       "coder.assistant",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/local-model-role-bindings.test.ts > local-model-role-bindings > resolves missing endpoint assignments as all roles in readback paths
+AssertionError: expected [] to deeply equal [ 'classifier', …(2) ]
+
+- Expected
++ Received
+
+- [
+-   "classifier",
+-   "coder.assistant",
+-   "general.chat",
+- ]
++ []
+
+ ❯ src/local-model-role-bindings.test.ts:334:7
+    332|         compareText: (left, right) => left.localeCompare(right, "en"),
+    333|       }),
+    334|     ).toEqual(["classifier", "coder.assistant", "general.chat"]);
+       |       ^
+    335| 
+    336|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m8 passed[39m[22m[90m (10)[39m
+[2m   Start at [22m 20:40:52
+[2m   Duration [22m 1.55s[2m (transform 146ms, setup 0ms, collect 108ms, tests 30ms, environment 0ms, prepare 558ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/local-model-role-bindings.test.ts

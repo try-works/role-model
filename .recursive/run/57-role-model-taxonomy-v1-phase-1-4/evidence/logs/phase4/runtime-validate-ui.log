@@ -1,0 +1,31 @@
+
+> role-model@0.0.0 runtime:validate-ui D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-ui.ts
+
+(node:24708) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Endpoint-registry diagnostics: [
+  {
+    "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+    "severity": "error",
+    "code": "PROVIDER_ACCOUNT_NOT_FOUND",
+    "message": "Provider account moonshot.personal.primary is not present in the runtime account set."
+  }
+]
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\index.ts:11618
+      throw new Error(`Endpoint-registry validation failed after runtime state update: ${summary}`);
+            ^
+
+Error: Endpoint-registry validation failed after runtime state update: [error] Provider account moonshot.personal.primary is not present in the runtime account set.
+    at rebuildCurrentState (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\index.ts:11618:13)
+    at applyUnifiedRuntimeConfigState (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\index.ts:12535:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async createRuntimeBridgeBackend (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\index.ts:12585:5)
+    at async runRuntimeUiValidation (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\validate-ui.ts:127:19)
+    at async <anonymous> (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\validate-ui.ts:812:7)
+
+Node.js v24.11.0
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx src/validate-ui.ts
+ ELIFECYCLE  Command failed with exit code 1.

@@ -1,0 +1,18 @@
+
+> role-model@0.0.0 runtime:validate-host D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-host.ts
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\validate-host.ts:73
+  throw new Error(`Timed out waiting for ${url}`);
+        ^
+
+Error: Timed out waiting for http://127.0.0.1:56465/health
+    at waitForOk (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\validate-host.ts:73:9)
+    at async runRuntimeHostValidation (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\validate-host.ts:118:5)
+    at async <anonymous> (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\validate-host.ts:282:30)
+
+Node.js v24.11.0
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx src/validate-host.ts
+ ELIFECYCLE  Command failed with exit code 1.

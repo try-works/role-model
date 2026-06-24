@@ -1,0 +1,73 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [31m❯[39m test/taxonomy-classification.test.ts [2m([22m[2m14 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 71[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mloads a compact group-first taxonomy snapshot[32m 14[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies 'Review this diff for security risks a…'[32m 5[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies 'Implement this small bug fix and add …'[32m 2[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies 'Compare current public documentation …'[32m 2[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies 'Turn these support notes into a clear…'[32m 2[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies 'Inspect this schema and propose a mig…'[32m 2[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies 'Create product requirements and accep…'[32m 2[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22memits the complete stable advisory classification contract[32m 3[2mms[22m[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mdegrades unknown prompts to broad low-confidence advisory metadata[39m[32m 21[2mms[22m[39m
+[31m     → expected [ …(4) ] to deeply equal ArrayContaining{…}[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mrecords only taxonomy chunks that were actually consulted[32m 3[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies request-time prompts without reading unrelated role task chunks[32m 2[2mms[22m[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mclassifies prompts across all 28 role families without hardcoded rules (F6)[39m[32m 4[2mms[22m[39m
+[31m     → Prompt "Debug this failing startup script and fix the port conflict." classified as coder, expected operator: expected 'coder' to be 'operator' // Object.is equality[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mbroad ambiguous prompts use group-first fallback instead of single writer fallback (F6)[32m 2[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22munknown prompts still produce advisory metadata with alternatives (F6)[32m 2[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 2 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/taxonomy-classification.test.ts[2m > [22mcompact taxonomy and progressive classification[2m > [22mdegrades unknown prompts to broad low-confidence advisory metadata
+[31m[1mAssertionError[22m: expected [ …(4) ] to deeply equal ArrayContaining{…}[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- ArrayContaining [[39m
+[32m-   StringMatching /fallback|low-confidence|broad/i,[39m
+[31m+ [[39m
+[31m+   "Group-first classification: matched groups [engineering, product_design, knowledge_research], scored 16 candidate roles.",[39m
+[31m+   "Selected coder (score 1, margin 0) from candidate groups.",[39m
+[31m+   "Task guidance preferred coder.edit.",[39m
+[31m+   "Confirmed taxonomy task coder.edit.",[39m
+[2m  ][22m
+
+[36m [2m❯[22m test/taxonomy-classification.test.ts:[2m134:55[22m[39m
+    [90m132| [39m    expect(classification.role_model.intent.confidence).toBeLessThan(0…
+    [90m133| [39m    expect(classification.role_model.intent.task_confidence).toBeLessT…
+    [90m134| [39m    [34mexpect[39m(classification[33m.[39mrole_model[33m.[39mintent[33m.[39mevidence)[33m.[39m[34mtoEqual[39m(
+    [90m   | [39m                                                      [31m^[39m
+    [90m135| [39m      expect.arrayContaining([expect.stringMatching(/fallback|low-conf…
+    [90m136| [39m    )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/taxonomy-classification.test.ts[2m > [22mcompact taxonomy and progressive classification[2m > [22mclassifies prompts across all 28 role families without hardcoded rules (F6)
+[31m[1mAssertionError[22m: Prompt "Debug this failing startup script and fix the port conflict." classified as coder, expected operator: expected 'coder' to be 'operator' // Object.is equality[39m
+
+Expected: [32m"[7moperato[27mr"[39m
+Received: [31m"[7mcode[27mr"[39m
+
+[36m [2m❯[22m test/taxonomy-classification.test.ts:[2m226:11[22m[39m
+    [90m224| [39m          classification[33m.[39mrole_model[33m.[39mintent[33m.[39mrole_hint_id[33m,[39m
+    [90m225| [39m          `Prompt "${testCase.prompt}" classified as ${classification.…
+    [90m226| [39m        )[33m.[39m[34mtoBe[39m(testCase[33m.[39mexpectedRole)[33m;[39m
+    [90m   | [39m          [31m^[39m
+    [90m227| [39m        [34mexpect[39m(
+    [90m228| [39m          classification[33m.[39mcandidateGroupIds[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m12 passed[39m[22m[90m (14)[39m
+[2m   Start at [22m 07:03:42
+[2m   Duration [22m 1.00s[2m (transform 149ms, setup 0ms, collect 175ms, tests 71ms, environment 0ms, prepare 285ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/taxonomy-classification.test.ts

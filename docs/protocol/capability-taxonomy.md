@@ -2,12 +2,13 @@
 
 Capabilities are stable protocol identifiers, not ad hoc strings.
 
-The baseline taxonomy includes:
+Taxonomy V1 capability examples include:
 
-- text: `text.chat`, `text.translation`, `text.instruction_following`, `text.classification`, `text.language_detection`
-- reasoning/code: `reasoning.multi_step`, `code.chat`, `code.edit`, `tools.function_calling`, `json.schema_adherence`
-- embeddings/multimodal: `embeddings.text`, `multimodal.vision_text`, `multimodal.audio_text`
-- media I/O: `image.generation`, `image.understanding`, `audio.asr`, `audio.tts`
-- runtime/decoding: `adapter.lora_runtime`, `decoding.constrained`
+- text and reasoning: `text.chat`, `reasoning.multi_step`, `json.schema_adherence`, `long_context`
+- code and tools: `code.read`, `code.write`, `tools.function_calling`, `tools.command_execution`
+- research: `web.search`, `citation.synthesis`, `tools.browser_control`
+- data: `data.query`, `data.schema`, `data.transform`
+- communication: `communication.user_facing`, `communication.follow_up`
+- governance and safety: `security.analysis`, `legal.analysis`, `health.safety`
 
 Routing eligibility, role binding, and benchmark suite selection all refer to these identifiers.

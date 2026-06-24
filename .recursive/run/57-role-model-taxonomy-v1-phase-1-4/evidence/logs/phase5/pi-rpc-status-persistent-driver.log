@@ -1,0 +1,6 @@
+(node:46992) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76
+{"type":"extension_ui_request","id":"c5a269af-f9de-4f9c-935a-4dba2f3324a0","method":"notify","message":"Role Model Runtime\nstate: ready\nendpoint: http://127.0.0.1:4567\nversion: 0.0.0-qa\naliases: 15\nselected alias: controller.remote-only\nprovider: registered\nauth: placeholder\nendpoint trust: local\nfallback: no\nwarnings: none","notifyType":"info"}
+{"id":"status","type":"response","command":"prompt","success":true}
+EXIT=3221226505 SIGNAL=

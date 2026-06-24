@@ -1,0 +1,32 @@
+[
+  {
+    "route": "/app/models",
+    "status": 200,
+    "length": 3232
+  },
+  {
+    "route": "/app/models/roles",
+    "status": 200,
+    "length": 3232
+  },
+  {
+    "route": "/app/router/candidates",
+    "status": 200,
+    "length": 3232
+  },
+  {
+    "route": "/app/router/decisions",
+    "status": 200,
+    "length": 3232
+  },
+  {
+    "route": "/app/observe/requests",
+    "status": 200,
+    "length": 3232
+  },
+  {
+    "route": "/app/observe/routing",
+    "status": 200,
+    "length": 3232
+  }
+]

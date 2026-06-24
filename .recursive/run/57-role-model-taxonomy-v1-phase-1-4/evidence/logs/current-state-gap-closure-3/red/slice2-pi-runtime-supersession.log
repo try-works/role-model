@@ -1,0 +1,43 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [31m❯[39m test/effective-taxonomy.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 61[2mms[22m[39m
+   [32m✓[39m effective taxonomy resolution[2m > [22mprefers compatible live runtime compact taxonomy over the packaged snapshot[32m 21[2mms[22m[39m
+   [32m✓[39m effective taxonomy resolution[2m > [22mdoes not fetch every runtime role task chunk when no candidate roles are supplied[32m 9[2mms[22m[39m
+[31m   [31m×[31m effective taxonomy resolution[2m > [22mprogressive runtime classification loads only candidate role task chunks before final task selection[39m[32m 18[2mms[22m[39m
+[31m     → expected undefined to deeply equal [ 'security' ][39m
+   [32m✓[39m effective taxonomy resolution[2m > [22mfalls back to packaged compact taxonomy when runtime taxonomy is unavailable[32m 8[2mms[22m[39m
+   [32m✓[39m effective taxonomy resolution[2m > [22mfalls back to packaged compact taxonomy when runtime taxonomy is incompatible[32m 3[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/effective-taxonomy.test.ts > effective taxonomy resolution > progressive runtime classification loads only candidate role task chunks before final task selection
+AssertionError: expected undefined to deeply equal [ 'security' ]
+
+- Expected: 
+[
+  "security",
+]
+
++ Received: 
+undefined
+
+ ❯ test/effective-taxonomy.test.ts:143:40
+    141|       taxonomy: packageTaxonomy,
+    142|     });
+    143|     expect(firstPass.candidateRoleIds).toEqual(["security"]);
+       |                                        ^
+    144| 
+    145|     const result = await resolveEffectiveTaxonomy({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 20:40:52
+[2m   Duration [22m 1.66s[2m (transform 160ms, setup 0ms, collect 178ms, tests 61ms, environment 0ms, prepare 510ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/effective-taxonomy.test.ts

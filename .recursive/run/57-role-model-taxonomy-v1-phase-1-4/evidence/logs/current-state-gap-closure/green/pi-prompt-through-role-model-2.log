@@ -1,0 +1,2 @@
+Warning: Model "claude-3.7-sonnet" not found for provider "role-model". Using custom model id.
+400 no_eligible_target: no targets for model claude-3.7-sonnet satisfy the inferred request capabilities.

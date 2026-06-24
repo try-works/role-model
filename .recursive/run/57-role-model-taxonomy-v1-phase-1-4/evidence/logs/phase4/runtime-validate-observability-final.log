@@ -1,0 +1,6 @@
+
+> role-model@0.0.0 runtime:validate-observability D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-observability.ts
+
+(node:45772) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

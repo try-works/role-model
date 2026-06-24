@@ -27,6 +27,7 @@ const legacyPrimaryRoutingAliasIds = new Set<string>([
 export interface UnifiedRuntimeConfigModel {
   readonly modelId: string;
   readonly path: string;
+  readonly capabilities: readonly string[];
   readonly contextWindow: number | null;
   readonly command: string | null;
   readonly proxyBaseUrl: string | null;
@@ -47,6 +48,7 @@ export interface UnifiedRuntimeConfigProviderMapping {
   readonly modelId: string;
   readonly litellmModel: string;
   readonly litellmParams: Readonly<Record<string, UnifiedRuntimeJSONValue>>;
+  readonly capabilities: readonly string[];
   readonly maxDifficulty?: UnifiedRuntimeDifficultyBucket | null;
 }
 
@@ -203,6 +205,7 @@ export interface UnifiedRuntimeConfig {
 
 interface RawLlamaSwapModel {
   readonly path?: string;
+  readonly capabilities?: readonly string[];
   readonly context_window?: number;
   readonly command?: string;
   readonly proxy?: string;
@@ -215,6 +218,7 @@ interface RawLiteLLMProvider {
   readonly api_key?: string;
   readonly model_list?: ReadonlyArray<{
     readonly model_name?: string;
+    readonly capabilities?: readonly string[];
     readonly max_difficulty?: string;
     readonly litellm_params?: Readonly<Record<string, unknown>>;
   }>;
@@ -524,6 +528,7 @@ function normalizeLlamaSwapModelInput(
   return {
     modelId,
     path,
+    capabilities: readStringArray(value.capabilities),
     contextWindow: readPositiveNumber(
       "contextWindow" in value ? value.contextWindow : value.context_window,
     ),
@@ -614,6 +619,7 @@ function normalizeLiteLLMProviderMappingInput(
       ...litellmParams,
       model: litellmModel,
     },
+    capabilities: readStringArray(value.capabilities),
     maxDifficulty: readDifficultyBucket(
       "maxDifficulty" in value
         ? value.maxDifficulty
@@ -1219,6 +1225,7 @@ function parseLlamaSwapModels(
     return {
       modelId,
       path: config.path,
+      capabilities: readStringArray(config.capabilities),
       contextWindow: typeof config.context_window === "number" ? config.context_window : null,
       command:
         typeof config.command === "string" && config.command.trim().length > 0
@@ -1285,6 +1292,9 @@ function parseLiteLLMProviders(
           ...litellmParams,
           model: litellmModel,
         },
+        capabilities: readStringArray(
+          "capabilities" in entry ? entry.capabilities : undefined,
+        ),
         maxDifficulty: readDifficultyBucket(
           "max_difficulty" in entry ? entry.max_difficulty : undefined,
           `litellm_proxy.providers.${providerId}.model_list.${modelId}.max_difficulty`,
@@ -1773,6 +1783,7 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
         model.modelId,
         {
           path: model.path,
+          ...(model.capabilities.length > 0 ? { capabilities: [...model.capabilities] } : {}),
           ...(model.contextWindow !== null ? { context_window: model.contextWindow } : {}),
           ...(model.command !== null ? { command: model.command } : {}),
           ...(model.proxyBaseUrl !== null ? { proxy: model.proxyBaseUrl } : {}),
@@ -1798,6 +1809,9 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
             provider.modelMappings.length > 0
               ? provider.modelMappings.map((mapping) => ({
                   model_name: mapping.modelId,
+                  ...(mapping.capabilities.length > 0
+                    ? { capabilities: [...mapping.capabilities] }
+                    : {}),
                   ...(mapping.maxDifficulty !== null
                     ? { max_difficulty: mapping.maxDifficulty }
                     : {}),

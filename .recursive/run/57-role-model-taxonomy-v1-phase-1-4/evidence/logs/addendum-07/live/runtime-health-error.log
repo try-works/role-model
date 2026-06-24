@@ -1,0 +1,6 @@
+Invoke-RestMethod: 
+Line |
+   2 |  … ds 8; try { Invoke-RestMethod -Uri http://127.0.0.1:4567/healthz -Tim …
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | No connection could be made because the target machine actively refused it.
+

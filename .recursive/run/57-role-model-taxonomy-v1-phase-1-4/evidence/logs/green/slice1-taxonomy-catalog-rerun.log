@@ -1,0 +1,45 @@
+
+> @role-model-router/core@0.0.0 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core
+> vitest run "--" "test/taxonomy-catalog.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+ [31m❯[39m test/taxonomy-catalog.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 144[2mms[22m[39m
+[31m   [31m×[31m canonical taxonomy catalog[2m > [22mdeclares approved taxonomy versions and counts[39m[32m 16[2mms[22m[39m
+[31m     → expected 46 to be 45 // Object.is equality[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mdeclares exact groups, roles, and role group membership[32m 5[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mgives every role at least ten native task types[32m 3[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mvalidates task naming, references, and classifier guidance[32m 115[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mreturns no structural validation diagnostics for the canonical catalog[32m 2[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/taxonomy-catalog.test.ts > canonical taxonomy catalog > declares approved taxonomy versions and counts
+AssertionError: expected 46 to be 45 // Object.is equality
+
+- Expected
++ Received
+
+- 45
++ 46
+
+ ❯ test/taxonomy-catalog.test.ts:89:50
+     87|     expect(taxonomyManifest.counts.groups).toBe(6);
+     88|     expect(taxonomyManifest.counts.roles).toBe(28);
+     89|     expect(taxonomyManifest.counts.capabilities).toBe(45);
+       |                                                  ^
+     90|     expect(taxonomyManifest.counts.modalities).toBe(9);
+     91|     expect(taxonomyManifest.counts.toolClasses).toBe(15);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 12:06:37
+[2m   Duration [22m 1.09s[2m (transform 176ms, setup 0ms, collect 165ms, tests 144ms, environment 0ms, prepare 327ms)[22m
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/core@0.0.0 test: `vitest run "--" "test/taxonomy-catalog.test.ts"`
+Exit status 1

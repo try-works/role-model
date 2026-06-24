@@ -1,0 +1,33 @@
+
+> @role-model-router/core@0.0.0 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core
+> vitest run "--" "test/taxonomy-catalog.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/taxonomy-catalog.test.ts [ test/taxonomy-catalog.test.ts ]
+ReferenceError: Cannot access 'getCanonicalTaskAction' before initialization
+ ❯ src/taxonomy/index.ts:387:20
+    385|   (taskSuffixesByRole[roleId] ?? []).map((suffix) => {
+    386|     const id = `${roleId}.${suffix}`;
+    387|     const action = getCanonicalTaskAction(id);
+       |                    ^
+    388|     const requiredCapabilities = roleCapabilityDefaults[roleId] ?? ["t…
+    389|     return {
+ ❯ src/taxonomy/index.ts:385:38
+ ❯ src/taxonomy/index.ts:384:72
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 12:06:21
+[2m   Duration [22m 1.38s[2m (transform 150ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 340ms)[22m
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/core@0.0.0 test: `vitest run "--" "test/taxonomy-catalog.test.ts"`
+Exit status 1

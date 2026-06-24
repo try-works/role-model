@@ -241,7 +241,12 @@ export async function runCatalogEconomicsValidation(
           authToken: "role-model-local",
         },
       ]);
-      await backend.loadPeerModel(localModelId, ["general.chat"]);
+      await backend.loadPeerModel(localModelId, {
+        roleIds: ["general.chat"],
+        roleAssignmentMode: "include",
+        enabledRoleIds: ["general.chat"],
+        disabledRoleIds: [],
+      });
 
       await backend.upsertProviderAccount({
         providerAccountId: "moonshot.personal.primary",

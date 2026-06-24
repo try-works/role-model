@@ -50,6 +50,11 @@ describe("Pi installation docs, skill, and safety guardrails", () => {
     expect(skill).toContain("Role-Model repository README");
     expect(skill).toContain("aliases");
     expect(skill).toContain("routing authority");
+    expect(skill).toContain("taxonomy discovery");
+    expect(skill).toContain("compact taxonomy snapshot");
+    expect(skill).toContain("progressive classification");
+    expect(skill).toContain("role_model.intent");
+    expect(skill).toContain("Taxonomy-aware benchmarks and telemetry are later Role-Model phases");
     expect(skill).toContain("benchmarks");
     expect(skill).toContain("Do not read, print, copy, or sync Pi auth files");
   });

@@ -1,0 +1,94 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/apps/runtime-host-bridge[39m
+
+(node:20536) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38520) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:49148) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38824) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:46652) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21576) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/validate-catalog-economics.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1801[2mms[22m[39m
+   [33m[2m✓[22m[39m runCatalogEconomicsValidation[2m > [22mhides moonshotai, routes easy cost work to local peer, and emits catalogEconomics [33m 1798[2mms[22m[39m
+ [32m✓[39m test/restart-rehydration.test.ts [2m([22m[2m9 tests[22m[2m | [22m[33m6 skipped[39m[2m)[22m[33m 2592[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart [33m 923[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mkeeps restarted remote endpoints healthy when provider /models returns unprefixed ids [33m 1067[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22marchives invalid persisted provider accounts instead of surfacing them as active lifecycle records [33m 598[2mms[22m[39m
+ [32m✓[39m test/openai-codex-subscription-matrix.test.ts [2m([22m[2m6 tests[22m[2m | [22m[33m5 skipped[39m[2m)[22m[33m 2802[2mms[22m[39m
+   [33m[2m✓[22m[39m OpenAI Codex Subscription model matrix[2m > [22mkeeps every supported OpenAI GPT-5.3+ subscription model coder.patch routable [33m 2799[2mms[22m[39m
+ [32m✓[39m test/validate-restart-rehydration.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 2826[2mms[22m[39m
+   [33m[2m✓[22m[39m runRestartRehydrationValidation[2m > [22mrehydrates activated endpoints and mixed alias model list after backend restart [33m 2823[2mms[22m[39m
+ [32m✓[39m test/index.test.ts [2m([22m[2m155 tests[22m[2m | [22m[33m151 skipped[39m[2m)[22m[33m 2817[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes env-backed api-key accounts through the live provider path when the env credential resolves [33m 763[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mkeeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog [33m 1146[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes non-controller requested coder review task requests without empty chosen-endpoint failures [33m 458[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes chat-completions through an api-key-static provider via environment credential [33m 446[2mms[22m[39m
+ [31m❯[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 7944[2mms[22m[39m
+[31m   [31m×[31m runRuntimeUiValidation[2m > [22mvalidates runtime config reads and the main control-plane mutations[39m[33m 7942[2mms[22m[39m
+[31m     → expected [ 'analyst', 'architect', …(26) ] to deeply equal ArrayContaining ["general.chat"][39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-ui.test.ts > runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations
+AssertionError: expected [ 'analyst', 'architect', …(26) ] to deeply equal ArrayContaining ["general.chat"]
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   "general.chat",
++ [
++   "analyst",
++   "architect",
++   "coder",
++   "coordinator",
++   "creative",
++   "data",
++   "designer",
++   "educator",
++   "finance",
++   "health",
++   "knowledge",
++   "legal",
++   "marketer",
++   "mathematician",
++   "operator",
++   "planner",
++   "procurement",
++   "product",
++   "recruiter",
++   "researcher",
++   "scientist",
++   "security",
++   "seller",
++   "strategist",
++   "support",
++   "tester",
++   "translator",
++   "writer",
+  ]
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m5 passed[39m[22m[90m (6)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[2m | [22m[33m162 skipped[39m[90m (173)[39m
+[2m   Start at [22m 21:28:31
+[2m   Duration [22m 10.70s[2m (transform 2.80s, setup 0ms, collect 10.41s, tests 20.78s, environment 2ms, prepare 1.88s)[22m
+
+ ❯ test/validate-ui.test.ts:58:37
+     56|     expect(result.runtimeConfigUpdatedRoutingStrategy).toBe("baseline"…
+     57|     expect(result.moonshotVariantIds).toEqual(["moonshot-open-platform…
+     58|     expect(result.availableRoleIds).toEqual(expect.arrayContaining(["g…
+       |                                     ^
+     59|     expect(result.upsertedAccountId).toBe("moonshot.personal.primary");
+     60|     expect(result.accountListIncludesUpsert).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts test/restart-rehydration.test.ts test/validate-catalog-economics.test.ts test/validate-ui.test.ts test/validate-restart-rehydration.test.ts test/openai-codex-subscription-matrix.test.ts -t executes env-backed api-key accounts|keeps Kimi Code|executes non-controller requested|executes chat-completions through an api-key-static provider|restores activated endpoints|keeps restarted remote endpoints|archives invalid persisted|hides moonshotai|validates runtime config|rehydrates activated endpoints|keeps every supported OpenAI

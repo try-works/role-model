@@ -1,0 +1,153 @@
+{
+  "requests": [],
+  "decisions": [
+    {
+      "requestId": "req-788d5806-82e7-4716-9cf3-cd0386db451e",
+      "routingDecisionId": "decision-req-788d5806-82e7-4716-9cf3-cd0386db451e",
+      "selectedEndpointId": "routing.failed.pre-execution",
+      "selectedModelId": "default.decision-only",
+      "strategyLabel": "baseline",
+      "decidedAtMs": 1782215105408,
+      "sourceType": "local",
+      "providerId": null,
+      "finishReason": null
+    }
+  ],
+  "candidates": [
+    {
+      "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+      "modelId": "moonshot/kimi-k2.5",
+      "providerId": "moonshot",
+      "sourceType": "remote",
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "region": "global",
+      "status": "active",
+      "healthStatus": "degraded",
+      "roleBindings": [
+        "general.chat"
+      ],
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "structured.output"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "openai",
+      "webSearchSupport": {
+        "mode": "native",
+        "currentRuntimeContract": "moonshot.chat.builtin_web_search",
+        "documentedProviderContract": "moonshot.chat.builtin_web_search"
+      },
+      "executionModeEligible": false,
+      "controllerEligible": false,
+      "preferred": false,
+      "ignored": false,
+      "latestProfile": null,
+      "recentSamples": [],
+      "difficultyProfiles": {
+        "easy": null,
+        "medium": null,
+        "hard": null
+      },
+      "advisoryMaxDifficultyRecommendation": {
+        "recommendedMaxDifficulty": null,
+        "thresholds": {
+          "minSamples": 4,
+          "maxFailureRate": 0.2,
+          "minQualityScore": 0.8,
+          "minTokensPerSec": 22
+        },
+        "evaluations": {
+          "easy": {
+            "eligible": false,
+            "rejectionReasons": [
+              "no-profile"
+            ],
+            "profile": null
+          },
+          "medium": {
+            "eligible": false,
+            "rejectionReasons": [
+              "no-profile"
+            ],
+            "profile": null
+          },
+          "hard": {
+            "eligible": false,
+            "rejectionReasons": [
+              "no-profile"
+            ],
+            "profile": null
+          }
+        }
+      }
+    },
+    {
+      "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "modelId": "lfm2.5-1.2b-instruct",
+      "providerId": null,
+      "sourceType": "local",
+      "endpointKind": "local_engine",
+      "servingSource": "vendor-llama-swap",
+      "region": "local",
+      "status": "active",
+      "healthStatus": "healthy",
+      "roleBindings": [],
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "openai",
+      "webSearchSupport": {
+        "mode": "runtime-fallback",
+        "currentRuntimeContract": null,
+        "documentedProviderContract": null
+      },
+      "executionModeEligible": true,
+      "controllerEligible": true,
+      "preferred": false,
+      "ignored": false,
+      "latestProfile": null,
+      "recentSamples": [],
+      "difficultyProfiles": {
+        "easy": null,
+        "medium": null,
+        "hard": null
+      },
+      "advisoryMaxDifficultyRecommendation": {
+        "recommendedMaxDifficulty": null,
+        "thresholds": {
+          "minSamples": 4,
+          "maxFailureRate": 0.2,
+          "minQualityScore": 0.8,
+          "minTokensPerSec": 22
+        },
+        "evaluations": {
+          "easy": {
+            "eligible": false,
+            "rejectionReasons": [
+              "no-profile"
+            ],
+            "profile": null
+          },
+          "medium": {
+            "eligible": false,
+            "rejectionReasons": [
+              "no-profile"
+            ],
+            "profile": null
+          },
+          "hard": {
+            "eligible": false,
+            "rejectionReasons": [
+              "no-profile"
+            ],
+            "profile": null
+          }
+        }
+      }
+    }
+  ]
+}

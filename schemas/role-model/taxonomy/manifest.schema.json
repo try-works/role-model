@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/manifest.schema.json",
+  "title": "Taxonomy Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "taxonomyVersion",
+    "databaseVersion",
+    "contentRevision",
+    "classificationContractVersion",
+    "generatedAt",
+    "entryCounts",
+    "entryFiles",
+    "contentHashes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "string"
+    },
+    "taxonomyVersion": {
+      "type": "string"
+    },
+    "databaseVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "contentRevision": {
+      "type": "string"
+    },
+    "classificationContractVersion": {
+      "type": "string"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "entryCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groups",
+        "roles",
+        "taskTypes",
+        "capabilities",
+        "modalities",
+        "toolClasses",
+        "intentPresets"
+      ],
+      "properties": {
+        "groups": { "type": "integer", "minimum": 0 },
+        "roles": { "type": "integer", "minimum": 0 },
+        "taskTypes": { "type": "integer", "minimum": 0 },
+        "capabilities": { "type": "integer", "minimum": 0 },
+        "modalities": { "type": "integer", "minimum": 0 },
+        "toolClasses": { "type": "integer", "minimum": 0 },
+        "intentPresets": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "entryFiles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groups",
+        "roles",
+        "taskTypes",
+        "capabilities",
+        "modalities",
+        "toolClasses",
+        "intentPresets"
+      ],
+      "properties": {
+        "groups": { "type": "string", "minLength": 1 },
+        "roles": { "type": "string", "minLength": 1 },
+        "taskTypes": { "type": "string", "minLength": 1 },
+        "capabilities": { "type": "string", "minLength": 1 },
+        "modalities": { "type": "string", "minLength": 1 },
+        "toolClasses": { "type": "string", "minLength": 1 },
+        "intentPresets": { "type": "string", "minLength": 1 }
+      }
+    },
+    "contentHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "groups",
+        "roles",
+        "taskTypes",
+        "capabilities",
+        "modalities",
+        "toolClasses",
+        "intentPresets"
+      ],
+      "properties": {
+        "groups": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "roles": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "taskTypes": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "capabilities": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "modalities": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "toolClasses": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "intentPresets": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    }
+  }
+}

@@ -15,7 +15,11 @@ For model selection, use `/role-model alias list` to inspect available aliases, 
 
 Aliases are Role-Model routing entries; direct models are concrete model IDs exposed by the runtime. Prefer aliases when the user wants Role-Model to route intelligently.
 
-Role-Model benchmarks, routing decisions, endpoint eligibility, fallback, and telemetry belong to Role-Model, not to this Pi package. Use Role-Model runtime docs and UI for benchmark or routing analysis.
+For taxonomy discovery, prefer the live Role-Model runtime taxonomy manifest and compact role/task endpoints when available. If the runtime is unavailable or reports an incompatible taxonomy version, fall back to the package compact taxonomy snapshot and report the version mismatch clearly.
+
+Use progressive classification before sending a request through Role-Model: choose likely groups first, inspect likely roles next, and load task detail only for the likely role or an ambiguous role pair. Include `role_model.intent` metadata when the package can classify the request: role, task, preferred capabilities, modalities, tool classes, confidence, source, evidence, taxonomy version, and classification contract version. Treat low-confidence heuristic classifications as advisory unless the user gave an explicit instruction.
+
+Role-Model benchmarks, routing decisions, endpoint eligibility, fallback, and telemetry belong to Role-Model, not to this Pi package. Use Role-Model runtime docs and UI for benchmark or routing analysis. Taxonomy-aware benchmarks and telemetry are later Role-Model phases, so do not claim that this package scores models or aggregates production telemetry itself.
 
 If the user explicitly asks to install or launch the external Role-Model router runtime, point them to the Role-Model repository README for those instructions and make it clear that this is external runtime setup, not a side effect of installing the Pi package.
 

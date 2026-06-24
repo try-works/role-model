@@ -79,7 +79,7 @@ type ScoringMetricName =
   | "reliability"
   | "preference";
 
-type MetricSource = "measured" | "declared" | "default" | "catalog";
+type MetricSource = "measured" | "declared" | "default" | "catalog" | "benchmark";
 type MetricEntry = {
   value: number;
   source: MetricSource;
@@ -429,7 +429,7 @@ function resolveQualityFreshness(
   };
 }
 
-function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput): MetricEntry {
+export function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput): MetricEntry {
   if (typeof candidate.observed?.judge_score === "number") {
     const freshness = resolveQualityFreshness(input, candidate);
     const freshnessWeight = freshness.freshnessWeight;
@@ -466,6 +466,27 @@ function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput
         measured_at_ms: freshness.measuredAtMs,
         freshness_weight: freshnessWeight,
         freshness_source: freshness.source,
+        neutral_value: FRESHNESS_NEUTRAL,
+        effective_value: value,
+      },
+    };
+  }
+
+  // Benchmark-derived quality (from benchmarkCapability.overallScore)
+  const benchmarkScore = candidate.benchmarkCapability?.overallScore;
+  if (typeof benchmarkScore === "number") {
+    const freshness = resolveQualityFreshness(input, candidate);
+    const freshnessWeight = freshness.freshnessWeight;
+    const value = input.observedDataConfig?.enabled
+      ? decayToNeutral(benchmarkScore, FRESHNESS_NEUTRAL, freshnessWeight)
+      : benchmarkScore;
+    return {
+      value,
+      source: "benchmark",
+      raw: {
+        benchmark_quality_score: benchmarkScore,
+        benchmark_source: "routing-capability-benchmark",
+        freshness_weight: freshnessWeight,
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
       },
@@ -1113,6 +1134,11 @@ function scoreCandidate(
 
   const selectionReasons: RouterDecisionRecord["selection_reasons"] = ["DECLARED_PROFILE_USED"];
   const { requestedTask } = getRequestedRoleAndTask(input);
+  const advisoryTask = !input.request.roleModelIntent?.task?.hard
+    ? input.taskDefinitions?.find(
+        (task) => task.task_type === input.request.roleModelIntent?.task?.id,
+      )
+    : undefined;
   const hasMeasuredMetric = Object.values(metricScores).some(
     (metric) => metric.source === "measured",
   );
@@ -1167,7 +1193,7 @@ function scoreCandidate(
   if (input.request.requestedRoleId || rolePolicyApplied) {
     selectionReasons.push("ROLE_POLICY_APPLIED");
   }
-  if (requestedTask) {
+  if (requestedTask || advisoryTask) {
     selectionReasons.push("TASK_POLICY_APPLIED");
   }
 
@@ -1195,13 +1221,67 @@ function compareTieBreak(left: TieBreakDiagnostic, right: TieBreakDiagnostic): n
   return left.endpoint_id.localeCompare(right.endpoint_id);
 }
 
+export function normalizeRoutingIntentInput(input: RouteRequestInput): RouteRequestInput {
+  const intent = input.request.roleModelIntent;
+  if (!intent) {
+    return input;
+  }
+
+  const stablePiAdvisoryIntent = intent.contractVersion === 1;
+  const hardRoleId = intent.role?.hard ? intent.role.id : undefined;
+  const hardTaskType = intent.task?.hard ? intent.task.id : undefined;
+  const advisoryRole =
+    !intent.role?.hard && intent.role?.id
+      ? input.roleDefinitions?.find((role) => role.role_id === intent.role?.id)
+      : undefined;
+  const advisoryTask =
+    !intent.task?.hard && intent.task?.id
+      ? input.taskDefinitions?.find((task) => task.task_type === intent.task?.id)
+      : undefined;
+  const requiredCapabilities = unique([
+    ...input.request.requiredCapabilities,
+    ...(stablePiAdvisoryIntent ? [] : (intent.capabilities?.required ?? [])),
+  ]);
+  const preferredCapabilities = unique([
+    ...input.request.preferredCapabilities,
+    ...(stablePiAdvisoryIntent ? (intent.capabilities?.required ?? []) : []),
+    ...(intent.capabilities?.preferred ?? []),
+    ...(advisoryRole?.preferred_capabilities ?? []),
+    ...(advisoryTask?.required_capabilities ?? []),
+    ...(advisoryTask?.preferred_capabilities ?? []),
+  ]);
+  const requiredModalities = unique([
+    ...input.request.requiredModalities,
+    ...(stablePiAdvisoryIntent ? [] : (intent.modalities?.required ?? [])),
+  ]);
+  const toolClasses = intent.toolClasses ?? [];
+
+  return {
+    ...input,
+    request: {
+      ...input.request,
+      requestedRoleId: hardRoleId ?? input.request.requestedRoleId,
+      taskType: hardTaskType ?? input.request.taskType,
+      requiredCapabilities,
+      preferredCapabilities,
+      requiredModalities,
+      needsTools:
+        input.request.needsTools ||
+        (intent.source === "explicit_user" && toolClasses.length > 0) ||
+        toolClasses.includes("shell.execute") ||
+        toolClasses.includes("browser.control"),
+    },
+  };
+}
+
 export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
-  const { policySnapshot, rolePolicyApplied } = buildPolicySnapshot(input);
-  const { eligible, eligibility } = evaluateEligibility(input, policySnapshot);
+  const normalizedInput = normalizeRoutingIntentInput(input);
+  const { policySnapshot, rolePolicyApplied } = buildPolicySnapshot(normalizedInput);
+  const { eligible, eligibility } = evaluateEligibility(normalizedInput, policySnapshot);
   const metricsByEndpoint = new Map(
     eligible.map((candidate) => [
       candidate.identity.endpoint_id,
-      getCandidateMetricScores(candidate, input, policySnapshot, rolePolicyApplied),
+      getCandidateMetricScores(candidate, normalizedInput, policySnapshot, rolePolicyApplied),
     ]),
   );
   const redistributedWeights = getRedistributedWeights(policySnapshot.strategy, [
@@ -1210,10 +1290,10 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
   const scored = eligible.map((candidate) =>
     scoreCandidate(
       candidate,
-      input,
+      normalizedInput,
       policySnapshot,
       metricsByEndpoint.get(candidate.identity.endpoint_id) ??
-        getCandidateMetricScores(candidate, input, policySnapshot, rolePolicyApplied),
+        getCandidateMetricScores(candidate, normalizedInput, policySnapshot, rolePolicyApplied),
       redistributedWeights,
       rolePolicyApplied,
     ),
@@ -1230,12 +1310,17 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
       buildTieBreak(
         leftCandidate,
         metricsByEndpoint.get(left.endpoint_id) ??
-          getCandidateMetricScores(leftCandidate, input, policySnapshot, rolePolicyApplied),
+          getCandidateMetricScores(leftCandidate, normalizedInput, policySnapshot, rolePolicyApplied),
       ),
       buildTieBreak(
         rightCandidate,
         metricsByEndpoint.get(right.endpoint_id) ??
-          getCandidateMetricScores(rightCandidate, input, policySnapshot, rolePolicyApplied),
+          getCandidateMetricScores(
+            rightCandidate,
+            normalizedInput,
+            policySnapshot,
+            rolePolicyApplied,
+          ),
       ),
     );
   });
@@ -1264,10 +1349,10 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
   );
 
   return {
-    routing_decision_id: `decision-${input.request.requestId}`,
-    request_id: input.request.requestId,
-    app_id: input.request.appId ?? "unknown-app",
-    org_id: input.request.orgId ?? null,
+    routing_decision_id: `decision-${normalizedInput.request.requestId}`,
+    request_id: normalizedInput.request.requestId,
+    app_id: normalizedInput.request.appId ?? "unknown-app",
+    org_id: normalizedInput.request.orgId ?? null,
     policy_snapshot: policySnapshot,
     eligibility,
     scored_candidates: scoredCandidates,

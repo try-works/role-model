@@ -1,0 +1,4 @@
+
+> @role-model-router/tasks@0.0.0 build D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\tasks
+> tsc -p tsconfig.json
+

@@ -322,7 +322,10 @@ export async function runRuntimeUiValidation(
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.5",
-            roleIds: ["general.chat"],
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
           },
         ],
         deniedModels: [],
@@ -348,6 +351,7 @@ export async function runRuntimeUiValidation(
       providerAccountId: string;
       modelRoleBindings?: Array<{
         modelId: string;
+        roleAssignmentMode?: string;
         roleIds: string[];
       }>;
     }>;
@@ -724,7 +728,7 @@ export async function runRuntimeUiValidation(
           account.providerAccountId === upsertedAccountId &&
           account.modelRoleBindings?.some(
             (binding) =>
-              binding.modelId === "moonshot/kimi-k2.5" && binding.roleIds.includes("general.chat"),
+              binding.modelId === "moonshot/kimi-k2.5" && binding.roleAssignmentMode === "all",
           ),
       ),
       activatedEndpointId,

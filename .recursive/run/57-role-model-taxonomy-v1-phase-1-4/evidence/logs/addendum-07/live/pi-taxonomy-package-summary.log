@@ -1,0 +1,11 @@
+{
+  "taxonomyVersion": "1.0.0-alpha.1",
+  "contentRevision": "taxonomy-v1-alpha.1",
+  "classificationContractVersion": "role-model.classification.v1",
+  "entryCounts": {
+    "groups": 6,
+    "roles": 28,
+    "taskTypes": 280
+  },
+  "chunkCount": 28
+}

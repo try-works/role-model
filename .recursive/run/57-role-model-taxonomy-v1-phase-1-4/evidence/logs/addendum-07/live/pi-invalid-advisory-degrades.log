@@ -1,0 +1,24 @@
+{
+  "status": 200,
+  "body": {
+    "id": "chatcmpl-role-model",
+    "object": "chat.completion",
+    "created": 1782269290,
+    "model": "lfm2.5-1.2b-instruct",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "local llama summary"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 11,
+      "completion_tokens": 4,
+      "total_tokens": 15
+    }
+  }
+}

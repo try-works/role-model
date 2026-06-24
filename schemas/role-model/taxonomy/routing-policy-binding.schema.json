@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/routing-policy-binding.schema.json",
+  "title": "Routing Policy Binding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "scope",
+    "subject",
+    "resource",
+    "actions",
+    "effect",
+    "authority",
+    "stability"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "kind": { "const": "routing_policy_binding" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["core", "provider", "client", "org", "team", "user"] },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["provider", "client", "org", "team", "user", "role", "model"] },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {
+          "enum": [
+            "group",
+            "role",
+            "task_type",
+            "capability",
+            "modality",
+            "tool_class",
+            "intent_preset",
+            "model_role_assignment",
+            "routing_policy_binding"
+          ]
+        },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "enum": [
+          "taxonomy.read",
+          "taxonomy.suggest",
+          "taxonomy.create",
+          "taxonomy.update",
+          "taxonomy.deprecate",
+          "taxonomy.delete",
+          "taxonomy.bind_policy",
+          "taxonomy.use"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "effect": { "enum": ["allow", "deny"] },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope"],
+      "properties": {
+        "scope": { "enum": ["core", "provider", "client", "org", "team", "user"] },
+        "ownerId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "stability": { "enum": ["stable", "experimental", "deprecated"] },
+    "description": { "type": "string" },
+    "createdAt": { "type": "string" },
+    "updatedAt": { "type": "string" }
+  }
+}

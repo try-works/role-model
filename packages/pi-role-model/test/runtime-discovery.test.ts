@@ -12,10 +12,12 @@ function jsonResponse(body: unknown, status = 200): Response {
 describe("Role-Model runtime discovery", () => {
   test("fetches health, version, and downstream discovery during normal discovery", async () => {
     const calls: string[] = [];
+    const requestInits: RequestInit[] = [];
     const discovery = createDiscovery();
     const result = await discoverRoleModelRuntime({
-      fetch: async (url) => {
+      fetch: async (url, init) => {
         calls.push(String(url));
+        requestInits.push(init ?? {});
         if (String(url).endsWith("/healthz")) return jsonResponse({ status: "healthy" });
         if (String(url).endsWith("/api/version")) return jsonResponse({ version: "0.0.0-test" });
         if (String(url).endsWith("/api/role-model/downstream/openai"))
@@ -32,6 +34,13 @@ describe("Role-Model runtime discovery", () => {
     expect(result.state).toBe("ready");
     expect(result.health).toEqual({ status: "healthy" });
     expect(result.version?.version).toBe("0.0.0-test");
+    expect(requestInits).toHaveLength(3);
+    expect(requestInits.every((init) => init.keepalive === false)).toBe(true);
+    expect(
+      requestInits.every(
+        (init) => (init.headers as Record<string, string> | undefined)?.connection === "close",
+      ),
+    ).toBe(true);
   });
 
   test("blocks remote endpoints before issuing network calls", async () => {

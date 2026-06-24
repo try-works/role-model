@@ -7,7 +7,11 @@
     ".": "./src/index.ts"
   },
   "files": ["src", "dist"],
+  "dependencies": {
+    "@role-model-router/core": "workspace:*"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
   }
 }

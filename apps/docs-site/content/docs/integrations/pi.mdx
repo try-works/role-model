@@ -83,6 +83,24 @@ Role-Model remains the routing authority. Pi sends model requests to the Role-Mo
 the runtime uses its current aliases, roles, tasks, endpoint capability metadata, and routing policy to choose
 the actual endpoint.
 
+## Taxonomy-aware requests
+
+`@try-works/pi-role-model` ships a compact taxonomy V1 snapshot and discovers the runtime taxonomy when the
+runtime is reachable. Pi uses progressive disclosure for classification:
+
+1. read compact groups such as `engineering`, `product_design`, and `governance_safety`
+2. choose likely roles such as `coder`, `security`, `researcher`, `support`, or `product`
+3. load task details only for likely roles
+4. send advisory `role_model.intent` metadata with the selected role, task, capabilities, modalities, tool
+   classes, confidence, evidence, and alternatives
+
+Examples include `coder.edit`, `security.audit`, `researcher.web_research.current`,
+`support.ticket.reply`, and `product.requirements`.
+
+The runtime validates the metadata against its active taxonomy. Unknown advisory fields are ignored with
+diagnostics instead of causing the request to fail, and the router/controller fall back to runtime policy when
+client metadata is stale or too uncertain.
+
 ## Runtime ownership boundary
 
 The Pi package is intentionally narrow:

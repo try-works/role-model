@@ -1,0 +1,675 @@
+{
+  "schemaVersion": "role-model.taxonomy.schema.v1",
+  "taxonomyVersion": "1.0.0-alpha.1",
+  "databaseVersion": 1,
+  "contentRevision": "taxonomy-v1-alpha.1",
+  "classificationContractVersion": "role-model.classification.v1",
+  "roles": [
+    {
+      "id": "coder",
+      "label": "Coder",
+      "description": "Code implementation, review, debugging, refactoring, and tests.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "coder.edit",
+        "coder.review",
+        "coder.debug.root_cause"
+      ],
+      "preferredCapabilities": [
+        "code.read",
+        "code.write",
+        "reasoning.multi_step",
+        "text.chat"
+      ],
+      "ui": {
+        "sortOrder": 10,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "architect",
+      "label": "Architect",
+      "description": "System design, API design, technical planning, and tradeoff analysis.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "architect.design",
+        "architect.review",
+        "architect.plan"
+      ],
+      "preferredCapabilities": [
+        "reasoning.multi_step",
+        "data.schema",
+        "text.chat"
+      ],
+      "ui": {
+        "sortOrder": 20,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "security",
+      "label": "Security",
+      "description": "Security review, threat modeling, abuse/risk analysis.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [
+        "governance_safety"
+      ],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "security.audit",
+        "security.threat_model",
+        "coder.review"
+      ],
+      "preferredCapabilities": [
+        "security.analysis",
+        "code.read",
+        "reasoning.multi_step",
+        "legal.analysis"
+      ],
+      "ui": {
+        "sortOrder": 30,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "researcher",
+      "label": "Researcher",
+      "description": "Search, compare, synthesize, cite, and summarize information.",
+      "primaryGroupId": "knowledge_research",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "researcher.web_research",
+        "researcher.compare_sources"
+      ],
+      "preferredCapabilities": [
+        "web.search",
+        "text.chat",
+        "long_context"
+      ],
+      "ui": {
+        "sortOrder": 40,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "writer",
+      "label": "Writer",
+      "description": "Write, edit, summarize, explain, and structure prose.",
+      "primaryGroupId": "communication",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "writer.docs.write",
+        "writer.summarize"
+      ],
+      "preferredCapabilities": [
+        "text.chat"
+      ],
+      "ui": {
+        "sortOrder": 50,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "operator",
+      "label": "Operator",
+      "description": "Runtime, deployment, logs, diagnostics, and operational response.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "operator.debug.startup",
+        "operator.deploy.review"
+      ],
+      "preferredCapabilities": [
+        "reasoning.multi_step",
+        "tools.browser_control",
+        "tools.function_calling",
+        "tools.command_execution"
+      ],
+      "ui": {
+        "sortOrder": 60,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "analyst",
+      "label": "Analyst",
+      "description": "Structured analysis, metrics, comparison, prioritization, and decision support.",
+      "primaryGroupId": "product_design",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "analyst.compare",
+        "analyst.evaluate",
+        "analyst.prioritize"
+      ],
+      "preferredCapabilities": [
+        "reasoning.multi_step",
+        "text.chat",
+        "data.query"
+      ],
+      "ui": {
+        "sortOrder": 70,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "planner",
+      "label": "Planner",
+      "description": "Breaks goals into requirements, milestones, phased plans, and acceptance criteria.",
+      "primaryGroupId": "product_design",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "planner.requirements",
+        "planner.roadmap",
+        "planner.decompose"
+      ],
+      "preferredCapabilities": [
+        "reasoning.multi_step"
+      ],
+      "ui": {
+        "sortOrder": 80,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "tester",
+      "label": "Tester",
+      "description": "Test design, QA, validation, reproduction, and end-to-end verification.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "tester.plan",
+        "tester.e2e",
+        "tester.regression"
+      ],
+      "preferredCapabilities": [
+        "code.read",
+        "code.write",
+        "tools.function_calling",
+        "reasoning.multi_step"
+      ],
+      "ui": {
+        "sortOrder": 90,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "data",
+      "label": "Data",
+      "description": "Data modeling, query analysis, schema review, transformation, and data quality.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "data.query",
+        "data.schema.review",
+        "data.transform"
+      ],
+      "preferredCapabilities": [
+        "data.query",
+        "data.schema",
+        "data.transform",
+        "reasoning.multi_step"
+      ],
+      "ui": {
+        "sortOrder": 100,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "product",
+      "label": "Product",
+      "description": "Product requirements, user workflows, prioritization, and release readiness.",
+      "primaryGroupId": "product_design",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "product.requirements",
+        "product.workflow.review",
+        "product.release_notes"
+      ],
+      "preferredCapabilities": [
+        "reasoning.multi_step",
+        "text.chat",
+        "long_context"
+      ],
+      "ui": {
+        "sortOrder": 110,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "designer",
+      "label": "Designer",
+      "description": "Interface design, interaction design, visual review, and experience quality.",
+      "primaryGroupId": "product_design",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "designer.ui.review",
+        "designer.interaction",
+        "designer.visual_direction"
+      ],
+      "preferredCapabilities": [
+        "vision.input",
+        "text.chat",
+        "vision.output",
+        "reasoning.multi_step"
+      ],
+      "ui": {
+        "sortOrder": 120,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "support",
+      "label": "Support",
+      "description": "Troubleshooting, user-facing diagnosis, remediation steps, and escalation.",
+      "primaryGroupId": "communication",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "support.triage",
+        "support.explain",
+        "support.escalate"
+      ],
+      "preferredCapabilities": [
+        "text.chat",
+        "communication.user_facing",
+        "knowledge.organization",
+        "coordination.workflow"
+      ],
+      "ui": {
+        "sortOrder": 130,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "legal",
+      "label": "Legal",
+      "description": "Legal, licensing, compliance, terms, and policy interpretation support.",
+      "primaryGroupId": "governance_safety",
+      "secondaryGroupIds": [
+        "business"
+      ],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "legal.review",
+        "legal.compliance_check"
+      ],
+      "preferredCapabilities": [
+        "legal.analysis",
+        "code.read",
+        "long_context",
+        "reasoning.multi_step"
+      ],
+      "ui": {
+        "sortOrder": 140,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "finance",
+      "label": "Finance",
+      "description": "Cost, budget, pricing, ROI, billing, and financial comparison work.",
+      "primaryGroupId": "business",
+      "secondaryGroupIds": [
+        "governance_safety"
+      ],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "finance.cost_estimate",
+        "finance.compare_options"
+      ],
+      "preferredCapabilities": [
+        "finance.analysis",
+        "reasoning.multi_step",
+        "data.query",
+        "procurement.analysis"
+      ],
+      "ui": {
+        "sortOrder": 150,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "creative",
+      "label": "Creative",
+      "description": "Ideation, naming, visual direction, storytelling, and creative variants.",
+      "primaryGroupId": "communication",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "creative.brainstorm",
+        "creative.copywriting",
+        "creative.storyboard"
+      ],
+      "preferredCapabilities": [
+        "text.chat",
+        "marketing.copy",
+        "vision.output"
+      ],
+      "ui": {
+        "sortOrder": 160,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "educator",
+      "label": "Educator",
+      "description": "Teaching, tutoring, curriculum, study support, quizzes, and feedback.",
+      "primaryGroupId": "knowledge_research",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "educator.tutor",
+        "educator.lesson.plan",
+        "educator.quiz.generate"
+      ],
+      "preferredCapabilities": [
+        "education.tutoring",
+        "text.chat",
+        "education.assessment",
+        "reasoning.multi_step"
+      ],
+      "ui": {
+        "sortOrder": 170,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "translator",
+      "label": "Translator",
+      "description": "Translation, localization, tone transfer, and multilingual communication.",
+      "primaryGroupId": "communication",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "translator.translate",
+        "translator.localize.locale",
+        "translator.review"
+      ],
+      "preferredCapabilities": [
+        "language.translation",
+        "text.chat",
+        "language.localization",
+        "code.read"
+      ],
+      "ui": {
+        "sortOrder": 180,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "marketer",
+      "label": "Marketer",
+      "description": "Positioning, messaging, campaigns, SEO, content strategy, and audience research.",
+      "primaryGroupId": "business",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "marketer.positioning",
+        "marketer.campaign.plan",
+        "marketer.content.seo"
+      ],
+      "preferredCapabilities": [
+        "marketing.analysis",
+        "text.chat",
+        "web.search",
+        "marketing.copy"
+      ],
+      "ui": {
+        "sortOrder": 190,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "seller",
+      "label": "Seller",
+      "description": "Sales discovery, outreach, proposals, account planning, and objection handling.",
+      "primaryGroupId": "business",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "seller.outreach.write",
+        "seller.discovery.plan",
+        "seller.proposal.enterprise"
+      ],
+      "preferredCapabilities": [
+        "sales.analysis",
+        "sales.communication",
+        "text.chat",
+        "communication.user_facing"
+      ],
+      "ui": {
+        "sortOrder": 200,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "recruiter",
+      "label": "Recruiter",
+      "description": "Job descriptions, interview plans, hiring rubrics, and candidate screening support.",
+      "primaryGroupId": "governance_safety",
+      "secondaryGroupIds": [
+        "business"
+      ],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "recruiter.job_description",
+        "recruiter.interview.plan",
+        "recruiter.candidate.screen"
+      ],
+      "preferredCapabilities": [
+        "recruiting.analysis",
+        "text.chat",
+        "communication.user_facing",
+        "coordination.workflow"
+      ],
+      "ui": {
+        "sortOrder": 210,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "procurement",
+      "label": "Procurement",
+      "description": "Vendor comparison, purchasing requirements, RFPs, and commercial review.",
+      "primaryGroupId": "business",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "procurement.vendor.compare",
+        "procurement.rfp.write",
+        "procurement.requirements"
+      ],
+      "preferredCapabilities": [
+        "procurement.analysis",
+        "finance.analysis",
+        "security.analysis",
+        "legal.analysis"
+      ],
+      "ui": {
+        "sortOrder": 220,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "coordinator",
+      "label": "Coordinator",
+      "description": "Meetings, schedules, task follow-up, inbox-style triage, and administrative workflows.",
+      "primaryGroupId": "communication",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "coordinator.meeting.agenda",
+        "coordinator.schedule.plan",
+        "coordinator.follow_up"
+      ],
+      "preferredCapabilities": [
+        "coordination.workflow",
+        "text.chat",
+        "calendar.planning",
+        "communication.follow_up"
+      ],
+      "ui": {
+        "sortOrder": 230,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "knowledge",
+      "label": "Knowledge",
+      "description": "Notes, memory, knowledge bases, retrieval organization, and institutional context.",
+      "primaryGroupId": "knowledge_research",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "knowledge.organize",
+        "knowledge.retrieve",
+        "knowledge.memory.update"
+      ],
+      "preferredCapabilities": [
+        "knowledge.organization",
+        "text.chat",
+        "knowledge.retrieval",
+        "memory.write"
+      ],
+      "ui": {
+        "sortOrder": 240,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "strategist",
+      "label": "Strategist",
+      "description": "Business strategy, market entry, competitive analysis, and organizational tradeoffs.",
+      "primaryGroupId": "business",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "strategist.business.plan",
+        "strategist.market.analyze",
+        "strategist.competitive.review"
+      ],
+      "preferredCapabilities": [
+        "strategy.analysis",
+        "market.analysis",
+        "reasoning.multi_step",
+        "text.chat"
+      ],
+      "ui": {
+        "sortOrder": 250,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "mathematician",
+      "label": "Mathematician",
+      "description": "Mathematical solving, verification, modeling, and explanation.",
+      "primaryGroupId": "knowledge_research",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "mathematician.solve",
+        "mathematician.verify",
+        "mathematician.model"
+      ],
+      "preferredCapabilities": [
+        "math.solve",
+        "math.verify",
+        "math.modeling",
+        "reasoning.multi_step"
+      ],
+      "ui": {
+        "sortOrder": 260,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "scientist",
+      "label": "Scientist",
+      "description": "Scientific reasoning, experimental design, evidence review, and method critique.",
+      "primaryGroupId": "knowledge_research",
+      "secondaryGroupIds": [],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "scientist.experiment.design",
+        "scientist.evidence.review",
+        "scientist.method.critique"
+      ],
+      "preferredCapabilities": [
+        "science.method",
+        "reasoning.multi_step",
+        "science.analysis",
+        "citation.synthesis"
+      ],
+      "ui": {
+        "sortOrder": 270,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    },
+    {
+      "id": "health",
+      "label": "Health",
+      "description": "General health information, symptom-safety triage, care-navigation support, and wellness explanations.",
+      "primaryGroupId": "governance_safety",
+      "secondaryGroupIds": [
+        "knowledge_research"
+      ],
+      "taskCount": 10,
+      "typicalTaskIds": [
+        "health.info.general",
+        "health.info.safety",
+        "health.care_navigation"
+      ],
+      "preferredCapabilities": [
+        "health.general_info",
+        "text.chat",
+        "health.safety",
+        "communication.user_facing"
+      ],
+      "ui": {
+        "sortOrder": 280,
+        "recommendedIcon": "circle",
+        "recommendedAccent": "neutral"
+      }
+    }
+  ]
+}

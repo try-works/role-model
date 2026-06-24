@@ -1,0 +1,7 @@
+src/index.ts(12485,58): error TS2304: Cannot find name 'roleDefinitions'.
+src/index.ts(13258,67): error TS2304: Cannot find name 'roleIds'.
+src/validate-catalog-economics.ts(244,49): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'RuntimeModelRoleAssignmentInput'.
+  Property 'roleIds' is missing in type 'string[]' but required in type 'RuntimeModelRoleAssignmentInput'.
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit

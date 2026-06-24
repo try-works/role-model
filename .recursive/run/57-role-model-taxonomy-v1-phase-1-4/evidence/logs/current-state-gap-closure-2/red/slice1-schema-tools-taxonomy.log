@@ -1,0 +1,42 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/schema-tools[39m
+
+ [31m❯[39m test/validate-schemas.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 608[2mms[22m[39m
+   [32m✓[39m loadSchemas[2m > [22mrequires canonical schema source files to declare stable $id values matching their filenames[32m 15[2mms[22m[39m
+   [32m✓[39m loadSchemas[2m > [22mreturns the same canonical $id values declared in source[32m 7[2mms[22m[39m
+[31m   [31m×[31m loadSchemas[2m > [22mincludes role-model taxonomy schemas in the validation entrypoint[39m[32m 16[2mms[22m[39m
+[31m     → expected false to be true // Object.is equality[39m
+   [32m✓[39m loadSchemas[2m > [22mdeclares manifest coverage for valid, invalid, minimal, and edge fixtures across in-scope families[32m 2[2mms[22m[39m
+   [33m[2m✓[22m[39m loadSchemas[2m > [22mtreats manifest expectations as authoritative for valid and invalid fixtures [33m 418[2mms[22m[39m
+   [32m✓[39m loadSchemas[2m > [22mvalidates the full fixture manifest through the schema-tool entrypoint[32m 148[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-schemas.test.ts > loadSchemas > includes role-model taxonomy schemas in the validation entrypoint
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/validate-schemas.test.ts:95:82
+     93| 
+     94|     for (const schemaName of taxonomySchemaNames) {
+     95|       expect(loadedSchemaNames.has(`schemas/role-model/taxonomy/${sche…
+       |                                                                                  ^
+     96|     }
+     97|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m5 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 19:10:11
+[2m   Duration [22m 1.80s[2m (transform 144ms, setup 0ms, collect 383ms, tests 608ms, environment 0ms, prepare 330ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\schema-tools:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/validate-schemas.test.ts

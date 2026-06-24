@@ -1,0 +1,64 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [31m❯[39m test/docs-and-safety.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 34[2mms[22m[39m
+[31m   [31m×[31m Pi installation docs, skill, and safety guardrails[2m > [22mships the role-model skill and README Installation for Pi section[39m[32m 26[2mms[22m[39m
+[31m     → expected '---\nname: role-model\ndescription: U…' to contain 'taxonomy-aware benchmarks and telemet…'[39m
+   [32m✓[39m Pi installation docs, skill, and safety guardrails[2m > [22mdoes not couple the package to auth storage, launchers, or managed runtime processes[32m 6[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/docs-and-safety.test.ts > Pi installation docs, skill, and safety guardrails > ships the role-model skill and README Installation for Pi section
+AssertionError: expected '---\nname: role-model\ndescription: U…' to contain 'taxonomy-aware benchmarks and telemet…'
+
+- Expected
++ Received
+
+- taxonomy-aware benchmarks and telemetry are later Role-Model phases
++ ---
++ name: role-model
++ description: Use when Pi should route model requests through a locally running Role-Model runtime, inspect Role-Model aliases, or diagnose Role-Model provider setup.
++ ---
++
++ # Role-Model For Pi
++
++ Use this skill when the user wants Pi to use Role-Model as the routing provider.
++
++ Role-Model is the routing authority. Pi sends requests to the `role-model` provider, and the external Role-Model runtime decides which endpoint or alias should handle the request. The Pi package only discovers the runtime, registers provider models, exposes diagnostics, and helps choose aliases.
++
++ First check `/role-model status`. If setup has not completed, run `/role-model setup`, then use `/role-model doctor` to verify the endpoint, runtime version, auth state, endpoint trust, provider state, and downstream discovery contract.
++
++ For model selection, use `/role-model alias list` to inspect available aliases, `/role-model alias recommended` to show the runtime recommendation, and `/role-model alias use <alias>` or `/role-model alias choose <alias>` to select the alias Pi should use. Use `/role-model alias refresh` after the Role-Model runtime catalog changes.
++
++ Aliases are Role-Model routing entries; direct models are concrete model IDs exposed by the runtime. Prefer aliases when the user wants Role-Model to route intelligently.
++
++ For taxonomy discovery, prefer the live Role-Model runtime taxonomy manifest and compact role/task endpoints when available. If the runtime is unavailable or reports an incompatible taxonomy version, fall back to the package compact taxonomy snapshot and report the version mismatch clearly.
++
++ Use progressive classification before sending a request through Role-Model: choose likely groups first, inspect likely roles next, and load task detail only for the likely role or an ambiguous role pair. Include `role_model.intent` metadata when the package can classify the request: role, task, preferred capabilities, modalities, tool classes, confidence, source, evidence, taxonomy version, and classification contract version. Treat low-confidence heuristic classifications as advisory unless the user gave an explicit instruction.
++
++ Role-Model benchmarks, routing decisions, endpoint eligibility, fallback, and telemetry belong to Role-Model, not to this Pi package. Use Role-Model runtime docs and UI for benchmark or routing analysis. Taxonomy-aware benchmarks and telemetry are later Role-Model phases, so do not claim that this package scores models or aggregates production telemetry itself.
++
++ If the user explicitly asks to install or launch the external Role-Model router runtime, point them to the Role-Model repository README for those instructions and make it clear that this is external runtime setup, not a side effect of installing the Pi package.
++
++ Security boundaries: remote endpoints require explicit trust, runtimes reporting `authentication.required` must fail closed unless an explicit supported token source exists, and the package must not manage the runtime lifecycle. Do not read, print, copy, or sync Pi auth files.
++
+
+ ❯ test/docs-and-safety.test.ts:57:19
+     55|     expect(skill).toContain("progressive classification");
+     56|     expect(skill).toContain("role_model.intent");
+     57|     expect(skill).toContain("taxonomy-aware benchmarks and telemetry a…
+       |                   ^
+     58|     expect(skill).toContain("benchmarks");
+     59|     expect(skill).toContain("Do not read, print, copy, or sync Pi auth…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 12:21:55
+[2m   Duration [22m 959ms[2m (transform 104ms, setup 0ms, collect 93ms, tests 34ms, environment 0ms, prepare 314ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/docs-and-safety.test.ts

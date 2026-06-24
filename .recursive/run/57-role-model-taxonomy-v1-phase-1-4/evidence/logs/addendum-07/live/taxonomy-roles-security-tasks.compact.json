@@ -1,0 +1,206 @@
+{
+  "schemaVersion": "role-model.taxonomy.schema.v1",
+  "taxonomyVersion": "1.0.0-alpha.1",
+  "databaseVersion": 1,
+  "contentRevision": "taxonomy-v1-alpha.1",
+  "classificationContractVersion": "role-model.classification.v1",
+  "roleId": "security",
+  "tasks": [
+    {
+      "id": "security.audit",
+      "label": "Security Audit",
+      "description": "Analyze a system, implementation, or configuration for security risk.",
+      "requiredCapabilities": [
+        "security.analysis"
+      ],
+      "preferredCapabilities": [
+        "code.read"
+      ],
+      "requiredModalities": [
+        "text"
+      ],
+      "toolClasses": [],
+      "classifier": {
+        "useWhen": "User asks for vulnerabilities, abuse cases, secrets, auth, permissions, or risk.",
+        "doNotUseWhen": "User asks for general code quality without security focus."
+      }
+    },
+    {
+      "id": "security.audit.supply_chain",
+      "label": "Supply Chain Security Audit",
+      "description": "Review dependencies, packages, build provenance, lockfiles, and release artifacts for supply-chain risk.",
+      "requiredCapabilities": [
+        "security.analysis",
+        "code.read"
+      ],
+      "preferredCapabilities": [
+        "web.search"
+      ],
+      "requiredModalities": [
+        "text"
+      ],
+      "toolClasses": [],
+      "classifier": {
+        "useWhen": "User asks about dependency risk, package publishing, build artifacts, provenance, or release integrity.",
+        "doNotUseWhen": "User asks for normal code quality review without dependency or release risk."
+      }
+    },
+    {
+      "id": "security.threat_model",
+      "label": "Threat Modeling",
+      "description": "Identify assets, attackers, trust boundaries, threats, and mitigations.",
+      "requiredCapabilities": [
+        "security.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferredCapabilities": [
+        "json.schema_adherence"
+      ],
+      "requiredModalities": [
+        "text"
+      ],
+      "toolClasses": [],
+      "classifier": {
+        "useWhen": "User asks to model risk before or during design.",
+        "doNotUseWhen": "User asks to patch an already identified bug."
+      }
+    },
+    {
+      "id": "security.vulnerability_triage",
+      "label": "Vulnerability Triage",
+      "description": "Assess vulnerability reports, severity, exploitability, and mitigation priority.",
+      "requiredCapabilities": [
+        "security.analysis"
+      ],
+      "preferredCapabilities": [
+        "web.search"
+      ],
+      "requiredModalities": [
+        "text"
+      ],
+      "toolClasses": [],
+      "classifier": {
+        "useWhen": "User provides a CVE, scanner finding, or suspected vulnerability.",
+        "doNotUseWhen": "User asks for general best practices."
+      }
+    },
+    {
+      "id": "security.policy_review",
+      "label": "Security Policy Review",
+      "description": "Review permissions, RBAC, access policy, or compliance controls.",
+      "requiredCapabilities": [
+        "security.analysis"
+      ],
+      "preferredCapabilities": [
+        "reasoning.multi_step"
+      ],
+      "requiredModalities": [
+        "text"
+      ],
+      "toolClasses": [],
+      "classifier": {
+        "useWhen": "User asks about authz, RBAC, scopes, permissions, or policy enforcement.",
+        "doNotUseWhen": "User asks for code formatting."
+      }
+    },
+    {
+      "id": "security.secrets.scan",
+      "label": "Secrets Scan Review",
+      "description": "Inspect code, config, or logs for exposed secrets and credential risks.",
+      "requiredCapabilities": [
+        "security.analysis",
+        "code.read"
+      ],
+      "preferredCapabilities": [
+        "tools.command_execution"
+      ],
+      "requiredModalities": [
+        "text"
+      ],
+      "toolClasses": [],
+      "classifier": {
+        "useWhen": "User asks to check for secrets or credential exposure.",
+        "doNotUseWhen": "User asks for general documentation edits."
+      }
+    },
+    {
+      "id": "security.auth.review",
+      "label": "Auth Review",
+      "description": "Review authentication, authorization, sessions, tokens, and access flows.",
+      "requiredCapabilities": [
+        "security.analysis"
+      ],
+      "preferredCapabilities": [
+        "reasoning.multi_step"
+      ],
+      "requiredModalities": [
+        "text"
+      ],
+      "toolClasses": [],
+      "classifier": {
+        "useWhen": "User asks about auth risk or permission behavior.",
+        "doNotUseWhen": "User asks for non-security code style review."
+      }
+    },
+    {
+      "id": "security.privacy.review",
+      "label": "Privacy Review",
+      "description": "Review data collection, retention, sharing, and privacy-sensitive flows.",
+      "requiredCapabilities": [
+        "security.analysis",
+        "legal.analysis"
+      ],
+      "preferredCapabilities": [
+        "json.schema_adherence"
+      ],
+      "requiredModalities": [
+        "text"
+      ],
+      "toolClasses": [],
+      "classifier": {
+        "useWhen": "User asks about privacy risk or personal data handling.",
+        "doNotUseWhen": "User asks for binding legal advice."
+      }
+    },
+    {
+      "id": "security.incident.review",
+      "label": "Security Incident Review",
+      "description": "Review suspected incidents, indicators, containment, and follow-up actions.",
+      "requiredCapabilities": [
+        "security.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferredCapabilities": [
+        "tools.command_execution"
+      ],
+      "requiredModalities": [
+        "text"
+      ],
+      "toolClasses": [],
+      "classifier": {
+        "useWhen": "User reports a potential security incident.",
+        "doNotUseWhen": "User asks for ordinary uptime triage."
+      }
+    },
+    {
+      "id": "security.safe_prompt.review",
+      "label": "Prompt Safety Review",
+      "description": "Review prompts, tools, or agent behavior for misuse and policy risk.",
+      "requiredCapabilities": [
+        "security.analysis",
+        "text.chat"
+      ],
+      "preferredCapabilities": [
+        "reasoning.multi_step"
+      ],
+      "requiredModalities": [
+        "text"
+      ],
+      "toolClasses": [],
+      "classifier": {
+        "useWhen": "User asks about AI safety, prompt abuse, or tool misuse.",
+        "doNotUseWhen": "User asks for creative prompt writing only."
+      }
+    }
+  ]
+}

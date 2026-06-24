@@ -16,12 +16,24 @@ Before benchmarking or routing, the operator needs to make four things true:
 - the intended roles are assigned
 - the candidate set reflects real production intent
 
-## Do not over-activate
+## Default role assignment
 
-Avoid assigning every role to every model just because you can.
+Newly added or loaded models default to all roles in taxonomy V1. This keeps first-run setup simple: a model
+is usable immediately, and operators can remove roles only when they know the model should not compete for
+that work.
 
-If a model is only meant to serve `general.chat`, do not also assign `coder.patch` or `tool.agent` unless you
-want it to compete for those requests and be benchmarked as part of those routing stories.
+The UI exposes this as visible checked role controls grouped by taxonomy group, plus an `All roles` control.
+Persisted role assignment uses all/include/exclude semantics:
+
+| Mode | Meaning |
+| --- | --- |
+| all | the model can serve every current canonical role and compatible future roles |
+| include | the model can serve only the listed enabled role IDs |
+| exclude | the model can serve all roles except the listed disabled role IDs |
+
+This all/include/exclude model avoids ambiguity between "default all roles" and "intentionally no roles."
+Policy-sensitive roles such as `security`, `legal`, `finance`, `recruiter`, and `health` are labeled so they
+can be reviewed deliberately.
 
 ## Why role activation comes before benchmarking
 
@@ -29,14 +41,18 @@ The benchmark should grade the same role-aware candidate set that Router will la
 
 If the role assignments change after the benchmark, your benchmark story and your routing story will drift.
 
-## Useful baseline roles
+## Useful taxonomy V1 roles
 
-Typical first-run role assignments are:
+Useful first-run checks include:
 
-- `general.chat` for general assistant routes
-- `coder.patch` for patch-oriented code work
-- `coder.review` for review and structured verdicts
-- `tool.agent` when tool calling is part of the route
+- `coder` with tasks such as `coder.edit` and `coder.review`
+- `security` with tasks such as `security.audit`
+- `product` with tasks such as `product.requirements`
+- `researcher` with tasks such as `researcher.web_research.current`
+- `support` with tasks such as `support.ticket.reply`
+
+Task details are shown after models are configured. The model page should keep add/load flows compact, then
+let operators drill into tasks by role when they need to inspect coverage.
 
 ## Next
 

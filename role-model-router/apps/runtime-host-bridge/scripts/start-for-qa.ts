@@ -279,7 +279,7 @@ export async function main(): Promise<void> {
   console.log(`[QA] repoRoot: ${repoRoot}`);
   console.log(`[QA] runtimeStateRoot: ${runtimeStateRoot}`);
   console.log(`[QA] scopeId: ${scopeId}`);
-  if (!process.env[qaMoonshotApiKeyEnv]) {
+  if (!process.env[qaMoonshotApiKeyEnv] && !process.env.RUNTIME_QA_NO_PLACEHOLDERS) {
     process.env[qaMoonshotApiKeyEnv] = qaPlaceholderApiKey;
     console.log(`[QA] Seeded placeholder ${qaMoonshotApiKeyEnv} for local UI QA.`);
   }
@@ -301,7 +301,9 @@ export async function main(): Promise<void> {
   const backend = await createRuntimeBridgeBackend(
     createQaRuntimeBridgeBackendOptions(repoRoot, runtimeStateRoot, scopeId),
   );
-  await bootstrapQaControlPlane(backend);
+  if (!process.env.RUNTIME_QA_NO_PLACEHOLDERS) {
+    await bootstrapQaControlPlane(backend);
+  }
 
   const server = await startBridgeServer(createQaServerOptions(repoRoot, backend));
 

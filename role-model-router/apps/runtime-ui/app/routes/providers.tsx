@@ -40,6 +40,7 @@ import {
   startRuntimeDeviceAuthorization,
   updateRuntimeAccountApiKey,
   upsertRuntimeAccount,
+  roleIdsToExplicitAssignment,
 } from "../lib/runtime-api";
 import {
   buildAccountModelCatalogIds,
@@ -73,25 +74,56 @@ function defaultCredentialRef(provider?: RuntimeProvider): string {
   return provider?.envVars?.[0] ?? "API_KEY";
 }
 
-function buildModelRoleSelection(
+export function buildModelRoleSelection(
   modelIds: readonly string[],
+  allRoleIds: readonly string[],
   bindings?: readonly {
     readonly modelId: string;
     readonly roleIds: readonly string[];
+    readonly roleAssignmentMode?: "all" | "include" | "exclude" | "custom";
+    readonly enabledRoleIds?: readonly string[];
+    readonly disabledRoleIds?: readonly string[];
   }[],
 ): ModelRoleSelection {
-  const byModelId = new Map(
-    (bindings ?? []).map((binding) => [binding.modelId, [...binding.roleIds].sort()]),
+  const byModelId = new Map((bindings ?? []).map((binding) => [binding.modelId, binding]));
+  return Object.fromEntries(
+    modelIds.map((modelId) => {
+      const binding = byModelId.get(modelId);
+      if (!binding || binding.roleAssignmentMode === "all") {
+        return [modelId, [...allRoleIds]];
+      }
+      if (binding.roleAssignmentMode === "exclude") {
+        const disabled = new Set(binding.disabledRoleIds ?? []);
+        return [modelId, allRoleIds.filter((roleId) => !disabled.has(roleId))];
+      }
+      if (binding.roleAssignmentMode === "include" || binding.roleAssignmentMode === "custom") {
+        return [modelId, [...(binding.enabledRoleIds ?? binding.roleIds)].sort()];
+      }
+      return [modelId, [...binding.roleIds].sort()];
+    }),
   );
-  return Object.fromEntries(modelIds.map((modelId) => [modelId, byModelId.get(modelId) ?? []]));
 }
 
-function buildModelRoleBindings(selectedModels: readonly string[], selection: ModelRoleSelection) {
-  return selectedModels.flatMap((modelId) => {
+export function buildModelRoleBindings(
+  selectedModels: readonly string[],
+  selection: ModelRoleSelection,
+  allRoleIds: readonly string[],
+) {
+  return selectedModels.map((modelId) => {
     const roleIds = [...new Set(selection[modelId] ?? [])].sort((left, right) =>
       left.localeCompare(right, "en"),
     );
-    return roleIds.length > 0 ? [{ modelId, roleIds }] : [];
+    const assignment =
+      allRoleIds.length > 0 && roleIds.length === allRoleIds.length
+        ? { roleAssignmentMode: "all" as const, enabledRoleIds: [], disabledRoleIds: [] }
+        : roleIdsToExplicitAssignment(roleIds, false);
+    return {
+      modelId,
+      roleIds: assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
+      roleAssignmentMode: assignment.roleAssignmentMode,
+      enabledRoleIds: [...(assignment.enabledRoleIds ?? [])],
+      disabledRoleIds: [...(assignment.disabledRoleIds ?? [])],
+    };
   });
 }
 
@@ -345,6 +377,7 @@ export default function ProvidersRoute() {
     [providerAccountId, snapshot],
   );
   const availableRoles = snapshot?.roles ?? [];
+  const availableRoleIds = availableRoles.map((role) => role.roleId);
   const providerMaintenanceRows = useMemo(
     () =>
       snapshot
@@ -387,7 +420,9 @@ export default function ProvidersRoute() {
     setProviderAccountId(account.providerAccountId);
     setCredentialRef(defaultCredentialRef(provider));
     setSelectedModel(restoredModelIds[0] ?? "");
-    setSelectedModelRoles(buildModelRoleSelection(restoredModelIds, account.modelRoleBindings));
+    setSelectedModelRoles(
+      buildModelRoleSelection(restoredModelIds, availableRoleIds, account.modelRoleBindings),
+    );
     setOauthConnected(false);
     setCopiedUserCode(false);
     setDeviceAuthorizationModalSession(null);
@@ -438,7 +473,9 @@ export default function ProvidersRoute() {
 
   const onModelSelect = (modelId: string) => {
     setSelectedModel(modelId);
-    setSelectedModelRoles((current) => (modelId ? { [modelId]: current[modelId] ?? [] } : {}));
+    setSelectedModelRoles((current) =>
+      modelId ? { [modelId]: current[modelId] ?? availableRoleIds } : {},
+    );
   };
 
   const toggleModelRole = (modelId: string, roleId: string) => {
@@ -491,6 +528,7 @@ export default function ProvidersRoute() {
       modelRoleBindings: buildModelRoleBindings(
         selectedModel ? [selectedModel] : [],
         selectedModelRoles,
+        availableRoleIds,
       ),
       deniedModels: [],
       entitlementTags: ["chat"],
@@ -545,6 +583,7 @@ export default function ProvidersRoute() {
         modelRoleBindings: buildModelRoleBindings(
           selectedModel ? [selectedModel] : [],
           selectedModelRoles,
+          availableRoleIds,
         ),
         deniedModels: [],
         entitlementTags: ["chat"],
@@ -734,7 +773,9 @@ export default function ProvidersRoute() {
                               className="flex items-center gap-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5"
                             >
                               <input
-                                checked={(selectedModelRoles[selectedModel] ?? []).includes(
+                                checked={(
+                                  selectedModelRoles[selectedModel] ?? availableRoleIds
+                                ).includes(
                                   role.roleId,
                                 )}
                                 type="checkbox"
@@ -965,15 +1006,18 @@ export default function ProvidersRoute() {
                       {row.allowedModels.length > 0 ? (
                         <div className="mt-3 space-y-3">
                           {row.allowedModels.map((modelId) => {
-                            const roleIds =
-                              row.modelRoleBindings.find((binding) => binding.modelId === modelId)
-                                ?.roleIds ?? [];
+                            const modelRoleSelection = buildModelRoleSelection(
+                              [modelId],
+                              availableRoleIds,
+                              row.modelRoleBindings,
+                            );
+                            const effectiveRoleIds = modelRoleSelection[modelId] ?? [];
                             return (
                               <div key={modelId} className={`${raisedPanelClassName} p-3`}>
                                 <div className="flex flex-wrap items-center gap-2">
                                   <StatusPill tone="accent">{modelId}</StatusPill>
-                                  {roleIds.length > 0 ? (
-                                    roleIds.map((roleId) => (
+                                  {effectiveRoleIds.length > 0 ? (
+                                    effectiveRoleIds.map((roleId) => (
                                       <StatusPill key={`${modelId}:${roleId}`} tone="neutral">
                                         {roleId}
                                       </StatusPill>

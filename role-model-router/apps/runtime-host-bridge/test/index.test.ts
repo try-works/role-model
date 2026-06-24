@@ -10,6 +10,7 @@ import { describe, expect, test } from "vitest";
 import { stringify } from "yaml";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
+import { canonicalTaxonomy } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { createRuntimeObservationBundle } from "@role-model-router/runtime-observability";
 import {
@@ -28,11 +29,13 @@ import { buildRoutableInventory } from "../src/routable-inventory.js";
 
 import {
   bootstrapQaControlPlane,
+  createQaCanonicalRoleIds,
   createQaFixtureRoot,
   createQaRuntimeBridgeBackendOptions,
   createQaRuntimeConfigPath,
   createQaRuntimeConfigText,
   createQaServerOptions,
+  shouldBootstrapQaPlaceholderControlPlane,
 } from "../scripts/start-for-qa.ts";
 import * as cli from "../src/cli.js";
 import * as bridge from "../src/index.js";
@@ -120,7 +123,7 @@ function createControllerVendorScript(options?: { readonly responseDelayMs?: num
 }
 
 function createControllerRetryVendorScript(): string {
-  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const isCompactRetry=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER_COMPACT");const isHardCase=joinedMessages.includes("runtime routing regression");const message=isController&&isHardCase&&!isCompactRetry?{role:"assistant",content:""}:{role:"assistant",content:isController?JSON.stringify({requestedRoleId:"coder.patch",taskType:"code.edit",requiredCapabilities:["code.edit"],preferredCapabilities:["reasoning.multi_step"],strategy:"quality"}):"alias remote summary"};const finishReason=isController&&isHardCase&&!isCompactRetry?"length":"stop";res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-retry",object:"chat.completion",choices:[{index:0,message,finish_reason:finishReason}],usage:{prompt_tokens:12,completion_tokens:isController&&isHardCase&&!isCompactRetry?1024:32,total_tokens:128}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
+  return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const isCompactRetry=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER_COMPACT");const isHardCase=joinedMessages.includes("runtime routing regression");const message=isController&&isHardCase&&!isCompactRetry?{role:"assistant",content:""}:{role:"assistant",content:isController?JSON.stringify({requestedRoleId:"coder",taskType:"coder.edit",requiredCapabilities:["code.write"],preferredCapabilities:["reasoning.multi_step"],strategy:"quality"}):"alias remote summary"};const finishReason=isController&&isHardCase&&!isCompactRetry?"length":"stop";res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-controller-retry",object:"chat.completion",choices:[{index:0,message,finish_reason:finishReason}],usage:{prompt_tokens:12,completion_tokens:isController&&isHardCase&&!isCompactRetry?1024:32,total_tokens:128}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 
 function createControllerInvalidVendorScript(): string {
@@ -650,7 +653,8 @@ describe("runtime-host-bridge", () => {
     expect(createQaRuntimeConfigText()).toContain("models:");
     expect(createQaRuntimeConfigText()).toContain("path: ./models/lfm2.5-1.2b-instruct.gguf");
     expect(createQaRuntimeConfigText()).toContain("litellm_proxy:");
-    expect(createQaRuntimeConfigText()).toContain("providers: {}");
+    expect(createQaRuntimeConfigText()).toContain("providers:");
+    expect(createQaRuntimeConfigText()).toContain("model_name: openai/gpt-4.1-mini-fast");
 
     const options = createQaServerOptions(repoRoot, backend);
 
@@ -688,7 +692,7 @@ describe("runtime-host-bridge", () => {
     expect(options.updateBenchmarkPreferences).toBe(updateBenchmarkPreferences);
   });
 
-  test("builds QA backend options that preserve runtime config without starting local vendors", () => {
+  test("builds QA backend options that start managed mock vendors for end-to-end Pi QA", () => {
     const runtimeStateRoot = path.join(os.tmpdir(), "role-model-runtime-host-qa-options-test");
     const scopeId = "runtime-qa";
 
@@ -698,8 +702,47 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot,
       scopeId,
       unifiedRuntimeConfigPath: createQaRuntimeConfigPath(runtimeStateRoot),
-      runtimeVendorStartup: "disabled",
+      runtimeVendorStartup: "enabled",
     });
+  });
+
+  test("seeds QA runtime config with executable local and remote mock backend commands", () => {
+    const config = createQaRuntimeConfigText();
+
+    expect(config).toContain("llama_swap:");
+    expect(config).toContain("command: node");
+    expect(config).toContain("args:");
+    expect(config).toContain("- -e");
+    expect(config).toContain("chat-local");
+    expect(config).toContain("litellm_proxy:");
+    expect(config).toContain("chat-remote");
+    expect(config).toContain("openai/gpt-4.1-mini-fast");
+  });
+
+  test("seeds QA runtime config with canonical task capabilities for role-routed backend QA", () => {
+    const config = createQaRuntimeConfigText();
+
+    expect(config).toContain("capabilities:");
+    expect(config).toContain("- code.read");
+    expect(config).toContain("- code.write");
+    expect(config).toContain("- security.analysis");
+    expect(config).toContain("- reasoning.multi_step");
+  });
+
+  test("binds managed QA backends to canonical taxonomy roles for classified request QA", () => {
+    const roleIds = createQaCanonicalRoleIds();
+
+    expect(roleIds).toEqual(expect.arrayContaining(["analyst", "coder", "security"]));
+    expect(roleIds.length).toBeGreaterThan(20);
+  });
+
+  test("does not bootstrap placeholder remote control-plane endpoints by default", () => {
+    expect(shouldBootstrapQaPlaceholderControlPlane({})).toBe(false);
+    expect(
+      shouldBootstrapQaPlaceholderControlPlane({
+        RUNTIME_QA_BOOTSTRAP_PLACEHOLDER_CONTROL_PLANE: "1",
+      }),
+    ).toBe(true);
   });
 
   test("bootstraps QA control-plane state for mixed local+remote routing proof", async () => {
@@ -745,7 +788,10 @@ describe("runtime-host-bridge", () => {
           modelRoleBindings: [
             {
               modelId: "moonshot/kimi-k2.5",
-              roleIds: ["general.chat"],
+              roleAssignmentMode: "all",
+              roleIds: [],
+              enabledRoleIds: [],
+              disabledRoleIds: [],
             },
           ],
           deniedModels: [],
@@ -1267,6 +1313,400 @@ describe("runtime-host-bridge", () => {
         },
       },
     });
+  });
+
+  test("maps request role_model intent metadata into the routing request", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            roleModelIntent?: unknown;
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Review this diff for security risks." }],
+        role_model: {
+          intent: {
+            taxonomyVersion: "1.0.0-alpha.1",
+            classificationContractVersion: "role-model.classification.v1",
+            role: { id: "security", hard: true },
+            task: { id: "security.audit", hard: true },
+            capabilities: {
+              required: ["security.analysis"],
+              preferred: ["code.read"],
+            },
+            modalities: { required: ["text"] },
+            toolClasses: ["filesystem.read"],
+            source: "explicit_user",
+            confidence: 0.98,
+            evidence: ["explicit security review request"],
+            alternatives: [{ roleId: "coder", taskType: "coder.review", confidence: 0.42 }],
+          },
+        },
+      },
+      "req-taxonomy-intent",
+    );
+
+    expect(result.routingRequest.roleModelIntent).toEqual(
+      expect.objectContaining({
+        taxonomyVersion: "1.0.0-alpha.1",
+        classificationContractVersion: "role-model.classification.v1",
+        role: { id: "security", hard: true },
+        task: { id: "security.audit", hard: true },
+        source: "explicit_user",
+        confidence: 0.98,
+      }),
+    );
+  });
+
+  test("maps stable proposal-shaped chat role_model intent metadata into the routing request", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            roleModelIntent?: unknown;
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Review this diff for security risks." }],
+        role_model: {
+          contract_version: 1,
+          intent: {
+            taxonomy_version: "1.0.0-alpha.1",
+            content_revision: "taxonomy-v1-alpha.1",
+            classification_contract_version: "role-model.classification.v1",
+            requested_role_id: "security",
+            role_hint_id: "coder",
+            role_source: "user",
+            task_type: "security.audit",
+            task_action: "audit",
+            task_variant: null,
+            task_source: "client.rule",
+            task_confidence: 0.98,
+            required_capabilities: ["security.analysis"],
+            preferred_capabilities: ["code.read"],
+            required_modalities: ["text"],
+            tool_classes: ["filesystem.read"],
+            evidence: ["explicit security review request"],
+            alternatives: [{ role_hint_id: "coder", task_type: "coder.review", confidence: 0.42 }],
+          },
+        },
+      },
+      "req-taxonomy-intent-stable",
+    );
+
+    expect(result.routingRequest.roleModelIntent).toEqual(
+      expect.objectContaining({
+        taxonomyVersion: "1.0.0-alpha.1",
+        classificationContractVersion: "role-model.classification.v1",
+        role: { id: "security", hard: false },
+        task: { id: "security.audit", hard: false },
+        contentRevision: "taxonomy-v1-alpha.1",
+        contractVersion: 1,
+        taskAction: "audit",
+        taskVariant: null,
+        capabilities: {
+          preferred: ["code.read", "security.analysis"],
+        },
+        modalities: { required: ["text"] },
+        toolClasses: ["filesystem.read"],
+        source: "client.rule",
+        confidence: 0.98,
+        evidence: ["explicit security review request"],
+        alternatives: [{ roleId: "coder", taskType: "coder.review", confidence: 0.42 }],
+      }),
+    );
+  });
+
+  test("normalizes stable advisory role_model intent with ignored-field diagnostics", () => {
+    const observation = (
+      bridge as {
+        createRoleModelNormalizedIntentObservation: (
+          intent: Record<string, unknown>,
+          roleDefinitions: readonly Record<string, unknown>[],
+          taskDefinitions: readonly Record<string, unknown>[],
+        ) => {
+          normalizedIntent?: Record<string, unknown>;
+          diagnostics: readonly { code: string; field: string; id: string; severity: string }[];
+        };
+      }
+    ).createRoleModelNormalizedIntentObservation(
+      {
+        contractVersion: 1,
+        taxonomyVersion: "1.0.0-alpha.1",
+        contentRevision: "taxonomy-v1-alpha.1",
+        classificationContractVersion: "role-model.classification.v1",
+        role: { id: "unknown.role", hard: false },
+        task: { id: "unknown.task", hard: false },
+        capabilities: {
+          preferred: ["security.analysis", "unknown.capability"],
+        },
+        modalities: { required: ["text", "unknown_modality"] },
+        toolClasses: ["filesystem.read", "unknown.tool"],
+        source: "heuristic",
+        confidence: 0.74,
+      },
+      [{ role_id: "security" }],
+      [{ task_type: "security.audit", allowed_roles: ["security"] }],
+    );
+
+    expect(observation.normalizedIntent).toMatchObject({
+      taxonomyVersion: "1.0.0-alpha.1",
+      contentRevision: "taxonomy-v1-alpha.1",
+      classificationContractVersion: "role-model.classification.v1",
+      capabilities: { preferred: ["security.analysis"] },
+      modalities: { required: ["text"] },
+      toolClasses: ["filesystem.read"],
+    });
+    expect(observation.normalizedIntent).not.toHaveProperty("role");
+    expect(observation.normalizedIntent).not.toHaveProperty("task");
+    expect(observation.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: "ROLE_MODEL_INTENT_FIELD_IGNORED",
+          field: "role",
+          id: "unknown.role",
+        }),
+        expect.objectContaining({
+          code: "ROLE_MODEL_INTENT_FIELD_IGNORED",
+          field: "task",
+          id: "unknown.task",
+        }),
+        expect.objectContaining({
+          code: "ROLE_MODEL_INTENT_FIELD_IGNORED",
+          field: "capabilities.preferred",
+          id: "unknown.capability",
+        }),
+        expect.objectContaining({
+          code: "ROLE_MODEL_INTENT_FIELD_IGNORED",
+          field: "modalities.required",
+          id: "unknown_modality",
+        }),
+        expect.objectContaining({
+          code: "ROLE_MODEL_INTENT_FIELD_IGNORED",
+          field: "toolClasses",
+          id: "unknown.tool",
+        }),
+      ]),
+    );
+  });
+
+  test("applies valid role_model intent as runtime role and task policy", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly unknown[],
+          difficultyContext?: unknown,
+          controllerContext?: unknown,
+          requestOptions?: unknown,
+          roleDefinitions?: readonly Record<string, unknown>[],
+          defaultRoutingMode?: unknown,
+          inventory?: unknown,
+          taskDefinitions?: readonly Record<string, unknown>[],
+        ) => {
+          routingRequest: {
+            requestedRoleId?: string;
+            taskType: string;
+            roleModelIntent?: unknown;
+            requiredCapabilities: readonly string[];
+            preferredCapabilities: readonly string[];
+          };
+          routingDiagnostics?: {
+            rolePolicy?: {
+              requestedRoleId?: string;
+              appliedRoleId?: string;
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Review this diff for security risks." }],
+        role_model: {
+          intent: {
+            taxonomyVersion: "1.0.0-alpha.1",
+            classificationContractVersion: "role-model.classification.v1",
+            role: { id: "security", hard: false },
+            task: { id: "security.audit", hard: false },
+            capabilities: {
+              required: ["text.chat"],
+              preferred: ["security.analysis"],
+            },
+            modalities: { required: ["text"] },
+            source: "heuristic",
+            confidence: 0.91,
+          },
+        },
+      },
+      "req-taxonomy-intent-policy",
+      [],
+      undefined,
+      undefined,
+      undefined,
+      [
+        {
+          role_id: "security",
+          description: "Security review role.",
+          default_system_instructions: "Review for security issues.",
+          task_types_supported: ["security.audit"],
+          required_capabilities: ["text.chat"],
+          preferred_capabilities: ["security.analysis"],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed", allowed_tools: [] },
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      undefined,
+      null,
+      [
+        {
+          task_type: "security.audit",
+          description: "Security audit task.",
+          required_inputs: ["text"],
+          required_capabilities: ["text.chat"],
+          preferred_capabilities: ["security.analysis"],
+          quality_metrics: [],
+          allowed_roles: ["security"],
+          default_benchmark_suites: [],
+        },
+      ],
+    );
+
+    expect(result.routingRequest).toEqual(
+      expect.objectContaining({
+        requestedRoleId: "security",
+        taskType: "security.audit",
+        requiredCapabilities: ["text.chat"],
+        preferredCapabilities: ["security.analysis"],
+      }),
+    );
+    expect(result.routingDiagnostics?.rolePolicy).toEqual(
+      expect.objectContaining({
+        requestedRoleId: "security",
+        appliedRoleId: "security",
+      }),
+    );
+  });
+
+  test("keeps stable Pi role_model metadata advisory for exact-model routing", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly unknown[],
+          difficultyContext?: unknown,
+          controllerContext?: unknown,
+          requestOptions?: unknown,
+          roleDefinitions?: readonly Record<string, unknown>[],
+          defaultRoutingMode?: unknown,
+          inventory?: unknown,
+          taskDefinitions?: readonly Record<string, unknown>[],
+        ) => {
+          routingRequest: {
+            requestedRoleId?: string;
+            taskType: string;
+            roleModelIntent?: unknown;
+            requiredCapabilities: readonly string[];
+            preferredCapabilities: readonly string[];
+          };
+          routingDiagnostics?: {
+            rolePolicy?: unknown;
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Review this diff for security risks." }],
+        role_model: {
+          contract_version: 1,
+          intent: {
+            taxonomy_version: "1.0.0-alpha.1",
+            classification_contract_version: "role-model.classification.v1",
+            role_hint_id: "not-a-real-role",
+            task_type: "not_a_role.not_a_task",
+            source: "heuristic",
+            confidence: 0.72,
+            required_capabilities: ["security.analysis", "not.real.required"],
+            preferred_capabilities: ["code.read", "not.real.preferred"],
+            required_modalities: ["text"],
+          },
+        },
+      },
+      "req-taxonomy-stable-advisory-exact-model",
+      [],
+      undefined,
+      undefined,
+      undefined,
+      [
+        {
+          role_id: "security",
+          description: "Security review role.",
+          default_system_instructions: "Review for security issues.",
+          task_types_supported: ["security.audit"],
+          required_capabilities: ["security.analysis"],
+          preferred_capabilities: ["code.read"],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed", allowed_tools: [] },
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      undefined,
+      null,
+      [
+        {
+          task_type: "security.audit",
+          description: "Security audit task.",
+          required_inputs: ["text"],
+          required_capabilities: ["security.analysis"],
+          preferred_capabilities: ["code.read"],
+          quality_metrics: [],
+          allowed_roles: ["security"],
+          default_benchmark_suites: [],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.requestedRoleId).toBeUndefined();
+    expect(result.routingRequest).toEqual(
+      expect.objectContaining({
+        taskType: "text.chat",
+        requiredCapabilities: expect.not.arrayContaining(["security.analysis"]),
+        preferredCapabilities: expect.arrayContaining([
+          "security.analysis",
+          "not.real.required",
+          "code.read",
+          "not.real.preferred",
+        ]),
+      }),
+    );
+    expect(result.routingDiagnostics?.rolePolicy).toBeUndefined();
   });
 
   test("maps chat-completions tool-turn history with null assistant content without crashing", () => {
@@ -3231,7 +3671,7 @@ describe("runtime-host-bridge", () => {
       {
         active: true,
         resolvedGuidance: {
-          requestedRoleId: "coder.patch",
+          requestedRoleId: "coder",
           taskType: "code.edit",
           requiredCapabilities: ["code.edit", "tools.function_calling"],
           preferredCapabilities: ["reasoning.multi_step"],
@@ -3243,7 +3683,7 @@ describe("runtime-host-bridge", () => {
     );
 
     expect(result.routingRequest).toMatchObject({
-      requestedRoleId: "coder.patch",
+      requestedRoleId: "coder",
       taskType: "code.edit",
       requiredCapabilities: ["code.edit", "tools.function_calling"],
       preferredCapabilities: ["reasoning.multi_step"],
@@ -3255,7 +3695,7 @@ describe("runtime-host-bridge", () => {
     expect(result.routingDiagnostics?.controllerRouting).toEqual({
       active: true,
       acceptedDirectives: {
-        requestedRoleId: "coder.patch",
+        requestedRoleId: "coder",
         taskType: "code.edit",
         requiredCapabilities: ["code.edit", "tools.function_calling"],
         preferredCapabilities: ["reasoning.multi_step"],
@@ -4145,6 +4585,328 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("maps responses role_model intent metadata into the routing request", () => {
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            roleModelIntent?: unknown;
+          };
+        };
+      }
+    ).mapResponsesRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        input: "Implement this small bug fix and add a regression test.",
+        role_model: {
+          intent: {
+            taxonomyVersion: "1.0.0-alpha.1",
+            classificationContractVersion: "role-model.classification.v1",
+            role: { id: "coder", hard: false },
+            task: { id: "coder.edit", hard: false },
+            capabilities: { preferred: ["code.write"] },
+            modalities: { required: ["text"] },
+            source: "heuristic",
+            confidence: 0.72,
+          },
+        },
+      },
+      "resp-taxonomy-intent",
+    );
+
+    expect(result.routingRequest.roleModelIntent).toEqual(
+      expect.objectContaining({
+        taxonomyVersion: "1.0.0-alpha.1",
+        classificationContractVersion: "role-model.classification.v1",
+        role: { id: "coder", hard: false },
+        task: { id: "coder.edit", hard: false },
+        source: "heuristic",
+        confidence: 0.72,
+      }),
+    );
+  });
+
+  test("maps stable proposal-shaped responses role_model intent metadata into the routing request", () => {
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            roleModelIntent?: unknown;
+          };
+        };
+      }
+    ).mapResponsesRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        input: "Implement this small bug fix and add a regression test.",
+        role_model: {
+          contract_version: 1,
+          intent: {
+            taxonomy_version: "1.0.0-alpha.1",
+            content_revision: "taxonomy-v1-alpha.1",
+            classification_contract_version: "role-model.classification.v1",
+            role_hint_id: "coder",
+            role_source: "heuristic",
+            task_type: "coder.edit",
+            task_action: "edit",
+            task_source: "heuristic",
+            task_confidence: 0.72,
+            preferred_capabilities: ["code.write"],
+            required_modalities: ["text"],
+          },
+        },
+      },
+      "resp-taxonomy-intent-stable",
+    );
+
+    expect(result.routingRequest.roleModelIntent).toEqual(
+      expect.objectContaining({
+        taxonomyVersion: "1.0.0-alpha.1",
+        classificationContractVersion: "role-model.classification.v1",
+        role: { id: "coder", hard: false },
+        task: { id: "coder.edit", hard: false },
+        capabilities: { preferred: ["code.write"] },
+        modalities: { required: ["text"] },
+        source: "heuristic",
+        confidence: 0.72,
+      }),
+    );
+  });
+
+  test("treats unknown stable role_model task metadata as advisory before routing", () => {
+    const result = (
+      (
+        bridge as {
+          mapChatCompletionsRequest: (
+            value: EndpointRegistryResult,
+            body: Record<string, unknown>,
+            requestId: string,
+            modelAliases?: readonly unknown[],
+            difficultyContext?: unknown,
+            controllerContext?: unknown,
+            requestOptions?: unknown,
+            roleDefinitions?: readonly Record<string, unknown>[],
+            defaultRoutingMode?: unknown,
+            inventory?: unknown,
+            taskDefinitions?: readonly Record<string, unknown>[],
+          ) => {
+            routingRequest: {
+              taskType: string;
+              roleModelIntent?: {
+                task?: { id: string; hard?: boolean };
+              };
+            };
+          };
+        }
+      )
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Do an impossible taxonomy task." }],
+        role_model: {
+          contract_version: 1,
+          intent: {
+            taxonomy_version: "1.0.0-alpha.1",
+            classification_contract_version: "role-model.classification.v1",
+            requested_role_id: "security",
+            task_type: "security.unknown",
+            task_source: "client.rule",
+            required_capabilities: ["text.chat"],
+            required_modalities: ["text"],
+          },
+        },
+      },
+      "req-taxonomy-intent-invalid-task",
+      [],
+      undefined,
+      undefined,
+      undefined,
+      [
+        {
+          role_id: "security",
+          description: "Security review role.",
+          default_system_instructions: "Review for security issues.",
+          task_types_supported: ["security.audit"],
+          required_capabilities: ["text.chat"],
+          preferred_capabilities: ["security.analysis"],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed", allowed_tools: [] },
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      undefined,
+      null,
+      [
+        {
+          task_type: "security.audit",
+          description: "Security audit task.",
+          required_inputs: ["text"],
+          required_capabilities: ["text.chat"],
+          preferred_capabilities: ["security.analysis"],
+          quality_metrics: [],
+          allowed_roles: ["security"],
+          default_benchmark_suites: [],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.roleModelIntent?.task).toEqual({
+      id: "security.unknown",
+      hard: false,
+    });
+    expect(result.routingRequest.taskType).not.toBe("security.unknown");
+  });
+
+  test("treats unknown stable role_model requested role metadata as advisory before routing", () => {
+    const result = (
+      (
+        bridge as {
+          mapChatCompletionsRequest: (
+            value: EndpointRegistryResult,
+            body: Record<string, unknown>,
+            requestId: string,
+            modelAliases?: readonly unknown[],
+            difficultyContext?: unknown,
+            controllerContext?: unknown,
+            requestOptions?: unknown,
+            roleDefinitions?: readonly Record<string, unknown>[],
+          ) => {
+            routingRequest: {
+              requestedRoleId?: string;
+              roleModelIntent?: {
+                role?: { id: string; hard?: boolean };
+              };
+            };
+          };
+        }
+      )
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Please handle this request normally." }],
+        role_model: {
+          contract_version: 1,
+          intent: {
+            taxonomy_version: "1.0.0-alpha.1",
+            classification_contract_version: "role-model.classification.v1",
+            requested_role_id: "missing-role",
+            role_source: "heuristic",
+            task_type: "missing-role.unknown",
+            task_source: "heuristic",
+            required_modalities: ["text"],
+          },
+        },
+      },
+      "req-taxonomy-intent-invalid-role",
+      [],
+      undefined,
+      undefined,
+      undefined,
+      [
+        {
+          role_id: "security",
+          description: "Security review role.",
+          default_system_instructions: "Review for security issues.",
+          task_types_supported: ["security.audit"],
+          required_capabilities: ["text.chat"],
+          preferred_capabilities: ["security.analysis"],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed", allowed_tools: [] },
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+    );
+
+    expect(result.routingRequest.roleModelIntent?.role).toEqual({
+      id: "missing-role",
+      hard: false,
+    });
+    expect(result.routingRequest.requestedRoleId).toBeUndefined();
+  });
+
+  test("rejects explicit hard role_model task metadata before routing", () => {
+    expect(() =>
+      (
+        bridge as {
+          mapChatCompletionsRequest: (
+            value: EndpointRegistryResult,
+            body: Record<string, unknown>,
+            requestId: string,
+            modelAliases?: readonly unknown[],
+            difficultyContext?: unknown,
+            controllerContext?: unknown,
+            requestOptions?: unknown,
+            roleDefinitions?: readonly Record<string, unknown>[],
+            defaultRoutingMode?: unknown,
+            inventory?: unknown,
+            taskDefinitions?: readonly Record<string, unknown>[],
+          ) => unknown;
+        }
+      ).mapChatCompletionsRequest(
+        registry,
+        {
+          model: "moonshot/kimi-k2.5",
+          messages: [{ role: "user", content: "Do an impossible taxonomy task." }],
+          role_model: {
+            intent: {
+              taxonomyVersion: "1.0.0-alpha.1",
+              classificationContractVersion: "role-model.classification.v1",
+              role: { id: "security", hard: true },
+              task: { id: "security.unknown", hard: true },
+            },
+          },
+        },
+        "req-taxonomy-intent-hard-invalid-task",
+        [],
+        undefined,
+        undefined,
+        undefined,
+        [
+          {
+            role_id: "security",
+            description: "Security review role.",
+            default_system_instructions: "Review for security issues.",
+            task_types_supported: ["security.audit"],
+            required_capabilities: ["text.chat"],
+            preferred_capabilities: ["security.analysis"],
+            forbidden_capabilities: [],
+            tool_policy: { mode: "allowed", allowed_tools: [] },
+            output_contracts: [],
+            safety_policy_refs: [],
+          },
+        ],
+        undefined,
+        null,
+        [
+          {
+            task_type: "security.audit",
+            description: "Security audit task.",
+            required_inputs: ["text"],
+            required_capabilities: ["text.chat"],
+            preferred_capabilities: ["security.analysis"],
+            quality_metrics: [],
+            allowed_roles: ["security"],
+            default_benchmark_suites: [],
+          },
+        ],
+      ),
+    ).toThrow("Requested task security.unknown is not defined in the runtime task policy.");
+  });
+
   test("maps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints", () => {
     const result = (
       bridge as {
@@ -4365,6 +5127,50 @@ describe("runtime-host-bridge", () => {
 
     expect(result.models.map((entry) => entry.id)).toEqual(["gpt-5.4", "moonshot/kimi-k2.5"]);
     expect(result.setup.recommendedModel).toBe("gpt-5.4");
+  });
+
+  test("fallback downstream OpenAI provider config remains compatible with pi-role-model", () => {
+    const result = (
+      bridge as {
+        createDownstreamOpenAIProviderConfig: (
+          value: EndpointRegistryResult,
+          baseUrl: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+        ) => {
+          contractVersion: string;
+          models: readonly {
+            id: string;
+            type?: string;
+            piMapping?: { contextWindow: number | null; maxTokens: number | null };
+          }[];
+          setup: { recommendedModel: string | null };
+        };
+      }
+    ).createDownstreamOpenAIProviderConfig(registry, "http://127.0.0.1:4010", [
+      {
+        aliasId: "gpt-5.4",
+        modelIds: ["moonshot/kimi-k2.5"],
+      },
+    ]);
+
+    expect(result.contractVersion).toBe("role-model.downstream.openai.v1");
+    expect(result.models).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "gpt-5.4",
+          type: "alias",
+          piMapping: { contextWindow: 128000, maxTokens: 8192 },
+        }),
+        expect.objectContaining({
+          id: "moonshot/kimi-k2.5",
+          type: "model",
+          piMapping: { contextWindow: 128000, maxTokens: 8192 },
+        }),
+      ]),
+    );
   });
 
   test("serves health and model-list endpoints", async () => {
@@ -5769,7 +6575,8 @@ describe("runtime-host-bridge", () => {
         `http://127.0.0.1:${server.port}/api/role-model/downstream/openai`,
       );
       expect(response.status).toBe(200);
-      expect(await response.json()).toEqual({
+      expect(await response.json()).toMatchObject({
+        contractVersion: "role-model.downstream.openai.v1",
         kind: "openai-compatible",
         providerId: "role-model-runtime",
         displayName: "Role Model Runtime",
@@ -5792,10 +6599,22 @@ describe("runtime-host-bridge", () => {
             id: "moonshot/kimi-k2.5",
             object: "model",
             owned_by: "role-model",
+            type: "model",
             endpoint_ids: [
               "moonshot.personal.kimi-code.global.kimi-k2.5",
               "moonshot.personal.primary.global.kimi-k2.5",
             ],
+            piMapping: {
+              contextWindow: 128000,
+              maxTokens: 8192,
+            },
+            modalities: {
+              availableInput: ["text"],
+              output: ["text"],
+            },
+            capabilities: {
+              available: ["text.chat", "tools.function_calling"],
+            },
           },
         ],
         setup: {
@@ -5806,6 +6625,10 @@ describe("runtime-host-bridge", () => {
             "Use POST /v1/chat/completions for routed inference and multi-turn tool history.",
             "POST /v1/responses supports string or string-content message input only; use chat-completions for tool-turn histories.",
           ],
+        },
+        freshness: {
+          catalogVersion: "fallback",
+          runtimeInventoryRevision: "fallback",
         },
       });
     } finally {
@@ -7132,6 +7955,108 @@ describe("runtime-host-bridge", () => {
       expect(
         (routerConfig.policySources?.roleBindings ?? []).map((binding) => binding.endpoint_id),
       ).not.toEqual(expect.arrayContaining(["openai.personal.primary.us-east-1.fast"]));
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("upsertProviderAccount replaces existing model role assignments for the same model", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-role-assignment-upsert-"),
+    );
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+          }) => Promise<{
+            upsertProviderAccount: (account: Record<string, unknown>) => Promise<unknown>;
+            listAccounts: () => Promise<
+              readonly {
+                providerAccountId: string;
+                modelRoleBindings?: readonly {
+                  modelId: string;
+                  roleIds: readonly string[];
+                  roleAssignmentMode?: string;
+                  enabledRoleIds?: readonly string[];
+                  disabledRoleIds?: readonly string[];
+                }[];
+              }[]
+            >;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "runtime-host-role-assignment-upsert",
+      });
+
+      const baseAccount = {
+        providerAccountId: "moonshot.personal.primary",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "MOONSHOT_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      };
+
+      await backend.upsertProviderAccount({
+        ...baseAccount,
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleIds: ["general.chat"],
+          },
+        ],
+      });
+
+      await backend.upsertProviderAccount({
+        ...baseAccount,
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleIds: [],
+            roleAssignmentMode: "all",
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
+      });
+
+      const account = (await backend.listAccounts()).find(
+        (entry) => entry.providerAccountId === "moonshot.personal.primary",
+      );
+      expect(account?.modelRoleBindings).toEqual([
+        {
+          modelId: "moonshot/kimi-k2.5",
+          roleIds: [],
+          roleAssignmentMode: "all",
+          enabledRoleIds: [],
+          disabledRoleIds: [],
+        },
+      ]);
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
@@ -9059,11 +9984,11 @@ describe("runtime-host-bridge", () => {
           routingDiagnostics: expect.objectContaining({
             controllerRouting: expect.objectContaining({
               active: true,
-              acceptedDirectives: {
+              acceptedDirectives: expect.objectContaining({
                 requiredCapabilities: ["text.chat"],
                 strategy: "quality",
                 preferLocal: true,
-              },
+              }),
             }),
           }),
         }),
@@ -9264,7 +10189,6 @@ describe("runtime-host-bridge", () => {
           controllerRouting: {
             active: true,
             acceptedDirectives: {
-              taskType: "text.chat",
               requiredCapabilities: ["text.chat"],
             },
           },
@@ -9744,9 +10668,9 @@ describe("runtime-host-bridge", () => {
       const policyRoleIds = new Set(rolePolicy.roleDefinitions.map((entry) => entry.role_id));
       const taskIds = new Set(tasks.map((entry) => entry.task_type));
 
-      expect(roleIds.has("general.chat")).toBe(true);
-      expect(policyRoleIds.has("general.chat")).toBe(true);
-      expect(taskIds.has("text.chat")).toBe(true);
+      expect(roleIds.has("coder")).toBe(true);
+      expect(policyRoleIds.has("coder")).toBe(true);
+      expect(taskIds.has("coder.edit")).toBe(true);
 
       for (const taskDefinition of tasks) {
         const policyTask = rolePolicy.taskDefinitions.find(
@@ -10898,9 +11822,13 @@ describe("runtime-host-bridge", () => {
     await expect(backend.listRoles?.()).resolves.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          roleId: "general.chat",
+          roleId: "coder",
         }),
       ]),
+    );
+    const runtimeRoles = (await backend.listRoles?.()) as readonly { roleId: string }[];
+    expect(runtimeRoles.map((role) => role.roleId).sort()).toEqual(
+      canonicalTaxonomy.roles.map((role) => role.id).sort(),
     );
 
     await expect(
@@ -10924,7 +11852,9 @@ describe("runtime-host-bridge", () => {
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.5",
-            roleIds: ["general.chat", "coder.patch"],
+            roleAssignmentMode: "include",
+            enabledRoleIds: ["coder", "security"],
+            roleIds: ["coder", "security"],
           },
         ],
         deniedModels: [],
@@ -10953,7 +11883,9 @@ describe("runtime-host-bridge", () => {
           modelRoleBindings: [
             {
               modelId: "moonshot/kimi-k2.5",
-              roleIds: ["general.chat", "coder.patch"],
+              roleAssignmentMode: "include",
+              enabledRoleIds: ["coder", "security"],
+              roleIds: ["coder", "security"],
             },
           ],
         }),
@@ -11145,14 +12077,14 @@ describe("runtime-host-bridge", () => {
       expect.objectContaining({
         roleDefinitions: expect.arrayContaining([
           expect.objectContaining({
-            role_id: "general.chat",
+            role_id: "coder",
             default_system_instructions: expect.any(String),
           }),
         ]),
         taskDefinitions: expect.arrayContaining([
           expect.objectContaining({
-            task_type: "text.chat",
-            allowed_roles: expect.arrayContaining(["general.chat"]),
+            task_type: "coder.edit",
+            allowed_roles: expect.arrayContaining(["coder"]),
           }),
         ]),
       }),
@@ -11184,13 +12116,13 @@ describe("runtime-host-bridge", () => {
     await expect(
       backend.updateTaskDefinitions?.([
         {
-          task_type: "text.chat",
-          description: "General chat task",
+          task_type: "writer.chat",
+          description: "Writer chat task",
           required_inputs: [],
-          required_capabilities: ["text.chat"],
+          required_capabilities: ["communication.user_facing"],
           preferred_capabilities: [],
           quality_metrics: [],
-          allowed_roles: ["general.chat"],
+          allowed_roles: ["writer"],
           default_benchmark_suites: [],
         },
         {
@@ -11347,7 +12279,10 @@ describe("runtime-host-bridge", () => {
         modelRoleBindings: [
           {
             modelId: "moonshot/kimi-k2.5",
-            roleIds: ["general.chat", "coder.patch"],
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
           },
         ],
         deniedModels: [],
@@ -11387,7 +12322,7 @@ describe("runtime-host-bridge", () => {
     }
   });
 
-  test("keeps Kimi Code and DeepSeek coding endpoints coder.patch-eligible from the tracked catalog", async () => {
+  test("keeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
     ).toBe("function");
@@ -11531,7 +12466,9 @@ describe("runtime-host-bridge", () => {
           modelRoleBindings: [
             {
               modelId: "moonshot/kimi-k2.7-code",
-              roleIds: ["general.chat", "coder.patch"],
+              roleAssignmentMode: "include",
+              enabledRoleIds: ["coder"],
+              roleIds: ["coder"],
             },
           ],
           deniedModels: [],
@@ -11562,7 +12499,9 @@ describe("runtime-host-bridge", () => {
           modelRoleBindings: [
             {
               modelId: "deepseek/deepseek-v4-flash",
-              roleIds: ["general.chat", "coder.patch"],
+              roleAssignmentMode: "include",
+              enabledRoleIds: ["coder"],
+              roleIds: ["coder"],
             },
           ],
           deniedModels: [],
@@ -11590,17 +12529,23 @@ describe("runtime-host-bridge", () => {
             expect.objectContaining({
               endpointId: kimiEndpoint.endpointId,
               modelId: "moonshot/kimi-k2.7-code",
-              roleBindings: expect.arrayContaining(["coder.patch"]),
+              roleBindings: expect.arrayContaining(["coder"]),
               capabilities: expect.arrayContaining(["code.edit", "tools.function_calling"]),
             }),
             expect.objectContaining({
               endpointId: deepseekEndpoint.endpointId,
               modelId: "deepseek/deepseek-v4-flash",
-              roleBindings: expect.arrayContaining(["coder.patch"]),
+              roleBindings: expect.arrayContaining(["coder"]),
               capabilities: expect.arrayContaining(["code.edit", "tools.function_calling"]),
             }),
           ]),
         );
+        const codingCandidates = await backend.listRouterCandidates();
+        for (const candidate of codingCandidates) {
+          expect(candidate.roleBindings).not.toEqual(
+            expect.arrayContaining(["general.chat", "coder.patch", "tool.agent"]),
+          );
+        }
 
         await expect(
           backend.executeChatCompletions(
@@ -11616,7 +12561,8 @@ describe("runtime-host-bridge", () => {
             "req-runtime-bridge-kimi-coder-001",
             undefined,
             {
-              requestedRoleId: "coder.patch",
+              requestedRoleId: "coder",
+              taskType: "coder.edit",
             },
           ),
         ).resolves.toEqual(
@@ -11641,7 +12587,8 @@ describe("runtime-host-bridge", () => {
             "req-runtime-bridge-deepseek-coder-001",
             undefined,
             {
-              requestedRoleId: "coder.patch",
+              requestedRoleId: "coder",
+              taskType: "coder.edit",
             },
           ),
         ).resolves.toEqual(
@@ -11821,7 +12768,7 @@ describe("runtime-host-bridge", () => {
     expect(result.usage.outputTokens).toBe(4);
   });
 
-  test("executes non-controller requested coder.review requests without empty chosen-endpoint failures", async () => {
+  test("executes non-controller requested coder review task requests without empty chosen-endpoint failures", async () => {
     expect(
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
     ).toBe("function");
@@ -11926,7 +12873,9 @@ describe("runtime-host-bridge", () => {
           modelRoleBindings: [
             {
               modelId: "moonshot/kimi-k2.7-code",
-              roleIds: ["general.chat", "coder.review"],
+              roleAssignmentMode: "include",
+              enabledRoleIds: ["coder", "tester"],
+              roleIds: ["coder", "tester"],
             },
           ],
           deniedModels: [],
@@ -11959,7 +12908,8 @@ describe("runtime-host-bridge", () => {
             "req-runtime-bridge-review-role-001",
             undefined,
             {
-              requestedRoleId: "coder.review",
+              requestedRoleId: "coder",
+              taskType: "coder.review",
             },
           ),
         ).resolves.toEqual(
@@ -15226,6 +16176,7 @@ describe("runtime-host-bridge", () => {
     const scopeId = "runtime-apikey-tests";
     const credentialDir = path.join(runtimeStateRoot, scopeId, "credentials", "oauth", "moonshot");
     const credentialFile = path.join(credentialDir, "moonshot.personal.apikey.json");
+    await rm(runtimeStateRoot, { recursive: true, force: true });
     await mkdir(credentialDir, { recursive: true });
     await writeFile(
       credentialFile,
@@ -15315,7 +16266,15 @@ describe("runtime-host-bridge", () => {
         regionPolicy: { mode: "prefer", regions: ["global"] },
         baseUrlOverride: "https://api.moonshot.ai/v1",
         allowedModels: ["moonshot/kimi-k2.5"],
-        modelRoleBindings: [{ modelId: "moonshot/kimi-k2.5", roleIds: ["general.chat"] }],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
         deniedModels: [],
         entitlementTags: ["chat"],
         budgetPolicyRef: "budget.default",

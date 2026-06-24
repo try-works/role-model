@@ -1,0 +1,120 @@
+(node:47576) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{
+  "runs": [
+    {
+      "prompt": "Review this diff for security risks and likely regressions.",
+      "exit": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "prompt": "Implement this small bug fix and add a regression test.",
+      "exit": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "prompt": "Compare current public documentation for this API and cite differences.",
+      "exit": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "prompt": "Turn these support notes into a clear customer reply.",
+      "exit": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "prompt": "Inspect this schema and propose a migration plan.",
+      "exit": 0,
+      "signal": null,
+      "stderr": ""
+    },
+    {
+      "prompt": "Create product requirements and acceptance criteria for this workflow.",
+      "exit": 0,
+      "signal": null,
+      "stderr": ""
+    }
+  ],
+  "capturedCount": 6,
+  "summary": [
+    {
+      "prompt": "Review this diff for security risks and likely regressions.",
+      "model": "default.decision-only",
+      "role": "security",
+      "task": "security.audit",
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contract": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "toolClasses": [
+        "filesystem.read"
+      ]
+    },
+    {
+      "prompt": "Implement this small bug fix and add a regression test.",
+      "model": "default.decision-only",
+      "role": "coder",
+      "task": "coder.edit",
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contract": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "toolClasses": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.execute"
+      ]
+    },
+    {
+      "prompt": "Compare current public documentation for this API and cite differences.",
+      "model": "default.decision-only",
+      "role": "researcher",
+      "task": "researcher.web_research.current",
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contract": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "toolClasses": [
+        "web.search",
+        "http.fetch"
+      ]
+    },
+    {
+      "prompt": "Turn these support notes into a clear customer reply.",
+      "model": "default.decision-only",
+      "role": "support",
+      "task": "support.ticket.reply",
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contract": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "toolClasses": []
+    },
+    {
+      "prompt": "Inspect this schema and propose a migration plan.",
+      "model": "default.decision-only",
+      "role": "architect",
+      "task": "architect.migration.strategy",
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contract": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "toolClasses": []
+    },
+    {
+      "prompt": "Create product requirements and acceptance criteria for this workflow.",
+      "model": "default.decision-only",
+      "role": "product",
+      "task": "product.requirements",
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "contract": "role-model.classification.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "toolClasses": []
+    }
+  ]
+}

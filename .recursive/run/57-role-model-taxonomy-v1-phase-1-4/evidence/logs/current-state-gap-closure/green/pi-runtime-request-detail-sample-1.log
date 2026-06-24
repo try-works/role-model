@@ -1,0 +1,102 @@
+{
+  "requestId": "req-30655284-978a-422a-806b-dcf6182e7746",
+  "endpointId": "anthropic.team.shared.us-east-1.default",
+  "requestedModel": "claude-3.7-sonnet",
+  "routingDiagnostics": {
+    "retrievalReceiptId": "conversation-main-retrieval-receipt",
+    "routingModel": {
+      "enabled": false,
+      "endpointId": null,
+      "preferredEndpointIds": [],
+      "ignoredEndpointIds": [
+        "openai.personal.primary.us-east-1.fast"
+      ]
+    },
+    "capabilityEligibility": {
+      "requiredInputModalities": [
+        "text"
+      ],
+      "requiredOutputModalities": [
+        "text"
+      ],
+      "requiredCapabilities": [
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "advisoryCapabilities": [],
+      "includedEndpoints": [
+        "anthropic.team.shared.us-east-1.default"
+      ],
+      "excludedTargets": []
+    },
+    "rewrite": {
+      "requestedModel": "claude-3.7-sonnet",
+      "downstreamModelId": "claude-3.7-sonnet",
+      "applied": false,
+      "reason": "requested-model-matches-downstream"
+    },
+    "observedProfile": {
+      "endpointId": "anthropic.team.shared.us-east-1.default",
+      "source": "runtime-state",
+      "readMode": "per-request",
+      "measuredAtMs": 1782231075017
+    },
+    "catalogEconomics": {
+      "canonicalModelId": "claude-3.7-sonnet",
+      "tokenEconomicsSource": "catalog",
+      "inputPer1M": 3,
+      "outputPer1M": 15,
+      "estimatedRequestUsd": 0.068799,
+      "cost_per_1k_tokens_est": 0.010505267979844251
+    },
+    "effectiveMetrics": {
+      "quality": {
+        "value": 0.8592947905374484,
+        "source": "measured",
+        "measuredAtMs": 1782231075017,
+        "freshnessWeight": 0.9980410848262455
+      },
+      "latency": {
+        "value": 0.40051571049578205,
+        "source": "measured",
+        "measuredAtMs": 1782231075017,
+        "freshnessWeight": 0.99413475900767
+      },
+      "throughput": {
+        "value": 0.9927006681959529,
+        "source": "measured",
+        "measuredAtMs": 1782231075017,
+        "freshnessWeight": 0.985401336391906
+      },
+      "reliability": {
+        "value": 0.9991189200145827,
+        "source": "measured",
+        "measuredAtMs": 1782231075017,
+        "freshnessWeight": 0.9970630667152756
+      },
+      "cost": {
+        "value": 0,
+        "source": "catalog",
+        "measuredAtMs": 1782231075017,
+        "freshnessWeight": 1
+      }
+    },
+    "selection": {
+      "mode": "best-total-score",
+      "scoreTieEpsilon": 0.01,
+      "winnerEndpointId": "anthropic.team.shared.us-east-1.default",
+      "winnerTotalScore": 0.6220294840821736,
+      "tieBreakOrder": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ]
+    },
+    "throughputPenalty": {
+      "endpointId": "anthropic.team.shared.us-east-1.default",
+      "active": false
+    }
+  },
+  "roleModelIntent": null
+}

@@ -1,0 +1,38 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+ [31m❯[39m test/taxonomy-catalog.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 153[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mdeclares approved taxonomy versions and counts[32m 5[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22muses real manifest content hashes for canonical JSON files[32m 5[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mdeclares exact groups, roles, and role group membership[32m 3[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mgives every role at least ten native task types[32m 2[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mvalidates task naming, references, and classifier guidance[32m 108[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mreturns no structural validation diagnostics for the canonical catalog[32m 2[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mmatches the proposal-derived golden taxonomy fixture exactly[32m 15[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mmatches proposal semantics for cross-role task routing examples[32m 1[2mms[22m[39m
+[31m   [31m×[31m canonical taxonomy catalog[2m > [22mdeprecation schema fields are present on all entity kinds (R12.1)[39m[32m 9[2mms[22m[39m
+[31m     → repoRoot is not defined[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/taxonomy-catalog.test.ts[2m > [22mcanonical taxonomy catalog[2m > [22mdeprecation schema fields are present on all entity kinds (R12.1)
+[31m[1mReferenceError[22m: repoRoot is not defined[39m
+[36m [2m❯[22m test/taxonomy-catalog.test.ts:[2m255:37[22m[39m
+    [90m253| [39m
+    [90m254| [39m  test("deprecation schema fields are present on all entity kinds (R12…
+    [90m255| [39m    const schemaRoot = path.resolve(repoRoot, "schemas/role-model/taxo…
+    [90m   | [39m                                    [31m^[39m
+    [90m256| [39m    [35mconst[39m entitySchemas [33m=[39m [
+    [90m257| [39m      [32m"role.schema.json"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m8 passed[39m[22m[90m (9)[39m
+[2m   Start at [22m 08:50:51
+[2m   Duration [22m 1.22s[2m (transform 127ms, setup 0ms, collect 140ms, tests 153ms, environment 0ms, prepare 366ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/taxonomy-catalog.test.ts

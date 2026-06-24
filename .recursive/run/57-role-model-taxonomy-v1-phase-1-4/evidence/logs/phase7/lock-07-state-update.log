@@ -1,0 +1,43 @@
+[FAIL] Refusing to lock .recursive\run\57-role-model-taxonomy-v1-phase-1-4\07-state-update.md
+Workflow Profile: recursive-mode-audit-v1
+- Audit Context is missing Subagent Capability Probe
+- Missing or empty audited-phase section: ## Gaps Found
+- Missing or empty audited-phase section: ## Repair Work Performed
+- Missing or empty audited-phase section: ## Subagent Contribution Verification
+- Missing or empty section: ## Prior Recursive Evidence Reviewed
+- Missing or empty section: ## Subagent Contribution Verification
+- Missing required section heading: ## Gaps Found
+- Missing required section heading: ## Prior Recursive Evidence Reviewed
+- Missing required section heading: ## Repair Work Performed
+- Missing required section heading: ## Subagent Contribution Verification
+- Requirement R1 Verification Evidence path(s) do not exist: 05-manual-qa.md
+- Requirement R1 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R10 Verification Evidence path(s) do not exist: 04-test-summary.md
+- Requirement R10 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R11 Verification Evidence path(s) do not exist: 04-test-summary.md, 05-manual-qa.md
+- Requirement R11 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R12 Verification Evidence path(s) do not exist: 04-test-summary.md
+- Requirement R12 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R13 Verification Evidence path(s) do not exist: 03-implementation-summary.md, 04-test-summary.md
+- Requirement R13 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R14 Verification Evidence path(s) do not exist: 05-manual-qa.md
+- Requirement R14 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R15 Verification Evidence path(s) do not exist: 05-manual-qa.md
+- Requirement R15 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R2 Verification Evidence path(s) do not exist: 04-test-summary.md, 05-manual-qa.md
+- Requirement R2 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R3 Verification Evidence path(s) do not exist: 04-test-summary.md, 05-manual-qa.md
+- Requirement R3 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R4 Verification Evidence path(s) do not exist: 05-manual-qa.md
+- Requirement R4 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R5 Verification Evidence path(s) do not exist: 04-test-summary.md, 05-manual-qa.md
+- Requirement R5 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R6 Verification Evidence path(s) do not exist: 04-test-summary.md, 05-manual-qa.md
+- Requirement R6 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R7 Verification Evidence path(s) do not exist: 05-manual-qa.md
+- Requirement R7 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R8 Verification Evidence path(s) do not exist: 05-manual-qa.md
+- Requirement R8 with Status verified must cite file or artifact paths in Implementation Evidence
+- Requirement R9 Verification Evidence path(s) do not exist: 05-manual-qa.md
+- Requirement R9 with Status verified must cite file or artifact paths in Implementation Evidence
+- Worktree Diff Audit does not account for actual changed files from git diff: README.md, docs/protocol/taxonomy-v1.md, packages/pi-role-model/data/taxonomy/compact-classification-guide.json, packages/pi-role-model/data/taxonomy/compact-groups.json, packages/pi-role-model/data/taxonomy/compact-manifest.json ...

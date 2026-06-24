@@ -1,0 +1,18 @@
+===== /role-model status =====
+exit=null signal=
+===== /role-model setup =====
+exit=null signal=
+===== /role-model doctor =====
+exit=null signal=
+===== /role-model ui =====
+exit=null signal=
+===== /role-model alias list =====
+exit=null signal=
+===== /role-model alias recommended =====
+exit=null signal=
+===== /role-model alias use default.decision-only =====
+exit=null signal=
+===== /role-model alias refresh =====
+exit=null signal=
+===== /role-model alias current =====
+exit=null signal=

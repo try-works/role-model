@@ -20,6 +20,7 @@ import {
   type RouterCandidate,
   type RuntimeAccount,
   type RuntimeControllerAssignment,
+  type RuntimeModelRoleAssignment,
   type RuntimeRolePolicy,
   type RuntimeSnapshot,
   fetchControllerAssignment,
@@ -30,19 +31,69 @@ import {
 } from "../lib/runtime-api";
 import { buildConfiguredModelCards, buildConfiguredModelMetadataRows } from "../lib/view-models";
 
-function getAccountRoleIdsForModel(account: RuntimeAccount, modelId: string): string[] {
-  const binding = account.modelRoleBindings?.find((entry) => entry.modelId === modelId);
-  return binding ? [...binding.roleIds] : [];
+function resolveRoleIdsFromAssignment(
+  binding: NonNullable<RuntimeAccount["modelRoleBindings"]>[number] | undefined,
+  allRoleIds: readonly string[],
+): string[] {
+  if (!binding || binding.roleAssignmentMode === "all") {
+    return [...allRoleIds];
+  }
+  if (binding.roleAssignmentMode === "exclude") {
+    const disabledRoleIds = new Set(binding.disabledRoleIds ?? []);
+    return allRoleIds.filter((roleId) => !disabledRoleIds.has(roleId));
+  }
+  if (binding.roleAssignmentMode === "include" || binding.roleAssignmentMode === "custom") {
+    return [...(binding.enabledRoleIds ?? binding.roleIds)];
+  }
+  return [...binding.roleIds];
 }
 
-function createAccountMutationPayload(
+function getAccountRoleIdsForModel(
+  account: RuntimeAccount,
+  modelId: string,
+  allRoleIds: readonly string[],
+): string[] {
+  const binding = account.modelRoleBindings?.find((entry) => entry.modelId === modelId);
+  return resolveRoleIdsFromAssignment(binding, allRoleIds);
+}
+
+export function buildModelRoleAssignmentForSelection(
+  selectedRoleIds: readonly string[],
+  allRoleIds: readonly string[],
+): RuntimeModelRoleAssignment {
+  const selected = [...new Set(selectedRoleIds)].sort((left, right) =>
+    left.localeCompare(right, "en"),
+  );
+  const knownRoleIds = allRoleIds.filter((roleId) => selected.includes(roleId));
+  if (allRoleIds.length > 0 && knownRoleIds.length === allRoleIds.length) {
+    return { roleAssignmentMode: "all", enabledRoleIds: [], disabledRoleIds: [] };
+  }
+  if (knownRoleIds.length === 0) {
+    return { roleAssignmentMode: "include", enabledRoleIds: [], disabledRoleIds: [] };
+  }
+  const disabledRoleIds = allRoleIds.filter((roleId) => !knownRoleIds.includes(roleId));
+  return {
+    roleAssignmentMode: "exclude",
+    enabledRoleIds: [],
+    disabledRoleIds,
+  };
+}
+
+export function createAccountMutationPayload(
   account: RuntimeAccount,
   modelId: string,
   roleIds: readonly string[],
+  allRoleIds: readonly string[] = [],
 ): Record<string, unknown> {
   const otherBindings = (account.modelRoleBindings ?? []).filter(
     (binding) => binding.modelId !== modelId,
   );
+  const assignment = buildModelRoleAssignmentForSelection(roleIds, allRoleIds);
+  const nextBinding = {
+    modelId,
+    roleIds: assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
+    ...assignment,
+  };
   return {
     providerAccountId: account.providerAccountId,
     providerId: account.providerId,
@@ -54,8 +105,7 @@ function createAccountMutationPayload(
     regionPolicy: account.regionPolicy ?? { mode: "prefer", regions: ["global"] },
     baseUrlOverride: account.baseUrlOverride ?? null,
     allowedModels: [...(account.allowedModels ?? [])],
-    modelRoleBindings:
-      roleIds.length > 0 ? [...otherBindings, { modelId, roleIds: [...roleIds] }] : otherBindings,
+    modelRoleBindings: [...otherBindings, nextBinding],
     deniedModels: [...(account.deniedModels ?? [])],
     entitlementTags: [...(account.entitlementTags ?? [])],
     budgetPolicyRef: account.budgetPolicyRef ?? "budget.default",
@@ -130,6 +180,10 @@ export default function ControlModelsRoute() {
     ),
   ].sort((left, right) => left.localeCompare(right, "en"));
   const selectedMetadataRows = selectedCard ? buildConfiguredModelMetadataRows(selectedCard) : [];
+  const allRuntimeRoleIds = useMemo(
+    () => (rolePolicy?.roleDefinitions ?? []).map((role) => role.role_id),
+    [rolePolicy],
+  );
   const selectedModelAccounts = useMemo(
     () =>
       snapshot && selectedCard
@@ -160,11 +214,11 @@ export default function ControlModelsRoute() {
       Object.fromEntries(
         selectedModelAccounts.map((account) => [
           account.providerAccountId,
-          getAccountRoleIdsForModel(account, selectedCard.modelId),
+          getAccountRoleIdsForModel(account, selectedCard.modelId, allRuntimeRoleIds),
         ]),
       ),
     );
-  }, [selectedCard, selectedModelAccounts]);
+  }, [allRuntimeRoleIds, selectedCard, selectedModelAccounts]);
 
   const toggleAccountRole = (providerAccountId: string, roleId: string) => {
     setDraftRolesByAccountId((current) => {
@@ -193,6 +247,7 @@ export default function ControlModelsRoute() {
           account,
           selectedCard.modelId,
           draftRolesByAccountId[account.providerAccountId] ?? [],
+          allRuntimeRoleIds,
         ),
       );
       const [nextSnapshot, nextRolePolicy] = await Promise.all([
@@ -461,6 +516,29 @@ export default function ControlModelsRoute() {
                             {account.healthStatus ?? "unknown"}
                           </StatusPill>
                         </div>
+                        <label className="mt-4 flex items-center gap-2 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-fg)]">
+                          <input
+                            checked={
+                              allRuntimeRoleIds.length > 0 &&
+                              allRuntimeRoleIds.every((roleId) =>
+                                (draftRolesByAccountId[account.providerAccountId] ?? []).includes(
+                                  roleId,
+                                ),
+                              )
+                            }
+                            type="checkbox"
+                            disabled={allRuntimeRoleIds.length === 0}
+                            onChange={(event) =>
+                              setDraftRolesByAccountId((current) => ({
+                                ...current,
+                                [account.providerAccountId]: event.currentTarget.checked
+                                  ? [...allRuntimeRoleIds]
+                                  : [],
+                              }))
+                            }
+                          />
+                          <span className="font-semibold">All roles</span>
+                        </label>
                         <div className="mt-4 flex flex-wrap gap-3">
                           {(rolePolicy?.roleDefinitions ?? []).map((role) => (
                             <label

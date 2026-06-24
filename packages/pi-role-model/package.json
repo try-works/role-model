@@ -17,7 +17,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": ["extensions", "skills", "src"],
+  "files": ["data", "extensions", "skills", "src"],
   "pi": {
     "extensions": ["extensions/role-model.ts"],
     "skills": ["skills"]

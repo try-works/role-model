@@ -1,0 +1,95 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+ [31m❯[39m test/taxonomy-catalog.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 141[2mms[22m[39m
+[31m   [31m×[31m canonical taxonomy catalog[2m > [22mdeclares approved taxonomy versions and counts[39m[32m 20[2mms[22m[39m
+[31m     → expected undefined to match object { groups: 'groups.json', …(6) }[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mdeclares exact groups, roles, and role group membership[32m 5[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mgives every role at least ten native task types[32m 3[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mvalidates task naming, references, and classifier guidance[32m 102[2mms[22m[39m
+   [32m✓[39m canonical taxonomy catalog[2m > [22mreturns no structural validation diagnostics for the canonical catalog[32m 2[2mms[22m[39m
+[31m   [31m×[31m canonical taxonomy catalog[2m > [22mmatches proposal semantics for cross-role task routing examples[39m[32m 6[2mms[22m[39m
+[31m     → expected { id: 'coder.review', …(13) } to match object { label: 'Code Review', …(6) }
+(9 matching properties omitted from actual)[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/taxonomy-catalog.test.ts > canonical taxonomy catalog > declares approved taxonomy versions and counts
+AssertionError: expected undefined to match object { groups: 'groups.json', …(6) }
+
+- Expected: 
+{
+  "capabilities": "capabilities.json",
+  "groups": "groups.json",
+  "intentPresets": "intent-presets.json",
+  "modalities": "modalities.json",
+  "roles": "roles.json",
+  "taskTypes": "task-types.json",
+  "toolClasses": "tool-classes.json",
+}
+
++ Received: 
+undefined
+
+ ❯ test/taxonomy-catalog.test.ts:93:41
+     91|     expect(taxonomyManifest.counts.toolClasses).toBe(15);
+     92|     expect(taxonomyManifest.counts.tasks).toBe(280);
+     93|     expect(taxonomyManifest.entryFiles).toMatchObject({
+       |                                         ^
+     94|       groups: "groups.json",
+     95|       roles: "roles.json",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/taxonomy-catalog.test.ts > canonical taxonomy catalog > matches proposal semantics for cross-role task routing examples
+AssertionError: expected { id: 'coder.review', …(13) } to match object { label: 'Code Review', …(6) }
+(9 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "classifier": {
+-     "doNotUseWhen": "User asks to implement changes directly.",
+-     "useWhen": "User asks to inspect existing code or a diff and identify issues.",
++     "doNotUseWhen": "Do not use when the request is better handled by another explicit role family.",
++     "useWhen": "Use for review requests assigned to coder work.",
+    },
+    "compatibleRoles": [
+      "coder",
+-     "security",
+-     "architect",
+    ],
+-   "description": "Review source changes for correctness, regressions, maintainability, and missing tests.",
+-   "label": "Code Review",
++   "description": "Review work for the coder role.",
++   "label": "Coder Review",
+    "preferredCapabilities": [
+      "reasoning.multi_step",
+    ],
+    "primaryRole": "coder",
+    "requiredCapabilities": [
+      "code.read",
++     "code.write",
+    ],
+  }
+
+ ❯ test/taxonomy-catalog.test.ts:151:80
+    149| 
+    150|   test("matches proposal semantics for cross-role task routing example…
+    151|     expect(canonicalTaxonomy.tasks.find((task) => task.id === "coder.r…
+       |                                                                                ^
+    152|       label: "Code Review",
+    153|       description:
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (6)[39m
+[2m   Start at [22m 16:24:27
+[2m   Duration [22m 1.29s[2m (transform 294ms, setup 0ms, collect 309ms, tests 141ms, environment 0ms, prepare 330ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/taxonomy-catalog.test.ts

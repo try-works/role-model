@@ -1,0 +1,4 @@
+Warning: Failed to load extension "D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\.recursive\run\57-role-model-taxonomy-v1-phase-1-4\evidence\logs\phase5\try-works-pi-role-model-0.1.1.tgz": Failed to load extension: Unknown file extension ".tgz" for D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\.recursive\run\57-role-model-taxonomy-v1-phase-1-4\evidence\logs\phase5\try-works-pi-role-model-0.1.1.tgz
+Removing .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase5/try-works-pi-role-model-0.1.1.tgz...
+Removed .recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/logs/phase5/try-works-pi-role-model-0.1.1.tgz
+EXIT_CODE=0

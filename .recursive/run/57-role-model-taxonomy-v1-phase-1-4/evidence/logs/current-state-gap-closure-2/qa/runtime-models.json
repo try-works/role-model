@@ -1,0 +1,106 @@
+[
+  {
+    "id": "lfm2.5-1.2b-instruct",
+    "object": "model",
+    "owned_by": "role-model",
+    "providerId": "unknown",
+    "displayName": "lfm2.5-1.2b-instruct",
+    "endpoint_ids": [
+      "llama-swap.local.lfm2-5-1-2b-instruct"
+    ],
+    "capabilities": [],
+    "modalities": [],
+    "contextWindow": null,
+    "maxOutputTokens": null,
+    "pricing": null
+  },
+  {
+    "id": "moonshot/kimi-k2.5",
+    "object": "model",
+    "owned_by": "role-model",
+    "providerId": "moonshot",
+    "displayName": "Kimi K2.5",
+    "endpoint_ids": [
+      "moonshot.personal.primary.global.kimi-k2.5"
+    ],
+    "capabilities": [
+      "structured.output",
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "modalities": [
+      "text"
+    ],
+    "contextWindow": 262144,
+    "maxOutputTokens": 16384,
+    "pricing": null
+  },
+  {
+    "id": "openai/gpt-4.1-mini-fast",
+    "object": "model",
+    "owned_by": "role-model",
+    "providerId": "openai",
+    "displayName": "GPT-4.1 Mini Fast",
+    "endpoint_ids": [
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ],
+    "capabilities": [
+      "calendar.planning",
+      "citation.synthesis",
+      "code.read",
+      "code.write",
+      "communication.follow_up",
+      "communication.user_facing",
+      "coordination.workflow",
+      "data.query",
+      "data.schema",
+      "data.transform",
+      "education.assessment",
+      "education.tutoring",
+      "finance.analysis",
+      "health.general_info",
+      "health.safety",
+      "json.schema_adherence",
+      "knowledge.organization",
+      "knowledge.retrieval",
+      "language.localization",
+      "language.translation",
+      "legal.analysis",
+      "long_context",
+      "market.analysis",
+      "marketing.analysis",
+      "marketing.copy",
+      "math.modeling",
+      "math.solve",
+      "math.verify",
+      "memory.write",
+      "procurement.analysis",
+      "reasoning.divergent",
+      "reasoning.multi_step",
+      "recruiting.analysis",
+      "sales.analysis",
+      "sales.communication",
+      "science.analysis",
+      "science.method",
+      "security.analysis",
+      "strategy.analysis",
+      "text.chat",
+      "tools.browser_control",
+      "tools.command_execution",
+      "tools.function_calling",
+      "vision.input",
+      "vision.output",
+      "web.search"
+    ],
+    "modalities": [
+      "text"
+    ],
+    "contextWindow": 1047576,
+    "maxOutputTokens": 32768,
+    "pricing": {
+      "inputPer1M": 0.4,
+      "outputPer1M": 1.6,
+      "currency": "USD"
+    }
+  }
+]

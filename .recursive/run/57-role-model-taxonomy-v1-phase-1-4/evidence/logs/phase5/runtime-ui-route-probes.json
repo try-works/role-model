@@ -1,0 +1,38 @@
+[
+  {
+    "Path": "/app/models",
+    "Status": 200,
+    "Length": 3232,
+    "Title": ""
+  },
+  {
+    "Path": "/app/models/roles",
+    "Status": 200,
+    "Length": 3232,
+    "Title": ""
+  },
+  {
+    "Path": "/app/router/candidates",
+    "Status": 200,
+    "Length": 3232,
+    "Title": ""
+  },
+  {
+    "Path": "/app/router/decisions",
+    "Status": 200,
+    "Length": 3232,
+    "Title": ""
+  },
+  {
+    "Path": "/app/observe/requests",
+    "Status": 200,
+    "Length": 3232,
+    "Title": ""
+  },
+  {
+    "Path": "/app/observe/routing",
+    "Status": 200,
+    "Length": 3232,
+    "Title": ""
+  }
+]

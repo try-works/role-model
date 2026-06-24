@@ -1,0 +1,175 @@
+{
+  "passed": 28,
+  "failed": 0,
+  "passed_details": [
+    {
+      "role": "health",
+      "task": "health.info.general",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "scientist",
+      "task": "scientist.experiment.design",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "mathematician",
+      "task": "mathematician.solve",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "strategist",
+      "task": "strategist.market.analyze",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "knowledge",
+      "task": "knowledge.organize",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "coordinator",
+      "task": "coordinator.meeting.agenda",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "procurement",
+      "task": "procurement.vendor.compare",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "recruiter",
+      "task": "recruiter.job_description",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "seller",
+      "task": "seller.outreach.write",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "marketer",
+      "task": "marketer.content.seo",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "translator",
+      "task": "translator.translate",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "educator",
+      "task": "educator.lesson.plan",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "creative",
+      "task": "creative.brainstorm",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "finance",
+      "task": "finance.cost_estimate",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "legal",
+      "task": "legal.review",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "support",
+      "task": "support.ticket.reply",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "designer",
+      "task": "designer.ui.review",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "product",
+      "task": "product.requirements",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "data",
+      "task": "data.schema.review",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "tester",
+      "task": "tester.e2e",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "planner",
+      "task": "planner.roadmap",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "analyst",
+      "task": "analyst.compare",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "operator",
+      "task": "operator.debug.startup",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "writer",
+      "task": "writer.docs.write",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "researcher",
+      "task": "researcher.web_research.current",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "security",
+      "task": "security.audit",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "architect",
+      "task": "architect.design",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    },
+    {
+      "role": "coder",
+      "task": "coder.edit",
+      "endpoint": "local",
+      "tax": "1.0.0-alpha.1"
+    }
+  ],
+  "failed_details": []
+}

@@ -85,6 +85,10 @@ const standaloneReleaseCopies = [
     sourceRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
     destinationRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
   },
+  {
+    sourceRelativePath: "role-model-router/packages/core/data/taxonomy",
+    destinationRelativePath: "role-model-router/packages/core/data/taxonomy",
+  },
 ] as const satisfies readonly StandaloneReleaseCopy[];
 
 const forbiddenProductionReleasePathFragments = [

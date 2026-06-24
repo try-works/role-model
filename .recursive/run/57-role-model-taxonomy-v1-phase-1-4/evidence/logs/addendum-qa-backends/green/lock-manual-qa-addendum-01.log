@@ -1,0 +1,12 @@
+[FAIL] Refusing to lock .recursive\run\57-role-model-taxonomy-v1-phase-1-4\05-manual-qa-addendum-01-healthy-backends.md
+Workflow Profile: recursive-mode-audit-v1
+- Approval gate must be PASS before locking
+- Artifact Status must be DRAFT before locking (found OPEN_ADDENDUM)
+- Coverage gate must be PASS before locking
+- Missing required gate line: Approval: PASS|FAIL
+- Missing required gate line: Coverage: PASS|FAIL
+- Missing required header field(s): Outputs, Scope note
+- Missing required section heading: ## Approval Gate
+- Missing required section heading: ## Coverage Gate
+- Missing required section heading: ## TODO
+- Missing required section: ## TODO

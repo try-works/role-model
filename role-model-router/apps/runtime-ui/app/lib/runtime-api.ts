@@ -249,6 +249,9 @@ export interface RuntimeAccount {
   readonly modelRoleBindings?: readonly {
     readonly modelId: string;
     readonly roleIds: readonly string[];
+    readonly roleAssignmentMode?: "all" | "include" | "exclude" | "custom";
+    readonly enabledRoleIds?: readonly string[];
+    readonly disabledRoleIds?: readonly string[];
   }[];
   readonly deniedModels?: readonly string[];
   readonly entitlementTags?: readonly string[];
@@ -294,6 +297,55 @@ export interface RuntimeLocalModel {
   readonly useModelName?: string | null;
 }
 
+export interface RuntimeModelRoleAssignment {
+  readonly roleAssignmentMode: "all" | "include" | "exclude" | "custom";
+  readonly enabledRoleIds?: readonly string[];
+  readonly disabledRoleIds?: readonly string[];
+  readonly taskOverrides?: Readonly<Record<string, unknown>>;
+  readonly capabilityOverrides?: Readonly<Record<string, readonly string[]>>;
+  readonly modalityOverrides?: Readonly<Record<string, readonly string[]>>;
+  readonly toolClassOverrides?: Readonly<Record<string, readonly string[]>>;
+}
+
+export function roleIdsToExplicitAssignment(
+  roleIds: readonly string[] | undefined,
+  defaultAllRoles = true,
+): RuntimeModelRoleAssignment {
+  if (!roleIds || (defaultAllRoles && roleIds.length === 0)) {
+    return { roleAssignmentMode: "all", enabledRoleIds: [], disabledRoleIds: [] };
+  }
+  return {
+    roleAssignmentMode: roleIds.length === 0 ? "include" : "include",
+    enabledRoleIds: [...roleIds],
+    disabledRoleIds: [],
+  };
+}
+
+function roleIdsToAssignmentPayload(
+  roleIds: readonly string[] | undefined,
+  defaultAllRoles: boolean,
+): Record<string, unknown> {
+  const assignment = roleIdsToExplicitAssignment(roleIds, defaultAllRoles);
+  return {
+    roleIds: assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
+    roleAssignmentMode: assignment.roleAssignmentMode,
+    enabledRoleIds: [...(assignment.enabledRoleIds ?? [])],
+    disabledRoleIds: [...(assignment.disabledRoleIds ?? [])],
+  };
+}
+
+export function explicitAssignmentToRoleIds(
+  assignment: RuntimeModelRoleAssignment,
+): readonly string[] {
+  if (assignment.roleAssignmentMode === "all") {
+    return [];
+  }
+  if (assignment.roleAssignmentMode === "exclude") {
+    return [];
+  }
+  return assignment.enabledRoleIds ?? [];
+}
+
 export interface RuntimeRoleDefinition {
   readonly roleId: string;
   readonly label: string;
@@ -305,6 +357,9 @@ export interface RuntimeRolePolicyRole {
   readonly role_id: string;
   readonly name: string;
   readonly description: string;
+  readonly primaryGroupId?: string;
+  readonly secondaryGroupIds?: readonly string[];
+  readonly riskLevel?: "standard" | "high" | string;
   readonly role_kind: string;
   readonly default_system_instructions: string;
   readonly task_types_supported: readonly string[];
@@ -1798,7 +1853,7 @@ export async function loadPeerModel(
 ): Promise<{ success: boolean }> {
   return postJson<{ success: boolean }>(
     `/api/role-model/local/peer/models/${encodeURIComponent(modelId)}/load`,
-    roleIds !== undefined ? { roleIds: [...roleIds] } : {},
+    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, true) : {},
     fetcher,
   );
 }
@@ -1810,7 +1865,7 @@ export async function loadLlamaSwapModel(
 ): Promise<{ success: boolean }> {
   return postJson<{ success: boolean }>(
     `/api/role-model/local/llama-swap/models/${encodeURIComponent(modelId)}/load`,
-    roleIds !== undefined ? { roleIds: [...roleIds] } : {},
+    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, true) : {},
     fetcher,
   );
 }
@@ -1822,7 +1877,7 @@ export async function setPeerModelRoles(
 ): Promise<{ success: boolean }> {
   return putJson<{ success: boolean }>(
     `/api/role-model/local/peer/models/${encodeURIComponent(modelId)}/roles`,
-    { roleIds: [...roleIds] },
+    roleIdsToAssignmentPayload(roleIds, false),
     fetcher,
   );
 }
@@ -1834,7 +1889,7 @@ export async function setLlamaSwapModelRoles(
 ): Promise<{ success: boolean }> {
   return putJson<{ success: boolean }>(
     `/api/role-model/local/llama-swap/models/${encodeURIComponent(modelId)}/roles`,
-    { roleIds: [...roleIds] },
+    roleIdsToAssignmentPayload(roleIds, false),
     fetcher,
   );
 }

@@ -331,6 +331,29 @@ describe("runtime-host-bridge executable packaging", () => {
     );
   });
 
+  test("packaged runtime validation exercises taxonomy manifest and compact task parity", async () => {
+    const validatePackagingPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "src",
+      "validate-packaging.ts",
+    );
+    const validatePackagingText = await readFile(validatePackagingPath, "utf8");
+
+    expect(validatePackagingText).toContain("/api/role-model/taxonomy/manifest");
+    expect(validatePackagingText).toContain("/api/role-model/taxonomy/version");
+    expect(validatePackagingText).toContain("/api/role-model/taxonomy/summary");
+    expect(validatePackagingText).toContain(
+      "/api/role-model/taxonomy/roles/security/tasks.compact",
+    );
+    expect(validatePackagingText).toContain("taxonomyVersion");
+    expect(validatePackagingText).toContain("contentRevision");
+    expect(validatePackagingText).toContain("entryCounts");
+    expect(validatePackagingText).toContain("security.audit");
+  });
+
   test("packaged runtime validation rebuilds the bridge before creating the SEA executable", async () => {
     const manifest = await readManifest("role-model-router/apps/runtime-host-bridge/package.json");
 

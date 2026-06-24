@@ -1,0 +1,7 @@
+(node:7184) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+===== set-model =====
+{"id":"set-model","type":"response","command":"set_model","success":true,"data":{"id":"default.decision-only","name":"default.decision-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":32768,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}}}
+===== prompt-1 =====
+{"id":"prompt-1","type":"response","command":"prompt","success":true}
+EXIT=0 SIGNAL=

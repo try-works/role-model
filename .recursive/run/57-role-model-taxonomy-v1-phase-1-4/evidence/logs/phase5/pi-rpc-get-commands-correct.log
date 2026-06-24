@@ -1,0 +1,5 @@
+(node:47676) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"id":"commands","type":"response","success":false,"error":"Unknown command: undefined"}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM

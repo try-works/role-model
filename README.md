@@ -188,6 +188,7 @@ Then double-click `role-model-launcher.exe` in `dist/release/win32-x64/`. It wil
 | [`protocol/README.md`](protocol/README.md) | canonical schemas and fixtures |
 | [`role-model-router/README.md`](role-model-router/README.md) | reference router packages and runtime apps |
 | [`docs/protocol/routing-policy.md`](docs/protocol/routing-policy.md) | routing policy reference |
+| [`docs/protocol/taxonomy-v1.md`](docs/protocol/taxonomy-v1.md) | taxonomy V1 groups, roles, tasks, and Pi classification |
 | [`docs/protocol/roles.md`](docs/protocol/roles.md) | role metadata reference |
 | [`docs/protocol/tasks.md`](docs/protocol/tasks.md) | task metadata reference |
 | [`docs/operations/02-ci-and-release-flow.md`](docs/operations/02-ci-and-release-flow.md) | CI, release automation, and workflow ownership |

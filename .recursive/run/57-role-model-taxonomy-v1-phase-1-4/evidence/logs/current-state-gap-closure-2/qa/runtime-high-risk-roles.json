@@ -1,0 +1,47 @@
+[
+  {
+    "role_id": "security",
+    "primaryGroupId": "engineering",
+    "secondaryGroupIds": [
+      "governance_safety"
+    ],
+    "riskLevel": "high",
+    "taskCount": 10
+  },
+  {
+    "role_id": "legal",
+    "primaryGroupId": "governance_safety",
+    "secondaryGroupIds": [
+      "business"
+    ],
+    "riskLevel": "high",
+    "taskCount": 10
+  },
+  {
+    "role_id": "finance",
+    "primaryGroupId": "business",
+    "secondaryGroupIds": [
+      "governance_safety"
+    ],
+    "riskLevel": "high",
+    "taskCount": 10
+  },
+  {
+    "role_id": "recruiter",
+    "primaryGroupId": "governance_safety",
+    "secondaryGroupIds": [
+      "business"
+    ],
+    "riskLevel": "high",
+    "taskCount": 10
+  },
+  {
+    "role_id": "health",
+    "primaryGroupId": "governance_safety",
+    "secondaryGroupIds": [
+      "knowledge_research"
+    ],
+    "riskLevel": "high",
+    "taskCount": 10
+  }
+]

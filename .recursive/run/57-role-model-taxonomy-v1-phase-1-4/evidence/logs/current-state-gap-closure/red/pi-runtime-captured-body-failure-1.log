@@ -1,0 +1,9 @@
+Invoke-RestMethod: 
+Line |
+   2 |  … ; $detail = Invoke-RestMethod "http://127.0.0.1:3456/api/role-model/r …
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | 
+{
+  "error": "runtime observation not found"
+}
+

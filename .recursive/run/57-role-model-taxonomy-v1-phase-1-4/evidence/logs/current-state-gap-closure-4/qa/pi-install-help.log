@@ -1,0 +1,18 @@
+Usage:
+  pi install <source> [-l] [--approve|--no-approve]
+
+Install a package and add it to settings.
+
+Options:
+  -l, --local       Install project-locally (.pi/settings.json)
+  -a, --approve     Trust project-local files for this command
+  -na, --no-approve Ignore project-local files for this command
+
+Examples:
+  pi install npm:@foo/bar
+  pi install git:github.com/user/repo
+  pi install git:git@github.com:user/repo
+  pi install https://github.com/user/repo
+  pi install ssh://git@github.com/user/repo
+  pi install ./local/path
+

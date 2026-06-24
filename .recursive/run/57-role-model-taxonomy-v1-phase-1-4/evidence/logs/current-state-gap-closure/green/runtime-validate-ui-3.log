@@ -1,0 +1,20 @@
+
+> role-model@0.0.0 runtime:validate-ui D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-ui.ts
+
+(node:20660) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\index.ts:13422
+  const captures = await loadResponseCaptures(repoRoot, fixtureBasePath, captureFixtureMap);
+                                              ^
+
+ReferenceError: repoRoot is not defined
+    at createRuntimeBridgeBackend (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\index.ts:13422:47)
+    at async runRuntimeUiValidation (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\validate-ui.ts:127:19)
+    at async <anonymous> (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge\src\validate-ui.ts:812:7)
+
+Node.js v24.11.0
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx src/validate-ui.ts
+ ELIFECYCLE  Command failed with exit code 1.

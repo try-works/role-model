@@ -10,11 +10,12 @@
       "default": "./src/index.ts"
     }
   },
-  "files": ["src", "dist"],
+  "files": ["src", "dist", "data"],
   "dependencies": {
     "@role-model/protocol-types": "workspace:*"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
   }
 }
