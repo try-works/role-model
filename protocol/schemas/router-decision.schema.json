@@ -153,7 +153,7 @@
         "value": { "type": "number", "minimum": 0, "maximum": 1 },
         "source": {
           "type": "string",
-          "enum": ["measured", "declared", "default", "catalog"]
+          "enum": ["measured", "declared", "default", "catalog", "benchmark"]
         },
         "raw": {
           "type": "object",

@@ -76,6 +76,11 @@ export interface TaxonomyRole {
   readonly preferredCapabilities: readonly string[];
   readonly authority: TaxonomyAuthority;
   readonly stability: TaxonomyStability;
+  readonly classification?: {
+    readonly summary: string;
+    readonly positiveSignals: readonly string[];
+    readonly negativeSignals: readonly string[];
+  };
   readonly ui: TaxonomyUiMetadata;
 }
 
