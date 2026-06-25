@@ -1,1 +1,162 @@
-[{"id":"analyst.compare","label":"Comparative Analysis","description":"Compare options, systems, plans, models, vendors, or tradeoffs.","primaryRole":"analyst","compatibleRoles":["analyst","architect","researcher"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks which option is better and why.","doNotUseWhen":"User asks to execute a direct edit."},"variants":[]},{"id":"analyst.evaluate","label":"Evaluation","description":"Score or assess quality, fit, risk, or performance against criteria.","primaryRole":"analyst","compatibleRoles":["analyst","product","architect"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for an evaluation rubric or assessment.","doNotUseWhen":"User asks for pure creative brainstorming."},"variants":[]},{"id":"analyst.prioritize","label":"Prioritization","description":"Rank work, risks, options, or next steps.","primaryRole":"analyst","compatibleRoles":["analyst","planner","product"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what to do first or how to sequence work.","doNotUseWhen":"User asks to write code immediately."},"variants":[]},{"id":"analyst.metrics.define","label":"Metrics Definition","description":"Define metrics, KPIs, dimensions, and measurement logic.","primaryRole":"analyst","compatibleRoles":["analyst","product","data"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what to measure or how to evaluate.","doNotUseWhen":"User asks for visual design."},"variants":["define"]},{"id":"analyst.risk.assess","label":"Risk Assessment","description":"Identify, score, and compare risks across options or plans.","primaryRole":"analyst","compatibleRoles":["analyst","security","strategist"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what risks matter and how severe they are.","doNotUseWhen":"User asks for security exploit details only."},"variants":["assess"]},{"id":"analyst.root_cause","label":"Analytical Root Cause","description":"Analyze non-code causes behind outcomes, incidents, or business symptoms.","primaryRole":"analyst","compatibleRoles":["analyst","operator","product"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["long_context"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks why a metric, process, or outcome changed.","doNotUseWhen":"User reports a source-code failure."},"variants":[]},{"id":"analyst.report.write","label":"Analysis Report","description":"Produce a structured analytical report with findings and recommendations.","primaryRole":"analyst","compatibleRoles":["analyst","writer","strategist"],"requiredCapabilities":["reasoning.multi_step","text.chat"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for an analysis write-up.","doNotUseWhen":"User asks for a short creative slogan."},"variants":["write"]},{"id":"analyst.data_interpret","label":"Data Interpretation","description":"Interpret charts, tables, metrics, or experiment results.","primaryRole":"analyst","compatibleRoles":["analyst","data","scientist"],"requiredCapabilities":["reasoning.multi_step","data.query"],"preferredCapabilities":["text.chat"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what data means.","doNotUseWhen":"User asks to transform raw data formats only."},"variants":[]},{"id":"analyst.decision_matrix","label":"Decision Matrix","description":"Create a weighted decision matrix or scoring rubric.","primaryRole":"analyst","compatibleRoles":["analyst","planner","procurement"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to choose among options with criteria.","doNotUseWhen":"User asks for free-form brainstorming."},"variants":[]},{"id":"analyst.trend.analyze","label":"Trend Analysis","description":"Analyze trends, changes, seasonality, or directional movement.","primaryRole":"analyst","compatibleRoles":["analyst","researcher","data"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["web.search"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks how something is changing over time.","doNotUseWhen":"User asks for current facts only."},"variants":["analyze"]}]
+[
+  {
+    "id": "analyst.compare",
+    "label": "Comparative Analysis",
+    "description": "Compare options, systems, plans, models, vendors, or tradeoffs.",
+    "primaryRole": "analyst",
+    "compatibleRoles": ["analyst", "architect", "researcher"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks which option is better and why.",
+      "doNotUseWhen": "User asks to execute a direct edit."
+    },
+    "variants": []
+  },
+  {
+    "id": "analyst.evaluate",
+    "label": "Evaluation",
+    "description": "Score or assess quality, fit, risk, or performance against criteria.",
+    "primaryRole": "analyst",
+    "compatibleRoles": ["analyst", "product", "architect"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for an evaluation rubric or assessment.",
+      "doNotUseWhen": "User asks for pure creative brainstorming."
+    },
+    "variants": []
+  },
+  {
+    "id": "analyst.prioritize",
+    "label": "Prioritization",
+    "description": "Rank work, risks, options, or next steps.",
+    "primaryRole": "analyst",
+    "compatibleRoles": ["analyst", "planner", "product"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what to do first or how to sequence work.",
+      "doNotUseWhen": "User asks to write code immediately."
+    },
+    "variants": []
+  },
+  {
+    "id": "analyst.metrics.define",
+    "label": "Metrics Definition",
+    "description": "Define metrics, KPIs, dimensions, and measurement logic.",
+    "primaryRole": "analyst",
+    "compatibleRoles": ["analyst", "product", "data"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what to measure or how to evaluate.",
+      "doNotUseWhen": "User asks for visual design."
+    },
+    "variants": ["define"]
+  },
+  {
+    "id": "analyst.risk.assess",
+    "label": "Risk Assessment",
+    "description": "Identify, score, and compare risks across options or plans.",
+    "primaryRole": "analyst",
+    "compatibleRoles": ["analyst", "security", "strategist"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what risks matter and how severe they are.",
+      "doNotUseWhen": "User asks for security exploit details only."
+    },
+    "variants": ["assess"]
+  },
+  {
+    "id": "analyst.root_cause",
+    "label": "Analytical Root Cause",
+    "description": "Analyze non-code causes behind outcomes, incidents, or business symptoms.",
+    "primaryRole": "analyst",
+    "compatibleRoles": ["analyst", "operator", "product"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks why a metric, process, or outcome changed.",
+      "doNotUseWhen": "User reports a source-code failure."
+    },
+    "variants": []
+  },
+  {
+    "id": "analyst.report.write",
+    "label": "Analysis Report",
+    "description": "Produce a structured analytical report with findings and recommendations.",
+    "primaryRole": "analyst",
+    "compatibleRoles": ["analyst", "writer", "strategist"],
+    "requiredCapabilities": ["reasoning.multi_step", "text.chat"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for an analysis write-up.",
+      "doNotUseWhen": "User asks for a short creative slogan."
+    },
+    "variants": ["write"]
+  },
+  {
+    "id": "analyst.data_interpret",
+    "label": "Data Interpretation",
+    "description": "Interpret charts, tables, metrics, or experiment results.",
+    "primaryRole": "analyst",
+    "compatibleRoles": ["analyst", "data", "scientist"],
+    "requiredCapabilities": ["reasoning.multi_step", "data.query"],
+    "preferredCapabilities": ["text.chat"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what data means.",
+      "doNotUseWhen": "User asks to transform raw data formats only."
+    },
+    "variants": []
+  },
+  {
+    "id": "analyst.decision_matrix",
+    "label": "Decision Matrix",
+    "description": "Create a weighted decision matrix or scoring rubric.",
+    "primaryRole": "analyst",
+    "compatibleRoles": ["analyst", "planner", "procurement"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to choose among options with criteria.",
+      "doNotUseWhen": "User asks for free-form brainstorming."
+    },
+    "variants": []
+  },
+  {
+    "id": "analyst.trend.analyze",
+    "label": "Trend Analysis",
+    "description": "Analyze trends, changes, seasonality, or directional movement.",
+    "primaryRole": "analyst",
+    "compatibleRoles": ["analyst", "researcher", "data"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["web.search"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how something is changing over time.",
+      "doNotUseWhen": "User asks for current facts only."
+    },
+    "variants": ["analyze"]
+  }
+]

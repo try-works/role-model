@@ -7220,22 +7220,7 @@ function buildRequestScopedEndpointList(): {
     readonly status: "active";
   }[];
 } {
-  return {
-    endpoints: [
-      {
-        endpoint_id: "local.lfm2.5-8b-a1b",
-        model_id: "lfm2.5-8b-a1b",
-        source_type: "local",
-        status: "active",
-      },
-      {
-        endpoint_id: "remote.deepseek-v4-flash",
-        model_id: "deepseek/deepseek-v4-flash",
-        source_type: "remote",
-        status: "active",
-      },
-    ],
-  };
+  return { endpoints: [] };
 }
 
 function buildRequestScopedMetrics(toolArguments: unknown): {
@@ -7248,7 +7233,7 @@ function buildRequestScopedMetrics(toolArguments: unknown): {
     readRequestScopedStringValue(readRequestScopedObject(toolArguments), [
       "endpoint_id",
       "endpointId",
-    ]) ?? "remote.deepseek-v4-flash";
+    ]) ?? "remote.default";
   const localEndpoint = endpointId.toLowerCase().includes("local");
   return {
     endpoint_id: endpointId,

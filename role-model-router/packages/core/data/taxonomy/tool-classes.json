@@ -4,10 +4,7 @@
     "kind": "tool_class",
     "label": "Filesystem Read",
     "description": "Read local files or workspace contents.",
-    "typicalTasks": [
-      "coder.review",
-      "coder.debug.root_cause"
-    ],
+    "typicalTasks": ["coder.review", "coder.debug.root_cause"],
     "classificationGuidance": "Use when request needs repo/file inspection.",
     "authority": {
       "scope": "core",
@@ -20,10 +17,7 @@
     "kind": "tool_class",
     "label": "Filesystem Write",
     "description": "Modify files or create patches.",
-    "typicalTasks": [
-      "coder.edit",
-      "coder.test.write"
-    ],
+    "typicalTasks": ["coder.edit", "coder.test.write"],
     "classificationGuidance": "Use when request requires edits.",
     "authority": {
       "scope": "core",
@@ -36,10 +30,7 @@
     "kind": "tool_class",
     "label": "Shell Execute",
     "description": "Run commands, tests, builds, or diagnostics.",
-    "typicalTasks": [
-      "coder.debug.root_cause",
-      "operator.debug.startup"
-    ],
+    "typicalTasks": ["coder.debug.root_cause", "operator.debug.startup"],
     "classificationGuidance": "Use when verification or command execution is needed.",
     "authority": {
       "scope": "core",
@@ -52,10 +43,7 @@
     "kind": "tool_class",
     "label": "Browser Control",
     "description": "Drive a browser for UI testing or inspection.",
-    "typicalTasks": [
-      "tester.e2e",
-      "operator.debug.ui"
-    ],
+    "typicalTasks": ["tester.e2e", "operator.debug.ui"],
     "classificationGuidance": "Use when request requires browser interaction.",
     "authority": {
       "scope": "core",
@@ -68,9 +56,7 @@
     "kind": "tool_class",
     "label": "Web Search",
     "description": "Search the web or current documentation.",
-    "typicalTasks": [
-      "researcher.web_research"
-    ],
+    "typicalTasks": ["researcher.web_research"],
     "classificationGuidance": "Use when facts may be current or external.",
     "authority": {
       "scope": "core",
@@ -83,10 +69,7 @@
     "kind": "tool_class",
     "label": "Http Fetch",
     "description": "Fetch external URLs or APIs.",
-    "typicalTasks": [
-      "researcher.web_research",
-      "operator.debug.api"
-    ],
+    "typicalTasks": ["researcher.web_research", "operator.debug.api"],
     "classificationGuidance": "Use when request needs direct HTTP retrieval.",
     "authority": {
       "scope": "core",
@@ -99,10 +82,7 @@
     "kind": "tool_class",
     "label": "Database Query",
     "description": "Query databases or structured stores.",
-    "typicalTasks": [
-      "data.query",
-      "data.schema.review"
-    ],
+    "typicalTasks": ["data.query", "data.schema.review"],
     "classificationGuidance": "Use when the request needs database inspection or query execution.",
     "authority": {
       "scope": "core",
@@ -115,10 +95,7 @@
     "kind": "tool_class",
     "label": "Package Install",
     "description": "Install or update packages.",
-    "typicalTasks": [
-      "operator.install",
-      "coder.migrate"
-    ],
+    "typicalTasks": ["operator.install", "coder.migrate"],
     "classificationGuidance": "Use when package manager actions are needed.",
     "authority": {
       "scope": "core",
@@ -131,9 +108,7 @@
     "kind": "tool_class",
     "label": "Calendar Read",
     "description": "Read calendar or scheduling context.",
-    "typicalTasks": [
-      "coordinator.schedule.plan"
-    ],
+    "typicalTasks": ["coordinator.schedule.plan"],
     "classificationGuidance": "Use when calendar availability affects the task.",
     "authority": {
       "scope": "core",
@@ -146,9 +121,7 @@
     "kind": "tool_class",
     "label": "Calendar Write",
     "description": "Create or update calendar entries.",
-    "typicalTasks": [
-      "coordinator.schedule.plan"
-    ],
+    "typicalTasks": ["coordinator.schedule.plan"],
     "classificationGuidance": "Use only when the user authorizes calendar changes.",
     "authority": {
       "scope": "core",
@@ -161,10 +134,7 @@
     "kind": "tool_class",
     "label": "Email Read",
     "description": "Read email or message context.",
-    "typicalTasks": [
-      "coordinator.follow_up",
-      "seller.outreach.write"
-    ],
+    "typicalTasks": ["coordinator.follow_up", "seller.outreach.write"],
     "classificationGuidance": "Use when the task depends on existing message threads.",
     "authority": {
       "scope": "core",
@@ -177,10 +147,7 @@
     "kind": "tool_class",
     "label": "Email Write",
     "description": "Draft or send email/messages.",
-    "typicalTasks": [
-      "coordinator.follow_up",
-      "seller.outreach.write"
-    ],
+    "typicalTasks": ["coordinator.follow_up", "seller.outreach.write"],
     "classificationGuidance": "Sending requires explicit user approval.",
     "authority": {
       "scope": "core",
@@ -193,9 +160,7 @@
     "kind": "tool_class",
     "label": "Memory Read",
     "description": "Read durable memory or knowledge-base state.",
-    "typicalTasks": [
-      "knowledge.retrieve"
-    ],
+    "typicalTasks": ["knowledge.retrieve"],
     "classificationGuidance": "Use when remembered context is needed.",
     "authority": {
       "scope": "core",
@@ -208,9 +173,7 @@
     "kind": "tool_class",
     "label": "Memory Write",
     "description": "Write durable memory or knowledge-base state.",
-    "typicalTasks": [
-      "knowledge.memory.update"
-    ],
+    "typicalTasks": ["knowledge.memory.update"],
     "classificationGuidance": "Use only when memory updates are authorized.",
     "authority": {
       "scope": "core",
@@ -223,10 +186,7 @@
     "kind": "tool_class",
     "label": "Vector Search",
     "description": "Search embeddings or semantic indexes.",
-    "typicalTasks": [
-      "knowledge.retrieve",
-      "researcher.compare_sources"
-    ],
+    "typicalTasks": ["knowledge.retrieve", "researcher.compare_sources"],
     "classificationGuidance": "Use for semantic retrieval over indexed content.",
     "authority": {
       "scope": "core",

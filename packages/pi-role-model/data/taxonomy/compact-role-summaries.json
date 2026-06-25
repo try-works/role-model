@@ -1,1 +1,807 @@
-[{"id":"coder","label":"Coder","description":"Code implementation, review, debugging, refactoring, and tests.","primaryGroupId":"engineering","secondaryGroupIds":[],"typicalTaskIds":["coder.edit","coder.review","coder.debug.root_cause"],"classification":{"summary":"Use when the request is primarily about source code, tests, diffs, implementation, or refactoring.","positiveSignals":["code","patch","diff","test","debug","implement","fix","refactor","migrate","generate"],"negativeSignals":["write marketing copy","compare web sources","threat model only","legal review","financial analysis"]}},{"id":"architect","label":"Architect","description":"System design, API design, technical planning, and tradeoff analysis.","primaryGroupId":"engineering","secondaryGroupIds":[],"typicalTaskIds":["architect.design","architect.review","architect.plan"],"classification":{"summary":"Use when the request is about system design, architecture evaluation, API contracts, infrastructure planning, or technical tradeoffs.","positiveSignals":["design","architecture","api design","system","tradeoff","integration","scalability","data model","migration strategy","adr","infrastructure"],"negativeSignals":["implement the code","debug a startup failure","write support reply"]}},{"id":"security","label":"Security","description":"Security review, threat modeling, abuse/risk analysis.","primaryGroupId":"engineering","secondaryGroupIds":["governance_safety"],"typicalTaskIds":["security.audit","security.threat_model","coder.review"],"classification":{"summary":"Use when the request is about vulnerabilities, threat modeling, auth, permissions, secrets, privacy, or security policy.","positiveSignals":["security","risk","vulnerability","threat","secrets","auth","permissions","privacy","compliance","incident","supply chain","safe prompt"],"negativeSignals":["general code quality without security focus","product marketing","creative writing"]}},{"id":"researcher","label":"Researcher","description":"Search, compare, synthesize, cite, and summarize information.","primaryGroupId":"knowledge_research","secondaryGroupIds":[],"typicalTaskIds":["researcher.web_research","researcher.compare_sources"],"classification":{"summary":"Use when the answer depends on current external information, web sources, document comparison, fact checking, or literature review.","positiveSignals":["research","find","search","compare","cite","current","latest","source","literature","fact check","timeline","market scan","standards","document extract"],"negativeSignals":["the answer is fully in local context","implement code","design ui"]}},{"id":"writer","label":"Writer","description":"Write, edit, summarize, explain, and structure prose.","primaryGroupId":"communication","secondaryGroupIds":[],"typicalTaskIds":["writer.docs.write","writer.summarize"],"classification":{"summary":"Use when the request is about writing, editing, summarizing, structuring prose, documentation, release notes, or style improvement.","positiveSignals":["write","edit","summarize","documentation","docs","release notes","blog","article","email","proposal","style","outline","rewrite"],"negativeSignals":["implement code","debug","security audit","data query"]}},{"id":"operator","label":"Operator","description":"Runtime, deployment, logs, diagnostics, and operational response.","primaryGroupId":"engineering","secondaryGroupIds":[],"typicalTaskIds":["operator.debug.startup","operator.deploy.review"],"classification":{"summary":"Use when the request is about runtime, deployment, configuration, installation, diagnostics, incidents, or operational work.","positiveSignals":["debug","startup","launch","install","configure","deploy","runtime","server","process","port","environment","incident","outage","alert","monitor","backup","restore","release execute"],"negativeSignals":["design a new feature","write marketing copy","legal review"]}},{"id":"analyst","label":"Analyst","description":"Structured analysis, metrics, comparison, prioritization, and decision support.","primaryGroupId":"product_design","secondaryGroupIds":[],"typicalTaskIds":["analyst.compare","analyst.evaluate","analyst.prioritize"],"classification":{"summary":"Use when the request is about structured analysis, comparison, evaluation, prioritization, metrics, risk assessment, or decision support.","positiveSignals":["compare","evaluate","analyze","assess","prioritize","rank","score","metrics","kpi","risk assessment","decision matrix","trend","report","interpret"],"negativeSignals":["implement code","creative brainstorming","write support reply"]}},{"id":"planner","label":"Planner","description":"Breaks goals into requirements, milestones, phased plans, and acceptance criteria.","primaryGroupId":"product_design","secondaryGroupIds":[],"typicalTaskIds":["planner.requirements","planner.roadmap","planner.decompose"],"classification":{"summary":"Use when the request is about breaking goals into requirements, milestones, roadmaps, sprint plans, acceptance criteria, or rollout plans.","positiveSignals":["plan","roadmap","milestone","sprint","requirements","acceptance criteria","decompose","rollout","resource plan","dependency map"],"negativeSignals":["implement the code now","source citation research","code review"]}},{"id":"tester","label":"Tester","description":"Test design, QA, validation, reproduction, and end-to-end verification.","primaryGroupId":"engineering","secondaryGroupIds":[],"typicalTaskIds":["tester.plan","tester.e2e","tester.regression"],"classification":{"summary":"Use when the request is about test design, QA, validation, reproduction, regression testing, E2E testing, or acceptance testing.","positiveSignals":["test","qa","validation","verify","regression","e2e","reproduce","accessibility","performance test","security test","acceptance test","unit test","integration test"],"negativeSignals":["write production code","design product strategy","legal policy review"]}},{"id":"data","label":"Data","description":"Data modeling, query analysis, schema review, transformation, and data quality.","primaryGroupId":"engineering","secondaryGroupIds":[],"typicalTaskIds":["data.query","data.schema.review","data.transform"],"classification":{"summary":"Use when the request is about data modeling, query analysis, schema review, transformation, data quality, or visualization.","positiveSignals":["data","sql","query","schema","transform","extract","join","visualize","validate data","quality audit","metric define"],"negativeSignals":["web research","frontend ui","legal advice"]}},{"id":"product","label":"Product","description":"Product requirements, user workflows, prioritization, and release readiness.","primaryGroupId":"product_design","secondaryGroupIds":[],"typicalTaskIds":["product.requirements","product.workflow.review","product.release_notes"],"classification":{"summary":"Use when the request is about product requirements, user workflows, feature prioritization, release readiness, or user stories.","positiveSignals":["product","feature","user story","workflow","prioritize","spec","prd","acceptance","feedback","launch readiness","release notes from product perspective"],"negativeSignals":["root cause debugging","implementation code","legal terms"]}},{"id":"designer","label":"Designer","description":"Interface design, interaction design, visual review, and experience quality.","primaryGroupId":"product_design","secondaryGroupIds":[],"typicalTaskIds":["designer.ui.review","designer.interaction","designer.visual_direction"],"classification":{"summary":"Use when the request is about interface design, interaction design, visual direction, prototyping, design systems, accessibility review, or UI polish.","positiveSignals":["design","ui","interface","visual","interaction","prototype","layout","accessibility","responsive","usability","design system","visual qa"],"negativeSignals":["backend debugging","database schema","legal compliance"]}},{"id":"support","label":"Support","description":"Troubleshooting, user-facing diagnosis, remediation steps, and escalation.","primaryGroupId":"communication","secondaryGroupIds":[],"typicalTaskIds":["support.triage","support.explain","support.escalate"],"classification":{"summary":"Use when the request is about user troubleshooting, diagnosis, remediation steps, support ticket replies, escalation, or FAQ writing.","positiveSignals":["support","customer","ticket","triage","troubleshoot","help","issue","faq","escalate","reply to customer","apology","status update","runbook"],"negativeSignals":["code generation","internal architecture design","legal policy"]}},{"id":"legal","label":"Legal","description":"Legal, licensing, compliance, terms, and policy interpretation support.","primaryGroupId":"governance_safety","secondaryGroupIds":["business"],"typicalTaskIds":["legal.review","legal.compliance_check"],"classification":{"summary":"Use when the request is about legal review, licensing, terms, privacy, compliance, contract summary, or policy drafting.","positiveSignals":["legal","license","terms","privacy","compliance","contract","gdpr","policy draft","retention","accessibility compliance"],"negativeSignals":["code implementation","binding legal advice","marketing copy"]}},{"id":"finance","label":"Finance","description":"Cost, budget, pricing, ROI, billing, and financial comparison work.","primaryGroupId":"business","secondaryGroupIds":["governance_safety"],"typicalTaskIds":["finance.cost_estimate","finance.compare_options"],"classification":{"summary":"Use when the request is about cost estimation, budget planning, financial forecasting, pricing, ROI, or procurement cost analysis.","positiveSignals":["cost","budget","price","pricing","roi","forecast","finance","invoice","unit economics","variance","procurement cost","financial"],"negativeSignals":["code refactoring","creative writing","non-financial technical comparison"]}},{"id":"creative","label":"Creative","description":"Ideation, naming, visual direction, storytelling, and creative variants.","primaryGroupId":"communication","secondaryGroupIds":[],"typicalTaskIds":["creative.brainstorm","creative.copywriting","creative.storyboard"],"classification":{"summary":"Use when the request is about ideation, naming, visual direction, storytelling, copywriting, brand voice, or creative concept development.","positiveSignals":["brainstorm","name","creative","idea","tagline","script","story","brand voice","visual prompt","social post","concept","slogan"],"negativeSignals":["verified factual claims","legal text","documentation"]}},{"id":"educator","label":"Educator","description":"Teaching, tutoring, curriculum, study support, quizzes, and feedback.","primaryGroupId":"knowledge_research","secondaryGroupIds":[],"typicalTaskIds":["educator.tutor","educator.lesson.plan","educator.quiz.generate"],"classification":{"summary":"Use when the request is about teaching, tutoring, curriculum design, lesson planning, quiz generation, learning feedback, or concept explanation.","positiveSignals":["teach","learn","lesson","curriculum","quiz","tutor","study","educate","explain concept","rubric","example","practice","feedback"],"negativeSignals":["employment or hiring evaluation","final answer only without explanation","professional medical advice"]}},{"id":"translator","label":"Translator","description":"Translation, localization, tone transfer, and multilingual communication.","primaryGroupId":"communication","secondaryGroupIds":[],"typicalTaskIds":["translator.translate","translator.localize.locale","translator.review"],"classification":{"summary":"Use when the request is about translation, localization, tone adaptation, glossary creation, or multilingual communication.","positiveSignals":["translate","localize","locale","language","multilingual","tone adapt","glossary","subtitles","back translate","locale review","multilingual reply"],"negativeSignals":["rewrite within the same language only","marketing campaign design","code implementation"]}},{"id":"marketer","label":"Marketer","description":"Positioning, messaging, campaigns, SEO, content strategy, and audience research.","primaryGroupId":"business","secondaryGroupIds":[],"typicalTaskIds":["marketer.positioning","marketer.campaign.plan","marketer.content.seo"],"classification":{"summary":"Use when the request is about positioning, campaign planning, SEO content, ad copy, audience research, messaging review, or launch planning.","positiveSignals":["marketing","positioning","campaign","seo","ad copy","audience","email sequence","landing page","social media plan","messaging","launch plan","brand"],"negativeSignals":["legal claims approval","technical release readiness","verified medical guidance"]}},{"id":"seller","label":"Seller","description":"Sales discovery, outreach, proposals, account planning, and objection handling.","primaryGroupId":"business","secondaryGroupIds":[],"typicalTaskIds":["seller.outreach.write","seller.discovery.plan","seller.proposal.enterprise"],"classification":{"summary":"Use when the request is about sales discovery, outreach, enterprise proposals, objection handling, account planning, demos, or follow-ups.","positiveSignals":["sales","outreach","proposal","enterprise","discovery","objection","cold email","demo","account plan","battlecard","mutual action plan","follow up sales"],"negativeSignals":["generic product requirements","support remediation steps","legal contract approval"]}},{"id":"recruiter","label":"Recruiter","description":"Job descriptions, interview plans, hiring rubrics, and candidate screening support.","primaryGroupId":"governance_safety","secondaryGroupIds":["business"],"typicalTaskIds":["recruiter.job_description","recruiter.interview.plan","recruiter.candidate.screen"],"classification":{"summary":"Use when the request is about job descriptions, interview planning, candidate screening, hiring rubrics, offer preparation, or pipeline management.","positiveSignals":["recruit","hire","job description","interview","candidate","offer","pipeline","sourcing","scorecard","role intake"],"negativeSignals":["employment law compliance review","inferring protected attributes","unlawful employment decisions"]}},{"id":"procurement","label":"Procurement","description":"Vendor comparison, purchasing requirements, RFPs, and commercial review.","primaryGroupId":"business","secondaryGroupIds":[],"typicalTaskIds":["procurement.vendor.compare","procurement.rfp.write","procurement.requirements"],"classification":{"summary":"Use when the request is about vendor comparison, RFP writing, purchasing requirements, contract review, SLA review, or negotiation planning.","positiveSignals":["procurement","vendor","rfp","purchase","contract commercial","sla","negotiation","scorecard","renewal","security questionnaire"],"negativeSignals":["implementation code","pure product marketing copy","binding legal advice"]}},{"id":"coordinator","label":"Coordinator","description":"Meetings, schedules, task follow-up, inbox-style triage, and administrative workflows.","primaryGroupId":"communication","secondaryGroupIds":[],"typicalTaskIds":["coordinator.meeting.agenda","coordinator.schedule.plan","coordinator.follow_up"],"classification":{"summary":"Use when the request is about meeting agendas, notes, scheduling, task follow-up, inbox triage, decision logs, project status, or handoff preparation.","positiveSignals":["meeting","agenda","schedule","follow up","coordinate","inbox","decision log","project status","reminder","handoff","task plan"],"negativeSignals":["deep technical implementation","legal transcript certification","product roadmap strategy"]}},{"id":"knowledge","label":"Knowledge","description":"Notes, memory, knowledge bases, retrieval organization, and institutional context.","primaryGroupId":"knowledge_research","secondaryGroupIds":[],"typicalTaskIds":["knowledge.organize","knowledge.retrieve","knowledge.memory.update"],"classification":{"summary":"Use when the request is about organizing notes, knowledge bases, memory updates, retrieval, runbook updates, link mapping, or context briefs.","positiveSignals":["organize","knowledge","notes","retrieve","memory","runbook","archive","context brief","taxonomy design","link map","kb write","kb"],"negativeSignals":["current external research only","create new code","one-off creative copy"]}},{"id":"strategist","label":"Strategist","description":"Business strategy, market entry, competitive analysis, and organizational tradeoffs.","primaryGroupId":"business","secondaryGroupIds":[],"typicalTaskIds":["strategist.business.plan","strategist.market.analyze","strategist.competitive.review"],"classification":{"summary":"Use when the request is about business strategy, market analysis, competitive review, scenario planning, OKRs, SWOT, or operating models.","positiveSignals":["strategy","business plan","market analyze","competitive","swot","okr","scenario","operating model","pricing strategy","partnership","board brief"],"negativeSignals":["technical implementation steps only","verified breaking news only","simple price comparison only"]}},{"id":"mathematician","label":"Mathematician","description":"Mathematical solving, verification, modeling, and explanation.","primaryGroupId":"knowledge_research","secondaryGroupIds":[],"typicalTaskIds":["mathematician.solve","mathematician.verify","mathematician.model"],"classification":{"summary":"Use when the request is about mathematical solving, verification, modeling, proof writing, formula derivation, statistics, optimization, or error checking.","positiveSignals":["math","solve","calculate","proof","derive","formula","statistics","optimize","model","simulation","verify math","error check"],"negativeSignals":["financial advice rather than math","code review","non-math writing"]}},{"id":"scientist","label":"Scientist","description":"Scientific reasoning, experimental design, evidence review, and method critique.","primaryGroupId":"knowledge_research","secondaryGroupIds":[],"typicalTaskIds":["scientist.experiment.design","scientist.evidence.review","scientist.method.critique"],"classification":{"summary":"Use when the request is about scientific reasoning, experimental design, evidence review, method critique, protocol writing, or literature synthesis.","positiveSignals":["science","experiment","hypothesis","scientific","evidence review","method critique","protocol","peer review","literature synthesize","data interpret"],"negativeSignals":["product A/B test logistics only","current product pricing","marketing copy"]}},{"id":"health","label":"Health","description":"General health information, symptom-safety triage, care-navigation support, and wellness explanations.","primaryGroupId":"governance_safety","secondaryGroupIds":["knowledge_research"],"typicalTaskIds":["health.info.general","health.info.safety","health.care_navigation"],"classification":{"summary":"Use when the request is about general health information, symptom safety triage, care navigation, wellness planning, medication information, or appointment preparation.","positiveSignals":["health","symptom","medication","wellness","exercise","nutrition","appointment","care","mental wellness","safety health"],"negativeSignals":["diagnosis","emergency care","individualized medical treatment","prescribing instructions"]}}]
+[
+  {
+    "id": "coder",
+    "label": "Coder",
+    "description": "Code implementation, review, debugging, refactoring, and tests.",
+    "primaryGroupId": "engineering",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["coder.edit", "coder.review", "coder.debug.root_cause"],
+    "classification": {
+      "summary": "Use when the request is primarily about source code, tests, diffs, implementation, or refactoring.",
+      "positiveSignals": [
+        "code",
+        "patch",
+        "diff",
+        "test",
+        "debug",
+        "implement",
+        "fix",
+        "refactor",
+        "migrate",
+        "generate"
+      ],
+      "negativeSignals": [
+        "write marketing copy",
+        "compare web sources",
+        "threat model only",
+        "legal review",
+        "financial analysis"
+      ]
+    }
+  },
+  {
+    "id": "architect",
+    "label": "Architect",
+    "description": "System design, API design, technical planning, and tradeoff analysis.",
+    "primaryGroupId": "engineering",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["architect.design", "architect.review", "architect.plan"],
+    "classification": {
+      "summary": "Use when the request is about system design, architecture evaluation, API contracts, infrastructure planning, or technical tradeoffs.",
+      "positiveSignals": [
+        "design",
+        "architecture",
+        "api design",
+        "system",
+        "tradeoff",
+        "integration",
+        "scalability",
+        "data model",
+        "migration strategy",
+        "adr",
+        "infrastructure"
+      ],
+      "negativeSignals": ["implement the code", "debug a startup failure", "write support reply"]
+    }
+  },
+  {
+    "id": "security",
+    "label": "Security",
+    "description": "Security review, threat modeling, abuse/risk analysis.",
+    "primaryGroupId": "engineering",
+    "secondaryGroupIds": ["governance_safety"],
+    "typicalTaskIds": ["security.audit", "security.threat_model", "coder.review"],
+    "classification": {
+      "summary": "Use when the request is about vulnerabilities, threat modeling, auth, permissions, secrets, privacy, or security policy.",
+      "positiveSignals": [
+        "security",
+        "risk",
+        "vulnerability",
+        "threat",
+        "secrets",
+        "auth",
+        "permissions",
+        "privacy",
+        "compliance",
+        "incident",
+        "supply chain",
+        "safe prompt"
+      ],
+      "negativeSignals": [
+        "general code quality without security focus",
+        "product marketing",
+        "creative writing"
+      ]
+    }
+  },
+  {
+    "id": "researcher",
+    "label": "Researcher",
+    "description": "Search, compare, synthesize, cite, and summarize information.",
+    "primaryGroupId": "knowledge_research",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["researcher.web_research", "researcher.compare_sources"],
+    "classification": {
+      "summary": "Use when the answer depends on current external information, web sources, document comparison, fact checking, or literature review.",
+      "positiveSignals": [
+        "research",
+        "find",
+        "search",
+        "compare",
+        "cite",
+        "current",
+        "latest",
+        "source",
+        "literature",
+        "fact check",
+        "timeline",
+        "market scan",
+        "standards",
+        "document extract"
+      ],
+      "negativeSignals": ["the answer is fully in local context", "implement code", "design ui"]
+    }
+  },
+  {
+    "id": "writer",
+    "label": "Writer",
+    "description": "Write, edit, summarize, explain, and structure prose.",
+    "primaryGroupId": "communication",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["writer.docs.write", "writer.summarize"],
+    "classification": {
+      "summary": "Use when the request is about writing, editing, summarizing, structuring prose, documentation, release notes, or style improvement.",
+      "positiveSignals": [
+        "write",
+        "edit",
+        "summarize",
+        "documentation",
+        "docs",
+        "release notes",
+        "blog",
+        "article",
+        "email",
+        "proposal",
+        "style",
+        "outline",
+        "rewrite"
+      ],
+      "negativeSignals": ["implement code", "debug", "security audit", "data query"]
+    }
+  },
+  {
+    "id": "operator",
+    "label": "Operator",
+    "description": "Runtime, deployment, logs, diagnostics, and operational response.",
+    "primaryGroupId": "engineering",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["operator.debug.startup", "operator.deploy.review"],
+    "classification": {
+      "summary": "Use when the request is about runtime, deployment, configuration, installation, diagnostics, incidents, or operational work.",
+      "positiveSignals": [
+        "debug",
+        "startup",
+        "launch",
+        "install",
+        "configure",
+        "deploy",
+        "runtime",
+        "server",
+        "process",
+        "port",
+        "environment",
+        "incident",
+        "outage",
+        "alert",
+        "monitor",
+        "backup",
+        "restore",
+        "release execute"
+      ],
+      "negativeSignals": ["design a new feature", "write marketing copy", "legal review"]
+    }
+  },
+  {
+    "id": "analyst",
+    "label": "Analyst",
+    "description": "Structured analysis, metrics, comparison, prioritization, and decision support.",
+    "primaryGroupId": "product_design",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["analyst.compare", "analyst.evaluate", "analyst.prioritize"],
+    "classification": {
+      "summary": "Use when the request is about structured analysis, comparison, evaluation, prioritization, metrics, risk assessment, or decision support.",
+      "positiveSignals": [
+        "compare",
+        "evaluate",
+        "analyze",
+        "assess",
+        "prioritize",
+        "rank",
+        "score",
+        "metrics",
+        "kpi",
+        "risk assessment",
+        "decision matrix",
+        "trend",
+        "report",
+        "interpret"
+      ],
+      "negativeSignals": ["implement code", "creative brainstorming", "write support reply"]
+    }
+  },
+  {
+    "id": "planner",
+    "label": "Planner",
+    "description": "Breaks goals into requirements, milestones, phased plans, and acceptance criteria.",
+    "primaryGroupId": "product_design",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["planner.requirements", "planner.roadmap", "planner.decompose"],
+    "classification": {
+      "summary": "Use when the request is about breaking goals into requirements, milestones, roadmaps, sprint plans, acceptance criteria, or rollout plans.",
+      "positiveSignals": [
+        "plan",
+        "roadmap",
+        "milestone",
+        "sprint",
+        "requirements",
+        "acceptance criteria",
+        "decompose",
+        "rollout",
+        "resource plan",
+        "dependency map"
+      ],
+      "negativeSignals": ["implement the code now", "source citation research", "code review"]
+    }
+  },
+  {
+    "id": "tester",
+    "label": "Tester",
+    "description": "Test design, QA, validation, reproduction, and end-to-end verification.",
+    "primaryGroupId": "engineering",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["tester.plan", "tester.e2e", "tester.regression"],
+    "classification": {
+      "summary": "Use when the request is about test design, QA, validation, reproduction, regression testing, E2E testing, or acceptance testing.",
+      "positiveSignals": [
+        "test",
+        "qa",
+        "validation",
+        "verify",
+        "regression",
+        "e2e",
+        "reproduce",
+        "accessibility",
+        "performance test",
+        "security test",
+        "acceptance test",
+        "unit test",
+        "integration test"
+      ],
+      "negativeSignals": ["write production code", "design product strategy", "legal policy review"]
+    }
+  },
+  {
+    "id": "data",
+    "label": "Data",
+    "description": "Data modeling, query analysis, schema review, transformation, and data quality.",
+    "primaryGroupId": "engineering",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["data.query", "data.schema.review", "data.transform"],
+    "classification": {
+      "summary": "Use when the request is about data modeling, query analysis, schema review, transformation, data quality, or visualization.",
+      "positiveSignals": [
+        "data",
+        "sql",
+        "query",
+        "schema",
+        "transform",
+        "extract",
+        "join",
+        "visualize",
+        "validate data",
+        "quality audit",
+        "metric define"
+      ],
+      "negativeSignals": ["web research", "frontend ui", "legal advice"]
+    }
+  },
+  {
+    "id": "product",
+    "label": "Product",
+    "description": "Product requirements, user workflows, prioritization, and release readiness.",
+    "primaryGroupId": "product_design",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["product.requirements", "product.workflow.review", "product.release_notes"],
+    "classification": {
+      "summary": "Use when the request is about product requirements, user workflows, feature prioritization, release readiness, or user stories.",
+      "positiveSignals": [
+        "product",
+        "feature",
+        "user story",
+        "workflow",
+        "prioritize",
+        "spec",
+        "prd",
+        "acceptance",
+        "feedback",
+        "launch readiness",
+        "release notes from product perspective"
+      ],
+      "negativeSignals": ["root cause debugging", "implementation code", "legal terms"]
+    }
+  },
+  {
+    "id": "designer",
+    "label": "Designer",
+    "description": "Interface design, interaction design, visual review, and experience quality.",
+    "primaryGroupId": "product_design",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["designer.ui.review", "designer.interaction", "designer.visual_direction"],
+    "classification": {
+      "summary": "Use when the request is about interface design, interaction design, visual direction, prototyping, design systems, accessibility review, or UI polish.",
+      "positiveSignals": [
+        "design",
+        "ui",
+        "interface",
+        "visual",
+        "interaction",
+        "prototype",
+        "layout",
+        "accessibility",
+        "responsive",
+        "usability",
+        "design system",
+        "visual qa"
+      ],
+      "negativeSignals": ["backend debugging", "database schema", "legal compliance"]
+    }
+  },
+  {
+    "id": "support",
+    "label": "Support",
+    "description": "Troubleshooting, user-facing diagnosis, remediation steps, and escalation.",
+    "primaryGroupId": "communication",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["support.triage", "support.explain", "support.escalate"],
+    "classification": {
+      "summary": "Use when the request is about user troubleshooting, diagnosis, remediation steps, support ticket replies, escalation, or FAQ writing.",
+      "positiveSignals": [
+        "support",
+        "customer",
+        "ticket",
+        "triage",
+        "troubleshoot",
+        "help",
+        "issue",
+        "faq",
+        "escalate",
+        "reply to customer",
+        "apology",
+        "status update",
+        "runbook"
+      ],
+      "negativeSignals": ["code generation", "internal architecture design", "legal policy"]
+    }
+  },
+  {
+    "id": "legal",
+    "label": "Legal",
+    "description": "Legal, licensing, compliance, terms, and policy interpretation support.",
+    "primaryGroupId": "governance_safety",
+    "secondaryGroupIds": ["business"],
+    "typicalTaskIds": ["legal.review", "legal.compliance_check"],
+    "classification": {
+      "summary": "Use when the request is about legal review, licensing, terms, privacy, compliance, contract summary, or policy drafting.",
+      "positiveSignals": [
+        "legal",
+        "license",
+        "terms",
+        "privacy",
+        "compliance",
+        "contract",
+        "gdpr",
+        "policy draft",
+        "retention",
+        "accessibility compliance"
+      ],
+      "negativeSignals": ["code implementation", "binding legal advice", "marketing copy"]
+    }
+  },
+  {
+    "id": "finance",
+    "label": "Finance",
+    "description": "Cost, budget, pricing, ROI, billing, and financial comparison work.",
+    "primaryGroupId": "business",
+    "secondaryGroupIds": ["governance_safety"],
+    "typicalTaskIds": ["finance.cost_estimate", "finance.compare_options"],
+    "classification": {
+      "summary": "Use when the request is about cost estimation, budget planning, financial forecasting, pricing, ROI, or procurement cost analysis.",
+      "positiveSignals": [
+        "cost",
+        "budget",
+        "price",
+        "pricing",
+        "roi",
+        "forecast",
+        "finance",
+        "invoice",
+        "unit economics",
+        "variance",
+        "procurement cost",
+        "financial"
+      ],
+      "negativeSignals": [
+        "code refactoring",
+        "creative writing",
+        "non-financial technical comparison"
+      ]
+    }
+  },
+  {
+    "id": "creative",
+    "label": "Creative",
+    "description": "Ideation, naming, visual direction, storytelling, and creative variants.",
+    "primaryGroupId": "communication",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["creative.brainstorm", "creative.copywriting", "creative.storyboard"],
+    "classification": {
+      "summary": "Use when the request is about ideation, naming, visual direction, storytelling, copywriting, brand voice, or creative concept development.",
+      "positiveSignals": [
+        "brainstorm",
+        "name",
+        "creative",
+        "idea",
+        "tagline",
+        "script",
+        "story",
+        "brand voice",
+        "visual prompt",
+        "social post",
+        "concept",
+        "slogan"
+      ],
+      "negativeSignals": ["verified factual claims", "legal text", "documentation"]
+    }
+  },
+  {
+    "id": "educator",
+    "label": "Educator",
+    "description": "Teaching, tutoring, curriculum, study support, quizzes, and feedback.",
+    "primaryGroupId": "knowledge_research",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["educator.tutor", "educator.lesson.plan", "educator.quiz.generate"],
+    "classification": {
+      "summary": "Use when the request is about teaching, tutoring, curriculum design, lesson planning, quiz generation, learning feedback, or concept explanation.",
+      "positiveSignals": [
+        "teach",
+        "learn",
+        "lesson",
+        "curriculum",
+        "quiz",
+        "tutor",
+        "study",
+        "educate",
+        "explain concept",
+        "rubric",
+        "example",
+        "practice",
+        "feedback"
+      ],
+      "negativeSignals": [
+        "employment or hiring evaluation",
+        "final answer only without explanation",
+        "professional medical advice"
+      ]
+    }
+  },
+  {
+    "id": "translator",
+    "label": "Translator",
+    "description": "Translation, localization, tone transfer, and multilingual communication.",
+    "primaryGroupId": "communication",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["translator.translate", "translator.localize.locale", "translator.review"],
+    "classification": {
+      "summary": "Use when the request is about translation, localization, tone adaptation, glossary creation, or multilingual communication.",
+      "positiveSignals": [
+        "translate",
+        "localize",
+        "locale",
+        "language",
+        "multilingual",
+        "tone adapt",
+        "glossary",
+        "subtitles",
+        "back translate",
+        "locale review",
+        "multilingual reply"
+      ],
+      "negativeSignals": [
+        "rewrite within the same language only",
+        "marketing campaign design",
+        "code implementation"
+      ]
+    }
+  },
+  {
+    "id": "marketer",
+    "label": "Marketer",
+    "description": "Positioning, messaging, campaigns, SEO, content strategy, and audience research.",
+    "primaryGroupId": "business",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["marketer.positioning", "marketer.campaign.plan", "marketer.content.seo"],
+    "classification": {
+      "summary": "Use when the request is about positioning, campaign planning, SEO content, ad copy, audience research, messaging review, or launch planning.",
+      "positiveSignals": [
+        "marketing",
+        "positioning",
+        "campaign",
+        "seo",
+        "ad copy",
+        "audience",
+        "email sequence",
+        "landing page",
+        "social media plan",
+        "messaging",
+        "launch plan",
+        "brand"
+      ],
+      "negativeSignals": [
+        "legal claims approval",
+        "technical release readiness",
+        "verified medical guidance"
+      ]
+    }
+  },
+  {
+    "id": "seller",
+    "label": "Seller",
+    "description": "Sales discovery, outreach, proposals, account planning, and objection handling.",
+    "primaryGroupId": "business",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": [
+      "seller.outreach.write",
+      "seller.discovery.plan",
+      "seller.proposal.enterprise"
+    ],
+    "classification": {
+      "summary": "Use when the request is about sales discovery, outreach, enterprise proposals, objection handling, account planning, demos, or follow-ups.",
+      "positiveSignals": [
+        "sales",
+        "outreach",
+        "proposal",
+        "enterprise",
+        "discovery",
+        "objection",
+        "cold email",
+        "demo",
+        "account plan",
+        "battlecard",
+        "mutual action plan",
+        "follow up sales"
+      ],
+      "negativeSignals": [
+        "generic product requirements",
+        "support remediation steps",
+        "legal contract approval"
+      ]
+    }
+  },
+  {
+    "id": "recruiter",
+    "label": "Recruiter",
+    "description": "Job descriptions, interview plans, hiring rubrics, and candidate screening support.",
+    "primaryGroupId": "governance_safety",
+    "secondaryGroupIds": ["business"],
+    "typicalTaskIds": [
+      "recruiter.job_description",
+      "recruiter.interview.plan",
+      "recruiter.candidate.screen"
+    ],
+    "classification": {
+      "summary": "Use when the request is about job descriptions, interview planning, candidate screening, hiring rubrics, offer preparation, or pipeline management.",
+      "positiveSignals": [
+        "recruit",
+        "hire",
+        "job description",
+        "interview",
+        "candidate",
+        "offer",
+        "pipeline",
+        "sourcing",
+        "scorecard",
+        "role intake"
+      ],
+      "negativeSignals": [
+        "employment law compliance review",
+        "inferring protected attributes",
+        "unlawful employment decisions"
+      ]
+    }
+  },
+  {
+    "id": "procurement",
+    "label": "Procurement",
+    "description": "Vendor comparison, purchasing requirements, RFPs, and commercial review.",
+    "primaryGroupId": "business",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": [
+      "procurement.vendor.compare",
+      "procurement.rfp.write",
+      "procurement.requirements"
+    ],
+    "classification": {
+      "summary": "Use when the request is about vendor comparison, RFP writing, purchasing requirements, contract review, SLA review, or negotiation planning.",
+      "positiveSignals": [
+        "procurement",
+        "vendor",
+        "rfp",
+        "purchase",
+        "contract commercial",
+        "sla",
+        "negotiation",
+        "scorecard",
+        "renewal",
+        "security questionnaire"
+      ],
+      "negativeSignals": [
+        "implementation code",
+        "pure product marketing copy",
+        "binding legal advice"
+      ]
+    }
+  },
+  {
+    "id": "coordinator",
+    "label": "Coordinator",
+    "description": "Meetings, schedules, task follow-up, inbox-style triage, and administrative workflows.",
+    "primaryGroupId": "communication",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": [
+      "coordinator.meeting.agenda",
+      "coordinator.schedule.plan",
+      "coordinator.follow_up"
+    ],
+    "classification": {
+      "summary": "Use when the request is about meeting agendas, notes, scheduling, task follow-up, inbox triage, decision logs, project status, or handoff preparation.",
+      "positiveSignals": [
+        "meeting",
+        "agenda",
+        "schedule",
+        "follow up",
+        "coordinate",
+        "inbox",
+        "decision log",
+        "project status",
+        "reminder",
+        "handoff",
+        "task plan"
+      ],
+      "negativeSignals": [
+        "deep technical implementation",
+        "legal transcript certification",
+        "product roadmap strategy"
+      ]
+    }
+  },
+  {
+    "id": "knowledge",
+    "label": "Knowledge",
+    "description": "Notes, memory, knowledge bases, retrieval organization, and institutional context.",
+    "primaryGroupId": "knowledge_research",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["knowledge.organize", "knowledge.retrieve", "knowledge.memory.update"],
+    "classification": {
+      "summary": "Use when the request is about organizing notes, knowledge bases, memory updates, retrieval, runbook updates, link mapping, or context briefs.",
+      "positiveSignals": [
+        "organize",
+        "knowledge",
+        "notes",
+        "retrieve",
+        "memory",
+        "runbook",
+        "archive",
+        "context brief",
+        "taxonomy design",
+        "link map",
+        "kb write",
+        "kb"
+      ],
+      "negativeSignals": [
+        "current external research only",
+        "create new code",
+        "one-off creative copy"
+      ]
+    }
+  },
+  {
+    "id": "strategist",
+    "label": "Strategist",
+    "description": "Business strategy, market entry, competitive analysis, and organizational tradeoffs.",
+    "primaryGroupId": "business",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": [
+      "strategist.business.plan",
+      "strategist.market.analyze",
+      "strategist.competitive.review"
+    ],
+    "classification": {
+      "summary": "Use when the request is about business strategy, market analysis, competitive review, scenario planning, OKRs, SWOT, or operating models.",
+      "positiveSignals": [
+        "strategy",
+        "business plan",
+        "market analyze",
+        "competitive",
+        "swot",
+        "okr",
+        "scenario",
+        "operating model",
+        "pricing strategy",
+        "partnership",
+        "board brief"
+      ],
+      "negativeSignals": [
+        "technical implementation steps only",
+        "verified breaking news only",
+        "simple price comparison only"
+      ]
+    }
+  },
+  {
+    "id": "mathematician",
+    "label": "Mathematician",
+    "description": "Mathematical solving, verification, modeling, and explanation.",
+    "primaryGroupId": "knowledge_research",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": ["mathematician.solve", "mathematician.verify", "mathematician.model"],
+    "classification": {
+      "summary": "Use when the request is about mathematical solving, verification, modeling, proof writing, formula derivation, statistics, optimization, or error checking.",
+      "positiveSignals": [
+        "math",
+        "solve",
+        "calculate",
+        "proof",
+        "derive",
+        "formula",
+        "statistics",
+        "optimize",
+        "model",
+        "simulation",
+        "verify math",
+        "error check"
+      ],
+      "negativeSignals": ["financial advice rather than math", "code review", "non-math writing"]
+    }
+  },
+  {
+    "id": "scientist",
+    "label": "Scientist",
+    "description": "Scientific reasoning, experimental design, evidence review, and method critique.",
+    "primaryGroupId": "knowledge_research",
+    "secondaryGroupIds": [],
+    "typicalTaskIds": [
+      "scientist.experiment.design",
+      "scientist.evidence.review",
+      "scientist.method.critique"
+    ],
+    "classification": {
+      "summary": "Use when the request is about scientific reasoning, experimental design, evidence review, method critique, protocol writing, or literature synthesis.",
+      "positiveSignals": [
+        "science",
+        "experiment",
+        "hypothesis",
+        "scientific",
+        "evidence review",
+        "method critique",
+        "protocol",
+        "peer review",
+        "literature synthesize",
+        "data interpret"
+      ],
+      "negativeSignals": [
+        "product A/B test logistics only",
+        "current product pricing",
+        "marketing copy"
+      ]
+    }
+  },
+  {
+    "id": "health",
+    "label": "Health",
+    "description": "General health information, symptom-safety triage, care-navigation support, and wellness explanations.",
+    "primaryGroupId": "governance_safety",
+    "secondaryGroupIds": ["knowledge_research"],
+    "typicalTaskIds": ["health.info.general", "health.info.safety", "health.care_navigation"],
+    "classification": {
+      "summary": "Use when the request is about general health information, symptom safety triage, care navigation, wellness planning, medication information, or appointment preparation.",
+      "positiveSignals": [
+        "health",
+        "symptom",
+        "medication",
+        "wellness",
+        "exercise",
+        "nutrition",
+        "appointment",
+        "care",
+        "mental wellness",
+        "safety health"
+      ],
+      "negativeSignals": [
+        "diagnosis",
+        "emergency care",
+        "individualized medical treatment",
+        "prescribing instructions"
+      ]
+    }
+  }
+]

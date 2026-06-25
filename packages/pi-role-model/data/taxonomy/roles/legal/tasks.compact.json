@@ -1,1 +1,162 @@
-[{"id":"legal.review","label":"Legal Review","description":"Review terms, licenses, policies, or compliance-sensitive text.","primaryRole":"legal","compatibleRoles":["legal","security"],"requiredCapabilities":["legal.analysis"],"preferredCapabilities":["citation.synthesis"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks about license, terms, privacy, or compliance implications.","doNotUseWhen":"User asks for code implementation."},"variants":[]},{"id":"legal.compliance_check","label":"Compliance Check","description":"Check whether a plan, policy, or document appears to satisfy stated compliance constraints.","primaryRole":"legal","compatibleRoles":["legal","security","operator"],"requiredCapabilities":["legal.analysis"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks about compliance posture, policy fit, or required controls.","doNotUseWhen":"User asks for binding legal advice or jurisdiction-specific counsel."},"variants":[]},{"id":"legal.privacy.review","label":"Privacy Legal Review","description":"Review privacy terms, data processing, notices, or user rights text.","primaryRole":"legal","compatibleRoles":["legal","security"],"requiredCapabilities":["legal.analysis"],"preferredCapabilities":["citation.synthesis"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for privacy legal review.","doNotUseWhen":"User asks for security implementation only."},"variants":["review"]},{"id":"legal.terms.review","label":"Terms Review","description":"Review terms of service, acceptable use, or contract language.","primaryRole":"legal","compatibleRoles":["legal","writer"],"requiredCapabilities":["legal.analysis"],"preferredCapabilities":["long_context"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to review terms or policy text.","doNotUseWhen":"User asks for product copy."},"variants":["review"]},{"id":"legal.license.review","label":"License Review","description":"Review software licenses, obligations, compatibility, or notices.","primaryRole":"legal","compatibleRoles":["legal","security","coder"],"requiredCapabilities":["legal.analysis","code.read"],"preferredCapabilities":["citation.synthesis"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks about open-source licensing.","doNotUseWhen":"User asks to update dependencies directly."},"variants":["review"]},{"id":"legal.contract.summarize","label":"Contract Summary","description":"Summarize contract clauses, obligations, risks, and open questions.","primaryRole":"legal","compatibleRoles":["legal","procurement","finance"],"requiredCapabilities":["legal.analysis","long_context"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User provides contract text and asks for summary.","doNotUseWhen":"User asks for binding legal advice."},"variants":["summarize"]},{"id":"legal.risk.issue_spot","label":"Legal Issue Spotting","description":"Identify legal-sensitive issues, risks, and questions for counsel.","primaryRole":"legal","compatibleRoles":["legal","security","procurement"],"requiredCapabilities":["legal.analysis","reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what legal issues may exist.","doNotUseWhen":"User asks for final legal advice."},"variants":["issue_spot"]},{"id":"legal.policy.draft","label":"Policy Drafting","description":"Draft internal or public policy language for review.","primaryRole":"legal","compatibleRoles":["legal","writer","security"],"requiredCapabilities":["legal.analysis","text.chat"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to draft policy text.","doNotUseWhen":"User asks for code implementation."},"variants":["draft"]},{"id":"legal.retention.review","label":"Retention Review","description":"Review retention, deletion, audit, or records-management implications.","primaryRole":"legal","compatibleRoles":["legal","data","security"],"requiredCapabilities":["legal.analysis","data.schema"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks about data retention or deletion policy.","doNotUseWhen":"User asks for database query writing."},"variants":["review"]},{"id":"legal.accessibility.compliance","label":"Accessibility Compliance","description":"Review accessibility obligations or compliance-oriented text.","primaryRole":"legal","compatibleRoles":["legal","designer","tester"],"requiredCapabilities":["legal.analysis"],"preferredCapabilities":["citation.synthesis"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks about accessibility compliance.","doNotUseWhen":"User asks for UI visual polish only."},"variants":["compliance"]}]
+[
+  {
+    "id": "legal.review",
+    "label": "Legal Review",
+    "description": "Review terms, licenses, policies, or compliance-sensitive text.",
+    "primaryRole": "legal",
+    "compatibleRoles": ["legal", "security"],
+    "requiredCapabilities": ["legal.analysis"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about license, terms, privacy, or compliance implications.",
+      "doNotUseWhen": "User asks for code implementation."
+    },
+    "variants": []
+  },
+  {
+    "id": "legal.compliance_check",
+    "label": "Compliance Check",
+    "description": "Check whether a plan, policy, or document appears to satisfy stated compliance constraints.",
+    "primaryRole": "legal",
+    "compatibleRoles": ["legal", "security", "operator"],
+    "requiredCapabilities": ["legal.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about compliance posture, policy fit, or required controls.",
+      "doNotUseWhen": "User asks for binding legal advice or jurisdiction-specific counsel."
+    },
+    "variants": []
+  },
+  {
+    "id": "legal.privacy.review",
+    "label": "Privacy Legal Review",
+    "description": "Review privacy terms, data processing, notices, or user rights text.",
+    "primaryRole": "legal",
+    "compatibleRoles": ["legal", "security"],
+    "requiredCapabilities": ["legal.analysis"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for privacy legal review.",
+      "doNotUseWhen": "User asks for security implementation only."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "legal.terms.review",
+    "label": "Terms Review",
+    "description": "Review terms of service, acceptable use, or contract language.",
+    "primaryRole": "legal",
+    "compatibleRoles": ["legal", "writer"],
+    "requiredCapabilities": ["legal.analysis"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to review terms or policy text.",
+      "doNotUseWhen": "User asks for product copy."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "legal.license.review",
+    "label": "License Review",
+    "description": "Review software licenses, obligations, compatibility, or notices.",
+    "primaryRole": "legal",
+    "compatibleRoles": ["legal", "security", "coder"],
+    "requiredCapabilities": ["legal.analysis", "code.read"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about open-source licensing.",
+      "doNotUseWhen": "User asks to update dependencies directly."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "legal.contract.summarize",
+    "label": "Contract Summary",
+    "description": "Summarize contract clauses, obligations, risks, and open questions.",
+    "primaryRole": "legal",
+    "compatibleRoles": ["legal", "procurement", "finance"],
+    "requiredCapabilities": ["legal.analysis", "long_context"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User provides contract text and asks for summary.",
+      "doNotUseWhen": "User asks for binding legal advice."
+    },
+    "variants": ["summarize"]
+  },
+  {
+    "id": "legal.risk.issue_spot",
+    "label": "Legal Issue Spotting",
+    "description": "Identify legal-sensitive issues, risks, and questions for counsel.",
+    "primaryRole": "legal",
+    "compatibleRoles": ["legal", "security", "procurement"],
+    "requiredCapabilities": ["legal.analysis", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what legal issues may exist.",
+      "doNotUseWhen": "User asks for final legal advice."
+    },
+    "variants": ["issue_spot"]
+  },
+  {
+    "id": "legal.policy.draft",
+    "label": "Policy Drafting",
+    "description": "Draft internal or public policy language for review.",
+    "primaryRole": "legal",
+    "compatibleRoles": ["legal", "writer", "security"],
+    "requiredCapabilities": ["legal.analysis", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to draft policy text.",
+      "doNotUseWhen": "User asks for code implementation."
+    },
+    "variants": ["draft"]
+  },
+  {
+    "id": "legal.retention.review",
+    "label": "Retention Review",
+    "description": "Review retention, deletion, audit, or records-management implications.",
+    "primaryRole": "legal",
+    "compatibleRoles": ["legal", "data", "security"],
+    "requiredCapabilities": ["legal.analysis", "data.schema"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about data retention or deletion policy.",
+      "doNotUseWhen": "User asks for database query writing."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "legal.accessibility.compliance",
+    "label": "Accessibility Compliance",
+    "description": "Review accessibility obligations or compliance-oriented text.",
+    "primaryRole": "legal",
+    "compatibleRoles": ["legal", "designer", "tester"],
+    "requiredCapabilities": ["legal.analysis"],
+    "preferredCapabilities": ["citation.synthesis"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about accessibility compliance.",
+      "doNotUseWhen": "User asks for UI visual polish only."
+    },
+    "variants": ["compliance"]
+  }
+]

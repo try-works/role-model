@@ -1,1 +1,162 @@
-[{"id":"security.audit","label":"Security Audit","description":"Analyze a system, implementation, or configuration for security risk.","primaryRole":"security","compatibleRoles":["security","architect"],"requiredCapabilities":["security.analysis"],"preferredCapabilities":["code.read"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for vulnerabilities, abuse cases, secrets, auth, permissions, or risk.","doNotUseWhen":"User asks for general code quality without security focus."},"variants":[]},{"id":"security.audit.supply_chain","label":"Supply Chain Security Audit","description":"Review dependencies, packages, build provenance, lockfiles, and release artifacts for supply-chain risk.","primaryRole":"security","compatibleRoles":["security","operator","coder"],"requiredCapabilities":["security.analysis","code.read"],"preferredCapabilities":["web.search"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks about dependency risk, package publishing, build artifacts, provenance, or release integrity.","doNotUseWhen":"User asks for normal code quality review without dependency or release risk."},"variants":["supply_chain"]},{"id":"security.threat_model","label":"Threat Modeling","description":"Identify assets, attackers, trust boundaries, threats, and mitigations.","primaryRole":"security","compatibleRoles":["security","architect"],"requiredCapabilities":["security.analysis","reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to model risk before or during design.","doNotUseWhen":"User asks to patch an already identified bug."},"variants":[]},{"id":"security.vulnerability_triage","label":"Vulnerability Triage","description":"Assess vulnerability reports, severity, exploitability, and mitigation priority.","primaryRole":"security","compatibleRoles":["security","operator","coder"],"requiredCapabilities":["security.analysis"],"preferredCapabilities":["web.search"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User provides a CVE, scanner finding, or suspected vulnerability.","doNotUseWhen":"User asks for general best practices."},"variants":[]},{"id":"security.policy_review","label":"Security Policy Review","description":"Review permissions, RBAC, access policy, or compliance controls.","primaryRole":"security","compatibleRoles":["security","legal","architect"],"requiredCapabilities":["security.analysis"],"preferredCapabilities":["reasoning.multi_step"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks about authz, RBAC, scopes, permissions, or policy enforcement.","doNotUseWhen":"User asks for code formatting."},"variants":[]},{"id":"security.secrets.scan","label":"Secrets Scan Review","description":"Inspect code, config, or logs for exposed secrets and credential risks.","primaryRole":"security","compatibleRoles":["security","coder","operator"],"requiredCapabilities":["security.analysis","code.read"],"preferredCapabilities":["tools.command_execution"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to check for secrets or credential exposure.","doNotUseWhen":"User asks for general documentation edits."},"variants":["scan"]},{"id":"security.auth.review","label":"Auth Review","description":"Review authentication, authorization, sessions, tokens, and access flows.","primaryRole":"security","compatibleRoles":["security","architect","coder"],"requiredCapabilities":["security.analysis"],"preferredCapabilities":["reasoning.multi_step"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks about auth risk or permission behavior.","doNotUseWhen":"User asks for non-security code style review."},"variants":["review"]},{"id":"security.privacy.review","label":"Privacy Review","description":"Review data collection, retention, sharing, and privacy-sensitive flows.","primaryRole":"security","compatibleRoles":["security","legal","architect"],"requiredCapabilities":["security.analysis","legal.analysis"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks about privacy risk or personal data handling.","doNotUseWhen":"User asks for binding legal advice."},"variants":["review"]},{"id":"security.incident.review","label":"Security Incident Review","description":"Review suspected incidents, indicators, containment, and follow-up actions.","primaryRole":"security","compatibleRoles":["security","operator","support"],"requiredCapabilities":["security.analysis","reasoning.multi_step"],"preferredCapabilities":["tools.command_execution"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User reports a potential security incident.","doNotUseWhen":"User asks for ordinary uptime triage."},"variants":["review"]},{"id":"security.safe_prompt.review","label":"Prompt Safety Review","description":"Review prompts, tools, or agent behavior for misuse and policy risk.","primaryRole":"security","compatibleRoles":["security","researcher","writer"],"requiredCapabilities":["security.analysis","text.chat"],"preferredCapabilities":["reasoning.multi_step"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks about AI safety, prompt abuse, or tool misuse.","doNotUseWhen":"User asks for creative prompt writing only."},"variants":["review"]}]
+[
+  {
+    "id": "security.audit",
+    "label": "Security Audit",
+    "description": "Analyze a system, implementation, or configuration for security risk.",
+    "primaryRole": "security",
+    "compatibleRoles": ["security", "architect"],
+    "requiredCapabilities": ["security.analysis"],
+    "preferredCapabilities": ["code.read"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for vulnerabilities, abuse cases, secrets, auth, permissions, or risk.",
+      "doNotUseWhen": "User asks for general code quality without security focus."
+    },
+    "variants": []
+  },
+  {
+    "id": "security.audit.supply_chain",
+    "label": "Supply Chain Security Audit",
+    "description": "Review dependencies, packages, build provenance, lockfiles, and release artifacts for supply-chain risk.",
+    "primaryRole": "security",
+    "compatibleRoles": ["security", "operator", "coder"],
+    "requiredCapabilities": ["security.analysis", "code.read"],
+    "preferredCapabilities": ["web.search"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about dependency risk, package publishing, build artifacts, provenance, or release integrity.",
+      "doNotUseWhen": "User asks for normal code quality review without dependency or release risk."
+    },
+    "variants": ["supply_chain"]
+  },
+  {
+    "id": "security.threat_model",
+    "label": "Threat Modeling",
+    "description": "Identify assets, attackers, trust boundaries, threats, and mitigations.",
+    "primaryRole": "security",
+    "compatibleRoles": ["security", "architect"],
+    "requiredCapabilities": ["security.analysis", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to model risk before or during design.",
+      "doNotUseWhen": "User asks to patch an already identified bug."
+    },
+    "variants": []
+  },
+  {
+    "id": "security.vulnerability_triage",
+    "label": "Vulnerability Triage",
+    "description": "Assess vulnerability reports, severity, exploitability, and mitigation priority.",
+    "primaryRole": "security",
+    "compatibleRoles": ["security", "operator", "coder"],
+    "requiredCapabilities": ["security.analysis"],
+    "preferredCapabilities": ["web.search"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User provides a CVE, scanner finding, or suspected vulnerability.",
+      "doNotUseWhen": "User asks for general best practices."
+    },
+    "variants": []
+  },
+  {
+    "id": "security.policy_review",
+    "label": "Security Policy Review",
+    "description": "Review permissions, RBAC, access policy, or compliance controls.",
+    "primaryRole": "security",
+    "compatibleRoles": ["security", "legal", "architect"],
+    "requiredCapabilities": ["security.analysis"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about authz, RBAC, scopes, permissions, or policy enforcement.",
+      "doNotUseWhen": "User asks for code formatting."
+    },
+    "variants": []
+  },
+  {
+    "id": "security.secrets.scan",
+    "label": "Secrets Scan Review",
+    "description": "Inspect code, config, or logs for exposed secrets and credential risks.",
+    "primaryRole": "security",
+    "compatibleRoles": ["security", "coder", "operator"],
+    "requiredCapabilities": ["security.analysis", "code.read"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to check for secrets or credential exposure.",
+      "doNotUseWhen": "User asks for general documentation edits."
+    },
+    "variants": ["scan"]
+  },
+  {
+    "id": "security.auth.review",
+    "label": "Auth Review",
+    "description": "Review authentication, authorization, sessions, tokens, and access flows.",
+    "primaryRole": "security",
+    "compatibleRoles": ["security", "architect", "coder"],
+    "requiredCapabilities": ["security.analysis"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about auth risk or permission behavior.",
+      "doNotUseWhen": "User asks for non-security code style review."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "security.privacy.review",
+    "label": "Privacy Review",
+    "description": "Review data collection, retention, sharing, and privacy-sensitive flows.",
+    "primaryRole": "security",
+    "compatibleRoles": ["security", "legal", "architect"],
+    "requiredCapabilities": ["security.analysis", "legal.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about privacy risk or personal data handling.",
+      "doNotUseWhen": "User asks for binding legal advice."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "security.incident.review",
+    "label": "Security Incident Review",
+    "description": "Review suspected incidents, indicators, containment, and follow-up actions.",
+    "primaryRole": "security",
+    "compatibleRoles": ["security", "operator", "support"],
+    "requiredCapabilities": ["security.analysis", "reasoning.multi_step"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User reports a potential security incident.",
+      "doNotUseWhen": "User asks for ordinary uptime triage."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "security.safe_prompt.review",
+    "label": "Prompt Safety Review",
+    "description": "Review prompts, tools, or agent behavior for misuse and policy risk.",
+    "primaryRole": "security",
+    "compatibleRoles": ["security", "researcher", "writer"],
+    "requiredCapabilities": ["security.analysis", "text.chat"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks about AI safety, prompt abuse, or tool misuse.",
+      "doNotUseWhen": "User asks for creative prompt writing only."
+    },
+    "variants": ["review"]
+  }
+]

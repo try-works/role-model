@@ -1,1 +1,162 @@
-[{"id":"seller.discovery.plan","label":"Sales Discovery Planning","description":"Prepare discovery questions, qualification criteria, and account research prompts.","primaryRole":"seller","compatibleRoles":["seller","product","strategist"],"requiredCapabilities":["sales.analysis"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks how to run a sales discovery call or qualify an opportunity.","doNotUseWhen":"User asks for generic product requirements."},"variants":["plan"]},{"id":"seller.outreach.write","label":"Sales Outreach","description":"Write prospecting, follow-up, or account-specific outreach messages.","primaryRole":"seller","compatibleRoles":["seller","writer","marketer"],"requiredCapabilities":["sales.communication","text.chat"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":["email.write"],"classifier":{"useWhen":"User asks for cold email, LinkedIn outreach, or follow-up copy.","doNotUseWhen":"User asks for support remediation steps."},"variants":["write"]},{"id":"seller.proposal.enterprise","label":"Enterprise Proposal","description":"Draft or review enterprise sales proposals, rollout plans, and buying-committee materials.","primaryRole":"seller","compatibleRoles":["seller","procurement","security","legal"],"requiredCapabilities":["sales.analysis","communication.user_facing"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for proposal content, mutual action plans, security/commercial positioning, or enterprise rollout language.","doNotUseWhen":"User asks for legal contract approval."},"variants":["enterprise"]},{"id":"seller.objection.handle","label":"Objection Handling","description":"Prepare responses to buyer concerns, risks, pricing objections, or adoption blockers.","primaryRole":"seller","compatibleRoles":["seller","marketer","product"],"requiredCapabilities":["sales.communication"],"preferredCapabilities":["reasoning.multi_step"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks how to respond to a sales objection.","doNotUseWhen":"User asks for support troubleshooting."},"variants":["handle"]},{"id":"seller.account.plan","label":"Account Plan","description":"Plan account strategy, stakeholders, risks, and next steps.","primaryRole":"seller","compatibleRoles":["seller","strategist"],"requiredCapabilities":["sales.analysis"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for sales account planning.","doNotUseWhen":"User asks for general market strategy only."},"variants":["plan"]},{"id":"seller.demo.script","label":"Demo Script","description":"Write product demo scripts and discovery-aligned walkthroughs.","primaryRole":"seller","compatibleRoles":["seller","product","writer"],"requiredCapabilities":["sales.communication","text.chat"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for demo talk track.","doNotUseWhen":"User asks for technical test plan."},"variants":["script"]},{"id":"seller.follow_up.write","label":"Sales Follow-Up","description":"Draft sales follow-up notes after calls, demos, or objections.","primaryRole":"seller","compatibleRoles":["seller","coordinator","writer"],"requiredCapabilities":["sales.communication","communication.follow_up"],"preferredCapabilities":["text.chat"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for follow-up sales message.","doNotUseWhen":"User asks for support apology only."},"variants":["write"]},{"id":"seller.competitor.battlecard","label":"Competitor Battlecard","description":"Create competitive sales positioning and objection responses.","primaryRole":"seller","compatibleRoles":["seller","marketer","strategist"],"requiredCapabilities":["sales.analysis","market.analysis"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for a battlecard.","doNotUseWhen":"User asks for unbiased academic comparison only."},"variants":["battlecard"]},{"id":"seller.call.summary","label":"Sales Call Summary","description":"Summarize sales calls into needs, risks, next steps, and owners.","primaryRole":"seller","compatibleRoles":["seller","coordinator","support"],"requiredCapabilities":["sales.analysis","coordination.workflow"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User provides sales notes or transcript.","doNotUseWhen":"User asks for legal contract summary."},"variants":["summary"]},{"id":"seller.mutual_action_plan","label":"Mutual Action Plan","description":"Create shared buyer/seller action plans, timelines, and owners.","primaryRole":"seller","compatibleRoles":["seller","planner","procurement"],"requiredCapabilities":["sales.analysis","coordination.workflow"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for mutual action plan or close plan.","doNotUseWhen":"User asks for project sprint plan."},"variants":[]}]
+[
+  {
+    "id": "seller.discovery.plan",
+    "label": "Sales Discovery Planning",
+    "description": "Prepare discovery questions, qualification criteria, and account research prompts.",
+    "primaryRole": "seller",
+    "compatibleRoles": ["seller", "product", "strategist"],
+    "requiredCapabilities": ["sales.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to run a sales discovery call or qualify an opportunity.",
+      "doNotUseWhen": "User asks for generic product requirements."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "seller.outreach.write",
+    "label": "Sales Outreach",
+    "description": "Write prospecting, follow-up, or account-specific outreach messages.",
+    "primaryRole": "seller",
+    "compatibleRoles": ["seller", "writer", "marketer"],
+    "requiredCapabilities": ["sales.communication", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["email.write"],
+    "classifier": {
+      "useWhen": "User asks for cold email, LinkedIn outreach, or follow-up copy.",
+      "doNotUseWhen": "User asks for support remediation steps."
+    },
+    "variants": ["write"]
+  },
+  {
+    "id": "seller.proposal.enterprise",
+    "label": "Enterprise Proposal",
+    "description": "Draft or review enterprise sales proposals, rollout plans, and buying-committee materials.",
+    "primaryRole": "seller",
+    "compatibleRoles": ["seller", "procurement", "security", "legal"],
+    "requiredCapabilities": ["sales.analysis", "communication.user_facing"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for proposal content, mutual action plans, security/commercial positioning, or enterprise rollout language.",
+      "doNotUseWhen": "User asks for legal contract approval."
+    },
+    "variants": ["enterprise"]
+  },
+  {
+    "id": "seller.objection.handle",
+    "label": "Objection Handling",
+    "description": "Prepare responses to buyer concerns, risks, pricing objections, or adoption blockers.",
+    "primaryRole": "seller",
+    "compatibleRoles": ["seller", "marketer", "product"],
+    "requiredCapabilities": ["sales.communication"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to respond to a sales objection.",
+      "doNotUseWhen": "User asks for support troubleshooting."
+    },
+    "variants": ["handle"]
+  },
+  {
+    "id": "seller.account.plan",
+    "label": "Account Plan",
+    "description": "Plan account strategy, stakeholders, risks, and next steps.",
+    "primaryRole": "seller",
+    "compatibleRoles": ["seller", "strategist"],
+    "requiredCapabilities": ["sales.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for sales account planning.",
+      "doNotUseWhen": "User asks for general market strategy only."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "seller.demo.script",
+    "label": "Demo Script",
+    "description": "Write product demo scripts and discovery-aligned walkthroughs.",
+    "primaryRole": "seller",
+    "compatibleRoles": ["seller", "product", "writer"],
+    "requiredCapabilities": ["sales.communication", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for demo talk track.",
+      "doNotUseWhen": "User asks for technical test plan."
+    },
+    "variants": ["script"]
+  },
+  {
+    "id": "seller.follow_up.write",
+    "label": "Sales Follow-Up",
+    "description": "Draft sales follow-up notes after calls, demos, or objections.",
+    "primaryRole": "seller",
+    "compatibleRoles": ["seller", "coordinator", "writer"],
+    "requiredCapabilities": ["sales.communication", "communication.follow_up"],
+    "preferredCapabilities": ["text.chat"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for follow-up sales message.",
+      "doNotUseWhen": "User asks for support apology only."
+    },
+    "variants": ["write"]
+  },
+  {
+    "id": "seller.competitor.battlecard",
+    "label": "Competitor Battlecard",
+    "description": "Create competitive sales positioning and objection responses.",
+    "primaryRole": "seller",
+    "compatibleRoles": ["seller", "marketer", "strategist"],
+    "requiredCapabilities": ["sales.analysis", "market.analysis"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a battlecard.",
+      "doNotUseWhen": "User asks for unbiased academic comparison only."
+    },
+    "variants": ["battlecard"]
+  },
+  {
+    "id": "seller.call.summary",
+    "label": "Sales Call Summary",
+    "description": "Summarize sales calls into needs, risks, next steps, and owners.",
+    "primaryRole": "seller",
+    "compatibleRoles": ["seller", "coordinator", "support"],
+    "requiredCapabilities": ["sales.analysis", "coordination.workflow"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User provides sales notes or transcript.",
+      "doNotUseWhen": "User asks for legal contract summary."
+    },
+    "variants": ["summary"]
+  },
+  {
+    "id": "seller.mutual_action_plan",
+    "label": "Mutual Action Plan",
+    "description": "Create shared buyer/seller action plans, timelines, and owners.",
+    "primaryRole": "seller",
+    "compatibleRoles": ["seller", "planner", "procurement"],
+    "requiredCapabilities": ["sales.analysis", "coordination.workflow"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for mutual action plan or close plan.",
+      "doNotUseWhen": "User asks for project sprint plan."
+    },
+    "variants": []
+  }
+]

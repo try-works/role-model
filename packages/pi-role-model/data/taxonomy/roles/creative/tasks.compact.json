@@ -1,1 +1,162 @@
-[{"id":"creative.brainstorm","label":"Brainstorming","description":"Generate creative options, names, concepts, or variants.","primaryRole":"creative","compatibleRoles":["creative","writer","product"],"requiredCapabilities":["text.chat"],"preferredCapabilities":["reasoning.divergent"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for ideation or alternatives.","doNotUseWhen":"User asks for verified factual claims."},"variants":[]},{"id":"creative.copywriting","label":"Copywriting","description":"Produce persuasive, brand, product, or campaign copy variants.","primaryRole":"creative","compatibleRoles":["creative","writer","product"],"requiredCapabilities":["text.chat"],"preferredCapabilities":["reasoning.divergent"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for headlines, taglines, short-form copy, or creative wording.","doNotUseWhen":"User asks for factual documentation or legal text."},"variants":[]},{"id":"creative.storyboard","label":"Storyboarding","description":"Plan a visual, narrative, product, or media sequence.","primaryRole":"creative","compatibleRoles":["creative","writer","product"],"requiredCapabilities":["text.chat"],"preferredCapabilities":["vision.output"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for scenes, flows, visual sequence, or narrative structure.","doNotUseWhen":"User asks for security triage."},"variants":[]},{"id":"creative.name.generate","label":"Name Generation","description":"Generate names for products, features, projects, or campaigns.","primaryRole":"creative","compatibleRoles":["creative","marketer","product"],"requiredCapabilities":["text.chat"],"preferredCapabilities":["reasoning.divergent"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for naming ideas.","doNotUseWhen":"User asks for legal trademark clearance."},"variants":["generate"]},{"id":"creative.concept.develop","label":"Concept Development","description":"Develop creative concepts, themes, or directions.","primaryRole":"creative","compatibleRoles":["creative","designer","marketer"],"requiredCapabilities":["text.chat"],"preferredCapabilities":["reasoning.divergent"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to develop an idea or concept.","doNotUseWhen":"User asks for factual verification."},"variants":["develop"]},{"id":"creative.script.write","label":"Script Writing","description":"Write scripts for video, audio, demos, or narrative scenes.","primaryRole":"creative","compatibleRoles":["creative","writer"],"requiredCapabilities":["text.chat"],"preferredCapabilities":["vision.output"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for script or scene dialogue.","doNotUseWhen":"User asks for legal policy review."},"variants":["write"]},{"id":"creative.brand.voice","label":"Brand Voice","description":"Define or apply brand voice, tone, and language style.","primaryRole":"creative","compatibleRoles":["creative","marketer","writer"],"requiredCapabilities":["text.chat","marketing.copy"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for voice or tone direction.","doNotUseWhen":"User asks for literal translation only."},"variants":["voice"]},{"id":"creative.visual.prompt","label":"Visual Prompting","description":"Write prompts or briefs for visual generation or visual direction.","primaryRole":"creative","compatibleRoles":["creative","designer"],"requiredCapabilities":["vision.output","text.chat"],"preferredCapabilities":["reasoning.divergent"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for image prompt or visual creative brief.","doNotUseWhen":"User asks to inspect existing UI only."},"variants":["prompt"]},{"id":"creative.tagline","label":"Tagline Writing","description":"Generate concise taglines, slogans, and campaign lines.","primaryRole":"creative","compatibleRoles":["creative","marketer","writer"],"requiredCapabilities":["marketing.copy","text.chat"],"preferredCapabilities":["reasoning.divergent"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for taglines or slogans.","doNotUseWhen":"User asks for source-cited research."},"variants":[]},{"id":"creative.social.post","label":"Social Post Writing","description":"Draft social posts, captions, and short creative variants.","primaryRole":"creative","compatibleRoles":["creative","marketer","writer"],"requiredCapabilities":["text.chat","marketing.copy"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for social media copy.","doNotUseWhen":"User asks for documentation."},"variants":["post"]}]
+[
+  {
+    "id": "creative.brainstorm",
+    "label": "Brainstorming",
+    "description": "Generate creative options, names, concepts, or variants.",
+    "primaryRole": "creative",
+    "compatibleRoles": ["creative", "writer", "product"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["reasoning.divergent"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for ideation or alternatives.",
+      "doNotUseWhen": "User asks for verified factual claims."
+    },
+    "variants": []
+  },
+  {
+    "id": "creative.copywriting",
+    "label": "Copywriting",
+    "description": "Produce persuasive, brand, product, or campaign copy variants.",
+    "primaryRole": "creative",
+    "compatibleRoles": ["creative", "writer", "product"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["reasoning.divergent"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for headlines, taglines, short-form copy, or creative wording.",
+      "doNotUseWhen": "User asks for factual documentation or legal text."
+    },
+    "variants": []
+  },
+  {
+    "id": "creative.storyboard",
+    "label": "Storyboarding",
+    "description": "Plan a visual, narrative, product, or media sequence.",
+    "primaryRole": "creative",
+    "compatibleRoles": ["creative", "writer", "product"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["vision.output"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for scenes, flows, visual sequence, or narrative structure.",
+      "doNotUseWhen": "User asks for security triage."
+    },
+    "variants": []
+  },
+  {
+    "id": "creative.name.generate",
+    "label": "Name Generation",
+    "description": "Generate names for products, features, projects, or campaigns.",
+    "primaryRole": "creative",
+    "compatibleRoles": ["creative", "marketer", "product"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["reasoning.divergent"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for naming ideas.",
+      "doNotUseWhen": "User asks for legal trademark clearance."
+    },
+    "variants": ["generate"]
+  },
+  {
+    "id": "creative.concept.develop",
+    "label": "Concept Development",
+    "description": "Develop creative concepts, themes, or directions.",
+    "primaryRole": "creative",
+    "compatibleRoles": ["creative", "designer", "marketer"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["reasoning.divergent"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to develop an idea or concept.",
+      "doNotUseWhen": "User asks for factual verification."
+    },
+    "variants": ["develop"]
+  },
+  {
+    "id": "creative.script.write",
+    "label": "Script Writing",
+    "description": "Write scripts for video, audio, demos, or narrative scenes.",
+    "primaryRole": "creative",
+    "compatibleRoles": ["creative", "writer"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["vision.output"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for script or scene dialogue.",
+      "doNotUseWhen": "User asks for legal policy review."
+    },
+    "variants": ["write"]
+  },
+  {
+    "id": "creative.brand.voice",
+    "label": "Brand Voice",
+    "description": "Define or apply brand voice, tone, and language style.",
+    "primaryRole": "creative",
+    "compatibleRoles": ["creative", "marketer", "writer"],
+    "requiredCapabilities": ["text.chat", "marketing.copy"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for voice or tone direction.",
+      "doNotUseWhen": "User asks for literal translation only."
+    },
+    "variants": ["voice"]
+  },
+  {
+    "id": "creative.visual.prompt",
+    "label": "Visual Prompting",
+    "description": "Write prompts or briefs for visual generation or visual direction.",
+    "primaryRole": "creative",
+    "compatibleRoles": ["creative", "designer"],
+    "requiredCapabilities": ["vision.output", "text.chat"],
+    "preferredCapabilities": ["reasoning.divergent"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for image prompt or visual creative brief.",
+      "doNotUseWhen": "User asks to inspect existing UI only."
+    },
+    "variants": ["prompt"]
+  },
+  {
+    "id": "creative.tagline",
+    "label": "Tagline Writing",
+    "description": "Generate concise taglines, slogans, and campaign lines.",
+    "primaryRole": "creative",
+    "compatibleRoles": ["creative", "marketer", "writer"],
+    "requiredCapabilities": ["marketing.copy", "text.chat"],
+    "preferredCapabilities": ["reasoning.divergent"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for taglines or slogans.",
+      "doNotUseWhen": "User asks for source-cited research."
+    },
+    "variants": []
+  },
+  {
+    "id": "creative.social.post",
+    "label": "Social Post Writing",
+    "description": "Draft social posts, captions, and short creative variants.",
+    "primaryRole": "creative",
+    "compatibleRoles": ["creative", "marketer", "writer"],
+    "requiredCapabilities": ["text.chat", "marketing.copy"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for social media copy.",
+      "doNotUseWhen": "User asks for documentation."
+    },
+    "variants": ["post"]
+  }
+]

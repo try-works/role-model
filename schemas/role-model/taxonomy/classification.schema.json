@@ -15,10 +15,7 @@
         "intent": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "taxonomy_version",
-            "classification_contract_version"
-          ],
+          "required": ["taxonomy_version", "classification_contract_version"],
           "properties": {
             "classification_version": { "type": "string", "minLength": 1 },
             "taxonomy_version": { "type": "string", "minLength": 1 },

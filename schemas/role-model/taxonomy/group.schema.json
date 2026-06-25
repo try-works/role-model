@@ -34,20 +34,10 @@
     "authority": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "scope",
-        "owner"
-      ],
+      "required": ["scope", "owner"],
       "properties": {
         "scope": {
-          "enum": [
-            "core",
-            "provider",
-            "client",
-            "org",
-            "team",
-            "user"
-          ]
+          "enum": ["core", "provider", "client", "org", "team", "user"]
         },
         "owner": {
           "type": "string",
@@ -56,11 +46,7 @@
       }
     },
     "stability": {
-      "enum": [
-        "stable",
-        "experimental",
-        "deprecated"
-      ]
+      "enum": ["stable", "experimental", "deprecated"]
     },
     "replacement": {
       "type": "string",
