@@ -528,14 +528,15 @@ export default function ControlModelsRoute() {
                             }
                             type="checkbox"
                             disabled={allRuntimeRoleIds.length === 0}
-                            onChange={(event) =>
+                            onChange={(event) => {
+                              const checked = event.currentTarget.checked;
                               setDraftRolesByAccountId((current) => ({
                                 ...current,
-                                [account.providerAccountId]: event.currentTarget.checked
+                                [account.providerAccountId]: checked
                                   ? [...allRuntimeRoleIds]
                                   : [],
-                              }))
-                            }
+                              }));
+                            }}
                           />
                           <span className="font-semibold">All roles</span>
                         </label>
