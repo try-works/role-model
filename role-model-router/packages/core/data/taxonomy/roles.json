@@ -6,11 +6,7 @@
     "description": "Code implementation, review, debugging, refactoring, and tests.",
     "primaryGroupId": "engineering",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "coder.edit",
-      "coder.review",
-      "coder.debug.root_cause"
-    ],
+    "typicalTaskIds": ["coder.edit", "coder.review", "coder.debug.root_cause"],
     "taskIds": [
       "coder.edit",
       "coder.review",
@@ -24,12 +20,7 @@
       "coder.config"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "code.read",
-      "code.write",
-      "reasoning.multi_step",
-      "text.chat"
-    ],
+    "preferredCapabilities": ["code.read", "code.write", "reasoning.multi_step", "text.chat"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -70,11 +61,7 @@
     "description": "System design, API design, technical planning, and tradeoff analysis.",
     "primaryGroupId": "engineering",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "architect.design",
-      "architect.review",
-      "architect.plan"
-    ],
+    "typicalTaskIds": ["architect.design", "architect.review", "architect.plan"],
     "taskIds": [
       "architect.design",
       "architect.review",
@@ -88,11 +75,7 @@
       "architect.adr.write"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "reasoning.multi_step",
-      "data.schema",
-      "text.chat"
-    ],
+    "preferredCapabilities": ["reasoning.multi_step", "data.schema", "text.chat"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -118,11 +101,7 @@
         "adr",
         "infrastructure"
       ],
-      "negativeSignals": [
-        "implement the code",
-        "debug a startup failure",
-        "write support reply"
-      ]
+      "negativeSignals": ["implement the code", "debug a startup failure", "write support reply"]
     }
   },
   {
@@ -131,14 +110,8 @@
     "label": "Security",
     "description": "Security review, threat modeling, abuse/risk analysis.",
     "primaryGroupId": "engineering",
-    "secondaryGroupIds": [
-      "governance_safety"
-    ],
-    "typicalTaskIds": [
-      "security.audit",
-      "security.threat_model",
-      "coder.review"
-    ],
+    "secondaryGroupIds": ["governance_safety"],
+    "typicalTaskIds": ["security.audit", "security.threat_model", "coder.review"],
     "taskIds": [
       "security.audit",
       "security.audit.supply_chain",
@@ -198,10 +171,7 @@
     "description": "Search, compare, synthesize, cite, and summarize information.",
     "primaryGroupId": "knowledge_research",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "researcher.web_research",
-      "researcher.compare_sources"
-    ],
+    "typicalTaskIds": ["researcher.web_research", "researcher.compare_sources"],
     "taskIds": [
       "researcher.web_research",
       "researcher.web_research.current",
@@ -215,11 +185,7 @@
       "researcher.document_extract"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "web.search",
-      "text.chat",
-      "long_context"
-    ],
+    "preferredCapabilities": ["web.search", "text.chat", "long_context"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -248,11 +214,7 @@
         "standards",
         "document extract"
       ],
-      "negativeSignals": [
-        "the answer is fully in local context",
-        "implement code",
-        "design ui"
-      ]
+      "negativeSignals": ["the answer is fully in local context", "implement code", "design ui"]
     }
   },
   {
@@ -262,10 +224,7 @@
     "description": "Write, edit, summarize, explain, and structure prose.",
     "primaryGroupId": "communication",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "writer.docs.write",
-      "writer.summarize"
-    ],
+    "typicalTaskIds": ["writer.docs.write", "writer.summarize"],
     "taskIds": [
       "writer.docs.write",
       "writer.docs.public",
@@ -279,9 +238,7 @@
       "writer.outline"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "text.chat"
-    ],
+    "preferredCapabilities": ["text.chat"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -309,12 +266,7 @@
         "outline",
         "rewrite"
       ],
-      "negativeSignals": [
-        "implement code",
-        "debug",
-        "security audit",
-        "data query"
-      ]
+      "negativeSignals": ["implement code", "debug", "security audit", "data query"]
     }
   },
   {
@@ -324,10 +276,7 @@
     "description": "Runtime, deployment, logs, diagnostics, and operational response.",
     "primaryGroupId": "engineering",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "operator.debug.startup",
-      "operator.deploy.review"
-    ],
+    "typicalTaskIds": ["operator.debug.startup", "operator.deploy.review"],
     "taskIds": [
       "operator.debug.startup",
       "operator.debug.ui",
@@ -379,11 +328,7 @@
         "restore",
         "release execute"
       ],
-      "negativeSignals": [
-        "design a new feature",
-        "write marketing copy",
-        "legal review"
-      ]
+      "negativeSignals": ["design a new feature", "write marketing copy", "legal review"]
     }
   },
   {
@@ -393,11 +338,7 @@
     "description": "Structured analysis, metrics, comparison, prioritization, and decision support.",
     "primaryGroupId": "product_design",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "analyst.compare",
-      "analyst.evaluate",
-      "analyst.prioritize"
-    ],
+    "typicalTaskIds": ["analyst.compare", "analyst.evaluate", "analyst.prioritize"],
     "taskIds": [
       "analyst.compare",
       "analyst.evaluate",
@@ -411,11 +352,7 @@
       "analyst.trend.analyze"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "reasoning.multi_step",
-      "text.chat",
-      "data.query"
-    ],
+    "preferredCapabilities": ["reasoning.multi_step", "text.chat", "data.query"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -444,11 +381,7 @@
         "report",
         "interpret"
       ],
-      "negativeSignals": [
-        "implement code",
-        "creative brainstorming",
-        "write support reply"
-      ]
+      "negativeSignals": ["implement code", "creative brainstorming", "write support reply"]
     }
   },
   {
@@ -458,11 +391,7 @@
     "description": "Breaks goals into requirements, milestones, phased plans, and acceptance criteria.",
     "primaryGroupId": "product_design",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "planner.requirements",
-      "planner.roadmap",
-      "planner.decompose"
-    ],
+    "typicalTaskIds": ["planner.requirements", "planner.roadmap", "planner.decompose"],
     "taskIds": [
       "planner.requirements",
       "planner.roadmap",
@@ -476,9 +405,7 @@
       "planner.resource.plan"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "reasoning.multi_step"
-    ],
+    "preferredCapabilities": ["reasoning.multi_step"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -503,11 +430,7 @@
         "resource plan",
         "dependency map"
       ],
-      "negativeSignals": [
-        "implement the code now",
-        "source citation research",
-        "code review"
-      ]
+      "negativeSignals": ["implement the code now", "source citation research", "code review"]
     }
   },
   {
@@ -517,11 +440,7 @@
     "description": "Test design, QA, validation, reproduction, and end-to-end verification.",
     "primaryGroupId": "engineering",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "tester.plan",
-      "tester.e2e",
-      "tester.regression"
-    ],
+    "typicalTaskIds": ["tester.plan", "tester.e2e", "tester.regression"],
     "taskIds": [
       "tester.e2e",
       "tester.plan",
@@ -568,11 +487,7 @@
         "unit test",
         "integration test"
       ],
-      "negativeSignals": [
-        "write production code",
-        "design product strategy",
-        "legal policy review"
-      ]
+      "negativeSignals": ["write production code", "design product strategy", "legal policy review"]
     }
   },
   {
@@ -582,11 +497,7 @@
     "description": "Data modeling, query analysis, schema review, transformation, and data quality.",
     "primaryGroupId": "engineering",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "data.query",
-      "data.schema.review",
-      "data.transform"
-    ],
+    "typicalTaskIds": ["data.query", "data.schema.review", "data.transform"],
     "taskIds": [
       "data.query",
       "data.schema.review",
@@ -631,11 +542,7 @@
         "quality audit",
         "metric define"
       ],
-      "negativeSignals": [
-        "web research",
-        "frontend ui",
-        "legal advice"
-      ]
+      "negativeSignals": ["web research", "frontend ui", "legal advice"]
     }
   },
   {
@@ -645,11 +552,7 @@
     "description": "Product requirements, user workflows, prioritization, and release readiness.",
     "primaryGroupId": "product_design",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "product.requirements",
-      "product.workflow.review",
-      "product.release_notes"
-    ],
+    "typicalTaskIds": ["product.requirements", "product.workflow.review", "product.release_notes"],
     "taskIds": [
       "product.requirements",
       "product.workflow.review",
@@ -663,11 +566,7 @@
       "product.launch.readiness"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "reasoning.multi_step",
-      "text.chat",
-      "long_context"
-    ],
+    "preferredCapabilities": ["reasoning.multi_step", "text.chat", "long_context"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -693,11 +592,7 @@
         "launch readiness",
         "release notes from product perspective"
       ],
-      "negativeSignals": [
-        "root cause debugging",
-        "implementation code",
-        "legal terms"
-      ]
+      "negativeSignals": ["root cause debugging", "implementation code", "legal terms"]
     }
   },
   {
@@ -707,11 +602,7 @@
     "description": "Interface design, interaction design, visual review, and experience quality.",
     "primaryGroupId": "product_design",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "designer.ui.review",
-      "designer.interaction",
-      "designer.visual_direction"
-    ],
+    "typicalTaskIds": ["designer.ui.review", "designer.interaction", "designer.visual_direction"],
     "taskIds": [
       "designer.ui.review",
       "designer.interaction",
@@ -725,12 +616,7 @@
       "designer.visual.qa"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "vision.input",
-      "text.chat",
-      "vision.output",
-      "reasoning.multi_step"
-    ],
+    "preferredCapabilities": ["vision.input", "text.chat", "vision.output", "reasoning.multi_step"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -757,11 +643,7 @@
         "design system",
         "visual qa"
       ],
-      "negativeSignals": [
-        "backend debugging",
-        "database schema",
-        "legal compliance"
-      ]
+      "negativeSignals": ["backend debugging", "database schema", "legal compliance"]
     }
   },
   {
@@ -771,11 +653,7 @@
     "description": "Troubleshooting, user-facing diagnosis, remediation steps, and escalation.",
     "primaryGroupId": "communication",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "support.triage",
-      "support.explain",
-      "support.escalate"
-    ],
+    "typicalTaskIds": ["support.triage", "support.explain", "support.escalate"],
     "taskIds": [
       "support.triage",
       "support.explain",
@@ -822,11 +700,7 @@
         "status update",
         "runbook"
       ],
-      "negativeSignals": [
-        "code generation",
-        "internal architecture design",
-        "legal policy"
-      ]
+      "negativeSignals": ["code generation", "internal architecture design", "legal policy"]
     }
   },
   {
@@ -835,13 +709,8 @@
     "label": "Legal",
     "description": "Legal, licensing, compliance, terms, and policy interpretation support.",
     "primaryGroupId": "governance_safety",
-    "secondaryGroupIds": [
-      "business"
-    ],
-    "typicalTaskIds": [
-      "legal.review",
-      "legal.compliance_check"
-    ],
+    "secondaryGroupIds": ["business"],
+    "typicalTaskIds": ["legal.review", "legal.compliance_check"],
     "taskIds": [
       "legal.review",
       "legal.compliance_check",
@@ -885,11 +754,7 @@
         "retention",
         "accessibility compliance"
       ],
-      "negativeSignals": [
-        "code implementation",
-        "binding legal advice",
-        "marketing copy"
-      ]
+      "negativeSignals": ["code implementation", "binding legal advice", "marketing copy"]
     }
   },
   {
@@ -898,13 +763,8 @@
     "label": "Finance",
     "description": "Cost, budget, pricing, ROI, billing, and financial comparison work.",
     "primaryGroupId": "business",
-    "secondaryGroupIds": [
-      "governance_safety"
-    ],
-    "typicalTaskIds": [
-      "finance.cost_estimate",
-      "finance.compare_options"
-    ],
+    "secondaryGroupIds": ["governance_safety"],
+    "typicalTaskIds": ["finance.cost_estimate", "finance.compare_options"],
     "taskIds": [
       "finance.cost_estimate",
       "finance.compare_options",
@@ -964,11 +824,7 @@
     "description": "Ideation, naming, visual direction, storytelling, and creative variants.",
     "primaryGroupId": "communication",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "creative.brainstorm",
-      "creative.copywriting",
-      "creative.storyboard"
-    ],
+    "typicalTaskIds": ["creative.brainstorm", "creative.copywriting", "creative.storyboard"],
     "taskIds": [
       "creative.brainstorm",
       "creative.copywriting",
@@ -982,11 +838,7 @@
       "creative.social.post"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "text.chat",
-      "marketing.copy",
-      "vision.output"
-    ],
+    "preferredCapabilities": ["text.chat", "marketing.copy", "vision.output"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -1013,11 +865,7 @@
         "concept",
         "slogan"
       ],
-      "negativeSignals": [
-        "verified factual claims",
-        "legal text",
-        "documentation"
-      ]
+      "negativeSignals": ["verified factual claims", "legal text", "documentation"]
     }
   },
   {
@@ -1027,11 +875,7 @@
     "description": "Teaching, tutoring, curriculum, study support, quizzes, and feedback.",
     "primaryGroupId": "knowledge_research",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "educator.tutor",
-      "educator.lesson.plan",
-      "educator.quiz.generate"
-    ],
+    "typicalTaskIds": ["educator.tutor", "educator.lesson.plan", "educator.quiz.generate"],
     "taskIds": [
       "educator.tutor",
       "educator.lesson.plan",
@@ -1092,11 +936,7 @@
     "description": "Translation, localization, tone transfer, and multilingual communication.",
     "primaryGroupId": "communication",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "translator.translate",
-      "translator.localize.locale",
-      "translator.review"
-    ],
+    "typicalTaskIds": ["translator.translate", "translator.localize.locale", "translator.review"],
     "taskIds": [
       "translator.translate",
       "translator.localize.locale",
@@ -1155,11 +995,7 @@
     "description": "Positioning, messaging, campaigns, SEO, content strategy, and audience research.",
     "primaryGroupId": "business",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "marketer.positioning",
-      "marketer.campaign.plan",
-      "marketer.content.seo"
-    ],
+    "typicalTaskIds": ["marketer.positioning", "marketer.campaign.plan", "marketer.content.seo"],
     "taskIds": [
       "marketer.positioning",
       "marketer.campaign.plan",
@@ -1173,12 +1009,7 @@
       "marketer.launch.plan"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "marketing.analysis",
-      "text.chat",
-      "web.search",
-      "marketing.copy"
-    ],
+    "preferredCapabilities": ["marketing.analysis", "text.chat", "web.search", "marketing.copy"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -1282,9 +1113,7 @@
     "label": "Recruiter",
     "description": "Job descriptions, interview plans, hiring rubrics, and candidate screening support.",
     "primaryGroupId": "governance_safety",
-    "secondaryGroupIds": [
-      "business"
-    ],
+    "secondaryGroupIds": ["business"],
     "typicalTaskIds": [
       "recruiter.job_description",
       "recruiter.interview.plan",
@@ -1472,11 +1301,7 @@
     "description": "Notes, memory, knowledge bases, retrieval organization, and institutional context.",
     "primaryGroupId": "knowledge_research",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "knowledge.organize",
-      "knowledge.retrieve",
-      "knowledge.memory.update"
-    ],
+    "typicalTaskIds": ["knowledge.organize", "knowledge.retrieve", "knowledge.memory.update"],
     "taskIds": [
       "knowledge.organize",
       "knowledge.retrieve",
@@ -1599,11 +1424,7 @@
     "description": "Mathematical solving, verification, modeling, and explanation.",
     "primaryGroupId": "knowledge_research",
     "secondaryGroupIds": [],
-    "typicalTaskIds": [
-      "mathematician.solve",
-      "mathematician.verify",
-      "mathematician.model"
-    ],
+    "typicalTaskIds": ["mathematician.solve", "mathematician.verify", "mathematician.model"],
     "taskIds": [
       "mathematician.solve",
       "mathematician.verify",
@@ -1617,12 +1438,7 @@
       "mathematician.error.check"
     ],
     "requiredCapabilities": [],
-    "preferredCapabilities": [
-      "math.solve",
-      "math.verify",
-      "math.modeling",
-      "reasoning.multi_step"
-    ],
+    "preferredCapabilities": ["math.solve", "math.verify", "math.modeling", "reasoning.multi_step"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -1649,11 +1465,7 @@
         "verify math",
         "error check"
       ],
-      "negativeSignals": [
-        "financial advice rather than math",
-        "code review",
-        "non-math writing"
-      ]
+      "negativeSignals": ["financial advice rather than math", "code review", "non-math writing"]
     }
   },
   {
@@ -1724,14 +1536,8 @@
     "label": "Health",
     "description": "General health information, symptom-safety triage, care-navigation support, and wellness explanations.",
     "primaryGroupId": "governance_safety",
-    "secondaryGroupIds": [
-      "knowledge_research"
-    ],
-    "typicalTaskIds": [
-      "health.info.general",
-      "health.info.safety",
-      "health.care_navigation"
-    ],
+    "secondaryGroupIds": ["knowledge_research"],
+    "typicalTaskIds": ["health.info.general", "health.info.safety", "health.care_navigation"],
     "taskIds": [
       "health.info.general",
       "health.info.safety",

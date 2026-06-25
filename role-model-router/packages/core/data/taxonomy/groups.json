@@ -4,14 +4,7 @@
     "kind": "group",
     "label": "Engineering",
     "description": "Software, systems, runtime, testing, security, and data implementation work.",
-    "primaryRoleIds": [
-      "coder",
-      "architect",
-      "operator",
-      "tester",
-      "security",
-      "data"
-    ],
+    "primaryRoleIds": ["coder", "architect", "operator", "tester", "security", "data"],
     "secondaryRoleIds": [],
     "authority": {
       "scope": "core",
@@ -29,12 +22,7 @@
     "kind": "group",
     "label": "Product And Design",
     "description": "Product planning, requirements, user workflows, interface design, and structured analysis.",
-    "primaryRoleIds": [
-      "product",
-      "designer",
-      "planner",
-      "analyst"
-    ],
+    "primaryRoleIds": ["product", "designer", "planner", "analyst"],
     "secondaryRoleIds": [],
     "authority": {
       "scope": "core",
@@ -52,16 +40,8 @@
     "kind": "group",
     "label": "Knowledge And Research",
     "description": "Research, learning, memory, scientific reasoning, mathematical reasoning, and evidence synthesis.",
-    "primaryRoleIds": [
-      "researcher",
-      "knowledge",
-      "scientist",
-      "mathematician",
-      "educator"
-    ],
-    "secondaryRoleIds": [
-      "health"
-    ],
+    "primaryRoleIds": ["researcher", "knowledge", "scientist", "mathematician", "educator"],
+    "secondaryRoleIds": ["health"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -78,17 +58,8 @@
     "kind": "group",
     "label": "Business",
     "description": "Strategy, marketing, sales, finance, procurement, and commercial work.",
-    "primaryRoleIds": [
-      "strategist",
-      "marketer",
-      "seller",
-      "finance",
-      "procurement"
-    ],
-    "secondaryRoleIds": [
-      "legal",
-      "recruiter"
-    ],
+    "primaryRoleIds": ["strategist", "marketer", "seller", "finance", "procurement"],
+    "secondaryRoleIds": ["legal", "recruiter"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"
@@ -105,13 +76,7 @@
     "kind": "group",
     "label": "Communication",
     "description": "Writing, translation, creative work, user support, coordination, and follow-up communication.",
-    "primaryRoleIds": [
-      "writer",
-      "translator",
-      "creative",
-      "support",
-      "coordinator"
-    ],
+    "primaryRoleIds": ["writer", "translator", "creative", "support", "coordinator"],
     "secondaryRoleIds": [],
     "authority": {
       "scope": "core",
@@ -129,15 +94,8 @@
     "kind": "group",
     "label": "Governance And Safety",
     "description": "Legal, health, recruiting, safety, risk, compliance, and governance-sensitive work.",
-    "primaryRoleIds": [
-      "legal",
-      "health",
-      "recruiter"
-    ],
-    "secondaryRoleIds": [
-      "security",
-      "finance"
-    ],
+    "primaryRoleIds": ["legal", "health", "recruiter"],
+    "secondaryRoleIds": ["security", "finance"],
     "authority": {
       "scope": "core",
       "owner": "try-works/role-model"

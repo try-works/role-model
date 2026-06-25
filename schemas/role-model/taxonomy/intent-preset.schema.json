@@ -4,15 +4,7 @@
   "title": "Taxonomy Intent Preset",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "id",
-    "kind",
-    "label",
-    "description",
-    "expandsTo",
-    "authority",
-    "stability"
-  ],
+  "required": ["id", "kind", "label", "description", "expandsTo", "authority", "stability"],
   "properties": {
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$" },
     "kind": { "const": "intent_preset" },
