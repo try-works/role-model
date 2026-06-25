@@ -1,1 +1,162 @@
-[{"id":"product.requirements","label":"Product Requirements","description":"Define user-facing behavior, constraints, and acceptance criteria.","primaryRole":"product","compatibleRoles":["product","planner","architect"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what a product/feature should do.","doNotUseWhen":"User asks for root-cause debugging."},"variants":[]},{"id":"product.workflow.review","label":"Workflow Review","description":"Review user workflows, ergonomics, states, or product flows.","primaryRole":"product","compatibleRoles":["product","designer","writer"],"requiredCapabilities":["text.chat"],"preferredCapabilities":["reasoning.multi_step"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks whether a user flow makes sense.","doNotUseWhen":"User asks to run commands."},"variants":["review"]},{"id":"product.release_notes","label":"Product Release Notes","description":"Define user-facing release messaging and notable behavior changes.","primaryRole":"product","compatibleRoles":["product","writer","planner"],"requiredCapabilities":["text.chat"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what should be communicated in a release from a product perspective.","doNotUseWhen":"User asks for a raw technical changelog only."},"variants":[]},{"id":"product.spec.write","label":"Product Spec Writing","description":"Write product specs with behavior, states, and constraints.","primaryRole":"product","compatibleRoles":["product","planner","designer"],"requiredCapabilities":["reasoning.multi_step","text.chat"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for a feature spec.","doNotUseWhen":"User asks for implementation code only."},"variants":["write"]},{"id":"product.user_story","label":"User Story Writing","description":"Write user stories, scenarios, and user value statements.","primaryRole":"product","compatibleRoles":["product","writer","planner"],"requiredCapabilities":["text.chat"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for user stories.","doNotUseWhen":"User asks for legal terms."},"variants":[]},{"id":"product.acceptance","label":"Product Acceptance","description":"Define acceptance criteria from a product perspective.","primaryRole":"product","compatibleRoles":["product","planner","tester"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what behavior must be accepted.","doNotUseWhen":"User asks for technical test implementation."},"variants":[]},{"id":"product.prd.write","label":"PRD Writing","description":"Write product requirements documents and decision context.","primaryRole":"product","compatibleRoles":["product","writer","strategist"],"requiredCapabilities":["reasoning.multi_step","text.chat"],"preferredCapabilities":["long_context"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for a PRD.","doNotUseWhen":"User asks for marketing launch copy only."},"variants":["write"]},{"id":"product.feature.prioritize","label":"Feature Prioritization","description":"Prioritize product features by value, cost, risk, and evidence.","primaryRole":"product","compatibleRoles":["product","analyst","planner"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks which features to build first.","doNotUseWhen":"User asks for code-level sequencing only."},"variants":["prioritize"]},{"id":"product.feedback.synthesize","label":"Feedback Synthesis","description":"Synthesize user feedback, themes, pain points, and opportunities.","primaryRole":"product","compatibleRoles":["product","analyst","researcher"],"requiredCapabilities":["text.chat","long_context"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what feedback means.","doNotUseWhen":"User asks for scientific evidence review."},"variants":["synthesize"]},{"id":"product.launch.readiness","label":"Launch Readiness","description":"Assess product readiness, blockers, messaging, and rollout risk.","primaryRole":"product","compatibleRoles":["product","planner","operator"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks whether a feature is ready to launch.","doNotUseWhen":"User asks to execute deployment steps."},"variants":["readiness"]}]
+[
+  {
+    "id": "product.requirements",
+    "label": "Product Requirements",
+    "description": "Define user-facing behavior, constraints, and acceptance criteria.",
+    "primaryRole": "product",
+    "compatibleRoles": ["product", "planner", "architect"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what a product/feature should do.",
+      "doNotUseWhen": "User asks for root-cause debugging."
+    },
+    "variants": []
+  },
+  {
+    "id": "product.workflow.review",
+    "label": "Workflow Review",
+    "description": "Review user workflows, ergonomics, states, or product flows.",
+    "primaryRole": "product",
+    "compatibleRoles": ["product", "designer", "writer"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether a user flow makes sense.",
+      "doNotUseWhen": "User asks to run commands."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "product.release_notes",
+    "label": "Product Release Notes",
+    "description": "Define user-facing release messaging and notable behavior changes.",
+    "primaryRole": "product",
+    "compatibleRoles": ["product", "writer", "planner"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what should be communicated in a release from a product perspective.",
+      "doNotUseWhen": "User asks for a raw technical changelog only."
+    },
+    "variants": []
+  },
+  {
+    "id": "product.spec.write",
+    "label": "Product Spec Writing",
+    "description": "Write product specs with behavior, states, and constraints.",
+    "primaryRole": "product",
+    "compatibleRoles": ["product", "planner", "designer"],
+    "requiredCapabilities": ["reasoning.multi_step", "text.chat"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a feature spec.",
+      "doNotUseWhen": "User asks for implementation code only."
+    },
+    "variants": ["write"]
+  },
+  {
+    "id": "product.user_story",
+    "label": "User Story Writing",
+    "description": "Write user stories, scenarios, and user value statements.",
+    "primaryRole": "product",
+    "compatibleRoles": ["product", "writer", "planner"],
+    "requiredCapabilities": ["text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for user stories.",
+      "doNotUseWhen": "User asks for legal terms."
+    },
+    "variants": []
+  },
+  {
+    "id": "product.acceptance",
+    "label": "Product Acceptance",
+    "description": "Define acceptance criteria from a product perspective.",
+    "primaryRole": "product",
+    "compatibleRoles": ["product", "planner", "tester"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what behavior must be accepted.",
+      "doNotUseWhen": "User asks for technical test implementation."
+    },
+    "variants": []
+  },
+  {
+    "id": "product.prd.write",
+    "label": "PRD Writing",
+    "description": "Write product requirements documents and decision context.",
+    "primaryRole": "product",
+    "compatibleRoles": ["product", "writer", "strategist"],
+    "requiredCapabilities": ["reasoning.multi_step", "text.chat"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a PRD.",
+      "doNotUseWhen": "User asks for marketing launch copy only."
+    },
+    "variants": ["write"]
+  },
+  {
+    "id": "product.feature.prioritize",
+    "label": "Feature Prioritization",
+    "description": "Prioritize product features by value, cost, risk, and evidence.",
+    "primaryRole": "product",
+    "compatibleRoles": ["product", "analyst", "planner"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks which features to build first.",
+      "doNotUseWhen": "User asks for code-level sequencing only."
+    },
+    "variants": ["prioritize"]
+  },
+  {
+    "id": "product.feedback.synthesize",
+    "label": "Feedback Synthesis",
+    "description": "Synthesize user feedback, themes, pain points, and opportunities.",
+    "primaryRole": "product",
+    "compatibleRoles": ["product", "analyst", "researcher"],
+    "requiredCapabilities": ["text.chat", "long_context"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what feedback means.",
+      "doNotUseWhen": "User asks for scientific evidence review."
+    },
+    "variants": ["synthesize"]
+  },
+  {
+    "id": "product.launch.readiness",
+    "label": "Launch Readiness",
+    "description": "Assess product readiness, blockers, messaging, and rollout risk.",
+    "primaryRole": "product",
+    "compatibleRoles": ["product", "planner", "operator"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether a feature is ready to launch.",
+      "doNotUseWhen": "User asks to execute deployment steps."
+    },
+    "variants": ["readiness"]
+  }
+]

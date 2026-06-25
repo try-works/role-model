@@ -1,1 +1,162 @@
-[{"id":"architect.design","label":"System Design","description":"Design architecture, modules, APIs, ownership boundaries, or technical approach.","primaryRole":"architect","compatibleRoles":["architect","coder"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["long_context"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for design, architecture, plans, or tradeoff analysis.","doNotUseWhen":"User asks for direct implementation with known design."},"variants":[]},{"id":"architect.review","label":"Architecture Review","description":"Review a design or implementation for architecture and long-term maintainability.","primaryRole":"architect","compatibleRoles":["architect","coder","security"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["code.read"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks whether a system shape, API, or module boundary is sound.","doNotUseWhen":"The review is primarily about code-level bugs or security risk."},"variants":[]},{"id":"architect.plan","label":"Technical Plan","description":"Produce a technical implementation plan, phases, or tradeoff analysis.","primaryRole":"architect","compatibleRoles":["architect","planner","coder"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["long_context"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks how to approach implementation before coding.","doNotUseWhen":"User asks to directly edit files now."},"variants":[]},{"id":"architect.api_design","label":"API Design","description":"Design public APIs, contracts, schemas, or integration boundaries.","primaryRole":"architect","compatibleRoles":["architect","coder","product"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for API shape, schema, protocol, or backwards compatibility.","doNotUseWhen":"User asks to debug a runtime failure."},"variants":[]},{"id":"architect.infrastructure.design","label":"Infrastructure Design","description":"Design infrastructure topology, deployment units, or service boundaries.","primaryRole":"architect","compatibleRoles":["architect","operator","security"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["long_context"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for infra architecture or environment design.","doNotUseWhen":"User asks to execute deployment commands."},"variants":["design"]},{"id":"architect.data_model","label":"Data Model Design","description":"Design entities, schemas, data ownership, and persistence boundaries.","primaryRole":"architect","compatibleRoles":["architect","data","coder"],"requiredCapabilities":["reasoning.multi_step","data.schema"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for data model or storage architecture.","doNotUseWhen":"User asks for SQL query implementation only."},"variants":[]},{"id":"architect.integration.plan","label":"Integration Plan","description":"Plan how systems, APIs, events, and services should integrate.","primaryRole":"architect","compatibleRoles":["architect","operator","coder"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to connect systems or design integration flow.","doNotUseWhen":"User asks to debug one failed API call."},"variants":["plan"]},{"id":"architect.scalability.review","label":"Scalability Review","description":"Review scalability, bottlenecks, throughput, and growth tradeoffs.","primaryRole":"architect","compatibleRoles":["architect","operator","data"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["long_context"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks whether a system will scale.","doNotUseWhen":"User asks for visual UI review."},"variants":["review"]},{"id":"architect.migration.strategy","label":"Migration Strategy","description":"Plan migrations across systems, data stores, APIs, or platforms.","primaryRole":"architect","compatibleRoles":["architect","coder","operator"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks how to migrate safely with stages and rollback.","doNotUseWhen":"User asks to edit a small file directly."},"variants":["strategy"]},{"id":"architect.adr.write","label":"Architecture Decision Record","description":"Write or review ADRs and architectural decision rationale.","primaryRole":"architect","compatibleRoles":["architect","writer","coder"],"requiredCapabilities":["reasoning.multi_step","text.chat"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to document a technical decision.","doNotUseWhen":"User asks for public marketing copy."},"variants":["write"]}]
+[
+  {
+    "id": "architect.design",
+    "label": "System Design",
+    "description": "Design architecture, modules, APIs, ownership boundaries, or technical approach.",
+    "primaryRole": "architect",
+    "compatibleRoles": ["architect", "coder"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for design, architecture, plans, or tradeoff analysis.",
+      "doNotUseWhen": "User asks for direct implementation with known design."
+    },
+    "variants": []
+  },
+  {
+    "id": "architect.review",
+    "label": "Architecture Review",
+    "description": "Review a design or implementation for architecture and long-term maintainability.",
+    "primaryRole": "architect",
+    "compatibleRoles": ["architect", "coder", "security"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["code.read"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether a system shape, API, or module boundary is sound.",
+      "doNotUseWhen": "The review is primarily about code-level bugs or security risk."
+    },
+    "variants": []
+  },
+  {
+    "id": "architect.plan",
+    "label": "Technical Plan",
+    "description": "Produce a technical implementation plan, phases, or tradeoff analysis.",
+    "primaryRole": "architect",
+    "compatibleRoles": ["architect", "planner", "coder"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to approach implementation before coding.",
+      "doNotUseWhen": "User asks to directly edit files now."
+    },
+    "variants": []
+  },
+  {
+    "id": "architect.api_design",
+    "label": "API Design",
+    "description": "Design public APIs, contracts, schemas, or integration boundaries.",
+    "primaryRole": "architect",
+    "compatibleRoles": ["architect", "coder", "product"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for API shape, schema, protocol, or backwards compatibility.",
+      "doNotUseWhen": "User asks to debug a runtime failure."
+    },
+    "variants": []
+  },
+  {
+    "id": "architect.infrastructure.design",
+    "label": "Infrastructure Design",
+    "description": "Design infrastructure topology, deployment units, or service boundaries.",
+    "primaryRole": "architect",
+    "compatibleRoles": ["architect", "operator", "security"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for infra architecture or environment design.",
+      "doNotUseWhen": "User asks to execute deployment commands."
+    },
+    "variants": ["design"]
+  },
+  {
+    "id": "architect.data_model",
+    "label": "Data Model Design",
+    "description": "Design entities, schemas, data ownership, and persistence boundaries.",
+    "primaryRole": "architect",
+    "compatibleRoles": ["architect", "data", "coder"],
+    "requiredCapabilities": ["reasoning.multi_step", "data.schema"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for data model or storage architecture.",
+      "doNotUseWhen": "User asks for SQL query implementation only."
+    },
+    "variants": []
+  },
+  {
+    "id": "architect.integration.plan",
+    "label": "Integration Plan",
+    "description": "Plan how systems, APIs, events, and services should integrate.",
+    "primaryRole": "architect",
+    "compatibleRoles": ["architect", "operator", "coder"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to connect systems or design integration flow.",
+      "doNotUseWhen": "User asks to debug one failed API call."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "architect.scalability.review",
+    "label": "Scalability Review",
+    "description": "Review scalability, bottlenecks, throughput, and growth tradeoffs.",
+    "primaryRole": "architect",
+    "compatibleRoles": ["architect", "operator", "data"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks whether a system will scale.",
+      "doNotUseWhen": "User asks for visual UI review."
+    },
+    "variants": ["review"]
+  },
+  {
+    "id": "architect.migration.strategy",
+    "label": "Migration Strategy",
+    "description": "Plan migrations across systems, data stores, APIs, or platforms.",
+    "primaryRole": "architect",
+    "compatibleRoles": ["architect", "coder", "operator"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to migrate safely with stages and rollback.",
+      "doNotUseWhen": "User asks to edit a small file directly."
+    },
+    "variants": ["strategy"]
+  },
+  {
+    "id": "architect.adr.write",
+    "label": "Architecture Decision Record",
+    "description": "Write or review ADRs and architectural decision rationale.",
+    "primaryRole": "architect",
+    "compatibleRoles": ["architect", "writer", "coder"],
+    "requiredCapabilities": ["reasoning.multi_step", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to document a technical decision.",
+      "doNotUseWhen": "User asks for public marketing copy."
+    },
+    "variants": ["write"]
+  }
+]

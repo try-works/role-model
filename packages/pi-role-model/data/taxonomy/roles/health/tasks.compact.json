@@ -1,1 +1,162 @@
-[{"id":"health.info.general","label":"General Health Information","description":"Provide general, non-diagnostic health information and explain concepts.","primaryRole":"health","compatibleRoles":["health","educator","writer"],"requiredCapabilities":["health.general_info","text.chat"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for general health education or explanations.","doNotUseWhen":"User asks for diagnosis, emergency care, or individualized medical treatment."},"variants":["general"]},{"id":"health.info.safety","label":"Health Safety Triage","description":"Provide cautious safety boundaries, urgency guidance, and care-seeking prompts.","primaryRole":"health","compatibleRoles":["health","support"],"requiredCapabilities":["health.safety","communication.user_facing"],"preferredCapabilities":["reasoning.multi_step"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User describes potentially concerning symptoms, medication risks, or safety-sensitive health questions.","doNotUseWhen":"User asks for definitive diagnosis or treatment instructions."},"variants":["safety"]},{"id":"health.care_navigation","label":"Care Navigation","description":"Help prepare questions, organize information, or plan discussion with a clinician.","primaryRole":"health","compatibleRoles":["health","coordinator","writer"],"requiredCapabilities":["health.general_info","coordination.workflow"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks how to prepare for an appointment or communicate health concerns.","doNotUseWhen":"User asks the assistant to replace professional care."},"variants":[]},{"id":"health.wellness.plan","label":"Wellness Planning","description":"Create general wellness, habit, or tracking plans within safe non-medical boundaries.","primaryRole":"health","compatibleRoles":["health","planner","educator"],"requiredCapabilities":["health.general_info"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for general routine, habit, sleep, nutrition, or exercise planning.","doNotUseWhen":"User has symptoms, conditions, medications, injury, pregnancy, or other high-risk context requiring professional guidance."},"variants":["plan"]},{"id":"health.medication.info","label":"Medication Information","description":"Provide general medication information and safety boundaries.","primaryRole":"health","compatibleRoles":["health","researcher"],"requiredCapabilities":["health.general_info","health.safety"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks general questions about medication facts or interactions.","doNotUseWhen":"User asks for personalized prescribing or dosing instructions."},"variants":["info"]},{"id":"health.appointment.prepare","label":"Appointment Preparation","description":"Help prepare questions, notes, and concerns for a healthcare visit.","primaryRole":"health","compatibleRoles":["health","coordinator","writer"],"requiredCapabilities":["health.general_info","coordination.workflow"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to prepare for a medical appointment.","doNotUseWhen":"User asks assistant to diagnose."},"variants":["prepare"]},{"id":"health.symptom.organize","label":"Symptom Organization","description":"Organize symptoms, timing, context, and questions for care discussion.","primaryRole":"health","compatibleRoles":["health","coordinator"],"requiredCapabilities":["health.safety","coordination.workflow"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User wants to organize health observations.","doNotUseWhen":"User asks for definitive diagnosis."},"variants":["organize"]},{"id":"health.exercise.general","label":"General Exercise Information","description":"Provide general exercise information within safe boundaries.","primaryRole":"health","compatibleRoles":["health","educator"],"requiredCapabilities":["health.general_info"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for general fitness education or habit ideas.","doNotUseWhen":"User has injury, condition, or high-risk medical context."},"variants":["general"]},{"id":"health.nutrition.general","label":"General Nutrition Information","description":"Provide general nutrition information and meal-planning concepts.","primaryRole":"health","compatibleRoles":["health","educator"],"requiredCapabilities":["health.general_info"],"preferredCapabilities":["communication.user_facing"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for general nutrition education.","doNotUseWhen":"User asks for medical nutrition therapy."},"variants":["general"]},{"id":"health.mental_wellness.info","label":"Mental Wellness Information","description":"Provide general mental wellness information and support-seeking guidance.","primaryRole":"health","compatibleRoles":["health","support"],"requiredCapabilities":["health.safety","communication.user_facing"],"preferredCapabilities":["reasoning.multi_step"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for general stress, sleep, or wellness information.","doNotUseWhen":"User presents imminent self-harm or crisis requiring emergency escalation."},"variants":["info"]}]
+[
+  {
+    "id": "health.info.general",
+    "label": "General Health Information",
+    "description": "Provide general, non-diagnostic health information and explain concepts.",
+    "primaryRole": "health",
+    "compatibleRoles": ["health", "educator", "writer"],
+    "requiredCapabilities": ["health.general_info", "text.chat"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for general health education or explanations.",
+      "doNotUseWhen": "User asks for diagnosis, emergency care, or individualized medical treatment."
+    },
+    "variants": ["general"]
+  },
+  {
+    "id": "health.info.safety",
+    "label": "Health Safety Triage",
+    "description": "Provide cautious safety boundaries, urgency guidance, and care-seeking prompts.",
+    "primaryRole": "health",
+    "compatibleRoles": ["health", "support"],
+    "requiredCapabilities": ["health.safety", "communication.user_facing"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User describes potentially concerning symptoms, medication risks, or safety-sensitive health questions.",
+      "doNotUseWhen": "User asks for definitive diagnosis or treatment instructions."
+    },
+    "variants": ["safety"]
+  },
+  {
+    "id": "health.care_navigation",
+    "label": "Care Navigation",
+    "description": "Help prepare questions, organize information, or plan discussion with a clinician.",
+    "primaryRole": "health",
+    "compatibleRoles": ["health", "coordinator", "writer"],
+    "requiredCapabilities": ["health.general_info", "coordination.workflow"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to prepare for an appointment or communicate health concerns.",
+      "doNotUseWhen": "User asks the assistant to replace professional care."
+    },
+    "variants": []
+  },
+  {
+    "id": "health.wellness.plan",
+    "label": "Wellness Planning",
+    "description": "Create general wellness, habit, or tracking plans within safe non-medical boundaries.",
+    "primaryRole": "health",
+    "compatibleRoles": ["health", "planner", "educator"],
+    "requiredCapabilities": ["health.general_info"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for general routine, habit, sleep, nutrition, or exercise planning.",
+      "doNotUseWhen": "User has symptoms, conditions, medications, injury, pregnancy, or other high-risk context requiring professional guidance."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "health.medication.info",
+    "label": "Medication Information",
+    "description": "Provide general medication information and safety boundaries.",
+    "primaryRole": "health",
+    "compatibleRoles": ["health", "researcher"],
+    "requiredCapabilities": ["health.general_info", "health.safety"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks general questions about medication facts or interactions.",
+      "doNotUseWhen": "User asks for personalized prescribing or dosing instructions."
+    },
+    "variants": ["info"]
+  },
+  {
+    "id": "health.appointment.prepare",
+    "label": "Appointment Preparation",
+    "description": "Help prepare questions, notes, and concerns for a healthcare visit.",
+    "primaryRole": "health",
+    "compatibleRoles": ["health", "coordinator", "writer"],
+    "requiredCapabilities": ["health.general_info", "coordination.workflow"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to prepare for a medical appointment.",
+      "doNotUseWhen": "User asks assistant to diagnose."
+    },
+    "variants": ["prepare"]
+  },
+  {
+    "id": "health.symptom.organize",
+    "label": "Symptom Organization",
+    "description": "Organize symptoms, timing, context, and questions for care discussion.",
+    "primaryRole": "health",
+    "compatibleRoles": ["health", "coordinator"],
+    "requiredCapabilities": ["health.safety", "coordination.workflow"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User wants to organize health observations.",
+      "doNotUseWhen": "User asks for definitive diagnosis."
+    },
+    "variants": ["organize"]
+  },
+  {
+    "id": "health.exercise.general",
+    "label": "General Exercise Information",
+    "description": "Provide general exercise information within safe boundaries.",
+    "primaryRole": "health",
+    "compatibleRoles": ["health", "educator"],
+    "requiredCapabilities": ["health.general_info"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for general fitness education or habit ideas.",
+      "doNotUseWhen": "User has injury, condition, or high-risk medical context."
+    },
+    "variants": ["general"]
+  },
+  {
+    "id": "health.nutrition.general",
+    "label": "General Nutrition Information",
+    "description": "Provide general nutrition information and meal-planning concepts.",
+    "primaryRole": "health",
+    "compatibleRoles": ["health", "educator"],
+    "requiredCapabilities": ["health.general_info"],
+    "preferredCapabilities": ["communication.user_facing"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for general nutrition education.",
+      "doNotUseWhen": "User asks for medical nutrition therapy."
+    },
+    "variants": ["general"]
+  },
+  {
+    "id": "health.mental_wellness.info",
+    "label": "Mental Wellness Information",
+    "description": "Provide general mental wellness information and support-seeking guidance.",
+    "primaryRole": "health",
+    "compatibleRoles": ["health", "support"],
+    "requiredCapabilities": ["health.safety", "communication.user_facing"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for general stress, sleep, or wellness information.",
+      "doNotUseWhen": "User presents imminent self-harm or crisis requiring emergency escalation."
+    },
+    "variants": ["info"]
+  }
+]

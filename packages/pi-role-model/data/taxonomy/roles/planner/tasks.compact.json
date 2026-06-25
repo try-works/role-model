@@ -1,1 +1,162 @@
-[{"id":"planner.requirements","label":"Requirements Definition","description":"Convert goals into requirements, acceptance criteria, and constraints.","primaryRole":"planner","compatibleRoles":["planner","product","architect"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to define requirements or scope.","doNotUseWhen":"User asks for a final implementation patch."},"variants":[]},{"id":"planner.roadmap","label":"Roadmap Planning","description":"Build phased plans, milestones, dependencies, and rollout sequencing.","primaryRole":"planner","compatibleRoles":["planner","product","architect"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["long_context"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for a roadmap or phased implementation plan.","doNotUseWhen":"User asks for a code review finding list."},"variants":[]},{"id":"planner.roadmap.release","label":"Release Roadmap","description":"Plan phased release work, readiness gates, changelog, docs, packaging, and rollout steps.","primaryRole":"planner","compatibleRoles":["planner","product","operator"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for release planning, alpha/beta sequencing, or launch readiness.","doNotUseWhen":"User asks to publish immediately without planning."},"variants":["release"]},{"id":"planner.decompose","label":"Task Decomposition","description":"Break a goal into tasks, phases, or executable work items.","primaryRole":"planner","compatibleRoles":["planner","operator","coder"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks to split work into steps or tickets.","doNotUseWhen":"User asks for source citation research."},"variants":[]},{"id":"planner.milestone","label":"Milestone Planning","description":"Define milestones, gates, sequencing, and completion criteria.","primaryRole":"planner","compatibleRoles":["planner","product","operator"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for milestones or phased delivery.","doNotUseWhen":"User asks to implement immediately."},"variants":[]},{"id":"planner.sprint.plan","label":"Sprint Planning","description":"Plan sprint scope, backlog slices, and delivery sequencing.","primaryRole":"planner","compatibleRoles":["planner","coder","product"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks for sprint or iteration planning.","doNotUseWhen":"User asks for long-term strategy only."},"variants":["plan"]},{"id":"planner.acceptance.criteria","label":"Acceptance Criteria","description":"Write acceptance criteria and verifiable completion checks.","primaryRole":"planner","compatibleRoles":["planner","tester","product"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what must be true for work to be done.","doNotUseWhen":"User asks for code review only."},"variants":["criteria"]},{"id":"planner.rollout","label":"Rollout Planning","description":"Plan rollout stages, risks, communications, and rollback points.","primaryRole":"planner","compatibleRoles":["planner","operator","product"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks how to roll something out.","doNotUseWhen":"User asks for a single announcement."},"variants":[]},{"id":"planner.dependency.map","label":"Dependency Mapping","description":"Map prerequisites, blockers, owners, and sequencing dependencies.","primaryRole":"planner","compatibleRoles":["planner","architect","coordinator"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":[],"classifier":{"useWhen":"User asks what depends on what.","doNotUseWhen":"User asks for creative copy."},"variants":["map"]},{"id":"planner.resource.plan","label":"Resource Planning","description":"Estimate effort, staffing, ownership, and resource needs.","primaryRole":"planner","compatibleRoles":["planner","finance","coordinator"],"requiredCapabilities":["reasoning.multi_step"],"preferredCapabilities":["json.schema_adherence"],"requiredModalities":["text"],"toolClasses":["web.search","http.fetch"],"classifier":{"useWhen":"User asks what resources are needed.","doNotUseWhen":"User asks for exact budget accounting."},"variants":["plan"]}]
+[
+  {
+    "id": "planner.requirements",
+    "label": "Requirements Definition",
+    "description": "Convert goals into requirements, acceptance criteria, and constraints.",
+    "primaryRole": "planner",
+    "compatibleRoles": ["planner", "product", "architect"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to define requirements or scope.",
+      "doNotUseWhen": "User asks for a final implementation patch."
+    },
+    "variants": []
+  },
+  {
+    "id": "planner.roadmap",
+    "label": "Roadmap Planning",
+    "description": "Build phased plans, milestones, dependencies, and rollout sequencing.",
+    "primaryRole": "planner",
+    "compatibleRoles": ["planner", "product", "architect"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["long_context"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for a roadmap or phased implementation plan.",
+      "doNotUseWhen": "User asks for a code review finding list."
+    },
+    "variants": []
+  },
+  {
+    "id": "planner.roadmap.release",
+    "label": "Release Roadmap",
+    "description": "Plan phased release work, readiness gates, changelog, docs, packaging, and rollout steps.",
+    "primaryRole": "planner",
+    "compatibleRoles": ["planner", "product", "operator"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for release planning, alpha/beta sequencing, or launch readiness.",
+      "doNotUseWhen": "User asks to publish immediately without planning."
+    },
+    "variants": ["release"]
+  },
+  {
+    "id": "planner.decompose",
+    "label": "Task Decomposition",
+    "description": "Break a goal into tasks, phases, or executable work items.",
+    "primaryRole": "planner",
+    "compatibleRoles": ["planner", "operator", "coder"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks to split work into steps or tickets.",
+      "doNotUseWhen": "User asks for source citation research."
+    },
+    "variants": []
+  },
+  {
+    "id": "planner.milestone",
+    "label": "Milestone Planning",
+    "description": "Define milestones, gates, sequencing, and completion criteria.",
+    "primaryRole": "planner",
+    "compatibleRoles": ["planner", "product", "operator"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for milestones or phased delivery.",
+      "doNotUseWhen": "User asks to implement immediately."
+    },
+    "variants": []
+  },
+  {
+    "id": "planner.sprint.plan",
+    "label": "Sprint Planning",
+    "description": "Plan sprint scope, backlog slices, and delivery sequencing.",
+    "primaryRole": "planner",
+    "compatibleRoles": ["planner", "coder", "product"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks for sprint or iteration planning.",
+      "doNotUseWhen": "User asks for long-term strategy only."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "planner.acceptance.criteria",
+    "label": "Acceptance Criteria",
+    "description": "Write acceptance criteria and verifiable completion checks.",
+    "primaryRole": "planner",
+    "compatibleRoles": ["planner", "tester", "product"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what must be true for work to be done.",
+      "doNotUseWhen": "User asks for code review only."
+    },
+    "variants": ["criteria"]
+  },
+  {
+    "id": "planner.rollout",
+    "label": "Rollout Planning",
+    "description": "Plan rollout stages, risks, communications, and rollback points.",
+    "primaryRole": "planner",
+    "compatibleRoles": ["planner", "operator", "product"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks how to roll something out.",
+      "doNotUseWhen": "User asks for a single announcement."
+    },
+    "variants": []
+  },
+  {
+    "id": "planner.dependency.map",
+    "label": "Dependency Mapping",
+    "description": "Map prerequisites, blockers, owners, and sequencing dependencies.",
+    "primaryRole": "planner",
+    "compatibleRoles": ["planner", "architect", "coordinator"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": [],
+    "classifier": {
+      "useWhen": "User asks what depends on what.",
+      "doNotUseWhen": "User asks for creative copy."
+    },
+    "variants": ["map"]
+  },
+  {
+    "id": "planner.resource.plan",
+    "label": "Resource Planning",
+    "description": "Estimate effort, staffing, ownership, and resource needs.",
+    "primaryRole": "planner",
+    "compatibleRoles": ["planner", "finance", "coordinator"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["web.search", "http.fetch"],
+    "classifier": {
+      "useWhen": "User asks what resources are needed.",
+      "doNotUseWhen": "User asks for exact budget accounting."
+    },
+    "variants": ["plan"]
+  }
+]
