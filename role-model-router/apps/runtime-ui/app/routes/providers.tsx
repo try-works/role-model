@@ -37,10 +37,10 @@ import {
   fetchRuntimeSnapshot,
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
+  roleIdsToExplicitAssignment,
   startRuntimeDeviceAuthorization,
   updateRuntimeAccountApiKey,
   upsertRuntimeAccount,
-  roleIdsToExplicitAssignment,
 } from "../lib/runtime-api";
 import {
   buildAccountModelCatalogIds,
@@ -119,7 +119,8 @@ export function buildModelRoleBindings(
         : roleIdsToExplicitAssignment(roleIds, false);
     return {
       modelId,
-      roleIds: assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
+      roleIds:
+        assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
       roleAssignmentMode: assignment.roleAssignmentMode,
       enabledRoleIds: [...(assignment.enabledRoleIds ?? [])],
       disabledRoleIds: [...(assignment.disabledRoleIds ?? [])],
@@ -775,9 +776,7 @@ export default function ProvidersRoute() {
                               <input
                                 checked={(
                                   selectedModelRoles[selectedModel] ?? availableRoleIds
-                                ).includes(
-                                  role.roleId,
-                                )}
+                                ).includes(role.roleId)}
                                 type="checkbox"
                                 onChange={() => toggleModelRole(selectedModel, role.roleId)}
                               />

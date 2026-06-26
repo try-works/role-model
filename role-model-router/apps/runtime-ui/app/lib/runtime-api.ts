@@ -327,7 +327,8 @@ function roleIdsToAssignmentPayload(
 ): Record<string, unknown> {
   const assignment = roleIdsToExplicitAssignment(roleIds, defaultAllRoles);
   return {
-    roleIds: assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
+    roleIds:
+      assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
     roleAssignmentMode: assignment.roleAssignmentMode,
     enabledRoleIds: [...(assignment.enabledRoleIds ?? [])],
     disabledRoleIds: [...(assignment.disabledRoleIds ?? [])],

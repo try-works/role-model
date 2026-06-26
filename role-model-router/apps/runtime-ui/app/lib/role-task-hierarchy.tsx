@@ -87,15 +87,12 @@ export function RoleCatalogHierarchy({
   readonly onSelectRole: (roleId: string) => void;
 }) {
   const hierarchy = buildRoleTaskHierarchy(roleDefinitions, taskDefinitions);
-  const groupedHierarchy = hierarchy.reduce(
-    (groups, role) => {
-      const existing = groups.get(role.primaryGroupId) ?? [];
-      existing.push(role);
-      groups.set(role.primaryGroupId, existing);
-      return groups;
-    },
-    new Map<string, RoleTaskHierarchyItem[]>(),
-  );
+  const groupedHierarchy = hierarchy.reduce((groups, role) => {
+    const existing = groups.get(role.primaryGroupId) ?? [];
+    existing.push(role);
+    groups.set(role.primaryGroupId, existing);
+    return groups;
+  }, new Map<string, RoleTaskHierarchyItem[]>());
 
   return (
     <div className="space-y-6">
@@ -118,7 +115,9 @@ export function RoleCatalogHierarchy({
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm font-semibold text-[var(--rm-fg)]">{role.label}</p>
-                        {isHighRiskRole(role) ? <StatusPill tone="warning">High risk</StatusPill> : null}
+                        {isHighRiskRole(role) ? (
+                          <StatusPill tone="warning">High risk</StatusPill>
+                        ) : null}
                       </div>
                       <p className="mt-1 break-all text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">
                         {role.roleId}

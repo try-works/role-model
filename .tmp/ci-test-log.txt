@@ -1,0 +1,1390 @@
+validate	Set up job	﻿2026-06-22T18:07:57.4491189Z Current runner version: '2.335.1'
+validate	Set up job	2026-06-22T18:07:57.4531047Z ##[group]Runner Image Provisioner
+validate	Set up job	2026-06-22T18:07:57.4532430Z Hosted Compute Agent
+validate	Set up job	2026-06-22T18:07:57.4533299Z Version: 20260611.554
+validate	Set up job	2026-06-22T18:07:57.4534344Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+validate	Set up job	2026-06-22T18:07:57.4535450Z Build Date: 2026-06-11T21:40:46Z
+validate	Set up job	2026-06-22T18:07:57.4536471Z Worker ID: {ba450203-5e9a-4ef9-9ce0-96d9a5c9e7b7}
+validate	Set up job	2026-06-22T18:07:57.4538020Z Azure Region: eastus2
+validate	Set up job	2026-06-22T18:07:57.4538966Z ##[endgroup]
+validate	Set up job	2026-06-22T18:07:57.4541213Z ##[group]Operating System
+validate	Set up job	2026-06-22T18:07:57.4542221Z Ubuntu
+validate	Set up job	2026-06-22T18:07:57.4543000Z 24.04.4
+validate	Set up job	2026-06-22T18:07:57.4543929Z LTS
+validate	Set up job	2026-06-22T18:07:57.4544709Z ##[endgroup]
+validate	Set up job	2026-06-22T18:07:57.4545580Z ##[group]Runner Image
+validate	Set up job	2026-06-22T18:07:57.4546546Z Image: ubuntu-24.04
+validate	Set up job	2026-06-22T18:07:57.4547685Z Version: 20260615.205.1
+validate	Set up job	2026-06-22T18:07:57.4550065Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260615.205/images/ubuntu/Ubuntu2404-Readme.md
+validate	Set up job	2026-06-22T18:07:57.4553016Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260615.205
+validate	Set up job	2026-06-22T18:07:57.4554547Z ##[endgroup]
+validate	Set up job	2026-06-22T18:07:57.4556554Z ##[group]GITHUB_TOKEN Permissions
+validate	Set up job	2026-06-22T18:07:57.4559683Z Contents: read
+validate	Set up job	2026-06-22T18:07:57.4560580Z Metadata: read
+validate	Set up job	2026-06-22T18:07:57.4561587Z Packages: read
+validate	Set up job	2026-06-22T18:07:57.4562427Z ##[endgroup]
+validate	Set up job	2026-06-22T18:07:57.4565701Z Secret source: Actions
+validate	Set up job	2026-06-22T18:07:57.4567339Z Prepare workflow directory
+validate	Set up job	2026-06-22T18:07:57.5126482Z Prepare all required actions
+validate	Set up job	2026-06-22T18:07:57.5184000Z Getting action download info
+validate	Set up job	2026-06-22T18:07:57.7864531Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+validate	Set up job	2026-06-22T18:07:57.8597233Z Download action repository 'pnpm/action-setup@v4' (SHA:b906affcce14559ad1aafd4ab0e942779e9f58b1)
+validate	Set up job	2026-06-22T18:07:58.1211928Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+validate	Set up job	2026-06-22T18:07:58.2051370Z Download action repository 'dtolnay/rust-toolchain@stable' (SHA:29eef336d9b2848a0b548edc03f92a220660cdb8)
+validate	Set up job	2026-06-22T18:07:58.4929715Z Complete job name: validate
+validate	Run actions/checkout@v4	﻿2026-06-22T18:07:58.5754889Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5764625Z ##[group]Run actions/checkout@v4
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5765426Z with:
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5765920Z   repository: try-works/role-model
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5771976Z   token: ***
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5772477Z   ssh-strict: true
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5772959Z   ssh-user: git
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5773449Z   persist-credentials: true
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5773997Z   clean: true
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5774496Z   sparse-checkout-cone-mode: true
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5775093Z   fetch-depth: 1
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5775614Z   fetch-tags: false
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5776103Z   show-progress: true
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5776601Z   lfs: false
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5777277Z   submodules: false
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5777834Z   set-safe-directory: true
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5778609Z env:
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5779094Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.5779733Z ##[endgroup]
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6812149Z Syncing repository: try-works/role-model
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6814375Z ##[group]Getting Git version info
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6815244Z Working directory is '/home/runner/work/role-model/role-model'
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6816434Z [command]/usr/bin/git version
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6857978Z git version 2.54.0
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6877458Z ##[endgroup]
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6893596Z Temporarily overriding HOME='/home/runner/work/_temp/a143ceac-4cfd-49f8-b2fb-1cf747bfdc25' before making global git config changes
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6895374Z Adding repository directory to the temporary git global config as a safe directory
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6899639Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6950514Z Deleting the contents of '/home/runner/work/role-model/role-model'
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6954557Z ##[group]Initializing the repository
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.6960135Z [command]/usr/bin/git init /home/runner/work/role-model/role-model
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7034228Z hint: Using 'master' as the name for the initial branch. This default branch name
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7036264Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7038225Z hint: to use in all of your new repositories, which will suppress this warning,
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7039572Z hint: call:
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7040241Z hint:
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7041046Z hint: 	git config --global init.defaultBranch <name>
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7041803Z hint:
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7042480Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7043958Z hint: 'development'. The just-created branch can be renamed via this command:
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7044855Z hint:
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7045325Z hint: 	git branch -m <name>
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7045887Z hint:
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7046620Z hint: Disable this message with "git config set advice.defaultBranchName false"
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7048387Z Initialized empty Git repository in /home/runner/work/role-model/role-model/.git/
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7051414Z [command]/usr/bin/git remote add origin https://github.com/try-works/role-model
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7122236Z ##[endgroup]
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7123562Z ##[group]Disabling automatic garbage collection
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7125314Z [command]/usr/bin/git config --local gc.auto 0
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7160727Z ##[endgroup]
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7161965Z ##[group]Setting up auth
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7167976Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7204514Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7518914Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7550739Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7788214Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.7821799Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.8054396Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.8090630Z ##[endgroup]
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.8091892Z ##[group]Fetching the repository
+validate	Run actions/checkout@v4	2026-06-22T18:07:58.8099783Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9d9e382895440f884541b5ed1b64c8fef1228c4c:refs/remotes/origin/main
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.5049768Z From https://github.com/try-works/role-model
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.5051954Z  * [new ref]         9d9e382895440f884541b5ed1b64c8fef1228c4c -> origin/main
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.5082617Z ##[endgroup]
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.5083189Z ##[group]Determining the checkout info
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.5085385Z ##[endgroup]
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.5090887Z [command]/usr/bin/git sparse-checkout disable
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.5135031Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.5163647Z ##[group]Checking out the ref
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.5168679Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.9634225Z Switched to a new branch 'main'
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.9638626Z branch 'main' set up to track 'origin/main'.
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.9664139Z ##[endgroup]
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.9713099Z [command]/usr/bin/git log -1 --format=%H
+validate	Run actions/checkout@v4	2026-06-22T18:08:00.9737142Z 9d9e382895440f884541b5ed1b64c8fef1228c4c
+validate	Run pnpm/action-setup@v4	﻿2026-06-22T18:08:00.9958490Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9960163Z ##[group]Run pnpm/action-setup@v4
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9960444Z with:
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9960643Z   version: 10.6.5
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9960863Z   dest: ~/setup-pnpm
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9961092Z   run_install: null
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9961303Z   cache: false
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9961535Z   cache_dependency_path: pnpm-lock.yaml
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9961832Z   package_json_file: package.json
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9962086Z   standalone: false
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9962307Z env:
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9962530Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:00.9962809Z ##[endgroup]
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:01.1394545Z ##[group]Running self-installer...
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:01.5306603Z (node:2283) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:01.5308367Z (Use `node --trace-deprecation ...` to show where the warning was created)
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:01.6880844Z Progress: resolved 1, reused 0, downloaded 0, added 0
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:01.6989674Z Packages: +1
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:01.6990147Z +
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:02.1270936Z Progress: resolved 1, reused 0, downloaded 1, added 1, done
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:02.1540932Z 
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:02.1541607Z dependencies:
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:02.1542049Z + pnpm 10.6.5 (11.8.0 is available)
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:02.1542351Z 
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:02.1580373Z Done in 844ms
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:02.1804491Z ##[endgroup]
+validate	Run pnpm/action-setup@v4	2026-06-22T18:08:02.1804805Z Installation Completed!
+validate	Run actions/setup-node@v4	﻿2026-06-22T18:08:02.1986660Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1988200Z ##[group]Run actions/setup-node@v4
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1988464Z with:
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1988670Z   node-version: 24
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1988885Z   cache: pnpm
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1989091Z   always-auth: false
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1989312Z   check-latest: false
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1992622Z   token: ***
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1992828Z env:
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1993045Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1993392Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.1993705Z ##[endgroup]
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.3402582Z Found in cache @ /opt/hostedtoolcache/node/24.16.0/x64
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.3406407Z (node:2297) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.3407539Z (Use `node --trace-deprecation ...` to show where the warning was created)
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.3409364Z ##[group]Environment details
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.6951723Z node: v24.16.0
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.6952167Z npm: 11.13.0
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.6952482Z yarn: 1.22.22
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.6953887Z ##[endgroup]
+validate	Run actions/setup-node@v4	2026-06-22T18:08:02.6974056Z [command]/home/runner/setup-pnpm/node_modules/.bin/pnpm store path --silent
+validate	Run actions/setup-node@v4	2026-06-22T18:08:03.0927415Z /home/runner/setup-pnpm/node_modules/.bin/store/v10
+validate	Run actions/setup-node@v4	2026-06-22T18:08:03.2196594Z Cache hit for: node-cache-Linux-x64-pnpm-559e44a1d7544cec8c7db9d5512baa71f579aa0fc7864b4a98b8958d2eadd7df
+validate	Run actions/setup-node@v4	2026-06-22T18:08:03.2328058Z (node:2297) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+validate	Run actions/setup-node@v4	2026-06-22T18:08:03.9927598Z Received 176472999 of 176472999 (100.0%), 232.8 MBs/sec
+validate	Run actions/setup-node@v4	2026-06-22T18:08:03.9928645Z Cache Size: ~168 MB (176472999 B)
+validate	Run actions/setup-node@v4	2026-06-22T18:08:03.9963027Z [command]/usr/bin/tar -xf /home/runner/work/_temp/c57dc9ac-724d-4319-b37e-2dcefcf63be5/cache.tzst -P -C /home/runner/work/role-model/role-model --use-compress-program unzstd
+validate	Run actions/setup-node@v4	2026-06-22T18:08:05.5927279Z Cache restored successfully
+validate	Run actions/setup-node@v4	2026-06-22T18:08:05.6014050Z Cache restored from key: node-cache-Linux-x64-pnpm-559e44a1d7544cec8c7db9d5512baa71f579aa0fc7864b4a98b8958d2eadd7df
+validate	Run dtolnay/rust-toolchain@stable	﻿2026-06-22T18:08:05.6309658Z ##[group]Run dtolnay/rust-toolchain@stable
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6309993Z with:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6310196Z   toolchain: stable
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6310414Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6310636Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6310974Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6311297Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6426311Z ##[group]Run : parse toolchain version
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6426750Z [36;1m: parse toolchain version[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6427224Z [36;1mif [[ -z $toolchain ]]; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6427775Z [36;1m  # GitHub does not enforce `required: true` inputs itself. https://github.com/actions/runner/issues/1070[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6428354Z [36;1m  echo "'toolchain' is a required input" >&2[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6428667Z [36;1m  exit 1[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6429031Z [36;1melif [[ $toolchain =~ ^stable' '[0-9]+' '(year|month|week|day)s?' 'ago$ ]]; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6429451Z [36;1m  if [[ Linux == macOS ]]; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6430053Z [36;1m    echo "toolchain=1.$((($(date -v-$(sed 's/stable \([0-9]*\) \(.\).*/\1\2/' <<< $toolchain) +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6430551Z [36;1m  else[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6430951Z [36;1m    echo "toolchain=1.$((($(date --date "${toolchain#stable }" +%s)/60/60/24-16569)/7/6))" >> $GITHUB_OUTPUT[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6431418Z [36;1m  fi[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6431727Z [36;1melif [[ $toolchain =~ ^stable' 'minus' '[0-9]+' 'releases?$ ]]; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6432277Z [36;1m  echo "toolchain=1.$((($(date +%s)/60/60/24-16569)/7/6-${toolchain//[^0-9]/}))" >> $GITHUB_OUTPUT[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6432749Z [36;1melif [[ $toolchain =~ ^1\.[0-9]+$ ]]; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6433284Z [36;1m  echo "toolchain=1.$((i=${toolchain#1.}, c=($(date +%s)/60/60/24-16569)/7/6, i+9*i*(10*i<=c)+90*i*(100*i<=c)))" >> $GITHUB_OUTPUT[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6433791Z [36;1melse[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6434049Z [36;1m  echo "toolchain=$toolchain" >> $GITHUB_OUTPUT[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6434352Z [36;1mfi[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6578787Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6579199Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6579442Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6579802Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6580158Z   toolchain: stable
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6580385Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6719468Z ##[group]Run : construct rustup command line
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6719859Z [36;1m: construct rustup command line[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6720337Z [36;1mecho "targets=$(for t in ${targets//,/ }; do echo -n ' --target' $t; done)" >> $GITHUB_OUTPUT[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6720980Z [36;1mecho "components=$(for c in ${components//,/ }; do echo -n ' --component' $c; done)" >> $GITHUB_OUTPUT[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6721474Z [36;1mecho "downgrade=" >> $GITHUB_OUTPUT[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6754974Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6755333Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6755559Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6755904Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6756213Z   targets: 
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6756412Z   components: 
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6756622Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6878070Z ##[group]Run : set $CARGO_HOME
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6878393Z [36;1m: set $CARGO_HOME[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6878730Z [36;1mecho CARGO_HOME=${CARGO_HOME:-"$HOME/.cargo"} >> $GITHUB_ENV[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6914551Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6914912Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6915144Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6915487Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6915815Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6998741Z ##[group]Run : install rustup if needed
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6999085Z [36;1m: install rustup if needed[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.6999612Z [36;1mif ! command -v rustup &>/dev/null; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7000383Z [36;1m  curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused --location --silent --show-error --fail https://sh.rustup.rs | sh -s -- --default-toolchain none -y[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7001116Z [36;1m  echo "$CARGO_HOME/bin" >> $GITHUB_PATH[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7001424Z [36;1mfi[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7034472Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7034821Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7035048Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7035395Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7035717Z   CARGO_HOME: /home/runner/.cargo
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7035969Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7124943Z ##[group]Run rustup toolchain install stable --profile minimal --no-self-update
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7125522Z [36;1mrustup toolchain install stable --profile minimal --no-self-update[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7160558Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7160961Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7161204Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7161555Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7161882Z   CARGO_HOME: /home/runner/.cargo
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7162156Z   RUSTUP_PERMIT_COPY_RENAME: 1
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:05.7162434Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:06.9591888Z info: syncing channel updates for stable-x86_64-unknown-linux-gnu
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2601790Z 
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2694887Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.96.0 (ac68faa20 2026-05-25)
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2695524Z 
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2794500Z ##[group]Run rustup default stable
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2794839Z [36;1mrustup default stable[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2828925Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2829288Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2829519Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2829893Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2830219Z   CARGO_HOME: /home/runner/.cargo
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2830470Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2946312Z info: using existing install for stable-x86_64-unknown-linux-gnu
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2953816Z info: default toolchain set to stable-x86_64-unknown-linux-gnu
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.2954205Z 
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3042878Z   stable-x86_64-unknown-linux-gnu unchanged - rustc 1.96.0 (ac68faa20 2026-05-25)
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3043543Z 
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3044301Z info: note that the toolchain 'stable-x86_64-unknown-linux-gnu' is currently in use (overridden by '/home/runner/work/role-model/role-model/rust-toolchain.toml')
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3078030Z ##[group]Run : create cachekey
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3078362Z [36;1m: create cachekey[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3078878Z [36;1mDATE=$(rustc +stable --version --verbose | sed -ne 's/^commit-date: \(20[0-9][0-9]\)-\([01][0-9]\)-\([0-3][0-9]\)$/\1\2\3/p')[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3079551Z [36;1mHASH=$(rustc +stable --version --verbose | sed -ne 's/^commit-hash: //p')[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3080052Z [36;1mecho "cachekey=$(echo $DATE$HASH | head -c12)" >> $GITHUB_OUTPUT[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3113317Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3113687Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3113909Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3114472Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3114792Z   CARGO_HOME: /home/runner/.cargo
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3115047Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3808931Z ##[group]Run : disable incremental compilation
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3809344Z [36;1m: disable incremental compilation[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3809681Z [36;1mif [ -z "${CARGO_INCREMENTAL+set}" ]; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3810017Z [36;1m  echo CARGO_INCREMENTAL=0 >> $GITHUB_ENV[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3810340Z [36;1mfi[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3844440Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3845042Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3845273Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3845622Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3845950Z   CARGO_HOME: /home/runner/.cargo
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3846218Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3927353Z ##[group]Run : enable colors in Cargo output
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3927752Z [36;1m: enable colors in Cargo output[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3928086Z [36;1mif [ -z "${CARGO_TERM_COLOR+set}" ]; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3928430Z [36;1m  echo CARGO_TERM_COLOR=always >> $GITHUB_ENV[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3928724Z [36;1mfi[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3960036Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3960398Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3960632Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3960973Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3961295Z   CARGO_HOME: /home/runner/.cargo
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3961559Z   CARGO_INCREMENTAL: 0
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.3961797Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4038901Z ##[group]Run : enable Cargo sparse registry
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4039268Z [36;1m: enable Cargo sparse registry[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4039648Z [36;1m# implemented in 1.66, stabilized in 1.68, made default in 1.70[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4040367Z [36;1mif [ -z "${CARGO_REGISTRIES_CRATES_IO_PROTOCOL+set}" -o -f "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol ]; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4041096Z [36;1m  if rustc +stable --version --verbose | grep -q '^release: 1\.6[89]\.'; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4041672Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4042206Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse >> $GITHUB_ENV[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4042702Z [36;1m  elif rustc +stable --version --verbose | grep -q '^release: 1\.6[67]\.'; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4043251Z [36;1m    touch "/home/runner/work/_temp"/.implicit_cargo_registries_crates_io_protocol || true[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4043766Z [36;1m    echo CARGO_REGISTRIES_CRATES_IO_PROTOCOL=git >> $GITHUB_ENV[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4044112Z [36;1m  fi[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4044322Z [36;1mfi[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4076152Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4076521Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4076750Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4077266Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4077607Z   CARGO_HOME: /home/runner/.cargo
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4077871Z   CARGO_INCREMENTAL: 0
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4078253Z   CARGO_TERM_COLOR: always
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4078513Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4465535Z ##[group]Run : work around spurious network errors in curl 8.0
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4466232Z [36;1m: work around spurious network errors in curl 8.0[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4466934Z [36;1m# https://rust-lang.zulipchat.com/#narrow/stream/246057-t-cargo/topic/timeout.20investigation[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4468192Z [36;1mif rustc +stable --version --verbose | grep -q '^release: 1\.7[01]\.'; then[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4468789Z [36;1m  echo CARGO_HTTP_MULTIPLEXING=false >> $GITHUB_ENV[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4469260Z [36;1mfi[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4503005Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4503791Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4504191Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4504691Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4505162Z   CARGO_HOME: /home/runner/.cargo
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4505572Z   CARGO_INCREMENTAL: 0
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4506025Z   CARGO_TERM_COLOR: always
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4506388Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4819560Z ##[group]Run rustc +stable --version --verbose
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4819944Z [36;1mrustc +stable --version --verbose[0m
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4853160Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4853749Z env:
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4853984Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4854335Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4854662Z   CARGO_HOME: /home/runner/.cargo
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4854929Z   CARGO_INCREMENTAL: 0
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4855180Z   CARGO_TERM_COLOR: always
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.4855434Z ##[endgroup]
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.5050517Z rustc 1.96.0 (ac68faa20 2026-05-25)
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.5051445Z binary: rustc
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.5052494Z commit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.5053105Z commit-date: 2026-05-25
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.5053510Z host: x86_64-unknown-linux-gnu
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.5053777Z release: 1.96.0
+validate	Run dtolnay/rust-toolchain@stable	2026-06-22T18:08:07.5054015Z LLVM version: 22.1.2
+validate	Print toolchain versions	﻿2026-06-22T18:08:07.5128832Z ##[group]Run node --version
+validate	Print toolchain versions	2026-06-22T18:08:07.5129153Z [36;1mnode --version[0m
+validate	Print toolchain versions	2026-06-22T18:08:07.5129394Z [36;1mpnpm --version[0m
+validate	Print toolchain versions	2026-06-22T18:08:07.5129629Z [36;1mrustc --version[0m
+validate	Print toolchain versions	2026-06-22T18:08:07.5129863Z [36;1mcargo --version[0m
+validate	Print toolchain versions	2026-06-22T18:08:07.5164010Z shell: /usr/bin/bash -e {0}
+validate	Print toolchain versions	2026-06-22T18:08:07.5164292Z env:
+validate	Print toolchain versions	2026-06-22T18:08:07.5164523Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Print toolchain versions	2026-06-22T18:08:07.5164888Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Print toolchain versions	2026-06-22T18:08:07.5165220Z   CARGO_HOME: /home/runner/.cargo
+validate	Print toolchain versions	2026-06-22T18:08:07.5165496Z   CARGO_INCREMENTAL: 0
+validate	Print toolchain versions	2026-06-22T18:08:07.5165724Z   CARGO_TERM_COLOR: always
+validate	Print toolchain versions	2026-06-22T18:08:07.5165966Z ##[endgroup]
+validate	Print toolchain versions	2026-06-22T18:08:07.5260707Z v24.16.0
+validate	Print toolchain versions	2026-06-22T18:08:07.7912451Z 10.6.5
+validate	Print toolchain versions	2026-06-22T18:08:07.8311145Z rustc 1.96.0 (ac68faa20 2026-05-25)
+validate	Print toolchain versions	2026-06-22T18:08:08.5386586Z cargo 1.96.0 (30a34c682 2026-05-25)
+validate	Install dependencies	﻿2026-06-22T18:08:08.5424332Z ##[group]Run pnpm install --frozen-lockfile=false
+validate	Install dependencies	2026-06-22T18:08:08.5424737Z [36;1mpnpm install --frozen-lockfile=false[0m
+validate	Install dependencies	2026-06-22T18:08:08.5458018Z shell: /usr/bin/bash -e {0}
+validate	Install dependencies	2026-06-22T18:08:08.5458290Z env:
+validate	Install dependencies	2026-06-22T18:08:08.5458525Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Install dependencies	2026-06-22T18:08:08.5458873Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Install dependencies	2026-06-22T18:08:08.5459209Z   CARGO_HOME: /home/runner/.cargo
+validate	Install dependencies	2026-06-22T18:08:08.5459481Z   CARGO_INCREMENTAL: 0
+validate	Install dependencies	2026-06-22T18:08:08.5459712Z   CARGO_TERM_COLOR: always
+validate	Install dependencies	2026-06-22T18:08:08.5459946Z ##[endgroup]
+validate	Install dependencies	2026-06-22T18:08:08.8629590Z Scope: all 44 workspace projects
+validate	Install dependencies	2026-06-22T18:08:08.8715370Z  WARN  There are cyclic workspace dependencies: /home/runner/work/role-model/role-model/role-model-router/packages/adapter-execution, /home/runner/work/role-model/role-model/role-model-router/packages/provider-anthropic
+validate	Install dependencies	2026-06-22T18:08:08.9180609Z Lockfile is up to date, resolution step is skipped
+validate	Install dependencies	2026-06-22T18:08:08.9852732Z Progress: resolved 1, reused 0, downloaded 0, added 0
+validate	Install dependencies	2026-06-22T18:08:09.0533350Z Packages: +565
+validate	Install dependencies	2026-06-22T18:08:09.0535073Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+validate	Install dependencies	2026-06-22T18:08:09.9865056Z Progress: resolved 565, reused 559, downloaded 0, added 564
+validate	Install dependencies	2026-06-22T18:08:09.9924742Z Progress: resolved 565, reused 559, downloaded 0, added 565, done
+validate	Install dependencies	2026-06-22T18:08:10.3833721Z 
+validate	Install dependencies	2026-06-22T18:08:10.3834390Z devDependencies:
+validate	Install dependencies	2026-06-22T18:08:10.3834873Z + @biomejs/biome 1.9.4
+validate	Install dependencies	2026-06-22T18:08:10.3835297Z + @types/node 22.19.17
+validate	Install dependencies	2026-06-22T18:08:10.3835621Z + ajv 8.18.0
+validate	Install dependencies	2026-06-22T18:08:10.3835879Z + ajv-formats 3.0.1
+validate	Install dependencies	2026-06-22T18:08:10.3836530Z + commander 13.1.0
+validate	Install dependencies	2026-06-22T18:08:10.3836772Z + esbuild 0.25.12
+validate	Install dependencies	2026-06-22T18:08:10.3837333Z + json-schema-to-typescript 15.0.4
+validate	Install dependencies	2026-06-22T18:08:10.3837668Z + postject 1.0.0-alpha.6
+validate	Install dependencies	2026-06-22T18:08:10.3837918Z + tsx 4.21.0
+validate	Install dependencies	2026-06-22T18:08:10.3838157Z + typescript 5.9.3
+validate	Install dependencies	2026-06-22T18:08:10.3838377Z + vitest 3.2.4
+validate	Install dependencies	2026-06-22T18:08:10.3838496Z 
+validate	Install dependencies	2026-06-22T18:08:10.3840947Z ╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @biomejs/biome, esbuild, sharp, workerd.            ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+validate	Install dependencies	2026-06-22T18:08:10.3842163Z 
+validate	Install dependencies	2026-06-22T18:08:10.4240659Z Done in 1.8s using pnpm v10.6.5
+validate	Lint	﻿2026-06-22T18:08:10.4573270Z ##[group]Run pnpm run lint
+validate	Lint	2026-06-22T18:08:10.4573580Z [36;1mpnpm run lint[0m
+validate	Lint	2026-06-22T18:08:10.4607952Z shell: /usr/bin/bash -e {0}
+validate	Lint	2026-06-22T18:08:10.4608239Z env:
+validate	Lint	2026-06-22T18:08:10.4608475Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Lint	2026-06-22T18:08:10.4608841Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Lint	2026-06-22T18:08:10.4609182Z   CARGO_HOME: /home/runner/.cargo
+validate	Lint	2026-06-22T18:08:10.4609451Z   CARGO_INCREMENTAL: 0
+validate	Lint	2026-06-22T18:08:10.4609690Z   CARGO_TERM_COLOR: always
+validate	Lint	2026-06-22T18:08:10.4609928Z ##[endgroup]
+validate	Lint	2026-06-22T18:08:10.7569337Z 
+validate	Lint	2026-06-22T18:08:10.7569996Z > role-model@0.0.0 lint /home/runner/work/role-model/role-model
+validate	Lint	2026-06-22T18:08:10.7570542Z > biome check . && corepack pnpm run lint:rust
+validate	Lint	2026-06-22T18:08:10.7570780Z 
+validate	Lint	2026-06-22T18:08:11.7421288Z Checked 617 files in 939ms. No fixes applied.
+validate	Lint	2026-06-22T18:08:13.0891966Z 
+validate	Lint	2026-06-22T18:08:13.0892892Z > role-model@0.0.0 lint:rust /home/runner/work/role-model/role-model
+validate	Lint	2026-06-22T18:08:13.0894693Z > cargo fmt --manifest-path role-model-router/rust/Cargo.toml --all --check && cargo clippy --manifest-path role-model-router/rust/Cargo.toml --workspace --all-targets -- -D warnings
+validate	Lint	2026-06-22T18:08:13.0895754Z 
+validate	Lint	2026-06-22T18:08:14.8582476Z [1m[92m    Updating[0m crates.io index
+validate	Lint	2026-06-22T18:08:15.2784991Z [1m[92m Downloading[0m crates ...
+validate	Lint	2026-06-22T18:08:15.5709380Z [1m[92m  Downloaded[0m serde v1.0.228
+validate	Lint	2026-06-22T18:08:15.6161580Z [1m[92m  Downloaded[0m zmij v1.0.21
+validate	Lint	2026-06-22T18:08:15.6212766Z [1m[92m  Downloaded[0m cfg-if v1.0.4
+validate	Lint	2026-06-22T18:08:15.6229077Z [1m[92m  Downloaded[0m itoa v1.0.18
+validate	Lint	2026-06-22T18:08:15.6296888Z [1m[92m  Downloaded[0m tracing-log v0.2.0
+validate	Lint	2026-06-22T18:08:15.6321842Z [1m[92m  Downloaded[0m thiserror v2.0.18
+validate	Lint	2026-06-22T18:08:15.6398280Z [1m[92m  Downloaded[0m unicode-ident v1.0.24
+validate	Lint	2026-06-22T18:08:15.6426631Z [1m[92m  Downloaded[0m sharded-slab v0.1.7
+validate	Lint	2026-06-22T18:08:15.6464765Z [1m[92m  Downloaded[0m tracing-core v0.1.36
+validate	Lint	2026-06-22T18:08:15.6549753Z [1m[92m  Downloaded[0m tracing v0.1.44
+validate	Lint	2026-06-22T18:08:15.6714577Z [1m[92m  Downloaded[0m anyhow v1.0.102
+validate	Lint	2026-06-22T18:08:15.6755229Z [1m[92m  Downloaded[0m memchr v2.8.0
+validate	Lint	2026-06-22T18:08:15.6922586Z [1m[92m  Downloaded[0m serde_json v1.0.149
+validate	Lint	2026-06-22T18:08:15.6997292Z [1m[92m  Downloaded[0m tracing-subscriber v0.3.23
+validate	Lint	2026-06-22T18:08:15.7085733Z [1m[92m  Downloaded[0m serde_derive v1.0.228
+validate	Lint	2026-06-22T18:08:15.7118317Z [1m[92m  Downloaded[0m serde_core v1.0.228
+validate	Lint	2026-06-22T18:08:15.7146143Z [1m[92m  Downloaded[0m syn v2.0.117
+validate	Lint	2026-06-22T18:08:15.7253722Z [1m[92m  Downloaded[0m lazy_static v1.5.0
+validate	Lint	2026-06-22T18:08:15.7270914Z [1m[92m  Downloaded[0m proc-macro2 v1.0.106
+validate	Lint	2026-06-22T18:08:15.7301161Z [1m[92m  Downloaded[0m nu-ansi-term v0.50.3
+validate	Lint	2026-06-22T18:08:15.7324286Z [1m[92m  Downloaded[0m log v0.4.29
+validate	Lint	2026-06-22T18:08:15.7348408Z [1m[92m  Downloaded[0m tracing-attributes v0.1.31
+validate	Lint	2026-06-22T18:08:15.7374908Z [1m[92m  Downloaded[0m thread_local v1.1.9
+validate	Lint	2026-06-22T18:08:15.7394645Z [1m[92m  Downloaded[0m pin-project-lite v0.2.17
+validate	Lint	2026-06-22T18:08:15.7579439Z [1m[92m  Downloaded[0m once_cell v1.21.4
+validate	Lint	2026-06-22T18:08:15.7604405Z [1m[92m  Downloaded[0m smallvec v1.15.1
+validate	Lint	2026-06-22T18:08:15.7626057Z [1m[92m  Downloaded[0m quote v1.0.45
+validate	Lint	2026-06-22T18:08:15.7652274Z [1m[92m  Downloaded[0m thiserror-impl v2.0.18
+validate	Lint	2026-06-22T18:08:15.8081301Z [1m[92m   Compiling[0m proc-macro2 v1.0.106
+validate	Lint	2026-06-22T18:08:15.8133999Z [1m[92m   Compiling[0m quote v1.0.45
+validate	Lint	2026-06-22T18:08:15.8134876Z [1m[92m   Compiling[0m unicode-ident v1.0.24
+validate	Lint	2026-06-22T18:08:15.8144602Z [1m[92m    Checking[0m once_cell v1.21.4
+validate	Lint	2026-06-22T18:08:17.6459931Z [1m[92m   Compiling[0m serde_core v1.0.228
+validate	Lint	2026-06-22T18:08:18.0753044Z [1m[92m    Checking[0m tracing-core v0.1.36
+validate	Lint	2026-06-22T18:08:18.3914468Z [1m[92m   Compiling[0m zmij v1.0.21
+validate	Lint	2026-06-22T18:08:19.8497877Z [1m[92m    Checking[0m cfg-if v1.0.4
+validate	Lint	2026-06-22T18:08:19.8515963Z [1m[92m    Checking[0m log v0.4.29
+validate	Lint	2026-06-22T18:08:19.8693502Z [1m[92m   Compiling[0m serde v1.0.228
+validate	Lint	2026-06-22T18:08:19.9362611Z [1m[92m   Compiling[0m anyhow v1.0.102
+validate	Lint	2026-06-22T18:08:20.0257742Z [1m[92m    Checking[0m lazy_static v1.5.0
+validate	Lint	2026-06-22T18:08:20.0660125Z [1m[92m   Compiling[0m serde_json v1.0.149
+validate	Lint	2026-06-22T18:08:20.0889359Z [1m[92m   Compiling[0m thiserror v2.0.18
+validate	Lint	2026-06-22T18:08:20.2162792Z [1m[92m    Checking[0m sharded-slab v0.1.7
+validate	Lint	2026-06-22T18:08:20.3303802Z [1m[92m    Checking[0m tracing-log v0.2.0
+validate	Lint	2026-06-22T18:08:20.4109158Z [1m[92m    Checking[0m thread_local v1.1.9
+validate	Lint	2026-06-22T18:08:20.5867279Z [1m[92m    Checking[0m itoa v1.0.18
+validate	Lint	2026-06-22T18:08:20.6526296Z [1m[92m    Checking[0m nu-ansi-term v0.50.3
+validate	Lint	2026-06-22T18:08:20.9038829Z [1m[92m    Checking[0m smallvec v1.15.1
+validate	Lint	2026-06-22T18:08:20.9463895Z [1m[92m   Compiling[0m syn v2.0.117
+validate	Lint	2026-06-22T18:08:20.9628543Z [1m[92m    Checking[0m memchr v2.8.0
+validate	Lint	2026-06-22T18:08:21.0398660Z [1m[92m    Checking[0m pin-project-lite v0.2.17
+validate	Lint	2026-06-22T18:08:21.0798829Z [1m[92m    Checking[0m tracing-subscriber v0.3.23
+validate	Lint	2026-06-22T18:08:23.6744723Z [1m[92m   Compiling[0m tracing-attributes v0.1.31
+validate	Lint	2026-06-22T18:08:23.6745546Z [1m[92m   Compiling[0m serde_derive v1.0.228
+validate	Lint	2026-06-22T18:08:23.6746204Z [1m[92m   Compiling[0m thiserror-impl v2.0.18
+validate	Lint	2026-06-22T18:08:24.6155263Z [1m[92m    Checking[0m tracing v0.1.44
+validate	Lint	2026-06-22T18:08:25.8460526Z [1m[92m    Checking[0m rm_provider_mediapipe_bridge v0.0.0 (/home/runner/work/role-model/role-model/role-model-router/rust/crates/rm_provider_mediapipe_bridge)
+validate	Lint	2026-06-22T18:08:25.8462613Z [1m[92m    Checking[0m rm_provider_litertlm v0.0.0 (/home/runner/work/role-model/role-model/role-model-router/rust/crates/rm_provider_litertlm)
+validate	Lint	2026-06-22T18:08:26.9649584Z [1m[92m    Finished[0m `dev` profile [unoptimized + debuginfo] target(s) in 12.55s
+validate	Validate schemas	﻿2026-06-22T18:08:27.0180568Z ##[group]Run pnpm run schemas:validate
+validate	Validate schemas	2026-06-22T18:08:27.0181130Z [36;1mpnpm run schemas:validate[0m
+validate	Validate schemas	2026-06-22T18:08:27.0230954Z shell: /usr/bin/bash -e {0}
+validate	Validate schemas	2026-06-22T18:08:27.0231296Z env:
+validate	Validate schemas	2026-06-22T18:08:27.0231550Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Validate schemas	2026-06-22T18:08:27.0231926Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Validate schemas	2026-06-22T18:08:27.0232281Z   CARGO_HOME: /home/runner/.cargo
+validate	Validate schemas	2026-06-22T18:08:27.0232554Z   CARGO_INCREMENTAL: 0
+validate	Validate schemas	2026-06-22T18:08:27.0232787Z   CARGO_TERM_COLOR: always
+validate	Validate schemas	2026-06-22T18:08:27.0233026Z ##[endgroup]
+validate	Validate schemas	2026-06-22T18:08:27.3085326Z 
+validate	Validate schemas	2026-06-22T18:08:27.3086486Z > role-model@0.0.0 schemas:validate /home/runner/work/role-model/role-model
+validate	Validate schemas	2026-06-22T18:08:27.3087870Z > corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate
+validate	Validate schemas	2026-06-22T18:08:27.3088484Z 
+validate	Validate schemas	2026-06-22T18:08:28.3061368Z Validated 20 schema file(s).
+validate	Validate schemas	2026-06-22T18:08:28.3249356Z Validated 30 fixture file(s).
+validate	Build	﻿2026-06-22T18:08:28.3767921Z ##[group]Run pnpm run build
+validate	Build	2026-06-22T18:08:28.3768225Z [36;1mpnpm run build[0m
+validate	Build	2026-06-22T18:08:28.3801351Z shell: /usr/bin/bash -e {0}
+validate	Build	2026-06-22T18:08:28.3801630Z env:
+validate	Build	2026-06-22T18:08:28.3801859Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Build	2026-06-22T18:08:28.3802217Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Build	2026-06-22T18:08:28.3802542Z   CARGO_HOME: /home/runner/.cargo
+validate	Build	2026-06-22T18:08:28.3802810Z   CARGO_INCREMENTAL: 0
+validate	Build	2026-06-22T18:08:28.3803048Z   CARGO_TERM_COLOR: always
+validate	Build	2026-06-22T18:08:28.3803282Z ##[endgroup]
+validate	Build	2026-06-22T18:08:28.6649769Z 
+validate	Build	2026-06-22T18:08:28.6650728Z > role-model@0.0.0 build /home/runner/work/role-model/role-model
+validate	Build	2026-06-22T18:08:28.6651764Z > corepack pnpm run types:generate && corepack pnpm -r --if-present build
+validate	Build	2026-06-22T18:08:28.6652290Z 
+validate	Build	2026-06-22T18:08:28.9587741Z 
+validate	Build	2026-06-22T18:08:28.9588554Z > role-model@0.0.0 types:generate /home/runner/work/role-model/role-model
+validate	Build	2026-06-22T18:08:28.9589373Z > corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types
+validate	Build	2026-06-22T18:08:28.9589856Z 
+validate	Build	2026-06-22T18:08:29.8531469Z Generated types for benchmark-run.schema.json
+validate	Build	2026-06-22T18:08:29.8605824Z Generated types for benchmark-suite.schema.json
+validate	Build	2026-06-22T18:08:29.8639783Z Generated types for capability-taxonomy.schema.json
+validate	Build	2026-06-22T18:08:29.8707549Z Generated types for declared-capability-profile.schema.json
+validate	Build	2026-06-22T18:08:29.9184311Z Generated types for downstream-openai-discovery.schema.json
+validate	Build	2026-06-22T18:08:29.9232907Z Generated types for endpoint-identity.schema.json
+validate	Build	2026-06-22T18:08:29.9250528Z Generated types for judge-score.schema.json
+validate	Build	2026-06-22T18:08:29.9275343Z Generated types for model-pack-manifest.schema.json
+validate	Build	2026-06-22T18:08:29.9319952Z Generated types for observed-performance-profile.schema.json
+validate	Build	2026-06-22T18:08:29.9340373Z Generated types for package-manifest.schema.json
+validate	Build	2026-06-22T18:08:29.9369859Z Generated types for planspec.schema.json
+validate	Build	2026-06-22T18:08:29.9401493Z Generated types for role-binding.schema.json
+validate	Build	2026-06-22T18:08:29.9435017Z Generated types for role-definition.schema.json
+validate	Build	2026-06-22T18:08:29.9575197Z Generated types for router-decision.schema.json
+validate	Build	2026-06-22T18:08:29.9626443Z Generated types for routing-policy.schema.json
+validate	Build	2026-06-22T18:08:29.9647644Z Generated types for task-definition.schema.json
+validate	Build	2026-06-22T18:08:29.9686246Z Generated types for task-execution-profile.schema.json
+validate	Build	2026-06-22T18:08:29.9718121Z Generated types for trace-event.schema.json
+validate	Build	2026-06-22T18:08:29.9746296Z Generated types for trace-span.schema.json
+validate	Build	2026-06-22T18:08:29.9784543Z Generated types for usage-event.schema.json
+validate	Build	2026-06-22T18:08:30.0270382Z Formatted 1 file in 2ms. Fixed 1 file.
+validate	Build	2026-06-22T18:08:30.4036491Z Scope: 43 of 44 workspace projects
+validate	Build	2026-06-22T18:08:30.4058275Z apps/docs-site build$ react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs
+validate	Build	2026-06-22T18:08:30.4064296Z packages/packaging build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:30.4067894Z packages/pi-role-model build$ tsc --noEmit -p tsconfig.json
+validate	Build	2026-06-22T18:08:30.4076624Z packages/protocol-types build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:31.9428443Z packages/packaging build: Done
+validate	Build	2026-06-22T18:08:31.9458046Z packages/schema-tools build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:32.0895418Z packages/protocol-types build: Done
+validate	Build	2026-06-22T18:08:32.0924999Z packages/store-contract build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:32.5316268Z apps/docs-site build: [MDX] generated files in 3.530420000000049ms
+validate	Build	2026-06-22T18:08:32.6366315Z apps/docs-site build: [MDX] generated files in 2.442982000000029ms
+validate	Build	2026-06-22T18:08:32.7633657Z apps/docs-site build: [MDX] generated files in 2.3780860000001667ms
+validate	Build	2026-06-22T18:08:32.7683872Z apps/docs-site build: [36mvite v8.0.10 [32mbuilding client environment for production...[36m[39m
+validate	Build	2026-06-22T18:08:32.7863493Z apps/docs-site build: [MDX] generated files in 2.0449140000000625ms
+validate	Build	2026-06-22T18:08:32.7972267Z apps/docs-site build: [2K
+validate	Build	2026-06-22T18:08:33.4828181Z packages/pi-role-model build: Done
+validate	Build	2026-06-22T18:08:33.4869425Z role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+validate	Build	2026-06-22T18:08:33.8799203Z packages/store-contract build: Done
+validate	Build	2026-06-22T18:08:33.8822821Z role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:34.5228756Z packages/schema-tools build: Done
+validate	Build	2026-06-22T18:08:34.5234439Z role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:35.5598247Z role-model-router/apps/runtime-ui build: [36mvite v7.3.2 [32mbuilding client environment for production...[36m[39m
+validate	Build	2026-06-22T18:08:35.6647239Z role-model-router/apps/runtime-ui build: transforming...
+validate	Build	2026-06-22T18:08:35.9964545Z role-model-router/packages/bench-core build: Done
+validate	Build	2026-06-22T18:08:35.9988311Z role-model-router/packages/catalog build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:36.6866847Z role-model-router/packages/bench-judge build: Done
+validate	Build	2026-06-22T18:08:36.6948559Z .../packages/process-supervisor build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:38.3488304Z role-model-router/packages/catalog build: Done
+validate	Build	2026-06-22T18:08:38.3528744Z role-model-router/packages/roles build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:39.2852511Z .../packages/process-supervisor build: Done
+validate	Build	2026-06-22T18:08:39.2902368Z role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:40.2376900Z role-model-router/packages/roles build: Done
+validate	Build	2026-06-22T18:08:40.2388268Z role-model-router/packages/tasks build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:40.3499460Z apps/docs-site build: transforming...✓ 2241 modules transformed.
+validate	Build	2026-06-22T18:08:40.5322622Z apps/docs-site build: rendering chunks...
+validate	Build	2026-06-22T18:08:40.8366250Z apps/docs-site build: computing gzip size...
+validate	Build	2026-06-22T18:08:40.8522959Z role-model-router/packages/runtime-web build: Done
+validate	Build	2026-06-22T18:08:40.8546034Z role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:40.8688092Z apps/docs-site build: build/client/.vite/manifest.json                                       28.22 kB │ gzip:  3.02 kB
+validate	Build	2026-06-22T18:08:40.8783465Z apps/docs-site build: build/client/assets/root-B7Fn2Ts0.css                                  80.28 kB │ gzip: 13.36 kB
+validate	Build	2026-06-22T18:08:40.8785782Z apps/docs-site build: build/client/assets/full-ZUGm99_m.js                                    0.00 kB │ gzip:  0.02 kB
+validate	Build	2026-06-22T18:08:40.8848723Z apps/docs-site build: build/client/assets/index-BeW4qblQ.js                                   0.00 kB │ gzip:  0.02 kB
+validate	Build	2026-06-22T18:08:40.8888388Z apps/docs-site build: build/client/assets/mdx-BNRw8oVt.js                                     0.00 kB │ gzip:  0.02 kB
+validate	Build	2026-06-22T18:08:40.8890854Z apps/docs-site build: build/client/assets/search-CSZo5aTn.js                                  0.00 kB │ gzip:  0.02 kB
+validate	Build	2026-06-22T18:08:40.8892563Z apps/docs-site build: build/client/assets/remove-undefined-CTqT55E9-FGRZbaf6.js               0.20 kB │ gzip:  0.16 kB
+validate	Build	2026-06-22T18:08:40.8894202Z apps/docs-site build: build/client/assets/jsx-runtime-B37CQREX.js                             0.42 kB │ gzip:  0.29 kB
+validate	Build	2026-06-22T18:08:40.8898812Z apps/docs-site build: build/client/assets/fetch-DGnOyXjG.js                                   0.44 kB │ gzip:  0.29 kB
+validate	Build	2026-06-22T18:08:40.8900565Z apps/docs-site build: build/client/assets/chunk-bqFK08oC.js                                   0.69 kB │ gzip:  0.42 kB
+validate	Build	2026-06-22T18:08:40.8902213Z apps/docs-site build: build/client/assets/algolia-CFZ923Fo.js                                 0.77 kB │ gzip:  0.49 kB
+validate	Build	2026-06-22T18:08:40.8903828Z apps/docs-site build: build/client/assets/search-GXOQ8cJo.js                                  0.99 kB │ gzip:  0.53 kB
+validate	Build	2026-06-22T18:08:40.8905417Z apps/docs-site build: build/client/assets/orama-cloud-legacy-DUGrrNQL.js                      1.11 kB │ gzip:  0.58 kB
+validate	Build	2026-06-22T18:08:40.8919887Z apps/docs-site build: build/client/assets/search-default-BQUAqqJQ.js                          1.15 kB │ gzip:  0.63 kB
+validate	Build	2026-06-22T18:08:40.8921806Z apps/docs-site build: build/client/assets/orama-cloud-BzzG-WKQ.js                             1.17 kB │ gzip:  0.60 kB
+validate	Build	2026-06-22T18:08:40.8925281Z apps/docs-site build: build/client/assets/install-D0uBP4qU.js                                 4.87 kB │ gzip:  1.21 kB
+validate	Build	2026-06-22T18:08:40.8927768Z apps/docs-site build: build/client/assets/policy-and-observability-BhOZSXix.js                5.63 kB │ gzip:  1.31 kB
+validate	Build	2026-06-22T18:08:40.8956020Z apps/docs-site build: build/client/assets/roles-tasks-and-capabilities-DCWoJk2E.js            6.39 kB │ gzip:  1.45 kB
+validate	Build	2026-06-22T18:08:40.8979465Z apps/docs-site build: build/client/assets/overview-DbeQC7lC.js                                6.65 kB │ gzip:  1.42 kB
+validate	Build	2026-06-22T18:08:40.9008679Z apps/docs-site build: build/client/assets/endpoints-and-profiles-DZ-ej84O.js                  6.65 kB │ gzip:  1.44 kB
+validate	Build	2026-06-22T18:08:40.9020685Z apps/docs-site build: build/client/assets/models-and-role-activation-Cj20PVpu.js              7.41 kB │ gzip:  1.64 kB
+validate	Build	2026-06-22T18:08:40.9043567Z apps/docs-site build: build/client/assets/first-request-and-decision-BccIaoF-.js              8.29 kB │ gzip:  1.68 kB
+validate	Build	2026-06-22T18:08:40.9045670Z apps/docs-site build: build/client/assets/quickstart-119tDmm7.js                              8.37 kB │ gzip:  1.93 kB
+validate	Build	2026-06-22T18:08:40.9047801Z apps/docs-site build: build/client/assets/protocol-lifecycle-B6jXTove.js                      9.15 kB │ gzip:  2.05 kB
+validate	Build	2026-06-22T18:08:40.9049685Z apps/docs-site build: build/client/assets/runtime-ui-tour-BlM3_hox.js                         9.78 kB │ gzip:  2.07 kB
+validate	Build	2026-06-22T18:08:40.9051986Z apps/docs-site build: build/client/assets/run-full-benchmark-AWxdNziL.js                     11.24 kB │ gzip:  2.23 kB
+validate	Build	2026-06-22T18:08:40.9055578Z apps/docs-site build: build/client/assets/first-launch-and-connect-models-BU0KTsZn.js        11.65 kB │ gzip:  2.56 kB
+validate	Build	2026-06-22T18:08:40.9060842Z apps/docs-site build: build/client/assets/mixedbread-0q_--Ga_.js                             11.95 kB │ gzip:  5.37 kB
+validate	Build	2026-06-22T18:08:40.9066253Z apps/docs-site build: build/client/assets/preload-helper-CzZtDwiq.js                         12.18 kB │ gzip:  4.43 kB
+validate	Build	2026-06-22T18:08:40.9068191Z apps/docs-site build: build/client/assets/overview-XKKi8NIF.js                               12.39 kB │ gzip:  2.35 kB
+validate	Build	2026-06-22T18:08:40.9069855Z apps/docs-site build: build/client/assets/trace-and-usage-artifacts-CAQmFdbY.js              12.52 kB │ gzip:  2.17 kB
+validate	Build	2026-06-22T18:08:40.9071532Z apps/docs-site build: build/client/assets/capability-taxonomy-DBOGYTiZ.js                    12.65 kB │ gzip:  2.33 kB
+validate	Build	2026-06-22T18:08:40.9073136Z apps/docs-site build: build/client/assets/protocol-BYaoVihX.js                               13.37 kB │ gzip:  2.43 kB
+validate	Build	2026-06-22T18:08:40.9074725Z apps/docs-site build: build/client/assets/router-decision-artifact-Ds32ZrPl.js               13.37 kB │ gzip:  2.41 kB
+validate	Build	2026-06-22T18:08:40.9076336Z apps/docs-site build: build/client/assets/install-CZA1G5gP.js                                13.49 kB │ gzip:  2.87 kB
+validate	Build	2026-06-22T18:08:40.9081556Z apps/docs-site build: build/client/assets/declared-capability-profiles-BabnGxxb.js           13.60 kB │ gzip:  2.43 kB
+validate	Build	2026-06-22T18:08:40.9083529Z apps/docs-site build: build/client/assets/routing-controls-and-decision-review-0rp1rdRM.js   14.26 kB │ gzip:  2.63 kB
+validate	Build	2026-06-22T18:08:40.9085312Z apps/docs-site build: build/client/assets/benchmarks-and-evaluation-CQPRH-Eo.js              14.68 kB │ gzip:  2.70 kB
+validate	Build	2026-06-22T18:08:40.9101393Z apps/docs-site build: build/client/assets/protocol-to-router-mapping-BSp9sR2R.js             15.40 kB │ gzip:  2.79 kB
+validate	Build	2026-06-22T18:08:40.9102789Z apps/docs-site build: build/client/assets/routing-policy-CNFdDG6M.js                         15.60 kB │ gzip:  2.80 kB
+validate	Build	2026-06-22T18:08:40.9103825Z apps/docs-site build: build/client/assets/how-routing-works-end-to-end-BA9FxMXA.js           16.81 kB │ gzip:  3.13 kB
+validate	Build	2026-06-22T18:08:40.9105005Z apps/docs-site build: build/client/assets/protocol-object-model-B_JX5M-K.js                  17.59 kB │ gzip:  3.09 kB
+validate	Build	2026-06-22T18:08:40.9106011Z apps/docs-site build: build/client/assets/reason-codes-and-rejection-taxonomy-Bucof3YY.js    18.10 kB │ gzip:  2.72 kB
+validate	Build	2026-06-22T18:08:40.9108169Z apps/docs-site build: build/client/assets/canonical-schemas-reference-BIidvxGK.js            18.29 kB │ gzip:  2.80 kB
+validate	Build	2026-06-22T18:08:40.9109755Z apps/docs-site build: build/client/assets/routing-overview-3jk8I1v5.js                       18.40 kB │ gzip:  3.32 kB
+validate	Build	2026-06-22T18:08:40.9111254Z apps/docs-site build: build/client/assets/how-role-model-works-vjffjlbq.js                   18.51 kB │ gzip:  3.33 kB
+validate	Build	2026-06-22T18:08:40.9112838Z apps/docs-site build: build/client/assets/core-vocabulary-B7ObQJMj.js                        18.62 kB │ gzip:  3.17 kB
+validate	Build	2026-06-22T18:08:40.9114392Z apps/docs-site build: build/client/assets/protocol-overview-DtxgGIRm.js                      19.08 kB │ gzip:  3.41 kB
+validate	Build	2026-06-22T18:08:40.9115961Z apps/docs-site build: build/client/assets/observed-performance-profiles-gsGnRGT7.js          19.57 kB │ gzip:  3.26 kB
+validate	Build	2026-06-22T18:08:40.9117781Z apps/docs-site build: build/client/assets/docs-CyVmojiP.js                                   19.72 kB │ gzip:  3.61 kB
+validate	Build	2026-06-22T18:08:40.9119385Z apps/docs-site build: build/client/assets/endpoint-identity-DHQDQcDf.js                      22.26 kB │ gzip:  3.45 kB
+validate	Build	2026-06-22T18:08:40.9121033Z apps/docs-site build: build/client/assets/fallbacks-failures-and-observability-CW75lQP0.js   24.19 kB │ gzip:  4.04 kB
+validate	Build	2026-06-22T18:08:40.9122622Z apps/docs-site build: build/client/assets/root-faFFT4h2.js                                   24.91 kB │ gzip:  8.40 kB
+validate	Build	2026-06-22T18:08:40.9124188Z apps/docs-site build: build/client/assets/choose-routing-strategy-B92PTyf6.js                26.41 kB │ gzip:  4.25 kB
+validate	Build	2026-06-22T18:08:40.9125753Z apps/docs-site build: build/client/assets/roles-and-tasks-B_vuNO9S.js                        27.54 kB │ gzip:  4.19 kB
+validate	Build	2026-06-22T18:08:40.9171850Z apps/docs-site build: build/client/assets/candidate-selection-and-eligibility-CR7ePR2W.js    29.07 kB │ gzip:  4.44 kB
+validate	Build	2026-06-22T18:08:40.9173562Z apps/docs-site build: build/client/assets/introduction-CoDOZZjH.js                           29.46 kB │ gzip:  4.86 kB
+validate	Build	2026-06-22T18:08:40.9175176Z apps/docs-site build: build/client/assets/scoring-tie-breaks-and-decisions-BVDl3AKv.js       30.07 kB │ gzip:  4.87 kB
+validate	Build	2026-06-22T18:08:40.9187765Z apps/docs-site build: build/client/assets/routing-modes-locality-and-execution-eHOc3glJ.js   39.32 kB │ gzip:  5.65 kB
+validate	Build	2026-06-22T18:08:40.9189587Z apps/docs-site build: build/client/assets/strategy-modes-and-tradeoffs-iHSrEF_y.js           48.70 kB │ gzip:  7.07 kB
+validate	Build	2026-06-22T18:08:40.9196729Z apps/docs-site build: build/client/assets/es2015-B692ofsD.js                                 61.65 kB │ gzip: 21.10 kB
+validate	Build	2026-06-22T18:08:40.9199279Z apps/docs-site build: build/client/assets/orama-static-0yW-cdKP.js                           62.73 kB │ gzip: 21.59 kB
+validate	Build	2026-06-22T18:08:40.9200669Z apps/docs-site build: build/client/assets/docs-it41EiFe.js                                   63.57 kB │ gzip: 21.49 kB
+validate	Build	2026-06-22T18:08:40.9202072Z apps/docs-site build: build/client/assets/dist-D-xxxXck.js                                   82.94 kB │ gzip: 27.42 kB
+validate	Build	2026-06-22T18:08:40.9203479Z apps/docs-site build: build/client/assets/remark-CW-4A0sf.js                                 89.89 kB │ gzip: 25.74 kB
+validate	Build	2026-06-22T18:08:40.9204961Z apps/docs-site build: build/client/assets/chunk-EVOBXE3Y-BVHgNXQf.js                        118.01 kB │ gzip: 38.59 kB
+validate	Build	2026-06-22T18:08:40.9206422Z apps/docs-site build: build/client/assets/entry.client-Ci5FUk0_.js                          183.20 kB │ gzip: 58.03 kB
+validate	Build	2026-06-22T18:08:40.9208152Z apps/docs-site build: build/client/assets/search-NRaKxE5R.js                                227.67 kB │ gzip: 70.51 kB
+validate	Build	2026-06-22T18:08:40.9210455Z apps/docs-site build: [33m[33m[PLUGIN_TIMINGS] Warning:[0m Your build spent significant time in plugins. Here is a breakdown:
+validate	Build	2026-06-22T18:08:40.9211609Z apps/docs-site build:   - react-router:virtual-modules (37%)
+validate	Build	2026-06-22T18:08:40.9212763Z apps/docs-site build:   - react-router:dot-server (29%)
+validate	Build	2026-06-22T18:08:40.9213912Z apps/docs-site build:   - react-router:inject-hmr-runtime (12%)
+validate	Build	2026-06-22T18:08:40.9214774Z apps/docs-site build:   - fumadocs-mdx (7%)
+validate	Build	2026-06-22T18:08:40.9215420Z apps/docs-site build:   - react-router:hmr-runtime (5%)
+validate	Build	2026-06-22T18:08:40.9216391Z apps/docs-site build: See https://rolldown.rs/options/checks#plugintimings for more details.
+validate	Build	2026-06-22T18:08:40.9217628Z apps/docs-site build: [39m
+validate	Build	2026-06-22T18:08:40.9218280Z apps/docs-site build: [32m✓ built in 8.10s[39m
+validate	Build	2026-06-22T18:08:40.9929403Z apps/docs-site build: [MDX] generated files in 1.4195089999993797ms
+validate	Build	2026-06-22T18:08:40.9958503Z apps/docs-site build: [36mvite v8.0.10 [32mbuilding ssr environment for production...[36m[39m
+validate	Build	2026-06-22T18:08:41.0168791Z apps/docs-site build: [MDX] generated files in 2.2219110000005458ms
+validate	Build	2026-06-22T18:08:41.0207796Z apps/docs-site build: [2K
+validate	Build	2026-06-22T18:08:41.7150567Z role-model-router/packages/tasks build: Done
+validate	Build	2026-06-22T18:08:41.7214866Z .../packages/vendor-abstraction build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:42.3355138Z role-model-router/packages/tool-registry build: Done
+validate	Build	2026-06-22T18:08:43.0379720Z .../packages/vendor-abstraction build: Done
+validate	Build	2026-06-22T18:08:43.0719926Z apps/docs-site build: transforming...✓ 478 modules transformed.
+validate	Build	2026-06-22T18:08:43.1428454Z apps/docs-site build: rendering chunks...
+validate	Build	2026-06-22T18:08:43.2377189Z apps/docs-site build: [32m✓[39m 1 asset cleaned from React Router server build.
+validate	Build	2026-06-22T18:08:43.2378750Z apps/docs-site build: [2mbuild/server/assets/server-build-B7Fn2Ts0.css[22m
+validate	Build	2026-06-22T18:08:43.5534005Z apps/docs-site build: Prerender (data): / -> [1mbuild/client/_root.data[22m
+validate	Build	2026-06-22T18:08:43.6230655Z apps/docs-site build: Prerender (html): / -> [1mbuild/client/index.html[22m
+validate	Build	2026-06-22T18:08:43.6272871Z apps/docs-site build: Prerender (data): /api/search -> [1mbuild/client/api/search.data[22m
+validate	Build	2026-06-22T18:08:43.6290293Z apps/docs-site build: Prerender (resource): /api/search -> [1mbuild/client/api/search[22m
+validate	Build	2026-06-22T18:08:43.6320164Z apps/docs-site build: Prerender (data): /llms.txt -> [1mbuild/client/llms.txt.data[22m
+validate	Build	2026-06-22T18:08:43.6331835Z apps/docs-site build: Prerender (resource): /llms.txt -> [1mbuild/client/llms.txt[22m
+validate	Build	2026-06-22T18:08:43.6394142Z apps/docs-site build: Prerender (data): /llms-full.txt -> [1mbuild/client/llms-full.txt.data[22m
+validate	Build	2026-06-22T18:08:43.6414550Z apps/docs-site build: Prerender (resource): /llms-full.txt -> [1mbuild/client/llms-full.txt[22m
+validate	Build	2026-06-22T18:08:43.6443205Z apps/docs-site build: Prerender (data): /core-vocabulary -> [1mbuild/client/core-vocabulary.data[22m
+validate	Build	2026-06-22T18:08:43.6634458Z apps/docs-site build: Prerender (html): /core-vocabulary -> [1mbuild/client/core-vocabulary/index.html[22m
+validate	Build	2026-06-22T18:08:43.6654294Z apps/docs-site build: Prerender (data): /llms.mdx/docs/core-vocabulary/content.md -> [1mbuild/client/llms.mdx/docs/core-vocabulary/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.6666432Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> [1mbuild/client/llms.mdx/docs/core-vocabulary/content.md[22m
+validate	Build	2026-06-22T18:08:43.6819243Z apps/docs-site build: Prerender (data): / -> [1mbuild/client/_root.data[22m
+validate	Build	2026-06-22T18:08:43.7169263Z apps/docs-site build: Prerender (html): / -> [1mbuild/client/index.html[22m
+validate	Build	2026-06-22T18:08:43.7181919Z apps/docs-site build: Prerender (data): /llms.mdx/docs/content.md -> [1mbuild/client/llms.mdx/docs/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.7192566Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/content.md -> [1mbuild/client/llms.mdx/docs/content.md[22m
+validate	Build	2026-06-22T18:08:43.7227995Z apps/docs-site build: Prerender (data): /install -> [1mbuild/client/install.data[22m
+validate	Build	2026-06-22T18:08:43.7369648Z apps/docs-site build: Prerender (html): /install -> [1mbuild/client/install/index.html[22m
+validate	Build	2026-06-22T18:08:43.7384103Z apps/docs-site build: Prerender (data): /llms.mdx/docs/install/content.md -> [1mbuild/client/llms.mdx/docs/install/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.7397141Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/install/content.md -> [1mbuild/client/llms.mdx/docs/install/content.md[22m
+validate	Build	2026-06-22T18:08:43.7438988Z apps/docs-site build: Prerender (data): /introduction -> [1mbuild/client/introduction.data[22m
+validate	Build	2026-06-22T18:08:43.7603393Z apps/docs-site build: Prerender (html): /introduction -> [1mbuild/client/introduction/index.html[22m
+validate	Build	2026-06-22T18:08:43.7614693Z apps/docs-site build: Prerender (data): /llms.mdx/docs/introduction/content.md -> [1mbuild/client/llms.mdx/docs/introduction/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.7628751Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/introduction/content.md -> [1mbuild/client/llms.mdx/docs/introduction/content.md[22m
+validate	Build	2026-06-22T18:08:43.7660286Z apps/docs-site build: Prerender (data): /protocol-lifecycle -> [1mbuild/client/protocol-lifecycle.data[22m
+validate	Build	2026-06-22T18:08:43.7753631Z apps/docs-site build: Prerender (html): /protocol-lifecycle -> [1mbuild/client/protocol-lifecycle/index.html[22m
+validate	Build	2026-06-22T18:08:43.7769255Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol-lifecycle/content.md -> [1mbuild/client/llms.mdx/docs/protocol-lifecycle/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.7778182Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol-lifecycle/content.md -> [1mbuild/client/llms.mdx/docs/protocol-lifecycle/content.md[22m
+validate	Build	2026-06-22T18:08:43.7799741Z apps/docs-site build: Prerender (data): /protocol-object-model -> [1mbuild/client/protocol-object-model.data[22m
+validate	Build	2026-06-22T18:08:43.7914572Z apps/docs-site build: Prerender (html): /protocol-object-model -> [1mbuild/client/protocol-object-model/index.html[22m
+validate	Build	2026-06-22T18:08:43.7930634Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol-object-model/content.md -> [1mbuild/client/llms.mdx/docs/protocol-object-model/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.7939282Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol-object-model/content.md -> [1mbuild/client/llms.mdx/docs/protocol-object-model/content.md[22m
+validate	Build	2026-06-22T18:08:43.7964942Z apps/docs-site build: Prerender (data): /quickstart -> [1mbuild/client/quickstart.data[22m
+validate	Build	2026-06-22T18:08:43.8093581Z apps/docs-site build: Prerender (html): /quickstart -> [1mbuild/client/quickstart/index.html[22m
+validate	Build	2026-06-22T18:08:43.8107648Z apps/docs-site build: Prerender (data): /llms.mdx/docs/quickstart/content.md -> [1mbuild/client/llms.mdx/docs/quickstart/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.8118236Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/quickstart/content.md -> [1mbuild/client/llms.mdx/docs/quickstart/content.md[22m
+validate	Build	2026-06-22T18:08:43.8146758Z apps/docs-site build: Prerender (data): /runtime/benchmarks-and-evaluation -> [1mbuild/client/runtime/benchmarks-and-evaluation.data[22m
+validate	Build	2026-06-22T18:08:43.8318555Z apps/docs-site build: Prerender (html): /runtime/benchmarks-and-evaluation -> [1mbuild/client/runtime/benchmarks-and-evaluation/index.html[22m
+validate	Build	2026-06-22T18:08:43.8333837Z apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md -> [1mbuild/client/llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.8345351Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md -> [1mbuild/client/llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md[22m
+validate	Build	2026-06-22T18:08:43.8375772Z apps/docs-site build: Prerender (data): /runtime/models-and-role-activation -> [1mbuild/client/runtime/models-and-role-activation.data[22m
+validate	Build	2026-06-22T18:08:43.8570784Z apps/docs-site build: Prerender (html): /runtime/models-and-role-activation -> [1mbuild/client/runtime/models-and-role-activation/index.html[22m
+validate	Build	2026-06-22T18:08:43.8584880Z apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/models-and-role-activation/content.md -> [1mbuild/client/llms.mdx/docs/runtime/models-and-role-activation/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.8600528Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/models-and-role-activation/content.md -> [1mbuild/client/llms.mdx/docs/runtime/models-and-role-activation/content.md[22m
+validate	Build	2026-06-22T18:08:43.8671260Z apps/docs-site build: Prerender (data): /runtime/routing-controls-and-decision-review -> [1mbuild/client/runtime/routing-controls-and-decision-review.data[22m
+validate	Build	2026-06-22T18:08:43.8794883Z apps/docs-site build: Prerender (html): /runtime/routing-controls-and-decision-review -> [1mbuild/client/runtime/routing-controls-and-decision-review/index.html[22m
+validate	Build	2026-06-22T18:08:43.8806359Z apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md -> [1mbuild/client/llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.8815889Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md -> [1mbuild/client/llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md[22m
+validate	Build	2026-06-22T18:08:43.8841742Z apps/docs-site build: Prerender (data): /runtime/runtime-ui-tour -> [1mbuild/client/runtime/runtime-ui-tour.data[22m
+validate	Build	2026-06-22T18:08:43.8952159Z apps/docs-site build: Prerender (html): /runtime/runtime-ui-tour -> [1mbuild/client/runtime/runtime-ui-tour/index.html[22m
+validate	Build	2026-06-22T18:08:43.8966645Z apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/runtime-ui-tour/content.md -> [1mbuild/client/llms.mdx/docs/runtime/runtime-ui-tour/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.8978973Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/runtime-ui-tour/content.md -> [1mbuild/client/llms.mdx/docs/runtime/runtime-ui-tour/content.md[22m
+validate	Build	2026-06-22T18:08:43.8998750Z apps/docs-site build: Prerender (data): /router/candidate-selection-and-eligibility -> [1mbuild/client/router/candidate-selection-and-eligibility.data[22m
+validate	Build	2026-06-22T18:08:43.9099527Z apps/docs-site build: Prerender (html): /router/candidate-selection-and-eligibility -> [1mbuild/client/router/candidate-selection-and-eligibility/index.html[22m
+validate	Build	2026-06-22T18:08:43.9113826Z apps/docs-site build: Prerender (data): /llms.mdx/docs/router/candidate-selection-and-eligibility/content.md -> [1mbuild/client/llms.mdx/docs/router/candidate-selection-and-eligibility/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.9124416Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/candidate-selection-and-eligibility/content.md -> [1mbuild/client/llms.mdx/docs/router/candidate-selection-and-eligibility/content.md[22m
+validate	Build	2026-06-22T18:08:43.9146381Z apps/docs-site build: Prerender (data): /router/fallbacks-failures-and-observability -> [1mbuild/client/router/fallbacks-failures-and-observability.data[22m
+validate	Build	2026-06-22T18:08:43.9292184Z apps/docs-site build: Prerender (html): /router/fallbacks-failures-and-observability -> [1mbuild/client/router/fallbacks-failures-and-observability/index.html[22m
+validate	Build	2026-06-22T18:08:43.9309390Z apps/docs-site build: Prerender (data): /llms.mdx/docs/router/fallbacks-failures-and-observability/content.md -> [1mbuild/client/llms.mdx/docs/router/fallbacks-failures-and-observability/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.9322528Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/fallbacks-failures-and-observability/content.md -> [1mbuild/client/llms.mdx/docs/router/fallbacks-failures-and-observability/content.md[22m
+validate	Build	2026-06-22T18:08:43.9383775Z apps/docs-site build: Prerender (data): /router/how-routing-works-end-to-end -> [1mbuild/client/router/how-routing-works-end-to-end.data[22m
+validate	Build	2026-06-22T18:08:43.9494195Z apps/docs-site build: Prerender (html): /router/how-routing-works-end-to-end -> [1mbuild/client/router/how-routing-works-end-to-end/index.html[22m
+validate	Build	2026-06-22T18:08:43.9510910Z apps/docs-site build: Prerender (data): /llms.mdx/docs/router/how-routing-works-end-to-end/content.md -> [1mbuild/client/llms.mdx/docs/router/how-routing-works-end-to-end/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.9519632Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/how-routing-works-end-to-end/content.md -> [1mbuild/client/llms.mdx/docs/router/how-routing-works-end-to-end/content.md[22m
+validate	Build	2026-06-22T18:08:43.9625681Z apps/docs-site build: Prerender (data): /router/overview -> [1mbuild/client/router/overview.data[22m
+validate	Build	2026-06-22T18:08:43.9722805Z apps/docs-site build: Prerender (html): /router/overview -> [1mbuild/client/router/overview/index.html[22m
+validate	Build	2026-06-22T18:08:43.9739073Z apps/docs-site build: Prerender (data): /llms.mdx/docs/router/overview/content.md -> [1mbuild/client/llms.mdx/docs/router/overview/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.9750613Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/overview/content.md -> [1mbuild/client/llms.mdx/docs/router/overview/content.md[22m
+validate	Build	2026-06-22T18:08:43.9780520Z apps/docs-site build: Prerender (data): /router/protocol-to-router-mapping -> [1mbuild/client/router/protocol-to-router-mapping.data[22m
+validate	Build	2026-06-22T18:08:43.9875201Z apps/docs-site build: Prerender (html): /router/protocol-to-router-mapping -> [1mbuild/client/router/protocol-to-router-mapping/index.html[22m
+validate	Build	2026-06-22T18:08:43.9887665Z apps/docs-site build: Prerender (data): /llms.mdx/docs/router/protocol-to-router-mapping/content.md -> [1mbuild/client/llms.mdx/docs/router/protocol-to-router-mapping/content.md.data[22m
+validate	Build	2026-06-22T18:08:43.9898086Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/protocol-to-router-mapping/content.md -> [1mbuild/client/llms.mdx/docs/router/protocol-to-router-mapping/content.md[22m
+validate	Build	2026-06-22T18:08:43.9919344Z apps/docs-site build: Prerender (data): /router/routing-modes-locality-and-execution -> [1mbuild/client/router/routing-modes-locality-and-execution.data[22m
+validate	Build	2026-06-22T18:08:44.0050128Z apps/docs-site build: Prerender (html): /router/routing-modes-locality-and-execution -> [1mbuild/client/router/routing-modes-locality-and-execution/index.html[22m
+validate	Build	2026-06-22T18:08:44.0080467Z apps/docs-site build: Prerender (data): /llms.mdx/docs/router/routing-modes-locality-and-execution/content.md -> [1mbuild/client/llms.mdx/docs/router/routing-modes-locality-and-execution/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.0088791Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/routing-modes-locality-and-execution/content.md -> [1mbuild/client/llms.mdx/docs/router/routing-modes-locality-and-execution/content.md[22m
+validate	Build	2026-06-22T18:08:44.0092107Z apps/docs-site build: Prerender (data): /router/scoring-tie-breaks-and-decisions -> [1mbuild/client/router/scoring-tie-breaks-and-decisions.data[22m
+validate	Build	2026-06-22T18:08:44.0173208Z apps/docs-site build: Prerender (html): /router/scoring-tie-breaks-and-decisions -> [1mbuild/client/router/scoring-tie-breaks-and-decisions/index.html[22m
+validate	Build	2026-06-22T18:08:44.0183569Z apps/docs-site build: Prerender (data): /llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md -> [1mbuild/client/llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.0190774Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md -> [1mbuild/client/llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md[22m
+validate	Build	2026-06-22T18:08:44.0212742Z apps/docs-site build: Prerender (data): /router/strategy-modes-and-tradeoffs -> [1mbuild/client/router/strategy-modes-and-tradeoffs.data[22m
+validate	Build	2026-06-22T18:08:44.0417801Z apps/docs-site build: Prerender (html): /router/strategy-modes-and-tradeoffs -> [1mbuild/client/router/strategy-modes-and-tradeoffs/index.html[22m
+validate	Build	2026-06-22T18:08:44.0429658Z apps/docs-site build: Prerender (data): /llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md -> [1mbuild/client/llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.0447319Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md -> [1mbuild/client/llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md[22m
+validate	Build	2026-06-22T18:08:44.0461059Z apps/docs-site build: Prerender (data): /reference/canonical-schemas-reference -> [1mbuild/client/reference/canonical-schemas-reference.data[22m
+validate	Build	2026-06-22T18:08:44.0545905Z apps/docs-site build: Prerender (html): /reference/canonical-schemas-reference -> [1mbuild/client/reference/canonical-schemas-reference/index.html[22m
+validate	Build	2026-06-22T18:08:44.0562219Z apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> [1mbuild/client/llms.mdx/docs/reference/canonical-schemas-reference/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.0571055Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> [1mbuild/client/llms.mdx/docs/reference/canonical-schemas-reference/content.md[22m
+validate	Build	2026-06-22T18:08:44.0596631Z apps/docs-site build: Prerender (data): /reference/overview -> [1mbuild/client/reference/overview.data[22m
+validate	Build	2026-06-22T18:08:44.0674879Z apps/docs-site build: Prerender (html): /reference/overview -> [1mbuild/client/reference/overview/index.html[22m
+validate	Build	2026-06-22T18:08:44.0685937Z apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/overview/content.md -> [1mbuild/client/llms.mdx/docs/reference/overview/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.0700917Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/overview/content.md -> [1mbuild/client/llms.mdx/docs/reference/overview/content.md[22m
+validate	Build	2026-06-22T18:08:44.0715265Z apps/docs-site build: Prerender (data): /reference/reason-codes-and-rejection-taxonomy -> [1mbuild/client/reference/reason-codes-and-rejection-taxonomy.data[22m
+validate	Build	2026-06-22T18:08:44.0829222Z apps/docs-site build: Prerender (html): /reference/reason-codes-and-rejection-taxonomy -> [1mbuild/client/reference/reason-codes-and-rejection-taxonomy/index.html[22m
+validate	Build	2026-06-22T18:08:44.0861160Z apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.0864468Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md[22m
+validate	Build	2026-06-22T18:08:44.0870216Z apps/docs-site build: Prerender (data): /protocol/capability-taxonomy -> [1mbuild/client/protocol/capability-taxonomy.data[22m
+validate	Build	2026-06-22T18:08:44.0944849Z apps/docs-site build: Prerender (html): /protocol/capability-taxonomy -> [1mbuild/client/protocol/capability-taxonomy/index.html[22m
+validate	Build	2026-06-22T18:08:44.0965753Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/capability-taxonomy/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.0980723Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/capability-taxonomy/content.md[22m
+validate	Build	2026-06-22T18:08:44.1010298Z apps/docs-site build: Prerender (data): /protocol/declared-capability-profiles -> [1mbuild/client/protocol/declared-capability-profiles.data[22m
+validate	Build	2026-06-22T18:08:44.1098956Z apps/docs-site build: Prerender (html): /protocol/declared-capability-profiles -> [1mbuild/client/protocol/declared-capability-profiles/index.html[22m
+validate	Build	2026-06-22T18:08:44.1121410Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/declared-capability-profiles/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.1130862Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/declared-capability-profiles/content.md[22m
+validate	Build	2026-06-22T18:08:44.1168138Z apps/docs-site build: Prerender (data): /protocol/endpoint-identity -> [1mbuild/client/protocol/endpoint-identity.data[22m
+validate	Build	2026-06-22T18:08:44.1336062Z apps/docs-site build: Prerender (html): /protocol/endpoint-identity -> [1mbuild/client/protocol/endpoint-identity/index.html[22m
+validate	Build	2026-06-22T18:08:44.1360086Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/endpoint-identity/content.md -> [1mbuild/client/llms.mdx/docs/protocol/endpoint-identity/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.1379221Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/endpoint-identity/content.md -> [1mbuild/client/llms.mdx/docs/protocol/endpoint-identity/content.md[22m
+validate	Build	2026-06-22T18:08:44.1417594Z apps/docs-site build: Prerender (data): /protocol -> [1mbuild/client/protocol.data[22m
+validate	Build	2026-06-22T18:08:44.1507185Z apps/docs-site build: Prerender (html): /protocol -> [1mbuild/client/protocol/index.html[22m
+validate	Build	2026-06-22T18:08:44.1533958Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/content.md -> [1mbuild/client/llms.mdx/docs/protocol/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.1545957Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/content.md -> [1mbuild/client/llms.mdx/docs/protocol/content.md[22m
+validate	Build	2026-06-22T18:08:44.1578594Z apps/docs-site build: Prerender (data): /protocol/observed-performance-profiles -> [1mbuild/client/protocol/observed-performance-profiles.data[22m
+validate	Build	2026-06-22T18:08:44.1691121Z apps/docs-site build: Prerender (html): /protocol/observed-performance-profiles -> [1mbuild/client/protocol/observed-performance-profiles/index.html[22m
+validate	Build	2026-06-22T18:08:44.1706560Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/observed-performance-profiles/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.1714188Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/observed-performance-profiles/content.md[22m
+validate	Build	2026-06-22T18:08:44.1812129Z apps/docs-site build: Prerender (data): /protocol/roles-and-tasks -> [1mbuild/client/protocol/roles-and-tasks.data[22m
+validate	Build	2026-06-22T18:08:44.1915289Z apps/docs-site build: Prerender (html): /protocol/roles-and-tasks -> [1mbuild/client/protocol/roles-and-tasks/index.html[22m
+validate	Build	2026-06-22T18:08:44.1924920Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> [1mbuild/client/llms.mdx/docs/protocol/roles-and-tasks/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.1959365Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> [1mbuild/client/llms.mdx/docs/protocol/roles-and-tasks/content.md[22m
+validate	Build	2026-06-22T18:08:44.1980863Z apps/docs-site build: Prerender (data): /protocol/router-decision-artifact -> [1mbuild/client/protocol/router-decision-artifact.data[22m
+validate	Build	2026-06-22T18:08:44.2068846Z apps/docs-site build: Prerender (html): /protocol/router-decision-artifact -> [1mbuild/client/protocol/router-decision-artifact/index.html[22m
+validate	Build	2026-06-22T18:08:44.2081938Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> [1mbuild/client/llms.mdx/docs/protocol/router-decision-artifact/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.2095675Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> [1mbuild/client/llms.mdx/docs/protocol/router-decision-artifact/content.md[22m
+validate	Build	2026-06-22T18:08:44.2113109Z apps/docs-site build: Prerender (data): /protocol/routing-policy -> [1mbuild/client/protocol/routing-policy.data[22m
+validate	Build	2026-06-22T18:08:44.2219341Z apps/docs-site build: Prerender (html): /protocol/routing-policy -> [1mbuild/client/protocol/routing-policy/index.html[22m
+validate	Build	2026-06-22T18:08:44.2245294Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/routing-policy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/routing-policy/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.2255152Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/routing-policy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/routing-policy/content.md[22m
+validate	Build	2026-06-22T18:08:44.2274877Z apps/docs-site build: Prerender (data): /protocol/trace-and-usage-artifacts -> [1mbuild/client/protocol/trace-and-usage-artifacts.data[22m
+validate	Build	2026-06-22T18:08:44.2342208Z apps/docs-site build: Prerender (html): /protocol/trace-and-usage-artifacts -> [1mbuild/client/protocol/trace-and-usage-artifacts/index.html[22m
+validate	Build	2026-06-22T18:08:44.2350832Z apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> [1mbuild/client/llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.2363703Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> [1mbuild/client/llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md[22m
+validate	Build	2026-06-22T18:08:44.2381731Z apps/docs-site build: Prerender (data): /get-started/choose-routing-strategy -> [1mbuild/client/get-started/choose-routing-strategy.data[22m
+validate	Build	2026-06-22T18:08:44.2462779Z apps/docs-site build: Prerender (html): /get-started/choose-routing-strategy -> [1mbuild/client/get-started/choose-routing-strategy/index.html[22m
+validate	Build	2026-06-22T18:08:44.2484786Z apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/choose-routing-strategy/content.md -> [1mbuild/client/llms.mdx/docs/get-started/choose-routing-strategy/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.2497458Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/choose-routing-strategy/content.md -> [1mbuild/client/llms.mdx/docs/get-started/choose-routing-strategy/content.md[22m
+validate	Build	2026-06-22T18:08:44.2522788Z apps/docs-site build: Prerender (data): /get-started/first-launch-and-connect-models -> [1mbuild/client/get-started/first-launch-and-connect-models.data[22m
+validate	Build	2026-06-22T18:08:44.2599463Z apps/docs-site build: Prerender (html): /get-started/first-launch-and-connect-models -> [1mbuild/client/get-started/first-launch-and-connect-models/index.html[22m
+validate	Build	2026-06-22T18:08:44.2613972Z apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/first-launch-and-connect-models/content.md -> [1mbuild/client/llms.mdx/docs/get-started/first-launch-and-connect-models/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.2621262Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/first-launch-and-connect-models/content.md -> [1mbuild/client/llms.mdx/docs/get-started/first-launch-and-connect-models/content.md[22m
+validate	Build	2026-06-22T18:08:44.2641246Z apps/docs-site build: Prerender (data): /get-started/first-request-and-decision -> [1mbuild/client/get-started/first-request-and-decision.data[22m
+validate	Build	2026-06-22T18:08:44.2715465Z apps/docs-site build: Prerender (html): /get-started/first-request-and-decision -> [1mbuild/client/get-started/first-request-and-decision/index.html[22m
+validate	Build	2026-06-22T18:08:44.2730090Z apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/first-request-and-decision/content.md -> [1mbuild/client/llms.mdx/docs/get-started/first-request-and-decision/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.2735015Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/first-request-and-decision/content.md -> [1mbuild/client/llms.mdx/docs/get-started/first-request-and-decision/content.md[22m
+validate	Build	2026-06-22T18:08:44.2752864Z apps/docs-site build: Prerender (data): /get-started/install -> [1mbuild/client/get-started/install.data[22m
+validate	Build	2026-06-22T18:08:44.2829494Z apps/docs-site build: Prerender (html): /get-started/install -> [1mbuild/client/get-started/install/index.html[22m
+validate	Build	2026-06-22T18:08:44.2842436Z apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/install/content.md -> [1mbuild/client/llms.mdx/docs/get-started/install/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.2849683Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/install/content.md -> [1mbuild/client/llms.mdx/docs/get-started/install/content.md[22m
+validate	Build	2026-06-22T18:08:44.2866816Z apps/docs-site build: Prerender (data): /get-started/run-full-benchmark -> [1mbuild/client/get-started/run-full-benchmark.data[22m
+validate	Build	2026-06-22T18:08:44.2940861Z apps/docs-site build: Prerender (html): /get-started/run-full-benchmark -> [1mbuild/client/get-started/run-full-benchmark/index.html[22m
+validate	Build	2026-06-22T18:08:44.2951981Z apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/run-full-benchmark/content.md -> [1mbuild/client/llms.mdx/docs/get-started/run-full-benchmark/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.2964110Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/run-full-benchmark/content.md -> [1mbuild/client/llms.mdx/docs/get-started/run-full-benchmark/content.md[22m
+validate	Build	2026-06-22T18:08:44.2982069Z apps/docs-site build: Prerender (data): /concepts/endpoints-and-profiles -> [1mbuild/client/concepts/endpoints-and-profiles.data[22m
+validate	Build	2026-06-22T18:08:44.3092826Z apps/docs-site build: Prerender (html): /concepts/endpoints-and-profiles -> [1mbuild/client/concepts/endpoints-and-profiles/index.html[22m
+validate	Build	2026-06-22T18:08:44.3136024Z apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/endpoints-and-profiles/content.md -> [1mbuild/client/llms.mdx/docs/concepts/endpoints-and-profiles/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.3145228Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/endpoints-and-profiles/content.md -> [1mbuild/client/llms.mdx/docs/concepts/endpoints-and-profiles/content.md[22m
+validate	Build	2026-06-22T18:08:44.3181180Z apps/docs-site build: Prerender (data): /concepts/how-role-model-works -> [1mbuild/client/concepts/how-role-model-works.data[22m
+validate	Build	2026-06-22T18:08:44.3259988Z apps/docs-site build: Prerender (html): /concepts/how-role-model-works -> [1mbuild/client/concepts/how-role-model-works/index.html[22m
+validate	Build	2026-06-22T18:08:44.3271028Z apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/how-role-model-works/content.md -> [1mbuild/client/llms.mdx/docs/concepts/how-role-model-works/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.3282205Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/how-role-model-works/content.md -> [1mbuild/client/llms.mdx/docs/concepts/how-role-model-works/content.md[22m
+validate	Build	2026-06-22T18:08:44.3298560Z apps/docs-site build: Prerender (data): /concepts/policy-and-observability -> [1mbuild/client/concepts/policy-and-observability.data[22m
+validate	Build	2026-06-22T18:08:44.3369966Z apps/docs-site build: Prerender (html): /concepts/policy-and-observability -> [1mbuild/client/concepts/policy-and-observability/index.html[22m
+validate	Build	2026-06-22T18:08:44.3389599Z apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/policy-and-observability/content.md -> [1mbuild/client/llms.mdx/docs/concepts/policy-and-observability/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.3396899Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/policy-and-observability/content.md -> [1mbuild/client/llms.mdx/docs/concepts/policy-and-observability/content.md[22m
+validate	Build	2026-06-22T18:08:44.3417252Z apps/docs-site build: Prerender (data): /concepts/protocol-overview -> [1mbuild/client/concepts/protocol-overview.data[22m
+validate	Build	2026-06-22T18:08:44.3486483Z apps/docs-site build: Prerender (html): /concepts/protocol-overview -> [1mbuild/client/concepts/protocol-overview/index.html[22m
+validate	Build	2026-06-22T18:08:44.3496195Z apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/protocol-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/protocol-overview/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.3511584Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/protocol-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/protocol-overview/content.md[22m
+validate	Build	2026-06-22T18:08:44.3533914Z apps/docs-site build: Prerender (data): /concepts/roles-tasks-and-capabilities -> [1mbuild/client/concepts/roles-tasks-and-capabilities.data[22m
+validate	Build	2026-06-22T18:08:44.3595042Z apps/docs-site build: Prerender (html): /concepts/roles-tasks-and-capabilities -> [1mbuild/client/concepts/roles-tasks-and-capabilities/index.html[22m
+validate	Build	2026-06-22T18:08:44.3610100Z apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md -> [1mbuild/client/llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.3618357Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md -> [1mbuild/client/llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md[22m
+validate	Build	2026-06-22T18:08:44.3637948Z apps/docs-site build: Prerender (data): /concepts/routing-overview -> [1mbuild/client/concepts/routing-overview.data[22m
+validate	Build	2026-06-22T18:08:44.3724081Z apps/docs-site build: Prerender (html): /concepts/routing-overview -> [1mbuild/client/concepts/routing-overview/index.html[22m
+validate	Build	2026-06-22T18:08:44.3736384Z apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/routing-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/routing-overview/content.md.data[22m
+validate	Build	2026-06-22T18:08:44.3744819Z apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/routing-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/routing-overview/content.md[22m
+validate	Build	2026-06-22T18:08:44.3834911Z apps/docs-site build: Prerender (html): SPA Fallback -> [1mbuild/client/__spa-fallback.html[22m
+validate	Build	2026-06-22T18:08:44.3836850Z apps/docs-site build: Removing the server build in [32m/home/runner/work/role-model/role-model/apps/docs-site/build/server[39m due to ssr:false
+validate	Build	2026-06-22T18:08:44.3928593Z apps/docs-site build: computing gzip size...
+validate	Build	2026-06-22T18:08:44.4039800Z apps/docs-site build: build/server/.vite/manifest.json                                       32.99 kB │ gzip:   3.58 kB
+validate	Build	2026-06-22T18:08:44.4041902Z apps/docs-site build: build/server/assets/server-build-B7Fn2Ts0.css                          80.28 kB │ gzip:  13.36 kB
+validate	Build	2026-06-22T18:08:44.4064082Z apps/docs-site build: build/server/assets/docs-DteSbGko.js                                    0.19 kB │ gzip:   0.14 kB
+validate	Build	2026-06-22T18:08:44.4065918Z apps/docs-site build: build/server/assets/install-B6qQr2ge.js                                 0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4067792Z apps/docs-site build: build/server/assets/install-bjSVtJGc.js                                 0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4069470Z apps/docs-site build: build/server/assets/overview-DG983NVD.js                                0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4071434Z apps/docs-site build: build/server/assets/overview-uG5YsRpM.js                                0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4073084Z apps/docs-site build: build/server/assets/protocol-CuPl987r.js                                0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4074644Z apps/docs-site build: build/server/assets/quickstart-G943PYnW.js                              0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4076252Z apps/docs-site build: build/server/assets/introduction-BKIAJ0m6.js                            0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4078159Z apps/docs-site build: build/server/assets/routing-policy-DKhzm_i5.js                          0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4079825Z apps/docs-site build: build/server/assets/core-vocabulary-BEK9kDVe.js                         0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4081429Z apps/docs-site build: build/server/assets/roles-and-tasks-D2KoCxPr.js                         0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4083018Z apps/docs-site build: build/server/assets/runtime-ui-tour-HStCrpzV.js                         0.20 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4084618Z apps/docs-site build: build/server/assets/routing-overview-trOZnul3.js                        0.21 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4086187Z apps/docs-site build: build/server/assets/endpoint-identity-DSKHZ0FL.js                       0.21 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4087938Z apps/docs-site build: build/server/assets/protocol-overview-CxiJEsBy.js                       0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4089574Z apps/docs-site build: build/server/assets/protocol-lifecycle-7DQXoMj0.js                      0.21 kB │ gzip:   0.15 kB
+validate	Build	2026-06-22T18:08:44.4091171Z apps/docs-site build: build/server/assets/run-full-benchmark-BPIlcsi_.js                      0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4093135Z apps/docs-site build: build/server/assets/capability-taxonomy-BsBUn1LH.js                     0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4094981Z apps/docs-site build: build/server/assets/how-role-model-works-CMTTpGQR.js                    0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4096627Z apps/docs-site build: build/server/assets/protocol-object-model-UXxwk7zP.js                   0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4098523Z apps/docs-site build: build/server/assets/endpoints-and-profiles-CZ5MZANL.js                  0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4100167Z apps/docs-site build: build/server/assets/choose-routing-strategy-WrCfbkqs.js                 0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4101847Z apps/docs-site build: build/server/assets/policy-and-observability-urw6o3YH.js                0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4103552Z apps/docs-site build: build/server/assets/router-decision-artifact-f1koitoH.js                0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4105241Z apps/docs-site build: build/server/assets/benchmarks-and-evaluation-CYtf9e0x.js               0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4106893Z apps/docs-site build: build/server/assets/trace-and-usage-artifacts-D_rMRkuA.js               0.21 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4108744Z apps/docs-site build: build/server/assets/first-request-and-decision-C8xcJczr.js              0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4110157Z apps/docs-site build: build/server/assets/models-and-role-activation-dzLIcy-_.js              0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4111528Z apps/docs-site build: build/server/assets/protocol-to-router-mapping-CQoH8hBN.js              0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4113180Z apps/docs-site build: build/server/assets/canonical-schemas-reference-B9lA6TPY.js             0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4114783Z apps/docs-site build: build/server/assets/declared-capability-profiles-uqUOUt7k.js            0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4116380Z apps/docs-site build: build/server/assets/how-routing-works-end-to-end-CpqZCu9u.js            0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4118130Z apps/docs-site build: build/server/assets/roles-tasks-and-capabilities-BjVOzjzQ.js            0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4119626Z apps/docs-site build: build/server/assets/strategy-modes-and-tradeoffs-Bz62yxEb.js            0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4142263Z apps/docs-site build: build/server/assets/observed-performance-profiles-MQBzamdk.js           0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4144235Z apps/docs-site build: build/server/assets/first-launch-and-connect-models-B55EA2Qb.js         0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4146008Z apps/docs-site build: build/server/assets/scoring-tie-breaks-and-decisions-CECoTco-.js        0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4148027Z apps/docs-site build: build/server/assets/candidate-selection-and-eligibility-5CaUF5Pg.js     0.22 kB │ gzip:   0.17 kB
+validate	Build	2026-06-22T18:08:44.4149974Z apps/docs-site build: build/server/assets/reason-codes-and-rejection-taxonomy-B9RVyuy7.js     0.22 kB │ gzip:   0.16 kB
+validate	Build	2026-06-22T18:08:44.4152230Z apps/docs-site build: build/server/assets/fallbacks-failures-and-observability-C1P7oK1B.js    0.23 kB │ gzip:   0.17 kB
+validate	Build	2026-06-22T18:08:44.4154021Z apps/docs-site build: build/server/assets/routing-controls-and-decision-review-BGE2U8mR.js    0.23 kB │ gzip:   0.17 kB
+validate	Build	2026-06-22T18:08:44.4155739Z apps/docs-site build: build/server/assets/routing-modes-locality-and-execution-BF6QVXt1.js    0.23 kB │ gzip:   0.17 kB
+validate	Build	2026-06-22T18:08:44.4157608Z apps/docs-site build: build/server/assets/remove-undefined-CTqT55E9-BnWj1XRQ.js               0.65 kB │ gzip:   0.39 kB
+validate	Build	2026-06-22T18:08:44.4159190Z apps/docs-site build: build/server/assets/fetch-txeB0Av7.js                                   0.95 kB │ gzip:   0.55 kB
+validate	Build	2026-06-22T18:08:44.4160750Z apps/docs-site build: build/server/assets/chunk-CYJPkc-J-FlMbUil2.js                          1.31 kB │ gzip:   0.69 kB
+validate	Build	2026-06-22T18:08:44.4163000Z apps/docs-site build: build/server/assets/chunk-BGC-wIje.js                                   1.40 kB │ gzip:   0.66 kB
+validate	Build	2026-06-22T18:08:44.4164515Z apps/docs-site build: build/server/assets/algolia-4G_dEY6h.js                                 1.61 kB │ gzip:   0.82 kB
+validate	Build	2026-06-22T18:08:44.4166030Z apps/docs-site build: build/server/assets/search-Dun81fc0.js                                  2.21 kB │ gzip:   0.98 kB
+validate	Build	2026-06-22T18:08:44.4167759Z apps/docs-site build: build/server/assets/search-default-DBZSZXmh.js                          2.24 kB │ gzip:   0.94 kB
+validate	Build	2026-06-22T18:08:44.4169302Z apps/docs-site build: build/server/assets/orama-cloud-legacy-Bi5vL-cp.js                      2.34 kB │ gzip:   0.95 kB
+validate	Build	2026-06-22T18:08:44.4170831Z apps/docs-site build: build/server/assets/orama-cloud-c9NiHTX6.js                             2.39 kB │ gzip:   0.96 kB
+validate	Build	2026-06-22T18:08:44.4172361Z apps/docs-site build: build/server/assets/orama-static-DKH675pu.js                            4.02 kB │ gzip:   1.60 kB
+validate	Build	2026-06-22T18:08:44.4173898Z apps/docs-site build: build/server/assets/install-iBT4G3MR.js                                 6.27 kB │ gzip:   1.48 kB
+validate	Build	2026-06-22T18:08:44.4175467Z apps/docs-site build: build/server/assets/policy-and-observability-DqsFsLRD.js                7.25 kB │ gzip:   1.57 kB
+validate	Build	2026-06-22T18:08:44.4181263Z apps/docs-site build: build/server/assets/roles-tasks-and-capabilities-Du5o_vus.js            8.19 kB │ gzip:   1.74 kB
+validate	Build	2026-06-22T18:08:44.4183365Z apps/docs-site build: build/server/assets/overview-DPK-WsAT.js                                8.29 kB │ gzip:   1.70 kB
+validate	Build	2026-06-22T18:08:44.4184947Z apps/docs-site build: build/server/assets/endpoints-and-profiles-D1vz45RN.js                  8.37 kB │ gzip:   1.72 kB
+validate	Build	2026-06-22T18:08:44.4186564Z apps/docs-site build: build/server/assets/models-and-role-activation-Q5BbAP9T.js              9.18 kB │ gzip:   1.90 kB
+validate	Build	2026-06-22T18:08:44.4189353Z apps/docs-site build: build/server/assets/first-request-and-decision-C5B76bmz.js             10.27 kB │ gzip:   1.98 kB
+validate	Build	2026-06-22T18:08:44.4190988Z apps/docs-site build: build/server/assets/quickstart-CQ1pbpWo.js                             10.89 kB │ gzip:   2.30 kB
+validate	Build	2026-06-22T18:08:44.4192539Z apps/docs-site build: build/server/assets/protocol-lifecycle-D5-OP5uu.js                     11.26 kB │ gzip:   2.33 kB
+validate	Build	2026-06-22T18:08:44.4194050Z apps/docs-site build: build/server/assets/runtime-ui-tour-C4CVTCi4.js                        12.42 kB │ gzip:   2.41 kB
+validate	Build	2026-06-22T18:08:44.4195416Z apps/docs-site build: build/server/assets/run-full-benchmark-02I44X6R.js                     13.70 kB │ gzip:   2.57 kB
+validate	Build	2026-06-22T18:08:44.4196820Z apps/docs-site build: build/server/assets/first-launch-and-connect-models-zMJjwVmW.js        14.43 kB │ gzip:   2.94 kB
+validate	Build	2026-06-22T18:08:44.4198392Z apps/docs-site build: build/server/assets/overview-Diap2kO1.js                               15.16 kB │ gzip:   2.62 kB
+validate	Build	2026-06-22T18:08:44.4199875Z apps/docs-site build: build/server/assets/mixedbread-BEcMb-bv.js                             15.29 kB │ gzip:   6.30 kB
+validate	Build	2026-06-22T18:08:44.4201309Z apps/docs-site build: build/server/assets/capability-taxonomy-Bb7o6gKG.js                    15.48 kB │ gzip:   2.58 kB
+validate	Build	2026-06-22T18:08:44.4203353Z apps/docs-site build: build/server/assets/trace-and-usage-artifacts-iFKsYC_C.js              15.70 kB │ gzip:   2.48 kB
+validate	Build	2026-06-22T18:08:44.4204707Z apps/docs-site build: build/server/assets/protocol-Bluf7jCu.js                               16.28 kB │ gzip:   2.72 kB
+validate	Build	2026-06-22T18:08:44.4206072Z apps/docs-site build: build/server/assets/router-decision-artifact-Dms8HiI4.js               16.49 kB │ gzip:   2.67 kB
+validate	Build	2026-06-22T18:08:44.4207908Z apps/docs-site build: build/server/assets/declared-capability-profiles-BW_-X6la.js           16.52 kB │ gzip:   2.72 kB
+validate	Build	2026-06-22T18:08:44.4209452Z apps/docs-site build: build/server/assets/routing-controls-and-decision-review-0gbg4OFf.js   17.12 kB │ gzip:   2.89 kB
+validate	Build	2026-06-22T18:08:44.4211234Z apps/docs-site build: build/server/assets/install-ByzPcLKN.js                                17.24 kB │ gzip:   3.16 kB
+validate	Build	2026-06-22T18:08:44.4212966Z apps/docs-site build: build/server/assets/benchmarks-and-evaluation-B44FTqZT.js              17.63 kB │ gzip:   3.03 kB
+validate	Build	2026-06-22T18:08:44.4214565Z apps/docs-site build: build/server/assets/protocol-to-router-mapping-kvrt-JgK.js             18.15 kB │ gzip:   2.99 kB
+validate	Build	2026-06-22T18:08:44.4216079Z apps/docs-site build: build/server/assets/routing-policy-C6d49QW8.js                         19.24 kB │ gzip:   2.99 kB
+validate	Build	2026-06-22T18:08:44.4217866Z apps/docs-site build: build/server/assets/how-routing-works-end-to-end-BL-fDbpQ.js           20.50 kB │ gzip:   3.43 kB
+validate	Build	2026-06-22T18:08:44.4219481Z apps/docs-site build: build/server/assets/protocol-object-model-COWhA7-G.js                  21.39 kB │ gzip:   3.46 kB
+validate	Build	2026-06-22T18:08:44.4220978Z apps/docs-site build: build/server/assets/core-vocabulary-C8M9Xyrv.js                        21.63 kB │ gzip:   3.46 kB
+validate	Build	2026-06-22T18:08:44.4222527Z apps/docs-site build: build/server/assets/canonical-schemas-reference-DfVKAzJy.js            22.25 kB │ gzip:   3.13 kB
+validate	Build	2026-06-22T18:08:44.4224170Z apps/docs-site build: build/server/assets/reason-codes-and-rejection-taxonomy-Cw7PXw5b.js    22.27 kB │ gzip:   3.06 kB
+validate	Build	2026-06-22T18:08:44.4225723Z apps/docs-site build: build/server/assets/how-role-model-works-pAZ7nWyp.js                   22.42 kB │ gzip:   3.62 kB
+validate	Build	2026-06-22T18:08:44.4227356Z apps/docs-site build: build/server/assets/routing-overview-DPnNBcz0.js                       22.54 kB │ gzip:   3.61 kB
+validate	Build	2026-06-22T18:08:44.4228902Z apps/docs-site build: build/server/assets/protocol-overview-BQWGGN4G.js                      22.99 kB │ gzip:   3.71 kB
+validate	Build	2026-06-22T18:08:44.4230467Z apps/docs-site build: build/server/assets/observed-performance-profiles-BmDE_LhH.js          23.74 kB │ gzip:   3.48 kB
+validate	Build	2026-06-22T18:08:44.4231947Z apps/docs-site build: build/server/assets/docs-C2pVtG-_.js                                   23.78 kB │ gzip:   3.98 kB
+validate	Build	2026-06-22T18:08:44.4233404Z apps/docs-site build: build/server/assets/endpoint-identity-WtfhpbKu.js                      27.36 kB │ gzip:   3.79 kB
+validate	Build	2026-06-22T18:08:44.4234979Z apps/docs-site build: build/server/assets/fallbacks-failures-and-observability-DgGQa3Ay.js   28.99 kB │ gzip:   4.38 kB
+validate	Build	2026-06-22T18:08:44.4236529Z apps/docs-site build: build/server/assets/choose-routing-strategy-DX5Y4L0I.js                31.35 kB │ gzip:   4.52 kB
+validate	Build	2026-06-22T18:08:44.4238200Z apps/docs-site build: build/server/assets/roles-and-tasks-DP7tjeq1.js                        33.62 kB │ gzip:   4.57 kB
+validate	Build	2026-06-22T18:08:44.4239725Z apps/docs-site build: build/server/assets/candidate-selection-and-eligibility-CJpMyubO.js    34.33 kB │ gzip:   4.74 kB
+validate	Build	2026-06-22T18:08:44.4241241Z apps/docs-site build: build/server/assets/introduction-Dvra_edG.js                           34.76 kB │ gzip:   5.26 kB
+validate	Build	2026-06-22T18:08:44.4242742Z apps/docs-site build: build/server/assets/scoring-tie-breaks-and-decisions-pXAgfTsC.js       36.71 kB │ gzip:   5.23 kB
+validate	Build	2026-06-22T18:08:44.4244366Z apps/docs-site build: build/server/assets/routing-modes-locality-and-execution-CoTUmZL2.js   46.46 kB │ gzip:   5.96 kB
+validate	Build	2026-06-22T18:08:44.4245969Z apps/docs-site build: build/server/assets/strategy-modes-and-tradeoffs-B2vMOyNC.js           57.94 kB │ gzip:   7.42 kB
+validate	Build	2026-06-22T18:08:44.4248270Z apps/docs-site build: build/server/index.js                                                 375.12 kB │ gzip:  89.36 kB
+validate	Build	2026-06-22T18:08:44.4249588Z apps/docs-site build: build/server/assets/remark-DmD561_2.js                                383.60 kB │ gzip:  81.28 kB
+validate	Build	2026-06-22T18:08:44.4250971Z apps/docs-site build: build/server/assets/search-AYrbavGh.js                                510.57 kB │ gzip: 122.46 kB
+validate	Build	2026-06-22T18:08:44.4251942Z apps/docs-site build: [32m✓ built in 3.42s[39m
+validate	Build	2026-06-22T18:08:44.4253114Z apps/docs-site build: [33m[33m[PLUGIN_TIMINGS] Warning:[0m Your build spent significant time in plugins. Here is a breakdown:
+validate	Build	2026-06-22T18:08:44.4254304Z apps/docs-site build:   - fumadocs-mdx (40%)
+validate	Build	2026-06-22T18:08:44.4255139Z apps/docs-site build:   - react-router:virtual-modules (16%)
+validate	Build	2026-06-22T18:08:44.4255784Z apps/docs-site build:   - react-router (16%)
+validate	Build	2026-06-22T18:08:44.4256386Z apps/docs-site build:   - react-router:hmr-runtime (7%)
+validate	Build	2026-06-22T18:08:44.4257152Z apps/docs-site build:   - react-router:dot-server (7%)
+validate	Build	2026-06-22T18:08:44.4258229Z apps/docs-site build: See https://rolldown.rs/options/checks#plugintimings for more details.
+validate	Build	2026-06-22T18:08:44.4259017Z apps/docs-site build: [39m
+validate	Build	2026-06-22T18:08:44.5974393Z apps/docs-site build: npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+validate	Build	2026-06-22T18:08:44.5986779Z apps/docs-site build: npm warn Unknown env config "recursive". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+validate	Build	2026-06-22T18:08:44.6116808Z apps/docs-site build: > types:check
+validate	Build	2026-06-22T18:08:44.6118366Z apps/docs-site build: > react-router typegen && fumadocs-mdx && tsc --noEmit
+validate	Build	2026-06-22T18:08:45.6926625Z apps/docs-site build: [MDX] generated files in 2.1974390000000312ms
+validate	Build	2026-06-22T18:08:46.0656622Z role-model-router/apps/runtime-ui build: [32m✓[39m 2370 modules transformed.
+validate	Build	2026-06-22T18:08:46.1314245Z apps/docs-site build: [MDX] generated files in 5.130475999999987ms
+validate	Build	2026-06-22T18:08:46.3659562Z role-model-router/apps/runtime-ui build: rendering chunks...
+validate	Build	2026-06-22T18:08:46.6801837Z role-model-router/apps/runtime-ui build: computing gzip size...
+validate	Build	2026-06-22T18:08:46.7161573Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[32m.vite/manifest.json                          [39m[1m[2m 22.24 kB[22m[1m[22m[2m │ gzip:   2.09 kB[22m
+validate	Build	2026-06-22T18:08:46.7163967Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[35mroot-CHj8AJlX.css                     [39m[1m[2m 39.56 kB[22m[1m[22m[2m │ gzip:   7.99 kB[22m
+validate	Build	2026-06-22T18:08:46.7166288Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mindex-_YM3yJ-p.js                     [39m[1m[2m  0.15 kB[22m[1m[22m[2m │ gzip:   0.15 kB[22m
+validate	Build	2026-06-22T18:08:46.7168445Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mrouter-config-BRQeXCTv.js             [39m[1m[2m  0.15 kB[22m[1m[22m[2m │ gzip:   0.16 kB[22m
+validate	Build	2026-06-22T18:08:46.7169781Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-models-DJPlNy3J.js              [39m[1m[2m  0.16 kB[22m[1m[22m[2m │ gzip:   0.16 kB[22m
+validate	Build	2026-06-22T18:08:46.7171079Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-matrix-Bb2ef4_g.js              [39m[1m[2m  0.18 kB[22m[1m[22m[2m │ gzip:   0.18 kB[22m
+validate	Build	2026-06-22T18:08:46.7172387Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mshell-header-context-Cj1zAnIg.js      [39m[1m[2m  0.78 kB[22m[1m[22m[2m │ gzip:   0.40 kB[22m
+validate	Build	2026-06-22T18:08:46.7173706Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mnot-found-D8GwhTa5.js                 [39m[1m[2m  1.01 kB[22m[1m[22m[2m │ gzip:   0.54 kB[22m
+validate	Build	2026-06-22T18:08:46.7174981Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mrouting-mode-0L6xYTH_.js              [39m[1m[2m  1.04 kB[22m[1m[22m[2m │ gzip:   0.48 kB[22m
+validate	Build	2026-06-22T18:08:46.7176279Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlegacy-redirect-BdELbf4_.js           [39m[1m[2m  1.19 kB[22m[1m[22m[2m │ gzip:   0.43 kB[22m
+validate	Build	2026-06-22T18:08:46.7177835Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mllama-swap-setup-DjrOlpYQ.js          [39m[1m[2m  1.50 kB[22m[1m[22m[2m │ gzip:   0.74 kB[22m
+validate	Build	2026-06-22T18:08:46.7179375Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-model-role-picker-kpC-3Gqr.js   [39m[1m[2m  1.51 kB[22m[1m[22m[2m │ gzip:   0.75 kB[22m
+validate	Build	2026-06-22T18:08:46.7182686Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-choose-BgTQWnm-.js              [39m[1m[2m  1.67 kB[22m[1m[22m[2m │ gzip:   0.79 kB[22m
+validate	Build	2026-06-22T18:08:46.7184969Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-swap-BQ_abaVa.js                [39m[1m[2m  2.11 kB[22m[1m[22m[2m │ gzip:   0.97 kB[22m
+validate	Build	2026-06-22T18:08:46.7187324Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mroot-Bws7DAor.js                      [39m[1m[2m  2.34 kB[22m[1m[22m[2m │ gzip:   1.15 kB[22m
+validate	Build	2026-06-22T18:08:46.7189571Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mrouter-decisions-CUJ9txPq.js          [39m[1m[2m  2.50 kB[22m[1m[22m[2m │ gzip:   1.12 kB[22m
+validate	Build	2026-06-22T18:08:46.7191961Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mintegrations-downstream-CSCqVDaj.js   [39m[1m[2m  2.52 kB[22m[1m[22m[2m │ gzip:   1.03 kB[22m
+validate	Build	2026-06-22T18:08:46.7194152Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mobserve-routing-D2p8TZoN.js           [39m[1m[2m  3.03 kB[22m[1m[22m[2m │ gzip:   1.34 kB[22m
+validate	Build	2026-06-22T18:08:46.7196449Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mintegrations-upstream-DeABLvlA.js     [39m[1m[2m  3.07 kB[22m[1m[22m[2m │ gzip:   1.28 kB[22m
+validate	Build	2026-06-22T18:08:46.7198958Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36msystem-peers-SR9Wl7gD.js              [39m[1m[2m  3.10 kB[22m[1m[22m[2m │ gzip:   1.44 kB[22m
+validate	Build	2026-06-22T18:08:46.7201365Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mcontrol-runtime-config-BaytcTnI.js    [39m[1m[2m  3.14 kB[22m[1m[22m[2m │ gzip:   1.47 kB[22m
+validate	Build	2026-06-22T18:08:46.7203782Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-policy-C6Wh-HX2.js              [39m[1m[2m  3.40 kB[22m[1m[22m[2m │ gzip:   1.41 kB[22m
+validate	Build	2026-06-22T18:08:46.7206104Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-peers-CY09YlYo.js               [39m[1m[2m  3.76 kB[22m[1m[22m[2m │ gzip:   1.56 kB[22m
+validate	Build	2026-06-22T18:08:46.7208573Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mrouter-decision-detail-FYKOwtDA.js    [39m[1m[2m  4.12 kB[22m[1m[22m[2m │ gzip:   1.67 kB[22m
+validate	Build	2026-06-22T18:08:46.7210980Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-logs-Usd_rW07.js                [39m[1m[2m  4.18 kB[22m[1m[22m[2m │ gzip:   1.57 kB[22m
+validate	Build	2026-06-22T18:08:46.7216610Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mrouter-candidates-c7XcAHa8.js         [39m[1m[2m  4.25 kB[22m[1m[22m[2m │ gzip:   1.74 kB[22m
+validate	Build	2026-06-22T18:08:46.7219257Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mruntime-Cy-L8LpH.js                   [39m[1m[2m  4.35 kB[22m[1m[22m[2m │ gzip:   1.48 kB[22m
+validate	Build	2026-06-22T18:08:46.7221466Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mstudio-rerank-CwPq3zXs.js             [39m[1m[2m  4.45 kB[22m[1m[22m[2m │ gzip:   1.89 kB[22m
+validate	Build	2026-06-22T18:08:46.7223662Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mapp-layout-GnUVWY9C.js                [39m[1m[2m  4.51 kB[22m[1m[22m[2m │ gzip:   1.73 kB[22m
+validate	Build	2026-06-22T18:08:46.7226852Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mcontrol-controller-CoerVdXY.js        [39m[1m[2m  4.58 kB[22m[1m[22m[2m │ gzip:   1.67 kB[22m
+validate	Build	2026-06-22T18:08:46.7229348Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mdashboard-Bfr3BPxo.js                 [39m[1m[2m  4.73 kB[22m[1m[22m[2m │ gzip:   1.85 kB[22m
+validate	Build	2026-06-22T18:08:46.7233106Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-peer-models-CLwTFtja.js         [39m[1m[2m  4.80 kB[22m[1m[22m[2m │ gzip:   1.89 kB[22m
+validate	Build	2026-06-22T18:08:46.7235328Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mstudio-images-Nxb5thOr.js             [39m[1m[2m  4.90 kB[22m[1m[22m[2m │ gzip:   1.95 kB[22m
+validate	Build	2026-06-22T18:08:46.7243191Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mobserve-logs-DI-9O6H7.js              [39m[1m[2m  4.96 kB[22m[1m[22m[2m │ gzip:   1.84 kB[22m
+validate	Build	2026-06-22T18:08:46.7245539Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mobserve-activity-Bxxt9zCF.js          [39m[1m[2m  4.99 kB[22m[1m[22m[2m │ gzip:   1.77 kB[22m
+validate	Build	2026-06-22T18:08:46.7248012Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mendpoints-D_BAZuZZ.js                 [39m[1m[2m  5.49 kB[22m[1m[22m[2m │ gzip:   1.86 kB[22m
+validate	Build	2026-06-22T18:08:46.7250337Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mstudio-advanced-B7Spmf7s.js           [39m[1m[2m  5.70 kB[22m[1m[22m[2m │ gzip:   2.19 kB[22m
+validate	Build	2026-06-22T18:08:46.7252596Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mrequests-BC1k4TD6.js                  [39m[1m[2m  5.92 kB[22m[1m[22m[2m │ gzip:   2.30 kB[22m
+validate	Build	2026-06-22T18:08:46.7254869Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mllama-swap-setup-hint-DOq6IISG.js     [39m[1m[2m  6.02 kB[22m[1m[22m[2m │ gzip:   2.03 kB[22m
+validate	Build	2026-06-22T18:08:46.7257347Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mpage-primitives-DuZ2TDdF.js           [39m[1m[2m  6.16 kB[22m[1m[22m[2m │ gzip:   2.44 kB[22m
+validate	Build	2026-06-22T18:08:46.7259707Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36msession-readiness-CMb-a2lF.js         [39m[1m[2m  6.27 kB[22m[1m[22m[2m │ gzip:   1.87 kB[22m
+validate	Build	2026-06-22T18:08:46.7262079Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mlocal-llama-swap-models-BadSr1bD.js   [39m[1m[2m  6.28 kB[22m[1m[22m[2m │ gzip:   2.20 kB[22m
+validate	Build	2026-06-22T18:08:46.7264350Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mrouter-CBnWLhmv.js                    [39m[1m[2m  6.40 kB[22m[1m[22m[2m │ gzip:   1.89 kB[22m
+validate	Build	2026-06-22T18:08:46.7266608Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mstudio-audio-B19dYr9Y.js              [39m[1m[2m  6.42 kB[22m[1m[22m[2m │ gzip:   2.43 kB[22m
+validate	Build	2026-06-22T18:08:46.7269011Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mworkbench-DKJTKIAO.js                 [39m[1m[2m  7.88 kB[22m[1m[22m[2m │ gzip:   2.66 kB[22m
+validate	Build	2026-06-22T18:08:46.7271301Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mcontrol-routing-strategy-CbSQ0pFq.js  [39m[1m[2m  9.62 kB[22m[1m[22m[2m │ gzip:   3.17 kB[22m
+validate	Build	2026-06-22T18:08:46.7273591Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mruntime-api-BmUrz8xm.js               [39m[1m[2m  9.65 kB[22m[1m[22m[2m │ gzip:   2.26 kB[22m
+validate	Build	2026-06-22T18:08:46.7275644Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mcontrol-models-DmNM_WI5.js            [39m[1m[2m 12.52 kB[22m[1m[22m[2m │ gzip:   3.67 kB[22m
+validate	Build	2026-06-22T18:08:46.7278065Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mrequest-detail-Bsy0HoLK.js            [39m[1m[2m 13.47 kB[22m[1m[22m[2m │ gzip:   4.24 kB[22m
+validate	Build	2026-06-22T18:08:46.7280378Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mcontrol-roles-BLTOU657.js             [39m[1m[2m 13.87 kB[22m[1m[22m[2m │ gzip:   3.68 kB[22m
+validate	Build	2026-06-22T18:08:46.7283073Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mcontrol-benchmark-DDLjuYrN.js         [39m[1m[2m 20.23 kB[22m[1m[22m[2m │ gzip:   6.49 kB[22m
+validate	Build	2026-06-22T18:08:46.7285357Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mview-models-CzvTxYnX.js               [39m[1m[2m 21.61 kB[22m[1m[22m[2m │ gzip:   6.85 kB[22m
+validate	Build	2026-06-22T18:08:46.7287823Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mproviders-DQ_aQIXg.js                 [39m[1m[2m 25.60 kB[22m[1m[22m[2m │ gzip:   6.84 kB[22m
+validate	Build	2026-06-22T18:08:46.7289946Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mdesign-system-D6PEcgMv.js             [39m[1m[2m 49.24 kB[22m[1m[22m[2m │ gzip:  15.53 kB[22m
+validate	Build	2026-06-22T18:08:46.7301094Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mchunk-EVOBXE3Y-CoiKifzG.js            [39m[1m[2m127.92 kB[22m[1m[22m[2m │ gzip:  43.10 kB[22m
+validate	Build	2026-06-22T18:08:46.7304906Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mentry.client-BnhdNt5O.js              [39m[1m[2m190.57 kB[22m[1m[22m[2m │ gzip:  60.05 kB[22m
+validate	Build	2026-06-22T18:08:46.7310617Z role-model-router/apps/runtime-ui build: [2mbuild/client/[22m[2massets/[22m[36mtelemetry-route-models-CJITPkmV.js    [39m[1m[2m426.21 kB[22m[1m[22m[2m │ gzip: 114.89 kB[22m
+validate	Build	2026-06-22T18:08:46.7311818Z role-model-router/apps/runtime-ui build: [32m✓ built in 11.10s[39m
+validate	Build	2026-06-22T18:08:46.8078996Z role-model-router/apps/runtime-ui build: [36mvite v7.3.2 [32mbuilding ssr environment for production...[36m[39m
+validate	Build	2026-06-22T18:08:46.8104836Z role-model-router/apps/runtime-ui build: transforming...
+validate	Build	2026-06-22T18:08:47.0756635Z role-model-router/apps/runtime-ui build: [32m✓[39m 9 modules transformed.
+validate	Build	2026-06-22T18:08:47.1009733Z role-model-router/apps/runtime-ui build: rendering chunks...
+validate	Build	2026-06-22T18:08:47.1025581Z role-model-router/apps/runtime-ui build: [2mbuild/server/[22m[32m.vite/manifest.json               [39m[1m[2m 0.23 kB[22m[1m[22m
+validate	Build	2026-06-22T18:08:47.1031458Z role-model-router/apps/runtime-ui build: [2mbuild/server/[22m[2massets/[22m[35mserver-build-CHj8AJlX.css  [39m[1m[2m39.56 kB[22m[1m[22m
+validate	Build	2026-06-22T18:08:47.1034126Z role-model-router/apps/runtime-ui build: [2mbuild/server/[22m[36mindex.js                          [39m[1m[2m65.40 kB[22m[1m[22m
+validate	Build	2026-06-22T18:08:47.1047582Z role-model-router/apps/runtime-ui build: [32m✓[39m 1 asset cleaned from React Router server build.
+validate	Build	2026-06-22T18:08:47.1049277Z role-model-router/apps/runtime-ui build: [2mbuild/server/assets/server-build-CHj8AJlX.css[22m
+validate	Build	2026-06-22T18:08:47.1577278Z role-model-router/apps/runtime-ui build: SPA Mode: Generated [1mbuild/client/index.html[22m
+validate	Build	2026-06-22T18:08:47.1579612Z role-model-router/apps/runtime-ui build: Removing the server build in [32m/home/runner/work/role-model/role-model/role-model-router/apps/runtime-ui/build/server[39m due to ssr:false
+validate	Build	2026-06-22T18:08:47.1581626Z role-model-router/apps/runtime-ui build: [32m✓ built in 350ms[39m
+validate	Build	2026-06-22T18:08:49.6209255Z apps/docs-site build: Materialized search index at /home/runner/work/role-model/role-model/apps/docs-site/build/client/api/search.json
+validate	Build	2026-06-22T18:08:49.6255105Z apps/docs-site build: Done
+validate	Build	2026-06-22T18:08:53.0949685Z role-model-router/apps/runtime-ui build: Done
+validate	Build	2026-06-22T18:08:53.0953912Z role-model-router/apps/bench-cli build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:53.0956115Z role-model-router/packages/bench-routing build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:53.0958274Z role-model-router/packages/core build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:53.0959442Z .../packages/profile-aggregator build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:54.7781463Z role-model-router/apps/bench-cli build: Done
+validate	Build	2026-06-22T18:08:54.7832745Z .../packages/provider-account build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:54.8463113Z .../packages/profile-aggregator build: Done
+validate	Build	2026-06-22T18:08:54.8478090Z role-model-router/packages/trace build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:55.0738040Z role-model-router/packages/core build: Done
+validate	Build	2026-06-22T18:08:55.0781883Z role-model-router/packages/usage build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:55.5444908Z role-model-router/packages/bench-routing build: Done
+validate	Build	2026-06-22T18:08:55.5463077Z .../packages/vendor-litellm build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:56.4530825Z role-model-router/packages/trace build: Done
+validate	Build	2026-06-22T18:08:56.4598330Z .../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:56.6326790Z role-model-router/packages/usage build: Done
+validate	Build	2026-06-22T18:08:56.7197558Z .../packages/provider-account build: Done
+validate	Build	2026-06-22T18:08:57.3087671Z .../packages/vendor-litellm build: Done
+validate	Build	2026-06-22T18:08:57.5729465Z .../packages/vendor-llama-swap build: Done
+validate	Build	2026-06-22T18:08:57.5733370Z role-model-router/packages/openai-compat build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:57.5734573Z role-model-router/packages/provider-acp build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:57.5736166Z role-model-router/packages/provider-cli build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:57.5744632Z role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:59.4471805Z role-model-router/packages/provider-mcp build: Done
+validate	Build	2026-06-22T18:08:59.4475898Z role-model-router/packages/openai-compat build: Done
+validate	Build	2026-06-22T18:08:59.4485753Z role-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:08:59.4857872Z role-model-router/packages/provider-acp build: Done
+validate	Build	2026-06-22T18:08:59.5017177Z role-model-router/packages/provider-cli build: Done
+validate	Build	2026-06-22T18:09:00.4715495Z role-model-router/packages/sqlite-memory build: Done
+validate	Build	2026-06-22T18:09:00.4719876Z role-model-router/apps/router-devtools build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:00.4720872Z .../packages/context-envelope build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:01.5495380Z role-model-router/apps/router-devtools build: Done
+validate	Build	2026-06-22T18:09:01.7800160Z .../packages/context-envelope build: Done
+validate	Build	2026-06-22T18:09:01.7804798Z .../packages/retrieval-receipt build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:02.7405751Z .../packages/retrieval-receipt build: Done
+validate	Build	2026-06-22T18:09:02.7409715Z .../packages/endpoint-registry build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:03.7532702Z .../packages/endpoint-registry build: Done
+validate	Build	2026-06-22T18:09:03.7535644Z .../packages/protocol-routing build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:04.8483692Z .../packages/protocol-routing build: Done
+validate	Build	2026-06-22T18:09:04.8486649Z packages/conformance build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:05.4981795Z packages/conformance build: Done
+validate	Build	2026-06-22T18:09:05.4984905Z .../packages/adapter-execution build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:05.4986136Z .../packages/provider-anthropic build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:07.1554052Z .../packages/provider-anthropic build: Done
+validate	Build	2026-06-22T18:09:07.2280166Z .../packages/adapter-execution build: Done
+validate	Build	2026-06-22T18:09:07.2283184Z .../packages/provider-openai build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:07.2284592Z .../packages/runtime-observability build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:08.9410112Z .../packages/runtime-observability build: Done
+validate	Build	2026-06-22T18:09:09.0579473Z .../packages/provider-openai build: Done
+validate	Build	2026-06-22T18:09:09.0582912Z role-model-router/apps/gateway-smoke build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:09.0584136Z .../packages/provider-litellm build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:10.7853983Z .../packages/provider-litellm build: Done
+validate	Build	2026-06-22T18:09:10.8797539Z role-model-router/apps/gateway-smoke build: Done
+validate	Build	2026-06-22T18:09:10.8800456Z .../apps/runtime-host-bridge build$ tsc -p tsconfig.json
+validate	Build	2026-06-22T18:09:14.4406455Z .../apps/runtime-host-bridge build: Done
+validate	Test	﻿2026-06-22T18:09:14.4654847Z ##[group]Run pnpm run test
+validate	Test	2026-06-22T18:09:14.4655150Z [36;1mpnpm run test[0m
+validate	Test	2026-06-22T18:09:14.4689219Z shell: /usr/bin/bash -e {0}
+validate	Test	2026-06-22T18:09:14.4689674Z env:
+validate	Test	2026-06-22T18:09:14.4689903Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+validate	Test	2026-06-22T18:09:14.4690262Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+validate	Test	2026-06-22T18:09:14.4690587Z   CARGO_HOME: /home/runner/.cargo
+validate	Test	2026-06-22T18:09:14.4690847Z   CARGO_INCREMENTAL: 0
+validate	Test	2026-06-22T18:09:14.4691074Z   CARGO_TERM_COLOR: always
+validate	Test	2026-06-22T18:09:14.4691307Z ##[endgroup]
+validate	Test	2026-06-22T18:09:14.7561536Z 
+validate	Test	2026-06-22T18:09:14.7562478Z > role-model@0.0.0 test /home/runner/work/role-model/role-model
+validate	Test	2026-06-22T18:09:14.7563107Z > corepack pnpm -r --if-present test
+validate	Test	2026-06-22T18:09:14.7563323Z 
+validate	Test	2026-06-22T18:09:15.1038401Z Scope: 43 of 44 workspace projects
+validate	Test	2026-06-22T18:09:15.1088058Z packages/pi-role-model test$ vitest run
+validate	Test	2026-06-22T18:09:15.1103738Z packages/schema-tools test$ vitest run
+validate	Test	2026-06-22T18:09:15.1114738Z role-model-router/apps/runtime-ui test$ vitest run
+validate	Test	2026-06-22T18:09:15.1115762Z role-model-router/packages/bench-judge test$ vitest run
+validate	Test	2026-06-22T18:09:15.5682790Z packages/pi-role-model test: [1m[46m RUN [49m[22m [36mv3.2.4 [39m[90m/home/runner/work/role-model/role-model/packages/pi-role-model[39m
+validate	Test	2026-06-22T18:09:15.5837718Z packages/schema-tools test: [1m[46m RUN [49m[22m [36mv3.2.4 [39m[90m/home/runner/work/role-model/role-model/packages/schema-tools[39m
+validate	Test	2026-06-22T18:09:15.5870030Z role-model-router/packages/bench-judge test: [1m[46m RUN [49m[22m [36mv3.2.4 [39m[90m/home/runner/work/role-model/role-model/role-model-router/packages/bench-judge[39m
+validate	Test	2026-06-22T18:09:16.5917866Z packages/pi-role-model test:  [32m✓[39m test/downstream-openai.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+validate	Test	2026-06-22T18:09:16.6248652Z role-model-router/packages/bench-judge test:  [32m✓[39m src/index.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+validate	Test	2026-06-22T18:09:16.6500430Z packages/pi-role-model test:  [32m✓[39m test/commands.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 78[2mms[22m[39m
+validate	Test	2026-06-22T18:09:16.6725769Z role-model-router/packages/bench-judge test: [2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+validate	Test	2026-06-22T18:09:16.6804014Z role-model-router/packages/bench-judge test: [2m      Tests [22m [1m[32m6 passed[39m[22m[90m (6)[39m
+validate	Test	2026-06-22T18:09:16.6828357Z role-model-router/packages/bench-judge test: [2m   Start at [22m 18:09:15
+validate	Test	2026-06-22T18:09:16.6919557Z role-model-router/packages/bench-judge test: [2m   Duration [22m 1.08s[2m (transform 208ms, setup 0ms, collect 210ms, tests 27ms, environment 0ms, prepare 248ms)[22m
+validate	Test	2026-06-22T18:09:16.7009503Z packages/pi-role-model test:  [32m✓[39m test/runtime-discovery.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 96[2mms[22m[39m
+validate	Test	2026-06-22T18:09:17.1254631Z role-model-router/packages/bench-judge test: Done
+validate	Test	2026-06-22T18:09:17.1348506Z role-model-router/packages/catalog test$ vitest run test
+validate	Test	2026-06-22T18:09:17.2419779Z role-model-router/apps/runtime-ui test: [1m[46m RUN [49m[22m [36mv3.2.4 [39m[90m/home/runner/work/role-model/role-model/role-model-router/apps/runtime-ui[39m
+validate	Test	2026-06-22T18:09:17.4025783Z packages/pi-role-model test:  [32m✓[39m test/config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+validate	Test	2026-06-22T18:09:17.5119858Z packages/schema-tools test:  [32m✓[39m test/recursive-biome-local-provider-config-format.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1082[2mms[22m[39m
+validate	Test	2026-06-22T18:09:17.5168454Z packages/schema-tools test:    [33m[2m✓[22m[39m run31 bounded Biome regression for local provider config format batch[2m > [22mrequires the local provider config format blocker set to pass under repository config [33m 1072[2mms[22m[39m
+validate	Test	2026-06-22T18:09:17.5303929Z packages/pi-role-model test:  [32m✓[39m test/extension.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+validate	Test	2026-06-22T18:09:17.5425890Z packages/pi-role-model test:  [31m❯[39m test/docs-and-safety.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 150[2mms[22m[39m
+validate	Test	2026-06-22T18:09:17.5489930Z packages/pi-role-model test: [31m   [31m×[31m Pi installation docs, skill, and safety guardrails[2m > [22mships the role-model skill and README Installation for Pi section[39m[32m 141[2mms[22m[39m
+validate	Test	2026-06-22T18:09:17.5596799Z packages/pi-role-model test: [31m     → expected '# role-model\n\n`role-model` is an op…' to contain '## Installation for Pi'[39m
+validate	Test	2026-06-22T18:09:17.5641472Z packages/pi-role-model test:    [32m✓[39m Pi installation docs, skill, and safety guardrails[2m > [22mdoes not couple the package to auth storage, launchers, or managed runtime processes[32m 8[2mms[22m[39m
+validate	Test	2026-06-22T18:09:18.1435112Z packages/schema-tools test:  [32m✓[39m test/recursive-biome-local-runtime-package-format.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1610[2mms[22m[39m
+validate	Test	2026-06-22T18:09:18.1479588Z packages/schema-tools test:    [33m[2m✓[22m[39m run31 bounded Biome regression for local runtime package format batch[2m > [22mrequires the local runtime package format blocker set to pass under repository config [33m 1600[2mms[22m[39m
+validate	Test	2026-06-22T18:09:18.1843783Z packages/pi-role-model test:  [32m✓[39m test/package-manifest.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 30[2mms[22m[39m
+validate	Test	2026-06-22T18:09:18.2049290Z packages/schema-tools test:  [32m✓[39m test/validate-schemas.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 1372[2mms[22m[39m
+validate	Test	2026-06-22T18:09:18.2052628Z packages/schema-tools test:    [33m[2m✓[22m[39m loadSchemas[2m > [22mtreats manifest expectations as authoritative for valid and invalid fixtures [33m 875[2mms[22m[39m
+validate	Test	2026-06-22T18:09:18.2118106Z packages/schema-tools test:    [33m[2m✓[22m[39m loadSchemas[2m > [22mvalidates the full fixture manifest through the schema-tool entrypoint [33m 422[2mms[22m[39m
+validate	Test	2026-06-22T18:09:18.3709781Z role-model-router/packages/catalog test: [1m[46m RUN [49m[22m [36mv3.2.4 [39m[90m/home/runner/work/role-model/role-model/role-model-router/packages/catalog[39m
+validate	Test	2026-06-22T18:09:18.6153413Z packages/pi-role-model test:  [32m✓[39m test/alias-store.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 66[2mms[22m[39m
+validate	Test	2026-06-22T18:09:18.6815646Z packages/pi-role-model test: [31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+validate	Test	2026-06-22T18:09:18.6909855Z packages/pi-role-model test: [41m[1m FAIL [22m[49m test/docs-and-safety.test.ts[2m > [22mPi installation docs, skill, and safety guardrails[2m > [22mships the role-model skill and README Installation for Pi section
+validate	Test	2026-06-22T18:09:18.7004858Z packages/pi-role-model test: [31m[1mAssertionError[22m: expected '# role-model\n\n`role-model` is an op…' to contain '## Installation for Pi'[39m
+validate	Test	2026-06-22T18:09:18.7148549Z packages/pi-role-model test: [32m- Expected[39m
+validate	Test	2026-06-22T18:09:18.7258834Z packages/pi-role-model test: [31m+ Received[39m
+validate	Test	2026-06-22T18:09:18.7388809Z packages/pi-role-model test: [32m- #[7m# Installation for Pi[27m[39m
+validate	Test	2026-06-22T18:09:18.7441140Z packages/pi-role-model test: [31m+ #[7m role-model[27m[39m
+validate	Test	2026-06-22T18:09:18.7530349Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.7567935Z packages/pi-role-model test: [31m+ `role-model` is an open protocol for capability-aware AI routing, plus a reference router that implements[39m
+validate	Test	2026-06-22T18:09:18.7797457Z packages/pi-role-model test: [31m+ that protocol.[39m
+validate	Test	2026-06-22T18:09:18.7888358Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.7999141Z packages/pi-role-model test: [31m+ It gives a router a durable contract for describing **what a request needs**, **what an endpoint can do**,[39m
+validate	Test	2026-06-22T18:09:18.8078197Z packages/pi-role-model test: [31m+ **what policy allows**, and **why a final routing decision was made**.[39m
+validate	Test	2026-06-22T18:09:18.8141342Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8258870Z packages/pi-role-model test: [31m+ ![role-model runtime overview](docs/public/images/runtime-overview.png)[39m
+validate	Test	2026-06-22T18:09:18.8288153Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8440570Z packages/pi-role-model test: [31m+ ## What role-model does[39m
+validate	Test	2026-06-22T18:09:18.8542160Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8625708Z packages/pi-role-model test: [31m+ Every AI workload eventually faces the same question: *which model should handle this request?* The answer[39m
+validate	Test	2026-06-22T18:09:18.8689272Z packages/pi-role-model test: [31m+ depends on task type, required capabilities, cost, latency, and whether the model is running locally or in[39m
+validate	Test	2026-06-22T18:09:18.8748355Z packages/pi-role-model test: [31m+ the cloud. `role-model` makes that decision explicit, explainable, and portable.[39m
+validate	Test	2026-06-22T18:09:18.8778429Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8837824Z packages/pi-role-model test: [31m+ At a high level, `role-model` separates AI routing into a few stable pieces:[39m
+validate	Test	2026-06-22T18:09:18.8873794Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8909607Z packages/pi-role-model test: [31m+ 1. **Requests** describe task type, required capabilities, modalities, tool needs, and constraints.[39m
+validate	Test	2026-06-22T18:09:18.8939618Z packages/pi-role-model test: [31m+ 2. **Endpoint identities and profiles** describe concrete routable endpoints rather than abstract model names.[39m
+validate	Test	2026-06-22T18:09:18.8947327Z packages/pi-role-model test: [31m+ 3. **Routing policy** applies hard denies, preferences, budgets, and tie-break rules.[39m
+validate	Test	2026-06-22T18:09:18.8949461Z packages/pi-role-model test: [31m+ 4. **Observability artifacts** record the decision, trace, usage, and observed performance.[39m
+validate	Test	2026-06-22T18:09:18.8950929Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8952398Z packages/pi-role-model test: [31m+ The reference router supports **hybrid routing** across three deployment shapes:[39m
+validate	Test	2026-06-22T18:09:18.8953665Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8955287Z packages/pi-role-model test: [31m+ - **Local / Local** - route between local models (e.g., llama-swap peers) based on role, task, and capability[39m
+validate	Test	2026-06-22T18:09:18.8957700Z packages/pi-role-model test: [31m+ - **Local / Cloud** - route between a local model and a cloud provider based on cost, latency, and task difficulty[39m
+validate	Test	2026-06-22T18:09:18.8959902Z packages/pi-role-model test: [31m+ - **Cloud / Cloud** - route between cloud providers (e.g., OpenAI, DeepSeek, Moonshot) based on capability and economics[39m
+validate	Test	2026-06-22T18:09:18.8962765Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8964426Z packages/pi-role-model test: [31m+ This means a single runtime can serve a quick chat request from a fast local model, route a complex coding[39m
+validate	Test	2026-06-22T18:09:18.8966640Z packages/pi-role-model test: [31m+ task to a capable cloud model, and fall back to a cheaper cloud endpoint when the primary is degraded, all[39m
+validate	Test	2026-06-22T18:09:18.8972913Z packages/pi-role-model test: [31m+ under one explainable routing contract.[39m
+validate	Test	2026-06-22T18:09:18.8973986Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8974978Z packages/pi-role-model test: [31m+ ## Install the runtime[39m
+validate	Test	2026-06-22T18:09:18.8975898Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8977505Z packages/pi-role-model test: [31m+ For end users, prefer the packaged standalone runtime over a source build.[39m
+validate	Test	2026-06-22T18:09:18.8978845Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8979683Z packages/pi-role-model test: [31m+ ### macOS and Linux[39m
+validate	Test	2026-06-22T18:09:18.8980494Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8981344Z packages/pi-role-model test: [31m+ ```bash[39m
+validate	Test	2026-06-22T18:09:18.8982968Z packages/pi-role-model test: [31m+ curl -fsSL https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.sh | sh[39m
+validate	Test	2026-06-22T18:09:18.8984276Z packages/pi-role-model test: [31m+ ```[39m
+validate	Test	2026-06-22T18:09:18.8985040Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8986688Z packages/pi-role-model test: [31m+ The installer downloads the latest GitHub Release archive, installs it under[39m
+validate	Test	2026-06-22T18:09:18.8989007Z packages/pi-role-model test: [31m+ `~/.local/share/role-model-router/<version>/<target>/`, and exposes a `role-model-router` launcher in[39m
+validate	Test	2026-06-22T18:09:18.8990311Z packages/pi-role-model test: [31m+ `~/.local/bin`.[39m
+validate	Test	2026-06-22T18:09:18.8991106Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8991848Z packages/pi-role-model test: [31m+ ### Windows[39m
+validate	Test	2026-06-22T18:09:18.8992621Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8993405Z packages/pi-role-model test: [31m+ ```powershell[39m
+validate	Test	2026-06-22T18:09:18.8994847Z packages/pi-role-model test: [31m+ irm https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.ps1 | iex[39m
+validate	Test	2026-06-22T18:09:18.8996095Z packages/pi-role-model test: [31m+ ```[39m
+validate	Test	2026-06-22T18:09:18.8996857Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.8998404Z packages/pi-role-model test: [31m+ The installer downloads the latest GitHub Release archive, installs it under[39m
+validate	Test	2026-06-22T18:09:18.9000361Z packages/pi-role-model test: [31m+ `%LOCALAPPDATA%\Programs\RoleModelRouter\<version>\<target>\`, and creates a `role-model-router.cmd`[39m
+validate	Test	2026-06-22T18:09:18.9001705Z packages/pi-role-model test: [31m+ launcher.[39m
+validate	Test	2026-06-22T18:09:18.9002490Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9003382Z packages/pi-role-model test: [31m+ ### Manual downloads[39m
+validate	Test	2026-06-22T18:09:18.9004219Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9005681Z packages/pi-role-model test: [31m+ If you do not want to use installer scripts, download the matching archive from GitHub Releases.[39m
+validate	Test	2026-06-22T18:09:18.9006899Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9007936Z packages/pi-role-model test: [31m+ | Platform | Archive | Launch |[39m
+validate	Test	2026-06-22T18:09:18.9009004Z packages/pi-role-model test: [31m+ | --- | --- | --- |[39m
+validate	Test	2026-06-22T18:09:18.9018628Z packages/pi-role-model test: [31m+ | Windows | `role-model-router-win32-x64.zip` | `Role-Model.bat` or `role-model-runtime.exe` |[39m
+validate	Test	2026-06-22T18:09:18.9020756Z packages/pi-role-model test: [31m+ | macOS x64 | `role-model-router-darwin-x64.tar.gz` | `role-model-runtime` |[39m
+validate	Test	2026-06-22T18:09:18.9022588Z packages/pi-role-model test: [31m+ | macOS arm64 | `role-model-router-darwin-arm64.tar.gz` | `role-model-runtime` |[39m
+validate	Test	2026-06-22T18:09:18.9024372Z packages/pi-role-model test: [31m+ | Linux x64 | `role-model-router-linux-x64.tar.gz` | `role-model-runtime` |[39m
+validate	Test	2026-06-22T18:09:18.9025621Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9026514Z packages/pi-role-model test: [31m+ ## Use with Pi[39m
+validate	Test	2026-06-22T18:09:18.9027599Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9029042Z packages/pi-role-model test: [31m+ The `pi-role-model` package connects Pi to an externally running Role-Model runtime.[39m
+validate	Test	2026-06-22T18:09:18.9030270Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9031596Z packages/pi-role-model test: [31m+ Start the Role-Model runtime first, then install the public Pi package:[39m
+validate	Test	2026-06-22T18:09:18.9032867Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9033699Z packages/pi-role-model test: [31m+ ```bash[39m
+validate	Test	2026-06-22T18:09:18.9034714Z packages/pi-role-model test: [31m+ pi install npm:@try-works/pi-role-model[39m
+validate	Test	2026-06-22T18:09:18.9035570Z packages/pi-role-model test: [31m+ ```[39m
+validate	Test	2026-06-22T18:09:18.9036293Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9037299Z packages/pi-role-model test: [31m+ Inside Pi, run:[39m
+validate	Test	2026-06-22T18:09:18.9038786Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9039654Z packages/pi-role-model test: [31m+ ```text[39m
+validate	Test	2026-06-22T18:09:18.9040507Z packages/pi-role-model test: [31m+ /role-model setup[39m
+validate	Test	2026-06-22T18:09:18.9041477Z packages/pi-role-model test: [31m+ /role-model doctor[39m
+validate	Test	2026-06-22T18:09:18.9042921Z packages/pi-role-model test: [31m+ /role-model alias list[39m
+validate	Test	2026-06-22T18:09:18.9044352Z packages/pi-role-model test: [31m+ /role-model alias use <alias>[39m
+validate	Test	2026-06-22T18:09:18.9045304Z packages/pi-role-model test: [31m+ ```[39m
+validate	Test	2026-06-22T18:09:18.9046070Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9047720Z packages/pi-role-model test: [31m+ By default the package connects to `http://127.0.0.1:3456` and registers Role-Model as the[39m
+validate	Test	2026-06-22T18:09:18.9049705Z packages/pi-role-model test: [31m+ `role-model` provider using `/api/role-model/downstream/openai`. For endpoint overrides,[39m
+validate	Test	2026-06-22T18:09:18.9051694Z packages/pi-role-model test: [31m+ remote-runtime safety, local development installs, and the full command reference, see[39m
+validate	Test	2026-06-22T18:09:18.9053557Z packages/pi-role-model test: [31m+ [`packages/pi-role-model/README.md`](packages/pi-role-model/README.md).[39m
+validate	Test	2026-06-22T18:09:18.9054755Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9055716Z packages/pi-role-model test: [31m+ ## Develop from source[39m
+validate	Test	2026-06-22T18:09:18.9056668Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9057963Z packages/pi-role-model test: [31m+ ### Prerequisites[39m
+validate	Test	2026-06-22T18:09:18.9058901Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9060158Z packages/pi-role-model test: [31m+ - **Node.js 24** (required for `node:sqlite` and SEA support)[39m
+validate	Test	2026-06-22T18:09:18.9061598Z packages/pi-role-model test: [31m+ - **pnpm 10.x** (via `corepack enable`)[39m
+validate	Test	2026-06-22T18:09:18.9063190Z packages/pi-role-model test: [31m+ - **Go 1.24+** (for llama-swap vendor binary and Windows launcher)[39m
+validate	Test	2026-06-22T18:09:18.9064402Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9065277Z packages/pi-role-model test: [31m+ ```bash[39m
+validate	Test	2026-06-22T18:09:18.9066263Z packages/pi-role-model test: [31m+ corepack enable[39m
+validate	Test	2026-06-22T18:09:18.9067539Z packages/pi-role-model test: [31m+ corepack pnpm install[39m
+validate	Test	2026-06-22T18:09:18.9068477Z packages/pi-role-model test: [31m+ ```[39m
+validate	Test	2026-06-22T18:09:18.9069239Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9070147Z packages/pi-role-model test: [31m+ ### Smoke test[39m
+validate	Test	2026-06-22T18:09:18.9070955Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9071767Z packages/pi-role-model test: [31m+ ```bash[39m
+validate	Test	2026-06-22T18:09:18.9072758Z packages/pi-role-model test: [31m+ corepack pnpm run smoke[39m
+validate	Test	2026-06-22T18:09:18.9073677Z packages/pi-role-model test: [31m+ ```[39m
+validate	Test	2026-06-22T18:09:18.9074465Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9075908Z packages/pi-role-model test: [31m+ For a fuller walkthrough, see [`docs/public/quickstart.md`](docs/public/quickstart.md).[39m
+validate	Test	2026-06-22T18:09:18.9077326Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9078235Z packages/pi-role-model test: [31m+ ### Development build[39m
+validate	Test	2026-06-22T18:09:18.9079083Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9080302Z packages/pi-role-model test: [31m+ Run the bridge and UI in development mode (separate processes):[39m
+validate	Test	2026-06-22T18:09:18.9081449Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9082233Z packages/pi-role-model test: [31m+ ```bash[39m
+validate	Test	2026-06-22T18:09:18.9083148Z packages/pi-role-model test: [31m+ # Terminal 1: bridge server[39m
+validate	Test	2026-06-22T18:09:18.9084372Z packages/pi-role-model test: [31m+ cd role-model-router/apps/runtime-host-bridge[39m
+validate	Test	2026-06-22T18:09:18.9085816Z packages/pi-role-model test: [31m+ corepack pnpm exec tsx scripts/start-for-qa.ts[39m
+validate	Test	2026-06-22T18:09:18.9086857Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9088077Z packages/pi-role-model test: [31m+ # Terminal 2: UI dev server[39m
+validate	Test	2026-06-22T18:09:18.9089269Z packages/pi-role-model test: [31m+ cd role-model-router/apps/runtime-ui[39m
+validate	Test	2026-06-22T18:09:18.9091953Z packages/pi-role-model test: [31m+ corepack pnpm exec react-router dev --port 5173 --host 127.0.0.1[39m
+validate	Test	2026-06-22T18:09:18.9093631Z packages/pi-role-model test: [31m+ ```[39m
+validate	Test	2026-06-22T18:09:18.9094433Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9095878Z packages/pi-role-model test: [31m+ Then open `http://127.0.0.1:5173` in your browser.[39m
+validate	Test	2026-06-22T18:09:18.9097180Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9098237Z packages/pi-role-model test: [31m+ ### Production build (all platforms)[39m
+validate	Test	2026-06-22T18:09:18.9099172Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9100215Z packages/pi-role-model test: [31m+ Build the UI and package the SEA runtime:[39m
+validate	Test	2026-06-22T18:09:18.9101163Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9101946Z packages/pi-role-model test: [31m+ ```bash[39m
+validate	Test	2026-06-22T18:09:18.9102895Z packages/pi-role-model test: [31m+ # Build UI static files[39m
+validate	Test	2026-06-22T18:09:18.9104233Z packages/pi-role-model test: [31m+ corepack pnpm --filter @role-model-router/runtime-ui run build[39m
+validate	Test	2026-06-22T18:09:18.9105317Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9106362Z packages/pi-role-model test: [31m+ # Package the bridge as a single executable[39m
+validate	Test	2026-06-22T18:09:18.9107745Z packages/pi-role-model test: [31m+ corepack pnpm run runtime:package-sea[39m
+validate	Test	2026-06-22T18:09:18.9108712Z packages/pi-role-model test: [31m+ ```[39m
+validate	Test	2026-06-22T18:09:18.9109458Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9110793Z packages/pi-role-model test: [31m+ Output: `role-model-router/dist/release/<platform-arch>/role-model-runtime`[39m
+validate	Test	2026-06-22T18:09:18.9111940Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9112882Z packages/pi-role-model test: [31m+ ### Windows desktop launcher[39m
+validate	Test	2026-06-22T18:09:18.9113768Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9114975Z packages/pi-role-model test: [31m+ Build a complete Windows package with dedicated browser window:[39m
+validate	Test	2026-06-22T18:09:18.9116027Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9116825Z packages/pi-role-model test: [31m+ ```bash[39m
+validate	Test	2026-06-22T18:09:18.9117851Z packages/pi-role-model test: [31m+ # 1. Build UI[39m
+validate	Test	2026-06-22T18:09:18.9119120Z packages/pi-role-model test: [31m+ corepack pnpm --filter @role-model-router/runtime-ui run build[39m
+validate	Test	2026-06-22T18:09:18.9120185Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9121143Z packages/pi-role-model test: [31m+ # 2. Package bridge SEA runtime[39m
+validate	Test	2026-06-22T18:09:18.9122315Z packages/pi-role-model test: [31m+ corepack pnpm run runtime:package-sea[39m
+validate	Test	2026-06-22T18:09:18.9123251Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9124142Z packages/pi-role-model test: [31m+ # 3. Build Go launcher[39m
+validate	Test	2026-06-22T18:09:18.9125246Z packages/pi-role-model test: [31m+ cd role-model-router/apps/launcher[39m
+validate	Test	2026-06-22T18:09:18.9126705Z packages/pi-role-model test: [31m+ go build -o ../../dist/release/win32-x64/role-model-launcher.exe main.go[39m
+validate	Test	2026-06-22T18:09:18.9127974Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9128874Z packages/pi-role-model test: [31m+ # 4. Bundle UI files[39m
+validate	Test	2026-06-22T18:09:18.9130164Z packages/pi-role-model test: [31m+ cp -r ../runtime-ui/build/client ../../dist/release/win32-x64/[39m
+validate	Test	2026-06-22T18:09:18.9131221Z packages/pi-role-model test: [31m+ ```[39m
+validate	Test	2026-06-22T18:09:18.9131988Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9133505Z packages/pi-role-model test: [31m+ Then double-click `role-model-launcher.exe` in `dist/release/win32-x64/`. It will:[39m
+validate	Test	2026-06-22T18:09:18.9135052Z packages/pi-role-model test: [31m+ - Start the bridge server on port 3456[39m
+validate	Test	2026-06-22T18:09:18.9136396Z packages/pi-role-model test: [31m+ - Open Microsoft Edge in app mode (dedicated window)[39m
+validate	Test	2026-06-22T18:09:18.9138151Z packages/pi-role-model test: [31m+ - Serve the UI directly from the bridge (no separate dev server)[39m
+validate	Test	2026-06-22T18:09:18.9139312Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9140301Z packages/pi-role-model test: [31m+ ## Documentation[39m
+validate	Test	2026-06-22T18:09:18.9141479Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9142471Z packages/pi-role-model test: [31m+ | Read this | If you want |[39m
+validate	Test	2026-06-22T18:09:18.9143681Z packages/pi-role-model test: [31m+ | --- | --- |[39m
+validate	Test	2026-06-22T18:09:18.9145033Z packages/pi-role-model test: [31m+ | [`docs/public/README.md`](docs/public/README.md) | the docs hub |[39m
+validate	Test	2026-06-22T18:09:18.9146775Z packages/pi-role-model test: [31m+ | [`docs/public/introduction.md`](docs/public/introduction.md) | what role-model is and why it exists |[39m
+validate	Test	2026-06-22T18:09:18.9148946Z packages/pi-role-model test: [31m+ | [`docs/public/quickstart.md`](docs/public/quickstart.md) | a real end-to-end smoke run |[39m
+validate	Test	2026-06-22T18:09:18.9151144Z packages/pi-role-model test: [31m+ | [`docs/public/concepts/how-role-model-works.md`](docs/public/concepts/how-role-model-works.md) | the system flow |[39m
+validate	Test	2026-06-22T18:09:18.9153533Z packages/pi-role-model test: [31m+ | [`docs/public/concepts/protocol-overview.md`](docs/public/concepts/protocol-overview.md) | the protocol surface |[39m
+validate	Test	2026-06-22T18:09:18.9155903Z packages/pi-role-model test: [31m+ | [`docs/public/concepts/routing-overview.md`](docs/public/concepts/routing-overview.md) | how routing decisions happen |[39m
+validate	Test	2026-06-22T18:09:18.9158081Z packages/pi-role-model test: [31m+ | [`protocol/README.md`](protocol/README.md) | canonical schemas and fixtures |[39m
+validate	Test	2026-06-22T18:09:18.9160549Z packages/pi-role-model test: [31m+ | [`role-model-router/README.md`](role-model-router/README.md) | reference router packages and runtime apps |[39m
+validate	Test	2026-06-22T18:09:18.9162676Z packages/pi-role-model test: [31m+ | [`docs/protocol/routing-policy.md`](docs/protocol/routing-policy.md) | routing policy reference |[39m
+validate	Test	2026-06-22T18:09:18.9164539Z packages/pi-role-model test: [31m+ | [`docs/protocol/roles.md`](docs/protocol/roles.md) | role metadata reference |[39m
+validate	Test	2026-06-22T18:09:18.9166303Z packages/pi-role-model test: [31m+ | [`docs/protocol/tasks.md`](docs/protocol/tasks.md) | task metadata reference |[39m
+validate	Test	2026-06-22T18:09:18.9168898Z packages/pi-role-model test: [31m+ | [`docs/operations/02-ci-and-release-flow.md`](docs/operations/02-ci-and-release-flow.md) | CI, release automation, and workflow ownership |[39m
+validate	Test	2026-06-22T18:09:18.9170930Z packages/pi-role-model test: [31m+ | [`CHANGELOG.md`](CHANGELOG.md) | release history |[39m
+validate	Test	2026-06-22T18:09:18.9172019Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9172895Z packages/pi-role-model test: [31m+ ## Acknowledgements[39m
+validate	Test	2026-06-22T18:09:18.9173756Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9174941Z packages/pi-role-model test: [31m+ `role-model` builds on the work of several open-source projects:[39m
+validate	Test	2026-06-22T18:09:18.9176078Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9178620Z packages/pi-role-model test: [31m+ - [**llama-swap**](https://github.com/mostlygeek/llama-swap) - the vendored local model lifecycle manager that handles process supervision, request forwarding, and model swapping for local endpoints[39m
+validate	Test	2026-06-22T18:09:18.9182155Z packages/pi-role-model test: [31m+ - [**LiteLLM**](https://github.com/BerriAI/litellm) - the unified LLM API abstraction whose provider catalog, model metadata, and pricing data inform the routing-compatible provider inventory[39m
+validate	Test	2026-06-22T18:09:18.9184089Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9184968Z packages/pi-role-model test: [31m+ ## License[39m
+validate	Test	2026-06-22T18:09:18.9185876Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9187380Z packages/pi-role-model test: [31m+ This repository is licensed under `BUSL-1.1` with a project-specific[39m
+validate	Test	2026-06-22T18:09:18.9189143Z packages/pi-role-model test: [31m+ Additional Use Grant. Internal production use, evaluation, development,[39m
+validate	Test	2026-06-22T18:09:18.9190966Z packages/pi-role-model test: [31m+ modification, and non-production redistribution are permitted under the root[39m
+validate	Test	2026-06-22T18:09:18.9193334Z packages/pi-role-model test: [31m+ license. Hosted or managed third-party services, paid product embedding, and[39m
+validate	Test	2026-06-22T18:09:18.9195477Z packages/pi-role-model test: [31m+ third-party commercialization require a separate commercial license.[39m
+validate	Test	2026-06-22T18:09:18.9196696Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9198199Z packages/pi-role-model test: [31m+ See [LICENSE](LICENSE) for the full terms. Contributions require acceptance of[39m
+validate	Test	2026-06-22T18:09:18.9199836Z packages/pi-role-model test: [31m+ the [Contributor License Agreement](CLA.md) before they can be merged.[39m
+validate	Test	2026-06-22T18:09:18.9200998Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9202339Z packages/pi-role-model test: [31m+ Only individual contributions are accepted. Please do not submit work owned by[39m
+validate	Test	2026-06-22T18:09:18.9204181Z packages/pi-role-model test: [31m+ an employer, client, company, or other entity unless you personally have the[39m
+validate	Test	2026-06-22T18:09:18.9205703Z packages/pi-role-model test: [31m+ right to contribute it under this project's terms.[39m
+validate	Test	2026-06-22T18:09:18.9206740Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9208398Z packages/pi-role-model test: [31m+ Commits published before 2026-06-16 remain under the license that applied[39m
+validate	Test	2026-06-22T18:09:18.9210082Z packages/pi-role-model test: [31m+ when they were published, including the earlier `Apache-2.0` history.[39m
+validate	Test	2026-06-22T18:09:18.9211187Z packages/pi-role-model test: [31m+[39m
+validate	Test	2026-06-22T18:09:18.9212383Z packages/pi-role-model test: [36m [2m❯[22m test/docs-and-safety.test.ts:[2m35:20[22m[39m
+validate	Test	2026-06-22T18:09:18.9214165Z packages/pi-role-model test:     [90m 33| [39m    [34mexpect[39m(skill)[33m.[39m[34mtoContain[39m([32m"/role-model status"[39m)[33m;[39m
+validate	Test	2026-06-22T18:09:18.9216087Z packages/pi-role-model test:     [90m 34| [39m    [34mexpect[39m(skill)[33m.[39m[34mtoContain[39m([32m"/role-model alias use"[39m)[33m;[39m
+validate	Test	2026-06-22T18:09:18.9218277Z packages/pi-role-model test:     [90m 35| [39m    [34mexpect[39m(readme)[33m.[39m[34mtoContain[39m([32m"## Installation for Pi"[39m)[33m;[39m
+validate	Test	2026-06-22T18:09:18.9219809Z packages/pi-role-model test:     [90m   | [39m                   [31m^[39m
+validate	Test	2026-06-22T18:09:18.9221577Z packages/pi-role-model test:     [90m 36| [39m    [34mexpect[39m(readme)[33m.[39m[34mtoContain[39m([32m"ROLE_MODEL_ENDPOINT"[39m)[33m;[39m
+validate	Test	2026-06-22T18:09:18.9223520Z packages/pi-role-model test:     [90m 37| [39m    [34mexpect[39m(readme)[33m.[39m[34mtoContain[39m([32m"allowRemote"[39m)[33m;[39m
+validate	Test	2026-06-22T18:09:18.9225174Z packages/pi-role-model test: [31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+validate	Test	2026-06-22T18:09:18.9226759Z packages/pi-role-model test: [2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m7 passed[39m[22m[90m (8)[39m
+validate	Test	2026-06-22T18:09:18.9228822Z packages/pi-role-model test: [2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m29 passed[39m[22m[90m (30)[39m
+validate	Test	2026-06-22T18:09:18.9230188Z packages/pi-role-model test: [2m   Start at [22m 18:09:15
+validate	Test	2026-06-22T18:09:18.9231866Z packages/pi-role-model test: [2m   Duration [22m 3.11s[2m (transform 652ms, setup 0ms, collect 1.22s, tests 498ms, environment 2ms, prepare 1.99s)[22m
+validate	Test	2026-06-22T18:09:18.9307190Z packages/pi-role-model test: ::error file=/home/runner/work/role-model/role-model/packages/pi-role-model/test/docs-and-safety.test.ts,title=test/docs-and-safety.test.ts > Pi installation docs%2C skill%2C and safety guardrails > ships the role-model skill and README Installation for Pi section,line=35,column=20::AssertionError: expected '# role-model\n\n`role-model` is an op…' to contain '## Installation for Pi'%0A%0A- Expected%0A+ Received%0A%0A- ## Installation for Pi%0A+ # role-model%0A+%0A+ `role-model` is an open protocol for capability-aware AI routing, plus a reference router that implements%0A+ that protocol.%0A+%0A+ It gives a router a durable contract for describing **what a request needs**, **what an endpoint can do**,%0A+ **what policy allows**, and **why a final routing decision was made**.%0A+%0A+ ![role-model runtime overview](docs/public/images/runtime-overview.png)%0A+%0A+ ## What role-model does%0A+%0A+ Every AI workload eventually faces the same question: *which model should handle this request?* The answer%0A+ depends on task type, required capabilities, cost, latency, and whether the model is running locally or in%0A+ the cloud. `role-model` makes that decision explicit, explainable, and portable.%0A+%0A+ At a high level, `role-model` separates AI routing into a few stable pieces:%0A+%0A+ 1. **Requests** describe task type, required capabilities, modalities, tool needs, and constraints.%0A+ 2. **Endpoint identities and profiles** describe concrete routable endpoints rather than abstract model names.%0A+ 3. **Routing policy** applies hard denies, preferences, budgets, and tie-break rules.%0A+ 4. **Observability artifacts** record the decision, trace, usage, and observed performance.%0A+%0A+ The reference router supports **hybrid routing** across three deployment shapes:%0A+%0A+ - **Local / Local** - route between local models (e.g., llama-swap peers) based on role, task, and capability%0A+ - **Local / Cloud** - route between a local model and a cloud provider based on cost, latency, and task difficulty%0A+ - **Cloud / Cloud** - route between cloud providers (e.g., OpenAI, DeepSeek, Moonshot) based on capability and economics%0A+%0A+ This means a single runtime can serve a quick chat request from a fast local model, route a complex coding%0A+ task to a capable cloud model, and fall back to a cheaper cloud endpoint when the primary is degraded, all%0A+ under one explainable routing contract.%0A+%0A+ ## Install the runtime%0A+%0A+ For end users, prefer the packaged standalone runtime over a source build.%0A+%0A+ ### macOS and Linux%0A+%0A+ ```bash%0A+ curl -fsSL https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.sh | sh%0A+ ```%0A+%0A+ The installer downloads the latest GitHub Release archive, installs it under%0A+ `~/.local/share/role-model-router/<version>/<target>/`, and exposes a `role-model-router` launcher in%0A+ `~/.local/bin`.%0A+%0A+ ### Windows%0A+%0A+ ```powershell%0A+ irm https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.ps1 | iex%0A+ ```%0A+%0A+ The installer downloads the latest GitHub Release archive, installs it under%0A+ `%25LOCALAPPDATA%25\Programs\RoleModelRouter\<version>\<target>\`, and creates a `role-model-router.cmd`%0A+ launcher.%0A+%0A+ ### Manual downloads%0A+%0A+ If you do not want to use installer scripts, download the matching archive from GitHub Releases.%0A+%0A+ | Platform | Archive | Launch |%0A+ | --- | --- | --- |%0A+ | Windows | `role-model-router-win32-x64.zip` | `Role-Model.bat` or `role-model-runtime.exe` |%0A+ | macOS x64 | `role-model-router-darwin-x64.tar.gz` | `role-model-runtime` |%0A+ | macOS arm64 | `role-model-router-darwin-arm64.tar.gz` | `role-model-runtime` |%0A+ | Linux x64 | `role-model-router-linux-x64.tar.gz` | `role-model-runtime` |%0A+%0A+ ## Use with Pi%0A+%0A+ The `pi-role-model` package connects Pi to an externally running Role-Model runtime.%0A+%0A+ Start the Role-Model runtime first, then install the public Pi package:%0A+%0A+ ```bash%0A+ pi install npm:@try-works/pi-role-model%0A+ ```%0A+%0A+ Inside Pi, run:%0A+%0A+ ```text%0A+ /role-model setup%0A+ /role-model doctor%0A+ /role-model alias list%0A+ /role-model alias use <alias>%0A+ ```%0A+%0A+ By default the package connects to `http://127.0.0.1:3456` and registers Role-Model as the%0A+ `role-model` provider using `/api/role-model/downstream/openai`. For endpoint overrides,%0A+ remote-runtime safety, local development installs, and the full command reference, see%0A+ [`packages/pi-role-model/README.md`](packages/pi-role-model/README.md).%0A+%0A+ ## Develop from source%0A+%0A+ ### Prerequisites%0A+%0A+ - **Node.js 24** (required for `node:sqlite` and SEA support)%0A+ - **pnpm 10.x** (via `corepack enable`)%0A+ - **Go 1.24+** (for llama-swap vendor binary and Windows launcher)%0A+%0A+ ```bash%0A+ corepack enable%0A+ corepack pnpm install%0A+ ```%0A+%0A+ ### Smoke test%0A+%0A+ ```bash%0A+ corepack pnpm run smoke%0A+ ```%0A+%0A+ For a fuller walkthrough, see [`docs/public/quickstart.md`](docs/public/quickstart.md).%0A+%0A+ ### Development build%0A+%0A+ Run the bridge and UI in development mode (separate processes):%0A+%0A+ ```bash%0A+ # Terminal 1: bridge server%0A+ cd role-model-router/apps/runtime-host-bridge%0A+ corepack pnpm exec tsx scripts/start-for-qa.ts%0A+%0A+ # Terminal 2: UI dev server%0A+ cd role-model-router/apps/runtime-ui%0A+ corepack pnpm exec react-router dev --port 5173 --host 127.0.0.1%0A+ ```%0A+%0A+ Then open `http://127.0.0.1:5173` in your browser.%0A+%0A+ ### Production build (all platforms)%0A+%0A+ Build the UI and package the SEA runtime:%0A+%0A+ ```bash%0A+ # Build UI static files%0A+ corepack pnpm --filter @role-model-router/runtime-ui run build%0A+%0A+ # Package the bridge as a single executable%0A+ corepack pnpm run runtime:package-sea%0A+ ```%0A+%0A+ Output: `role-model-router/dist/release/<platform-arch>/role-model-runtime`%0A+%0A+ ### Windows desktop launcher%0A+%0A+ Build a complete Windows package with dedicated browser window:%0A+%0A+ ```bash%0A+ # 1. Build UI%0A+ corepack pnpm --filter @role-model-router/runtime-ui run build%0A+%0A+ # 2. Package bridge SEA runtime%0A+ corepack pnpm run runtime:package-sea%0A+%0A+ # 3. Build Go launcher%0A+ cd role-model-router/apps/launcher%0A+ go build -o ../../dist/release/win32-x64/role-model-launcher.exe main.go%0A+%0A+ # 4. Bundle UI files%0A+ cp -r ../runtime-ui/build/client ../../dist/release/win32-x64/%0A+ ```%0A+%0A+ Then double-click `role-model-launcher.exe` in `dist/release/win32-x64/`. It will:%0A+ - Start the bridge server on port 3456%0A+ - Open Microsoft Edge in app mode (dedicated window)%0A+ - Serve the UI directly from the bridge (no separate dev server)%0A+%0A+ ## Documentation%0A+%0A+ | Read this | If you want |%0A+ | --- | --- |%0A+ | [`docs/public/README.md`](docs/public/README.md) | the docs hub |%0A+ | [`docs/public/introduction.md`](docs/public/introduction.md) | what role-model is and why it exists |%0A+ | [`docs/public/quickstart.md`](docs/public/quickstart.md) | a real end-to-end smoke run |%0A+ | [`docs/public/concepts/how-role-model-works.md`](docs/public/concepts/how-role-model-works.md) | the system flow |%0A+ | [`docs/public/concepts/protocol-overview.md`](docs/public/concepts/protocol-overview.md) | the protocol surface |%0A+ | [`docs/public/concepts/routing-overview.md`](docs/public/concepts/routing-overview.md) | how routing decisions happen |%0A+ | [`protocol/README.md`](protocol/README.md) | canonical schemas and fixtures |%0A+ | [`role-model-router/README.md`](role-model-router/README.md) | reference router packages and runtime apps |%0A+ | [`docs/protocol/routing-policy.md`](docs/protocol/routing-policy.md) | routing policy reference |%0A+ | [`docs/protocol/roles.md`](docs/protocol/roles.md) | role metadata reference |%0A+ | [`docs/protocol/tasks.md`](docs/protocol/tasks.md) | task metadata reference |%0A+ | [`docs/operations/02-ci-and-release-flow.md`](docs/operations/02-ci-and-release-flow.md) | CI, release automation, and workflow ownership |%0A+ | [`CHANGELOG.md`](CHANGELOG.md) | release history |%0A+%0A+ ## Acknowledgements%0A+%0A+ `role-model` builds on the work of several open-source projects:%0A+%0A+ - [**llama-swap**](https://github.com/mostlygeek/llama-swap) - the vendored local model lifecycle manager that handles process supervision, request forwarding, and model swapping for local endpoints%0A+ - [**LiteLLM**](https://github.com/BerriAI/litellm) - the unified LLM API abstraction whose provider catalog, model metadata, and pricing data inform the routing-compatible provider inventory%0A+%0A+ ## License%0A+%0A+ This repository is licensed under `BUSL-1.1` with a project-specific%0A+ Additional Use Grant. Internal production use, evaluation, development,%0A+ modification, and non-production redistribution are permitted under the root%0A+ license. Hosted or managed third-party services, paid product embedding, and%0A+ third-party commercialization require a separate commercial license.%0A+%0A+ See [LICENSE](LICENSE) for the full terms. Contributions require acceptance of%0A+ the [Contributor License Agreement](CLA.md) before they can be merged.%0A+%0A+ Only individual contributions are accepted. Please do not submit work owned by%0A+ an employer, client, company, or other entity unless you personally have the%0A+ right to contribute it under this project's terms.%0A+%0A+ Commits published before 2026-06-16 remain under the license that applied%0A+ when they were published, including the earlier `Apache-2.0` history.%0A+%0A%0A ❯ test/docs-and-safety.test.ts:35:20%0A%0A
+validate	Test	2026-06-22T18:09:18.9392769Z role-model-router/apps/runtime-ui test:  [32m✓[39m app/lib/view-models.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 213[2mms[22m[39m
+validate	Test	2026-06-22T18:09:19.2143646Z role-model-router/apps/runtime-ui test:  [32m✓[39m app/lib/runtime-api.test.ts [2m([22m[2m40 tests[22m[2m)[22m[32m 217[2mms[22m[39m
+validate	Test	2026-06-22T18:09:19.2973423Z packages/pi-role-model test: Failed
+validate	Test	2026-06-22T18:09:19.3203534Z /home/runner/work/role-model/role-model/packages/pi-role-model:
+validate	Test	2026-06-22T18:09:19.3271932Z  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @try-works/pi-role-model@0.1.1 test: `vitest run`
+validate	Test	2026-06-22T18:09:19.3298108Z Exit status 1
+validate	Test	2026-06-22T18:09:19.3323852Z .../packages/process-supervisor test$ vitest run
+validate	Test	2026-06-22T18:09:19.4144120Z  ELIFECYCLE  Test failed. See above for more details.
+validate	Test	2026-06-22T18:09:19.4384295Z ##[error]Process completed with exit code 1.
+validate	Post Run pnpm/action-setup@v4	﻿2026-06-22T18:09:19.4495806Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate	Post Run pnpm/action-setup@v4	2026-06-22T18:09:19.4497249Z Post job cleanup.
+validate	Post Run pnpm/action-setup@v4	2026-06-22T18:09:19.6109366Z Pruning is unnecessary.
+validate	Post Run actions/checkout@v4	﻿2026-06-22T18:09:19.6344196Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.6345896Z Post job cleanup.
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.7491996Z [command]/usr/bin/git version
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.7546530Z git version 2.54.0
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.7793938Z Temporarily overriding HOME='/home/runner/work/_temp/ce9a6912-0d3c-4e49-9056-d0cec015b489' before making global git config changes
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.7838426Z Adding repository directory to the temporary git global config as a safe directory
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.7878304Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.7998119Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.8096868Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.8155811Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.8188088Z http.https://github.com/.extraheader
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.8248454Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.8309193Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.8809116Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+validate	Post Run actions/checkout@v4	2026-06-22T18:09:19.8988912Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+validate	Complete job	﻿2026-06-22T18:09:19.9591484Z Cleaning up orphan processes
+validate	Complete job	2026-06-22T18:09:20.0036751Z Terminate orphan process: pid (4884) (node (vitest))
+validate	Complete job	2026-06-22T18:09:20.0124531Z Terminate orphan process: pid (4936) (node (vitest 1))
+validate	Complete job	2026-06-22T18:09:20.0167538Z Terminate orphan process: pid (4938) (node (vitest 2))
+validate	Complete job	2026-06-22T18:09:20.0208704Z Terminate orphan process: pid (4939) (node (vitest 3))
+validate	Complete job	2026-06-22T18:09:20.0220116Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, pnpm/action-setup@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

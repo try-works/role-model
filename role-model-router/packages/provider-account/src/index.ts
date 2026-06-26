@@ -404,10 +404,7 @@ export function validateProviderAccounts(
         ...(binding.disabledRoleIds ?? []),
       ];
 
-      if (
-        allowedRoleIds &&
-        referencedRoleIds.some((roleId) => !allowedRoleIds.has(roleId))
-      ) {
+      if (allowedRoleIds && referencedRoleIds.some((roleId) => !allowedRoleIds.has(roleId))) {
         diagnostics.push({
           providerAccountId: account.providerAccountId,
           severity: "error",

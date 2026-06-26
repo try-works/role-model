@@ -4685,30 +4685,28 @@ describe("runtime-host-bridge", () => {
 
   test("treats unknown stable role_model task metadata as advisory before routing", () => {
     const result = (
-      (
-        bridge as {
-          mapChatCompletionsRequest: (
-            value: EndpointRegistryResult,
-            body: Record<string, unknown>,
-            requestId: string,
-            modelAliases?: readonly unknown[],
-            difficultyContext?: unknown,
-            controllerContext?: unknown,
-            requestOptions?: unknown,
-            roleDefinitions?: readonly Record<string, unknown>[],
-            defaultRoutingMode?: unknown,
-            inventory?: unknown,
-            taskDefinitions?: readonly Record<string, unknown>[],
-          ) => {
-            routingRequest: {
-              taskType: string;
-              roleModelIntent?: {
-                task?: { id: string; hard?: boolean };
-              };
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly unknown[],
+          difficultyContext?: unknown,
+          controllerContext?: unknown,
+          requestOptions?: unknown,
+          roleDefinitions?: readonly Record<string, unknown>[],
+          defaultRoutingMode?: unknown,
+          inventory?: unknown,
+          taskDefinitions?: readonly Record<string, unknown>[],
+        ) => {
+          routingRequest: {
+            taskType: string;
+            roleModelIntent?: {
+              task?: { id: string; hard?: boolean };
             };
           };
-        }
-      )
+        };
+      }
     ).mapChatCompletionsRequest(
       registry,
       {
@@ -4771,27 +4769,25 @@ describe("runtime-host-bridge", () => {
 
   test("treats unknown stable role_model requested role metadata as advisory before routing", () => {
     const result = (
-      (
-        bridge as {
-          mapChatCompletionsRequest: (
-            value: EndpointRegistryResult,
-            body: Record<string, unknown>,
-            requestId: string,
-            modelAliases?: readonly unknown[],
-            difficultyContext?: unknown,
-            controllerContext?: unknown,
-            requestOptions?: unknown,
-            roleDefinitions?: readonly Record<string, unknown>[],
-          ) => {
-            routingRequest: {
-              requestedRoleId?: string;
-              roleModelIntent?: {
-                role?: { id: string; hard?: boolean };
-              };
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly unknown[],
+          difficultyContext?: unknown,
+          controllerContext?: unknown,
+          requestOptions?: unknown,
+          roleDefinitions?: readonly Record<string, unknown>[],
+        ) => {
+          routingRequest: {
+            requestedRoleId?: string;
+            roleModelIntent?: {
+              role?: { id: string; hard?: boolean };
             };
           };
-        }
-      )
+        };
+      }
     ).mapChatCompletionsRequest(
       registry,
       {

@@ -12,7 +12,9 @@ export function getLocalModelRolePickerState({
   readonly selectedRoleIds: readonly string[];
   readonly defaultAllRoles: boolean;
 }) {
-  const selectedRoleSet = new Set(defaultAllRoles && selectedRoleIds.length === 0 ? roleIds : selectedRoleIds);
+  const selectedRoleSet = new Set(
+    defaultAllRoles && selectedRoleIds.length === 0 ? roleIds : selectedRoleIds,
+  );
   const nextSelectedRoleIds = roleIds.filter((roleId) => selectedRoleSet.has(roleId));
   const allSelected = roleIds.length > 0 && nextSelectedRoleIds.length === roleIds.length;
   const noneSelected = nextSelectedRoleIds.length === 0;
@@ -58,16 +60,13 @@ export function LocalModelRolePicker({
     role.riskLevel === "high" ||
     ["security", "legal", "finance", "recruiter", "health"].includes(role.role_id);
 
-  const groupedRoles = roles.reduce(
-    (groups, role) => {
-      const groupId = role.primaryGroupId ?? "ungrouped";
-      const existing = groups.get(groupId) ?? [];
-      existing.push(role);
-      groups.set(groupId, existing);
-      return groups;
-    },
-    new Map<string, RuntimeRolePolicyRole[]>(),
-  );
+  const groupedRoles = roles.reduce((groups, role) => {
+    const groupId = role.primaryGroupId ?? "ungrouped";
+    const existing = groups.get(groupId) ?? [];
+    existing.push(role);
+    groups.set(groupId, existing);
+    return groups;
+  }, new Map<string, RuntimeRolePolicyRole[]>());
 
   const toggleRole = (roleId: string) => {
     const next = new Set(selected);

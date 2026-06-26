@@ -252,7 +252,15 @@ describe("canonical taxonomy catalog", () => {
   // ── R12.1: Deprecation schema fields ──
 
   test("deprecation schema fields are present on all entity kinds (R12.1)", () => {
-    const schemaRoot = path.resolve(process.cwd(), "..", "..", "..", "schemas", "role-model", "taxonomy");
+    const schemaRoot = path.resolve(
+      process.cwd(),
+      "..",
+      "..",
+      "..",
+      "schemas",
+      "role-model",
+      "taxonomy",
+    );
     const entitySchemas = [
       "role.schema.json",
       "task-type.schema.json",
@@ -264,9 +272,10 @@ describe("canonical taxonomy catalog", () => {
     ];
 
     for (const schemaFile of entitySchemas) {
-      const schema = JSON.parse(
-        readFileSync(path.join(schemaRoot, schemaFile), "utf8"),
-      ) as Record<string, unknown>;
+      const schema = JSON.parse(readFileSync(path.join(schemaRoot, schemaFile), "utf8")) as Record<
+        string,
+        unknown
+      >;
       const props = (schema.properties ?? {}) as Record<string, unknown>;
 
       // replacement: optional string

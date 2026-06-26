@@ -46,7 +46,14 @@ describe("taxonomy documentation", () => {
     expect(doc).toContain("### Tool Classes");
 
     // Verify key canonical IDs appear in generated tables
-    const requiredGroupIds = ["engineering", "product_design", "knowledge_research", "business", "communication", "governance_safety"];
+    const requiredGroupIds = [
+      "engineering",
+      "product_design",
+      "knowledge_research",
+      "business",
+      "communication",
+      "governance_safety",
+    ];
     for (const id of requiredGroupIds) {
       expect(doc.includes(`\`${id}\``), `docs should include group ${id}`).toBe(true);
     }

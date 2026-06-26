@@ -70,7 +70,9 @@ function extractClassificationContext(payload: Record<string, unknown>): Classif
           if (part.type === "file") {
             hasFiles = true;
             if (isRecord(part.file) && typeof part.file.filename === "string") {
-              const ext = part.file.filename.slice(part.file.filename.lastIndexOf(".")).toLowerCase();
+              const ext = part.file.filename
+                .slice(part.file.filename.lastIndexOf("."))
+                .toLowerCase();
               if (ext && ext.length > 1 && ext.length <= 10) fileExtensions.push(ext);
             }
           }
@@ -161,13 +163,15 @@ export async function injectRoleModelIntentIntoPayloadWithRuntimeTasks(
         if (runtimeRoleSummaries.length > 0) {
           const reader = createStagedCompactTaxonomyReader();
           const baseGroups = taxonomy?.groups ?? reader.loadGroups();
-          const candidateGroupIds = firstPass.candidateGroupIds.length > 0
-            ? firstPass.candidateGroupIds
-            : baseGroups.slice(0, 3).map((g) => g.id);
+          const candidateGroupIds =
+            firstPass.candidateGroupIds.length > 0
+              ? firstPass.candidateGroupIds
+              : baseGroups.slice(0, 3).map((g) => g.id);
           const additionalRoles = runtimeRoleSummaries
-            .filter((role) =>
-              candidateGroupIds.includes(role.primaryGroupId) ||
-              role.secondaryGroupIds.some((sg) => candidateGroupIds.includes(sg)),
+            .filter(
+              (role) =>
+                candidateGroupIds.includes(role.primaryGroupId) ||
+                role.secondaryGroupIds.some((sg) => candidateGroupIds.includes(sg)),
             )
             .filter((role) => !candidateRoleIds.includes(role.id))
             .map((role) => role.id);

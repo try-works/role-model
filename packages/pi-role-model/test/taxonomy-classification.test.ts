@@ -79,33 +79,40 @@ describe("compact taxonomy and progressive classification", () => {
       capabilities: ["reasoning.multi_step"],
       toolClasses: [],
     },
-  ])("classifies $prompt", ({ prompt, expectedRole, acceptedTasks, capabilities, toolClasses, lowConfidence }) => {
-    const classification = classifyWithProgressiveDisclosure({ prompt });
-    const emittedTasks = [
-      classification.role_model.intent.task_type,
-      ...classification.role_model.intent.alternatives.map((alternative) => alternative.task_type),
-    ];
-    const emittedCapabilities = classification.role_model.intent.preferred_capabilities;
+  ])(
+    "classifies $prompt",
+    ({ prompt, expectedRole, acceptedTasks, capabilities, toolClasses, lowConfidence }) => {
+      const classification = classifyWithProgressiveDisclosure({ prompt });
+      const emittedTasks = [
+        classification.role_model.intent.task_type,
+        ...classification.role_model.intent.alternatives.map(
+          (alternative) => alternative.task_type,
+        ),
+      ];
+      const emittedCapabilities = classification.role_model.intent.preferred_capabilities;
 
-    expect(classification.role_model.contract_version).toBe(1);
-    expect(classification.role_model.intent.role_hint_id).toBe(expectedRole);
-    expect(emittedTasks).toEqual(expect.arrayContaining(acceptedTasks));
-    expect(emittedCapabilities).toEqual(expect.arrayContaining(capabilities));
-    if (toolClasses.length > 0) {
-      expect(classification.role_model.intent.tool_classes).toEqual(
-        expect.arrayContaining(toolClasses),
+      expect(classification.role_model.contract_version).toBe(1);
+      expect(classification.role_model.intent.role_hint_id).toBe(expectedRole);
+      expect(emittedTasks).toEqual(expect.arrayContaining(acceptedTasks));
+      expect(emittedCapabilities).toEqual(expect.arrayContaining(capabilities));
+      if (toolClasses.length > 0) {
+        expect(classification.role_model.intent.tool_classes).toEqual(
+          expect.arrayContaining(toolClasses),
+        );
+      }
+      expect(classification.role_model.intent.taxonomy_version).toBe("1.0.0-alpha.1");
+      expect(classification.role_model.intent.classification_contract_version).toBe(
+        "role-model.classification.v1",
       );
-    }
-    expect(classification.role_model.intent.taxonomy_version).toBe("1.0.0-alpha.1");
-    expect(classification.role_model.intent.classification_contract_version).toBe(
-      "role-model.classification.v1",
-    );
-    expect(classification.role_model.intent.task_source).toBe("heuristic");
-    expect(classification.role_model.intent.task_confidence).toBeGreaterThan(lowConfidence ? 0.2 : 0.5);
-    expect(classification.role_model.intent.evidence.length).toBeGreaterThan(0);
-    expect(classification.loadedChunks[0]).toBe("groups");
-    expect(classification.hiddenModelCallUsed).toBe(false);
-  });
+      expect(classification.role_model.intent.task_source).toBe("heuristic");
+      expect(classification.role_model.intent.task_confidence).toBeGreaterThan(
+        lowConfidence ? 0.2 : 0.5,
+      );
+      expect(classification.role_model.intent.evidence.length).toBeGreaterThan(0);
+      expect(classification.loadedChunks[0]).toBe("groups");
+      expect(classification.hiddenModelCallUsed).toBe(false);
+    },
+  );
 
   test("emits the complete stable advisory classification contract", () => {
     const classification = classifyWithProgressiveDisclosure({
@@ -179,41 +186,140 @@ describe("compact taxonomy and progressive classification", () => {
   // ── F6: Expanded classifier coverage across all 28 role families ──
 
   test("classifies prompts across all 28 role families without hardcoded rules (F6)", () => {
-    const promptsByGroup: Record<string, readonly { readonly prompt: string; readonly expectedRole: string; readonly expectedGroup: string }[]> = {
+    const promptsByGroup: Record<
+      string,
+      readonly {
+        readonly prompt: string;
+        readonly expectedRole: string;
+        readonly expectedGroup: string;
+      }[]
+    > = {
       engineering: [
-        { prompt: "Debug this failing startup script and fix the port conflict.", expectedRole: "operator", expectedGroup: "engineering" },
-        { prompt: "Write E2E tests for the login flow using Playwright.", expectedRole: "tester", expectedGroup: "engineering" },
-        { prompt: "Review this SQL schema for normalization issues and indexing.", expectedRole: "data", expectedGroup: "engineering" },
-        { prompt: "Design the API contract for our new payments service.", expectedRole: "architect", expectedGroup: "engineering" },
+        {
+          prompt: "Debug this failing startup script and fix the port conflict.",
+          expectedRole: "operator",
+          expectedGroup: "engineering",
+        },
+        {
+          prompt: "Write E2E tests for the login flow using Playwright.",
+          expectedRole: "tester",
+          expectedGroup: "engineering",
+        },
+        {
+          prompt: "Review this SQL schema for normalization issues and indexing.",
+          expectedRole: "data",
+          expectedGroup: "engineering",
+        },
+        {
+          prompt: "Design the API contract for our new payments service.",
+          expectedRole: "architect",
+          expectedGroup: "engineering",
+        },
       ],
       product_design: [
-        { prompt: "Evaluate these three vendors and tell me which is the best fit.", expectedRole: "analyst", expectedGroup: "product_design" },
-        { prompt: "Break this goal into milestones with acceptance criteria.", expectedRole: "planner", expectedGroup: "product_design" },
-        { prompt: "Review this user interface for accessibility and visual hierarchy.", expectedRole: "designer", expectedGroup: "product_design" },
+        {
+          prompt: "Evaluate these three vendors and tell me which is the best fit.",
+          expectedRole: "analyst",
+          expectedGroup: "product_design",
+        },
+        {
+          prompt: "Break this goal into milestones with acceptance criteria.",
+          expectedRole: "planner",
+          expectedGroup: "product_design",
+        },
+        {
+          prompt: "Review this user interface for accessibility and visual hierarchy.",
+          expectedRole: "designer",
+          expectedGroup: "product_design",
+        },
       ],
       knowledge_research: [
-        { prompt: "Design a science experiment to test this hypothesis with controls.", expectedRole: "scientist", expectedGroup: "knowledge_research" },
-        { prompt: "Solve this optimization problem and explain each step.", expectedRole: "mathematician", expectedGroup: "knowledge_research" },
-        { prompt: "Create a lesson plan for teaching Python to beginners.", expectedRole: "educator", expectedGroup: "knowledge_research" },
-        { prompt: "Organize these notes into a structured knowledge base.", expectedRole: "knowledge", expectedGroup: "knowledge_research" },
+        {
+          prompt: "Design a science experiment to test this hypothesis with controls.",
+          expectedRole: "scientist",
+          expectedGroup: "knowledge_research",
+        },
+        {
+          prompt: "Solve this optimization problem and explain each step.",
+          expectedRole: "mathematician",
+          expectedGroup: "knowledge_research",
+        },
+        {
+          prompt: "Create a lesson plan for teaching Python to beginners.",
+          expectedRole: "educator",
+          expectedGroup: "knowledge_research",
+        },
+        {
+          prompt: "Organize these notes into a structured knowledge base.",
+          expectedRole: "knowledge",
+          expectedGroup: "knowledge_research",
+        },
       ],
       business: [
-        { prompt: "Analyze our market position and recommend a GTM strategy.", expectedRole: "strategist", expectedGroup: "business" },
-        { prompt: "Write SEO-optimized landing page copy for our launch.", expectedRole: "marketer", expectedGroup: "business" },
-        { prompt: "Draft a cold outreach email for enterprise prospects.", expectedRole: "seller", expectedGroup: "business" },
-        { prompt: "Compare these vendor proposals and build a scorecard.", expectedRole: "procurement", expectedGroup: "business" },
-        { prompt: "Estimate the ROI of migrating to this new infrastructure.", expectedRole: "finance", expectedGroup: "business" },
+        {
+          prompt: "Analyze our market position and recommend a GTM strategy.",
+          expectedRole: "strategist",
+          expectedGroup: "business",
+        },
+        {
+          prompt: "Write SEO-optimized landing page copy for our launch.",
+          expectedRole: "marketer",
+          expectedGroup: "business",
+        },
+        {
+          prompt: "Draft a cold outreach email for enterprise prospects.",
+          expectedRole: "seller",
+          expectedGroup: "business",
+        },
+        {
+          prompt: "Compare these vendor proposals and build a scorecard.",
+          expectedRole: "procurement",
+          expectedGroup: "business",
+        },
+        {
+          prompt: "Estimate the ROI of migrating to this new infrastructure.",
+          expectedRole: "finance",
+          expectedGroup: "business",
+        },
       ],
       communication: [
-        { prompt: "Translate this technical document into Japanese.", expectedRole: "translator", expectedGroup: "communication" },
-        { prompt: "Brainstorm catchy brand names and taglines for our new launch.", expectedRole: "creative", expectedGroup: "communication" },
-        { prompt: "Prepare a meeting agenda and decision log for the quarterly review.", expectedRole: "coordinator", expectedGroup: "communication" },
-        { prompt: "Rewrite this article to match our new brand voice.", expectedRole: "writer", expectedGroup: "communication" },
+        {
+          prompt: "Translate this technical document into Japanese.",
+          expectedRole: "translator",
+          expectedGroup: "communication",
+        },
+        {
+          prompt: "Brainstorm catchy brand names and taglines for our new launch.",
+          expectedRole: "creative",
+          expectedGroup: "communication",
+        },
+        {
+          prompt: "Prepare a meeting agenda and decision log for the quarterly review.",
+          expectedRole: "coordinator",
+          expectedGroup: "communication",
+        },
+        {
+          prompt: "Rewrite this article to match our new brand voice.",
+          expectedRole: "writer",
+          expectedGroup: "communication",
+        },
       ],
       governance_safety: [
-        { prompt: "Review this privacy policy for GDPR compliance.", expectedRole: "legal", expectedGroup: "governance_safety" },
-        { prompt: "Write a job description for a senior platform engineer.", expectedRole: "recruiter", expectedGroup: "governance_safety" },
-        { prompt: "What are the general exercise recommendations for improving sleep?", expectedRole: "health", expectedGroup: "governance_safety" },
+        {
+          prompt: "Review this privacy policy for GDPR compliance.",
+          expectedRole: "legal",
+          expectedGroup: "governance_safety",
+        },
+        {
+          prompt: "Write a job description for a senior platform engineer.",
+          expectedRole: "recruiter",
+          expectedGroup: "governance_safety",
+        },
+        {
+          prompt: "What are the general exercise recommendations for improving sleep?",
+          expectedRole: "health",
+          expectedGroup: "governance_safety",
+        },
       ],
     };
 

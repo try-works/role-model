@@ -87,8 +87,7 @@ async function waitForStructuredRequest(
       clientRequestId?: string | null;
     }>;
     const recentRequest = recentRequests.find(
-      (entry) =>
-        entry.requestId === clientRequestId || entry.clientRequestId === clientRequestId,
+      (entry) => entry.requestId === clientRequestId || entry.clientRequestId === clientRequestId,
     );
     if (recentRequest) {
       return { request: recentRequest, count: recentRequests.length };

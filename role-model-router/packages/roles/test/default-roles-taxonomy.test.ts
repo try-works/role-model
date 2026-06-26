@@ -12,9 +12,9 @@ describe("default runtime roles", () => {
 
     for (const role of defaultRoles) {
       expect(role.task_types_supported.length, role.role_id).toBeGreaterThanOrEqual(10);
-      expect(role.task_types_supported.every((taskId) => taskId.startsWith(`${role.role_id}.`))).toBe(
-        true,
-      );
+      expect(
+        role.task_types_supported.every((taskId) => taskId.startsWith(`${role.role_id}.`)),
+      ).toBe(true);
     }
   });
 });
