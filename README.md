@@ -218,5 +218,3 @@ Only individual contributions are accepted. Please do not submit work owned by
 an employer, client, company, or other entity unless you personally have the
 right to contribute it under this project's terms.
 
-Commits published before 2026-06-16 remain under the license that applied
-when they were published, including the earlier `Apache-2.0` history.
