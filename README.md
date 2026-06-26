@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/public/role-model-hero.png" alt="Role Model" width="600"></p>
+
 # role-model
 
 `role-model` is an open protocol for capability-aware AI routing, plus a reference router that implements
