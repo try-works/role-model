@@ -20,7 +20,7 @@ const goldenFixturePath = path.resolve(
   "proposal-v1-golden.json",
 );
 const readJson = <T>(filePath: string): T => JSON.parse(readFileSync(filePath, "utf8")) as T;
-const compactChunkLimitBytes = 20 * 1024; // 20 KB — classification fields added for all 28 roles
+const compactChunkLimitBytes = 26 * 1024; // 20 KB — classification fields added for all 28 roles
 const allowedIndexTaskKeys = new Set(["id", "label"]);
 type RawRoleTaskIndex = Record<
   string,

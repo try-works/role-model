@@ -9,10 +9,10 @@
     "classificationGuide": "compact-classification-guide.json"
   },
   "contentHashes": {
-    "groups": "sha256:e2dcddebaceb1d15f112d3190c9f57a8c6a158f66729880265b4f41e5a1e9520",
-    "roleSummaries": "sha256:0e6d3e91330d36ee9745c6f4c5ff7679752419585ab3b9b8cdb06b37ad4bb526",
-    "roleTaskIndex": "sha256:9494c738c66fd5607e4b48df2c90c899c7e777ff5f23a75f78bd347ddaaa60fe",
-    "classificationGuide": "sha256:43262c11ec483b80284a4eeaa62f09ef9c0459e9fbf945776a4a7949ed520c1c"
+    "groups": "sha256:561819de4d98e8bd637668512a0e34d3b61d693ca8f437a6f9a4e86712637fbe",
+    "roleSummaries": "sha256:743a31281ee4b1f30f06159badf08a6cabeaf041d9e4c9b1e2a2332e8c11357b",
+    "roleTaskIndex": "sha256:b358c59ec13c0ec85d924760d45d870e03d6b3ec4704c96fd405bb06677f75d7",
+    "classificationGuide": "sha256:7c7ede534201e1f9e712dddf89c93abc0a6e8c0e4e2069a3b0f094739dce0986"
   },
   "runtimeContentHashes": {
     "groups": "sha256:3166564d260afced40bbab0088916e18a8e6b37c733b307a596ab4acc3ca3da9",
