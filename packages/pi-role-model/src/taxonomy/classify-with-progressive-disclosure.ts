@@ -211,64 +211,259 @@ function fallbackAlternatives(taxonomy: CompactTaxonomy): readonly {
 
 const groupKeywordSets: Record<string, readonly string[]> = {
   engineering: [
-    "code", "implement", "bug", "fix", "patch", "diff", "security", "schema",
-    "migration", "api", "runtime", "test", "deploy", "debug", "refactor",
-    "database", "sql", "query", "infrastructure", "server", "compile",
-    "build", "pipeline", "ci", "cd", "container", "kubernetes", "docker",
-    "endpoint", "service", "crash", "failure", "startup", "port",
-    "install", "configure", "package", "dependency", "vulnerability",
-    "threat", "auth", "permission", "role", "access", "incident",
-    "script", "module", "library", "framework", "version", "upgrade",
-    "unit test", "integration test", "e2e", "performance test",
+    "code",
+    "implement",
+    "bug",
+    "fix",
+    "patch",
+    "diff",
+    "security",
+    "schema",
+    "migration",
+    "api",
+    "runtime",
+    "test",
+    "deploy",
+    "debug",
+    "refactor",
+    "database",
+    "sql",
+    "query",
+    "infrastructure",
+    "server",
+    "compile",
+    "build",
+    "pipeline",
+    "ci",
+    "cd",
+    "container",
+    "kubernetes",
+    "docker",
+    "endpoint",
+    "service",
+    "crash",
+    "failure",
+    "startup",
+    "port",
+    "install",
+    "configure",
+    "package",
+    "dependency",
+    "vulnerability",
+    "threat",
+    "auth",
+    "permission",
+    "role",
+    "access",
+    "incident",
+    "script",
+    "module",
+    "library",
+    "framework",
+    "version",
+    "upgrade",
+    "unit test",
+    "integration test",
+    "e2e",
+    "performance test",
   ],
   product_design: [
-    "product", "requirements", "acceptance criteria", "workflow", "design",
-    "roadmap", "user story", "feature", "prioritize", "milestone",
-    "sprint", "backlog", "release plan", "rollout", "ui", "interface",
-    "visual", "layout", "wireframe", "prototype", "mockup",
-    "usability", "accessibility", "responsive", "interaction",
-    "compare options", "evaluate", "assess", "score", "rank",
-    "decision matrix", "tradeoff", "analysis", "metrics", "kpi",
-    "business plan", "strategy", "operating model", "okr",
+    "product",
+    "requirements",
+    "acceptance criteria",
+    "workflow",
+    "design",
+    "roadmap",
+    "user story",
+    "feature",
+    "prioritize",
+    "milestone",
+    "sprint",
+    "backlog",
+    "release plan",
+    "rollout",
+    "ui",
+    "interface",
+    "visual",
+    "layout",
+    "wireframe",
+    "prototype",
+    "mockup",
+    "usability",
+    "accessibility",
+    "responsive",
+    "interaction",
+    "compare options",
+    "evaluate",
+    "assess",
+    "score",
+    "rank",
+    "decision matrix",
+    "tradeoff",
+    "analysis",
+    "metrics",
+    "kpi",
+    "business plan",
+    "strategy",
+    "operating model",
+    "okr",
   ],
   knowledge_research: [
-    "research", "current", "public documentation", "cite", "compare", "sources",
-    "evidence", "literature", "paper", "study", "experiment",
-    "scientific", "hypothesis", "method", "peer review", "protocol",
-    "math", "solve", "calculate", "proof", "derive", "formula",
-    "statistics", "optimize", "model", "simulation",
-    "teach", "learn", "lesson", "curriculum", "quiz", "tutor",
-    "study", "educate", "concept", "explain in simple terms",
-    "organize notes", "knowledge base", "retrieve", "memory",
-    "summarize notes", "archive", "context brief",
+    "research",
+    "current",
+    "public documentation",
+    "cite",
+    "compare",
+    "sources",
+    "evidence",
+    "literature",
+    "paper",
+    "study",
+    "experiment",
+    "scientific",
+    "hypothesis",
+    "method",
+    "peer review",
+    "protocol",
+    "math",
+    "solve",
+    "calculate",
+    "proof",
+    "derive",
+    "formula",
+    "statistics",
+    "optimize",
+    "model",
+    "simulation",
+    "teach",
+    "learn",
+    "lesson",
+    "curriculum",
+    "quiz",
+    "tutor",
+    "study",
+    "educate",
+    "concept",
+    "explain in simple terms",
+    "organize notes",
+    "knowledge base",
+    "retrieve",
+    "memory",
+    "summarize notes",
+    "archive",
+    "context brief",
   ],
   business: [
-    "strategy", "market", "sales", "finance", "procurement", "vendor",
-    "cost", "budget", "pricing", "roi", "revenue", "forecast",
-    "positioning", "campaign", "seo", "ad copy", "marketing",
-    "audience", "email sequence", "landing page", "social media",
-    "outreach", "proposal", "enterprise", "discovery call",
-    "objection", "cold email", "sales pitch", "account plan",
-    "rfp", "purchase", "contract", "negotiation", "scorecard",
-    "competitive", "swot", "partnership",
+    "strategy",
+    "market",
+    "sales",
+    "finance",
+    "procurement",
+    "vendor",
+    "cost",
+    "budget",
+    "pricing",
+    "roi",
+    "revenue",
+    "forecast",
+    "positioning",
+    "campaign",
+    "seo",
+    "ad copy",
+    "marketing",
+    "audience",
+    "email sequence",
+    "landing page",
+    "social media",
+    "outreach",
+    "proposal",
+    "enterprise",
+    "discovery call",
+    "objection",
+    "cold email",
+    "sales pitch",
+    "account plan",
+    "rfp",
+    "purchase",
+    "contract",
+    "negotiation",
+    "scorecard",
+    "competitive",
+    "swot",
+    "partnership",
   ],
   communication: [
-    "write", "edit", "summarize", "documentation", "blog", "article",
-    "email", "release notes", "prose", "style", "tone", "voice",
-    "translate", "localize", "locale", "language", "multilingual",
-    "creative", "brainstorm", "name", "tagline", "script", "story",
-    "copywriting", "brand", "visual prompt", "social post",
-    "support", "customer", "ticket", "triage", "faq",
-    "meeting", "agenda", "schedule", "follow up", "coordinate",
-    "handoff", "status update", "reminder", "inbox",
+    "write",
+    "edit",
+    "summarize",
+    "documentation",
+    "blog",
+    "article",
+    "email",
+    "release notes",
+    "prose",
+    "style",
+    "tone",
+    "voice",
+    "translate",
+    "localize",
+    "locale",
+    "language",
+    "multilingual",
+    "creative",
+    "brainstorm",
+    "name",
+    "tagline",
+    "script",
+    "story",
+    "copywriting",
+    "brand",
+    "visual prompt",
+    "social post",
+    "support",
+    "customer",
+    "ticket",
+    "triage",
+    "faq",
+    "meeting",
+    "agenda",
+    "schedule",
+    "follow up",
+    "coordinate",
+    "handoff",
+    "status update",
+    "reminder",
+    "inbox",
   ],
   governance_safety: [
-    "legal", "compliance", "privacy", "health", "safety", "risk",
-    "policy", "license", "terms", "regulation", "gdpr",
-    "recruit", "hire", "job description", "interview", "candidate",
-    "offer", "pipeline", "sourcing", "scorecard",
-    "symptom", "medication", "wellness", "exercise", "nutrition",
-    "appointment", "care", "mental health",
+    "legal",
+    "compliance",
+    "privacy",
+    "health",
+    "safety",
+    "risk",
+    "policy",
+    "license",
+    "terms",
+    "regulation",
+    "gdpr",
+    "recruit",
+    "hire",
+    "job description",
+    "interview",
+    "candidate",
+    "offer",
+    "pipeline",
+    "sourcing",
+    "scorecard",
+    "symptom",
+    "medication",
+    "wellness",
+    "exercise",
+    "nutrition",
+    "appointment",
+    "care",
+    "mental health",
   ],
 };
 
@@ -313,7 +508,9 @@ function selectCandidateGroupIds(
   const scoredByKeywords = Object.entries(groupKeywordSets)
     .filter(([, keywords]) => keywords.length > 0)
     .map(([groupId, keywords]) => {
-      const hits = keywords.filter((kw) => promptWords.includes(kw) || prompt.toLowerCase().includes(kw.toLowerCase()));
+      const hits = keywords.filter(
+        (kw) => promptWords.includes(kw) || prompt.toLowerCase().includes(kw.toLowerCase()),
+      );
       return { groupId, score: hits.length };
     })
     .filter((entry) => entry.score > 0)
@@ -334,7 +531,11 @@ function selectCandidateGroupIds(
   }
 
   const matchedGroupIds = [
-    ...new Set([...matchedByRegex, ...scoredByKeywords.map((entry) => entry.groupId), ...contextBoosted]),
+    ...new Set([
+      ...matchedByRegex,
+      ...scoredByKeywords.map((entry) => entry.groupId),
+      ...contextBoosted,
+    ]),
   ].filter((groupId) => groups.some((group) => group.id === groupId));
 
   return matchedGroupIds.length > 0
@@ -389,7 +590,11 @@ function scoreRoleForPrompt(
     const knowledgeRoles = ["researcher", "knowledge", "scientist"];
     if (context.hasTools && engineeringRoles.includes(role.id)) score += 2;
     if (context.hasImages && productDesignRoles.includes(role.id)) score += 2;
-    if (context.hasFiles && (engineeringRoles.includes(role.id) || knowledgeRoles.includes(role.id))) score += 1;
+    if (
+      context.hasFiles &&
+      (engineeringRoles.includes(role.id) || knowledgeRoles.includes(role.id))
+    )
+      score += 1;
 
     // R9.1: Tool name → role hints
     const toolNameRoleHints: Record<string, readonly string[]> = {
@@ -411,7 +616,10 @@ function scoreRoleForPrompt(
     };
     for (const toolName of context.toolNames) {
       const hints = toolNameRoleHints[toolName];
-      if (hints?.includes(role.id)) { score += 1; break; }
+      if (hints?.includes(role.id)) {
+        score += 1;
+        break;
+      }
     }
 
     // R9.1: File extension → role hints
@@ -436,7 +644,10 @@ function scoreRoleForPrompt(
     };
     for (const ext of context.fileExtensions) {
       const hints = fileExtensionRoleHints[ext];
-      if (hints?.includes(role.id)) { score += 1; break; }
+      if (hints?.includes(role.id)) {
+        score += 1;
+        break;
+      }
     }
   }
 
@@ -475,36 +686,35 @@ function classifyByGroupAndRoleScoring(
     .map((role) => ({ role, score: scoreRoleForPrompt(role, prompt, context) }))
     .sort((a, b) => b.score - a.score);
 
-  const bestRole = scoredRoles[0]!.role;
-  const bestScore = scoredRoles[0]!.score;
-  const runnerUpScore = scoredRoles.length > 1 ? scoredRoles[1]!.score : 0;
+  const bestRole = scoredRoles[0]?.role;
+  const bestScore = scoredRoles[0]?.score;
+  const runnerUpScore = scoredRoles.length > 1 ? scoredRoles[1]?.score : 0;
   const scoreMargin = bestScore - runnerUpScore;
 
   const roleTasks = taxonomy.roleTaskChunks[bestRole.id] ?? [];
-  const bestTask = roleTasks.length > 0
-    ? (roleTasks
-        .map((task) => ({ task, score: scoreTaskForPrompt(task, prompt) }))
-        .filter((entry) => entry.score > 0)
-        .sort((a, b) => b.score - a.score)[0]?.task ?? roleTasks[0]!)
-    : undefined;
+  const bestTask =
+    roleTasks.length > 0
+      ? (roleTasks
+          .map((task) => ({ task, score: scoreTaskForPrompt(task, prompt) }))
+          .filter((entry) => entry.score > 0)
+          .sort((a, b) => b.score - a.score)[0]?.task ?? roleTasks[0])
+      : undefined;
 
   const taskType = bestTask?.id ?? `${bestRole.id}.general`;
-  const confidence = scoreMargin >= 4 ? 0.60 : scoreMargin >= 2 ? 0.50 : 0.38;
+  const confidence = scoreMargin >= 4 ? 0.6 : scoreMargin >= 2 ? 0.5 : 0.38;
 
-  const alternatives = scoredRoles
-    .slice(1, 4)
-    .map((entry) => {
-      const altTasks = taxonomy.roleTaskChunks[entry.role.id] ?? [];
-      const altTaskId = altTasks[0]?.id ?? `${entry.role.id}.general`;
-      return { role_hint_id: entry.role.id, task_type: altTaskId };
-    });
+  const alternatives = scoredRoles.slice(1, 4).map((entry) => {
+    const altTasks = taxonomy.roleTaskChunks[entry.role.id] ?? [];
+    const altTaskId = altTasks[0]?.id ?? `${entry.role.id}.general`;
+    return { role_hint_id: entry.role.id, task_type: altTaskId };
+  });
 
   const evidence = [
     `Group-first classification: matched groups [${candidateGroupIds.join(", ")}], scored ${candidateRoles.length} candidate roles.`,
     `Selected ${bestRole.id} (score ${bestScore}, margin ${scoreMargin}) from candidate groups.`,
     bestTask
       ? `Task guidance preferred ${bestTask.id}.`
-      : `No task matched prompt signals; using default task.`,
+      : "No task matched prompt signals; using default task.",
   ];
 
   return { roleId: bestRole.id, taskType, confidence, evidence, alternatives };
@@ -532,13 +742,17 @@ function buildTaxonomyFromStagedReader(
   // Regex rules serve as task/capability hints when they agree with the scored role.
   const useGroupScoring = true;
   const baseTaxonomy: CompactTaxonomy = {
-    manifest, groups, roleSummaries, roleTaskIndex, roleTaskChunks: {},
+    manifest,
+    groups,
+    roleSummaries,
+    roleTaskIndex,
+    roleTaskChunks: {},
   };
   const scored = classifyByGroupAndRoleScoring(prompt, baseTaxonomy, candidateGroupIds, context);
 
   // If regex rule strongly agrees with the scored role, prefer the rule's task type for precision.
   // If regex rule disagrees, still use group scoring but keep the regex rule as an alternative.
-  let roleId = scored.roleId;
+  const roleId = scored.roleId;
   if (match && match.roleId === roleId && roleIsInCandidateGroup(matchedRole, candidateGroupIds)) {
     // Regex rule confirms the scored role; keep the scored role (already set).
     // Task selection later will prefer the rule's taskType.
@@ -589,8 +803,17 @@ export function classifyWithProgressiveDisclosure(
   let groupResult: ReturnType<typeof classifyByGroupAndRoleScoring> | undefined;
 
   // Always use group-first scoring. Regex rules are task hints, not role selectors.
-  const candidateGroupIds = selectCandidateGroupIds(normalizedPrompt, taxonomy.groups, input.context);
-  groupResult = classifyByGroupAndRoleScoring(normalizedPrompt, taxonomy, candidateGroupIds, input.context);
+  const candidateGroupIds = selectCandidateGroupIds(
+    normalizedPrompt,
+    taxonomy.groups,
+    input.context,
+  );
+  groupResult = classifyByGroupAndRoleScoring(
+    normalizedPrompt,
+    taxonomy,
+    candidateGroupIds,
+    input.context,
+  );
   roleId = groupResult.roleId;
   requestedTaskType = groupResult.taskType;
   confidence = groupResult.confidence;

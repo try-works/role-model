@@ -1292,9 +1292,7 @@ function parseLiteLLMProviders(
           ...litellmParams,
           model: litellmModel,
         },
-        capabilities: readStringArray(
-          "capabilities" in entry ? entry.capabilities : undefined,
-        ),
+        capabilities: readStringArray("capabilities" in entry ? entry.capabilities : undefined),
         maxDifficulty: readDifficultyBucket(
           "max_difficulty" in entry ? entry.max_difficulty : undefined,
           `litellm_proxy.providers.${providerId}.model_list.${modelId}.max_difficulty`,

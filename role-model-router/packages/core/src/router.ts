@@ -429,7 +429,10 @@ function resolveQualityFreshness(
   };
 }
 
-export function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput): MetricEntry {
+export function getQualityMetric(
+  candidate: EndpointCandidate,
+  input: RouteRequestInput,
+): MetricEntry {
   if (typeof candidate.observed?.judge_score === "number") {
     const freshness = resolveQualityFreshness(input, candidate);
     const freshnessWeight = freshness.freshnessWeight;
@@ -1310,7 +1313,12 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
       buildTieBreak(
         leftCandidate,
         metricsByEndpoint.get(left.endpoint_id) ??
-          getCandidateMetricScores(leftCandidate, normalizedInput, policySnapshot, rolePolicyApplied),
+          getCandidateMetricScores(
+            leftCandidate,
+            normalizedInput,
+            policySnapshot,
+            rolePolicyApplied,
+          ),
       ),
       buildTieBreak(
         rightCandidate,

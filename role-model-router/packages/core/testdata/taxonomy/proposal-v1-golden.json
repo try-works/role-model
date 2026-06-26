@@ -16,12 +16,12 @@
       "intentPresets": "intent-presets.json"
     },
     "contentHashes": {
-      "groups": "sha256:3166564d260afced40bbab0088916e18a8e6b37c733b307a596ab4acc3ca3da9",
-      "roles": "sha256:ff1619325d0a1c3584715a2f025fd4536994c69c56dd0fe14b8799d58f799e15",
-      "taskTypes": "sha256:9e8492e30d3136b9a31473c89ec5e38ddb97c0238ba11900796d428cacaa29a1",
+      "groups": "sha256:dafd8ba0d20c79795dea157aa5484e7bdd81ca0999c67ad0c961d7d342c83c59",
+      "roles": "sha256:2f9caa873b8c3269f3fc9b76fe853534265c2cbf6986ef4dfa29847ca1076df5",
+      "taskTypes": "sha256:c4c9dfa1ac2d3a30efc4fe9c42d9433380fc29eec04a112ae91d0b58535a503e",
       "capabilities": "sha256:8318320ad8d755bd6ea0709adbafbc545f1526dce92e7389a74384998c66f68e",
       "modalities": "sha256:6de4f8ed64d14c567bbc725d29db1519b7a9e4462764114cfec48435685a9018",
-      "toolClasses": "sha256:7b1bcd382124d7a7c0cac2689caabb7bfcda6a8d27c45cbcdbae6e6eec28749f",
+      "toolClasses": "sha256:ff8962fe2cbdbc208cabf53599365bfe99d14958ba0ba10e7fb296041034ba2c",
       "intentPresets": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
     },
     "entryCounts": {

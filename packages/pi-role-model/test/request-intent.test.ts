@@ -53,18 +53,18 @@ describe("Role-Model provider request intent injection", () => {
       model: "gpt-4.1-mini",
       messages: [{ role: "user", content: "Implement a bug fix." }],
     };
-    expect(injectRoleModelIntentIntoPayload(nonRoleModelPayload, new Set(["default.decision-only"]))).toBe(
-      nonRoleModelPayload,
-    );
+    expect(
+      injectRoleModelIntentIntoPayload(nonRoleModelPayload, new Set(["default.decision-only"])),
+    ).toBe(nonRoleModelPayload);
 
     const explicitPayload = {
       model: "default.decision-only",
       role_model: { intent: { source: "explicit_user" } },
       messages: [{ role: "user", content: "Implement a bug fix." }],
     };
-    expect(injectRoleModelIntentIntoPayload(explicitPayload, new Set(["default.decision-only"]))).toBe(
-      explicitPayload,
-    );
+    expect(
+      injectRoleModelIntentIntoPayload(explicitPayload, new Set(["default.decision-only"])),
+    ).toBe(explicitPayload);
   });
 
   // ── F7: Context input extraction from payload (tools, images, files) ──
@@ -105,9 +105,7 @@ describe("Role-Model provider request intent injection", () => {
     const intent = (result as Record<string, unknown>).role_model as Record<string, unknown>;
     const innerIntent = intent.intent as Record<string, unknown>;
     // Image attachment should bias toward designer or vision capabilities
-    expect(innerIntent.preferred_capabilities).toEqual(
-      expect.arrayContaining(["vision.input"]),
-    );
+    expect(innerIntent.preferred_capabilities).toEqual(expect.arrayContaining(["vision.input"]));
   });
 
   // ── F8: Runtime override can redirect role families ──
@@ -192,13 +190,15 @@ describe("Role-Model provider request intent injection", () => {
   test("file attachment extensions bias classification (R9.1)", () => {
     const payload = {
       model: "role-model/mixed.local-remote",
-      messages: [{
-        role: "user",
-        content: [
-          { type: "text", text: "Review this for issues." },
-          { type: "file", file: { filename: "schema.sql" } },
-        ],
-      }],
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Review this for issues." },
+            { type: "file", file: { filename: "schema.sql" } },
+          ],
+        },
+      ],
     };
     const result = injectRoleModelIntentIntoPayload(payload, new Set(["mixed.local-remote"]));
     const intent = (result as Record<string, unknown>).role_model as Record<string, unknown>;
@@ -209,13 +209,15 @@ describe("Role-Model provider request intent injection", () => {
   test("context signals combined: tools + images produce additive bias (R9.1)", () => {
     const payload = {
       model: "role-model/mixed.local-remote",
-      messages: [{
-        role: "user",
-        content: [
-          { type: "text", text: "Check this." },
-          { type: "image_url", image_url: { url: "data:image/png;base64,..." } },
-        ],
-      }],
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Check this." },
+            { type: "image_url", image_url: { url: "data:image/png;base64,..." } },
+          ],
+        },
+      ],
       tools: [
         { type: "function", function: { name: "browser_navigate" } },
         { type: "function", function: { name: "browser_snapshot" } },

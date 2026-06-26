@@ -12,7 +12,9 @@ describe("provider model role assignment helpers", () => {
   });
 
   test("serializes all selected roles as explicit all assignment", () => {
-    expect(buildModelRoleBindings(["openai/gpt-4.1"], { "openai/gpt-4.1": allRoleIds }, allRoleIds)).toEqual([
+    expect(
+      buildModelRoleBindings(["openai/gpt-4.1"], { "openai/gpt-4.1": allRoleIds }, allRoleIds),
+    ).toEqual([
       {
         modelId: "openai/gpt-4.1",
         roleIds: [],
@@ -24,7 +26,9 @@ describe("provider model role assignment helpers", () => {
   });
 
   test("serializes explicit empty provider roles as include-empty assignment", () => {
-    expect(buildModelRoleBindings(["openai/gpt-4.1"], { "openai/gpt-4.1": [] }, allRoleIds)).toEqual([
+    expect(
+      buildModelRoleBindings(["openai/gpt-4.1"], { "openai/gpt-4.1": [] }, allRoleIds),
+    ).toEqual([
       {
         modelId: "openai/gpt-4.1",
         roleIds: [],

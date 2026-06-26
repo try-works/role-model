@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 
+import type { RuntimeAccount } from "../lib/runtime-api";
 import {
   buildModelRoleAssignmentForSelection,
   createAccountMutationPayload,
 } from "./control-models";
-import type { RuntimeAccount } from "../lib/runtime-api";
 
 const account = {
   providerAccountId: "openai.personal.primary",

@@ -2,8 +2,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
 
-import { getLocalModelRolePickerState, LocalModelRolePicker } from "./local-model-role-picker";
 import type { RuntimeRolePolicy } from "../lib/runtime-api";
+import { LocalModelRolePicker, getLocalModelRolePickerState } from "./local-model-role-picker";
 
 const rolePolicy = {
   roleDefinitions: [
@@ -89,7 +89,11 @@ describe("LocalModelRolePicker", () => {
         selectedRoleIds: [],
         defaultAllRoles: true,
       }),
-    ).toMatchObject({ selectedRoleIds: ["coder", "writer"], allSelected: true, noneSelected: false });
+    ).toMatchObject({
+      selectedRoleIds: ["coder", "writer"],
+      allSelected: true,
+      noneSelected: false,
+    });
 
     expect(
       getLocalModelRolePickerState({

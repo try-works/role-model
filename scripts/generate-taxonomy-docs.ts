@@ -89,31 +89,47 @@ function generate() {
   for (const g of groups.sort((a, b) => a.id.localeCompare(b.id))) {
     const primary = g.primaryRoleIds.join(", ");
     const secondary = g.secondaryRoleIds.join(", ") || "—";
-    lines.push(`| \`${g.id}\` | ${g.label} | ${escapeMd(g.description)} | ${primary} | ${secondary} |`);
+    lines.push(
+      `| \`${g.id}\` | ${g.label} | ${escapeMd(g.description)} | ${primary} | ${secondary} |`,
+    );
   }
   lines.push("");
 
   // ── Roles ──
   lines.push("### Roles");
   lines.push("");
-  lines.push("| ID | Label | Primary Group | Secondary Groups | Description | Typical Tasks | Classification |");
+  lines.push(
+    "| ID | Label | Primary Group | Secondary Groups | Description | Typical Tasks | Classification |",
+  );
   lines.push("| --- | --- | --- | --- | --- | --- | --- |");
   for (const r of roles.sort((a, b) => a.id.localeCompare(b.id))) {
     const secondary = r.secondaryGroupIds.join(", ") || "—";
-    const typical = (r.typicalTaskIds ?? []).slice(0, 3).map(t => `\`${t}\``).join(", ") || "—";
-    const classif = r.classification ? escapeMd(r.classification.summary).substring(0, 80) + "…" : "—";
-    lines.push(`| \`${r.id}\` | ${r.label} | \`${r.primaryGroupId}\` | ${secondary} | ${escapeMd(r.description)} | ${typical} | ${classif} |`);
+    const typical =
+      (r.typicalTaskIds ?? [])
+        .slice(0, 3)
+        .map((t) => `\`${t}\``)
+        .join(", ") || "—";
+    const classif = r.classification
+      ? `${escapeMd(r.classification.summary).substring(0, 80)}…`
+      : "—";
+    lines.push(
+      `| \`${r.id}\` | ${r.label} | \`${r.primaryGroupId}\` | ${secondary} | ${escapeMd(r.description)} | ${typical} | ${classif} |`,
+    );
   }
   lines.push("");
 
   // ── Task Types (compact — full details generated on demand) ──
   lines.push("### Task Types");
   lines.push("");
-  lines.push(`V1 ships with ${tasks.length} canonical task types across ${roles.length} role families. The table below shows a representative sample. Full task details including classifier guidance (use-when, do-not-use-when), compatible roles, required/preferred capabilities, modalities, and tool classes are available through the runtime taxonomy API at \`/api/role-model/taxonomy/task-types/{taskType}\`.`);
+  lines.push(
+    `V1 ships with ${tasks.length} canonical task types across ${roles.length} role families. The table below shows a representative sample. Full task details including classifier guidance (use-when, do-not-use-when), compatible roles, required/preferred capabilities, modalities, and tool classes are available through the runtime taxonomy API at \`/api/role-model/taxonomy/task-types/{taskType}\`.`,
+  );
   lines.push("");
-  lines.push("| Task Type ID | Label | Primary Role | Compatible Roles | Required Capabilities | Preferred Capabilities | Use When |");
+  lines.push(
+    "| Task Type ID | Label | Primary Role | Compatible Roles | Required Capabilities | Preferred Capabilities | Use When |",
+  );
   lines.push("| --- | --- | --- | --- | --- | --- | --- |");
-  
+
   // Show one task per role family as representative
   const sampledTasks = new Map<string, TaskType>();
   for (const t of tasks) {
@@ -124,10 +140,12 @@ function generate() {
   }
   for (const t of [...sampledTasks.values()].sort((a, b) => a.id.localeCompare(b.id))) {
     const compatible = t.compatibleRoles.join(", ");
-    const required = t.requiredCapabilities.map(c => `\`${c}\``).join(", ") || "—";
-    const preferred = t.preferredCapabilities.map(c => `\`${c}\``).join(", ") || "—";
+    const required = t.requiredCapabilities.map((c) => `\`${c}\``).join(", ") || "—";
+    const preferred = t.preferredCapabilities.map((c) => `\`${c}\``).join(", ") || "—";
     const useWhen = t.classifier?.useWhen ? escapeMd(t.classifier.useWhen).substring(0, 100) : "—";
-    lines.push(`| \`${t.id}\` | ${t.label} | \`${t.primaryRole}\` | ${compatible} | ${required} | ${preferred} | ${useWhen} |`);
+    lines.push(
+      `| \`${t.id}\` | ${t.label} | \`${t.primaryRole}\` | ${compatible} | ${required} | ${preferred} | ${useWhen} |`,
+    );
   }
   lines.push("");
 
@@ -176,15 +194,17 @@ function generate() {
   if (docContent.includes(startMarker) && docContent.includes(endMarker)) {
     const before = docContent.substring(0, docContent.indexOf(startMarker) + startMarker.length);
     const after = docContent.substring(docContent.indexOf(endMarker));
-    updated = before + "\n\n" + lines.join("\n") + "\n\n" + after;
+    updated = `${before}\n\n${lines.join("\n")}\n\n${after}`;
   } else {
     // First run: inject markers around the manually-maintained tables section
     // Find "### Groups" and the last "### Tool Classes" section end
-    updated = docContent + "\n\n" + startMarker + "\n" + lines.join("\n") + "\n" + endMarker + "\n";
+    updated = `${docContent}\n\n${startMarker}\n${lines.join("\n")}\n${endMarker}\n`;
   }
 
   writeFileSync(docsPath, updated);
-  console.log(`Generated taxonomy docs tables for ${groups.length} groups, ${roles.length} roles, ${tasks.length} task types, ${capabilities.length} capabilities, ${modalities.length} modalities, ${toolClasses.length} tool classes.`);
+  console.log(
+    `Generated taxonomy docs tables for ${groups.length} groups, ${roles.length} roles, ${tasks.length} task types, ${capabilities.length} capabilities, ${modalities.length} modalities, ${toolClasses.length} tool classes.`,
+  );
   console.log(`Updated: ${docsPath}`);
 }
 

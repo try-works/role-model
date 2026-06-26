@@ -329,7 +329,9 @@ export async function loadSchemas(): Promise<
   return [...(await loadProtocolSchemas()), ...(await loadTaxonomySchemas())];
 }
 
-async function loadProtocolSchemas(): Promise<Array<{ fileName: string; schema: CanonicalJsonSchema }>> {
+async function loadProtocolSchemas(): Promise<
+  Array<{ fileName: string; schema: CanonicalJsonSchema }>
+> {
   const names = (await readdir(schemaDir)).filter((name) => name.endsWith(".schema.json")).sort();
   return Promise.all(
     names.map(async (fileName) => {

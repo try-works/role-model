@@ -142,7 +142,8 @@ export function buildLlamaSwapRegistryRoleBindings(input: {
       continue;
     }
     const modelId = endpoint.identity.model_id;
-    const roleIds = input.roleIdsByModelId[modelId] ?? input.roleDefinitions.map((role) => role.role_id);
+    const roleIds =
+      input.roleIdsByModelId[modelId] ?? input.roleDefinitions.map((role) => role.role_id);
     const endpointCapabilities = [...endpoint.declared.capabilities];
     for (const roleId of roleIds) {
       const roleDefinition = roleDefinitionsById.get(roleId);

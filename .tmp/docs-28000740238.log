@@ -1,0 +1,859 @@
+Build docs site	Set up job	﻿2026-06-23T03:46:56.8531488Z Current runner version: '2.335.1'
+Build docs site	Set up job	2026-06-23T03:46:56.8557604Z ##[group]Runner Image Provisioner
+Build docs site	Set up job	2026-06-23T03:46:56.8558567Z Hosted Compute Agent
+Build docs site	Set up job	2026-06-23T03:46:56.8559177Z Version: 20260611.554
+Build docs site	Set up job	2026-06-23T03:46:56.8559891Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+Build docs site	Set up job	2026-06-23T03:46:56.8560887Z Build Date: 2026-06-11T21:40:46Z
+Build docs site	Set up job	2026-06-23T03:46:56.8561591Z Worker ID: {0d3740a9-95d8-4e51-b328-957b795d9d34}
+Build docs site	Set up job	2026-06-23T03:46:56.8562381Z Azure Region: westus
+Build docs site	Set up job	2026-06-23T03:46:56.8562963Z ##[endgroup]
+Build docs site	Set up job	2026-06-23T03:46:56.8564588Z ##[group]Operating System
+Build docs site	Set up job	2026-06-23T03:46:56.8565264Z Ubuntu
+Build docs site	Set up job	2026-06-23T03:46:56.8565793Z 24.04.4
+Build docs site	Set up job	2026-06-23T03:46:56.8566344Z LTS
+Build docs site	Set up job	2026-06-23T03:46:56.8566867Z ##[endgroup]
+Build docs site	Set up job	2026-06-23T03:46:56.8567445Z ##[group]Runner Image
+Build docs site	Set up job	2026-06-23T03:46:56.8568106Z Image: ubuntu-24.04
+Build docs site	Set up job	2026-06-23T03:46:56.8568678Z Version: 20260615.205.1
+Build docs site	Set up job	2026-06-23T03:46:56.8569776Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260615.205/images/ubuntu/Ubuntu2404-Readme.md
+Build docs site	Set up job	2026-06-23T03:46:56.8571785Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260615.205
+Build docs site	Set up job	2026-06-23T03:46:56.8572853Z ##[endgroup]
+Build docs site	Set up job	2026-06-23T03:46:56.8573949Z ##[group]GITHUB_TOKEN Permissions
+Build docs site	Set up job	2026-06-23T03:46:56.8576380Z Contents: read
+Build docs site	Set up job	2026-06-23T03:46:56.8577047Z Metadata: read
+Build docs site	Set up job	2026-06-23T03:46:56.8577686Z ##[endgroup]
+Build docs site	Set up job	2026-06-23T03:46:56.8579752Z Secret source: Actions
+Build docs site	Set up job	2026-06-23T03:46:56.8580816Z Prepare workflow directory
+Build docs site	Set up job	2026-06-23T03:46:56.8976907Z Prepare all required actions
+Build docs site	Set up job	2026-06-23T03:46:56.9015299Z Getting action download info
+Build docs site	Set up job	2026-06-23T03:46:57.2889287Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Build docs site	Set up job	2026-06-23T03:46:57.3662885Z Download action repository 'pnpm/action-setup@v4' (SHA:b906affcce14559ad1aafd4ab0e942779e9f58b1)
+Build docs site	Set up job	2026-06-23T03:46:57.8959755Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Build docs site	Set up job	2026-06-23T03:46:57.9774214Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+Build docs site	Set up job	2026-06-23T03:46:58.2210644Z Complete job name: Build docs site
+Build docs site	Checkout	﻿2026-06-23T03:46:58.3129439Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build docs site	Checkout	2026-06-23T03:46:58.3141189Z ##[group]Run actions/checkout@v4
+Build docs site	Checkout	2026-06-23T03:46:58.3142497Z with:
+Build docs site	Checkout	2026-06-23T03:46:58.3143387Z   repository: try-works/role-model
+Build docs site	Checkout	2026-06-23T03:46:58.3154942Z   token: ***
+Build docs site	Checkout	2026-06-23T03:46:58.3155830Z   ssh-strict: true
+Build docs site	Checkout	2026-06-23T03:46:58.3156713Z   ssh-user: git
+Build docs site	Checkout	2026-06-23T03:46:58.3157615Z   persist-credentials: true
+Build docs site	Checkout	2026-06-23T03:46:58.3158617Z   clean: true
+Build docs site	Checkout	2026-06-23T03:46:58.3159513Z   sparse-checkout-cone-mode: true
+Build docs site	Checkout	2026-06-23T03:46:58.3160764Z   fetch-depth: 1
+Build docs site	Checkout	2026-06-23T03:46:58.3161650Z   fetch-tags: false
+Build docs site	Checkout	2026-06-23T03:46:58.3162601Z   show-progress: true
+Build docs site	Checkout	2026-06-23T03:46:58.3163497Z   lfs: false
+Build docs site	Checkout	2026-06-23T03:46:58.3164325Z   submodules: false
+Build docs site	Checkout	2026-06-23T03:46:58.3165287Z   set-safe-directory: true
+Build docs site	Checkout	2026-06-23T03:46:58.3166545Z env:
+Build docs site	Checkout	2026-06-23T03:46:58.3167449Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+Build docs site	Checkout	2026-06-23T03:46:58.3168583Z ##[endgroup]
+Build docs site	Checkout	2026-06-23T03:46:58.4166035Z Syncing repository: try-works/role-model
+Build docs site	Checkout	2026-06-23T03:46:58.4169007Z ##[group]Getting Git version info
+Build docs site	Checkout	2026-06-23T03:46:58.4170706Z Working directory is '/home/runner/work/role-model/role-model'
+Build docs site	Checkout	2026-06-23T03:46:58.4172922Z [command]/usr/bin/git version
+Build docs site	Checkout	2026-06-23T03:46:58.4227029Z git version 2.54.0
+Build docs site	Checkout	2026-06-23T03:46:58.4251491Z ##[endgroup]
+Build docs site	Checkout	2026-06-23T03:46:58.4268007Z Temporarily overriding HOME='/home/runner/work/_temp/d022a67d-5ff2-4d80-a0af-21ec8dbc733b' before making global git config changes
+Build docs site	Checkout	2026-06-23T03:46:58.4273386Z Adding repository directory to the temporary git global config as a safe directory
+Build docs site	Checkout	2026-06-23T03:46:58.4277542Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+Build docs site	Checkout	2026-06-23T03:46:58.4323067Z Deleting the contents of '/home/runner/work/role-model/role-model'
+Build docs site	Checkout	2026-06-23T03:46:58.4327502Z ##[group]Initializing the repository
+Build docs site	Checkout	2026-06-23T03:46:58.4333031Z [command]/usr/bin/git init /home/runner/work/role-model/role-model
+Build docs site	Checkout	2026-06-23T03:46:58.4455879Z hint: Using 'master' as the name for the initial branch. This default branch name
+Build docs site	Checkout	2026-06-23T03:46:58.4458538Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Build docs site	Checkout	2026-06-23T03:46:58.4462789Z hint: to use in all of your new repositories, which will suppress this warning,
+Build docs site	Checkout	2026-06-23T03:46:58.4464924Z hint: call:
+Build docs site	Checkout	2026-06-23T03:46:58.4466016Z hint:
+Build docs site	Checkout	2026-06-23T03:46:58.4467284Z hint: 	git config --global init.defaultBranch <name>
+Build docs site	Checkout	2026-06-23T03:46:58.4468780Z hint:
+Build docs site	Checkout	2026-06-23T03:46:58.4470177Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Build docs site	Checkout	2026-06-23T03:46:58.4473915Z hint: 'development'. The just-created branch can be renamed via this command:
+Build docs site	Checkout	2026-06-23T03:46:58.4475637Z hint:
+Build docs site	Checkout	2026-06-23T03:46:58.4476499Z hint: 	git branch -m <name>
+Build docs site	Checkout	2026-06-23T03:46:58.4477528Z hint:
+Build docs site	Checkout	2026-06-23T03:46:58.4479017Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Build docs site	Checkout	2026-06-23T03:46:58.4481441Z Initialized empty Git repository in /home/runner/work/role-model/role-model/.git/
+Build docs site	Checkout	2026-06-23T03:46:58.4484828Z [command]/usr/bin/git remote add origin https://github.com/try-works/role-model
+Build docs site	Checkout	2026-06-23T03:46:58.4516886Z ##[endgroup]
+Build docs site	Checkout	2026-06-23T03:46:58.4518715Z ##[group]Disabling automatic garbage collection
+Build docs site	Checkout	2026-06-23T03:46:58.4521025Z [command]/usr/bin/git config --local gc.auto 0
+Build docs site	Checkout	2026-06-23T03:46:58.4548732Z ##[endgroup]
+Build docs site	Checkout	2026-06-23T03:46:58.4555462Z ##[group]Setting up auth
+Build docs site	Checkout	2026-06-23T03:46:58.4556947Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Build docs site	Checkout	2026-06-23T03:46:58.4590572Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Build docs site	Checkout	2026-06-23T03:46:58.4932771Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build docs site	Checkout	2026-06-23T03:46:58.4965202Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Build docs site	Checkout	2026-06-23T03:46:58.5184363Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build docs site	Checkout	2026-06-23T03:46:58.5215297Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Build docs site	Checkout	2026-06-23T03:46:58.5430515Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Build docs site	Checkout	2026-06-23T03:46:58.5464744Z ##[endgroup]
+Build docs site	Checkout	2026-06-23T03:46:58.5473476Z ##[group]Fetching the repository
+Build docs site	Checkout	2026-06-23T03:46:58.5476239Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +c4bf7c90f3f3b6b77a36248011d4b946d5ff5334:refs/remotes/origin/main
+Build docs site	Checkout	2026-06-23T03:47:00.4345739Z From https://github.com/try-works/role-model
+Build docs site	Checkout	2026-06-23T03:47:00.4346879Z  * [new ref]         c4bf7c90f3f3b6b77a36248011d4b946d5ff5334 -> origin/main
+Build docs site	Checkout	2026-06-23T03:47:00.4385586Z ##[endgroup]
+Build docs site	Checkout	2026-06-23T03:47:00.4386205Z ##[group]Determining the checkout info
+Build docs site	Checkout	2026-06-23T03:47:00.4389447Z ##[endgroup]
+Build docs site	Checkout	2026-06-23T03:47:00.4395154Z [command]/usr/bin/git sparse-checkout disable
+Build docs site	Checkout	2026-06-23T03:47:00.4440033Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Build docs site	Checkout	2026-06-23T03:47:00.4466947Z ##[group]Checking out the ref
+Build docs site	Checkout	2026-06-23T03:47:00.4470613Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Build docs site	Checkout	2026-06-23T03:47:00.8827532Z Switched to a new branch 'main'
+Build docs site	Checkout	2026-06-23T03:47:00.8832166Z branch 'main' set up to track 'origin/main'.
+Build docs site	Checkout	2026-06-23T03:47:00.8855355Z ##[endgroup]
+Build docs site	Checkout	2026-06-23T03:47:00.8906943Z [command]/usr/bin/git log -1 --format=%H
+Build docs site	Checkout	2026-06-23T03:47:00.8929751Z c4bf7c90f3f3b6b77a36248011d4b946d5ff5334
+Build docs site	Setup pnpm	﻿2026-06-23T03:47:00.9247541Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9249640Z ##[group]Run pnpm/action-setup@v4
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9249928Z with:
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9250122Z   version: 10.6.5
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9250531Z   dest: ~/setup-pnpm
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9250759Z   run_install: null
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9250962Z   cache: false
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9251185Z   cache_dependency_path: pnpm-lock.yaml
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9251494Z   package_json_file: package.json
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9251750Z   standalone: false
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9251947Z env:
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9252174Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+Build docs site	Setup pnpm	2026-06-23T03:47:00.9252444Z ##[endgroup]
+Build docs site	Setup pnpm	2026-06-23T03:47:01.0760977Z ##[group]Running self-installer...
+Build docs site	Setup pnpm	2026-06-23T03:47:01.4686929Z (node:2298) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+Build docs site	Setup pnpm	2026-06-23T03:47:01.4688824Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Build docs site	Setup pnpm	2026-06-23T03:47:01.6039859Z Progress: resolved 1, reused 0, downloaded 0, added 0
+Build docs site	Setup pnpm	2026-06-23T03:47:01.6135033Z Packages: +1
+Build docs site	Setup pnpm	2026-06-23T03:47:01.6136585Z +
+Build docs site	Setup pnpm	2026-06-23T03:47:02.0296526Z Progress: resolved 1, reused 0, downloaded 1, added 1, done
+Build docs site	Setup pnpm	2026-06-23T03:47:02.0586853Z 
+Build docs site	Setup pnpm	2026-06-23T03:47:02.0589519Z dependencies:
+Build docs site	Setup pnpm	2026-06-23T03:47:02.0590080Z + pnpm 10.6.5 (11.8.0 is available)
+Build docs site	Setup pnpm	2026-06-23T03:47:02.0591147Z 
+Build docs site	Setup pnpm	2026-06-23T03:47:02.0619355Z Done in 820ms
+Build docs site	Setup pnpm	2026-06-23T03:47:02.0847623Z ##[endgroup]
+Build docs site	Setup pnpm	2026-06-23T03:47:02.0848185Z Installation Completed!
+Build docs site	Setup Node.js	﻿2026-06-23T03:47:02.1023739Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1024995Z ##[group]Run actions/setup-node@v4
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1025247Z with:
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1025433Z   node-version: 24
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1025658Z   cache: pnpm
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1025851Z   always-auth: false
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1026061Z   check-latest: false
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1029232Z   token: ***
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1029417Z env:
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1029618Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1029955Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Build docs site	Setup Node.js	2026-06-23T03:47:02.1030475Z ##[endgroup]
+Build docs site	Setup Node.js	2026-06-23T03:47:02.2442157Z Found in cache @ /opt/hostedtoolcache/node/24.16.0/x64
+Build docs site	Setup Node.js	2026-06-23T03:47:02.2447740Z (node:2312) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Build docs site	Setup Node.js	2026-06-23T03:47:02.2449039Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Build docs site	Setup Node.js	2026-06-23T03:47:02.2451426Z ##[group]Environment details
+Build docs site	Setup Node.js	2026-06-23T03:47:02.6367679Z node: v24.16.0
+Build docs site	Setup Node.js	2026-06-23T03:47:02.6367992Z npm: 11.13.0
+Build docs site	Setup Node.js	2026-06-23T03:47:02.6368190Z yarn: 1.22.22
+Build docs site	Setup Node.js	2026-06-23T03:47:02.6368874Z ##[endgroup]
+Build docs site	Setup Node.js	2026-06-23T03:47:02.6394567Z [command]/home/runner/setup-pnpm/node_modules/.bin/pnpm store path --silent
+Build docs site	Setup Node.js	2026-06-23T03:47:03.0609563Z /home/runner/setup-pnpm/node_modules/.bin/store/v10
+Build docs site	Setup Node.js	2026-06-23T03:47:03.3409664Z Cache hit for: node-cache-Linux-x64-pnpm-559e44a1d7544cec8c7db9d5512baa71f579aa0fc7864b4a98b8958d2eadd7df
+Build docs site	Setup Node.js	2026-06-23T03:47:03.3541166Z (node:2312) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+Build docs site	Setup Node.js	2026-06-23T03:47:04.6265305Z Received 0 of 176472999 (0.0%), 0.0 MBs/sec
+Build docs site	Setup Node.js	2026-06-23T03:47:05.6267431Z Received 113246208 of 176472999 (64.2%), 54.0 MBs/sec
+Build docs site	Setup Node.js	2026-06-23T03:47:06.2508428Z Received 176472999 of 176472999 (100.0%), 64.1 MBs/sec
+Build docs site	Setup Node.js	2026-06-23T03:47:06.2510358Z Cache Size: ~168 MB (176472999 B)
+Build docs site	Setup Node.js	2026-06-23T03:47:06.2617448Z [command]/usr/bin/tar -xf /home/runner/work/_temp/05d14785-6383-43af-8ff1-e7ad9ce8a95a/cache.tzst -P -C /home/runner/work/role-model/role-model --use-compress-program unzstd
+Build docs site	Setup Node.js	2026-06-23T03:47:07.9591690Z Cache restored successfully
+Build docs site	Setup Node.js	2026-06-23T03:47:07.9677607Z Cache restored from key: node-cache-Linux-x64-pnpm-559e44a1d7544cec8c7db9d5512baa71f579aa0fc7864b4a98b8958d2eadd7df
+Build docs site	Print toolchain versions	﻿2026-06-23T03:47:07.9839696Z ##[group]Run node --version
+Build docs site	Print toolchain versions	2026-06-23T03:47:07.9840076Z [36;1mnode --version[0m
+Build docs site	Print toolchain versions	2026-06-23T03:47:07.9840713Z [36;1mpnpm --version[0m
+Build docs site	Print toolchain versions	2026-06-23T03:47:08.0028176Z shell: /usr/bin/bash -e {0}
+Build docs site	Print toolchain versions	2026-06-23T03:47:08.0028500Z env:
+Build docs site	Print toolchain versions	2026-06-23T03:47:08.0028778Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+Build docs site	Print toolchain versions	2026-06-23T03:47:08.0029165Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Build docs site	Print toolchain versions	2026-06-23T03:47:08.0029517Z ##[endgroup]
+Build docs site	Print toolchain versions	2026-06-23T03:47:08.0150700Z v24.16.0
+Build docs site	Print toolchain versions	2026-06-23T03:47:08.3038304Z 10.6.5
+Build docs site	Install dependencies	﻿2026-06-23T03:47:08.3150945Z ##[group]Run pnpm install --frozen-lockfile
+Build docs site	Install dependencies	2026-06-23T03:47:08.3151375Z [36;1mpnpm install --frozen-lockfile[0m
+Build docs site	Install dependencies	2026-06-23T03:47:08.3182928Z shell: /usr/bin/bash -e {0}
+Build docs site	Install dependencies	2026-06-23T03:47:08.3183199Z env:
+Build docs site	Install dependencies	2026-06-23T03:47:08.3183421Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+Build docs site	Install dependencies	2026-06-23T03:47:08.3183763Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Build docs site	Install dependencies	2026-06-23T03:47:08.3184069Z ##[endgroup]
+Build docs site	Install dependencies	2026-06-23T03:47:08.6655431Z Scope: all 44 workspace projects
+Build docs site	Install dependencies	2026-06-23T03:47:08.6750736Z  WARN  There are cyclic workspace dependencies: /home/runner/work/role-model/role-model/role-model-router/packages/adapter-execution, /home/runner/work/role-model/role-model/role-model-router/packages/provider-anthropic
+Build docs site	Install dependencies	2026-06-23T03:47:08.7240143Z Lockfile is up to date, resolution step is skipped
+Build docs site	Install dependencies	2026-06-23T03:47:08.8020724Z Progress: resolved 1, reused 0, downloaded 0, added 0
+Build docs site	Install dependencies	2026-06-23T03:47:08.8915763Z Packages: +565
+Build docs site	Install dependencies	2026-06-23T03:47:08.8916825Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Build docs site	Install dependencies	2026-06-23T03:47:09.8030997Z Progress: resolved 565, reused 559, downloaded 0, added 564
+Build docs site	Install dependencies	2026-06-23T03:47:09.8618787Z Progress: resolved 565, reused 559, downloaded 0, added 565, done
+Build docs site	Install dependencies	2026-06-23T03:47:10.3007605Z 
+Build docs site	Install dependencies	2026-06-23T03:47:10.3008276Z devDependencies:
+Build docs site	Install dependencies	2026-06-23T03:47:10.3008765Z + @biomejs/biome 1.9.4
+Build docs site	Install dependencies	2026-06-23T03:47:10.3009171Z + @types/node 22.19.17
+Build docs site	Install dependencies	2026-06-23T03:47:10.3009412Z + ajv 8.18.0
+Build docs site	Install dependencies	2026-06-23T03:47:10.3009700Z + ajv-formats 3.0.1
+Build docs site	Install dependencies	2026-06-23T03:47:10.3009937Z + commander 13.1.0
+Build docs site	Install dependencies	2026-06-23T03:47:10.3010166Z + esbuild 0.25.12
+Build docs site	Install dependencies	2026-06-23T03:47:10.3011244Z + json-schema-to-typescript 15.0.4
+Build docs site	Install dependencies	2026-06-23T03:47:10.3011739Z + postject 1.0.0-alpha.6
+Build docs site	Install dependencies	2026-06-23T03:47:10.3012132Z + tsx 4.21.0
+Build docs site	Install dependencies	2026-06-23T03:47:10.3012511Z + typescript 5.9.3
+Build docs site	Install dependencies	2026-06-23T03:47:10.3012865Z + vitest 3.2.4
+Build docs site	Install dependencies	2026-06-23T03:47:10.3013050Z 
+Build docs site	Install dependencies	2026-06-23T03:47:10.3016992Z ╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @biomejs/biome, esbuild, sharp, workerd.            ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+Build docs site	Install dependencies	2026-06-23T03:47:10.3019428Z 
+Build docs site	Install dependencies	2026-06-23T03:47:10.3459185Z Done in 1.9s using pnpm v10.6.5
+Build docs site	Build docs site	﻿2026-06-23T03:47:10.3740001Z ##[group]Run pnpm docs:build
+Build docs site	Build docs site	2026-06-23T03:47:10.3740862Z [36;1mpnpm docs:build[0m
+Build docs site	Build docs site	2026-06-23T03:47:10.3772264Z shell: /usr/bin/bash -e {0}
+Build docs site	Build docs site	2026-06-23T03:47:10.3772525Z env:
+Build docs site	Build docs site	2026-06-23T03:47:10.3772745Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+Build docs site	Build docs site	2026-06-23T03:47:10.3773290Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Build docs site	Build docs site	2026-06-23T03:47:10.3773607Z ##[endgroup]
+Build docs site	Build docs site	2026-06-23T03:47:10.6782408Z 
+Build docs site	Build docs site	2026-06-23T03:47:10.6783349Z > role-model@0.0.0 docs:build /home/runner/work/role-model/role-model
+Build docs site	Build docs site	2026-06-23T03:47:10.6784287Z > corepack pnpm --filter @role-model/docs-site build
+Build docs site	Build docs site	2026-06-23T03:47:10.6784719Z 
+Build docs site	Build docs site	2026-06-23T03:47:12.1542162Z 
+Build docs site	Build docs site	2026-06-23T03:47:12.1543523Z > @role-model/docs-site@ build /home/runner/work/role-model/role-model/apps/docs-site
+Build docs site	Build docs site	2026-06-23T03:47:12.1544823Z > react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs
+Build docs site	Build docs site	2026-06-23T03:47:12.1545479Z 
+Build docs site	Build docs site	2026-06-23T03:47:13.1451936Z [MDX] generated files in 2.3439019999999573ms
+Build docs site	Build docs site	2026-06-23T03:47:13.1999528Z [MDX] generated files in 1.3487569999999778ms
+Build docs site	Build docs site	2026-06-23T03:47:13.2483887Z [MDX] generated files in 1.0804319999999734ms
+Build docs site	Build docs site	2026-06-23T03:47:13.2498029Z [36mvite v8.0.10 [32mbuilding client environment for production...[36m[39m
+Build docs site	Build docs site	2026-06-23T03:47:13.2614211Z [MDX] generated files in 1.8921179999999822ms
+Build docs site	Build docs site	2026-06-23T03:47:13.2738751Z [2K
+Build docs site	Build docs site	2026-06-23T03:47:17.1338534Z transforming...✓ 2246 modules transformed.
+Build docs site	Build docs site	2026-06-23T03:47:17.2382321Z rendering chunks...
+Build docs site	Build docs site	2026-06-23T03:47:17.3721354Z computing gzip size...
+Build docs site	Build docs site	2026-06-23T03:47:17.3821705Z build/client/.vite/manifest.json                                       30.16 kB │ gzip:  3.24 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3822976Z build/client/assets/runtime-overview-WUpVyoOR.png                     218.07 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3824298Z build/client/assets/root-B7Fn2Ts0.css                                  80.28 kB │ gzip: 13.36 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3825647Z build/client/assets/full-ZUGm99_m.js                                    0.00 kB │ gzip:  0.02 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3826921Z build/client/assets/index-BeW4qblQ.js                                   0.00 kB │ gzip:  0.02 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3828215Z build/client/assets/mdx-BNRw8oVt.js                                     0.00 kB │ gzip:  0.02 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3829503Z build/client/assets/search-CSZo5aTn.js                                  0.00 kB │ gzip:  0.02 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3831070Z build/client/assets/remove-undefined-CTqT55E9-CEhwT_UK.js               0.20 kB │ gzip:  0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3832468Z build/client/assets/jsx-runtime-B37CQREX.js                             0.42 kB │ gzip:  0.29 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3833780Z build/client/assets/fetch-CZTZgNEB.js                                   0.44 kB │ gzip:  0.29 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3835053Z build/client/assets/chunk-bqFK08oC.js                                   0.69 kB │ gzip:  0.42 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3836316Z build/client/assets/algolia-_6BuK-IQ.js                                 0.77 kB │ gzip:  0.49 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3837606Z build/client/assets/search-DEDyBNxK.js                                  0.99 kB │ gzip:  0.53 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3838974Z build/client/assets/orama-cloud-legacy-CC2n-yU_.js                      1.11 kB │ gzip:  0.58 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3840537Z build/client/assets/search-default-hR82aom8.js                          1.15 kB │ gzip:  0.63 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3841907Z build/client/assets/orama-cloud-Dv5atMv7.js                             1.17 kB │ gzip:  0.60 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3843310Z build/client/assets/policy-and-observability-BhOZSXix.js                5.63 kB │ gzip:  1.31 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3844773Z build/client/assets/roles-tasks-and-capabilities-DCWoJk2E.js            6.39 kB │ gzip:  1.45 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3846161Z build/client/assets/overview-DL0sFI9Z.js                                6.65 kB │ gzip:  1.42 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3847534Z build/client/assets/endpoints-and-profiles-DZ-ej84O.js                  6.65 kB │ gzip:  1.44 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3848994Z build/client/assets/install-hAjN9fao.js                                 6.91 kB │ gzip:  1.81 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3851415Z build/client/assets/models-and-role-activation-DNpwZqhA.js              7.41 kB │ gzip:  1.64 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3853159Z build/client/assets/first-request-and-decision-QJ0LImHg.js              8.31 kB │ gzip:  1.69 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3854648Z build/client/assets/quickstart-CJdBEnmM.js                              8.37 kB │ gzip:  1.93 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3856034Z build/client/assets/protocol-lifecycle-fSMJKa20.js                      9.15 kB │ gzip:  2.05 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3857438Z build/client/assets/runtime-ui-tour-DPDck6k5.js                        10.09 kB │ gzip:  2.11 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3858844Z build/client/assets/provider-connections-scwawSjb.js                   10.64 kB │ gzip:  2.05 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3860450Z build/client/assets/run-full-benchmark-AWxdNziL.js                     11.24 kB │ gzip:  2.23 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3861853Z build/client/assets/mixedbread-uXJPCjNC.js                             11.95 kB │ gzip:  5.37 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3863283Z build/client/assets/first-launch-and-connect-models-DbeF7SMs.js        11.99 kB │ gzip:  2.63 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3864710Z build/client/assets/preload-helper-CzZtDwiq.js                         12.18 kB │ gzip:  4.43 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3866157Z build/client/assets/observe-and-telemetry-analytics-TXIMlRHD.js        12.39 kB │ gzip:  2.37 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3867563Z build/client/assets/overview-MFGZi6sz.js                               12.39 kB │ gzip:  2.35 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3868936Z build/client/assets/trace-and-usage-artifacts-BnQTaqCY.js              12.52 kB │ gzip:  2.17 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3870558Z build/client/assets/capability-taxonomy-cl3M1xIC.js                    12.65 kB │ gzip:  2.33 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3871953Z build/client/assets/protocol-r0dmstfX.js                               13.37 kB │ gzip:  2.43 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3873427Z build/client/assets/router-decision-artifact-BN1oozDE.js               13.37 kB │ gzip:  2.41 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3874911Z build/client/assets/declared-capability-profiles-CwCrm5Kf.js           13.60 kB │ gzip:  2.43 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3876399Z build/client/assets/downstream-openai-discovery-BEQKUr3r.js            14.07 kB │ gzip:  2.61 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3877919Z build/client/assets/routing-controls-and-decision-review-zEqKqJCQ.js   14.26 kB │ gzip:  2.63 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3879406Z build/client/assets/benchmarks-and-evaluation-DDBBiM4v.js              14.68 kB │ gzip:  2.70 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3881087Z build/client/assets/protocol-to-router-mapping-BBL6e6Zz.js             15.40 kB │ gzip:  2.79 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3882507Z build/client/assets/routing-policy-202Ihj8J.js                         15.60 kB │ gzip:  2.80 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3911040Z build/client/assets/how-routing-works-end-to-end-DklWJpyb.js           16.81 kB │ gzip:  3.13 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3912631Z build/client/assets/install-BD7LNwDd.js                                16.90 kB │ gzip:  3.23 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3914056Z build/client/assets/protocol-object-model-Db75M9Xb.js                  17.59 kB │ gzip:  3.09 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3915529Z build/client/assets/reason-codes-and-rejection-taxonomy-BDnVYHLC.js    18.10 kB │ gzip:  2.72 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3917033Z build/client/assets/canonical-schemas-reference-eTT_qeNw.js            18.29 kB │ gzip:  2.80 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3918464Z build/client/assets/routing-overview-3jk8I1v5.js                       18.40 kB │ gzip:  3.32 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3919866Z build/client/assets/how-role-model-works-vjffjlbq.js                   18.51 kB │ gzip:  3.33 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3921475Z build/client/assets/core-vocabulary-B7ObQJMj.js                        18.62 kB │ gzip:  3.17 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3922778Z build/client/assets/pi-DAPzT-JO.js                                     18.71 kB │ gzip:  3.44 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3924086Z build/client/assets/protocol-overview-DtxgGIRm.js                      19.08 kB │ gzip:  3.41 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3926000Z build/client/assets/observed-performance-profiles-oDcCFM5E.js          19.57 kB │ gzip:  3.26 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3927400Z build/client/assets/docs-DdcErlPH.js                                   21.38 kB │ gzip:  3.97 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3928937Z build/client/assets/endpoint-identity-DuG0EMPf.js                      22.26 kB │ gzip:  3.45 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3930587Z build/client/assets/fallbacks-failures-and-observability-itJcz6lf.js   24.19 kB │ gzip:  4.04 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3931986Z build/client/assets/root-BoGIFjNV.js                                   24.91 kB │ gzip:  8.39 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3933341Z build/client/assets/choose-routing-strategy-B92PTyf6.js                26.41 kB │ gzip:  4.25 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3934742Z build/client/assets/roles-and-tasks-BMD_pWls.js                        27.54 kB │ gzip:  4.19 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3936182Z build/client/assets/candidate-selection-and-eligibility-BFMGmbXY.js    29.07 kB │ gzip:  4.44 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3937632Z build/client/assets/introduction-B00Fl6xq.js                           29.46 kB │ gzip:  4.86 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3939038Z build/client/assets/scoring-tie-breaks-and-decisions-BXA7gR-4.js       30.07 kB │ gzip:  4.87 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3951089Z build/client/assets/routing-modes-locality-and-execution-DamcYx3e.js   39.32 kB │ gzip:  5.65 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3952824Z build/client/assets/strategy-modes-and-tradeoffs-MolmhfQb.js           48.70 kB │ gzip:  7.07 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3954425Z build/client/assets/es2015-B692ofsD.js                                 61.65 kB │ gzip: 21.10 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3955796Z build/client/assets/orama-static-j7_IV24U.js                           62.73 kB │ gzip: 21.59 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3957108Z build/client/assets/docs-TtVYfG92.js                                   64.22 kB │ gzip: 21.73 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3958354Z build/client/assets/dist-D-xxxXck.js                                   82.94 kB │ gzip: 27.42 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3959665Z build/client/assets/remark-CW-4A0sf.js                                 89.89 kB │ gzip: 25.74 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3961215Z build/client/assets/chunk-EVOBXE3Y-BVHgNXQf.js                        118.01 kB │ gzip: 38.59 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3962630Z build/client/assets/entry.client-Ci5FUk0_.js                          183.20 kB │ gzip: 58.03 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3963944Z build/client/assets/search-Ddm80bT9.js                                227.67 kB │ gzip: 70.51 kB
+Build docs site	Build docs site	2026-06-23T03:47:17.3964534Z 
+Build docs site	Build docs site	2026-06-23T03:47:17.3965536Z [33m[33m[PLUGIN_TIMINGS] Warning:[0m Your build spent significant time in plugins. Here is a breakdown:
+Build docs site	Build docs site	2026-06-23T03:47:17.3966489Z   - react-router:virtual-modules (40%)
+Build docs site	Build docs site	2026-06-23T03:47:17.3967068Z   - react-router:dot-server (31%)
+Build docs site	Build docs site	2026-06-23T03:47:17.3967627Z   - react-router:inject-hmr-runtime (10%)
+Build docs site	Build docs site	2026-06-23T03:47:17.3968116Z   - fumadocs-mdx (5%)
+Build docs site	Build docs site	2026-06-23T03:47:17.3968544Z   - react-router:hmr-runtime (4%)
+Build docs site	Build docs site	2026-06-23T03:47:17.3969652Z See https://rolldown.rs/options/checks#plugintimings for more details.
+Build docs site	Build docs site	2026-06-23T03:47:17.3972119Z [39m
+Build docs site	Build docs site	2026-06-23T03:47:17.3972623Z [32m✓ built in 4.13s[39m
+Build docs site	Build docs site	2026-06-23T03:47:17.4487393Z [MDX] generated files in 1.0701319999998304ms
+Build docs site	Build docs site	2026-06-23T03:47:17.4495532Z [36mvite v8.0.10 [32mbuilding ssr environment for production...[36m[39m
+Build docs site	Build docs site	2026-06-23T03:47:17.4607815Z [MDX] generated files in 1.0855209999999715ms
+Build docs site	Build docs site	2026-06-23T03:47:17.4690952Z [2K
+Build docs site	Build docs site	2026-06-23T03:47:18.6376399Z transforming...✓ 484 modules transformed.
+Build docs site	Build docs site	2026-06-23T03:47:18.6946772Z rendering chunks...
+Build docs site	Build docs site	2026-06-23T03:47:18.7521283Z 
+Build docs site	Build docs site	2026-06-23T03:47:18.7524571Z [32m✓[39m 2 assets cleaned from React Router server build.
+Build docs site	Build docs site	2026-06-23T03:47:18.7525618Z [2mbuild/client/assets/runtime-overview-WUpVyoOR.png[22m
+Build docs site	Build docs site	2026-06-23T03:47:18.7526655Z [2mbuild/server/assets/server-build-B7Fn2Ts0.css[22m
+Build docs site	Build docs site	2026-06-23T03:47:18.7527193Z 
+Build docs site	Build docs site	2026-06-23T03:47:19.0024535Z Prerender (data): / -> [1mbuild/client/_root.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.0704210Z Prerender (html): / -> [1mbuild/client/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.0744893Z Prerender (data): /api/search -> [1mbuild/client/api/search.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.0763878Z Prerender (resource): /api/search -> [1mbuild/client/api/search[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.0791546Z Prerender (data): /llms.txt -> [1mbuild/client/llms.txt.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.0803089Z Prerender (resource): /llms.txt -> [1mbuild/client/llms.txt[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.0993233Z Prerender (data): /llms-full.txt -> [1mbuild/client/llms-full.txt.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1014305Z Prerender (resource): /llms-full.txt -> [1mbuild/client/llms-full.txt[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1042979Z Prerender (data): /core-vocabulary -> [1mbuild/client/core-vocabulary.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1212246Z Prerender (html): /core-vocabulary -> [1mbuild/client/core-vocabulary/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1232028Z Prerender (data): /llms.mdx/docs/core-vocabulary/content.md -> [1mbuild/client/llms.mdx/docs/core-vocabulary/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1240956Z Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> [1mbuild/client/llms.mdx/docs/core-vocabulary/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1265182Z Prerender (data): / -> [1mbuild/client/_root.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1412018Z Prerender (html): / -> [1mbuild/client/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1428464Z Prerender (data): /llms.mdx/docs/content.md -> [1mbuild/client/llms.mdx/docs/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1437078Z Prerender (resource): /llms.mdx/docs/content.md -> [1mbuild/client/llms.mdx/docs/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1462657Z Prerender (data): /install -> [1mbuild/client/install.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1578145Z Prerender (html): /install -> [1mbuild/client/install/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1593593Z Prerender (data): /llms.mdx/docs/install/content.md -> [1mbuild/client/llms.mdx/docs/install/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1602593Z Prerender (resource): /llms.mdx/docs/install/content.md -> [1mbuild/client/llms.mdx/docs/install/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1627269Z Prerender (data): /introduction -> [1mbuild/client/introduction.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1751630Z Prerender (html): /introduction -> [1mbuild/client/introduction/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1764157Z Prerender (data): /llms.mdx/docs/introduction/content.md -> [1mbuild/client/llms.mdx/docs/introduction/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1773964Z Prerender (resource): /llms.mdx/docs/introduction/content.md -> [1mbuild/client/llms.mdx/docs/introduction/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1798361Z Prerender (data): /protocol-lifecycle -> [1mbuild/client/protocol-lifecycle.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1899670Z Prerender (html): /protocol-lifecycle -> [1mbuild/client/protocol-lifecycle/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1913097Z Prerender (data): /llms.mdx/docs/protocol-lifecycle/content.md -> [1mbuild/client/llms.mdx/docs/protocol-lifecycle/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1921325Z Prerender (resource): /llms.mdx/docs/protocol-lifecycle/content.md -> [1mbuild/client/llms.mdx/docs/protocol-lifecycle/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.1941943Z Prerender (data): /protocol-object-model -> [1mbuild/client/protocol-object-model.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2064081Z Prerender (html): /protocol-object-model -> [1mbuild/client/protocol-object-model/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2079117Z Prerender (data): /llms.mdx/docs/protocol-object-model/content.md -> [1mbuild/client/llms.mdx/docs/protocol-object-model/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2087803Z Prerender (resource): /llms.mdx/docs/protocol-object-model/content.md -> [1mbuild/client/llms.mdx/docs/protocol-object-model/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2109435Z Prerender (data): /quickstart -> [1mbuild/client/quickstart.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2199773Z Prerender (html): /quickstart -> [1mbuild/client/quickstart/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2212392Z Prerender (data): /llms.mdx/docs/quickstart/content.md -> [1mbuild/client/llms.mdx/docs/quickstart/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2222229Z Prerender (resource): /llms.mdx/docs/quickstart/content.md -> [1mbuild/client/llms.mdx/docs/quickstart/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2246488Z Prerender (data): /runtime/benchmarks-and-evaluation -> [1mbuild/client/runtime/benchmarks-and-evaluation.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2378700Z Prerender (html): /runtime/benchmarks-and-evaluation -> [1mbuild/client/runtime/benchmarks-and-evaluation/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2392201Z Prerender (data): /llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md -> [1mbuild/client/llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2400521Z Prerender (resource): /llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md -> [1mbuild/client/llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2438810Z Prerender (data): /runtime/models-and-role-activation -> [1mbuild/client/runtime/models-and-role-activation.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2548313Z Prerender (html): /runtime/models-and-role-activation -> [1mbuild/client/runtime/models-and-role-activation/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2562051Z Prerender (data): /llms.mdx/docs/runtime/models-and-role-activation/content.md -> [1mbuild/client/llms.mdx/docs/runtime/models-and-role-activation/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2570580Z Prerender (resource): /llms.mdx/docs/runtime/models-and-role-activation/content.md -> [1mbuild/client/llms.mdx/docs/runtime/models-and-role-activation/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2591877Z Prerender (data): /runtime/observe-and-telemetry-analytics -> [1mbuild/client/runtime/observe-and-telemetry-analytics.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2689372Z Prerender (html): /runtime/observe-and-telemetry-analytics -> [1mbuild/client/runtime/observe-and-telemetry-analytics/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2702637Z Prerender (data): /llms.mdx/docs/runtime/observe-and-telemetry-analytics/content.md -> [1mbuild/client/llms.mdx/docs/runtime/observe-and-telemetry-analytics/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2711097Z Prerender (resource): /llms.mdx/docs/runtime/observe-and-telemetry-analytics/content.md -> [1mbuild/client/llms.mdx/docs/runtime/observe-and-telemetry-analytics/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2802000Z Prerender (data): /runtime/provider-connections -> [1mbuild/client/runtime/provider-connections.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2900935Z Prerender (html): /runtime/provider-connections -> [1mbuild/client/runtime/provider-connections/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2914005Z Prerender (data): /llms.mdx/docs/runtime/provider-connections/content.md -> [1mbuild/client/llms.mdx/docs/runtime/provider-connections/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2922073Z Prerender (resource): /llms.mdx/docs/runtime/provider-connections/content.md -> [1mbuild/client/llms.mdx/docs/runtime/provider-connections/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.2942192Z Prerender (data): /runtime/routing-controls-and-decision-review -> [1mbuild/client/runtime/routing-controls-and-decision-review.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3033210Z Prerender (html): /runtime/routing-controls-and-decision-review -> [1mbuild/client/runtime/routing-controls-and-decision-review/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3047985Z Prerender (data): /llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md -> [1mbuild/client/llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3057341Z Prerender (resource): /llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md -> [1mbuild/client/llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3077295Z Prerender (data): /runtime/runtime-ui-tour -> [1mbuild/client/runtime/runtime-ui-tour.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3182537Z Prerender (html): /runtime/runtime-ui-tour -> [1mbuild/client/runtime/runtime-ui-tour/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3198247Z Prerender (data): /llms.mdx/docs/runtime/runtime-ui-tour/content.md -> [1mbuild/client/llms.mdx/docs/runtime/runtime-ui-tour/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3212333Z Prerender (resource): /llms.mdx/docs/runtime/runtime-ui-tour/content.md -> [1mbuild/client/llms.mdx/docs/runtime/runtime-ui-tour/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3292558Z Prerender (data): /router/candidate-selection-and-eligibility -> [1mbuild/client/router/candidate-selection-and-eligibility.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3397645Z Prerender (html): /router/candidate-selection-and-eligibility -> [1mbuild/client/router/candidate-selection-and-eligibility/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3410890Z Prerender (data): /llms.mdx/docs/router/candidate-selection-and-eligibility/content.md -> [1mbuild/client/llms.mdx/docs/router/candidate-selection-and-eligibility/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3420674Z Prerender (resource): /llms.mdx/docs/router/candidate-selection-and-eligibility/content.md -> [1mbuild/client/llms.mdx/docs/router/candidate-selection-and-eligibility/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3439815Z Prerender (data): /router/fallbacks-failures-and-observability -> [1mbuild/client/router/fallbacks-failures-and-observability.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3526300Z Prerender (html): /router/fallbacks-failures-and-observability -> [1mbuild/client/router/fallbacks-failures-and-observability/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3540709Z Prerender (data): /llms.mdx/docs/router/fallbacks-failures-and-observability/content.md -> [1mbuild/client/llms.mdx/docs/router/fallbacks-failures-and-observability/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3550174Z Prerender (resource): /llms.mdx/docs/router/fallbacks-failures-and-observability/content.md -> [1mbuild/client/llms.mdx/docs/router/fallbacks-failures-and-observability/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3573092Z Prerender (data): /router/how-routing-works-end-to-end -> [1mbuild/client/router/how-routing-works-end-to-end.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3652603Z Prerender (html): /router/how-routing-works-end-to-end -> [1mbuild/client/router/how-routing-works-end-to-end/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3664445Z Prerender (data): /llms.mdx/docs/router/how-routing-works-end-to-end/content.md -> [1mbuild/client/llms.mdx/docs/router/how-routing-works-end-to-end/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3671856Z Prerender (resource): /llms.mdx/docs/router/how-routing-works-end-to-end/content.md -> [1mbuild/client/llms.mdx/docs/router/how-routing-works-end-to-end/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3690523Z Prerender (data): /router/overview -> [1mbuild/client/router/overview.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3766292Z Prerender (html): /router/overview -> [1mbuild/client/router/overview/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3778890Z Prerender (data): /llms.mdx/docs/router/overview/content.md -> [1mbuild/client/llms.mdx/docs/router/overview/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3786077Z Prerender (resource): /llms.mdx/docs/router/overview/content.md -> [1mbuild/client/llms.mdx/docs/router/overview/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3804560Z Prerender (data): /router/protocol-to-router-mapping -> [1mbuild/client/router/protocol-to-router-mapping.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3881172Z Prerender (html): /router/protocol-to-router-mapping -> [1mbuild/client/router/protocol-to-router-mapping/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3892305Z Prerender (data): /llms.mdx/docs/router/protocol-to-router-mapping/content.md -> [1mbuild/client/llms.mdx/docs/router/protocol-to-router-mapping/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3899629Z Prerender (resource): /llms.mdx/docs/router/protocol-to-router-mapping/content.md -> [1mbuild/client/llms.mdx/docs/router/protocol-to-router-mapping/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.3917720Z Prerender (data): /router/routing-modes-locality-and-execution -> [1mbuild/client/router/routing-modes-locality-and-execution.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4003036Z Prerender (html): /router/routing-modes-locality-and-execution -> [1mbuild/client/router/routing-modes-locality-and-execution/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4017073Z Prerender (data): /llms.mdx/docs/router/routing-modes-locality-and-execution/content.md -> [1mbuild/client/llms.mdx/docs/router/routing-modes-locality-and-execution/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4025644Z Prerender (resource): /llms.mdx/docs/router/routing-modes-locality-and-execution/content.md -> [1mbuild/client/llms.mdx/docs/router/routing-modes-locality-and-execution/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4046770Z Prerender (data): /router/scoring-tie-breaks-and-decisions -> [1mbuild/client/router/scoring-tie-breaks-and-decisions.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4143645Z Prerender (html): /router/scoring-tie-breaks-and-decisions -> [1mbuild/client/router/scoring-tie-breaks-and-decisions/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4155688Z Prerender (data): /llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md -> [1mbuild/client/llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4164905Z Prerender (resource): /llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md -> [1mbuild/client/llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4182498Z Prerender (data): /router/strategy-modes-and-tradeoffs -> [1mbuild/client/router/strategy-modes-and-tradeoffs.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4268468Z Prerender (html): /router/strategy-modes-and-tradeoffs -> [1mbuild/client/router/strategy-modes-and-tradeoffs/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4295745Z Prerender (data): /llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md -> [1mbuild/client/llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4305580Z Prerender (resource): /llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md -> [1mbuild/client/llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4328881Z Prerender (data): /reference/canonical-schemas-reference -> [1mbuild/client/reference/canonical-schemas-reference.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4432046Z Prerender (html): /reference/canonical-schemas-reference -> [1mbuild/client/reference/canonical-schemas-reference/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4447938Z Prerender (data): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> [1mbuild/client/llms.mdx/docs/reference/canonical-schemas-reference/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4456215Z Prerender (resource): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> [1mbuild/client/llms.mdx/docs/reference/canonical-schemas-reference/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4479848Z Prerender (data): /reference/overview -> [1mbuild/client/reference/overview.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4567051Z Prerender (html): /reference/overview -> [1mbuild/client/reference/overview/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4581467Z Prerender (data): /llms.mdx/docs/reference/overview/content.md -> [1mbuild/client/llms.mdx/docs/reference/overview/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4589054Z Prerender (resource): /llms.mdx/docs/reference/overview/content.md -> [1mbuild/client/llms.mdx/docs/reference/overview/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4636963Z Prerender (data): /reference/reason-codes-and-rejection-taxonomy -> [1mbuild/client/reference/reason-codes-and-rejection-taxonomy.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4717539Z Prerender (html): /reference/reason-codes-and-rejection-taxonomy -> [1mbuild/client/reference/reason-codes-and-rejection-taxonomy/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4731332Z Prerender (data): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4740899Z Prerender (resource): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4761091Z Prerender (data): /protocol/capability-taxonomy -> [1mbuild/client/protocol/capability-taxonomy.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4833264Z Prerender (html): /protocol/capability-taxonomy -> [1mbuild/client/protocol/capability-taxonomy/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4845490Z Prerender (data): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/capability-taxonomy/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4852788Z Prerender (resource): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/capability-taxonomy/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4870480Z Prerender (data): /protocol/declared-capability-profiles -> [1mbuild/client/protocol/declared-capability-profiles.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4939525Z Prerender (html): /protocol/declared-capability-profiles -> [1mbuild/client/protocol/declared-capability-profiles/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4950693Z Prerender (data): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/declared-capability-profiles/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4957227Z Prerender (resource): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/declared-capability-profiles/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.4973494Z Prerender (data): /protocol/endpoint-identity -> [1mbuild/client/protocol/endpoint-identity.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5048092Z Prerender (html): /protocol/endpoint-identity -> [1mbuild/client/protocol/endpoint-identity/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5060127Z Prerender (data): /llms.mdx/docs/protocol/endpoint-identity/content.md -> [1mbuild/client/llms.mdx/docs/protocol/endpoint-identity/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5067596Z Prerender (resource): /llms.mdx/docs/protocol/endpoint-identity/content.md -> [1mbuild/client/llms.mdx/docs/protocol/endpoint-identity/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5085625Z Prerender (data): /protocol -> [1mbuild/client/protocol.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5157873Z Prerender (html): /protocol -> [1mbuild/client/protocol/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5169698Z Prerender (data): /llms.mdx/docs/protocol/content.md -> [1mbuild/client/llms.mdx/docs/protocol/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5178775Z Prerender (resource): /llms.mdx/docs/protocol/content.md -> [1mbuild/client/llms.mdx/docs/protocol/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5197315Z Prerender (data): /protocol/observed-performance-profiles -> [1mbuild/client/protocol/observed-performance-profiles.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5267645Z Prerender (html): /protocol/observed-performance-profiles -> [1mbuild/client/protocol/observed-performance-profiles/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5280780Z Prerender (data): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/observed-performance-profiles/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5288599Z Prerender (resource): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> [1mbuild/client/llms.mdx/docs/protocol/observed-performance-profiles/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5308815Z Prerender (data): /protocol/roles-and-tasks -> [1mbuild/client/protocol/roles-and-tasks.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5385546Z Prerender (html): /protocol/roles-and-tasks -> [1mbuild/client/protocol/roles-and-tasks/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5397703Z Prerender (data): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> [1mbuild/client/llms.mdx/docs/protocol/roles-and-tasks/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5406558Z Prerender (resource): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> [1mbuild/client/llms.mdx/docs/protocol/roles-and-tasks/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5424592Z Prerender (data): /protocol/router-decision-artifact -> [1mbuild/client/protocol/router-decision-artifact.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5498914Z Prerender (html): /protocol/router-decision-artifact -> [1mbuild/client/protocol/router-decision-artifact/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5511216Z Prerender (data): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> [1mbuild/client/llms.mdx/docs/protocol/router-decision-artifact/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5519192Z Prerender (resource): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> [1mbuild/client/llms.mdx/docs/protocol/router-decision-artifact/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5538349Z Prerender (data): /protocol/routing-policy -> [1mbuild/client/protocol/routing-policy.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5612946Z Prerender (html): /protocol/routing-policy -> [1mbuild/client/protocol/routing-policy/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5625239Z Prerender (data): /llms.mdx/docs/protocol/routing-policy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/routing-policy/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5634402Z Prerender (resource): /llms.mdx/docs/protocol/routing-policy/content.md -> [1mbuild/client/llms.mdx/docs/protocol/routing-policy/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5655441Z Prerender (data): /protocol/trace-and-usage-artifacts -> [1mbuild/client/protocol/trace-and-usage-artifacts.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5730451Z Prerender (html): /protocol/trace-and-usage-artifacts -> [1mbuild/client/protocol/trace-and-usage-artifacts/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5742904Z Prerender (data): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> [1mbuild/client/llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5751484Z Prerender (resource): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> [1mbuild/client/llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5771576Z Prerender (data): /integrations/downstream-openai-discovery -> [1mbuild/client/integrations/downstream-openai-discovery.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5845898Z Prerender (html): /integrations/downstream-openai-discovery -> [1mbuild/client/integrations/downstream-openai-discovery/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5866858Z Prerender (data): /llms.mdx/docs/integrations/downstream-openai-discovery/content.md -> [1mbuild/client/llms.mdx/docs/integrations/downstream-openai-discovery/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5875129Z Prerender (resource): /llms.mdx/docs/integrations/downstream-openai-discovery/content.md -> [1mbuild/client/llms.mdx/docs/integrations/downstream-openai-discovery/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5902132Z Prerender (data): /integrations/pi -> [1mbuild/client/integrations/pi.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.5984497Z Prerender (html): /integrations/pi -> [1mbuild/client/integrations/pi/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6000586Z Prerender (data): /llms.mdx/docs/integrations/pi/content.md -> [1mbuild/client/llms.mdx/docs/integrations/pi/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6010666Z Prerender (resource): /llms.mdx/docs/integrations/pi/content.md -> [1mbuild/client/llms.mdx/docs/integrations/pi/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6030515Z Prerender (data): /get-started/choose-routing-strategy -> [1mbuild/client/get-started/choose-routing-strategy.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6107983Z Prerender (html): /get-started/choose-routing-strategy -> [1mbuild/client/get-started/choose-routing-strategy/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6121280Z Prerender (data): /llms.mdx/docs/get-started/choose-routing-strategy/content.md -> [1mbuild/client/llms.mdx/docs/get-started/choose-routing-strategy/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6129135Z Prerender (resource): /llms.mdx/docs/get-started/choose-routing-strategy/content.md -> [1mbuild/client/llms.mdx/docs/get-started/choose-routing-strategy/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6149739Z Prerender (data): /get-started/first-launch-and-connect-models -> [1mbuild/client/get-started/first-launch-and-connect-models.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6245176Z Prerender (html): /get-started/first-launch-and-connect-models -> [1mbuild/client/get-started/first-launch-and-connect-models/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6257808Z Prerender (data): /llms.mdx/docs/get-started/first-launch-and-connect-models/content.md -> [1mbuild/client/llms.mdx/docs/get-started/first-launch-and-connect-models/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6267556Z Prerender (resource): /llms.mdx/docs/get-started/first-launch-and-connect-models/content.md -> [1mbuild/client/llms.mdx/docs/get-started/first-launch-and-connect-models/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6286505Z Prerender (data): /get-started/first-request-and-decision -> [1mbuild/client/get-started/first-request-and-decision.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6356039Z Prerender (html): /get-started/first-request-and-decision -> [1mbuild/client/get-started/first-request-and-decision/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6368292Z Prerender (data): /llms.mdx/docs/get-started/first-request-and-decision/content.md -> [1mbuild/client/llms.mdx/docs/get-started/first-request-and-decision/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6375270Z Prerender (resource): /llms.mdx/docs/get-started/first-request-and-decision/content.md -> [1mbuild/client/llms.mdx/docs/get-started/first-request-and-decision/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6392520Z Prerender (data): /get-started/install -> [1mbuild/client/get-started/install.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6473715Z Prerender (html): /get-started/install -> [1mbuild/client/get-started/install/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6488425Z Prerender (data): /llms.mdx/docs/get-started/install/content.md -> [1mbuild/client/llms.mdx/docs/get-started/install/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6496897Z Prerender (resource): /llms.mdx/docs/get-started/install/content.md -> [1mbuild/client/llms.mdx/docs/get-started/install/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6515778Z Prerender (data): /get-started/run-full-benchmark -> [1mbuild/client/get-started/run-full-benchmark.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6587791Z Prerender (html): /get-started/run-full-benchmark -> [1mbuild/client/get-started/run-full-benchmark/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6598999Z Prerender (data): /llms.mdx/docs/get-started/run-full-benchmark/content.md -> [1mbuild/client/llms.mdx/docs/get-started/run-full-benchmark/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6606210Z Prerender (resource): /llms.mdx/docs/get-started/run-full-benchmark/content.md -> [1mbuild/client/llms.mdx/docs/get-started/run-full-benchmark/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6625773Z Prerender (data): /concepts/endpoints-and-profiles -> [1mbuild/client/concepts/endpoints-and-profiles.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6697689Z Prerender (html): /concepts/endpoints-and-profiles -> [1mbuild/client/concepts/endpoints-and-profiles/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6712796Z Prerender (data): /llms.mdx/docs/concepts/endpoints-and-profiles/content.md -> [1mbuild/client/llms.mdx/docs/concepts/endpoints-and-profiles/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6719839Z Prerender (resource): /llms.mdx/docs/concepts/endpoints-and-profiles/content.md -> [1mbuild/client/llms.mdx/docs/concepts/endpoints-and-profiles/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6737705Z Prerender (data): /concepts/how-role-model-works -> [1mbuild/client/concepts/how-role-model-works.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6817374Z Prerender (html): /concepts/how-role-model-works -> [1mbuild/client/concepts/how-role-model-works/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6828168Z Prerender (data): /llms.mdx/docs/concepts/how-role-model-works/content.md -> [1mbuild/client/llms.mdx/docs/concepts/how-role-model-works/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6835839Z Prerender (resource): /llms.mdx/docs/concepts/how-role-model-works/content.md -> [1mbuild/client/llms.mdx/docs/concepts/how-role-model-works/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6858649Z Prerender (data): /concepts/policy-and-observability -> [1mbuild/client/concepts/policy-and-observability.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6925860Z Prerender (html): /concepts/policy-and-observability -> [1mbuild/client/concepts/policy-and-observability/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6935316Z Prerender (data): /llms.mdx/docs/concepts/policy-and-observability/content.md -> [1mbuild/client/llms.mdx/docs/concepts/policy-and-observability/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6941545Z Prerender (resource): /llms.mdx/docs/concepts/policy-and-observability/content.md -> [1mbuild/client/llms.mdx/docs/concepts/policy-and-observability/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.6957952Z Prerender (data): /concepts/protocol-overview -> [1mbuild/client/concepts/protocol-overview.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7029483Z Prerender (html): /concepts/protocol-overview -> [1mbuild/client/concepts/protocol-overview/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7042077Z Prerender (data): /llms.mdx/docs/concepts/protocol-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/protocol-overview/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7049878Z Prerender (resource): /llms.mdx/docs/concepts/protocol-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/protocol-overview/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7068820Z Prerender (data): /concepts/roles-tasks-and-capabilities -> [1mbuild/client/concepts/roles-tasks-and-capabilities.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7138418Z Prerender (html): /concepts/roles-tasks-and-capabilities -> [1mbuild/client/concepts/roles-tasks-and-capabilities/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7148876Z Prerender (data): /llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md -> [1mbuild/client/llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7156134Z Prerender (resource): /llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md -> [1mbuild/client/llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7172651Z Prerender (data): /concepts/routing-overview -> [1mbuild/client/concepts/routing-overview.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7245462Z Prerender (html): /concepts/routing-overview -> [1mbuild/client/concepts/routing-overview/index.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7257174Z Prerender (data): /llms.mdx/docs/concepts/routing-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/routing-overview/content.md.data[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7271825Z Prerender (resource): /llms.mdx/docs/concepts/routing-overview/content.md -> [1mbuild/client/llms.mdx/docs/concepts/routing-overview/content.md[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7303743Z Prerender (html): SPA Fallback -> [1mbuild/client/__spa-fallback.html[22m
+Build docs site	Build docs site	2026-06-23T03:47:19.7304781Z Removing the server build in [32m/home/runner/work/role-model/role-model/apps/docs-site/build/server[39m due to ssr:false
+Build docs site	Build docs site	2026-06-23T03:47:19.7331082Z computing gzip size...
+Build docs site	Build docs site	2026-06-23T03:47:19.7453984Z build/server/.vite/manifest.json                                       35.65 kB │ gzip:   3.91 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7455161Z build/server/assets/runtime-overview-WUpVyoOR.png                     218.07 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7456496Z build/server/assets/server-build-B7Fn2Ts0.css                          80.28 kB │ gzip:  13.36 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7457667Z build/server/assets/pi-1yMO1_E_.js                                      0.19 kB │ gzip:   0.14 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7458411Z build/server/assets/docs-CD4dOncr.js                                    0.19 kB │ gzip:   0.14 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7459153Z build/server/assets/install-CDy_k22D.js                                 0.20 kB │ gzip:   0.14 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7459907Z build/server/assets/install-DryAn5l8.js                                 0.20 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7461064Z build/server/assets/overview-D_tys8yt.js                                0.20 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7461842Z build/server/assets/overview-DaPxjq9e.js                                0.20 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7462600Z build/server/assets/protocol-C15oPyMK.js                                0.20 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7463379Z build/server/assets/quickstart-CHogQaRj.js                              0.20 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7464157Z build/server/assets/introduction-DpukyDsx.js                            0.20 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7465256Z build/server/assets/routing-policy-DyH_sbVS.js                          0.20 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7466864Z build/server/assets/core-vocabulary-BEK9kDVe.js                         0.20 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7468229Z build/server/assets/roles-and-tasks-Dujqi6L8.js                         0.20 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7469029Z build/server/assets/runtime-ui-tour-CcwkBNVi.js                         0.20 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7470004Z build/server/assets/routing-overview-trOZnul3.js                        0.21 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7471157Z build/server/assets/endpoint-identity-ZTtUsca7.js                       0.21 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7471982Z build/server/assets/protocol-overview-CxiJEsBy.js                       0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7472812Z build/server/assets/protocol-lifecycle-CWezWAkQ.js                      0.21 kB │ gzip:   0.15 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7473609Z build/server/assets/run-full-benchmark-BPIlcsi_.js                      0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7474399Z build/server/assets/capability-taxonomy-MKcaRY6I.js                     0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7475215Z build/server/assets/how-role-model-works-CMTTpGQR.js                    0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7476004Z build/server/assets/provider-connections-CFZDX4T5.js                    0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7476811Z build/server/assets/protocol-object-model-BlFZUKZr.js                   0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7477619Z build/server/assets/endpoints-and-profiles-CZ5MZANL.js                  0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7478460Z build/server/assets/choose-routing-strategy-WrCfbkqs.js                 0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7479280Z build/server/assets/policy-and-observability-urw6o3YH.js                0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7480094Z build/server/assets/router-decision-artifact-YlbSwx6y.js                0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7481080Z build/server/assets/benchmarks-and-evaluation-BGhfnKkg.js               0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7481914Z build/server/assets/trace-and-usage-artifacts-BXPVJtyV.js               0.21 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7482806Z build/server/assets/first-request-and-decision-oYgSt0o-.js              0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7483710Z build/server/assets/models-and-role-activation-C0P9potk.js              0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7484630Z build/server/assets/protocol-to-router-mapping-DUSLV6R7.js              0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7485537Z build/server/assets/canonical-schemas-reference-BJeTQlq1.js             0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7486459Z build/server/assets/downstream-openai-discovery-C2Pq-oUR.js             0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7487357Z build/server/assets/declared-capability-profiles-9kgOF7Xn.js            0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7488228Z build/server/assets/how-routing-works-end-to-end-BaSOz4gC.js            0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7489106Z build/server/assets/roles-tasks-and-capabilities-BjVOzjzQ.js            0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7489941Z build/server/assets/strategy-modes-and-tradeoffs-2eB5AdKn.js            0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7490992Z build/server/assets/observed-performance-profiles-vzmV6OIO.js           0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7491830Z build/server/assets/first-launch-and-connect-models-UzLgogW5.js         0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7492693Z build/server/assets/observe-and-telemetry-analytics-iZqR9kMR.js         0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7493534Z build/server/assets/scoring-tie-breaks-and-decisions-Gmnx5iJW.js        0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7494382Z build/server/assets/candidate-selection-and-eligibility-DSDYgjPz.js     0.22 kB │ gzip:   0.17 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7495230Z build/server/assets/reason-codes-and-rejection-taxonomy-gu3x9VNv.js     0.22 kB │ gzip:   0.16 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7496251Z build/server/assets/fallbacks-failures-and-observability-CjvyxHgf.js    0.23 kB │ gzip:   0.17 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7497114Z build/server/assets/routing-controls-and-decision-review-jSEXINeL.js    0.23 kB │ gzip:   0.17 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7498157Z build/server/assets/routing-modes-locality-and-execution-D2pMnVE_.js    0.23 kB │ gzip:   0.17 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7499026Z build/server/assets/remove-undefined-CTqT55E9-C8h6arTJ.js               0.65 kB │ gzip:   0.39 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7500137Z build/server/assets/fetch-B18SI4xD.js                                   0.95 kB │ gzip:   0.55 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7501173Z build/server/assets/chunk-CYJPkc-J-PQN4GMKe.js                          1.31 kB │ gzip:   0.69 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7502617Z build/server/assets/chunk-BGC-wIje.js                                   1.40 kB │ gzip:   0.66 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7503948Z build/server/assets/algolia-BMazrhV7.js                                 1.61 kB │ gzip:   0.82 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7505343Z build/server/assets/search-DgEhSOhw.js                                  2.21 kB │ gzip:   0.98 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7506772Z build/server/assets/search-default-CFkGQyE8.js                          2.24 kB │ gzip:   0.94 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7508069Z build/server/assets/orama-cloud-legacy-JnO5AnPJ.js                      2.34 kB │ gzip:   0.94 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7509322Z build/server/assets/orama-cloud-ClrKO4J8.js                             2.39 kB │ gzip:   0.96 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7510801Z build/server/assets/orama-static-Cr4nnGIS.js                            4.02 kB │ gzip:   1.60 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7512096Z build/server/assets/policy-and-observability-DqsFsLRD.js                7.25 kB │ gzip:   1.57 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7513426Z build/server/assets/roles-tasks-and-capabilities-Du5o_vus.js            8.19 kB │ gzip:   1.74 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7514692Z build/server/assets/overview-CUBLQIig.js                                8.29 kB │ gzip:   1.70 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7516090Z build/server/assets/endpoints-and-profiles-D1vz45RN.js                  8.37 kB │ gzip:   1.72 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7517349Z build/server/assets/install-BujL4KeW.js                                 8.77 kB │ gzip:   2.13 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7518635Z build/server/assets/models-and-role-activation-pjCbatNh.js              9.18 kB │ gzip:   1.90 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7520039Z build/server/assets/first-request-and-decision-BdQ-plYY.js             10.29 kB │ gzip:   1.98 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7521531Z build/server/assets/quickstart-CHXYD-8J.js                             10.89 kB │ gzip:   2.30 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7522776Z build/server/assets/protocol-lifecycle-DldRu7r5.js                     11.26 kB │ gzip:   2.33 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7540712Z build/server/assets/provider-connections-XxUw6EMc.js                   12.65 kB │ gzip:   2.32 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7542279Z build/server/assets/runtime-ui-tour-D_BPGOyH.js                        12.79 kB │ gzip:   2.45 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7543662Z build/server/assets/run-full-benchmark-02I44X6R.js                     13.70 kB │ gzip:   2.57 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7545103Z build/server/assets/first-launch-and-connect-models-C0hW28dV.js        14.84 kB │ gzip:   3.01 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7546518Z build/server/assets/overview-wL6vWRdJ.js                               15.16 kB │ gzip:   2.62 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7547802Z build/server/assets/mixedbread-DdS68_qq.js                             15.29 kB │ gzip:   6.30 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7549274Z build/server/assets/observe-and-telemetry-analytics-CMRSVjuj.js        15.32 kB │ gzip:   2.67 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7550946Z build/server/assets/capability-taxonomy-BLt8psF2.js                    15.48 kB │ gzip:   2.58 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7552435Z build/server/assets/trace-and-usage-artifacts-DGLg392X.js              15.70 kB │ gzip:   2.48 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7553840Z build/server/assets/protocol-DA2L6n54.js                               16.28 kB │ gzip:   2.72 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7555233Z build/server/assets/router-decision-artifact-MSzdN1xX.js               16.49 kB │ gzip:   2.67 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7556973Z build/server/assets/declared-capability-profiles-a79_Tc7l.js           16.52 kB │ gzip:   2.72 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7558680Z build/server/assets/downstream-openai-discovery-EFN1zktI.js            16.73 kB │ gzip:   2.89 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7560387Z build/server/assets/routing-controls-and-decision-review-DQBtaHjW.js   17.12 kB │ gzip:   2.89 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7561941Z build/server/assets/benchmarks-and-evaluation-Rp2704Ry.js              17.63 kB │ gzip:   3.03 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7563398Z build/server/assets/protocol-to-router-mapping-SEpY5EK3.js             18.15 kB │ gzip:   2.99 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7564790Z build/server/assets/routing-policy-CY6YSPC2.js                         19.24 kB │ gzip:   2.99 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7566203Z build/server/assets/how-routing-works-end-to-end-Ci_c6BWj.js           20.50 kB │ gzip:   3.43 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7567542Z build/server/assets/install-nw3n_rwz.js                                21.34 kB │ gzip:   3.54 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7568915Z build/server/assets/protocol-object-model-DPRCtdD2.js                  21.39 kB │ gzip:   3.46 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7570482Z build/server/assets/core-vocabulary-C8M9Xyrv.js                        21.63 kB │ gzip:   3.46 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7571975Z build/server/assets/canonical-schemas-reference-BOdYeagG.js            22.25 kB │ gzip:   3.13 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7573445Z build/server/assets/reason-codes-and-rejection-taxonomy-CTyrrY1W.js    22.27 kB │ gzip:   3.06 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7574897Z build/server/assets/how-role-model-works-pAZ7nWyp.js                   22.42 kB │ gzip:   3.62 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7576254Z build/server/assets/pi-xUdanMXT.js                                     22.51 kB │ gzip:   3.69 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7577621Z build/server/assets/routing-overview-DPnNBcz0.js                       22.54 kB │ gzip:   3.61 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7579038Z build/server/assets/protocol-overview-BQWGGN4G.js                      22.99 kB │ gzip:   3.71 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7580651Z build/server/assets/observed-performance-profiles-CJ3GMn24.js          23.74 kB │ gzip:   3.48 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7582090Z build/server/assets/docs-Dt_vkp_r.js                                   25.74 kB │ gzip:   4.36 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7583434Z build/server/assets/endpoint-identity-CuzPqz9u.js                      27.36 kB │ gzip:   3.79 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7584919Z build/server/assets/fallbacks-failures-and-observability-C5WCLBKN.js   28.99 kB │ gzip:   4.38 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7586403Z build/server/assets/choose-routing-strategy-DX5Y4L0I.js                31.35 kB │ gzip:   4.52 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7587842Z build/server/assets/roles-and-tasks-CG1XeVM6.js                        33.62 kB │ gzip:   4.57 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7589305Z build/server/assets/candidate-selection-and-eligibility-LaYe7HsM.js    34.33 kB │ gzip:   4.74 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7590907Z build/server/assets/introduction-zxuyuKzu.js                           34.76 kB │ gzip:   5.26 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7592402Z build/server/assets/scoring-tie-breaks-and-decisions-BB5tv2nn.js       36.71 kB │ gzip:   5.23 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7593925Z build/server/assets/routing-modes-locality-and-execution-C9vPaV-U.js   46.46 kB │ gzip:   5.96 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7595448Z build/server/assets/strategy-modes-and-tradeoffs-Bas5mgpp.js           57.94 kB │ gzip:   7.42 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7596787Z build/server/index.js                                                 376.88 kB │ gzip:  89.85 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7597999Z build/server/assets/remark-DmD561_2.js                                383.60 kB │ gzip:  81.28 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7599289Z build/server/assets/search-CbCAnK6R.js                                510.57 kB │ gzip: 122.46 kB
+Build docs site	Build docs site	2026-06-23T03:47:19.7599854Z 
+Build docs site	Build docs site	2026-06-23T03:47:19.7600146Z [32m✓ built in 2.30s[39m
+Build docs site	Build docs site	2026-06-23T03:47:19.9042017Z npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+Build docs site	Build docs site	2026-06-23T03:47:19.9044446Z npm warn Unknown env config "recursive". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+Build docs site	Build docs site	2026-06-23T03:47:19.9327801Z 
+Build docs site	Build docs site	2026-06-23T03:47:19.9328266Z > types:check
+Build docs site	Build docs site	2026-06-23T03:47:19.9328744Z > react-router typegen && fumadocs-mdx && tsc --noEmit
+Build docs site	Build docs site	2026-06-23T03:47:19.9329047Z 
+Build docs site	Build docs site	2026-06-23T03:47:20.8827594Z [MDX] generated files in 2.324310999999966ms
+Build docs site	Build docs site	2026-06-23T03:47:21.3006326Z [MDX] generated files in 2.8029379999999833ms
+Build docs site	Build docs site	2026-06-23T03:47:23.8610575Z Materialized search index at /home/runner/work/role-model/role-model/apps/docs-site/build/client/api/search.json
+Build docs site	Upload docs build artifact	﻿2026-06-23T03:47:23.8968374Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8969652Z ##[group]Run actions/upload-artifact@v4
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8969927Z with:
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8970122Z   name: docs-site-build
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8970705Z   path: apps/docs-site/build/client
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8970976Z   retention-days: 7
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8971195Z   if-no-files-found: warn
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8971438Z   compression-level: 6
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8971654Z   overwrite: false
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8971873Z   include-hidden-files: false
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8972109Z env:
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8972314Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8972646Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+Build docs site	Upload docs build artifact	2026-06-23T03:47:23.8972953Z ##[endgroup]
+Build docs site	Upload docs build artifact	2026-06-23T03:47:24.0712054Z (node:2563) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Build docs site	Upload docs build artifact	2026-06-23T03:47:24.0713068Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Build docs site	Upload docs build artifact	2026-06-23T03:47:24.1496934Z With the provided path, there will be 269 files uploaded
+Build docs site	Upload docs build artifact	2026-06-23T03:47:24.1502544Z Artifact name is valid!
+Build docs site	Upload docs build artifact	2026-06-23T03:47:24.1503405Z Root directory input is valid!
+Build docs site	Upload docs build artifact	2026-06-23T03:47:24.5242540Z Beginning upload of artifact content to blob storage
+Build docs site	Upload docs build artifact	2026-06-23T03:47:24.8824843Z (node:2563) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+Build docs site	Upload docs build artifact	2026-06-23T03:47:25.6777587Z Uploaded bytes 2012834
+Build docs site	Upload docs build artifact	2026-06-23T03:47:25.7589637Z Finished uploading artifact content to blob storage!
+Build docs site	Upload docs build artifact	2026-06-23T03:47:25.7591439Z SHA256 digest of uploaded artifact zip is 3c91e450cc9650c6d6f71a5b452e6bdbe045d2418b46031b027ac13da587f00f
+Build docs site	Upload docs build artifact	2026-06-23T03:47:25.7592602Z Finalizing artifact upload
+Build docs site	Upload docs build artifact	2026-06-23T03:47:25.9995037Z Artifact docs-site-build.zip successfully finalized. Artifact ID 7810947040
+Build docs site	Upload docs build artifact	2026-06-23T03:47:25.9996881Z Artifact docs-site-build has been successfully uploaded! Final size is 2012834 bytes. Artifact ID is 7810947040
+Build docs site	Upload docs build artifact	2026-06-23T03:47:26.0003762Z Artifact download URL: https://github.com/try-works/role-model/actions/runs/28000740238/artifacts/7810947040
+Build docs site	Post Setup Node.js	﻿2026-06-23T03:47:26.0194171Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build docs site	Post Setup Node.js	2026-06-23T03:47:26.0195424Z Post job cleanup.
+Build docs site	Post Setup Node.js	2026-06-23T03:47:26.1446322Z (node:2576) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Build docs site	Post Setup Node.js	2026-06-23T03:47:26.1447370Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Build docs site	Post Setup Node.js	2026-06-23T03:47:26.1451828Z Cache hit occurred on the primary key node-cache-Linux-x64-pnpm-559e44a1d7544cec8c7db9d5512baa71f579aa0fc7864b4a98b8958d2eadd7df, not saving cache.
+Build docs site	Post Setup pnpm	﻿2026-06-23T03:47:26.1560971Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build docs site	Post Setup pnpm	2026-06-23T03:47:26.1562404Z Post job cleanup.
+Build docs site	Post Setup pnpm	2026-06-23T03:47:26.3054953Z Pruning is unnecessary.
+Build docs site	Post Checkout	﻿2026-06-23T03:47:26.3201904Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Build docs site	Post Checkout	2026-06-23T03:47:26.3203160Z Post job cleanup.
+Build docs site	Post Checkout	2026-06-23T03:47:26.4155091Z [command]/usr/bin/git version
+Build docs site	Post Checkout	2026-06-23T03:47:26.4193508Z git version 2.54.0
+Build docs site	Post Checkout	2026-06-23T03:47:26.4234732Z Temporarily overriding HOME='/home/runner/work/_temp/6631606d-d4fa-4630-8e33-946747b719f8' before making global git config changes
+Build docs site	Post Checkout	2026-06-23T03:47:26.4236295Z Adding repository directory to the temporary git global config as a safe directory
+Build docs site	Post Checkout	2026-06-23T03:47:26.4241323Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+Build docs site	Post Checkout	2026-06-23T03:47:26.4279041Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Build docs site	Post Checkout	2026-06-23T03:47:26.4313670Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Build docs site	Post Checkout	2026-06-23T03:47:26.4579607Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Build docs site	Post Checkout	2026-06-23T03:47:26.4609556Z http.https://github.com/.extraheader
+Build docs site	Post Checkout	2026-06-23T03:47:26.4621871Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Build docs site	Post Checkout	2026-06-23T03:47:26.4653872Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Build docs site	Post Checkout	2026-06-23T03:47:26.4885900Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Build docs site	Post Checkout	2026-06-23T03:47:26.4917447Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Build docs site	Complete job	﻿2026-06-23T03:47:26.5283396Z Cleaning up orphan processes
+Build docs site	Complete job	2026-06-23T03:47:26.5580942Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4, pnpm/action-setup@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Deploy docs site	Set up job	﻿2026-06-23T03:47:33.9429004Z Current runner version: '2.335.1'
+Deploy docs site	Set up job	2026-06-23T03:47:33.9455907Z ##[group]Runner Image Provisioner
+Deploy docs site	Set up job	2026-06-23T03:47:33.9456909Z Hosted Compute Agent
+Deploy docs site	Set up job	2026-06-23T03:47:33.9457508Z Version: 20260611.554
+Deploy docs site	Set up job	2026-06-23T03:47:33.9458182Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+Deploy docs site	Set up job	2026-06-23T03:47:33.9458976Z Build Date: 2026-06-11T21:40:46Z
+Deploy docs site	Set up job	2026-06-23T03:47:33.9459665Z Worker ID: {d5ae4dd1-033d-46ae-83d3-6e138402d183}
+Deploy docs site	Set up job	2026-06-23T03:47:33.9460429Z Azure Region: westus
+Deploy docs site	Set up job	2026-06-23T03:47:33.9460996Z ##[endgroup]
+Deploy docs site	Set up job	2026-06-23T03:47:33.9462412Z ##[group]Operating System
+Deploy docs site	Set up job	2026-06-23T03:47:33.9463239Z Ubuntu
+Deploy docs site	Set up job	2026-06-23T03:47:33.9463766Z 24.04.4
+Deploy docs site	Set up job	2026-06-23T03:47:33.9464688Z LTS
+Deploy docs site	Set up job	2026-06-23T03:47:33.9465259Z ##[endgroup]
+Deploy docs site	Set up job	2026-06-23T03:47:33.9465869Z ##[group]Runner Image
+Deploy docs site	Set up job	2026-06-23T03:47:33.9466949Z Image: ubuntu-24.04
+Deploy docs site	Set up job	2026-06-23T03:47:33.9467593Z Version: 20260615.205.1
+Deploy docs site	Set up job	2026-06-23T03:47:33.9468683Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260615.205/images/ubuntu/Ubuntu2404-Readme.md
+Deploy docs site	Set up job	2026-06-23T03:47:33.9470431Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260615.205
+Deploy docs site	Set up job	2026-06-23T03:47:33.9471518Z ##[endgroup]
+Deploy docs site	Set up job	2026-06-23T03:47:33.9472604Z ##[group]GITHUB_TOKEN Permissions
+Deploy docs site	Set up job	2026-06-23T03:47:33.9475146Z Contents: read
+Deploy docs site	Set up job	2026-06-23T03:47:33.9475795Z Metadata: read
+Deploy docs site	Set up job	2026-06-23T03:47:33.9476426Z ##[endgroup]
+Deploy docs site	Set up job	2026-06-23T03:47:33.9478595Z Secret source: Actions
+Deploy docs site	Set up job	2026-06-23T03:47:33.9479392Z Prepare workflow directory
+Deploy docs site	Set up job	2026-06-23T03:47:34.0022737Z Prepare all required actions
+Deploy docs site	Set up job	2026-06-23T03:47:34.0061923Z Getting action download info
+Deploy docs site	Set up job	2026-06-23T03:47:34.3855179Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+Deploy docs site	Set up job	2026-06-23T03:47:34.4652431Z Download action repository 'actions/download-artifact@v4' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+Deploy docs site	Set up job	2026-06-23T03:47:34.9001807Z Download action repository 'pnpm/action-setup@v4' (SHA:b906affcce14559ad1aafd4ab0e942779e9f58b1)
+Deploy docs site	Set up job	2026-06-23T03:47:35.3606913Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+Deploy docs site	Set up job	2026-06-23T03:47:35.5702944Z Complete job name: Deploy docs site
+Deploy docs site	Checkout	﻿2026-06-23T03:47:35.6591331Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Deploy docs site	Checkout	2026-06-23T03:47:35.6603249Z ##[group]Run actions/checkout@v4
+Deploy docs site	Checkout	2026-06-23T03:47:35.6604795Z with:
+Deploy docs site	Checkout	2026-06-23T03:47:35.6605714Z   repository: try-works/role-model
+Deploy docs site	Checkout	2026-06-23T03:47:35.6615726Z   token: ***
+Deploy docs site	Checkout	2026-06-23T03:47:35.6616617Z   ssh-strict: true
+Deploy docs site	Checkout	2026-06-23T03:47:35.6617523Z   ssh-user: git
+Deploy docs site	Checkout	2026-06-23T03:47:35.6618434Z   persist-credentials: true
+Deploy docs site	Checkout	2026-06-23T03:47:35.6619432Z   clean: true
+Deploy docs site	Checkout	2026-06-23T03:47:35.6620358Z   sparse-checkout-cone-mode: true
+Deploy docs site	Checkout	2026-06-23T03:47:35.6621447Z   fetch-depth: 1
+Deploy docs site	Checkout	2026-06-23T03:47:35.6622342Z   fetch-tags: false
+Deploy docs site	Checkout	2026-06-23T03:47:35.6623284Z   show-progress: true
+Deploy docs site	Checkout	2026-06-23T03:47:35.6624568Z   lfs: false
+Deploy docs site	Checkout	2026-06-23T03:47:35.6625588Z   submodules: false
+Deploy docs site	Checkout	2026-06-23T03:47:35.6626622Z   set-safe-directory: true
+Deploy docs site	Checkout	2026-06-23T03:47:35.6627972Z env:
+Deploy docs site	Checkout	2026-06-23T03:47:35.6628868Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+Deploy docs site	Checkout	2026-06-23T03:47:35.6630037Z   CLOUDFLARE_API_TOKEN: 
+Deploy docs site	Checkout	2026-06-23T03:47:35.6631020Z   CLOUDFLARE_ACCOUNT_ID: 
+Deploy docs site	Checkout	2026-06-23T03:47:35.6631964Z ##[endgroup]
+Deploy docs site	Checkout	2026-06-23T03:47:35.7636515Z Syncing repository: try-works/role-model
+Deploy docs site	Checkout	2026-06-23T03:47:35.7639616Z ##[group]Getting Git version info
+Deploy docs site	Checkout	2026-06-23T03:47:35.7641274Z Working directory is '/home/runner/work/role-model/role-model'
+Deploy docs site	Checkout	2026-06-23T03:47:35.7643549Z [command]/usr/bin/git version
+Deploy docs site	Checkout	2026-06-23T03:47:35.7685751Z git version 2.54.0
+Deploy docs site	Checkout	2026-06-23T03:47:35.7707714Z ##[endgroup]
+Deploy docs site	Checkout	2026-06-23T03:47:35.7722316Z Temporarily overriding HOME='/home/runner/work/_temp/7dd3a5aa-c611-4ba7-8c2a-b1d75ed6d67c' before making global git config changes
+Deploy docs site	Checkout	2026-06-23T03:47:35.7726149Z Adding repository directory to the temporary git global config as a safe directory
+Deploy docs site	Checkout	2026-06-23T03:47:35.7729455Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+Deploy docs site	Checkout	2026-06-23T03:47:35.7778269Z Deleting the contents of '/home/runner/work/role-model/role-model'
+Deploy docs site	Checkout	2026-06-23T03:47:35.7782805Z ##[group]Initializing the repository
+Deploy docs site	Checkout	2026-06-23T03:47:35.7787131Z [command]/usr/bin/git init /home/runner/work/role-model/role-model
+Deploy docs site	Checkout	2026-06-23T03:47:35.7890707Z hint: Using 'master' as the name for the initial branch. This default branch name
+Deploy docs site	Checkout	2026-06-23T03:47:35.7892882Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+Deploy docs site	Checkout	2026-06-23T03:47:35.7895867Z hint: to use in all of your new repositories, which will suppress this warning,
+Deploy docs site	Checkout	2026-06-23T03:47:35.7897572Z hint: call:
+Deploy docs site	Checkout	2026-06-23T03:47:35.7898543Z hint:
+Deploy docs site	Checkout	2026-06-23T03:47:35.7900498Z hint: 	git config --global init.defaultBranch <name>
+Deploy docs site	Checkout	2026-06-23T03:47:35.7902005Z hint:
+Deploy docs site	Checkout	2026-06-23T03:47:35.7903340Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+Deploy docs site	Checkout	2026-06-23T03:47:35.7906149Z hint: 'development'. The just-created branch can be renamed via this command:
+Deploy docs site	Checkout	2026-06-23T03:47:35.7908038Z hint:
+Deploy docs site	Checkout	2026-06-23T03:47:35.7909051Z hint: 	git branch -m <name>
+Deploy docs site	Checkout	2026-06-23T03:47:35.7910104Z hint:
+Deploy docs site	Checkout	2026-06-23T03:47:35.7911726Z hint: Disable this message with "git config set advice.defaultBranchName false"
+Deploy docs site	Checkout	2026-06-23T03:47:35.7913966Z Initialized empty Git repository in /home/runner/work/role-model/role-model/.git/
+Deploy docs site	Checkout	2026-06-23T03:47:35.7919222Z [command]/usr/bin/git remote add origin https://github.com/try-works/role-model
+Deploy docs site	Checkout	2026-06-23T03:47:35.7953096Z ##[endgroup]
+Deploy docs site	Checkout	2026-06-23T03:47:35.7955245Z ##[group]Disabling automatic garbage collection
+Deploy docs site	Checkout	2026-06-23T03:47:35.7957734Z [command]/usr/bin/git config --local gc.auto 0
+Deploy docs site	Checkout	2026-06-23T03:47:35.7987285Z ##[endgroup]
+Deploy docs site	Checkout	2026-06-23T03:47:35.7988924Z ##[group]Setting up auth
+Deploy docs site	Checkout	2026-06-23T03:47:35.7993743Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Deploy docs site	Checkout	2026-06-23T03:47:35.8027966Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Deploy docs site	Checkout	2026-06-23T03:47:35.8405181Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Deploy docs site	Checkout	2026-06-23T03:47:35.8437847Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Deploy docs site	Checkout	2026-06-23T03:47:35.8655188Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Deploy docs site	Checkout	2026-06-23T03:47:35.8686120Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Deploy docs site	Checkout	2026-06-23T03:47:35.8908253Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+Deploy docs site	Checkout	2026-06-23T03:47:35.8944966Z ##[endgroup]
+Deploy docs site	Checkout	2026-06-23T03:47:35.8946816Z ##[group]Fetching the repository
+Deploy docs site	Checkout	2026-06-23T03:47:35.8954522Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +c4bf7c90f3f3b6b77a36248011d4b946d5ff5334:refs/remotes/origin/main
+Deploy docs site	Checkout	2026-06-23T03:47:37.7846792Z From https://github.com/try-works/role-model
+Deploy docs site	Checkout	2026-06-23T03:47:37.7848041Z  * [new ref]         c4bf7c90f3f3b6b77a36248011d4b946d5ff5334 -> origin/main
+Deploy docs site	Checkout	2026-06-23T03:47:37.7882692Z ##[endgroup]
+Deploy docs site	Checkout	2026-06-23T03:47:37.7883588Z ##[group]Determining the checkout info
+Deploy docs site	Checkout	2026-06-23T03:47:37.7892510Z ##[endgroup]
+Deploy docs site	Checkout	2026-06-23T03:47:37.7895370Z [command]/usr/bin/git sparse-checkout disable
+Deploy docs site	Checkout	2026-06-23T03:47:37.7941420Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+Deploy docs site	Checkout	2026-06-23T03:47:37.7973843Z ##[group]Checking out the ref
+Deploy docs site	Checkout	2026-06-23T03:47:37.7985624Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+Deploy docs site	Checkout	2026-06-23T03:47:38.2328436Z Switched to a new branch 'main'
+Deploy docs site	Checkout	2026-06-23T03:47:38.2330563Z branch 'main' set up to track 'origin/main'.
+Deploy docs site	Checkout	2026-06-23T03:47:38.2372469Z ##[endgroup]
+Deploy docs site	Checkout	2026-06-23T03:47:38.2424110Z [command]/usr/bin/git log -1 --format=%H
+Deploy docs site	Checkout	2026-06-23T03:47:38.2449623Z c4bf7c90f3f3b6b77a36248011d4b946d5ff5334
+Deploy docs site	Download docs build artifact	﻿2026-06-23T03:47:38.2738007Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2739793Z ##[group]Run actions/download-artifact@v4
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2740068Z with:
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2740262Z   name: docs-site-build
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2740495Z   path: apps/docs-site/build/client
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2740756Z   merge-multiple: false
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2740987Z   repository: try-works/role-model
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2741233Z   run-id: 28000740238
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2741445Z env:
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2741655Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2741922Z   CLOUDFLARE_API_TOKEN: 
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2742146Z   CLOUDFLARE_ACCOUNT_ID: 
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.2742588Z ##[endgroup]
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.4252183Z Downloading single artifact
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.4397944Z (node:2286) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.4398914Z (Use `node --trace-deprecation ...` to show where the warning was created)
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.6961174Z Preparing to download the following artifacts:
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.6962282Z - docs-site-build (ID: 7810947040, Size: 2012834, Expected Digest: sha256:3c91e450cc9650c6d6f71a5b452e6bdbe045d2418b46031b027ac13da587f00f)
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.9391983Z Redirecting to blob download url: https://productionresultssa10.blob.core.windows.net/actions-results/210a274d-f8fb-4ff4-9677-ee7280325b11/workflow-job-run-957e818b-821d-52d2-a0fc-5960ced8bb6c/artifacts/8fceec98363b0a6e12b30f31bcfcb6106125c5c5010e003c64b55078efa15594.zip
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:38.9394713Z Starting download of artifact to: /home/runner/work/role-model/role-model/apps/docs-site/build/client
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:39.2530086Z (node:2286) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:39.8826560Z SHA256 digest of downloaded artifact is 3c91e450cc9650c6d6f71a5b452e6bdbe045d2418b46031b027ac13da587f00f
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:39.8827487Z Artifact download completed successfully.
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:39.8827801Z Total of 1 artifact(s) downloaded
+Deploy docs site	Download docs build artifact	2026-06-23T03:47:39.8832110Z Download artifact has finished successfully
+Deploy docs site	Require Cloudflare secrets	﻿2026-06-23T03:47:39.8961764Z ##[group]Run if [[ -z "$CLOUDFLARE_API_TOKEN" || -z "$CLOUDFLARE_ACCOUNT_ID" ]]; then
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.8962400Z [36;1mif [[ -z "$CLOUDFLARE_API_TOKEN" || -z "$CLOUDFLARE_ACCOUNT_ID" ]]; then[0m
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.8963004Z [36;1m  echo "CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must be set for docs deployment." >&2[0m
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.8963479Z [36;1m  exit 1[0m
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.8963675Z [36;1mfi[0m
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.9133815Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.9134526Z env:
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.9134787Z   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.9135079Z   CLOUDFLARE_API_TOKEN: 
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.9135319Z   CLOUDFLARE_ACCOUNT_ID: 
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.9135538Z ##[endgroup]
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.9208439Z CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must be set for docs deployment.
+Deploy docs site	Require Cloudflare secrets	2026-06-23T03:47:39.9222165Z ##[error]Process completed with exit code 1.
+Deploy docs site	Post Checkout	﻿2026-06-23T03:47:39.9372368Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+Deploy docs site	Post Checkout	2026-06-23T03:47:39.9373774Z Post job cleanup.
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0208795Z [command]/usr/bin/git version
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0244900Z git version 2.54.0
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0282999Z Temporarily overriding HOME='/home/runner/work/_temp/b03c2033-a671-4013-971d-f8593ff0cd92' before making global git config changes
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0284683Z Adding repository directory to the temporary git global config as a safe directory
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0289661Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/role-model/role-model
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0325604Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0359087Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0587489Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0612766Z http.https://github.com/.extraheader
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0624606Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0658358Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0925549Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+Deploy docs site	Post Checkout	2026-06-23T03:47:40.0957933Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+Deploy docs site	Complete job	﻿2026-06-23T03:47:40.1313020Z Cleaning up orphan processes
+Deploy docs site	Complete job	2026-06-23T03:47:40.1567253Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/download-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

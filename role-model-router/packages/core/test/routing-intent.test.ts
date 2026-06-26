@@ -197,7 +197,29 @@ describe("routing intent metadata", () => {
       },
       benchmarkCapability: { overallScore: 0.85 },
     });
-    const input = { request: baseRequest, candidates: [c], observedDataConfig: { enabled: false, metricHalflives: { qualityMs: 900000, latencyMs: 300000, throughputMs: 120000, reliabilityMs: 600000, costMs: 1800000 }, throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 }, difficultyLearning: { recommendation: { minSamples: 4, maxFailureRate: 0.2, minQualityScore: 0.8, minTokensPerSec: 22 } } } };
+    const input = {
+      request: baseRequest,
+      candidates: [c],
+      observedDataConfig: {
+        enabled: false,
+        metricHalflives: {
+          qualityMs: 900000,
+          latencyMs: 300000,
+          throughputMs: 120000,
+          reliabilityMs: 600000,
+          costMs: 1800000,
+        },
+        throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
+        difficultyLearning: {
+          recommendation: {
+            minSamples: 4,
+            maxFailureRate: 0.2,
+            minQualityScore: 0.8,
+            minTokensPerSec: 22,
+          },
+        },
+      },
+    };
     const quality = getQualityMetric(c, input);
     expect(quality.value).toBeGreaterThan(0.5);
     expect(quality.value).toBeLessThanOrEqual(0.85);
@@ -219,9 +241,31 @@ describe("routing intent metadata", () => {
         quality_freshness_score: 1.0,
         quality_live_request_samples: 5,
       },
-      benchmarkCapability: { overallScore: 0.70 },
+      benchmarkCapability: { overallScore: 0.7 },
     });
-    const input = { request: baseRequest, candidates: [c], observedDataConfig: { enabled: false, metricHalflives: { qualityMs: 900000, latencyMs: 300000, throughputMs: 120000, reliabilityMs: 600000, costMs: 1800000 }, throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 }, difficultyLearning: { recommendation: { minSamples: 4, maxFailureRate: 0.2, minQualityScore: 0.8, minTokensPerSec: 22 } } } };
+    const input = {
+      request: baseRequest,
+      candidates: [c],
+      observedDataConfig: {
+        enabled: false,
+        metricHalflives: {
+          qualityMs: 900000,
+          latencyMs: 300000,
+          throughputMs: 120000,
+          reliabilityMs: 600000,
+          costMs: 1800000,
+        },
+        throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
+        difficultyLearning: {
+          recommendation: {
+            minSamples: 4,
+            maxFailureRate: 0.2,
+            minQualityScore: 0.8,
+            minTokensPerSec: 22,
+          },
+        },
+      },
+    };
     const quality = getQualityMetric(c, input);
     expect(quality.source).toBe("measured");
     expect(quality.raw.quality_score).toBe(0.92);
@@ -237,13 +281,35 @@ describe("routing intent metadata", () => {
         cost_per_1k_tokens_est: 0.002,
         measured_at_ms: Date.now(),
         judge_score: 0.95,
-        quality_score: 0.80,
+        quality_score: 0.8,
         quality_measured_at_ms: Date.now(),
         quality_freshness_score: 1.0,
       },
-      benchmarkCapability: { overallScore: 0.60 },
+      benchmarkCapability: { overallScore: 0.6 },
     });
-    const input = { request: baseRequest, candidates: [c], observedDataConfig: { enabled: false, metricHalflives: { qualityMs: 900000, latencyMs: 300000, throughputMs: 120000, reliabilityMs: 600000, costMs: 1800000 }, throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 }, difficultyLearning: { recommendation: { minSamples: 4, maxFailureRate: 0.2, minQualityScore: 0.8, minTokensPerSec: 22 } } } };
+    const input = {
+      request: baseRequest,
+      candidates: [c],
+      observedDataConfig: {
+        enabled: false,
+        metricHalflives: {
+          qualityMs: 900000,
+          latencyMs: 300000,
+          throughputMs: 120000,
+          reliabilityMs: 600000,
+          costMs: 1800000,
+        },
+        throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
+        difficultyLearning: {
+          recommendation: {
+            minSamples: 4,
+            maxFailureRate: 0.2,
+            minQualityScore: 0.8,
+            minTokensPerSec: 22,
+          },
+        },
+      },
+    };
     const quality = getQualityMetric(c, input);
     expect(quality.source).toBe("measured");
     expect(quality.raw.judge_score).toBe(0.95);
@@ -251,16 +317,66 @@ describe("routing intent metadata", () => {
 
   test("getQualityMetric falls back to default when no quality data exists", () => {
     const c = candidate("test-ep", ["text.chat"], { observed: undefined });
-    const input = { request: baseRequest, candidates: [c], observedDataConfig: { enabled: false, metricHalflives: { qualityMs: 900000, latencyMs: 300000, throughputMs: 120000, reliabilityMs: 600000, costMs: 1800000 }, throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 }, difficultyLearning: { recommendation: { minSamples: 4, maxFailureRate: 0.2, minQualityScore: 0.8, minTokensPerSec: 22 } } } };
+    const input = {
+      request: baseRequest,
+      candidates: [c],
+      observedDataConfig: {
+        enabled: false,
+        metricHalflives: {
+          qualityMs: 900000,
+          latencyMs: 300000,
+          throughputMs: 120000,
+          reliabilityMs: 600000,
+          costMs: 1800000,
+        },
+        throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
+        difficultyLearning: {
+          recommendation: {
+            minSamples: 4,
+            maxFailureRate: 0.2,
+            minQualityScore: 0.8,
+            minTokensPerSec: 22,
+          },
+        },
+      },
+    };
     const quality = getQualityMetric(c, input);
     expect(quality.value).toBe(0.5);
     expect(quality.source).toBe("default");
   });
 
   test("multiple candidates with different benchmark scores get different quality metrics", () => {
-    const c1 = candidate("v4-pro", ["text.chat"], { observed: undefined, benchmarkCapability: { overallScore: 1.0 } });
-    const c2 = candidate("v4-flash", ["text.chat"], { observed: undefined, benchmarkCapability: { overallScore: 0.75 } });
-    const input = { request: baseRequest, candidates: [c1, c2], observedDataConfig: { enabled: false, metricHalflives: { qualityMs: 900000, latencyMs: 300000, throughputMs: 120000, reliabilityMs: 600000, costMs: 1800000 }, throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 }, difficultyLearning: { recommendation: { minSamples: 4, maxFailureRate: 0.2, minQualityScore: 0.8, minTokensPerSec: 22 } } } };
+    const c1 = candidate("v4-pro", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: { overallScore: 1.0 },
+    });
+    const c2 = candidate("v4-flash", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: { overallScore: 0.75 },
+    });
+    const input = {
+      request: baseRequest,
+      candidates: [c1, c2],
+      observedDataConfig: {
+        enabled: false,
+        metricHalflives: {
+          qualityMs: 900000,
+          latencyMs: 300000,
+          throughputMs: 120000,
+          reliabilityMs: 600000,
+          costMs: 1800000,
+        },
+        throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
+        difficultyLearning: {
+          recommendation: {
+            minSamples: 4,
+            maxFailureRate: 0.2,
+            minQualityScore: 0.8,
+            minTokensPerSec: 22,
+          },
+        },
+      },
+    };
     const q1 = getQualityMetric(c1, input);
     const q2 = getQualityMetric(c2, input);
     expect(q1.value).toBeGreaterThan(q2.value);

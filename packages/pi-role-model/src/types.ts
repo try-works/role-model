@@ -102,7 +102,9 @@ export interface PiExtensionAPI {
   registerCommand(name: string, config: { description: string; handler: PiCommandHandler }): void;
   on?: (
     event: "before_provider_request",
-    handler: (event: { type: "before_provider_request"; payload: unknown }) => unknown | Promise<unknown>,
+    handler: (event: { type: "before_provider_request"; payload: unknown }) =>
+      | unknown
+      | Promise<unknown>,
   ) => void;
   setModel?: (model: PiModelSelection) => Promise<boolean>;
 }

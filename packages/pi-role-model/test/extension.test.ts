@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { createRoleModelExtension } from "../src/extension.js";
-import type { PiCommandContext, PiModelSelection } from "../src/types.js";
 import { loadCompactTaxonomy } from "../src/taxonomy/load-compact-taxonomy.js";
+import type { PiCommandContext, PiModelSelection } from "../src/types.js";
 import { createDiscovery } from "./fixtures.js";
 
 type RegisteredCommandConfig = {
@@ -199,7 +199,9 @@ describe("Pi extension registration", () => {
       type: "before_provider_request",
       payload: {
         model: "role-model/auto",
-        messages: [{ role: "user", content: "Implement this small bug fix and add a regression test." }],
+        messages: [
+          { role: "user", content: "Implement this small bug fix and add a regression test." },
+        ],
       },
     });
 

@@ -91,7 +91,8 @@ export function createAccountMutationPayload(
   const assignment = buildModelRoleAssignmentForSelection(roleIds, allRoleIds);
   const nextBinding = {
     modelId,
-    roleIds: assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
+    roleIds:
+      assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
     ...assignment,
   };
   return {
@@ -532,9 +533,7 @@ export default function ControlModelsRoute() {
                               const checked = event.currentTarget.checked;
                               setDraftRolesByAccountId((current) => ({
                                 ...current,
-                                [account.providerAccountId]: checked
-                                  ? [...allRuntimeRoleIds]
-                                  : [],
+                                [account.providerAccountId]: checked ? [...allRuntimeRoleIds] : [],
                               }));
                             }}
                           />

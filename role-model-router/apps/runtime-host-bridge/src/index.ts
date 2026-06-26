@@ -9789,7 +9789,7 @@ function createRuntimeTaxonomyClassificationGuideResponse(): Record<string, unkn
       "3. Score each candidate role using classification signals (positiveSignals, negativeSignals, description keywords).",
       "4. Select the highest-scoring role; load its task chunk.",
       "5. Score tasks within the chunk using task labels, descriptions, and classifier guidance.",
-      `6. Emit role_model.intent with role_hint_id, task_type, preferred_capabilities, modalities, tool_classes, confidence, source, evidence, and alternatives.`,
+      "6. Emit role_model.intent with role_hint_id, task_type, preferred_capabilities, modalities, tool_classes, confidence, source, evidence, and alternatives.",
     ],
     groups,
     wireWrapper: "role_model.intent",
@@ -15171,13 +15171,11 @@ export async function createRuntimeBridgeBackend(
     const tcs = normalizedIntent.toolClasses as readonly string[] | undefined;
 
     const alternatives = Array.isArray(normalizedIntent.alternatives)
-      ? (normalizedIntent.alternatives as readonly Record<string, unknown>[]).map(
-          (alt) => ({
-            ...(typeof alt.roleId === "string" ? { role_hint_id: alt.roleId } : {}),
-            ...(typeof alt.taskType === "string" ? { task_type: alt.taskType } : {}),
-            ...(typeof alt.confidence === "number" ? { confidence: alt.confidence } : {}),
-          }),
-        )
+      ? (normalizedIntent.alternatives as readonly Record<string, unknown>[]).map((alt) => ({
+          ...(typeof alt.roleId === "string" ? { role_hint_id: alt.roleId } : {}),
+          ...(typeof alt.taskType === "string" ? { task_type: alt.taskType } : {}),
+          ...(typeof alt.confidence === "number" ? { confidence: alt.confidence } : {}),
+        }))
       : undefined;
 
     return {
@@ -15190,21 +15188,15 @@ export async function createRuntimeBridgeBackend(
         classification_contract_version: normalizedIntent.classificationContractVersion,
         ...(role?.id ? { role_hint_id: role.id } : {}),
         ...(task?.id ? { task_type: task.id } : {}),
-        ...(normalizedIntent.taskAction
-          ? { task_action: normalizedIntent.taskAction }
-          : {}),
+        ...(normalizedIntent.taskAction ? { task_action: normalizedIntent.taskAction } : {}),
         ...(normalizedIntent.taskVariant !== undefined && normalizedIntent.taskVariant !== null
           ? { task_variant: normalizedIntent.taskVariant }
           : {}),
-        ...(normalizedIntent.taskSource
-          ? { task_source: normalizedIntent.taskSource }
-          : {}),
+        ...(normalizedIntent.taskSource ? { task_source: normalizedIntent.taskSource } : {}),
         ...(typeof normalizedIntent.taskConfidence === "number"
           ? { task_confidence: normalizedIntent.taskConfidence }
           : {}),
-        ...(normalizedIntent.roleSource
-          ? { role_source: normalizedIntent.roleSource }
-          : {}),
+        ...(normalizedIntent.roleSource ? { role_source: normalizedIntent.roleSource } : {}),
         ...(typeof normalizedIntent.confidence === "number"
           ? { confidence: normalizedIntent.confidence }
           : {}),
@@ -15215,16 +15207,12 @@ export async function createRuntimeBridgeBackend(
         ...(caps?.preferred && (caps.preferred as readonly string[]).length > 0
           ? { preferred_capabilities: caps.preferred }
           : {}),
-        ...(mods?.required
-          ? { required_modalities: mods.required }
-          : {}),
+        ...(mods?.required ? { required_modalities: mods.required } : {}),
         ...(tcs && tcs.length > 0 ? { tool_classes: tcs } : {}),
         ...(normalizedIntent.contextTokensEstimate
           ? { context_tokens_estimate: normalizedIntent.contextTokensEstimate }
           : {}),
-        ...(normalizedIntent.evidence
-          ? { evidence: normalizedIntent.evidence }
-          : {}),
+        ...(normalizedIntent.evidence ? { evidence: normalizedIntent.evidence } : {}),
         ...(alternatives && alternatives.length > 0 ? { alternatives } : {}),
       },
     };
