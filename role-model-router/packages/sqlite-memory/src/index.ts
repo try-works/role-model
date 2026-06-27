@@ -1043,9 +1043,7 @@ function initializeSchema(database: DatabaseSync): void {
     ).map((row) => row.name),
   );
   if (!observationColumns.has("retain_until_ms")) {
-    database.exec(
-      "ALTER TABLE runtime_observations ADD COLUMN retain_until_ms INTEGER",
-    );
+    database.exec("ALTER TABLE runtime_observations ADD COLUMN retain_until_ms INTEGER");
     database.exec(
       "CREATE INDEX IF NOT EXISTS idx_obs_retain_until ON runtime_observations(retain_until_ms)",
     );

@@ -40,14 +40,17 @@ export interface BenchmarkPersistedEndpointGrade {
     readonly judgeUnavailable?: boolean;
     readonly cappedByValidator?: boolean;
   }[];
-  readonly caseTaxonomyTags?: Record<string, {
-    readonly roleId: string;
-    readonly taskType: string;
-    readonly variant?: string;
-    readonly requiredCapabilities?: readonly string[];
-    readonly requiredModalities?: readonly string[];
-    readonly toolClasses?: readonly string[];
-  }>;
+  readonly caseTaxonomyTags?: Record<
+    string,
+    {
+      readonly roleId: string;
+      readonly taskType: string;
+      readonly variant?: string;
+      readonly requiredCapabilities?: readonly string[];
+      readonly requiredModalities?: readonly string[];
+      readonly toolClasses?: readonly string[];
+    }
+  >;
 }
 
 export interface BenchmarkPersistedRunResult {
@@ -133,14 +136,17 @@ export interface BenchmarkCapability {
 
 function computeTaxonomyAggregates(
   caseResults: readonly { readonly caseId: string; readonly score: number }[],
-  caseTaxonomyTags: Record<string, {
-    readonly roleId: string;
-    readonly taskType: string;
-    readonly variant?: string;
-    readonly requiredCapabilities?: readonly string[];
-    readonly requiredModalities?: readonly string[];
-    readonly toolClasses?: readonly string[];
-  }>,
+  caseTaxonomyTags: Record<
+    string,
+    {
+      readonly roleId: string;
+      readonly taskType: string;
+      readonly variant?: string;
+      readonly requiredCapabilities?: readonly string[];
+      readonly requiredModalities?: readonly string[];
+      readonly toolClasses?: readonly string[];
+    }
+  >,
 ): BenchmarkSummarySubject["taxonomyScores"] {
   const byRole: Record<string, { total: number; count: number }> = {};
   const byTask: Record<string, { total: number; count: number }> = {};
@@ -189,10 +195,18 @@ function computeTaxonomyAggregates(
   return {
     byRole: Object.fromEntries(Object.entries(byRole).map(([k, v]) => [k, v.total / v.count])),
     byTask: Object.fromEntries(Object.entries(byTask).map(([k, v]) => [k, v.total / v.count])),
-    byVariant: Object.fromEntries(Object.entries(byVariant).map(([k, v]) => [k, v.total / v.count])),
-    byCapability: Object.fromEntries(Object.entries(byCapability).map(([k, v]) => [k, v.total / v.count])),
-    byModality: Object.fromEntries(Object.entries(byModality).map(([k, v]) => [k, v.total / v.count])),
-    byToolClass: Object.fromEntries(Object.entries(byToolClass).map(([k, v]) => [k, v.total / v.count])),
+    byVariant: Object.fromEntries(
+      Object.entries(byVariant).map(([k, v]) => [k, v.total / v.count]),
+    ),
+    byCapability: Object.fromEntries(
+      Object.entries(byCapability).map(([k, v]) => [k, v.total / v.count]),
+    ),
+    byModality: Object.fromEntries(
+      Object.entries(byModality).map(([k, v]) => [k, v.total / v.count]),
+    ),
+    byToolClass: Object.fromEntries(
+      Object.entries(byToolClass).map(([k, v]) => [k, v.total / v.count]),
+    ),
   };
 }
 

@@ -38,9 +38,7 @@ export type TaxonomyScoreAggregates = Partial<TaxonomyDimensionScoreMap>;
  * Extract taxonomy tags from a benchmark case, if present.
  * Returns undefined for cases that have not been tagged.
  */
-export function getCaseTaxonomyTags(
-  caseItem: TaggedBenchmarkCase,
-): TaxonomyCaseTags | undefined {
+export function getCaseTaxonomyTags(caseItem: TaggedBenchmarkCase): TaxonomyCaseTags | undefined {
   const tags = caseItem.taxonomy_tags;
   if (!tags) return undefined;
   return {

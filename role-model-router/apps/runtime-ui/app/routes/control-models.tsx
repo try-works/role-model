@@ -17,13 +17,13 @@ import {
   secondaryButtonClassName,
 } from "../lib/design-system";
 import {
+  type ModelTelemetryRollup,
   type RouterCandidate,
   type RuntimeAccount,
   type RuntimeControllerAssignment,
   type RuntimeModelRoleAssignment,
   type RuntimeRolePolicy,
   type RuntimeSnapshot,
-  type ModelTelemetryRollup,
   fetchControllerAssignment,
   fetchModelTelemetryRollup,
   fetchRolePolicy,
@@ -420,7 +420,8 @@ export default function ControlModelsRoute() {
 
                     {typeof capabilityScore === "number" ? (
                       <p className="mt-3 text-xs text-[var(--rm-accent-fg,var(--rm-secondary))]">
-                        Advisory: scores {Math.round(capabilityScore * 100)}% on routing capability benchmark.
+                        Advisory: scores {Math.round(capabilityScore * 100)}% on routing capability
+                        benchmark.
                         {card.requestCount > 0
                           ? ` Based on ${card.requestCount} request${card.requestCount === 1 ? "" : "s"}.`
                           : ""}
@@ -664,8 +665,8 @@ export default function ControlModelsRoute() {
                   <div className="space-y-3 text-sm">
                     <p className="text-xs text-[var(--rm-muted)]">
                       Based on {telemetryRollup.totalRequests} request
-                      {telemetryRollup.totalRequests === 1 ? "" : "s"} over the
-                      last {telemetryRollup.windowDays} days.
+                      {telemetryRollup.totalRequests === 1 ? "" : "s"} over the last{" "}
+                      {telemetryRollup.windowDays} days.
                     </p>
                     <div className="space-y-2">
                       {telemetryRollup.tasks.map((task) => (
@@ -674,14 +675,10 @@ export default function ControlModelsRoute() {
                           className="flex flex-wrap items-center justify-between gap-2 rounded border border-[var(--rm-border)] p-2"
                         >
                           <div className="min-w-0">
-                            <p className="font-mono text-xs text-[var(--rm-fg)]">
-                              {task.taskType}
-                            </p>
+                            <p className="font-mono text-xs text-[var(--rm-fg)]">{task.taskType}</p>
                             <p className="text-xs text-[var(--rm-secondary)]">
                               {task.requestCount} req{" "}
-                              {task.avgLatencyMs !== null
-                                ? `• avg ${task.avgLatencyMs}ms`
-                                : ""}
+                              {task.avgLatencyMs !== null ? `• avg ${task.avgLatencyMs}ms` : ""}
                             </p>
                           </div>
                           <div className="flex gap-1">
@@ -703,8 +700,8 @@ export default function ControlModelsRoute() {
                   </div>
                 ) : (
                   <p className="text-sm text-[var(--rm-secondary)]">
-                    No telemetry data available yet for this model. Send requests
-                    to populate per-task performance and advisory warnings.
+                    No telemetry data available yet for this model. Send requests to populate
+                    per-task performance and advisory warnings.
                   </p>
                 )}
               </DisclosureSection>

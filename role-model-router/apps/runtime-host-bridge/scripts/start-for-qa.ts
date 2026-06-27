@@ -183,8 +183,11 @@ export async function bootstrapQaControlPlane(
   if (process.env.DEEPSEEK_API_KEY) {
     const da = "deepseek.personal.deepseek-api-key";
     await backend.upsertProviderAccount({
-      providerAccountId: da, providerId: "deepseek", providerKind: "provider-openai",
-      orgScope: "personal", accountScope: "workspace-default",
+      providerAccountId: da,
+      providerId: "deepseek",
+      providerKind: "provider-openai",
+      orgScope: "personal",
+      accountScope: "workspace-default",
       credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" },
       authMode: "api-key-static",
       regionPolicy: { mode: "prefer", regions: ["global"] },
@@ -194,12 +197,24 @@ export async function bootstrapQaControlPlane(
         { modelId: "deepseek/deepseek-v4-flash", roleIds: ["general.chat"] },
         { modelId: "deepseek/deepseek-v4-pro", roleIds: ["general.chat"] },
       ],
-      deniedModels: [], entitlementTags: ["chat", "benchmark"],
-      budgetPolicyRef: "budget.default", quotaPolicyRef: "quota.default",
-      status: "active", healthStatus: "healthy", rotationState: "stable",
+      deniedModels: [],
+      entitlementTags: ["chat", "benchmark"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
     });
-    await backend.activateEndpoint({ providerAccountId: da, modelId: "deepseek/deepseek-v4-flash", region: "global" });
-    await backend.activateEndpoint({ providerAccountId: da, modelId: "deepseek/deepseek-v4-pro", region: "global" });
+    await backend.activateEndpoint({
+      providerAccountId: da,
+      modelId: "deepseek/deepseek-v4-flash",
+      region: "global",
+    });
+    await backend.activateEndpoint({
+      providerAccountId: da,
+      modelId: "deepseek/deepseek-v4-pro",
+      region: "global",
+    });
   }
 }
 
@@ -343,12 +358,31 @@ export async function main(): Promise<void> {
       created_at_ms, updated_at_ms
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
     stmt.run(
-      "deepseek.personal.deepseek-api-key", "deepseek", "provider-openai", "personal", "workspace-default",
-      "env", "DEEPSEEK_API_KEY", "api-key-static", JSON.stringify({mode:"prefer",regions:["global"]}), "https://api.deepseek.com/v1",
-      JSON.stringify(["deepseek/deepseek-v4-flash","deepseek/deepseek-v4-pro"]),
-      JSON.stringify([{modelId:"deepseek/deepseek-v4-flash",roleIds:["general.chat"]},{modelId:"deepseek/deepseek-v4-pro",roleIds:["general.chat"]}]),
-      "[]", "[\"chat\",\"benchmark\"]", "budget.default", "quota.default",
-      "active", "healthy", "stable", now, now);
+      "deepseek.personal.deepseek-api-key",
+      "deepseek",
+      "provider-openai",
+      "personal",
+      "workspace-default",
+      "env",
+      "DEEPSEEK_API_KEY",
+      "api-key-static",
+      JSON.stringify({ mode: "prefer", regions: ["global"] }),
+      "https://api.deepseek.com/v1",
+      JSON.stringify(["deepseek/deepseek-v4-flash", "deepseek/deepseek-v4-pro"]),
+      JSON.stringify([
+        { modelId: "deepseek/deepseek-v4-flash", roleIds: ["general.chat"] },
+        { modelId: "deepseek/deepseek-v4-pro", roleIds: ["general.chat"] },
+      ]),
+      "[]",
+      '["chat","benchmark"]',
+      "budget.default",
+      "quota.default",
+      "active",
+      "healthy",
+      "stable",
+      now,
+      now,
+    );
     db.close();
     console.log("[QA] Pre-registered DeepSeek account.");
   }

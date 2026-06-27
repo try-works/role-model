@@ -920,9 +920,7 @@ export default function ControlBenchmarkRoute() {
             const allTasks = new Set<string>();
             const allCapabilities = new Set<string>();
             for (const row of modelScoreRows) {
-              const subject = lastSummary?.subjects.find(
-                (s) => s.endpointId === row.endpointId,
-              );
+              const subject = lastSummary?.subjects.find((s) => s.endpointId === row.endpointId);
               if (subject?.taxonomyScores) {
                 for (const k of Object.keys(subject.taxonomyScores.byRole ?? {})) allRoles.add(k);
                 for (const k of Object.keys(subject.taxonomyScores.byTask ?? {})) allTasks.add(k);
@@ -1050,13 +1048,9 @@ export default function ControlBenchmarkRoute() {
                         >
                           <div>
                             <p className="font-semibold text-[var(--rm-fg)]">{entry.modelId}</p>
-                            <p className="text-xs text-[var(--rm-secondary)]">
-                              {entry.endpointId}
-                            </p>
+                            <p className="text-xs text-[var(--rm-secondary)]">{entry.endpointId}</p>
                           </div>
-                          <StatusPill tone="success">
-                            {formatScore(entry.score)}
-                          </StatusPill>
+                          <StatusPill tone="success">{formatScore(entry.score)}</StatusPill>
                         </div>
                       ))}
                     </div>

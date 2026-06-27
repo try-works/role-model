@@ -40,9 +40,12 @@ export default function ObserveRoutingRoute() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const timeRange = (searchParams.get("range") as TelemetryTimeRangeValue) || "week";
-  const breakdownValue = (searchParams.get("breakdown") as "" | RuntimeTelemetryAnalyticsDimension) || "selectedStrategy";
+  const breakdownValue =
+    (searchParams.get("breakdown") as "" | RuntimeTelemetryAnalyticsDimension) ||
+    "selectedStrategy";
   const sourceFilter = (searchParams.get("source") as "all" | "local" | "remote") || "all";
-  const difficulty = (searchParams.get("difficulty") as "all" | "easy" | "medium" | "hard") || "all";
+  const difficulty =
+    (searchParams.get("difficulty") as "all" | "easy" | "medium" | "hard") || "all";
   const selectedStrategy = searchParams.get("strategy") || "";
   const requestedRoleId = searchParams.get("roleId") || "";
   const taxonomyRoleId = searchParams.get("taxRole") || "";
@@ -72,9 +75,7 @@ export default function ObserveRoutingRoute() {
       ...(selectedStrategy.trim().length > 0
         ? { selectedStrategies: [selectedStrategy.trim()] }
         : {}),
-      ...(taxonomyRoleId.trim().length > 0
-        ? { taxonomyRoleIds: [taxonomyRoleId.trim()] }
-        : {}),
+      ...(taxonomyRoleId.trim().length > 0 ? { taxonomyRoleIds: [taxonomyRoleId.trim()] } : {}),
       ...(taxonomyTaskType.trim().length > 0
         ? { taxonomyTaskTypes: [taxonomyTaskType.trim()] }
         : {}),
@@ -83,7 +84,9 @@ export default function ObserveRoutingRoute() {
   );
 
   const breakdown: RuntimeTelemetryAnalyticsDimension | null =
-    (breakdownValue as string) === "" ? null : (breakdownValue as RuntimeTelemetryAnalyticsDimension);
+    (breakdownValue as string) === ""
+      ? null
+      : (breakdownValue as RuntimeTelemetryAnalyticsDimension);
 
   useEffect(() => {
     let disposed = false;
@@ -155,9 +158,7 @@ export default function ObserveRoutingRoute() {
           <div className="grid gap-4 xl:grid-cols-4">
             <TelemetrySelectField
               label="Breakdown"
-              onChange={(value) =>
-                updateParam("breakdown", value)
-              }
+              onChange={(value) => updateParam("breakdown", value)}
               options={routingBreakdownOptions}
               value={breakdownValue}
             />

@@ -14,7 +14,10 @@
         "classificationContractVersion": { "type": "string" },
         "dimensions": {
           "type": "array",
-          "items": { "type": "string", "enum": ["role", "task", "variant", "capability", "modality", "toolClass"] }
+          "items": {
+            "type": "string",
+            "enum": ["role", "task", "variant", "capability", "modality", "toolClass"]
+          }
         }
       }
     }

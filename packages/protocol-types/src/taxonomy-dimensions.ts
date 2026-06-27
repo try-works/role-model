@@ -18,14 +18,10 @@ export const TAXONOMY_BENCHMARK_DIMENSIONS = [
 ] as const;
 
 /** A single taxonomy benchmark dimension. */
-export type TaxonomyBenchmarkDimension =
-  (typeof TAXONOMY_BENCHMARK_DIMENSIONS)[number];
+export type TaxonomyBenchmarkDimension = (typeof TAXONOMY_BENCHMARK_DIMENSIONS)[number];
 
 /**
  * A complete taxonomy dimension score map.
  * Every dimension key maps to a record of { value: score } aggregated per-endpoint.
  */
-export type TaxonomyDimensionScoreMap = Record<
-  TaxonomyBenchmarkDimension,
-  Record<string, number>
->;
+export type TaxonomyDimensionScoreMap = Record<TaxonomyBenchmarkDimension, Record<string, number>>;

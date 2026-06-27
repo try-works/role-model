@@ -14462,7 +14462,10 @@ export async function createRuntimeBridgeBackend(
   };
   const readObservationTelemetryMeta = (
     requestId: string,
-  ): Pick<BridgeTelemetryRequestRecord, "clientRequestId" | "requestClass" | "taxonomyRoleId" | "taxonomyTaskType"> => {
+  ): Pick<
+    BridgeTelemetryRequestRecord,
+    "clientRequestId" | "requestClass" | "taxonomyRoleId" | "taxonomyTaskType"
+  > => {
     const observation = readRuntimeObservationBundle({
       databasePath: initialization.databasePath,
       requestId,
@@ -16018,12 +16021,10 @@ export async function createRuntimeBridgeBackend(
     const persistedControllerAssignment = !configuredController?.enabled
       ? getCurrentControllerAssignment()
       : null;
-    const effectiveController =
-      configuredController?.enabled
-        ? configuredController
-        : persistedControllerAssignment;
-    const effectiveClassifierModelId =
-      classifier?.modelId ?? effectiveController?.modelId ?? null;
+    const effectiveController = configuredController?.enabled
+      ? configuredController
+      : persistedControllerAssignment;
+    const effectiveClassifierModelId = classifier?.modelId ?? effectiveController?.modelId ?? null;
     if (!classifier?.enabled) {
       return persistResolvedClassification({
         ...classifyDifficultyFromSignals({

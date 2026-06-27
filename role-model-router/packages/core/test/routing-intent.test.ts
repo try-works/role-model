@@ -577,8 +577,8 @@ describe("routing intent metadata", () => {
       candidates: [c],
       observedDataConfig: {
         ...minimalObservedConfig,
-        telemetryAdvisoryFailureThreshold: 0.30,
-        telemetryAdvisoryPenalty: -0.10,
+        telemetryAdvisoryFailureThreshold: 0.3,
+        telemetryAdvisoryPenalty: -0.1,
       },
     };
     const quality = getQualityMetric(c, input);
@@ -600,7 +600,7 @@ describe("routing intent metadata", () => {
       candidates: [c],
       observedDataConfig: {
         ...minimalObservedConfig,
-        telemetryAdvisoryFailureThreshold: 0.40,
+        telemetryAdvisoryFailureThreshold: 0.4,
         telemetryAdvisoryPenalty: -0.08,
       },
     };

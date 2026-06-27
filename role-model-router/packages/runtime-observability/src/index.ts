@@ -772,7 +772,11 @@ export function createRuntimeObservationBundle(
     tooling,
     ...(input.telemetrySnapshot ? { telemetrySnapshot: input.telemetrySnapshot } : {}),
     ...(input.normalizedIntent
-      ? { taxonomyDimensions: extractTaxonomyFields(input.normalizedIntent) as RuntimeObservationBundle["taxonomyDimensions"] }
+      ? {
+          taxonomyDimensions: extractTaxonomyFields(
+            input.normalizedIntent,
+          ) as RuntimeObservationBundle["taxonomyDimensions"],
+        }
       : {}),
     privacyReceipt: {
       samplingRate,

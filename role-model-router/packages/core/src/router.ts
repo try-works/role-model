@@ -487,9 +487,10 @@ export function getQualityMetric(
     // Blend weight is configurable via observedDataConfig.benchmarkTaskBlendWeight (default 0.7).
     const config = input.observedDataConfig;
     const blendWeight = config?.benchmarkTaskBlendWeight ?? 0.7;
-    const blendedScore = typeof taskScore === "number"
-      ? blendWeight * benchmarkScore + (1 - blendWeight) * taskScore
-      : benchmarkScore;
+    const blendedScore =
+      typeof taskScore === "number"
+        ? blendWeight * benchmarkScore + (1 - blendWeight) * taskScore
+        : benchmarkScore;
     let value = config?.enabled
       ? decayToNeutral(blendedScore, FRESHNESS_NEUTRAL, freshnessWeight)
       : blendedScore;
@@ -505,7 +506,7 @@ export function getQualityMetric(
     // Threshold and penalty are configurable via observedDataConfig (defaults: 0.20, -0.05).
     const telemetrySuccessRate = candidate.telemetryScores?.taskSuccessRates?.[taskType];
     if (typeof telemetrySuccessRate === "number") {
-      const failureThreshold = config?.telemetryAdvisoryFailureThreshold ?? 0.20;
+      const failureThreshold = config?.telemetryAdvisoryFailureThreshold ?? 0.2;
       const advisoryAdjustment = config?.telemetryAdvisoryPenalty ?? -0.05;
       if (1 - telemetrySuccessRate > failureThreshold) {
         value = Math.max(0, value + advisoryAdjustment);

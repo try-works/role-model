@@ -547,7 +547,11 @@ describe("benchmark-summary", () => {
     // byModality: text in both = 0.75, structured_json in h02 = 1.0
     expect(taxonomyScores?.byModality).toEqual({ text: 0.75, structured_json: 1 });
     // byToolClass: filesystem.read in h01 = 0.5, filesystem.write in h02 = 1.0, shell.execute in h02 = 1.0
-    expect(taxonomyScores?.byToolClass).toEqual({ "filesystem.read": 0.5, "filesystem.write": 1, "shell.execute": 1 });
+    expect(taxonomyScores?.byToolClass).toEqual({
+      "filesystem.read": 0.5,
+      "filesystem.write": 1,
+      "shell.execute": 1,
+    });
   });
 
   test("returns undefined taxonomyScores when caseTaxonomyTags are absent", async () => {
@@ -587,9 +591,7 @@ describe("benchmark-summary", () => {
             medium: { score: 0, cases: 0 },
             hard: { score: 0, cases: 0 },
           },
-          caseResults: [
-            { caseId: "h01", difficultyBucket: "easy", score: 0.9 },
-          ],
+          caseResults: [{ caseId: "h01", difficultyBucket: "easy", score: 0.9 }],
         },
       ],
     });
