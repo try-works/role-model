@@ -70,14 +70,14 @@ import {
   readDifficultyClassificationCache,
   readLatestObservedProfile,
   readLatestObservedProfilesByEndpointIds,
+  readObservationTelemetryColumns,
+  readObservationTelemetryColumnsBatch,
   readObservedPerformanceSamples,
   readObservedThroughputPenaltyState,
   readProviderDeviceAuthSession,
   readRuntimeControllerAssignment,
   readRuntimeMaintenancePolicy,
   readRuntimeObservationBundle,
-  readObservationTelemetryColumns,
-  readObservationTelemetryColumnsBatch,
   readRuntimeTelemetrySummary,
   upsertDifficultyClassificationCache,
   upsertObservedThroughputPenaltyState,
@@ -14475,7 +14475,8 @@ export async function createRuntimeBridgeBackend(
     if (columns) {
       return {
         clientRequestId: columns.clientRequestId,
-        requestClass: (columns.requestClass as "benchmark" | "live_request" | "unknown") ?? "unknown",
+        requestClass:
+          (columns.requestClass as "benchmark" | "live_request" | "unknown") ?? "unknown",
         taxonomyRoleId: columns.taxonomyRoleId,
         taxonomyTaskType: columns.taxonomyTaskType,
       };
@@ -14578,8 +14579,7 @@ export async function createRuntimeBridgeBackend(
       const endpointMeta = getTelemetryEndpointMeta(record.endpointId);
       return {
         ...record,
-        clientRequestId:
-          record.clientRequestId ?? observationMeta?.clientRequestId ?? null,
+        clientRequestId: record.clientRequestId ?? observationMeta?.clientRequestId ?? null,
         requestClass:
           (record.requestClass as BridgeTelemetryRequestRecord["requestClass"]) ??
           (observationMeta?.requestClass as BridgeTelemetryRequestRecord["requestClass"]) ??

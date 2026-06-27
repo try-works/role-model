@@ -1058,9 +1058,7 @@ function initializeSchema(database: DatabaseSync): void {
     ["request_class", "TEXT"],
   ] as const) {
     if (!observationColumns.has(colName)) {
-      database.exec(
-        `ALTER TABLE runtime_observations ADD COLUMN ${colName} ${colType}`,
-      );
+      database.exec(`ALTER TABLE runtime_observations ADD COLUMN ${colName} ${colType}`);
     }
   }
   // R-PERF3: Backfill existing records from observation_json
@@ -2919,10 +2917,18 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
         observation.conversationId,
         observation.usageEvent.timestamp_ms,
         observation.privacyReceipt?.retainUntil ?? null,
-        typeof observation.taxonomyDimensions?.taxonomy_role_id === "string" ? observation.taxonomyDimensions.taxonomy_role_id : null,
-        typeof observation.taxonomyDimensions?.taxonomy_task_type === "string" ? observation.taxonomyDimensions.taxonomy_task_type : null,
+        typeof observation.taxonomyDimensions?.taxonomy_role_id === "string"
+          ? observation.taxonomyDimensions.taxonomy_role_id
+          : null,
+        typeof observation.taxonomyDimensions?.taxonomy_task_type === "string"
+          ? observation.taxonomyDimensions.taxonomy_task_type
+          : null,
         observation.clientRequestId ?? null,
-        observation.observedPerformance?.sample?.source_type === "benchmark" ? "benchmark" : observation.observedPerformance?.sample?.source_type === "live_request" ? "live_request" : null,
+        observation.observedPerformance?.sample?.source_type === "benchmark"
+          ? "benchmark"
+          : observation.observedPerformance?.sample?.source_type === "live_request"
+            ? "live_request"
+            : null,
         JSON.stringify(observation),
       );
     database
