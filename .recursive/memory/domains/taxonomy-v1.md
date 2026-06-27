@@ -4,8 +4,8 @@ Status: `CURRENT`
 Owns-Paths: `schemas/role-model/taxonomy/**`, `role-model-router/packages/core/data/taxonomy/**`, `role-model-router/packages/core/src/taxonomy/**`, `docs/protocol/taxonomy-v1.md`
 Watch-Paths: `packages/pi-role-model/data/taxonomy/**`, `packages/pi-role-model/src/taxonomy/**`
 Created: `2026-06-23`
-Last Validated: `2026-06-24`
-Validated By: `260624-clever-seal`
+Last Validated: `2026-06-27`
+Validated By: `260626-still-diamond`
 
 ## Canonical Catalog
 

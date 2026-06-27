@@ -29,6 +29,47 @@
   - Phase 5 QA addendum 01 closed the original QA-runtime backend limitation: managed local and remote mock vendors now start healthy, advertise canonical taxonomy capabilities, and the real local Pi prompt completed through the runtime with `requestedRoleId=security`, `roleIds=[security]`, `ROLE_POLICY_APPLIED`, and `TASK_POLICY_APPLIED` in telemetry/request detail
   - run 58 remains draft for proposal phases 5 and 6: taxonomy-aware benchmark scoring and taxonomy-level telemetry/observability
 
+### Run `58-role-model-taxonomy-v1-benchmark-telemetry`
+
+- Run folder: `/.recursive/run/58-role-model-taxonomy-v1-benchmark-telemetry/`
+- Worktree: `.worktrees/58-taxonomy-benchmark-telemetry`
+- Branch: `recursive/58-role-model-taxonomy-v1-benchmark-telemetry`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md` (applied to STATE.md)
+  - `08-memory-impact.md`
+- What changed:
+  - Implemented proposal Phase 5 (taxonomy-aware benchmarks) and Phase 6 (taxonomy-aware telemetry):
+    - 4 taxonomy benchmark/telemetry schemas, 15 tagged benchmark cases across 4 minimum task types
+    - 6-dimension taxonomy score aggregation in benchmark pipeline
+    - Per-task benchmark scoring in router (configurable blend weights)
+    - Taxonomy dimension extraction in protocol-types, recording in observation bundles
+    - Telemetry analytics taxonomy dimensions (taxonomyRoleId, taxonomyTaskType)
+    - Benchmark UI taxonomy filters, observe routing taxonomy inputs, model telemetry rollup
+    - Privacy receipt, retention cleanup with indexed column, configurable telemetry advisory scoring
+    - Difficulty classifier fallback to controller modelId
+  - Architecture: single extraction source in protocol-types, dimension registry, configurable weights, re-exported linkage modules
+  - 257+ tests across 7 packages (21 new), all green. All 3 packages build clean.
+- Why:
+  - Benchmark scores must be differentiated by taxonomy dimension so model performance can be compared within role/task/capability categories
+  - Telemetry must record taxonomy dimensions for filtering, aggregation, and advisory performance signals without silently changing routing policy
+- How:
+  - Implemented with strict TDD (RED→GREEN across 5 test files). Additive/extension pattern — all changes extend existing code without replacing run 57 behavior.
+- What was not done:
+  - Live Pi-driven E2E verification incomplete: `litellm` Python binary not available in QA environment, blocking remote model execution. Code verified through unit/integration tests.
+  - Full model telemetry rollup (R10): live API function exists, shows static data until telemetry accumulates from successful executions.
+- Known issues / follow-ups:
+  - QA runtime requires `litellm` binary on PATH for remote execution. Without it, all requests return VENDOR_NOT_CONFIGURED.
+  - Pi uses run 57 pi-role-model extension by default; run 58 extension installed but classification not verified live.
+  - Adding a new taxonomy dimension touches 12+ files across all layers.
+
 ### Session `260624-clever-seal` — Post-Implementation Audit, Gap Closure, and E2E Verification
 
 - Date: 2026-06-24
