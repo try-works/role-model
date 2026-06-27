@@ -136,6 +136,8 @@ llama_swap:
   models:
     lfm2.5-1.2b-instruct:
       path: ./models/lfm2.5-1.2b-instruct.gguf
+litellm_proxy:
+  providers: {}
 `;
 }
 

@@ -652,6 +652,8 @@ describe("runtime-host-bridge", () => {
     expect(createQaRuntimeConfigText()).toContain("llama_swap:");
     expect(createQaRuntimeConfigText()).toContain("models:");
     expect(createQaRuntimeConfigText()).toContain("path: ./models/lfm2.5-1.2b-instruct.gguf");
+    expect(createQaRuntimeConfigText()).toContain("litellm_proxy:");
+    expect(createQaRuntimeConfigText()).toContain("providers:");
 
     const options = createQaServerOptions(repoRoot, backend);
 
@@ -707,6 +709,7 @@ describe("runtime-host-bridge", () => {
     const config = createQaRuntimeConfigText();
 
     expect(config).toContain("llama_swap:");
+    expect(config).toContain("litellm_proxy:");
   });
 
   test("seeds QA runtime config with canonical task capabilities for role-routed backend QA", () => {
