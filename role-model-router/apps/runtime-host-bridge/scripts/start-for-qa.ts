@@ -433,3 +433,20 @@ export async function main(): Promise<void> {
 if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
   await main();
 }
+
+export function createQaCanonicalRoleIds(): string[] {
+  return [
+    "analyst", "architect", "coder", "coordinator", "creative",
+    "data", "designer", "educator", "finance", "health",
+    "knowledge", "legal", "marketer", "mathematician", "operator",
+    "planner", "procurement", "product", "recruiter", "researcher",
+    "scientist", "security", "seller", "strategist", "support",
+    "tester", "translator", "writer",
+  ];
+}
+
+export function shouldBootstrapQaPlaceholderControlPlane(
+  env: Record<string, string | undefined>,
+): boolean {
+  return env.RUNTIME_QA_BOOTSTRAP_PLACEHOLDER_CONTROL_PLANE === "1";
+}

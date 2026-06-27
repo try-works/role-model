@@ -701,7 +701,7 @@ describe("runtime-host-bridge", () => {
       runtimeStateRoot,
       scopeId,
       unifiedRuntimeConfigPath: createQaRuntimeConfigPath(runtimeStateRoot),
-      runtimeVendorStartup: "enabled",
+      runtimeVendorStartup: "disabled",
     });
   });
 
