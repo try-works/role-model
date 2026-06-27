@@ -1,6 +1,6 @@
+import path from "node:path";
 // Production launcher: uses QA's working approach with production state
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
-import path from "node:path";
 
 const repoRoot = "D:/DEV/role-model";
 const runtimeStateRoot = "C:/Users/erikb/AppData/Local/Role Model Runtime/state";
@@ -11,7 +11,7 @@ const backend = await createRuntimeBridgeBackend({
   runtimeStateRoot,
   scopeId,
   runtimeVendorStartup: "enabled",
-  unifiedRuntimeConfigPath: runtimeStateRoot + "/" + scopeId + "/runtime-config.yaml",
+  unifiedRuntimeConfigPath: `${runtimeStateRoot}/${scopeId}/runtime-config.yaml`,
 });
 
 const server = await startBridgeServer({
@@ -91,9 +91,10 @@ const server = await startBridgeServer({
   readPeers: backend.readPeers,
   updatePeers: backend.updatePeers,
   checkPeerHealth: backend.checkPeerHealth,
-  getRoutableInventory: backend.getRoutableInventory,
-  readHealthStatus: backend.readHealthStatus,
 });
 
 console.log(`Production runtime on http://127.0.0.1:${server.port}`);
-process.on("SIGINT", () => { server.close(); process.exit(0); });
+process.on("SIGINT", () => {
+  server.close();
+  process.exit(0);
+});
