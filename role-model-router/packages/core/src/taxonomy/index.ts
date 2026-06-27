@@ -163,6 +163,7 @@ const taxonomyDataRootCandidates = (): string[] => {
     path.resolve(process.cwd(), "data", "taxonomy"),
     path.resolve(process.cwd(), "..", "..", "packages", "core", "data", "taxonomy"),
     path.resolve(process.cwd(), "role-model-router", "packages", "core", "data", "taxonomy"),
+    path.resolve(process.cwd(), "..", "..", "role-model-router", "packages", "core", "data", "taxonomy"),
   ];
 };
 
