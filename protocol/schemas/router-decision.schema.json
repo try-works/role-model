@@ -135,7 +135,9 @@
           "HIGH_QUALITY_TARGET_MET",
           "ROLE_POLICY_APPLIED",
           "TASK_POLICY_APPLIED",
-          "FALLBACK_CHAIN_COMPUTED"
+          "FALLBACK_CHAIN_COMPUTED",
+          "BENCHMARK_TASK_SCORE",
+          "TELEMETRY_TASK_PERFORMANCE"
         ]
       }
     },

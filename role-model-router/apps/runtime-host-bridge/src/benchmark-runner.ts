@@ -2016,6 +2016,23 @@ export async function runRoutingCapabilityBenchmark(
       endpointGrades,
     };
 
+    const caseTaxonomyTags: Record<
+      string,
+      {
+        readonly roleId: string;
+        readonly taskType: string;
+        readonly variant?: string;
+        readonly requiredCapabilities?: readonly string[];
+        readonly requiredModalities?: readonly string[];
+        readonly toolClasses?: readonly string[];
+      }
+    > = {};
+    for (const c of suite.cases) {
+      if (c.taxonomy_tags) {
+        caseTaxonomyTags[c.case_id] = c.taxonomy_tags;
+      }
+    }
+
     await writeBenchmarkRunResult(artifactRoot, {
       runId,
       suiteId: suite.suite_id,
@@ -2040,6 +2057,7 @@ export async function runRoutingCapabilityBenchmark(
           judgeUnavailable: caseResult.judgeUnavailable,
           cappedByValidator: caseResult.cappedByValidator,
         })),
+        caseTaxonomyTags,
       })),
     });
 

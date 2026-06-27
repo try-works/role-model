@@ -136,8 +136,6 @@ llama_swap:
   models:
     lfm2.5-1.2b-instruct:
       path: ./models/lfm2.5-1.2b-instruct.gguf
-litellm_proxy:
-  providers: {}
 `;
 }
 
@@ -181,6 +179,28 @@ export async function bootstrapQaControlPlane(
     modelId: qaActivatedModelId,
     region: qaActivatedEndpointRegion,
   });
+
+  if (process.env.DEEPSEEK_API_KEY) {
+    const da = "deepseek.personal.deepseek-api-key";
+    await backend.upsertProviderAccount({
+      providerAccountId: da, providerId: "deepseek", providerKind: "provider-openai",
+      orgScope: "personal", accountScope: "workspace-default",
+      credentialRef: { backend: "env", ref: "DEEPSEEK_API_KEY" },
+      authMode: "api-key-static",
+      regionPolicy: { mode: "prefer", regions: ["global"] },
+      baseUrlOverride: "https://api.deepseek.com/v1",
+      allowedModels: ["deepseek/deepseek-v4-flash", "deepseek/deepseek-v4-pro"],
+      modelRoleBindings: [
+        { modelId: "deepseek/deepseek-v4-flash", roleIds: ["general.chat"] },
+        { modelId: "deepseek/deepseek-v4-pro", roleIds: ["general.chat"] },
+      ],
+      deniedModels: [], entitlementTags: ["chat", "benchmark"],
+      budgetPolicyRef: "budget.default", quotaPolicyRef: "quota.default",
+      status: "active", healthStatus: "healthy", rotationState: "stable",
+    });
+    await backend.activateEndpoint({ providerAccountId: da, modelId: "deepseek/deepseek-v4-flash", region: "global" });
+    await backend.activateEndpoint({ providerAccountId: da, modelId: "deepseek/deepseek-v4-pro", region: "global" });
+  }
 }
 
 export function createQaServerOptions(
@@ -284,19 +304,54 @@ export async function main(): Promise<void> {
     console.log(`[QA] Seeded placeholder ${qaMoonshotApiKeyEnv} for local UI QA.`);
   }
 
-  // Clear any stale SQLite state from previous runs to ensure clean startup
-  console.log("[QA] Clearing stale runtime state...");
-  try {
-    await rm(runtimeStateRoot, { recursive: true, force: true });
-    console.log("[QA] Stale runtime state cleared.");
-  } catch {
-    // Directory may not exist; that's fine
-  }
-
   await mkdir(runtimeStateRoot, { recursive: true });
   const unifiedRuntimeConfigPath = createQaRuntimeConfigPath(runtimeStateRoot);
+
+  // Only clear config, keep runtime state for observation persistence
+  console.log("[QA] Keeping runtime state for observation persistence...");
+  try {
+    await rm(unifiedRuntimeConfigPath, { force: true });
+  } catch {
+    // File may not exist; that's fine
+  }
+
   await writeFile(unifiedRuntimeConfigPath, createQaRuntimeConfigText(), "utf8");
   console.log(`[QA] Seeded runtime config: ${unifiedRuntimeConfigPath}`);
+
+  // Pre-register deepseek.litellm account so LiteLLM endpoint validation passes
+  if (process.env.DEEPSEEK_API_KEY) {
+    const { DatabaseSync } = await import("node:sqlite");
+    const dbPath = path.join(runtimeStateRoot, scopeId, "memory", "memory.sqlite");
+    await mkdir(path.dirname(dbPath), { recursive: true });
+    const db = new DatabaseSync(dbPath);
+    db.exec(`CREATE TABLE IF NOT EXISTS provider_accounts (
+      provider_account_id TEXT PRIMARY KEY, provider_id TEXT NOT NULL, provider_kind TEXT NOT NULL,
+      org_scope TEXT NOT NULL, account_scope TEXT NOT NULL,
+      credential_backend TEXT NOT NULL, credential_ref TEXT NOT NULL, auth_mode TEXT NOT NULL,
+      region_policy_json TEXT NOT NULL, base_url_override TEXT,
+      allowed_models_json TEXT NOT NULL, model_role_bindings_json TEXT NOT NULL DEFAULT '[]',
+      denied_models_json TEXT NOT NULL, entitlement_tags_json TEXT NOT NULL,
+      budget_policy_ref TEXT NOT NULL, quota_policy_ref TEXT NOT NULL,
+      status TEXT NOT NULL, health_status TEXT NOT NULL, rotation_state TEXT NOT NULL,
+      created_at_ms INTEGER NOT NULL, updated_at_ms INTEGER NOT NULL)`);
+    const now = Date.now();
+    const stmt = db.prepare(`INSERT OR REPLACE INTO provider_accounts (
+      provider_account_id, provider_id, provider_kind, org_scope, account_scope,
+      credential_backend, credential_ref, auth_mode, region_policy_json, base_url_override,
+      allowed_models_json, model_role_bindings_json, denied_models_json, entitlement_tags_json,
+      budget_policy_ref, quota_policy_ref, status, health_status, rotation_state,
+      created_at_ms, updated_at_ms
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    stmt.run(
+      "deepseek.personal.deepseek-api-key", "deepseek", "provider-openai", "personal", "workspace-default",
+      "env", "DEEPSEEK_API_KEY", "api-key-static", JSON.stringify({mode:"prefer",regions:["global"]}), "https://api.deepseek.com/v1",
+      JSON.stringify(["deepseek/deepseek-v4-flash","deepseek/deepseek-v4-pro"]),
+      JSON.stringify([{modelId:"deepseek/deepseek-v4-flash",roleIds:["general.chat"]},{modelId:"deepseek/deepseek-v4-pro",roleIds:["general.chat"]}]),
+      "[]", "[\"chat\",\"benchmark\"]", "budget.default", "quota.default",
+      "active", "healthy", "stable", now, now);
+    db.close();
+    console.log("[QA] Pre-registered DeepSeek account.");
+  }
 
   const backend = await createRuntimeBridgeBackend(
     createQaRuntimeBridgeBackendOptions(repoRoot, runtimeStateRoot, scopeId),

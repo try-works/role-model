@@ -477,22 +477,49 @@ export function getQualityMetric(
 
   // Benchmark-derived quality (from benchmarkCapability.overallScore)
   const benchmarkScore = candidate.benchmarkCapability?.overallScore;
+  const taskType = input.request.taskType;
+  const taskScore = candidate.benchmarkCapability?.taskScores?.[taskType];
+
   if (typeof benchmarkScore === "number") {
     const freshness = resolveQualityFreshness(input, candidate);
     const freshnessWeight = freshness.freshnessWeight;
-    const value = input.observedDataConfig?.enabled
-      ? decayToNeutral(benchmarkScore, FRESHNESS_NEUTRAL, freshnessWeight)
+    // Blend overall benchmark quality with task-specific score if available.
+    // Blend weight is configurable via observedDataConfig.benchmarkTaskBlendWeight (default 0.7).
+    const config = input.observedDataConfig;
+    const blendWeight = config?.benchmarkTaskBlendWeight ?? 0.7;
+    const blendedScore = typeof taskScore === "number"
+      ? blendWeight * benchmarkScore + (1 - blendWeight) * taskScore
       : benchmarkScore;
+    let value = config?.enabled
+      ? decayToNeutral(blendedScore, FRESHNESS_NEUTRAL, freshnessWeight)
+      : blendedScore;
+    const raw: Record<string, unknown> = {
+      benchmark_quality_score: benchmarkScore,
+      ...(typeof taskScore === "number" ? { benchmark_task_score: taskScore } : {}),
+      benchmark_source: "routing-capability-benchmark",
+      freshness_weight: freshnessWeight,
+      neutral_value: FRESHNESS_NEUTRAL,
+    };
+
+    // Telemetry-derived advisory adjustment.
+    // Threshold and penalty are configurable via observedDataConfig (defaults: 0.20, -0.05).
+    const telemetrySuccessRate = candidate.telemetryScores?.taskSuccessRates?.[taskType];
+    if (typeof telemetrySuccessRate === "number") {
+      const failureThreshold = config?.telemetryAdvisoryFailureThreshold ?? 0.20;
+      const advisoryAdjustment = config?.telemetryAdvisoryPenalty ?? -0.05;
+      if (1 - telemetrySuccessRate > failureThreshold) {
+        value = Math.max(0, value + advisoryAdjustment);
+        raw.telemetry_advisory_applied = true;
+        raw.telemetry_success_rate = telemetrySuccessRate;
+        raw.telemetry_advisory_adjustment = advisoryAdjustment;
+        raw.telemetry_effective_value = value;
+      }
+    }
+
     return {
       value,
-      source: "benchmark",
-      raw: {
-        benchmark_quality_score: benchmarkScore,
-        benchmark_source: "routing-capability-benchmark",
-        freshness_weight: freshnessWeight,
-        neutral_value: FRESHNESS_NEUTRAL,
-        effective_value: value,
-      },
+      source: "benchmark" as const,
+      raw: { ...raw, effective_value: raw.effective_value ?? value },
     };
   }
 

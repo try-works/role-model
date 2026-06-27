@@ -464,4 +464,142 @@ describe("benchmark-summary", () => {
       quick: expect.objectContaining({ runId: quickRunId, mode: "quick" }),
     });
   });
+
+  test("aggregates benchmark scores by taxonomy dimensions when caseTaxonomyTags are present", async () => {
+    const root = await createArtifactRoot();
+    const runId = "run-taxonomy-agg";
+
+    await writeBenchmarkRunManifest(root, {
+      runId,
+      suiteId: "routing-capability-v2",
+      mode: "quick",
+      judgeEndpointId: "judge.tax",
+      startedAtMs: 1,
+      executionCompletedAtMs: 2,
+      gradingCompletedAtMs: 3,
+      endpointIds: ["moonshot.kimi"],
+      caseIds: ["h01", "h02"],
+      responseCount: 2,
+      judgeArtifactCount: 1,
+      compareArtifactCount: 0,
+    });
+    await writeBenchmarkRunResult(root, {
+      runId,
+      suiteId: "routing-capability-v2",
+      suiteVersion: "2.0",
+      mode: "quick",
+      judgeEndpointId: "judge.tax",
+      startedAtMs: 1,
+      completedAtMs: 3,
+      endpointGrades: [
+        {
+          endpointId: "moonshot.kimi",
+          modelId: "kimi-k2.6",
+          sourceType: "remote",
+          overallScore: 0.75,
+          byDifficulty: {
+            easy: { score: 0, cases: 0 },
+            medium: { score: 0.5, cases: 1 },
+            hard: { score: 1, cases: 1 },
+          },
+          caseResults: [
+            { caseId: "h01", difficultyBucket: "medium", score: 0.5 },
+            { caseId: "h02", difficultyBucket: "hard", score: 1 },
+          ],
+          caseTaxonomyTags: {
+            h01: {
+              roleId: "coder",
+              taskType: "coder.review",
+              variant: "root_cause",
+              requiredCapabilities: ["code.read"],
+              requiredModalities: ["text"],
+              toolClasses: ["filesystem.read"],
+            },
+            h02: {
+              roleId: "coder",
+              taskType: "coder.write",
+              variant: "e2e",
+              requiredCapabilities: ["code.write", "code.read"],
+              requiredModalities: ["text", "structured_json"],
+              toolClasses: ["filesystem.write", "shell.execute"],
+            },
+          },
+        },
+      ],
+    });
+
+    const summary = await readLatestBenchmarkSummary({
+      artifactRoot: root,
+      resolveModelId: () => "kimi-k2.6",
+    });
+
+    expect(summary.subjects).toHaveLength(1);
+    const taxonomyScores = summary.subjects[0]?.taxonomyScores;
+    expect(taxonomyScores).toBeDefined();
+    // byRole: coder avg = (0.5 + 1.0) / 2 = 0.75
+    expect(taxonomyScores?.byRole).toEqual({ coder: 0.75 });
+    // byTask: coder.review = 0.5, coder.write = 1.0
+    expect(taxonomyScores?.byTask).toEqual({ "coder.review": 0.5, "coder.write": 1 });
+    // byCapability: code.read in both cases (0.5+1.0)/2 = 0.75, code.write in h02 only = 1.0
+    expect(taxonomyScores?.byCapability).toEqual({ "code.read": 0.75, "code.write": 1 });
+    // byVariant: root_cause = 0.5, e2e = 1.0
+    expect(taxonomyScores?.byVariant).toEqual({ root_cause: 0.5, e2e: 1 });
+    // byModality: text in both = 0.75, structured_json in h02 = 1.0
+    expect(taxonomyScores?.byModality).toEqual({ text: 0.75, structured_json: 1 });
+    // byToolClass: filesystem.read in h01 = 0.5, filesystem.write in h02 = 1.0, shell.execute in h02 = 1.0
+    expect(taxonomyScores?.byToolClass).toEqual({ "filesystem.read": 0.5, "filesystem.write": 1, "shell.execute": 1 });
+  });
+
+  test("returns undefined taxonomyScores when caseTaxonomyTags are absent", async () => {
+    const root = await createArtifactRoot();
+    const runId = "run-no-tax-tags";
+
+    await writeBenchmarkRunManifest(root, {
+      runId,
+      suiteId: "routing-capability-v2",
+      mode: "quick",
+      judgeEndpointId: "judge.notax",
+      startedAtMs: 1,
+      executionCompletedAtMs: 2,
+      gradingCompletedAtMs: 3,
+      endpointIds: ["local.lfm"],
+      caseIds: ["h01"],
+      responseCount: 1,
+      judgeArtifactCount: 1,
+      compareArtifactCount: 0,
+    });
+    await writeBenchmarkRunResult(root, {
+      runId,
+      suiteId: "routing-capability-v2",
+      suiteVersion: "2.0",
+      mode: "quick",
+      judgeEndpointId: "judge.notax",
+      startedAtMs: 1,
+      completedAtMs: 3,
+      endpointGrades: [
+        {
+          endpointId: "local.lfm",
+          modelId: "lfm2.5",
+          sourceType: "local",
+          overallScore: 0.9,
+          byDifficulty: {
+            easy: { score: 0.9, cases: 1 },
+            medium: { score: 0, cases: 0 },
+            hard: { score: 0, cases: 0 },
+          },
+          caseResults: [
+            { caseId: "h01", difficultyBucket: "easy", score: 0.9 },
+          ],
+        },
+      ],
+    });
+
+    const summary = await readLatestBenchmarkSummary({
+      artifactRoot: root,
+      resolveModelId: () => "lfm2.5",
+    });
+
+    expect(summary.subjects).toHaveLength(1);
+    expect(summary.subjects[0]?.taxonomyScores).toBeUndefined();
+  });
 });

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/benchmark-suite.schema.json",
+  "title": "Taxonomy-Aware Benchmark Suite",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "taxonomyTags": {
+      "type": "object",
+      "description": "Taxonomy dimensions that apply to all cases in this suite unless overridden per-case.",
+      "additionalProperties": false,
+      "properties": {
+        "roleId": { "type": "string", "description": "Canonical role ID from taxonomy V1" },
+        "taskType": { "type": "string", "description": "Canonical task type ID" },
+        "requiredCapabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "preferredCapabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "requiredModalities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "toolClasses": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 
 import { ErrorState, SectionCard } from "../components/page-primitives";
 import { TelemetryAnalyticsChartCard } from "../components/telemetry-charts";
@@ -27,6 +27,8 @@ const routingBreakdownOptions = [
   { label: "By requested role", value: "requestedRoleId" },
   { label: "By model", value: "modelId" },
   { label: "By strategy", value: "selectedStrategy" },
+  { label: "By taxonomy role", value: "taxonomyRoleId" },
+  { label: "By taxonomy task", value: "taxonomyTaskType" },
 ];
 
 type RoutingChartRecord = {
@@ -35,14 +37,28 @@ type RoutingChartRecord = {
 };
 
 export default function ObserveRoutingRoute() {
-  const [timeRange, setTimeRange] = useState<TelemetryTimeRangeValue>("week");
-  const [breakdownValue, setBreakdownValue] = useState<"" | RuntimeTelemetryAnalyticsDimension>(
-    "selectedStrategy",
-  );
-  const [sourceFilter, setSourceFilter] = useState<"all" | "local" | "remote">("all");
-  const [difficulty, setDifficulty] = useState<"all" | "easy" | "medium" | "hard">("all");
-  const [selectedStrategy, setSelectedStrategy] = useState("");
-  const [requestedRoleId, setRequestedRoleId] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const timeRange = (searchParams.get("range") as TelemetryTimeRangeValue) || "week";
+  const breakdownValue = (searchParams.get("breakdown") as "" | RuntimeTelemetryAnalyticsDimension) || "selectedStrategy";
+  const sourceFilter = (searchParams.get("source") as "all" | "local" | "remote") || "all";
+  const difficulty = (searchParams.get("difficulty") as "all" | "easy" | "medium" | "hard") || "all";
+  const selectedStrategy = searchParams.get("strategy") || "";
+  const requestedRoleId = searchParams.get("roleId") || "";
+  const taxonomyRoleId = searchParams.get("taxRole") || "";
+  const taxonomyTaskType = searchParams.get("taxTask") || "";
+
+  const updateParam = (key: string, value: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) {
+        next.set(key, value);
+      } else {
+        next.delete(key);
+      }
+      return next;
+    });
+  };
   const [charts, setCharts] = useState<readonly RoutingChartRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,11 +72,18 @@ export default function ObserveRoutingRoute() {
       ...(selectedStrategy.trim().length > 0
         ? { selectedStrategies: [selectedStrategy.trim()] }
         : {}),
+      ...(taxonomyRoleId.trim().length > 0
+        ? { taxonomyRoleIds: [taxonomyRoleId.trim()] }
+        : {}),
+      ...(taxonomyTaskType.trim().length > 0
+        ? { taxonomyTaskTypes: [taxonomyTaskType.trim()] }
+        : {}),
     }),
-    [difficulty, requestedRoleId, selectedStrategy, sourceFilter],
+    [difficulty, requestedRoleId, selectedStrategy, sourceFilter, taxonomyRoleId, taxonomyTaskType],
   );
 
-  const breakdown = breakdownValue === "" ? null : breakdownValue;
+  const breakdown: RuntimeTelemetryAnalyticsDimension | null =
+    (breakdownValue as string) === "" ? null : (breakdownValue as RuntimeTelemetryAnalyticsDimension);
 
   useEffect(() => {
     let disposed = false;
@@ -125,19 +148,22 @@ export default function ObserveRoutingRoute() {
         description="Inspect routing mix, difficulty distribution, and avoided cost without leaving the Observe pillar."
       >
         <div className="space-y-4">
-          <TelemetryTimeRangeControl onChange={setTimeRange} value={timeRange} />
+          <TelemetryTimeRangeControl
+            onChange={(value) => updateParam("range", value)}
+            value={timeRange}
+          />
           <div className="grid gap-4 xl:grid-cols-4">
             <TelemetrySelectField
               label="Breakdown"
               onChange={(value) =>
-                setBreakdownValue(value as "" | RuntimeTelemetryAnalyticsDimension)
+                updateParam("breakdown", value)
               }
               options={routingBreakdownOptions}
               value={breakdownValue}
             />
             <TelemetrySelectField
               label="Source"
-              onChange={(value) => setSourceFilter(value as "all" | "local" | "remote")}
+              onChange={(value) => updateParam("source", value)}
               options={[
                 { label: "All sources", value: "all" },
                 { label: "Local only", value: "local" },
@@ -147,7 +173,7 @@ export default function ObserveRoutingRoute() {
             />
             <TelemetrySelectField
               label="Difficulty"
-              onChange={(value) => setDifficulty(value as "all" | "easy" | "medium" | "hard")}
+              onChange={(value) => updateParam("difficulty", value)}
               options={[
                 { label: "All buckets", value: "all" },
                 { label: "Easy only", value: "easy" },
@@ -158,18 +184,32 @@ export default function ObserveRoutingRoute() {
             />
             <TelemetryTextField
               label="Requested role id"
-              onChange={setRequestedRoleId}
+              onChange={(value) => updateParam("roleId", value)}
               placeholder="Filter a specific requested role id"
               value={requestedRoleId}
             />
           </div>
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-end">
             <TelemetryTextField
               label="Selected strategy"
-              onChange={setSelectedStrategy}
+              onChange={(value) => updateParam("strategy", value)}
               placeholder="Filter a specific selected strategy"
               value={selectedStrategy}
             />
+            <div className="grid gap-4 grid-cols-2">
+              <TelemetryTextField
+                label="Taxonomy role id"
+                onChange={(value) => updateParam("taxRole", value)}
+                placeholder="e.g. coder"
+                value={taxonomyRoleId}
+              />
+              <TelemetryTextField
+                label="Taxonomy task type"
+                onChange={(value) => updateParam("taxTask", value)}
+                placeholder="e.g. coder.review"
+                value={taxonomyTaskType}
+              />
+            </div>
             <div className="flex flex-wrap gap-3">
               <Link className={secondaryButtonClassName} to="/app/router">
                 Open router configuration

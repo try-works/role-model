@@ -23,7 +23,9 @@ import {
   type RuntimeModelRoleAssignment,
   type RuntimeRolePolicy,
   type RuntimeSnapshot,
+  type ModelTelemetryRollup,
   fetchControllerAssignment,
+  fetchModelTelemetryRollup,
   fetchRolePolicy,
   fetchRouterCandidates,
   fetchRuntimeSnapshot,
@@ -128,6 +130,7 @@ export default function ControlModelsRoute() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
+  const [telemetryRollup, setTelemetryRollup] = useState<ModelTelemetryRollup | null>(null);
 
   useEffect(() => {
     void Promise.all([
@@ -163,6 +166,16 @@ export default function ControlModelsRoute() {
   );
 
   const selectedCard = cards.find((card) => card.modelId === selectedModelId) ?? null;
+
+  useEffect(() => {
+    if (selectedCard) {
+      void fetchModelTelemetryRollup(selectedCard.modelId).then(setTelemetryRollup, () =>
+        setTelemetryRollup(null),
+      );
+    } else {
+      setTelemetryRollup(null);
+    }
+  }, [selectedCard]);
   const selectedEndpoints =
     snapshot && selectedCard
       ? snapshot.endpoints.filter((endpoint) => endpoint.modelId === selectedCard.modelId)
@@ -405,6 +418,15 @@ export default function ControlModelsRoute() {
                       </p>
                     </div>
 
+                    {typeof capabilityScore === "number" ? (
+                      <p className="mt-3 text-xs text-[var(--rm-accent-fg,var(--rm-secondary))]">
+                        Advisory: scores {Math.round(capabilityScore * 100)}% on routing capability benchmark.
+                        {card.requestCount > 0
+                          ? ` Based on ${card.requestCount} request${card.requestCount === 1 ? "" : "s"}.`
+                          : ""}
+                      </p>
+                    ) : null}
+
                     <div className="mt-5 flex flex-wrap gap-2">
                       <button
                         className={secondaryButtonClassName}
@@ -635,6 +657,56 @@ export default function ControlModelsRoute() {
                     </StatusPill>
                   ))}
                 </div>
+              </DisclosureSection>
+
+              <DisclosureSection summary="Telemetry rollup (advisory)">
+                {telemetryRollup && telemetryRollup.tasks.length > 0 ? (
+                  <div className="space-y-3 text-sm">
+                    <p className="text-xs text-[var(--rm-muted)]">
+                      Based on {telemetryRollup.totalRequests} request
+                      {telemetryRollup.totalRequests === 1 ? "" : "s"} over the
+                      last {telemetryRollup.windowDays} days.
+                    </p>
+                    <div className="space-y-2">
+                      {telemetryRollup.tasks.map((task) => (
+                        <div
+                          key={task.taskType}
+                          className="flex flex-wrap items-center justify-between gap-2 rounded border border-[var(--rm-border)] p-2"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-mono text-xs text-[var(--rm-fg)]">
+                              {task.taskType}
+                            </p>
+                            <p className="text-xs text-[var(--rm-secondary)]">
+                              {task.requestCount} req{" "}
+                              {task.avgLatencyMs !== null
+                                ? `• avg ${task.avgLatencyMs}ms`
+                                : ""}
+                            </p>
+                          </div>
+                          <div className="flex gap-1">
+                            <StatusPill
+                              tone={
+                                task.successRate >= 0.95
+                                  ? "success"
+                                  : task.successRate < 0.8
+                                    ? "warning"
+                                    : "neutral"
+                              }
+                            >
+                              {Math.round(task.successRate * 100)}%
+                            </StatusPill>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-[var(--rm-secondary)]">
+                    No telemetry data available yet for this model. Send requests
+                    to populate per-task performance and advisory warnings.
+                  </p>
+                )}
               </DisclosureSection>
             </div>
 

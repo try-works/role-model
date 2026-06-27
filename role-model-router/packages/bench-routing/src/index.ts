@@ -55,6 +55,14 @@ export interface RoutingBenchmarkCase {
   readonly expected_tool_names?: readonly string[];
   readonly answer_format?: BenchmarkAnswerFormat;
   readonly example_deliverable?: string;
+  readonly taxonomy_tags?: {
+    readonly roleId: string;
+    readonly taskType: string;
+    readonly requiredCapabilities?: readonly string[];
+    readonly preferredCapabilities?: readonly string[];
+    readonly requiredModalities?: readonly string[];
+    readonly toolClasses?: readonly string[];
+  };
   readonly judge_guidance?: {
     readonly exemplar?: { readonly summary?: string; readonly deliverable?: string };
   };

@@ -1,6 +1,8 @@
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import type { TaxonomyDimensionScoreMap } from "@role-model/protocol-types";
+
 import type { BenchmarkCompareRecord, BenchmarkRunManifest } from "./benchmark-artifacts.js";
 import { resolveBenchmarkRunArtifactDir } from "./benchmark-artifacts.js";
 
@@ -38,6 +40,14 @@ export interface BenchmarkPersistedEndpointGrade {
     readonly judgeUnavailable?: boolean;
     readonly cappedByValidator?: boolean;
   }[];
+  readonly caseTaxonomyTags?: Record<string, {
+    readonly roleId: string;
+    readonly taskType: string;
+    readonly variant?: string;
+    readonly requiredCapabilities?: readonly string[];
+    readonly requiredModalities?: readonly string[];
+    readonly toolClasses?: readonly string[];
+  }>;
 }
 
 export interface BenchmarkPersistedRunResult {
@@ -80,6 +90,7 @@ export interface BenchmarkSummarySubject {
   >;
   readonly passingCaseIds: readonly string[];
   readonly caseCount: number;
+  readonly taxonomyScores?: Partial<TaxonomyDimensionScoreMap>;
 }
 
 export interface BenchmarkSummaryResponse {
@@ -118,6 +129,71 @@ export interface BenchmarkCapability {
   readonly lastRunId: string | null;
   readonly lastRunCompletedAtMs: number | null;
   readonly judgeEndpointId: string | null;
+}
+
+function computeTaxonomyAggregates(
+  caseResults: readonly { readonly caseId: string; readonly score: number }[],
+  caseTaxonomyTags: Record<string, {
+    readonly roleId: string;
+    readonly taskType: string;
+    readonly variant?: string;
+    readonly requiredCapabilities?: readonly string[];
+    readonly requiredModalities?: readonly string[];
+    readonly toolClasses?: readonly string[];
+  }>,
+): BenchmarkSummarySubject["taxonomyScores"] {
+  const byRole: Record<string, { total: number; count: number }> = {};
+  const byTask: Record<string, { total: number; count: number }> = {};
+  const byVariant: Record<string, { total: number; count: number }> = {};
+  const byCapability: Record<string, { total: number; count: number }> = {};
+  const byModality: Record<string, { total: number; count: number }> = {};
+  const byToolClass: Record<string, { total: number; count: number }> = {};
+
+  for (const cr of caseResults) {
+    const tags = caseTaxonomyTags[cr.caseId];
+    if (!tags) continue;
+
+    if (!byRole[tags.roleId]) byRole[tags.roleId] = { total: 0, count: 0 };
+    byRole[tags.roleId].total += cr.score;
+    byRole[tags.roleId].count++;
+
+    if (!byTask[tags.taskType]) byTask[tags.taskType] = { total: 0, count: 0 };
+    byTask[tags.taskType].total += cr.score;
+    byTask[tags.taskType].count++;
+
+    if (tags.variant) {
+      if (!byVariant[tags.variant]) byVariant[tags.variant] = { total: 0, count: 0 };
+      byVariant[tags.variant].total += cr.score;
+      byVariant[tags.variant].count++;
+    }
+
+    for (const cap of tags.requiredCapabilities ?? []) {
+      if (!byCapability[cap]) byCapability[cap] = { total: 0, count: 0 };
+      byCapability[cap].total += cr.score;
+      byCapability[cap].count++;
+    }
+
+    for (const mod of tags.requiredModalities ?? []) {
+      if (!byModality[mod]) byModality[mod] = { total: 0, count: 0 };
+      byModality[mod].total += cr.score;
+      byModality[mod].count++;
+    }
+
+    for (const tc of tags.toolClasses ?? []) {
+      if (!byToolClass[tc]) byToolClass[tc] = { total: 0, count: 0 };
+      byToolClass[tc].total += cr.score;
+      byToolClass[tc].count++;
+    }
+  }
+
+  return {
+    byRole: Object.fromEntries(Object.entries(byRole).map(([k, v]) => [k, v.total / v.count])),
+    byTask: Object.fromEntries(Object.entries(byTask).map(([k, v]) => [k, v.total / v.count])),
+    byVariant: Object.fromEntries(Object.entries(byVariant).map(([k, v]) => [k, v.total / v.count])),
+    byCapability: Object.fromEntries(Object.entries(byCapability).map(([k, v]) => [k, v.total / v.count])),
+    byModality: Object.fromEntries(Object.entries(byModality).map(([k, v]) => [k, v.total / v.count])),
+    byToolClass: Object.fromEntries(Object.entries(byToolClass).map(([k, v]) => [k, v.total / v.count])),
+  };
 }
 
 export const EMPTY_BENCHMARK_SUMMARY: BenchmarkSummaryResponse = {
@@ -254,6 +330,9 @@ async function buildBenchmarkSummaryResponse(input: {
         scoresByBucket: grade.byDifficulty,
         passingCaseIds,
         caseCount: grade.caseResults.length,
+        taxonomyScores: grade.caseTaxonomyTags
+          ? computeTaxonomyAggregates(grade.caseResults, grade.caseTaxonomyTags)
+          : undefined,
       });
     }
   }

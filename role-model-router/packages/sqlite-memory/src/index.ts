@@ -247,8 +247,11 @@ CREATE TABLE IF NOT EXISTS runtime_observations (
   endpoint_id TEXT NOT NULL,
   conversation_id TEXT NOT NULL,
   created_at_ms INTEGER NOT NULL,
+  retain_until_ms INTEGER,
   observation_json TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_obs_retain_until
+  ON runtime_observations(retain_until_ms);
 CREATE TABLE IF NOT EXISTS observed_performance_samples (
   sample_id TEXT PRIMARY KEY,
   endpoint_id TEXT NOT NULL,
@@ -998,6 +1001,11 @@ export interface PersistedRuntimeObservationBundle {
       };
     };
   };
+  readonly privacyReceipt?: {
+    readonly samplingRate?: number;
+    readonly retentionTtlHours?: number;
+    readonly retainUntil?: number;
+  };
 }
 
 function ensureNonEmpty(value: string, label: string): string {
@@ -1025,6 +1033,21 @@ function initializeSchema(database: DatabaseSync): void {
   if (!providerAccountColumns.has("model_role_bindings_json")) {
     database.exec(
       "ALTER TABLE provider_accounts ADD COLUMN model_role_bindings_json TEXT NOT NULL DEFAULT '[]'",
+    );
+  }
+  const observationColumns = new Set(
+    (
+      database.prepare("PRAGMA table_info(runtime_observations)").all() as Array<{
+        name: string;
+      }>
+    ).map((row) => row.name),
+  );
+  if (!observationColumns.has("retain_until_ms")) {
+    database.exec(
+      "ALTER TABLE runtime_observations ADD COLUMN retain_until_ms INTEGER",
+    );
+    database.exec(
+      "CREATE INDEX IF NOT EXISTS idx_obs_retain_until ON runtime_observations(retain_until_ms)",
     );
   }
   const runtimeTelemetryColumns = new Set(
@@ -2862,7 +2885,7 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
   withSqliteBusyRetry(input.databasePath, (database) => {
     database
       .prepare(
-        "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
       )
       .run(
         observation.requestId,
@@ -2870,6 +2893,7 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
         observation.endpointId,
         observation.conversationId,
         observation.usageEvent.timestamp_ms,
+        observation.privacyReceipt?.retainUntil ?? null,
         JSON.stringify(observation),
       );
     database

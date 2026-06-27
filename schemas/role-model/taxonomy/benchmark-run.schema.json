@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/benchmark-run.schema.json",
+  "title": "Taxonomy-Aware Benchmark Run",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "taxonomyContext": {
+      "type": "object",
+      "description": "Taxonomy context for the benchmark run — which dimensions were tested.",
+      "additionalProperties": false,
+      "properties": {
+        "taxonomyVersion": { "type": "string" },
+        "classificationContractVersion": { "type": "string" },
+        "dimensions": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["role", "task", "variant", "capability", "modality", "toolClass"] }
+        }
+      }
+    }
+  }
+}

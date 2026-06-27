@@ -49,6 +49,19 @@ describe("runtime-observability", () => {
         contextEnvelope: validation.contextEnvelope,
         execution: validation.execution,
         priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+        normalizedIntent: {
+          role: { id: "coder" },
+          task: { id: "coder.review" },
+          roleSource: "heuristic",
+          taskSource: "heuristic",
+          confidence: 0.85,
+          taxonomyVersion: "1.0.0-alpha.1",
+          classificationContractVersion: "role-model.classification.v1",
+        },
+        telemetryConfig: {
+          samplingRate: 1.0,
+          retentionTtlHours: 720,
+        },
         maintenancePolicy: {
           "redaction.level": "strict",
           "retention.class": "standard",
@@ -103,6 +116,20 @@ describe("runtime-observability", () => {
           rawCaptureAvailable: true,
           redactedFields: expect.arrayContaining(["request.headers.authorization"]),
           suppressedFields: expect.arrayContaining(["request.body", "response.body"]),
+        },
+        privacyReceipt: {
+          samplingRate: 1.0,
+          retentionTtlHours: 720,
+          retainUntil: expect.any(Number),
+        },
+        taxonomyDimensions: {
+          taxonomy_role_id: "coder",
+          taxonomy_task_type: "coder.review",
+          taxonomy_role_source: "heuristic",
+          taxonomy_task_source: "heuristic",
+          taxonomy_confidence: 0.85,
+          taxonomy_version: "1.0.0-alpha.1",
+          classification_contract_version: "role-model.classification.v1",
         },
       });
 
@@ -189,6 +216,12 @@ describe("runtime-observability", () => {
               difficulty_bucket?: string;
             };
           };
+          privacyReceipt: {
+            samplingRate: number;
+            retentionTtlHours: number;
+            retainUntil: number;
+          };
+          taxonomyDimensions?: Record<string, unknown>;
         };
       };
       const validation = await runRuntimeAdapterValidation({
@@ -233,8 +266,61 @@ describe("runtime-observability", () => {
       });
 
       expect(bundle.observedPerformance.sample.difficulty_bucket).toBe("hard");
+      // privacyReceipt always present even without explicit telemetryConfig
+      expect(bundle.privacyReceipt).toBeDefined();
+      expect(bundle.privacyReceipt.samplingRate).toBeGreaterThanOrEqual(0);
+      expect(bundle.privacyReceipt.retentionTtlHours).toBeGreaterThan(0);
+      expect(typeof bundle.privacyReceipt.retainUntil).toBe("number");
+      // taxonomyDimensions absent when normalizedIntent is not provided
+      expect(bundle.taxonomyDimensions).toBeUndefined();
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
+  });
+});
+
+// ── SP-A2: extractTaxonomyFields direct unit tests ──
+
+describe("extractTaxonomyFields", () => {
+  test("extracts all fields from a fully populated normalizedIntent", async () => {
+    const moduleImport = import(pathToFileURL(path.join(__dirname, "..", "src", "index.js")).href);
+    const mod = (await moduleImport) as {
+      extractTaxonomyFields(intent: Readonly<Record<string, unknown>>): Record<string, unknown>;
+    };
+    const result = mod.extractTaxonomyFields({
+      role: { id: "coder" },
+      task: { id: "coder.review" },
+      roleSource: "heuristic",
+      taskSource: "heuristic",
+      confidence: 0.85,
+      taxonomyVersion: "1.0.0-alpha.1",
+      classificationContractVersion: "role-model.classification.v1",
+    });
+    expect(result).toEqual({
+      taxonomy_role_id: "coder",
+      taxonomy_task_type: "coder.review",
+      taxonomy_role_source: "heuristic",
+      taxonomy_task_source: "heuristic",
+      taxonomy_confidence: 0.85,
+      taxonomy_version: "1.0.0-alpha.1",
+      classification_contract_version: "role-model.classification.v1",
+    });
+  });
+
+  test("returns null for missing fields", async () => {
+    const moduleImport = import(pathToFileURL(path.join(__dirname, "..", "src", "index.js")).href);
+    const mod = (await moduleImport) as {
+      extractTaxonomyFields(intent: Readonly<Record<string, unknown>>): Record<string, unknown>;
+    };
+    const result = mod.extractTaxonomyFields({});
+    expect(result).toEqual({
+      taxonomy_role_id: null,
+      taxonomy_task_type: null,
+      taxonomy_role_source: null,
+      taxonomy_task_source: null,
+      taxonomy_confidence: null,
+      taxonomy_version: null,
+      classification_contract_version: null,
+    });
   });
 });

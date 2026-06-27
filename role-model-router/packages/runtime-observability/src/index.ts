@@ -5,6 +5,7 @@ import {
 } from "@role-model-router/profile-aggregator";
 import type { ToolRegistryExecution } from "@role-model-router/tool-registry";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
+import { extractTaxonomyDimensions } from "@role-model/protocol-types";
 
 export type RuntimeRoutingMode = "baseline" | "difficulty" | "controller" | "hybrid";
 
@@ -291,6 +292,10 @@ export interface RuntimeObservationBundleInput {
     readonly executions: readonly ToolRegistryExecution[];
   };
   readonly telemetrySnapshot?: RuntimeTelemetrySnapshot;
+  readonly telemetryConfig?: {
+    readonly samplingRate?: number;
+    readonly retentionTtlHours?: number;
+  };
 }
 
 export interface RedactedCaptureBody {
@@ -337,6 +342,20 @@ export interface RuntimeObservationBundle {
     readonly operator: readonly RuntimeDiagnostic[];
   };
   readonly capturePolicy: RuntimeObservationCapturePolicyReceipt;
+  readonly taxonomyDimensions?: {
+    readonly taxonomy_role_id: unknown;
+    readonly taxonomy_task_type: unknown;
+    readonly taxonomy_role_source: unknown;
+    readonly taxonomy_task_source: unknown;
+    readonly taxonomy_confidence: unknown;
+    readonly taxonomy_version: unknown;
+    readonly classification_contract_version: unknown;
+  };
+  readonly privacyReceipt: {
+    readonly samplingRate: number;
+    readonly retentionTtlHours: number;
+    readonly retainUntil: number;
+  };
   readonly executionTelemetry: {
     readonly providerFamily: string;
     readonly finishReason: string;
@@ -670,6 +689,13 @@ function deriveCostProvenance(
   return "unavailable";
 }
 
+/**
+ * Extract taxonomy dimensions from normalizedIntent for telemetry recording.
+ * Delegates to the canonical implementation in @role-model/protocol-types.
+ * @deprecated Use extractTaxonomyDimensions from @role-model/protocol-types directly.
+ */
+export const extractTaxonomyFields = extractTaxonomyDimensions;
+
 export function createRuntimeObservationBundle(
   input: RuntimeObservationBundleInput,
 ): RuntimeObservationBundle {
@@ -685,6 +711,10 @@ export function createRuntimeObservationBundle(
     nowMs: currentSample.timestamp_ms,
   });
   const capturePolicy = buildCapturePolicyReceipt(input.maintenancePolicy, input.capturePolicy);
+  const telemetryConfig = input.telemetryConfig ?? {};
+  const samplingRate = telemetryConfig.samplingRate ?? 1.0;
+  const retentionTtlHours = telemetryConfig.retentionTtlHours ?? 720;
+  const retainUntil = Date.now() + retentionTtlHours * 3600 * 1000;
   const diagnostics = {
     routing: buildRoutingDiagnostics(input),
     execution: buildExecutionDiagnostics(input),
@@ -741,6 +771,14 @@ export function createRuntimeObservationBundle(
     },
     tooling,
     ...(input.telemetrySnapshot ? { telemetrySnapshot: input.telemetrySnapshot } : {}),
+    ...(input.normalizedIntent
+      ? { taxonomyDimensions: extractTaxonomyFields(input.normalizedIntent) as RuntimeObservationBundle["taxonomyDimensions"] }
+      : {}),
+    privacyReceipt: {
+      samplingRate,
+      retentionTtlHours,
+      retainUntil,
+    },
     inspection: {
       request: {
         requestId: input.decision.request_id,

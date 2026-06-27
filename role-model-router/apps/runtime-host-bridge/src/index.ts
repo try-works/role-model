@@ -1697,7 +1697,9 @@ export type BridgeTelemetryAnalyticsDimension =
   | "routingMode"
   | "difficultyBucket"
   | "statusFamily"
-  | "requestOperation";
+  | "requestOperation"
+  | "taxonomyRoleId"
+  | "taxonomyTaskType";
 
 export interface BridgeTelemetryAnalyticsFilters {
   readonly sourceTypes?: readonly ("local" | "remote")[];
@@ -1979,6 +1981,8 @@ export type BridgeTelemetryRequestRecord = ReturnType<
   readonly healthStatus: string;
   readonly status: string;
   readonly roleIds: readonly string[];
+  readonly taxonomyRoleId?: string | null;
+  readonly taxonomyTaskType?: string | null;
 };
 
 export type BridgeTelemetryEndpointMeta = Pick<
@@ -12043,6 +12047,24 @@ export async function createRuntimeBridgeBackend(
     currentRuntimeRoles.roleSummaries.map((role) => role.roleId);
   const deviceId = randomUUID();
 
+  // ── Retention cleanup: delete telemetry records past their retainUntil timestamp ──
+  const runRetentionCleanup = (): { deletedCount: number } => {
+    const database = new DatabaseSync(initialization.databasePath);
+    let deletedCount = 0;
+    try {
+      const result = database
+        .prepare(
+          "DELETE FROM runtime_observations WHERE retain_until_ms IS NOT NULL AND retain_until_ms < ?",
+        )
+        .run(Date.now());
+      deletedCount = Number(result.changes);
+    } finally {
+      database.close();
+    }
+    return { deletedCount };
+  };
+  runRetentionCleanup();
+
   if (continuityFixture) {
     persistContinuitySnapshot({
       databasePath: initialization.databasePath,
@@ -13810,6 +13832,8 @@ export async function createRuntimeBridgeBackend(
     "difficultyBucket",
     "statusFamily",
     "requestOperation",
+    "taxonomyRoleId",
+    "taxonomyTaskType",
   ];
   const readTelemetryAnalyticsMetric = (value: string): BridgeTelemetryAnalyticsMetric => {
     if (!SUPPORTED_TELEMETRY_ANALYTICS_METRICS.includes(value as BridgeTelemetryAnalyticsMetric)) {
@@ -13955,6 +13979,10 @@ export async function createRuntimeBridgeBackend(
         return record.statusFamily;
       case "requestOperation":
         return record.requestOperation;
+      case "taxonomyRoleId":
+        return record.taxonomyRoleId ?? null;
+      case "taxonomyTaskType":
+        return record.taxonomyTaskType ?? null;
     }
   };
   const getTelemetryDimensionLabel = (
@@ -14434,7 +14462,7 @@ export async function createRuntimeBridgeBackend(
   };
   const readObservationTelemetryMeta = (
     requestId: string,
-  ): Pick<BridgeTelemetryRequestRecord, "clientRequestId" | "requestClass"> => {
+  ): Pick<BridgeTelemetryRequestRecord, "clientRequestId" | "requestClass" | "taxonomyRoleId" | "taxonomyTaskType"> => {
     const observation = readRuntimeObservationBundle({
       databasePath: initialization.databasePath,
       requestId,
@@ -14442,10 +14470,13 @@ export async function createRuntimeBridgeBackend(
     const observedPerformance = asObjectRecord(observation?.observedPerformance);
     const sample = asObjectRecord(observedPerformance?.sample);
     const sourceType = asStringValue(sample?.source_type);
+    const taxonomyDimensions = asObjectRecord(observation?.taxonomyDimensions);
     return {
       clientRequestId: asStringValue(observation?.clientRequestId) ?? null,
       requestClass:
         sourceType === "benchmark" || sourceType === "live_request" ? sourceType : "unknown",
+      taxonomyRoleId: asStringValue(taxonomyDimensions?.taxonomy_role_id) ?? null,
+      taxonomyTaskType: asStringValue(taxonomyDimensions?.taxonomy_task_type) ?? null,
     };
   };
   const getTelemetryEndpointMeta = (endpointId: string): BridgeTelemetryEndpointMeta => {
@@ -14535,6 +14566,8 @@ export async function createRuntimeBridgeBackend(
         healthStatus: record.healthStatusAtRequest ?? endpointMeta.healthStatus,
         status: record.lifecycleStateAtRequest ?? endpointMeta.status,
         roleIds: record.roleIds.length > 0 ? record.roleIds : endpointMeta.roleIds,
+        taxonomyRoleId: observationMeta.taxonomyRoleId ?? null,
+        taxonomyTaskType: observationMeta.taxonomyTaskType ?? null,
       };
     });
   const readTelemetrySummaryData = (query?: BridgeTelemetryQuery): BridgeTelemetrySummary => {
@@ -15977,6 +16010,20 @@ export async function createRuntimeBridgeBackend(
     }
 
     const classifier = currentUnifiedRuntimeConfig?.difficultyClassifier;
+
+    // When classifier.modelId is not set, fall back to controller's modelId.
+    // Without this, the classifier endpoint filter matches nothing and difficulty
+    // routing degrades to basic mode. See addenda/04-difficulty-classifier-bug.
+    const configuredController = currentUnifiedRuntimeConfig?.controller;
+    const persistedControllerAssignment = !configuredController?.enabled
+      ? getCurrentControllerAssignment()
+      : null;
+    const effectiveController =
+      configuredController?.enabled
+        ? configuredController
+        : persistedControllerAssignment;
+    const effectiveClassifierModelId =
+      classifier?.modelId ?? effectiveController?.modelId ?? null;
     if (!classifier?.enabled) {
       return persistResolvedClassification({
         ...classifyDifficultyFromSignals({
@@ -15990,7 +16037,7 @@ export async function createRuntimeBridgeBackend(
     const classifierAllowEndpoints = currentRegistry.endpoints
       .filter(
         (endpoint) =>
-          endpoint.identity.model_id === classifier.modelId &&
+          endpoint.identity.model_id === effectiveClassifierModelId &&
           toSourceType(endpoint.identity.endpoint_kind) === classifier.sourceType,
       )
       .map((endpoint) => endpoint.identity.endpoint_id)

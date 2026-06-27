@@ -266,3 +266,6 @@ export const validateCanonicalTaxonomy = (taxonomy: CanonicalTaxonomy): readonly
 
   return diagnostics;
 };
+
+export * from "./benchmark-linkage.js";
+export * from "./telemetry-linkage.js";

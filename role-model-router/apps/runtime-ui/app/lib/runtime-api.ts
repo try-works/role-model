@@ -546,7 +546,9 @@ export type RuntimeTelemetryAnalyticsDimension =
   | "routingMode"
   | "difficultyBucket"
   | "statusFamily"
-  | "requestOperation";
+  | "requestOperation"
+  | "taxonomyRoleId"
+  | "taxonomyTaskType";
 
 export interface RuntimeTelemetryAnalyticsFilters {
   readonly sourceTypes?: readonly ("local" | "remote")[];
@@ -562,6 +564,8 @@ export interface RuntimeTelemetryAnalyticsFilters {
   readonly difficultyBuckets?: readonly ("easy" | "medium" | "hard")[];
   readonly statusFamilies?: readonly ("success" | "failure" | "unknown")[];
   readonly requestOperations?: readonly string[];
+  readonly taxonomyRoleIds?: readonly string[];
+  readonly taxonomyTaskTypes?: readonly string[];
 }
 
 export interface RuntimeTelemetryAnalyticsRanking {
@@ -993,6 +997,14 @@ export interface BenchmarkSummarySubject {
   >;
   readonly passingCaseIds: readonly string[];
   readonly caseCount: number;
+  readonly taxonomyScores?: {
+    readonly byRole?: Record<string, number>;
+    readonly byTask?: Record<string, number>;
+    readonly byVariant?: Record<string, number>;
+    readonly byCapability?: Record<string, number>;
+    readonly byModality?: Record<string, number>;
+    readonly byToolClass?: Record<string, number>;
+  };
 }
 
 export interface BenchmarkSummary {
@@ -1996,4 +2008,54 @@ export async function checkPeerHealth(
     `/api/role-model/local/peers/health?url=${encodeURIComponent(url)}`,
     fetcher,
   );
+}
+
+export interface ModelTelemetryRollup {
+  readonly tasks: readonly {
+    taskType: string;
+    requestCount: number;
+    successRate: number;
+    avgLatencyMs: number | null;
+  }[];
+  readonly totalRequests: number;
+  readonly windowDays: number;
+}
+
+export async function fetchModelTelemetryRollup(
+  modelId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<ModelTelemetryRollup> {
+  const resp = await fetchTelemetryAnalytics(
+    {
+      granularity: "day",
+      metrics: ["requestCount", "successCount", "averageLatencyMs"],
+      breakdown: "taxonomyTaskType",
+      filters: { modelIds: [modelId] },
+      windowMs: 7 * 24 * 3600 * 1000,
+    },
+    fetcher,
+  );
+  const tasks: ModelTelemetryRollup["tasks"][number][] = [];
+  let totalRequests = 0;
+  for (const bucket of resp.buckets ?? []) {
+    for (const series of bucket.series ?? []) {
+      const count = (series.metrics?.requestCount as number) ?? 0;
+      const success = (series.metrics?.successCount as number) ?? 0;
+      const latency = series.metrics?.averageLatencyMs as number | null | undefined;
+      if (count > 0 && series.key) {
+        tasks.push({
+          taskType: series.key,
+          requestCount: count,
+          successRate: count > 0 ? success / count : 0,
+          avgLatencyMs: latency ?? null,
+        });
+        totalRequests += count;
+      }
+    }
+  }
+  return {
+    tasks: tasks.sort((a, b) => b.requestCount - a.requestCount),
+    totalRequests,
+    windowDays: 7,
+  };
 }

@@ -256,6 +256,9 @@ importers:
       '@role-model-router/vendor-llama-swap':
         specifier: workspace:*
         version: link:../../packages/vendor-llama-swap
+      '@role-model/protocol-types':
+        specifier: workspace:*
+        version: link:../../../packages/protocol-types
       yaml:
         specifier: ^2.8.1
         version: 2.8.4

@@ -191,26 +191,53 @@ describe("taxonomy discovery API", () => {
   // ── R4.1: Classification guide generated from taxonomy data ──
 
   test("classification guide is generated from taxonomy data (R4.1)", async () => {
-    const resp = await fetch(`${baseUrl}/api/role-model/taxonomy/classification-guide`);
-    expect(resp.status).toBe(200);
-    const guide = await resp.json();
+    const registry = {
+      endpoints: [],
+      diagnostics: [],
+      lifecycleSummary: { active: 0, degraded: 0, offline: 0 },
+    } as never;
 
-    expect(guide.taxonomyVersion).toBe("1.0.0-alpha.1");
-    expect(guide.groups).toBeDefined();
-    expect(Array.isArray(guide.groups)).toBe(true);
-    expect(guide.groups.length).toBe(6);
+    const server = await startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      getRegistry: () => registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      executeResponses: async () => {
+        throw new Error("not used");
+      },
+      readHealthStatus: async () => ({ status: "healthy" }),
+      getRoutableInventory: () => null,
+    });
 
-    for (const group of guide.groups) {
-      expect(group.id).toBeDefined();
-      expect(group.label).toBeDefined();
-      expect(group.roleCount).toBeGreaterThan(0);
+    try {
+      const baseUrl = `http://127.0.0.1:${server.port}`;
+
+      const resp = await fetch(`${baseUrl}/api/role-model/taxonomy/classification-guide`);
+      expect(resp.status).toBe(200);
+      const guide = await resp.json();
+
+      expect(guide.taxonomyVersion).toBe("1.0.0-alpha.1");
+      expect(guide.groups).toBeDefined();
+      expect(Array.isArray(guide.groups)).toBe(true);
+      expect(guide.groups.length).toBe(6);
+
+      for (const group of guide.groups) {
+        expect(group.id).toBeDefined();
+        expect(group.label).toBeDefined();
+        expect(group.roleCount).toBeGreaterThan(0);
+      }
+
+      expect(guide.algorithm).toBeDefined();
+      expect(Array.isArray(guide.algorithm)).toBe(true);
+      expect(guide.algorithm.length).toBeGreaterThan(0);
+
+      const engineering = guide.groups.find((g: { id: string }) => g.id === "engineering");
+      expect(engineering).toBeDefined();
+    } finally {
+      await server.close();
     }
-
-    expect(guide.algorithm).toBeDefined();
-    expect(Array.isArray(guide.algorithm)).toBe(true);
-    expect(guide.algorithm.length).toBeGreaterThan(0);
-
-    const engineering = guide.groups.find((g: { id: string }) => g.id === "engineering");
-    expect(engineering).toBeDefined();
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import { getQualityMetric, routeRequest } from "../src/router.js";
+import { extractTaxonomyDimensions } from "../src/taxonomy/telemetry-linkage.js";
 import type { EndpointCandidate, RouteRequestInput, RoutingRequest } from "../src/types.js";
 
 function candidate(
@@ -382,5 +383,305 @@ describe("routing intent metadata", () => {
     expect(q1.value).toBeGreaterThan(q2.value);
     expect(q1.source).toBe("benchmark");
     expect(q2.source).toBe("benchmark");
+  });
+
+  const minimalObservedConfig = {
+    enabled: false,
+    metricHalflives: {
+      qualityMs: 900000,
+      latencyMs: 300000,
+      throughputMs: 120000,
+      reliabilityMs: 600000,
+      costMs: 1800000,
+    },
+  } as const;
+
+  // ── SP4: Task-specific benchmark scoring ──
+
+  test("getQualityMetric blends task-specific score when taskScores available", () => {
+    const c = candidate("v4-pro", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: {
+        overallScore: 0.7,
+        taskScores: { "coder.review": 0.95 },
+      },
+    });
+    const input = {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    };
+    const quality = getQualityMetric(c, input);
+    // Blended: 0.7 * 0.7 + 0.3 * 0.95 = 0.49 + 0.285 = 0.775
+    expect(quality.value).toBeCloseTo(0.775, 3);
+    expect(quality.source).toBe("benchmark");
+    expect(quality.raw.benchmark_task_score).toBe(0.95);
+  });
+
+  test("getQualityMetric falls back to overallScore when taskScores lacks requested task", () => {
+    const c = candidate("v4-pro", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: {
+        overallScore: 0.7,
+        taskScores: { "coder.review": 0.95 },
+      },
+    });
+    const input = {
+      request: { ...baseRequest, taskType: "coder.write" },
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    };
+    const quality = getQualityMetric(c, input);
+    // No task match: uses overallScore directly = 0.7
+    expect(quality.value).toBe(0.7);
+    expect(quality.source).toBe("benchmark");
+    expect(quality.raw.benchmark_task_score).toBeUndefined();
+  });
+
+  test("getQualityMetric includes benchmark_task_score in raw when task data exists", () => {
+    const c = candidate("v4-flash", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: {
+        overallScore: 0.6,
+        taskScores: { "researcher.compare_sources": 0.88 },
+      },
+    });
+    const input = {
+      request: { ...baseRequest, taskType: "researcher.compare_sources" },
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    };
+    const quality = getQualityMetric(c, input);
+    expect(quality.raw.benchmark_quality_score).toBe(0.6);
+    expect(quality.raw.benchmark_task_score).toBe(0.88);
+    expect(quality.raw.benchmark_source).toBe("routing-capability-benchmark");
+  });
+
+  // ── SP9: Telemetry advisory boundary ──
+
+  test("getQualityMetric applies telemetry advisory penalty when failure rate is high", () => {
+    const c = candidate("v4-flash", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: {
+        overallScore: 0.8,
+        taskScores: { "coder.review": 0.9 },
+      },
+      telemetryScores: {
+        taskSuccessRates: { "coder.review": 0.6 }, // 40% failure > 20% threshold
+      },
+    });
+    const input = {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    };
+    const quality = getQualityMetric(c, input);
+    // Blended: 0.7*0.8 + 0.3*0.9 = 0.83, then penalty: 0.83 - 0.05 = 0.78
+    expect(quality.value).toBeCloseTo(0.78, 3);
+    expect(quality.source).toBe("benchmark");
+    expect(quality.raw.telemetry_advisory_applied).toBe(true);
+    expect(quality.raw.telemetry_success_rate).toBe(0.6);
+    expect(quality.raw.telemetry_advisory_adjustment).toBe(-0.05);
+  });
+
+  test("getQualityMetric does not apply telemetry penalty when failure rate is low", () => {
+    const c = candidate("v4-flash", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: {
+        overallScore: 0.8,
+        taskScores: { "coder.review": 0.9 },
+      },
+      telemetryScores: {
+        taskSuccessRates: { "coder.review": 0.85 }, // 15% failure < 20% threshold
+      },
+    });
+    const input = {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    };
+    const quality = getQualityMetric(c, input);
+    // Blended: 0.7*0.8 + 0.3*0.9 = 0.83, no penalty
+    expect(quality.value).toBeCloseTo(0.83, 3);
+    expect(quality.raw.telemetry_advisory_applied).toBeUndefined();
+  });
+
+  test("getQualityMetric floors telemetry-adjusted value at 0", () => {
+    const c = candidate("bad-model", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: {
+        overallScore: 0.03,
+      },
+      telemetryScores: {
+        taskSuccessRates: { "coder.review": 0.5 }, // 50% failure
+      },
+    });
+    const input = {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: minimalObservedConfig,
+    };
+    const quality = getQualityMetric(c, input);
+    // 0.03 - 0.05 would be negative, floored to 0
+    expect(quality.value).toBe(0);
+  });
+
+  // ── SP-A3: Configurable blend weights ──
+
+  test("getQualityMetric uses custom blend weight from config", () => {
+    const c = candidate("v4-pro", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: {
+        overallScore: 0.6,
+        taskScores: { "coder.review": 0.9 },
+      },
+    });
+    const input = {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: { ...minimalObservedConfig, benchmarkTaskBlendWeight: 0.5 },
+    };
+    const quality = getQualityMetric(c, input);
+    // 0.5 * 0.6 + 0.5 * 0.9 = 0.75
+    expect(quality.value).toBeCloseTo(0.75, 3);
+  });
+
+  test("getQualityMetric uses default blend weight when config absent", () => {
+    const c = candidate("v4-pro", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: {
+        overallScore: 0.6,
+        taskScores: { "coder.review": 0.9 },
+      },
+    });
+    const input = {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: { ...minimalObservedConfig },
+    };
+    const quality = getQualityMetric(c, input);
+    // Default: 0.7 * 0.6 + 0.3 * 0.9 = 0.69
+    expect(quality.value).toBeCloseTo(0.69, 3);
+  });
+
+  test("getQualityMetric uses custom telemetry threshold from config", () => {
+    const c = candidate("v4-flash", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: { overallScore: 0.8 },
+      telemetryScores: {
+        taskSuccessRates: { "coder.review": 0.75 }, // 25% failure
+      },
+    });
+    const input = {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: {
+        ...minimalObservedConfig,
+        telemetryAdvisoryFailureThreshold: 0.30,
+        telemetryAdvisoryPenalty: -0.10,
+      },
+    };
+    const quality = getQualityMetric(c, input);
+    // 25% failure < 30% threshold → no penalty
+    expect(quality.value).toBe(0.8);
+    expect(quality.raw.telemetry_advisory_applied).toBeUndefined();
+  });
+
+  test("getQualityMetric applies custom penalty when below custom threshold", () => {
+    const c = candidate("v4-flash", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: { overallScore: 0.8 },
+      telemetryScores: {
+        taskSuccessRates: { "coder.review": 0.55 }, // 45% failure
+      },
+    });
+    const input = {
+      request: { ...baseRequest, taskType: "coder.review" },
+      candidates: [c],
+      observedDataConfig: {
+        ...minimalObservedConfig,
+        telemetryAdvisoryFailureThreshold: 0.40,
+        telemetryAdvisoryPenalty: -0.08,
+      },
+    };
+    const quality = getQualityMetric(c, input);
+    // 45% > 40% threshold → penalty: 0.8 - 0.08 = 0.72
+    expect(quality.value).toBeCloseTo(0.72, 3);
+    expect(quality.raw.telemetry_advisory_applied).toBe(true);
+    expect(quality.raw.telemetry_advisory_adjustment).toBe(-0.08);
+  });
+});
+
+// ── SP5: Taxonomy dimension extraction ──
+
+describe("extractTaxonomyDimensions", () => {
+  test("extracts taxonomy fields from a fully populated normalizedIntent", () => {
+    const result = extractTaxonomyDimensions({
+      role: { id: "coder", hard: false },
+      task: { id: "coder.review", hard: false },
+      roleSource: "heuristic",
+      taskSource: "heuristic",
+      confidence: 0.85,
+      taxonomyVersion: "1.0.0-alpha.1",
+      classificationContractVersion: "role-model.classification.v1",
+    });
+
+    expect(result).toEqual({
+      taxonomy_role_id: "coder",
+      taxonomy_task_type: "coder.review",
+      taxonomy_role_source: "heuristic",
+      taxonomy_task_source: "heuristic",
+      taxonomy_confidence: 0.85,
+      taxonomy_version: "1.0.0-alpha.1",
+      classification_contract_version: "role-model.classification.v1",
+    });
+  });
+
+  test("returns null for missing taxonomy fields", () => {
+    const result = extractTaxonomyDimensions({
+      roleSource: "user",
+      taxonomyVersion: "1.0.0-alpha.1",
+      classificationContractVersion: "role-model.classification.v1",
+    });
+
+    expect(result).toEqual({
+      taxonomy_role_id: null,
+      taxonomy_task_type: null,
+      taxonomy_role_source: "user",
+      taxonomy_task_source: null,
+      taxonomy_confidence: null,
+      taxonomy_version: "1.0.0-alpha.1",
+      classification_contract_version: "role-model.classification.v1",
+    });
+  });
+
+  test("returns undefined when normalizedIntent is undefined", () => {
+    expect(extractTaxonomyDimensions(undefined)).toBeUndefined();
+  });
+
+  test("handles confidence as non-number gracefully", () => {
+    const result = extractTaxonomyDimensions({
+      confidence: "high", // not a number
+    });
+    expect(result?.taxonomy_confidence).toBeNull();
+  });
+
+  test("extracts partial data when role exists but task is missing", () => {
+    const result = extractTaxonomyDimensions({
+      role: { id: "security" },
+      roleSource: "trusted",
+      taxonomyVersion: "1.0.0-alpha.1",
+      classificationContractVersion: "role-model.classification.v1",
+    });
+
+    expect(result).toEqual({
+      taxonomy_role_id: "security",
+      taxonomy_task_type: null,
+      taxonomy_role_source: "trusted",
+      taxonomy_task_source: null,
+      taxonomy_confidence: null,
+      taxonomy_version: "1.0.0-alpha.1",
+      classification_contract_version: "role-model.classification.v1",
+    });
   });
 });

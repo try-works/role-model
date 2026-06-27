@@ -10,7 +10,10 @@
       "default": "./src/index.ts"
     }
   },
-  "files": ["src", "dist"],
+  "files": [
+    "src",
+    "dist"
+  ],
   "dependencies": {
     "@role-model-router/adapter-execution": "workspace:*",
     "@role-model-router/bench-judge": "workspace:*",
@@ -34,7 +37,8 @@
     "@role-model-router/vendor-abstraction": "workspace:*",
     "@role-model-router/vendor-llama-swap": "workspace:*",
     "@role-model-router/vendor-litellm": "workspace:*",
-    "yaml": "^2.8.1"
+    "yaml": "^2.8.1",
+    "@role-model/protocol-types": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

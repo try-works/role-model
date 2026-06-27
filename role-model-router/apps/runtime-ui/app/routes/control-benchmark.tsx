@@ -405,6 +405,9 @@ export default function ControlBenchmarkRoute() {
   const [clearingEndpointId, setClearingEndpointId] = useState<string | null>(null);
   const [clearingAll, setClearingAll] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [taxonomyFilterRole, setTaxonomyFilterRole] = useState<string>("");
+  const [taxonomyFilterTask, setTaxonomyFilterTask] = useState<string>("");
+  const [taxonomyFilterCapability, setTaxonomyFilterCapability] = useState<string>("");
 
   const resolveJudgeEndpointId = useCallback(
     (candidateValue: readonly RouterCandidate[], savedJudgeEndpointId?: string): string => {
@@ -906,6 +909,170 @@ export default function ControlBenchmarkRoute() {
           </div>
         )}
       </SectionCard>
+
+      {modelScoreRows.length > 0 ? (
+        <SectionCard
+          title="Taxonomy dimensions"
+          description="View benchmark scores aggregated by taxonomy dimension. Select a dimension to see per-model scores."
+        >
+          {(() => {
+            const allRoles = new Set<string>();
+            const allTasks = new Set<string>();
+            const allCapabilities = new Set<string>();
+            for (const row of modelScoreRows) {
+              const subject = lastSummary?.subjects.find(
+                (s) => s.endpointId === row.endpointId,
+              );
+              if (subject?.taxonomyScores) {
+                for (const k of Object.keys(subject.taxonomyScores.byRole ?? {})) allRoles.add(k);
+                for (const k of Object.keys(subject.taxonomyScores.byTask ?? {})) allTasks.add(k);
+                for (const k of Object.keys(subject.taxonomyScores.byCapability ?? {}))
+                  allCapabilities.add(k);
+              }
+            }
+            const hasTaxonomyData =
+              allRoles.size > 0 || allTasks.size > 0 || allCapabilities.size > 0;
+
+            const getFilteredScores = (
+              dimension: "byRole" | "byTask" | "byCapability",
+              filterValue: string,
+            ): Array<{
+              modelId: string;
+              endpointId: string;
+              score: number;
+            }> => {
+              if (!filterValue) return [];
+              return modelScoreRows
+                .map((row) => {
+                  const subject = lastSummary?.subjects.find(
+                    (s) => s.endpointId === row.endpointId,
+                  );
+                  const score = subject?.taxonomyScores?.[dimension]?.[filterValue];
+                  return score !== undefined
+                    ? {
+                        modelId: row.modelId,
+                        endpointId: row.endpointId,
+                        score,
+                      }
+                    : null;
+                })
+                .filter(
+                  (
+                    entry,
+                  ): entry is {
+                    modelId: string;
+                    endpointId: string;
+                    score: number;
+                  } => entry !== null,
+                )
+                .sort((a, b) => b.score - a.score);
+            };
+
+            return hasTaxonomyData ? (
+              <div className="space-y-4">
+                <p className="text-sm text-[var(--rm-secondary)]">
+                  These scores are advisory and reflect benchmark performance within specific
+                  taxonomy categories. They do not override routing policy.
+                </p>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <SelectField
+                    label="Filter by role"
+                    value={taxonomyFilterRole}
+                    onChange={(value) => {
+                      setTaxonomyFilterRole(value);
+                      setTaxonomyFilterTask("");
+                      setTaxonomyFilterCapability("");
+                    }}
+                  >
+                    <option value="">All roles</option>
+                    {[...allRoles].sort().map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </SelectField>
+                  <SelectField
+                    label="Filter by task"
+                    value={taxonomyFilterTask}
+                    onChange={(value) => {
+                      setTaxonomyFilterTask(value);
+                      setTaxonomyFilterRole("");
+                      setTaxonomyFilterCapability("");
+                    }}
+                  >
+                    <option value="">All tasks</option>
+                    {[...allTasks].sort().map((task) => (
+                      <option key={task} value={task}>
+                        {task}
+                      </option>
+                    ))}
+                  </SelectField>
+                  <SelectField
+                    label="Filter by capability"
+                    value={taxonomyFilterCapability}
+                    onChange={(value) => {
+                      setTaxonomyFilterCapability(value);
+                      setTaxonomyFilterRole("");
+                      setTaxonomyFilterTask("");
+                    }}
+                  >
+                    <option value="">All capabilities</option>
+                    {[...allCapabilities].sort().map((cap) => (
+                      <option key={cap} value={cap}>
+                        {cap}
+                      </option>
+                    ))}
+                  </SelectField>
+                </div>
+
+                {(() => {
+                  const roleScores = getFilteredScores("byRole", taxonomyFilterRole);
+                  const taskScores = getFilteredScores("byTask", taxonomyFilterTask);
+                  const capScores = getFilteredScores("byCapability", taxonomyFilterCapability);
+                  const activeScores =
+                    roleScores.length > 0
+                      ? { label: `Role: ${taxonomyFilterRole}`, scores: roleScores }
+                      : taskScores.length > 0
+                        ? { label: `Task: ${taxonomyFilterTask}`, scores: taskScores }
+                        : capScores.length > 0
+                          ? { label: `Capability: ${taxonomyFilterCapability}`, scores: capScores }
+                          : null;
+
+                  return activeScores ? (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-[var(--rm-secondary)]">
+                        {activeScores.label}
+                      </p>
+                      {activeScores.scores.map((entry) => (
+                        <div
+                          key={entry.endpointId}
+                          className="flex items-center justify-between rounded-lg border border-[var(--rm-border)] p-3"
+                        >
+                          <div>
+                            <p className="font-semibold text-[var(--rm-fg)]">{entry.modelId}</p>
+                            <p className="text-xs text-[var(--rm-secondary)]">
+                              {entry.endpointId}
+                            </p>
+                          </div>
+                          <StatusPill tone="success">
+                            {formatScore(entry.score)}
+                          </StatusPill>
+                        </div>
+                      ))}
+                    </div>
+                  ) : taxonomyFilterRole || taxonomyFilterTask || taxonomyFilterCapability ? (
+                    <EmptyState label="No benchmark data for the selected taxonomy dimension." />
+                  ) : (
+                    <EmptyState label="Select a taxonomy dimension above to see per-model benchmark scores." />
+                  );
+                })()}
+              </div>
+            ) : (
+              <EmptyState label="No taxonomy dimension data available yet. Run a benchmark with taxonomy-tagged cases to populate dimension scores." />
+            );
+          })()}
+        </SectionCard>
+      ) : null}
 
       <SectionCard
         title="Run capability benchmark"

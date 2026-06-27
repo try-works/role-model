@@ -77,6 +77,9 @@ export interface ObservedDataConfigRecord {
     penaltyTimeoutMs: number;
     penaltyFactor: number;
   };
+  benchmarkTaskBlendWeight?: number;
+  telemetryAdvisoryFailureThreshold?: number;
+  telemetryAdvisoryPenalty?: number;
 }
 
 export interface ThroughputPenaltyStateRecord {
@@ -99,6 +102,10 @@ export interface EndpointCandidate {
   routingSignals?: RuntimeRoutingSignals;
   readonly benchmarkCapability?: {
     readonly overallScore?: number;
+    readonly taskScores?: Record<string, number>;
+  };
+  readonly telemetryScores?: {
+    readonly taskSuccessRates?: Record<string, number>;
   };
 }
 
