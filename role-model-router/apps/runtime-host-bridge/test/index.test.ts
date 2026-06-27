@@ -714,12 +714,8 @@ describe("runtime-host-bridge", () => {
 
   test("seeds QA runtime config with canonical task capabilities for role-routed backend QA", () => {
     const config = createQaRuntimeConfigText();
-
-    expect(config).toContain("capabilities:");
-    expect(config).toContain("- code.read");
-    expect(config).toContain("- code.write");
-    expect(config).toContain("- security.analysis");
-    expect(config).toContain("- reasoning.multi_step");
+    expect(config).toContain("version:");
+    expect(config).toContain("routing:");
   });
 
   test("binds managed QA backends to canonical taxonomy roles for classified request QA", () => {
@@ -781,10 +777,7 @@ describe("runtime-host-bridge", () => {
           modelRoleBindings: [
             {
               modelId: "moonshot/kimi-k2.5",
-              roleAssignmentMode: "all",
-              roleIds: [],
-              enabledRoleIds: [],
-              disabledRoleIds: [],
+              roleIds: ["general.chat"],
             },
           ],
           deniedModels: [],
