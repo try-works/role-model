@@ -22,7 +22,9 @@
       "category": "easy-trivial",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -32,15 +34,31 @@
       "max_tokens": 8,
       "expected_response": "yes",
       "grading_criteria": "Must answer yes or no only.",
-      "accept_patterns": ["^yes$", "^no$"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "^yes$",
+        "^no$"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.review",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "e02-single-word",
       "category": "easy-trivial",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -50,15 +68,30 @@
       "max_tokens": 8,
       "expected_response": "ok",
       "grading_criteria": "Single word ok.",
-      "accept_patterns": ["^ok$"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "^ok$"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.review",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "e03-count",
       "category": "easy-trivial",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -68,15 +101,30 @@
       "max_tokens": 16,
       "expected_response": "1, 2, 3",
       "grading_criteria": "Lists integers 1 through 3.",
-      "accept_patterns": ["1.*2.*3"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "1.*2.*3"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.review",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "e04-capitalize",
       "category": "easy-trivial",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -86,15 +134,30 @@
       "max_tokens": 16,
       "expected_response": "Hello World",
       "grading_criteria": "Capitalizes hello world.",
-      "accept_patterns": ["Hello World"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "Hello World"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.review",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "e05-emoji",
       "category": "easy-trivial",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -104,15 +167,30 @@
       "max_tokens": 8,
       "expected_response": "Concise correct answer following instructions.",
       "grading_criteria": "Follows user instruction: Reply with a single smile emoji.",
-      "accept_patterns": [".+"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.review",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "e06-timezone",
       "category": "easy-trivial",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -122,15 +200,30 @@
       "max_tokens": 24,
       "expected_response": "Concise correct answer following instructions.",
       "grading_criteria": "Follows user instruction: What does UTC stand for? One phrase.",
-      "accept_patterns": [".+"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.review",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "e07-boolean",
       "category": "easy-trivial",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -140,15 +233,31 @@
       "max_tokens": 16,
       "expected_response": "true",
       "grading_criteria": "Correct boolean for HTTP port 80.",
-      "accept_patterns": ["^true$", "^false$"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "^true$",
+        "^false$"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.review",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "e08-format-json",
       "category": "easy-trivial",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -158,13 +267,19 @@
       "max_tokens": 32,
       "expected_response": "{\"name\":\"\",\"value\":\"\"}",
       "grading_criteria": "Valid JSON with name and value keys only.",
-      "accept_patterns": ["\"name\"", "\"value\""],
+      "accept_patterns": [
+        "\"name\"",
+        "\"value\""
+      ],
       "answer_format": {
         "kind": "json",
         "instruction": "Return ONLY a ```json fence: {\"name\":\"...\",\"value\":\"...\"}. Do not wrap it in an `answer` field.",
         "schema": {
           "type": "object",
-          "required": ["name", "value"],
+          "required": [
+            "name",
+            "value"
+          ],
           "properties": {
             "name": {
               "type": "string"
@@ -176,14 +291,29 @@
           "additionalProperties": false
         }
       },
-      "quick_benchmark": false
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "data",
+        "taskType": "data.transform",
+        "requiredCapabilities": [
+          "text.chat",
+          "data.schema"
+        ],
+        "requiredModalities": [
+          "text",
+          "structured_json"
+        ]
+      }
     },
     {
       "case_id": "p01-easy-greet",
       "category": "easy-short",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following", "general_knowledge"],
+      "capability_targets": [
+        "instruction_following",
+        "general_knowledge"
+      ],
       "messages": [
         {
           "role": "user",
@@ -193,15 +323,31 @@
       "max_tokens": 32,
       "expected_response": "Concise correct answer following instructions.",
       "grading_criteria": "Follows user instruction: Say hello in one sentence.",
-      "accept_patterns": [".+"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "support",
+        "taskType": "support.ticket.reply",
+        "requiredCapabilities": [
+          "text.chat",
+          "communication.user_facing"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p02-easy-math",
       "category": "easy-short",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following", "general_knowledge"],
+      "capability_targets": [
+        "instruction_following",
+        "general_knowledge"
+      ],
       "messages": [
         {
           "role": "user",
@@ -211,15 +357,31 @@
       "max_tokens": 16,
       "expected_response": "4",
       "grading_criteria": "Numeric answer 4 only.",
-      "accept_patterns": ["^4$"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "^4$"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "mathematician",
+        "taskType": "mathematician.proof.verify",
+        "requiredCapabilities": [
+          "text.chat",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p03-easy-define",
       "category": "easy-short",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following", "general_knowledge"],
+      "capability_targets": [
+        "instruction_following",
+        "general_knowledge"
+      ],
       "messages": [
         {
           "role": "user",
@@ -235,14 +397,28 @@
         "software applications",
         "communicate"
       ],
-      "quick_benchmark": false
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "knowledge",
+        "taskType": "knowledge.explain.concept",
+        "requiredCapabilities": [
+          "text.chat",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p04-easy-translate",
       "category": "easy-short",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following", "general_knowledge"],
+      "capability_targets": [
+        "instruction_following",
+        "general_knowledge"
+      ],
       "messages": [
         {
           "role": "user",
@@ -252,15 +428,31 @@
       "max_tokens": 16,
       "expected_response": "Bonjour",
       "grading_criteria": "French translation of good morning.",
-      "accept_patterns": ["Bonjour"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "Bonjour"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "translator",
+        "taskType": "translator.localize.text",
+        "requiredCapabilities": [
+          "text.chat",
+          "translation.text"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p05-easy-list",
       "category": "easy-short",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following", "general_knowledge"],
+      "capability_targets": [
+        "instruction_following",
+        "general_knowledge"
+      ],
       "messages": [
         {
           "role": "user",
@@ -270,15 +462,30 @@
       "max_tokens": 24,
       "expected_response": "Concise correct answer following instructions.",
       "grading_criteria": "Follows user instruction: List three colors.",
-      "accept_patterns": [".+"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "knowledge",
+        "taskType": "knowledge.explain.concept",
+        "requiredCapabilities": [
+          "text.chat"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p06-medium-explain",
       "category": "medium-qa",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["explanation", "reasoning"],
+      "capability_targets": [
+        "explanation",
+        "reasoning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -288,21 +495,43 @@
       "max_tokens": 128,
       "expected_response": "Accurate explanatory answer to the user question.",
       "grading_criteria": "Answers the question with relevant technical detail.",
-      "accept_patterns": [".{20,}"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".{20,}"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "educator",
+        "taskType": "educator.lesson.plan",
+        "requiredCapabilities": [
+          "text.chat",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p07-medium-compare",
       "category": "medium-qa",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["explanation", "reasoning"],
+      "capability_targets": [
+        "explanation",
+        "reasoning"
+      ],
       "taxonomy_tags": {
         "roleId": "researcher",
         "taskType": "researcher.compare_sources",
-        "requiredCapabilities": ["text.chat"],
-        "preferredCapabilities": ["citation.synthesis"],
-        "requiredModalities": ["text"],
+        "requiredCapabilities": [
+          "text.chat"
+        ],
+        "preferredCapabilities": [
+          "citation.synthesis"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
         "toolClasses": []
       },
       "messages": [
@@ -314,7 +543,9 @@
       "max_tokens": 160,
       "expected_response": "Accurate explanatory answer to the user question.",
       "grading_criteria": "Answers the question with relevant technical detail.",
-      "accept_patterns": [".{20,}"],
+      "accept_patterns": [
+        ".{20,}"
+      ],
       "quick_benchmark": false
     },
     {
@@ -322,7 +553,10 @@
       "category": "medium-qa",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["explanation", "reasoning"],
+      "capability_targets": [
+        "explanation",
+        "reasoning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -332,15 +566,31 @@
       "max_tokens": 120,
       "expected_response": "Accurate explanatory answer to the user question.",
       "grading_criteria": "Answers the question with relevant technical detail.",
-      "accept_patterns": [".{20,}"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".{20,}"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "analyst",
+        "taskType": "analyst.metrics.define",
+        "requiredCapabilities": [
+          "text.chat",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p09-medium-howto",
       "category": "medium-qa",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["explanation", "reasoning"],
+      "capability_targets": [
+        "explanation",
+        "reasoning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -350,15 +600,31 @@
       "max_tokens": 128,
       "expected_response": "Accurate explanatory answer to the user question.",
       "grading_criteria": "Answers the question with relevant technical detail.",
-      "accept_patterns": [".{20,}"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".{20,}"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "support",
+        "taskType": "support.knowledge_base.suggest",
+        "requiredCapabilities": [
+          "text.chat",
+          "communication.user_facing"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p10-long-context",
       "category": "long-context",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["long_context", "summarization"],
+      "capability_targets": [
+        "long_context",
+        "summarization"
+      ],
       "messages": [
         {
           "role": "user",
@@ -368,15 +634,33 @@
       "max_tokens": 256,
       "expected_response": "throughput SLA hard-deny; partial config PUT dropped routing.strategy",
       "grading_criteria": "Names both root causes and merge-preserving fix.",
-      "accept_patterns": ["throughput", "routing\\.strategy", "merge"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "throughput",
+        "routing\\.strategy",
+        "merge"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "researcher",
+        "taskType": "researcher.literature_review",
+        "requiredCapabilities": [
+          "text.chat",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p11-long-multi-turn",
       "category": "long-context",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["long_context", "summarization"],
+      "capability_targets": [
+        "long_context",
+        "summarization"
+      ],
       "messages": [
         {
           "role": "user",
@@ -394,21 +678,44 @@
       "max_tokens": 200,
       "expected_response": "Accurate explanatory answer to the user question.",
       "grading_criteria": "Answers the question with relevant technical detail.",
-      "accept_patterns": [".{20,}"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".{20,}"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coordinator",
+        "taskType": "coordinator.project.track",
+        "requiredCapabilities": [
+          "text.chat",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "l01-verbose-incident",
       "category": "long-context",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["long_context", "summarization"],
+      "capability_targets": [
+        "long_context",
+        "summarization"
+      ],
       "taxonomy_tags": {
         "roleId": "support",
         "taskType": "support.ticket.reply",
-        "requiredCapabilities": ["text.chat", "communication.user_facing"],
-        "preferredCapabilities": ["reasoning.multi_step"],
-        "requiredModalities": ["text"],
+        "requiredCapabilities": [
+          "text.chat",
+          "communication.user_facing"
+        ],
+        "preferredCapabilities": [
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
         "toolClasses": []
       },
       "messages": [
@@ -420,7 +727,10 @@
       "max_tokens": 64,
       "expected_response": "difficulty-based routing selects models by request difficulty within an alias pool",
       "grading_criteria": "One-sentence definition despite long filler context.",
-      "accept_patterns": ["difficulty", "routing"],
+      "accept_patterns": [
+        "difficulty",
+        "routing"
+      ],
       "quick_benchmark": false
     },
     {
@@ -428,7 +738,10 @@
       "category": "long-context",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["long_context", "summarization"],
+      "capability_targets": [
+        "long_context",
+        "summarization"
+      ],
       "messages": [
         {
           "role": "user",
@@ -438,15 +751,33 @@
       "max_tokens": 180,
       "expected_response": "bullet list with recommendation line",
       "grading_criteria": "Bullet-only, <=6 bullets, mentions local/remote/cache/rubric, no 'however', recommendation line.",
-      "accept_patterns": ["local", "remote", "recommend"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "local",
+        "remote",
+        "recommend"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "architect",
+        "taskType": "architect.system.design",
+        "requiredCapabilities": [
+          "text.chat",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p12-code-patch",
       "category": "code-burden",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation", "debugging"],
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
       "messages": [
         {
           "role": "user",
@@ -456,14 +787,21 @@
       "max_tokens": 128,
       "expected_response": "unified diff patch for router.ts with refactor explanation",
       "grading_criteria": "Must include unified diff with ---/+++ hunks for router.ts and brief refactor rationale covering the rename and strategy normalization.",
-      "accept_patterns": ["---|\\+\\+\\+|@@", "router", "diff|patch"],
+      "accept_patterns": [
+        "---|\\+\\+\\+|@@",
+        "router",
+        "diff|patch"
+      ],
       "quick_benchmark": false,
       "answer_format": {
         "kind": "json",
         "instruction": "Return ONLY a ```json fence: {\"diff\":\"<unified diff>\",\"rationale\":\"<brief rationale>\"}.",
         "schema": {
           "type": "object",
-          "required": ["diff", "rationale"],
+          "required": [
+            "diff",
+            "rationale"
+          ],
           "properties": {
             "diff": {
               "type": "string",
@@ -476,14 +814,32 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,4 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"rationale\": \"Renamed the entrypoint for clarity and normalized strategy values to avoid whitespace and casing bugs.\"\n}"
+      "example_deliverable": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,4 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"rationale\": \"Renamed the entrypoint for clarity and normalized strategy values to avoid whitespace and casing bugs.\"\n}",
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.edit",
+        "requiredCapabilities": [
+          "code.read",
+          "code.write"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write"
+        ]
+      }
     },
     {
       "case_id": "p13-code-debug",
       "category": "code-burden",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation", "debugging"],
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
       "messages": [
         {
           "role": "user",
@@ -493,21 +849,49 @@
       "max_tokens": 160,
       "expected_response": "inspect eligibility, throughput SLA, allowEndpoints, chosen_endpoint_id",
       "grading_criteria": "Lists eligibility checks for empty chosen_endpoint_id.",
-      "accept_patterns": ["eligib", "endpoint", "registry|allow"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "eligib",
+        "endpoint",
+        "registry|allow"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.debug.root_cause",
+        "requiredCapabilities": [
+          "code.read",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read"
+        ]
+      }
     },
     {
       "case_id": "p14-schema-validate",
       "category": "code-burden",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation", "debugging"],
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
       "taxonomy_tags": {
         "roleId": "data",
         "taskType": "data.schema.review",
-        "requiredCapabilities": ["data.schema"],
-        "preferredCapabilities": ["reasoning.multi_step"],
-        "requiredModalities": ["text", "structured_json"],
+        "requiredCapabilities": [
+          "data.schema"
+        ],
+        "preferredCapabilities": [
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text",
+          "structured_json"
+        ],
         "toolClasses": []
       },
       "messages": [
@@ -519,14 +903,20 @@
       "max_tokens": 128,
       "expected_response": "Schema analysis naming missing fields and concrete test updates.",
       "grading_criteria": "Must identify that `requestedRoleId` is missing from the schema and propose concrete test updates.",
-      "accept_patterns": ["requestedRoleId|schema|test"],
+      "accept_patterns": [
+        "requestedRoleId|schema|test"
+      ],
       "quick_benchmark": false,
       "answer_format": {
         "kind": "json",
         "instruction": "Return ONLY a ```json fence: {\"analysis\":\"...\",\"missing_fields\":[\"...\"],\"test_updates\":[\"...\"]}.",
         "schema": {
           "type": "object",
-          "required": ["analysis", "missing_fields", "test_updates"],
+          "required": [
+            "analysis",
+            "missing_fields",
+            "test_updates"
+          ],
           "properties": {
             "analysis": {
               "type": "string",
@@ -556,7 +946,10 @@
       "category": "code-burden",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation", "debugging"],
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
       "messages": [
         {
           "role": "user",
@@ -566,14 +959,21 @@
       "max_tokens": 200,
       "expected_response": "Diff, schema findings, test updates, and before/after explanations.",
       "grading_criteria": "Must include a unified diff for router.ts, identify the missing `requestedRoleId` schema field, propose test updates, and include before/after explanations.",
-      "accept_patterns": ["requestedRoleId|schema|test|router|diff"],
+      "accept_patterns": [
+        "requestedRoleId|schema|test|router|diff"
+      ],
       "quick_benchmark": false,
       "answer_format": {
         "kind": "json",
         "instruction": "Return ONLY a ```json fence: {\"diff\":\"<unified diff>\",\"schema_findings\":[\"...\"],\"test_updates\":[\"...\"],\"before_after\":[\"...\"]}.",
         "schema": {
           "type": "object",
-          "required": ["diff", "schema_findings", "test_updates", "before_after"],
+          "required": [
+            "diff",
+            "schema_findings",
+            "test_updates",
+            "before_after"
+          ],
           "properties": {
             "diff": {
               "type": "string",
@@ -603,14 +1003,32 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,4 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"schema_findings\": [\n    \"`requestedRoleId` is missing from `routingDiagnostics.difficultyRouting` even though controller-guided tests expect it.\"\n  ],\n  \"test_updates\": [\n    \"Extend the schema fixture with `requestedRoleId`.\",\n    \"Keep the controller-guided conformance assertion and update fixture snapshots accordingly.\"\n  ],\n  \"before_after\": [\n    \"Before: `route` returned the raw strategy string. After: `routeRuntimeRequest` normalizes whitespace and casing.\",\n    \"Before: schema omitted `requestedRoleId`. After: controller-guided fixtures include it so tests and schema agree.\"\n  ]\n}"
+      "example_deliverable": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,4 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"schema_findings\": [\n    \"`requestedRoleId` is missing from `routingDiagnostics.difficultyRouting` even though controller-guided tests expect it.\"\n  ],\n  \"test_updates\": [\n    \"Extend the schema fixture with `requestedRoleId`.\",\n    \"Keep the controller-guided conformance assertion and update fixture snapshots accordingly.\"\n  ],\n  \"before_after\": [\n    \"Before: `route` returned the raw strategy string. After: `routeRuntimeRequest` normalizes whitespace and casing.\",\n    \"Before: schema omitted `requestedRoleId`. After: controller-guided fixtures include it so tests and schema agree.\"\n  ]\n}",
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.refactor",
+        "requiredCapabilities": [
+          "code.read",
+          "code.write"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write"
+        ]
+      }
     },
     {
       "case_id": "c02-ts-generics",
       "category": "code-burden",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation", "debugging"],
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
       "messages": [
         {
           "role": "user",
@@ -620,15 +1038,30 @@
       "max_tokens": 160,
       "expected_response": "Technical analysis referencing code, patch, schema, or tests.",
       "grading_criteria": "Engages with code-edit or debugging request substantively.",
-      "accept_patterns": ["code|patch|schema|test|typescript|router"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "code|patch|schema|test|typescript|router"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.edit",
+        "requiredCapabilities": [
+          "code.read",
+          "code.write"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p15-tools-read-one",
       "category": "tools-light",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling"],
+      "capability_targets": [
+        "tool_calling"
+      ],
       "messages": [
         {
           "role": "user",
@@ -638,7 +1071,9 @@
       "max_tokens": 96,
       "expected_response": "Coherent plan or summary addressing the tool-using task.",
       "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
-      "accept_patterns": ["read|search|list|patch|tool|plan"],
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
       "quick_benchmark": false,
       "tools": [
         {
@@ -653,19 +1088,25 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         }
       ],
       "required_tool_call": true,
-      "expected_tool_names": ["read_file"],
+      "expected_tool_names": [
+        "read_file"
+      ],
       "answer_format": {
         "kind": "tool_calls_with_answer",
         "instruction": "Step 1: emit the required read_file tool call for `state/runtime-config.yaml`. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<routing strategy>\"}.",
         "schema": {
           "type": "object",
-          "required": ["answer"],
+          "required": [
+            "answer"
+          ],
           "properties": {
             "answer": {
               "type": "string",
@@ -674,14 +1115,30 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ],\n  \"answer\": \"controller\"\n}"
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ],\n  \"answer\": \"controller\"\n}",
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.edit",
+        "requiredCapabilities": [
+          "code.read",
+          "tools.function_calling"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read"
+        ]
+      }
     },
     {
       "case_id": "p16-tools-search",
       "category": "tools-light",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling"],
+      "capability_targets": [
+        "tool_calling"
+      ],
       "messages": [
         {
           "role": "user",
@@ -691,7 +1148,9 @@
       "max_tokens": 128,
       "expected_response": "Coherent plan or summary addressing the tool-using task.",
       "grading_criteria": "Must call grep_search and summarize where throughputSla hard-deny happens from the provided grep results.",
-      "accept_patterns": ["read|search|list|patch|tool|plan"],
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
       "quick_benchmark": false,
       "tools": [
         {
@@ -706,19 +1165,25 @@
                   "type": "string"
                 }
               },
-              "required": ["pattern"]
+              "required": [
+                "pattern"
+              ]
             }
           }
         }
       ],
       "required_tool_call": true,
-      "expected_tool_names": ["grep_search"],
+      "expected_tool_names": [
+        "grep_search"
+      ],
       "answer_format": {
         "kind": "tool_calls_with_answer",
         "instruction": "Step 1: emit the required grep_search tool call. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<summary of where hard-deny happens>\"}.",
         "schema": {
           "type": "object",
-          "required": ["answer"],
+          "required": [
+            "answer"
+          ],
           "properties": {
             "answer": {
               "type": "string",
@@ -727,14 +1192,30 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ],\n  \"answer\": \"Hard-deny happens in the zero-eligible fast-fail branch and when a candidate is marked `hardDeniedBySla` because its throughput is below the threshold.\"\n}"
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ],\n  \"answer\": \"Hard-deny happens in the zero-eligible fast-fail branch and when a candidate is marked `hardDeniedBySla` because its throughput is below the threshold.\"\n}",
+      "taxonomy_tags": {
+        "roleId": "researcher",
+        "taskType": "researcher.web_research",
+        "requiredCapabilities": [
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read"
+        ]
+      }
     },
     {
       "case_id": "t01-tools-list-dir",
       "category": "tools-light",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling"],
+      "capability_targets": [
+        "tool_calling"
+      ],
       "messages": [
         {
           "role": "user",
@@ -744,7 +1225,9 @@
       "max_tokens": 96,
       "expected_response": "Coherent plan or summary addressing the tool-using task.",
       "grading_criteria": "Must call list_dir and summarize routing-related filenames from the provided directory listing.",
-      "accept_patterns": ["read|search|list|patch|tool|plan"],
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
       "quick_benchmark": false,
       "tools": [
         {
@@ -759,19 +1242,25 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         }
       ],
       "required_tool_call": true,
-      "expected_tool_names": ["list_dir"],
+      "expected_tool_names": [
+        "list_dir"
+      ],
       "answer_format": {
         "kind": "tool_calls_with_answer",
         "instruction": "Step 1: emit the required list_dir tool call. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<summary of routing-related filenames>\"}.",
         "schema": {
           "type": "object",
-          "required": ["answer"],
+          "required": [
+            "answer"
+          ],
           "properties": {
             "answer": {
               "type": "string",
@@ -780,14 +1269,32 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_dir\",\n      \"arguments\": {\n        \"path\": \"config\"\n      }\n    }\n  ],\n  \"answer\": \"The routing-related files are `router.yaml` and `routing-policy.json`; the other files are unrelated config assets.\"\n}"
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_dir\",\n      \"arguments\": {\n        \"path\": \"config\"\n      }\n    }\n  ],\n  \"answer\": \"The routing-related files are `router.yaml` and `routing-policy.json`; the other files are unrelated config assets.\"\n}",
+      "taxonomy_tags": {
+        "roleId": "operator",
+        "taskType": "operator.debug.startup",
+        "requiredCapabilities": [
+          "code.read",
+          "tools.function_calling"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "shell.execute"
+        ]
+      }
     },
     {
       "case_id": "p17-tools-multi-hard",
       "category": "tools-heavy",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "agentic_workflow"],
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
       "messages": [
         {
           "role": "user",
@@ -797,7 +1304,11 @@
       "max_tokens": 1024,
       "expected_response": "read_file and apply_patch tool calls plus validation plan",
       "grading_criteria": "Must call read_file and apply_patch; acknowledges schema/test validation steps.",
-      "accept_patterns": ["read", "patch", "schema|test"],
+      "accept_patterns": [
+        "read",
+        "patch",
+        "schema|test"
+      ],
       "quick_benchmark": true,
       "tools": [
         {
@@ -812,7 +1323,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         },
@@ -828,19 +1341,26 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         }
       ],
       "required_tool_call": true,
-      "expected_tool_names": ["read_file", "apply_patch"],
+      "expected_tool_names": [
+        "read_file",
+        "apply_patch"
+      ],
       "answer_format": {
         "kind": "tool_calls_with_answer",
         "instruction": "Step 1: API read_file src/router.ts and apply_patch with minimal unified diff. Step 2: ```json {\"answer\":\"brief schema/test validation note\"}",
         "schema": {
           "type": "object",
-          "required": ["answer"],
+          "required": [
+            "answer"
+          ],
           "properties": {
             "answer": {
               "type": "string",
@@ -853,10 +1373,22 @@
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.edit",
-        "requiredCapabilities": ["code.read", "code.write", "tools.function_calling"],
-        "preferredCapabilities": ["tools.command_execution"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"]
+        "requiredCapabilities": [
+          "code.read",
+          "code.write",
+          "tools.function_calling"
+        ],
+        "preferredCapabilities": [
+          "tools.command_execution"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write",
+          "shell.execute"
+        ]
       }
     },
     {
@@ -864,7 +1396,10 @@
       "category": "tools-heavy",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "agentic_workflow"],
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
       "messages": [
         {
           "role": "user",
@@ -874,7 +1409,9 @@
       "max_tokens": 160,
       "expected_response": "Coherent plan or summary addressing the tool-using task.",
       "grading_criteria": "Must call list_endpoints and get_metrics, then recommend routing changes using the provided endpoint and latency data.",
-      "accept_patterns": ["read|search|list|patch|tool|plan"],
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
       "quick_benchmark": false,
       "tools": [
         {
@@ -900,19 +1437,27 @@
                   "type": "string"
                 }
               },
-              "required": ["endpoint_id"]
+              "required": [
+                "endpoint_id"
+              ]
             }
           }
         }
       ],
       "required_tool_call": true,
-      "expected_tool_names": ["list_endpoints", "get_metrics", "get_metrics"],
+      "expected_tool_names": [
+        "list_endpoints",
+        "get_metrics",
+        "get_metrics"
+      ],
       "answer_format": {
         "kind": "tool_calls_with_answer",
         "instruction": "Step 1: emit list_endpoints and get_metrics tool calls for both compared endpoints. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<routing recommendation>\"}.",
         "schema": {
           "type": "object",
-          "required": ["answer"],
+          "required": [
+            "answer"
+          ],
           "properties": {
             "answer": {
               "type": "string",
@@ -921,14 +1466,35 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"Keep local as the default for low-latency traffic, but retain remote deepseek-v4-flash as the fallback for harder requests where quality matters more than p95 latency.\"\n}"
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"Keep local as the default for low-latency traffic, but retain remote deepseek-v4-flash as the fallback for harder requests where quality matters more than p95 latency.\"\n}",
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.edit",
+        "requiredCapabilities": [
+          "code.read",
+          "code.write",
+          "tools.function_calling",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write",
+          "shell.execute"
+        ]
+      }
     },
     {
       "case_id": "t02-tools-triple",
       "category": "tools-heavy",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "agentic_workflow"],
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
       "messages": [
         {
           "role": "user",
@@ -938,7 +1504,9 @@
       "max_tokens": 160,
       "expected_response": "Coherent plan or summary addressing the tool-using task.",
       "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
-      "accept_patterns": ["read|search|list|patch|tool|plan"],
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
       "quick_benchmark": false,
       "tools": [
         {
@@ -953,7 +1521,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         },
@@ -969,7 +1539,9 @@
                   "type": "string"
                 }
               },
-              "required": ["pattern"]
+              "required": [
+                "pattern"
+              ]
             }
           }
         },
@@ -985,18 +1557,40 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         }
-      ]
+      ],
+      "taxonomy_tags": {
+        "roleId": "operator",
+        "taskType": "operator.debug.startup",
+        "requiredCapabilities": [
+          "code.read",
+          "tools.function_calling",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write",
+          "shell.execute"
+        ]
+      }
     },
     {
       "case_id": "t03-tools-agent-plan",
       "category": "tools-heavy",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "agentic_workflow"],
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1006,15 +1600,25 @@
       "max_tokens": 192,
       "expected_response": "Coherent plan or summary addressing the tool-using task.",
       "grading_criteria": "Attempts the requested tool workflow without refusing outright.",
-      "accept_patterns": ["read|search|list|patch|tool|plan"],
+      "accept_patterns": [
+        "read|search|list|patch|tool|plan"
+      ],
       "required_tool_call": true,
-      "expected_tool_names": ["read_file", "validate_schema", "apply_patch"],
+      "expected_tool_names": [
+        "read_file",
+        "validate_schema",
+        "apply_patch"
+      ],
       "answer_format": {
         "kind": "tool_calls_with_summary",
         "instruction": "Step 1: emit the required API tool calls. Step 2: after tools, output ONLY a ```json fence: {\"plan\":[\"...\"],\"patch_summary\":\"...\",\"strategy_improvements\":[\"...\"]}.",
         "schema": {
           "type": "object",
-          "required": ["plan", "patch_summary", "strategy_improvements"],
+          "required": [
+            "plan",
+            "patch_summary",
+            "strategy_improvements"
+          ],
           "properties": {
             "plan": {
               "type": "array",
@@ -1052,7 +1656,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         },
@@ -1068,7 +1674,9 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         },
@@ -1084,18 +1692,38 @@
                   "type": "string"
                 }
               },
-              "required": ["document"]
+              "required": [
+                "document"
+              ]
             }
           }
         }
-      ]
+      ],
+      "taxonomy_tags": {
+        "roleId": "architect",
+        "taskType": "architect.system.design",
+        "requiredCapabilities": [
+          "tools.function_calling",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "shell.execute"
+        ]
+      }
     },
     {
       "case_id": "p19-decompose-plan",
       "category": "decomposition",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["planning", "reasoning"],
+      "capability_targets": [
+        "planning",
+        "reasoning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1105,15 +1733,31 @@
       "max_tokens": 200,
       "expected_response": "Step-by-step plan with milestones and verification criteria.",
       "grading_criteria": "Provides structured decomposition with phases or milestones.",
-      "accept_patterns": ["step|phase|milestone|verif"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "step|phase|milestone|verif"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "planner",
+        "taskType": "planner.roadmap.create",
+        "requiredCapabilities": [
+          "text.chat",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p20-decompose-arch",
       "category": "decomposition",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["planning", "reasoning"],
+      "capability_targets": [
+        "planning",
+        "reasoning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1123,15 +1767,31 @@
       "max_tokens": 220,
       "expected_response": "Step-by-step plan with milestones and verification criteria.",
       "grading_criteria": "Provides structured decomposition with phases or milestones.",
-      "accept_patterns": ["step|phase|milestone|verif"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "step|phase|milestone|verif"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "architect",
+        "taskType": "architect.system.design",
+        "requiredCapabilities": [
+          "text.chat",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "d01-milestones-heavy",
       "category": "decomposition",
       "difficulty_bucket": "medium",
       "benchmark_eligible": true,
-      "capability_targets": ["planning", "reasoning"],
+      "capability_targets": [
+        "planning",
+        "reasoning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1141,15 +1801,32 @@
       "max_tokens": 240,
       "expected_response": "Step-by-step plan with milestones and verification criteria.",
       "grading_criteria": "Provides structured decomposition with phases or milestones.",
-      "accept_patterns": ["step|phase|milestone|verif"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "step|phase|milestone|verif"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "planner",
+        "taskType": "planner.roadmap.create",
+        "requiredCapabilities": [
+          "text.chat",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "x01-max-signal",
       "category": "max-signal",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "code_generation", "planning"],
+      "capability_targets": [
+        "tool_calling",
+        "code_generation",
+        "planning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1160,8 +1837,16 @@
       "expected_response": "milestone plan, patch summary, test refactor checklist",
       "grading_criteria": "Structured plan with milestones; read_file, grep_search, apply_patch tool calls; test checklist.",
       "required_tool_call": true,
-      "expected_tool_names": ["read_file", "grep_search", "apply_patch"],
-      "accept_patterns": ["milestone|plan", "patch", "test"],
+      "expected_tool_names": [
+        "read_file",
+        "grep_search",
+        "apply_patch"
+      ],
+      "accept_patterns": [
+        "milestone|plan",
+        "patch",
+        "test"
+      ],
       "quick_benchmark": true,
       "tools": [
         {
@@ -1176,7 +1861,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         },
@@ -1192,7 +1879,9 @@
                   "type": "string"
                 }
               },
-              "required": ["pattern"]
+              "required": [
+                "pattern"
+              ]
             }
           }
         },
@@ -1208,7 +1897,9 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         }
@@ -1218,7 +1909,10 @@
         "instruction": "Step 1: emit read_file, grep_search, apply_patch via API. Step 2: output ONLY ```json {\"plan\":[\"milestone 1\"],\"patch_summary\":\"what changed\",\"test_snippet\":\"short test idea\"}.",
         "schema": {
           "type": "object",
-          "required": ["plan", "patch_summary"],
+          "required": [
+            "plan",
+            "patch_summary"
+          ],
           "properties": {
             "plan": {
               "type": "array",
@@ -1239,10 +1933,20 @@
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.edit",
-        "requiredCapabilities": ["code.read", "code.write"],
-        "preferredCapabilities": ["reasoning.multi_step"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read", "filesystem.write"]
+        "requiredCapabilities": [
+          "code.read",
+          "code.write"
+        ],
+        "preferredCapabilities": [
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write"
+        ]
       }
     },
     {
@@ -1250,7 +1954,11 @@
       "category": "max-signal",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "code_generation", "planning"],
+      "capability_targets": [
+        "tool_calling",
+        "code_generation",
+        "planning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1260,7 +1968,11 @@
       "max_tokens": 256,
       "expected_response": "analysis of workflow with routing recommendation for hard prompts",
       "grading_criteria": "Addresses incident context and when to route hard prompts remote.",
-      "accept_patterns": ["remote", "routing", "patch|schema"],
+      "accept_patterns": [
+        "remote",
+        "routing",
+        "patch|schema"
+      ],
       "quick_benchmark": false,
       "tools": [
         {
@@ -1275,7 +1987,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         },
@@ -1291,7 +2005,9 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         },
@@ -1307,18 +2023,39 @@
                   "type": "string"
                 }
               },
-              "required": ["document"]
+              "required": [
+                "document"
+              ]
             }
           }
         }
-      ]
+      ],
+      "taxonomy_tags": {
+        "roleId": "architect",
+        "taskType": "architect.tradeoff.analyze",
+        "requiredCapabilities": [
+          "tools.function_calling",
+          "code_generation",
+          "planning"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write",
+          "shell.execute"
+        ]
+      }
     },
     {
       "case_id": "p24-exact-local",
       "category": "exact-model",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1328,15 +2065,30 @@
       "max_tokens": 16,
       "expected_response": "routed-local",
       "grading_criteria": "Exact text routed-local.",
-      "accept_patterns": ["routed-local"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "routed-local"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "operator",
+        "taskType": "operator.monitor.setup",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p25-exact-remote",
       "category": "exact-model",
       "difficulty_bucket": "easy",
       "benchmark_eligible": true,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1346,15 +2098,30 @@
       "max_tokens": 16,
       "expected_response": "routed-remote",
       "grading_criteria": "Exact text routed-remote.",
-      "accept_patterns": ["routed-remote"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "routed-remote"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "operator",
+        "taskType": "operator.monitor.setup",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p26-cache-easy-a",
       "category": "cache-probe",
       "difficulty_bucket": "easy",
       "benchmark_eligible": false,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1364,15 +2131,30 @@
       "max_tokens": 32,
       "expected_response": "Concise correct answer following instructions.",
       "grading_criteria": "Follows user instruction: Say hello in one short sentence.",
-      "accept_patterns": [".+"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "operator",
+        "taskType": "operator.monitor.setup",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p27-cache-easy-b",
       "category": "cache-probe",
       "difficulty_bucket": "easy",
       "benchmark_eligible": false,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1382,15 +2164,30 @@
       "max_tokens": 32,
       "expected_response": "Concise correct answer following instructions.",
       "grading_criteria": "Follows user instruction: Say hello in one short sentence.",
-      "accept_patterns": [".+"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "operator",
+        "taskType": "operator.monitor.setup",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p28-cache-hard-a",
       "category": "cache-probe",
       "difficulty_bucket": "easy",
       "benchmark_eligible": false,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1400,7 +2197,9 @@
       "max_tokens": 96,
       "expected_response": "Concise correct answer following instructions.",
       "grading_criteria": "Follows user instruction: Analyze this code-edit workflow and apply a patch with schema validation.",
-      "accept_patterns": [".+"],
+      "accept_patterns": [
+        ".+"
+      ],
       "quick_benchmark": false,
       "tools": [
         {
@@ -1415,7 +2214,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         },
@@ -1431,18 +2232,33 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         }
-      ]
+      ],
+      "taxonomy_tags": {
+        "roleId": "operator",
+        "taskType": "operator.monitor.setup",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p29-cache-hard-b",
       "category": "cache-probe",
       "difficulty_bucket": "easy",
       "benchmark_eligible": false,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1452,7 +2268,9 @@
       "max_tokens": 96,
       "expected_response": "Concise correct answer following instructions.",
       "grading_criteria": "Follows user instruction: Analyze this code-edit workflow and apply a patch with schema validation.",
-      "accept_patterns": [".+"],
+      "accept_patterns": [
+        ".+"
+      ],
       "quick_benchmark": false,
       "tools": [
         {
@@ -1467,7 +2285,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         },
@@ -1483,18 +2303,33 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         }
-      ]
+      ],
+      "taxonomy_tags": {
+        "roleId": "operator",
+        "taskType": "operator.monitor.setup",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p30-cache-invalidate",
       "category": "cache-probe",
       "difficulty_bucket": "easy",
       "benchmark_eligible": false,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1504,7 +2339,9 @@
       "max_tokens": 128,
       "expected_response": "Concise correct answer following instructions.",
       "grading_criteria": "Follows user instruction: Analyze this code-edit workflow, apply a patch, validate schema contract, and refactor the test suite with multiple tool",
-      "accept_patterns": [".+"],
+      "accept_patterns": [
+        ".+"
+      ],
       "quick_benchmark": false,
       "tools": [
         {
@@ -1519,7 +2356,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         },
@@ -1535,18 +2374,33 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         }
-      ]
+      ],
+      "taxonomy_tags": {
+        "roleId": "operator",
+        "taskType": "operator.monitor.setup",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "p31-cache-strategy-switch",
       "category": "cache-probe",
       "difficulty_bucket": "easy",
       "benchmark_eligible": false,
-      "capability_targets": ["instruction_following"],
+      "capability_targets": [
+        "instruction_following"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1556,15 +2410,30 @@
       "max_tokens": 8,
       "expected_response": "Concise correct answer following instructions.",
       "grading_criteria": "Follows user instruction: What is 1+1? Number only.",
-      "accept_patterns": [".+"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        ".+"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "operator",
+        "taskType": "operator.monitor.setup",
+        "requiredCapabilities": [
+          "text.chat",
+          "instruction_following"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "h01-implement-two-sum",
       "category": "code-implementation",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation"],
+      "capability_targets": [
+        "code_generation"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1574,7 +2443,13 @@
       "max_tokens": 320,
       "expected_response": "TypeScript twoSum using Map, single pass, returns index tuple",
       "grading_criteria": "Must define twoSum, use Map or hash map, iterate nums once, return two numeric indices. No nested O(n^2) double loop.",
-      "accept_patterns": ["function\\s+twoSum", "Map|new Map", "nums", "target", "return"],
+      "accept_patterns": [
+        "function\\s+twoSum",
+        "Map|new Map",
+        "nums",
+        "target",
+        "return"
+      ],
       "quick_benchmark": true,
       "answer_format": {
         "kind": "code_fence",
@@ -1585,10 +2460,20 @@
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.edit",
-        "requiredCapabilities": ["code.read", "code.write"],
-        "preferredCapabilities": ["reasoning.multi_step"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read", "filesystem.write"]
+        "requiredCapabilities": [
+          "code.read",
+          "code.write"
+        ],
+        "preferredCapabilities": [
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write"
+        ]
       }
     },
     {
@@ -1596,7 +2481,10 @@
       "category": "code-implementation",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation", "debugging"],
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1606,7 +2494,9 @@
       "max_tokens": 512,
       "expected_response": "Uses mutex/lock/queue/atomic pattern so concurrent increments serialize",
       "grading_criteria": "Must fix race on shared count (mutex, semaphore, queue, or atomic increment pattern). Final code should reliably reach count 3.",
-      "accept_patterns": ["Mutex|mutex|lock|queue|semaphore|atomic|Promise\\.resolve"],
+      "accept_patterns": [
+        "Mutex|mutex|lock|queue|semaphore|atomic|Promise\\.resolve"
+      ],
       "quick_benchmark": true,
       "answer_format": {
         "kind": "code_fence",
@@ -1617,10 +2507,19 @@
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.debug.root_cause",
-        "requiredCapabilities": ["code.read", "reasoning.multi_step"],
-        "preferredCapabilities": ["tools.function_calling"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read"]
+        "requiredCapabilities": [
+          "code.read",
+          "reasoning.multi_step"
+        ],
+        "preferredCapabilities": [
+          "tools.function_calling"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read"
+        ]
       }
     },
     {
@@ -1628,7 +2527,10 @@
       "category": "code-implementation",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation", "reasoning"],
+      "capability_targets": [
+        "code_generation",
+        "reasoning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1638,15 +2540,38 @@
       "max_tokens": 480,
       "expected_response": "LRUCache class with get/put and eviction at capacity",
       "grading_criteria": "Defines LRUCache class with get and put, evicts least-recently-used when capacity exceeded.",
-      "accept_patterns": ["class\\s+LRUCache", "get\\(", "put\\(", "capacity"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "class\\s+LRUCache",
+        "get\\(",
+        "put\\(",
+        "capacity"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.edit",
+        "requiredCapabilities": [
+          "code.read",
+          "code.write",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write"
+        ]
+      }
     },
     {
       "case_id": "h04-tool-read-router",
       "category": "tools-heavy",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling"],
+      "capability_targets": [
+        "tool_calling"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1664,9 +2589,13 @@
       "max_tokens": 320,
       "expected_response": "TOOL_CALL read_file path src/router.ts then function name",
       "grading_criteria": "Must call read_file with router.ts path; answer references a function name.",
-      "accept_patterns": ["router\\.ts|read_file"],
+      "accept_patterns": [
+        "router\\.ts|read_file"
+      ],
       "required_tool_call": true,
-      "expected_tool_names": ["read_file"],
+      "expected_tool_names": [
+        "read_file"
+      ],
       "tools": [
         {
           "type": "function",
@@ -1680,7 +2609,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         }
@@ -1691,7 +2622,9 @@
         "instruction": "Step 1: emit required API tool calls. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"...\"}. No reasoning inside the JSON.",
         "schema": {
           "type": "object",
-          "required": ["answer"],
+          "required": [
+            "answer"
+          ],
           "properties": {
             "answer": {
               "type": "string",
@@ -1704,10 +2637,18 @@
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.review",
-        "requiredCapabilities": ["code.read"],
-        "preferredCapabilities": ["reasoning.multi_step"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read"]
+        "requiredCapabilities": [
+          "code.read"
+        ],
+        "preferredCapabilities": [
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read"
+        ]
       }
     },
     {
@@ -1715,7 +2656,9 @@
       "category": "tools-heavy",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling"],
+      "capability_targets": [
+        "tool_calling"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1733,9 +2676,13 @@
       "max_tokens": 320,
       "expected_response": "grep_search for evaluateEligibility then eligibility summary bullets",
       "grading_criteria": "Must call grep_search with evaluateEligibility pattern; summary mentions eligibility checks.",
-      "accept_patterns": ["evaluateEligibility|eligib"],
+      "accept_patterns": [
+        "evaluateEligibility|eligib"
+      ],
       "required_tool_call": true,
-      "expected_tool_names": ["grep_search"],
+      "expected_tool_names": [
+        "grep_search"
+      ],
       "tools": [
         {
           "type": "function",
@@ -1749,7 +2696,9 @@
                   "type": "string"
                 }
               },
-              "required": ["pattern"]
+              "required": [
+                "pattern"
+              ]
             }
           }
         }
@@ -1760,7 +2709,9 @@
         "instruction": "Step 1: emit required API tool calls. Step 2: output ONLY ```json {\"bullets\":[\"...\",\"...\"]}. Exactly two bullets.",
         "schema": {
           "type": "object",
-          "required": ["bullets"],
+          "required": [
+            "bullets"
+          ],
           "properties": {
             "bullets": {
               "type": "array",
@@ -1776,10 +2727,18 @@
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.review",
-        "requiredCapabilities": ["code.read"],
-        "preferredCapabilities": ["tools.function_calling"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read"]
+        "requiredCapabilities": [
+          "code.read"
+        ],
+        "preferredCapabilities": [
+          "tools.function_calling"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read"
+        ]
       }
     },
     {
@@ -1787,7 +2746,10 @@
       "category": "tools-heavy",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "code_generation"],
+      "capability_targets": [
+        "tool_calling",
+        "code_generation"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1797,9 +2759,13 @@
       "max_tokens": 256,
       "expected_response": "apply_patch tool call with unified diff changing MODE to difficulty",
       "grading_criteria": "Must call apply_patch; diff includes ---/+++ headers and changes MODE to difficulty.",
-      "accept_patterns": ["apply_patch|MODE|difficulty|\\+\\+\\+|---"],
+      "accept_patterns": [
+        "apply_patch|MODE|difficulty|\\+\\+\\+|---"
+      ],
       "required_tool_call": true,
-      "expected_tool_names": ["apply_patch"],
+      "expected_tool_names": [
+        "apply_patch"
+      ],
       "tools": [
         {
           "type": "function",
@@ -1813,7 +2779,9 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         }
@@ -1827,10 +2795,20 @@
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.edit",
-        "requiredCapabilities": ["code.read", "code.write"],
-        "preferredCapabilities": ["tools.function_calling"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read", "filesystem.write"]
+        "requiredCapabilities": [
+          "code.read",
+          "code.write"
+        ],
+        "preferredCapabilities": [
+          "tools.function_calling"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write"
+        ]
       }
     },
     {
@@ -1838,7 +2816,11 @@
       "category": "multi-step",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation", "debugging", "reasoning"],
+      "capability_targets": [
+        "code_generation",
+        "debugging",
+        "reasoning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1856,7 +2838,9 @@
       "max_tokens": 512,
       "expected_response": "Guard clause checking sole candidate + throughput SLA hard deny fallback",
       "grading_criteria": "Multi-turn context used; code references throughput SLA, sole candidate, and fallback allow.",
-      "accept_patterns": ["throughput|sla|sole|candidate|fallback|allow"],
+      "accept_patterns": [
+        "throughput|sla|sole|candidate|fallback|allow"
+      ],
       "quick_benchmark": true,
       "answer_format": {
         "kind": "code_fence",
@@ -1867,10 +2851,20 @@
       "taxonomy_tags": {
         "roleId": "operator",
         "taskType": "operator.debug.startup",
-        "requiredCapabilities": ["code.read", "reasoning.multi_step"],
-        "preferredCapabilities": ["tools.function_calling"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read", "shell.execute"]
+        "requiredCapabilities": [
+          "code.read",
+          "reasoning.multi_step"
+        ],
+        "preferredCapabilities": [
+          "tools.function_calling"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "shell.execute"
+        ]
       }
     },
     {
@@ -1878,7 +2872,10 @@
       "category": "multi-step",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "agentic_workflow"],
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1904,9 +2901,13 @@
       "max_tokens": 320,
       "expected_response": "read_file runtime-config.yaml and routing.strategy value",
       "grading_criteria": "Must call read_file on runtime-config.yaml after multi-turn context and answer with the routing.strategy value from the provided tool result.",
-      "accept_patterns": ["runtime-config|routing\\.strategy|strategy"],
+      "accept_patterns": [
+        "runtime-config|routing\\.strategy|strategy"
+      ],
       "required_tool_call": true,
-      "expected_tool_names": ["read_file"],
+      "expected_tool_names": [
+        "read_file"
+      ],
       "tools": [
         {
           "type": "function",
@@ -1920,7 +2921,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         }
@@ -1931,7 +2934,9 @@
         "instruction": "Step 1: emit required API tool calls. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"...\"}. No reasoning inside the JSON.",
         "schema": {
           "type": "object",
-          "required": ["answer"],
+          "required": [
+            "answer"
+          ],
           "properties": {
             "answer": {
               "type": "string",
@@ -1944,10 +2949,20 @@
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.refactor",
-        "requiredCapabilities": ["code.read", "code.write"],
-        "preferredCapabilities": ["reasoning.multi_step"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read", "filesystem.write"]
+        "requiredCapabilities": [
+          "code.read",
+          "code.write"
+        ],
+        "preferredCapabilities": [
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write"
+        ]
       }
     },
     {
@@ -1955,7 +2970,10 @@
       "category": "tools-heavy",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "agentic_workflow"],
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow"
+      ],
       "messages": [
         {
           "role": "user",
@@ -1981,9 +2999,15 @@
       "max_tokens": 1024,
       "expected_response": "list_endpoints then get_metrics tool calls for both compared endpoints and a one-sentence remote-vs-local latency comparison",
       "grading_criteria": "Must call list_endpoints and get_metrics for both compared endpoints before summarizing latency, and the answer must explicitly compare remote vs local p95 latency.",
-      "accept_patterns": ["latency|p95|remote|local|endpoint"],
+      "accept_patterns": [
+        "latency|p95|remote|local|endpoint"
+      ],
       "required_tool_call": true,
-      "expected_tool_names": ["list_endpoints", "get_metrics", "get_metrics"],
+      "expected_tool_names": [
+        "list_endpoints",
+        "get_metrics",
+        "get_metrics"
+      ],
       "tools": [
         {
           "type": "function",
@@ -2008,7 +3032,9 @@
                   "type": "string"
                 }
               },
-              "required": ["endpoint_id"]
+              "required": [
+                "endpoint_id"
+              ]
             }
           }
         }
@@ -2019,7 +3045,9 @@
         "instruction": "Step 1: emit list_endpoints and get_metrics tool calls for both compared endpoints. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<one sentence local-vs-remote latency comparison>\"}. No reasoning inside the JSON.",
         "schema": {
           "type": "object",
-          "required": ["answer"],
+          "required": [
+            "answer"
+          ],
           "properties": {
             "answer": {
               "type": "string",
@@ -2032,10 +3060,18 @@
       "taxonomy_tags": {
         "roleId": "analyst",
         "taskType": "analyst.metrics.define",
-        "requiredCapabilities": ["reasoning.multi_step"],
-        "preferredCapabilities": ["data.query"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read"]
+        "requiredCapabilities": [
+          "reasoning.multi_step"
+        ],
+        "preferredCapabilities": [
+          "data.query"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read"
+        ]
       }
     },
     {
@@ -2043,7 +3079,11 @@
       "category": "tools-heavy",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "agentic_workflow", "code_generation"],
+      "capability_targets": [
+        "tool_calling",
+        "agentic_workflow",
+        "code_generation"
+      ],
       "messages": [
         {
           "role": "user",
@@ -2053,9 +3093,15 @@
       "max_tokens": 640,
       "expected_response": "read_file, grep_search, apply_patch tool calls in sequence",
       "grading_criteria": "Must emit read_file, grep_search, and apply_patch tool calls.",
-      "accept_patterns": ["router|evaluateEligibility|patch|diff"],
+      "accept_patterns": [
+        "router|evaluateEligibility|patch|diff"
+      ],
       "required_tool_call": true,
-      "expected_tool_names": ["read_file", "grep_search", "apply_patch"],
+      "expected_tool_names": [
+        "read_file",
+        "grep_search",
+        "apply_patch"
+      ],
       "tools": [
         {
           "type": "function",
@@ -2069,7 +3115,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         },
@@ -2085,7 +3133,9 @@
                   "type": "string"
                 }
               },
-              "required": ["pattern"]
+              "required": [
+                "pattern"
+              ]
             }
           }
         },
@@ -2101,7 +3151,9 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         }
@@ -2115,10 +3167,21 @@
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.edit",
-        "requiredCapabilities": ["code.read", "code.write"],
-        "preferredCapabilities": ["tools.function_calling"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"]
+        "requiredCapabilities": [
+          "code.read",
+          "code.write"
+        ],
+        "preferredCapabilities": [
+          "tools.function_calling"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write",
+          "shell.execute"
+        ]
       }
     },
     {
@@ -2126,7 +3189,11 @@
       "category": "multi-step",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["planning", "code_generation", "tool_calling"],
+      "capability_targets": [
+        "planning",
+        "code_generation",
+        "tool_calling"
+      ],
       "messages": [
         {
           "role": "user",
@@ -2136,9 +3203,13 @@
       "max_tokens": 400,
       "expected_response": "Milestone bullets, BenchmarkRunProgress interface, run_tests tool call",
       "grading_criteria": "Structured phases; includes BenchmarkRunProgress interface fields; run_tests tool emitted.",
-      "accept_patterns": ["BenchmarkRunProgress|milestone|phase|run_tests"],
+      "accept_patterns": [
+        "BenchmarkRunProgress|milestone|phase|run_tests"
+      ],
       "required_tool_call": true,
-      "expected_tool_names": ["run_tests"],
+      "expected_tool_names": [
+        "run_tests"
+      ],
       "tools": [
         {
           "type": "function",
@@ -2152,19 +3223,40 @@
                   "type": "string"
                 }
               },
-              "required": ["command"]
+              "required": [
+                "command"
+              ]
             }
           }
         }
       ],
-      "quick_benchmark": false
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "architect",
+        "taskType": "architect.system.design",
+        "requiredCapabilities": [
+          "planning",
+          "code_generation",
+          "tools.function_calling"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "shell.execute"
+        ]
+      }
     },
     {
       "case_id": "h12-four-turn-architecture",
       "category": "multi-step",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["planning", "reasoning"],
+      "capability_targets": [
+        "planning",
+        "reasoning"
+      ],
       "messages": [
         {
           "role": "user",
@@ -2190,15 +3282,32 @@
       "max_tokens": 280,
       "expected_response": "5-step numbered plan with verification per step under 180 words",
       "grading_criteria": "Uses prior turns; numbered plan with 5 steps; each step has verification; <=180 words.",
-      "accept_patterns": ["1[.)\\s]", "verif|verify|criteria", "cache|rubric|classifier"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "1[.)\\s]",
+        "verif|verify|criteria",
+        "cache|rubric|classifier"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "architect",
+        "taskType": "architect.tradeoff.analyze",
+        "requiredCapabilities": [
+          "planning",
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ]
+      }
     },
     {
       "case_id": "h13-parse-nested-json",
       "category": "code-implementation",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation"],
+      "capability_targets": [
+        "code_generation"
+      ],
       "messages": [
         {
           "role": "user",
@@ -2213,14 +3322,29 @@
         "JSON\\.parse|try",
         "chosenEndpointId|difficulty"
       ],
-      "quick_benchmark": false
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "data",
+        "taskType": "data.transform",
+        "requiredCapabilities": [
+          "data.schema",
+          "code.write"
+        ],
+        "requiredModalities": [
+          "text",
+          "structured_json"
+        ]
+      }
     },
     {
       "case_id": "h14-refactor-extract-helper",
       "category": "code-implementation",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["code_generation", "debugging"],
+      "capability_targets": [
+        "code_generation",
+        "debugging"
+      ],
       "messages": [
         {
           "role": "user",
@@ -2230,15 +3354,38 @@
       "max_tokens": 360,
       "expected_response": "pickFallbackJudge helper with before/after code blocks",
       "grading_criteria": "Extracts pickFallbackJudge function; shows before and after blocks.",
-      "accept_patterns": ["pickFallbackJudge", "before|after|fallback"],
-      "quick_benchmark": false
+      "accept_patterns": [
+        "pickFallbackJudge",
+        "before|after|fallback"
+      ],
+      "quick_benchmark": false,
+      "taxonomy_tags": {
+        "roleId": "coder",
+        "taskType": "coder.refactor",
+        "requiredCapabilities": [
+          "code.read",
+          "code.write"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write"
+        ]
+      }
     },
     {
       "case_id": "h15-max-signal-v3",
       "category": "max-signal",
       "difficulty_bucket": "hard",
       "benchmark_eligible": true,
-      "capability_targets": ["tool_calling", "code_generation", "planning", "agentic_workflow"],
+      "capability_targets": [
+        "tool_calling",
+        "code_generation",
+        "planning",
+        "agentic_workflow"
+      ],
       "messages": [
         {
           "role": "user",
@@ -2254,7 +3401,11 @@
         "test|expect|assert"
       ],
       "required_tool_call": true,
-      "expected_tool_names": ["read_file", "grep_search", "apply_patch"],
+      "expected_tool_names": [
+        "read_file",
+        "grep_search",
+        "apply_patch"
+      ],
       "tools": [
         {
           "type": "function",
@@ -2268,7 +3419,9 @@
                   "type": "string"
                 }
               },
-              "required": ["path"]
+              "required": [
+                "path"
+              ]
             }
           }
         },
@@ -2284,7 +3437,9 @@
                   "type": "string"
                 }
               },
-              "required": ["pattern"]
+              "required": [
+                "pattern"
+              ]
             }
           }
         },
@@ -2300,7 +3455,9 @@
                   "type": "string"
                 }
               },
-              "required": ["diff"]
+              "required": [
+                "diff"
+              ]
             }
           }
         }
@@ -2311,7 +3468,10 @@
         "instruction": "Step 1: emit read_file, grep_search, apply_patch via API. Step 2: output ONLY ```json {\"plan\":[\"milestone 1\"],\"patch_summary\":\"what changed\",\"test_snippet\":\"short test idea\"}.",
         "schema": {
           "type": "object",
-          "required": ["plan", "patch_summary"],
+          "required": [
+            "plan",
+            "patch_summary"
+          ],
           "properties": {
             "plan": {
               "type": "array",
@@ -2332,10 +3492,20 @@
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.edit",
-        "requiredCapabilities": ["code.read", "code.write"],
-        "preferredCapabilities": ["reasoning.multi_step"],
-        "requiredModalities": ["text"],
-        "toolClasses": ["filesystem.read", "filesystem.write"]
+        "requiredCapabilities": [
+          "code.read",
+          "code.write"
+        ],
+        "preferredCapabilities": [
+          "reasoning.multi_step"
+        ],
+        "requiredModalities": [
+          "text"
+        ],
+        "toolClasses": [
+          "filesystem.read",
+          "filesystem.write"
+        ]
       }
     }
   ],

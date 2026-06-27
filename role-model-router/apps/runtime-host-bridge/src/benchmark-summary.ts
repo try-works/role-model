@@ -579,6 +579,9 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
       ...capability,
       overallScore: summarySubject.overallScore,
       scoresByBucket: summarySubject.scoresByBucket,
+      ...(summarySubject.taxonomyScores?.byTask
+        ? { taskScores: summarySubject.taxonomyScores.byTask }
+        : {}),
     };
   }
   return capability;
