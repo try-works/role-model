@@ -76,6 +76,8 @@ import {
   readRuntimeControllerAssignment,
   readRuntimeMaintenancePolicy,
   readRuntimeObservationBundle,
+  readObservationTelemetryColumns,
+  readObservationTelemetryColumnsBatch,
   readRuntimeTelemetrySummary,
   upsertDifficultyClassificationCache,
   upsertObservedThroughputPenaltyState,
@@ -14466,6 +14468,19 @@ export async function createRuntimeBridgeBackend(
     BridgeTelemetryRequestRecord,
     "clientRequestId" | "requestClass" | "taxonomyRoleId" | "taxonomyTaskType"
   > => {
+    const columns = readObservationTelemetryColumns({
+      databasePath: initialization.databasePath,
+      requestId,
+    });
+    if (columns) {
+      return {
+        clientRequestId: columns.clientRequestId,
+        requestClass: (columns.requestClass as "benchmark" | "live_request" | "unknown") ?? "unknown",
+        taxonomyRoleId: columns.taxonomyRoleId,
+        taxonomyTaskType: columns.taxonomyTaskType,
+      };
+    }
+    // Fallback: parse JSON for records that predate the column migration
     const observation = readRuntimeObservationBundle({
       databasePath: initialization.databasePath,
       requestId,
@@ -14553,14 +14568,22 @@ export async function createRuntimeBridgeBackend(
   };
   const enrichTelemetryRequestRecords = (
     records: readonly ReturnType<typeof listRuntimeTelemetryRecords>[number][],
-  ): readonly BridgeTelemetryRequestRecord[] =>
-    records.map((record) => {
-      const observationMeta = readObservationTelemetryMeta(record.requestId);
+  ): readonly BridgeTelemetryRequestRecord[] => {
+    const observationMetaBatch = readObservationTelemetryColumnsBatch({
+      databasePath: initialization.databasePath,
+      requestIds: records.map((r) => r.requestId),
+    });
+    return records.map((record) => {
+      const observationMeta = observationMetaBatch.get(record.requestId);
       const endpointMeta = getTelemetryEndpointMeta(record.endpointId);
       return {
         ...record,
-        clientRequestId: record.clientRequestId ?? observationMeta.clientRequestId,
-        requestClass: record.requestClass ?? observationMeta.requestClass,
+        clientRequestId:
+          record.clientRequestId ?? observationMeta?.clientRequestId ?? null,
+        requestClass:
+          (record.requestClass as BridgeTelemetryRequestRecord["requestClass"]) ??
+          (observationMeta?.requestClass as BridgeTelemetryRequestRecord["requestClass"]) ??
+          "unknown",
         ...endpointMeta,
         sourceType: record.sourceType ?? endpointMeta.sourceType,
         providerId: record.providerId ?? endpointMeta.providerId,
@@ -14569,10 +14592,11 @@ export async function createRuntimeBridgeBackend(
         healthStatus: record.healthStatusAtRequest ?? endpointMeta.healthStatus,
         status: record.lifecycleStateAtRequest ?? endpointMeta.status,
         roleIds: record.roleIds.length > 0 ? record.roleIds : endpointMeta.roleIds,
-        taxonomyRoleId: observationMeta.taxonomyRoleId ?? null,
-        taxonomyTaskType: observationMeta.taxonomyTaskType ?? null,
+        taxonomyRoleId: observationMeta?.taxonomyRoleId ?? null,
+        taxonomyTaskType: observationMeta?.taxonomyTaskType ?? null,
       };
     });
+  };
   const readTelemetrySummaryData = (query?: BridgeTelemetryQuery): BridgeTelemetrySummary => {
     const normalizedQuery = normalizeTelemetryQuery(query);
     const requestRecords = listTelemetryRequestRecords(normalizedQuery);
