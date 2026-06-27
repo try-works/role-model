@@ -250,6 +250,8 @@ CREATE TABLE IF NOT EXISTS runtime_observations (
   retain_until_ms INTEGER,
   observation_json TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_obs_retain_until
+  ON runtime_observations(retain_until_ms);
 CREATE TABLE IF NOT EXISTS observed_performance_samples (
   sample_id TEXT PRIMARY KEY,
   endpoint_id TEXT NOT NULL,
@@ -1004,10 +1006,6 @@ export interface PersistedRuntimeObservationBundle {
     readonly retentionTtlHours?: number;
     readonly retainUntil?: number;
   };
-  readonly taxonomyDimensions?: {
-    readonly taxonomy_role_id?: unknown;
-    readonly taxonomy_task_type?: unknown;
-  };
 }
 
 function ensureNonEmpty(value: string, label: string): string {
@@ -1046,35 +1044,10 @@ function initializeSchema(database: DatabaseSync): void {
   );
   if (!observationColumns.has("retain_until_ms")) {
     database.exec("ALTER TABLE runtime_observations ADD COLUMN retain_until_ms INTEGER");
+    database.exec(
+      "CREATE INDEX IF NOT EXISTS idx_obs_retain_until ON runtime_observations(retain_until_ms)",
+    );
   }
-  database.exec(
-    "CREATE INDEX IF NOT EXISTS idx_obs_retain_until ON runtime_observations(retain_until_ms)",
-  );
-  // R-PERF1: Add metadata columns to avoid JSON parsing on every telemetry query
-  for (const [colName, colType] of [
-    ["taxonomy_role_id", "TEXT"],
-    ["taxonomy_task_type", "TEXT"],
-    ["client_request_id", "TEXT"],
-    ["request_class", "TEXT"],
-  ] as const) {
-    if (!observationColumns.has(colName)) {
-      database.exec(
-        `ALTER TABLE runtime_observations ADD COLUMN ${colName} ${colType}`,
-      );
-    }
-  }
-  // R-PERF3: Backfill existing records from observation_json
-  database.exec(
-    `UPDATE runtime_observations SET
-      client_request_id = COALESCE(client_request_id, json_extract(observation_json, '$.clientRequestId')),
-      request_class = COALESCE(request_class, CASE
-        WHEN json_extract(observation_json, '$.observedPerformance.sample.source_type') = 'benchmark' THEN 'benchmark'
-        WHEN json_extract(observation_json, '$.observedPerformance.sample.source_type') = 'live_request' THEN 'live_request'
-        ELSE NULL END),
-      taxonomy_role_id = COALESCE(taxonomy_role_id, json_extract(observation_json, '$.taxonomyDimensions.taxonomy_role_id')),
-      taxonomy_task_type = COALESCE(taxonomy_task_type, json_extract(observation_json, '$.taxonomyDimensions.taxonomy_task_type'))
-    WHERE client_request_id IS NULL OR taxonomy_role_id IS NULL`,
-  );
   const runtimeTelemetryColumns = new Set(
     (
       database.prepare("PRAGMA table_info(runtime_telemetry_records)").all() as Array<{
@@ -2910,7 +2883,7 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
   withSqliteBusyRetry(input.databasePath, (database) => {
     database
       .prepare(
-        "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, taxonomy_role_id, taxonomy_task_type, client_request_id, request_class, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
       )
       .run(
         observation.requestId,
@@ -2919,10 +2892,6 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
         observation.conversationId,
         observation.usageEvent.timestamp_ms,
         observation.privacyReceipt?.retainUntil ?? null,
-        typeof observation.taxonomyDimensions?.taxonomy_role_id === "string" ? observation.taxonomyDimensions.taxonomy_role_id : null,
-        typeof observation.taxonomyDimensions?.taxonomy_task_type === "string" ? observation.taxonomyDimensions.taxonomy_task_type : null,
-        observation.clientRequestId ?? null,
-        observation.observedPerformance?.sample?.source_type === "benchmark" ? "benchmark" : observation.observedPerformance?.sample?.source_type === "live_request" ? "live_request" : null,
         JSON.stringify(observation),
       );
     database
@@ -3047,79 +3016,6 @@ export function readRuntimeObservationBundle(
   database.close();
 
   return row ? (JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle) : null;
-}
-
-export interface ReadObservationTelemetryColumnsInput {
-  readonly databasePath: string;
-  readonly requestId: string;
-}
-
-export interface ReadObservationTelemetryColumnsBatchInput {
-  readonly databasePath: string;
-  readonly requestIds: readonly string[];
-}
-
-export interface ObservationTelemetryColumns {
-  readonly clientRequestId: string | null;
-  readonly requestClass: string | null;
-  readonly taxonomyRoleId: string | null;
-  readonly taxonomyTaskType: string | null;
-}
-
-export function readObservationTelemetryColumns(
-  input: ReadObservationTelemetryColumnsInput,
-): ObservationTelemetryColumns | null {
-  const database = new DatabaseSync(input.databasePath);
-  const row = database
-    .prepare(
-      "SELECT client_request_id, request_class, taxonomy_role_id, taxonomy_task_type FROM runtime_observations WHERE request_id = ?",
-    )
-    .get(input.requestId) as
-    | {
-        client_request_id: string | null;
-        request_class: string | null;
-        taxonomy_role_id: string | null;
-        taxonomy_task_type: string | null;
-      }
-    | undefined;
-  database.close();
-  return row
-    ? {
-        clientRequestId: row.client_request_id,
-        requestClass: row.request_class,
-        taxonomyRoleId: row.taxonomy_role_id,
-        taxonomyTaskType: row.taxonomy_task_type,
-      }
-    : null;
-}
-
-export function readObservationTelemetryColumnsBatch(
-  input: ReadObservationTelemetryColumnsBatchInput,
-): Map<string, ObservationTelemetryColumns> {
-  const database = new DatabaseSync(input.databasePath);
-  const placeholders = input.requestIds.map(() => "?").join(", ");
-  const rows = database
-    .prepare(
-      `SELECT request_id, client_request_id, request_class, taxonomy_role_id, taxonomy_task_type FROM runtime_observations WHERE request_id IN (${placeholders})`,
-    )
-    .all(...input.requestIds) as unknown as ReadonlyArray<{
-    request_id: string;
-    client_request_id: string | null;
-    request_class: string | null;
-    taxonomy_role_id: string | null;
-    taxonomy_task_type: string | null;
-  }>;
-  database.close();
-  const result = new Map<string, ObservationTelemetryColumns>();
-  for (const row of rows) {
-    result.set(row.request_id, {
-      clientRequestId: row.client_request_id,
-      requestClass: row.request_class,
-      taxonomyRoleId: row.taxonomy_role_id,
-      taxonomyTaskType: row.taxonomy_task_type,
-    });
-  }
-  return result;
 }
 
 export function readObservedPerformanceSamples(
