@@ -1,4 +1,8 @@
 import { createPiModelSelection } from "./downstream-openai.js";
+import type {
+  RoleModelRecentRequest,
+  RoleModelRequestInspection,
+} from "./runtime-inspection.js";
 import { RoleModelDiscoveryError } from "./runtime-discovery.js";
 import type {
   DiscoveryResult,
@@ -13,8 +17,8 @@ export interface RoleModelCommandDependencies {
   readSelectedAlias?: () => Promise<string | null>;
   writeSelectedAlias?: (alias: string) => Promise<void>;
   setActiveModel?: (model: PiModelSelection) => Promise<boolean>;
-  listRuntimeRequests?: () => Promise<string>;
-  explainLatestRuntimeRequest?: () => Promise<string>;
+  listRecentRequests?: (limit?: number) => Promise<readonly RoleModelRecentRequest[]>;
+  inspectRequest?: (requestId: string) => Promise<RoleModelRequestInspection | null>;
 }
 
 const HELP = [
@@ -28,8 +32,8 @@ const HELP = [
   "/role-model alias choose <alias> - choose the alias Pi should use",
   "/role-model alias refresh - refresh Role-Model provider aliases from runtime discovery",
   "/role-model alias current - show the selected alias",
-  "/role-model requests - show recent runtime requests from Role-Model",
-  "/role-model explain latest - explain the latest runtime request using runtime-owned diagnostics",
+  "/role-model requests [limit] - list recent Role-Model runtime requests",
+  "/role-model explain <request-id|latest> - show runtime routing diagnostics for a request",
 ].join("\n");
 
 function ok(text: string): RoleModelCommandResult {
@@ -46,6 +50,103 @@ function aliasRecords(result: DiscoveryResult) {
 
 function diagnosticsFor(result: DiscoveryResult, id: string): RoleModelModelDiagnostic | undefined {
   return result.modelDiagnostics?.find((diagnostic) => diagnostic.id === id);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readNullableString(record: Record<string, unknown>, ...keys: readonly string[]): string | null {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.length > 0) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function readStringArray(value: unknown): readonly string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+}
+
+function extractRoleTask(record: RoleModelRecentRequest): { roleId: string | null; taskType: string | null } {
+  const normalizedIntent = record.normalizedIntent;
+  const roleModel = record.roleModel;
+  const intent = isRecord(roleModel?.intent) ? roleModel.intent : null;
+  return {
+    roleId:
+      (normalizedIntent && readNullableString(normalizedIntent, "roleId", "requestedRoleId")) ??
+      (intent && readNullableString(intent, "role_hint_id")) ??
+      null,
+    taskType:
+      (normalizedIntent && readNullableString(normalizedIntent, "taskType", "requestedTaskType")) ??
+      (intent && readNullableString(intent, "task_type")) ??
+      null,
+  };
+}
+
+function formatRecentRequest(record: RoleModelRecentRequest): string {
+  const { roleId, taskType } = extractRoleTask(record);
+  const parts = [
+    `- ${record.requestId}`,
+    `[${record.status ?? "unknown"}]`,
+    record.endpointId ? `endpoint=${record.endpointId}` : null,
+    record.modelId ? `model=${record.modelId}` : null,
+    roleId ? `role=${roleId}` : null,
+    taskType ? `task=${taskType}` : null,
+  ].filter(Boolean);
+  return parts.join(" ");
+}
+
+function readSelectionReasons(inspection: RoleModelRequestInspection): readonly string[] {
+  const decision = inspection.routerDecision?.decision;
+  if (!decision) {
+    return [];
+  }
+  const snakeCase = readStringArray(decision.selection_reasons);
+  if (snakeCase.length > 0) {
+    return snakeCase;
+  }
+  return readStringArray(decision.selectionReasons);
+}
+
+function formatInspection(inspection: RoleModelRequestInspection): string {
+  const request = inspection.request;
+  const routerDecision = inspection.routerDecision;
+  const { roleId, taskType } = extractRoleTask(request);
+  const reasonCodes = readSelectionReasons(inspection);
+  const observeUrl =
+    routerDecision?.observeRequestPath && routerDecision.observeRequestPath.startsWith("/")
+      ? `${inspection.runtimeBaseUrl}${routerDecision.observeRequestPath}`
+      : null;
+  return [
+    `request: ${request.requestId}`,
+    `status: ${request.status ?? "unknown"}`,
+    `endpoint: ${request.endpointId ?? routerDecision?.selectedEndpointId ?? "unknown"}`,
+    `model: ${request.modelId ?? routerDecision?.selectedModelId ?? "unknown"}`,
+    `provider: ${request.providerId ?? "unknown"}`,
+    `role: ${roleId ?? "unknown"}`,
+    `task: ${taskType ?? "unknown"}`,
+    `strategy: ${routerDecision?.strategyLabel ?? "unknown"}`,
+    `selection reasons: ${reasonCodes.length > 0 ? reasonCodes.join(", ") : "none recorded"}`,
+    `observe: ${observeUrl ?? "not available"}`,
+  ].join("\n");
+}
+
+function resolveAliasId(result: DiscoveryResult, rawAlias: string): string | null {
+  const trimmed = rawAlias.trim();
+  if (!trimmed) {
+    return null;
+  }
+  const candidates = new Set([trimmed]);
+  if (trimmed.startsWith("role-model/")) {
+    candidates.add(trimmed.slice("role-model/".length));
+  } else {
+    candidates.add(`role-model/${trimmed}`);
+  }
+  const match = result.discovery.models.find((model) => candidates.has(model.id));
+  return match?.id ?? null;
 }
 
 function formatDiscoveryError(error: unknown): string {
@@ -141,29 +242,37 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
     }
 
     if (command === "requests") {
-      if (!dependencies.listRuntimeRequests) {
-        return fail("Role-Model runtime request inspection is unavailable in this context.");
+      if (!dependencies.listRecentRequests) {
+        return fail("Recent request inspection is unavailable in this Pi context.");
       }
-      try {
-        return ok(await dependencies.listRuntimeRequests());
-      } catch (error) {
-        return fail(
-          `Role-Model runtime request inspection failed: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
+      const requestedLimit = Number.parseInt(subcommand ?? "", 10);
+      const limit = Number.isFinite(requestedLimit) && requestedLimit > 0 ? requestedLimit : 10;
+      const requests = await dependencies.listRecentRequests(limit);
+      return ok(
+        requests.length > 0
+          ? requests.map((request) => formatRecentRequest(request)).join("\n")
+          : "No recent Role-Model runtime requests are available.",
+      );
     }
 
-    if (command === "explain" && subcommand === "latest") {
-      if (!dependencies.explainLatestRuntimeRequest) {
-        return fail("Role-Model runtime request explanation is unavailable in this context.");
+    if (command === "explain") {
+      if (!dependencies.inspectRequest || !dependencies.listRecentRequests) {
+        return fail("Runtime request diagnostics are unavailable in this Pi context.");
       }
-      try {
-        return ok(await dependencies.explainLatestRuntimeRequest());
-      } catch (error) {
-        return fail(
-          `Role-Model runtime request explanation failed: ${error instanceof Error ? error.message : String(error)}`,
-        );
+      const requested = [subcommand, ...rest].filter(Boolean).join(" ") || "latest";
+      let requestId = requested;
+      if (requested === "latest") {
+        const latest = await dependencies.listRecentRequests(1);
+        requestId = latest[0]?.requestId ?? "";
       }
+      if (!requestId) {
+        return fail("No recent Role-Model runtime request is available to explain.");
+      }
+      const inspection = await dependencies.inspectRequest(requestId);
+      if (!inspection) {
+        return fail(`Role-Model runtime request not found: ${requestId}`);
+      }
+      return ok(formatInspection(inspection));
     }
 
     if (command === "alias" && subcommand === "list") {
@@ -188,13 +297,13 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
     }
 
     if (command === "alias" && (subcommand === "choose" || subcommand === "use")) {
-      const alias = rest.join(" ");
-      if (!alias) {
+      const requestedAlias = rest.join(" ");
+      if (!requestedAlias) {
         return fail(`Usage: /role-model alias ${subcommand} <alias>`);
       }
-      const exists = result.discovery.models.some((model) => model.id === alias);
-      if (!exists) {
-        return fail(`Unknown Role-Model alias: ${alias}`);
+      const alias = resolveAliasId(result, requestedAlias);
+      if (!alias) {
+        return fail(`Unknown Role-Model alias: ${requestedAlias}`);
       }
       await dependencies.writeSelectedAlias?.(alias);
       const model = createPiModelSelection(result.discovery, alias);
@@ -214,7 +323,7 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
           `selected alias: ${alias}\nactive model: not changed (Pi rejected model selection; check provider auth)`,
         );
       }
-      return ok(`selected alias: ${alias}\nactive model: role-model/${alias}`);
+      return ok(`selected alias: ${alias}\nactive model: ${model.id}`);
     }
 
     if (command === "alias" && subcommand === "refresh") {

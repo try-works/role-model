@@ -23,6 +23,12 @@ export interface FetchRuntimeRoleTaskChunkInput {
   readonly requestTimeoutMs?: number;
 }
 
+export interface FetchRuntimeRoleSummariesInput {
+  readonly endpoint?: string;
+  readonly fetch?: typeof fetch;
+  readonly requestTimeoutMs?: number;
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -214,6 +220,17 @@ export async function fetchRuntimeRoleTaskChunk(
   );
 }
 
+export async function fetchRuntimeRoleSummaries(
+  input: FetchRuntimeRoleSummariesInput = {},
+): Promise<CompactTaxonomy["roleSummaries"]> {
+  const fetchImpl = input.fetch ?? fetch;
+  const endpoint = normalizeEndpoint(input.endpoint ?? "http://127.0.0.1:3456");
+  const timeoutMs = input.requestTimeoutMs ?? 2500;
+  return parseRoleSummaries(
+    await fetchJson(`${endpoint}/api/role-model/taxonomy/compact/roles`, timeoutMs, fetchImpl),
+  );
+}
+
 export async function resolveEffectiveTaxonomy(
   input: ResolveEffectiveTaxonomyInput = {},
 ): Promise<EffectiveTaxonomyResolution> {
@@ -232,9 +249,11 @@ export async function resolveEffectiveTaxonomy(
     const groups = parseGroups(
       await fetchJson(`${endpoint}/api/role-model/taxonomy/compact/groups`, timeoutMs, fetchImpl),
     );
-    const roleSummaries = parseRoleSummaries(
-      await fetchJson(`${endpoint}/api/role-model/taxonomy/compact/roles`, timeoutMs, fetchImpl),
-    );
+    const roleSummaries = await fetchRuntimeRoleSummaries({
+      endpoint,
+      fetch: fetchImpl,
+      requestTimeoutMs: timeoutMs,
+    });
     const roleTaskEntries = await Promise.all(
       roleIds.map(
         async (roleId) =>

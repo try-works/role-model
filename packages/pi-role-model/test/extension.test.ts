@@ -81,46 +81,6 @@ describe("Pi extension registration", () => {
     ]);
   });
 
-  test("refreshes effective taxonomy during setup and alias refresh", async () => {
-    const commands: Array<{ name: string; config: RegisteredCommandConfig }> = [];
-    const taxonomyResolutions: string[] = [];
-    const extension = createRoleModelExtension({
-      discover: async () => ({
-        discovery: createDiscovery(),
-        state: "ready",
-        warnings: [],
-        modelDiagnostics: [],
-      }),
-      resolveTaxonomy: async () => {
-        taxonomyResolutions.push("resolved");
-        return {
-          source: "runtime",
-          taxonomy: loadCompactTaxonomy(),
-        };
-      },
-    });
-
-    await extension({
-      registerProvider() {
-        // registered during setup and refresh
-      },
-      registerCommand(name: string, config: RegisteredCommandConfig) {
-        commands.push({ name, config });
-      },
-    });
-
-    await commands[0]?.config.handler("setup", {
-      ui: { notify: () => undefined },
-      isProjectTrusted: () => true,
-    });
-    await commands[0]?.config.handler("alias refresh", {
-      ui: { notify: () => undefined },
-      isProjectTrusted: () => true,
-    });
-
-    expect(taxonomyResolutions).toHaveLength(3);
-  });
-
   test("injects provider requests with the resolved runtime taxonomy when available", async () => {
     const callbacks: Array<
       (event: { type: "before_provider_request"; payload: unknown }) => unknown
@@ -143,6 +103,8 @@ describe("Pi extension registration", () => {
         source: "runtime",
         taxonomy: runtimeTaxonomy,
       }),
+      fetchRuntimeTaskChunk: async () => [],
+      fetchRuntimeRoleSummaries: async () => [],
     });
 
     await extension({
@@ -157,7 +119,7 @@ describe("Pi extension registration", () => {
       },
     });
 
-    const payload = callbacks[0]?.({
+    const payload = await callbacks[0]?.({
       type: "before_provider_request",
       payload: {
         model: "role-model/auto",
@@ -221,6 +183,7 @@ describe("Pi extension registration", () => {
           },
         ];
       },
+      fetchRuntimeRoleSummaries: async () => packageTaxonomy.roleSummaries,
     });
 
     await extension({
@@ -245,13 +208,129 @@ describe("Pi extension registration", () => {
       },
     });
 
-    expect(taskChunkRequests).toEqual(["tester"]);
+    expect(taskChunkRequests).toEqual(
+      expect.arrayContaining(["tester", "coder", "architect", "security", "operator"]),
+    );
     expect(payload).toEqual(
       expect.objectContaining({
         role_model: expect.objectContaining({
           intent: expect.objectContaining({
             content_revision: "runtime-summary-only",
             role_hint_id: "tester",
+          }),
+        }),
+      }),
+    );
+  });
+
+  test("loads runtime task chunks on the default endpoint path without requiring explicit endpoint config", async () => {
+    const callbacks: Array<
+      (event: { type: "before_provider_request"; payload: unknown }) => unknown
+    > = [];
+    const taskChunkRequests: string[] = [];
+    const extension = createRoleModelExtension({
+      discover: async () => ({
+        discovery: createDiscovery(),
+        state: "ready",
+        warnings: [],
+        modelDiagnostics: [],
+      }),
+      fetchRuntimeTaskChunk: async (roleId) => {
+        taskChunkRequests.push(roleId);
+        return [];
+      },
+      fetchRuntimeRoleSummaries: async () => loadCompactTaxonomy().roleSummaries,
+    });
+
+    await extension({
+      registerProvider() {
+        // registered during startup discovery
+      },
+      registerCommand() {
+        // registered below startup discovery
+      },
+      on(event, callback) {
+        if (event === "before_provider_request") callbacks.push(callback);
+      },
+    });
+
+    await callbacks[0]?.({
+      type: "before_provider_request",
+      payload: {
+        model: "role-model/auto",
+        messages: [
+          { role: "user", content: "Implement this small bug fix and add a regression test." },
+        ],
+      },
+    });
+
+    expect(taskChunkRequests).toEqual(
+      expect.arrayContaining(["tester", "coder", "architect", "security", "operator"]),
+    );
+  });
+
+  test("refreshes effective taxonomy during command setup and alias refresh", async () => {
+    const callbacks: Array<
+      (event: { type: "before_provider_request"; payload: unknown }) => unknown
+    > = [];
+    const commands: Array<{ name: string; config: RegisteredCommandConfig }> = [];
+    let contentRevision = "startup-taxonomy";
+    const extension = createRoleModelExtension({
+      discover: async () => ({
+        discovery: createDiscovery(),
+        state: "ready",
+        warnings: [],
+        modelDiagnostics: [],
+      }),
+      resolveTaxonomy: async () => ({
+        source: "runtime",
+        taxonomy: {
+          ...loadCompactTaxonomy(),
+          manifest: {
+            ...loadCompactTaxonomy().manifest,
+            contentRevision,
+          },
+        },
+      }),
+      fetchRuntimeTaskChunk: async () => [],
+      fetchRuntimeRoleSummaries: async () => [],
+    });
+
+    await extension({
+      registerProvider() {
+        // registered during startup discovery
+      },
+      registerCommand(name: string, config: RegisteredCommandConfig) {
+        commands.push({ name, config });
+      },
+      on(event, callback) {
+        if (event === "before_provider_request") callbacks.push(callback);
+      },
+    });
+
+    contentRevision = "refreshed-taxonomy";
+    await commands[0]?.config.handler("setup", {
+      ui: { notify: () => undefined },
+      isProjectTrusted: () => true,
+    });
+    await commands[0]?.config.handler("alias refresh", {
+      ui: { notify: () => undefined },
+      isProjectTrusted: () => true,
+    });
+
+    const payload = await callbacks[0]?.({
+      type: "before_provider_request",
+      payload: {
+        model: "role-model/auto",
+        messages: [{ role: "user", content: "Implement this small bug fix." }],
+      },
+    });
+
+    expect(payload).toEqual(
+      expect.objectContaining({
+        role_model: expect.objectContaining({
+          intent: expect.objectContaining({
+            content_revision: "refreshed-taxonomy",
           }),
         }),
       }),
@@ -280,6 +359,8 @@ describe("Pi extension registration", () => {
         warnings: [],
         modelDiagnostics: [],
       }),
+      fetchRuntimeTaskChunk: async () => [],
+      fetchRuntimeRoleSummaries: async () => [],
     });
 
     await extension({
@@ -294,7 +375,7 @@ describe("Pi extension registration", () => {
       },
     });
 
-    const payload = callbacks[0]?.({
+    const payload = await callbacks[0]?.({
       type: "before_provider_request",
       payload: {
         model: "claude-3.7-sonnet",

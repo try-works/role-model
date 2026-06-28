@@ -34,14 +34,14 @@ Then use these Pi commands:
 /role-model alias use <alias>
 /role-model alias choose <alias>
 /role-model alias refresh
-/role-model requests
-/role-model explain latest
+/role-model requests [limit]
+/role-model explain <request-id|latest>
 ```
 
 The package registers a Pi provider named `role-model` from Role-Model's downstream OpenAI discovery endpoint at `/api/role-model/downstream/openai`.
 
-`/role-model alias use <alias>` stores the selected alias and asks Pi to make the corresponding `role-model/<alias>` model active when Pi exposes active model selection in the command context. If Pi rejects the model switch, the command reports that the active model was not changed.
+`/role-model alias use <alias>` stores the selected alias and asks Pi to make that exact Role-Model model id active when Pi exposes active model selection in the command context. The command accepts either the canonical runtime alias id or a convenience unprefixed alias when the runtime exposes prefixed ids. If Pi rejects the model switch, the command reports that the active model was not changed.
 
-`/role-model requests` and `/role-model explain latest` read runtime-owned request diagnostics from `/api/role-model/requests`, `/api/role-model/requests/:requestId`, and `/api/role-model/router/decisions/:requestId`. They surface the runtime's own request, routing, benchmark, and telemetry evidence when available; the Pi package does not invent or score routing reasons locally.
+`/role-model requests` and `/role-model explain <request-id|latest>` read the runtime-owned structured request inspection and router decision surfaces. They report routing reason codes, selected endpoint/model, and Observe request links from the runtime without claiming that the Pi package computes benchmark or telemetry analytics itself.
 
 This package does not install, start, stop, or update the Role-Model runtime. It also does not copy or sync Pi provider credentials. Start Role-Model outside Pi, then run `/role-model setup`.

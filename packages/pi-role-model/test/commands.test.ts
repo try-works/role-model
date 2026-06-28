@@ -68,8 +68,6 @@ describe("role-model command dispatcher", () => {
     expect(result.ok).toBe(true);
     expect(result.text).toContain("/role-model setup");
     expect(result.text).toContain("/role-model alias choose");
-    expect(result.text).toContain("/role-model requests");
-    expect(result.text).toContain("/role-model explain latest");
   });
 
   test("reports status and doctor results from the configured endpoint", async () => {
@@ -126,22 +124,62 @@ describe("role-model command dispatcher", () => {
     expect(selectedAlias).toBe("role-model/auto");
   });
 
-  test("dispatches runtime-owned request list and latest explanation commands", async () => {
+  test("lists recent runtime requests and explains the latest routing decision", async () => {
     const handler = createRoleModelCommandHandler({
       discover: async () => ({ discovery, version: { version: "0.0.0-test" } }),
-      listRuntimeRequests: async () =>
-        "Recent Role-Model requests (1) from http://127.0.0.1:3456:\n- req-001",
-      explainLatestRuntimeRequest: async () =>
-        "Role-Model runtime explanation for req-001:\n- strategy: hybrid",
+      listRecentRequests: async () => [
+        {
+          requestId: "req-001",
+          clientRequestId: null,
+          endpointId: "openai.primary",
+          modelId: "openai/gpt-5.4",
+          providerId: "openai",
+          status: "succeeded",
+          createdAtMs: 1_770_000_000_000,
+          normalizedIntent: {
+            roleId: "security",
+            taskType: "security.audit",
+          },
+          roleModel: null,
+        },
+      ],
+      inspectRequest: async (requestId) => ({
+        runtimeBaseUrl: "http://127.0.0.1:3456",
+        request: {
+          requestId,
+          clientRequestId: null,
+          endpointId: "openai.primary",
+          modelId: "openai/gpt-5.4",
+          providerId: "openai",
+          status: "succeeded",
+          createdAtMs: 1_770_000_000_000,
+          normalizedIntent: {
+            roleId: "security",
+            taskType: "security.audit",
+          },
+          roleModel: null,
+        },
+        routerDecision: {
+          requestId,
+          selectedEndpointId: "openai.primary",
+          selectedModelId: "openai/gpt-5.4",
+          strategyLabel: "quality",
+          decision: {
+            selection_reasons: ["BENCHMARK_TASK_SCORE", "TELEMETRY_TASK_PERFORMANCE"],
+          },
+          routingDiagnostics: null,
+          observeRequestPath: `/app/observe/requests/${requestId}`,
+        },
+      }),
     });
 
-    await expect(handler("requests")).resolves.toMatchObject({
+    await expect(handler("requests 1")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("Recent Role-Model requests"),
+      text: expect.stringContaining("role=security"),
     });
     await expect(handler("explain latest")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("Role-Model runtime explanation"),
+      text: expect.stringContaining("selection reasons: BENCHMARK_TASK_SCORE, TELEMETRY_TASK_PERFORMANCE"),
     });
   });
 
@@ -264,7 +302,7 @@ describe("role-model command dispatcher", () => {
         id: "role-model/auto",
       }),
     ]);
-    expect(result.text).toContain("active model: role-model/role-model/auto");
+    expect(result.text).toContain("active model: role-model/auto");
   });
 
   test("alias use reports active-model failure without claiming Pi switched models", async () => {
@@ -283,5 +321,26 @@ describe("role-model command dispatcher", () => {
     expect(result.ok).toBe(false);
     expect(result.text).toContain("selected alias: role-model/auto");
     expect(result.text).toContain("active model: not changed");
+  });
+
+  test("alias use accepts unprefixed alias ids and stores the canonical runtime alias", async () => {
+    let selectedAlias: string | null = null;
+    const handler = createRoleModelCommandHandler({
+      discover: async () => ({
+        discovery: createDiscovery(),
+        state: "ready",
+        warnings: [],
+        modelDiagnostics: [],
+      }),
+      writeSelectedAlias: async (alias) => {
+        selectedAlias = alias;
+      },
+      setActiveModel: async () => true,
+    });
+
+    const result = await handler("alias use auto");
+    expect(result.ok).toBe(true);
+    expect(selectedAlias).toBe("role-model/auto");
+    expect(result.text).toContain("selected alias: role-model/auto");
   });
 });

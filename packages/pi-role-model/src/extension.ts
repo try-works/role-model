@@ -1,15 +1,14 @@
+import { DEFAULT_ROLE_MODEL_ENDPOINT, normalizeEndpoint } from "./config.js";
 import { createFileAliasStore } from "./alias-store.js";
 import { type RoleModelCommandDependencies, createRoleModelCommandHandler } from "./commands.js";
 import { registerRoleModelProvider } from "./provider-registration.js";
-import {
-  injectRoleModelIntentIntoPayload,
-  injectRoleModelIntentIntoPayloadWithRuntimeTasks,
-} from "./request-intent.js";
+import { injectRoleModelIntentIntoPayloadWithRuntimeTasks } from "./request-intent.js";
+import { inspectRequest, listRecentRequests } from "./runtime-inspection.js";
 import { discoverRoleModelRuntime } from "./runtime-discovery.js";
-import { createRuntimeInspectionClient } from "./runtime-inspection.js";
 import type { CompactRoleTask, CompactTaxonomy } from "./taxonomy/compact-data.js";
 import {
   type EffectiveTaxonomyResolution,
+  fetchRuntimeRoleSummaries,
   fetchRuntimeRoleTaskChunk,
   resolveEffectiveTaxonomy,
 } from "./taxonomy/resolve-effective-taxonomy.js";
@@ -22,22 +21,14 @@ export interface RoleModelExtensionOptions extends Partial<RoleModelCommandDepen
   aliasStorePath?: string;
   resolveTaxonomy?: () => Promise<EffectiveTaxonomyResolution>;
   fetchRuntimeTaskChunk?: (roleId: string) => Promise<readonly CompactRoleTask[]>;
-  runtimeInspectionFetch?: typeof fetch;
+  fetchRuntimeRoleSummaries?: () => Promise<CompactTaxonomy["roleSummaries"]>;
 }
 
 export function createRoleModelExtension(options: RoleModelExtensionOptions = {}) {
   return async function roleModelExtension(pi: PiExtensionAPI): Promise<void> {
+    const runtimeEndpoint = normalizeEndpoint(options.endpoint ?? DEFAULT_ROLE_MODEL_ENDPOINT);
     const roleModelModelIds = new Set<string>();
     let effectiveTaxonomy: CompactTaxonomy | undefined;
-    const refreshEffectiveTaxonomy = async () => {
-      const taxonomyResolution =
-        options.resolveTaxonomy ??
-        (() =>
-          resolveEffectiveTaxonomy({
-            ...(options.endpoint ? { endpoint: options.endpoint } : {}),
-          }));
-      effectiveTaxonomy = (await taxonomyResolution()).taxonomy;
-    };
     const rememberRoleModelModels = (discovery: DownstreamOpenAIDiscovery) => {
       roleModelModelIds.clear();
       for (const model of discovery.models) {
@@ -50,11 +41,24 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
         }
       }
     };
+    const taxonomyResolution =
+      options.resolveTaxonomy ??
+      (() =>
+        resolveEffectiveTaxonomy({
+          endpoint: runtimeEndpoint,
+        }));
+    const refreshEffectiveTaxonomy = async () => {
+      try {
+        effectiveTaxonomy = (await taxonomyResolution()).taxonomy;
+      } catch {
+        // Request-time classification still falls back to package-local taxonomy loading.
+      }
+    };
     const discover =
       options.discover ??
       (() => {
         return discoverRoleModelRuntime({
-          ...(options.endpoint ? { endpoint: options.endpoint } : {}),
+          endpoint: runtimeEndpoint,
           ...(options.allowRemote === undefined ? {} : { allowRemote: options.allowRemote }),
         });
       });
@@ -85,36 +89,41 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
       setActiveModel:
         options.setActiveModel ??
         (pi.setModel ? (model) => pi.setModel?.(model) ?? Promise.resolve(false) : undefined),
-      ...(options.listRuntimeRequests || options.explainLatestRuntimeRequest
-        ? {
-            listRuntimeRequests: options.listRuntimeRequests,
-            explainLatestRuntimeRequest: options.explainLatestRuntimeRequest,
-          }
-        : createRuntimeInspectionClient({
-            ...(options.endpoint ? { endpoint: options.endpoint } : {}),
-            ...(options.runtimeInspectionFetch ? { fetch: options.runtimeInspectionFetch } : {}),
-          })),
+      listRecentRequests: (limit) =>
+        listRecentRequests({
+          endpoint: runtimeEndpoint,
+          limit,
+        }),
+      inspectRequest: (requestId) =>
+        inspectRequest({
+          endpoint: runtimeEndpoint,
+          requestId,
+        }),
     });
 
     const fetchRuntimeTaskChunk =
       options.fetchRuntimeTaskChunk ??
-      (options.endpoint
-        ? (roleId: string) =>
-            fetchRuntimeRoleTaskChunk({
-              endpoint: options.endpoint,
-              roleId,
-            })
-        : undefined);
+      ((roleId: string) =>
+        fetchRuntimeRoleTaskChunk({
+          endpoint: runtimeEndpoint,
+          roleId,
+        }));
+
+    const readRuntimeRoleSummaries =
+      options.fetchRuntimeRoleSummaries ??
+      (() =>
+        fetchRuntimeRoleSummaries({
+          endpoint: runtimeEndpoint,
+        }));
 
     pi.on?.("before_provider_request", (event) =>
-      fetchRuntimeTaskChunk
-        ? injectRoleModelIntentIntoPayloadWithRuntimeTasks(
-            event.payload,
-            roleModelModelIds,
-            effectiveTaxonomy,
-            fetchRuntimeTaskChunk,
-          )
-        : injectRoleModelIntentIntoPayload(event.payload, roleModelModelIds, effectiveTaxonomy),
+      injectRoleModelIntentIntoPayloadWithRuntimeTasks(
+        event.payload,
+        roleModelModelIds,
+        effectiveTaxonomy,
+        fetchRuntimeTaskChunk,
+        readRuntimeRoleSummaries,
+      ),
     );
 
     pi.registerCommand("role-model", {
