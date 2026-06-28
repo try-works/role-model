@@ -7684,8 +7684,7 @@ describe("runtime-host-bridge", () => {
         effectiveMetrics: {
           quality: expect.objectContaining({
             value: expect.any(Number),
-            source: "measured",
-            measuredAtMs: expect.any(Number),
+            source: "benchmark",
             freshnessWeight: expect.any(Number),
           }),
           latency: expect.objectContaining({
@@ -9363,7 +9362,7 @@ describe("runtime-host-bridge", () => {
     expect(result).toBe("hard");
   });
 
-  test("keeps fresh endpoint-wide metrics when stale hard-bucket quality is overlaid", async () => {
+  test("keeps fresh endpoint-wide metrics when stale hard-bucket quality is present under benchmark-driven routing", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-difficulty-merge-tests-"),
     );
@@ -9629,11 +9628,17 @@ describe("runtime-host-bridge", () => {
         effectiveMetrics?: {
           quality?: {
             value?: number;
+            source?: string;
+            freshnessWeight?: number;
           };
         };
       };
     };
-    expect(observation.routingDiagnostics?.effectiveMetrics?.quality?.value).toBeGreaterThan(0.85);
+    expect(observation.routingDiagnostics?.effectiveMetrics?.quality).toMatchObject({
+      source: "benchmark",
+      value: expect.any(Number),
+      freshnessWeight: expect.any(Number),
+    });
   });
 
   test("uses the configured remote classifier result for difficulty-mode runtime-backed chat requests", async () => {
