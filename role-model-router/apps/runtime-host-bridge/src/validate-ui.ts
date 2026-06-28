@@ -458,7 +458,9 @@ export async function runRuntimeUiValidation(
     const mixedAliasModelListIncludesAlias =
       inProcessModelListIncludesAlias ||
       (await waitForModelListAlias(baseUrl, requestHeaders, mixedAliasId, 5_000));
-    traceValidation(`mixed-alias:model-list:${mixedAliasModelListIncludesAlias ? "present" : "missing"}`);
+    traceValidation(
+      `mixed-alias:model-list:${mixedAliasModelListIncludesAlias ? "present" : "missing"}`,
+    );
 
     const mixedAliasRequestId = "req-runtime-ui-mixed-alias-001";
     const mixedAliasPlan = mapChatCompletionsRequest(

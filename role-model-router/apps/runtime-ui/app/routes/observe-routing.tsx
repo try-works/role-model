@@ -9,13 +9,13 @@ import {
   TelemetryTimeRangeControl,
 } from "../components/telemetry-controls";
 import { secondaryButtonClassName } from "../lib/design-system";
-import { telemetryBreakdownOptions } from "../lib/telemetry-chart-config";
 import type {
   RuntimeTelemetryAnalyticsDimension,
   RuntimeTelemetryAnalyticsFilters,
   RuntimeTelemetryAnalyticsResponse,
 } from "../lib/runtime-api";
 import { fetchTelemetryAnalytics, subscribeTelemetryStream } from "../lib/runtime-api";
+import { telemetryBreakdownOptions } from "../lib/telemetry-chart-config";
 import type {
   TelemetryRouteChartDefinition,
   TelemetryTimeRangeValue,
@@ -97,56 +97,51 @@ export default function ObserveRoutingRoute() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const filters: RuntimeTelemetryAnalyticsFilters = useMemo(
-    () => {
-      const normalizedRequestedRoleId = normalizeOptionalId(requestedRoleId);
-      const normalizedSelectedStrategy = normalizeOptionalId(selectedStrategy);
-      const normalizedTaxonomyGroupId = normalizeOptionalId(taxonomyGroupId);
-      const normalizedTaxonomyRoleId = normalizeOptionalId(taxonomyRoleId);
-      const normalizedTaxonomyTaskType = normalizeOptionalId(taxonomyTaskType);
-      const normalizedTaxonomyTaskVariant = normalizeOptionalId(taxonomyTaskVariant);
-      const normalizedTaxonomyCapabilityIds = normalizeOptionalCsvIds(taxonomyCapabilityIds);
-      const normalizedTaxonomyModalityIds = normalizeOptionalCsvIds(taxonomyModalityIds);
-      const normalizedTaxonomyToolClassIds = normalizeOptionalCsvIds(taxonomyToolClassIds);
+  const filters: RuntimeTelemetryAnalyticsFilters = useMemo(() => {
+    const normalizedRequestedRoleId = normalizeOptionalId(requestedRoleId);
+    const normalizedSelectedStrategy = normalizeOptionalId(selectedStrategy);
+    const normalizedTaxonomyGroupId = normalizeOptionalId(taxonomyGroupId);
+    const normalizedTaxonomyRoleId = normalizeOptionalId(taxonomyRoleId);
+    const normalizedTaxonomyTaskType = normalizeOptionalId(taxonomyTaskType);
+    const normalizedTaxonomyTaskVariant = normalizeOptionalId(taxonomyTaskVariant);
+    const normalizedTaxonomyCapabilityIds = normalizeOptionalCsvIds(taxonomyCapabilityIds);
+    const normalizedTaxonomyModalityIds = normalizeOptionalCsvIds(taxonomyModalityIds);
+    const normalizedTaxonomyToolClassIds = normalizeOptionalCsvIds(taxonomyToolClassIds);
 
-      return {
-        ...(sourceFilter === "all" ? {} : { sourceTypes: [sourceFilter] }),
-        ...(difficulty === "all" ? {} : { difficultyBuckets: [difficulty] }),
-        ...(normalizedRequestedRoleId ? { requestedRoleIds: [normalizedRequestedRoleId] } : {}),
-        ...(normalizedSelectedStrategy
-          ? { selectedStrategies: [normalizedSelectedStrategy] }
-          : {}),
-        ...(normalizedTaxonomyGroupId ? { taxonomyGroupIds: [normalizedTaxonomyGroupId] } : {}),
-        ...(normalizedTaxonomyRoleId ? { taxonomyRoleIds: [normalizedTaxonomyRoleId] } : {}),
-        ...(normalizedTaxonomyTaskType ? { taxonomyTaskTypes: [normalizedTaxonomyTaskType] } : {}),
-        ...(normalizedTaxonomyTaskVariant
-          ? { taxonomyTaskVariants: [normalizedTaxonomyTaskVariant] }
-          : {}),
-        ...(normalizedTaxonomyCapabilityIds
-          ? { taxonomyCapabilityIds: normalizedTaxonomyCapabilityIds }
-          : {}),
-        ...(normalizedTaxonomyModalityIds
-          ? { taxonomyModalityIds: normalizedTaxonomyModalityIds }
-          : {}),
-        ...(normalizedTaxonomyToolClassIds
-          ? { taxonomyToolClassIds: normalizedTaxonomyToolClassIds }
-          : {}),
-      };
-    },
-    [
-      difficulty,
-      requestedRoleId,
-      selectedStrategy,
-      sourceFilter,
-      taxonomyCapabilityIds,
-      taxonomyGroupId,
-      taxonomyModalityIds,
-      taxonomyRoleId,
-      taxonomyTaskType,
-      taxonomyTaskVariant,
-      taxonomyToolClassIds,
-    ],
-  );
+    return {
+      ...(sourceFilter === "all" ? {} : { sourceTypes: [sourceFilter] }),
+      ...(difficulty === "all" ? {} : { difficultyBuckets: [difficulty] }),
+      ...(normalizedRequestedRoleId ? { requestedRoleIds: [normalizedRequestedRoleId] } : {}),
+      ...(normalizedSelectedStrategy ? { selectedStrategies: [normalizedSelectedStrategy] } : {}),
+      ...(normalizedTaxonomyGroupId ? { taxonomyGroupIds: [normalizedTaxonomyGroupId] } : {}),
+      ...(normalizedTaxonomyRoleId ? { taxonomyRoleIds: [normalizedTaxonomyRoleId] } : {}),
+      ...(normalizedTaxonomyTaskType ? { taxonomyTaskTypes: [normalizedTaxonomyTaskType] } : {}),
+      ...(normalizedTaxonomyTaskVariant
+        ? { taxonomyTaskVariants: [normalizedTaxonomyTaskVariant] }
+        : {}),
+      ...(normalizedTaxonomyCapabilityIds
+        ? { taxonomyCapabilityIds: normalizedTaxonomyCapabilityIds }
+        : {}),
+      ...(normalizedTaxonomyModalityIds
+        ? { taxonomyModalityIds: normalizedTaxonomyModalityIds }
+        : {}),
+      ...(normalizedTaxonomyToolClassIds
+        ? { taxonomyToolClassIds: normalizedTaxonomyToolClassIds }
+        : {}),
+    };
+  }, [
+    difficulty,
+    requestedRoleId,
+    selectedStrategy,
+    sourceFilter,
+    taxonomyCapabilityIds,
+    taxonomyGroupId,
+    taxonomyModalityIds,
+    taxonomyRoleId,
+    taxonomyTaskType,
+    taxonomyTaskVariant,
+    taxonomyToolClassIds,
+  ]);
 
   const breakdown: RuntimeTelemetryAnalyticsDimension | null =
     (breakdownValue as string) === ""

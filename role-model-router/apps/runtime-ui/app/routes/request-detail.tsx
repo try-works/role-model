@@ -372,10 +372,7 @@ export default function RequestDetailRoute() {
     "taxonomy_classification_source",
   );
   const taxonomyConfidence = pickNumber(taxonomyDimensions ?? {}, "taxonomy_confidence");
-  const taxonomyTaskConfidence = pickNumber(
-    taxonomyDimensions ?? {},
-    "taxonomy_task_confidence",
-  );
+  const taxonomyTaskConfidence = pickNumber(taxonomyDimensions ?? {}, "taxonomy_task_confidence");
   const taxonomyAlternativeRoleIds = readStringList(
     taxonomyDimensions?.taxonomy_alternative_role_ids,
   );
@@ -575,10 +572,7 @@ export default function RequestDetailRoute() {
                 ["Classification source", taxonomyClassificationSource],
                 ["Role source", taxonomyRoleSource],
                 ["Task source", taxonomyTaskSource],
-                [
-                  "Confidence",
-                  taxonomyConfidence === null ? null : String(taxonomyConfidence),
-                ],
+                ["Confidence", taxonomyConfidence === null ? null : String(taxonomyConfidence)],
                 [
                   "Task confidence",
                   taxonomyTaskConfidence === null ? null : String(taxonomyTaskConfidence),
@@ -666,7 +660,9 @@ export default function RequestDetailRoute() {
               {rawObservationAvailable ? "Raw observation retained" : "Ledger fallback only"}
             </StatusPill>
             <StatusPill tone={structuredInspectionAvailable ? "accent" : "neutral"}>
-              {structuredInspectionAvailable ? "Structured inspection available" : "No structured inspection"}
+              {structuredInspectionAvailable
+                ? "Structured inspection available"
+                : "No structured inspection"}
             </StatusPill>
             <StatusPill tone={rawCaptureAvailable ? "accent" : "neutral"}>
               {rawCaptureAvailable ? "Raw capture allowed" : "Raw capture unavailable"}
@@ -679,7 +675,9 @@ export default function RequestDetailRoute() {
               ["Sampling rate", formatPercent(samplingRate)],
               [
                 "Retention TTL",
-                retentionTtlHours === null ? null : `${retentionTtlHours} hour${retentionTtlHours === 1 ? "" : "s"}`,
+                retentionTtlHours === null
+                  ? null
+                  : `${retentionTtlHours} hour${retentionTtlHours === 1 ? "" : "s"}`,
               ],
               ["Retain until", formatDateTime(retainUntil)],
               ["Redaction level", captureRedactionLevel],

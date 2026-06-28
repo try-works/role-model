@@ -2058,7 +2058,13 @@ function synthesizeFallbackCapturePolicy(
 
 function synthesizeFallbackPrivacyReceipt(
   record: ReturnType<typeof listRuntimeTelemetryRecords>[number],
-): { readonly samplingRate?: number; readonly retentionTtlHours?: number; readonly retainUntil?: number } | undefined {
+):
+  | {
+      readonly samplingRate?: number;
+      readonly retentionTtlHours?: number;
+      readonly retainUntil?: number;
+    }
+  | undefined {
   if (
     record.samplingRate === null &&
     record.retentionTtlHours === null &&
@@ -2068,9 +2074,7 @@ function synthesizeFallbackPrivacyReceipt(
   }
   return {
     ...(record.samplingRate !== null ? { samplingRate: record.samplingRate } : {}),
-    ...(record.retentionTtlHours !== null
-      ? { retentionTtlHours: record.retentionTtlHours }
-      : {}),
+    ...(record.retentionTtlHours !== null ? { retentionTtlHours: record.retentionTtlHours } : {}),
     ...(record.retainUntil !== null ? { retainUntil: record.retainUntil } : {}),
   };
 }
@@ -2375,9 +2379,7 @@ export interface RuntimeBridgeBackend {
   ): Promise<readonly BridgeTelemetryRequestRecord[]>;
   queryTelemetryAnalytics(body: Record<string, unknown>): Promise<BridgeTelemetryAnalyticsResponse>;
   subscribeTelemetry(listener: (event: RuntimeTelemetryStreamEvent) => void): () => void;
-  readRequestObservation(
-    requestId: string,
-  ): Promise<BridgeRequestObservation | null>;
+  readRequestObservation(requestId: string): Promise<BridgeRequestObservation | null>;
   readEndpointProfile(endpointId: string): Promise<{
     endpointId: string;
     latestProfile: ReturnType<typeof readLatestObservedProfile>;
@@ -6643,10 +6645,7 @@ function writeJson(
   response.end(`${JSON.stringify(body)}\n`);
 }
 
-export function writeUnhandledBridgeError(
-  response: ServerResponse,
-  error: unknown,
-): boolean {
+export function writeUnhandledBridgeError(response: ServerResponse, error: unknown): boolean {
   if (response.headersSent || response.writableEnded) {
     return false;
   }
@@ -14222,9 +14221,8 @@ export async function createRuntimeBridgeBackend(
             : null,
     };
   };
-  const isTaxonomyTelemetryDimension = (
-    dimension: BridgeTelemetryAnalyticsDimension,
-  ): boolean => dimension.startsWith("taxonomy");
+  const isTaxonomyTelemetryDimension = (dimension: BridgeTelemetryAnalyticsDimension): boolean =>
+    dimension.startsWith("taxonomy");
   const buildTelemetryTaxonomyCoverage = (
     records: readonly BridgeTelemetryRequestRecord[],
   ): {
@@ -14250,9 +14248,7 @@ export async function createRuntimeBridgeBackend(
       richerTaxonomyRowCount,
       legacyRowCount: matchedRowCount - richerTaxonomyRowCount,
       coverageRate:
-        matchedRowCount === 0
-          ? 0
-          : Number((richerTaxonomyRowCount / matchedRowCount).toFixed(6)),
+        matchedRowCount === 0 ? 0 : Number((richerTaxonomyRowCount / matchedRowCount).toFixed(6)),
       backfillPerformed: false,
     };
   };
@@ -14542,10 +14538,7 @@ export async function createRuntimeBridgeBackend(
                     ),
                   }
                 : {}),
-              ...(readStringList(
-                filtersBody.taxonomyCapabilityIds,
-                "filters.taxonomyCapabilityIds",
-              )
+              ...(readStringList(filtersBody.taxonomyCapabilityIds, "filters.taxonomyCapabilityIds")
                 ? {
                     taxonomyCapabilityIds: readStringList(
                       filtersBody.taxonomyCapabilityIds,
@@ -14686,7 +14679,11 @@ export async function createRuntimeBridgeBackend(
       }
       if (
         filters.taxonomyTaskVariants &&
-        !matchesTelemetryDimensionFilter(record, "taxonomyTaskVariant", filters.taxonomyTaskVariants)
+        !matchesTelemetryDimensionFilter(
+          record,
+          "taxonomyTaskVariant",
+          filters.taxonomyTaskVariants,
+        )
       ) {
         return false;
       }
@@ -14947,8 +14944,8 @@ export async function createRuntimeBridgeBackend(
         ]
           .sort((left, right) => left.localeCompare(right))
           .map((key) => {
-            const seriesRecords = bucketRecords.filter(
-              (record) => getTelemetryDimensionValues(record, breakdownDimension).includes(key),
+            const seriesRecords = bucketRecords.filter((record) =>
+              getTelemetryDimensionValues(record, breakdownDimension).includes(key),
             );
             return {
               key,
@@ -15065,8 +15062,8 @@ export async function createRuntimeBridgeBackend(
         }))
         .sort(
           (left, right) =>
-            (right.value ?? Number.NEGATIVE_INFINITY) -
-              (left.value ?? Number.NEGATIVE_INFINITY) || left.key.localeCompare(right.key),
+            (right.value ?? Number.NEGATIVE_INFINITY) - (left.value ?? Number.NEGATIVE_INFINITY) ||
+            left.key.localeCompare(right.key),
         );
       const truncated = rows.length > limit;
       return {
@@ -18433,9 +18430,7 @@ export async function createRuntimeBridgeBackend(
         telemetryListeners.delete(listener);
       };
     },
-    async readRequestObservation(
-      requestId: string,
-    ): Promise<BridgeRequestObservation | null> {
+    async readRequestObservation(requestId: string): Promise<BridgeRequestObservation | null> {
       const telemetryRecord = listTelemetryRequestRecords({
         startAtMs: 0,
         endAtMs: Date.now() + DEFAULT_TELEMETRY_WINDOW_MS,

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
+import { LocalModelRolePicker } from "../components/local-model-role-picker";
 import {
   CodeBlock,
   DisclosureSection,
@@ -11,7 +12,6 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { LocalModelRolePicker } from "../components/local-model-role-picker";
 import {
   mutedPanelClassName,
   primaryButtonClassName,
@@ -276,7 +276,10 @@ export default function ControlModelsRoute() {
   const activeModelCount = cards.filter((card) => card.status === "active").length;
 
   const capabilityByModelId = new Map<string, number>();
-  const benchmarkCapabilityByModelId = new Map<string, NonNullable<RouterCandidate["benchmarkCapability"]>>();
+  const benchmarkCapabilityByModelId = new Map<
+    string,
+    NonNullable<RouterCandidate["benchmarkCapability"]>
+  >();
   for (const candidate of candidates) {
     const benchmarkCapability = candidate.benchmarkCapability;
     const score = benchmarkCapability?.overallScore;
@@ -549,7 +552,9 @@ export default function ControlModelsRoute() {
                             </StatusPill>
                           ))
                         ) : (
-                          <StatusPill tone="warning">No assigned-role benchmark evidence yet</StatusPill>
+                          <StatusPill tone="warning">
+                            No assigned-role benchmark evidence yet
+                          </StatusPill>
                         )}
                       </div>
                     </div>
@@ -849,8 +854,8 @@ export default function ControlModelsRoute() {
                   </div>
                 ) : (
                   <p className="text-sm text-[var(--rm-secondary)]">
-                    No taxonomy-tagged telemetry data available yet for this model. Send requests
-                    to populate taxonomy rollups, per-task performance, and advisory warnings.
+                    No taxonomy-tagged telemetry data available yet for this model. Send requests to
+                    populate taxonomy rollups, per-task performance, and advisory warnings.
                   </p>
                 )}
               </DisclosureSection>

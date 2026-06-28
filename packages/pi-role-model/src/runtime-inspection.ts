@@ -55,10 +55,7 @@ function formatUsd(value: number | null): string | null {
   return typeof value === "number" ? `$${value.toFixed(4)}` : null;
 }
 
-async function fetchJson<TValue>(
-  fetcher: typeof fetch,
-  url: string,
-): Promise<TValue> {
+async function fetchJson<TValue>(fetcher: typeof fetch, url: string): Promise<TValue> {
   const response = await fetcher(url);
   if (!response.ok) {
     throw new Error(`${url} returned HTTP ${response.status}`);
@@ -72,17 +69,22 @@ export function selectLatestRuntimeRequest(
   if (requests.length === 0) {
     return null;
   }
-  return [...requests].sort((left, right) => {
-    const leftCreatedAt = typeof left.createdAtMs === "number" ? left.createdAtMs : -1;
-    const rightCreatedAt = typeof right.createdAtMs === "number" ? right.createdAtMs : -1;
-    if (rightCreatedAt !== leftCreatedAt) {
-      return rightCreatedAt - leftCreatedAt;
-    }
-    return left.requestId.localeCompare(right.requestId);
-  })[0] ?? null;
+  return (
+    [...requests].sort((left, right) => {
+      const leftCreatedAt = typeof left.createdAtMs === "number" ? left.createdAtMs : -1;
+      const rightCreatedAt = typeof right.createdAtMs === "number" ? right.createdAtMs : -1;
+      if (rightCreatedAt !== leftCreatedAt) {
+        return rightCreatedAt - leftCreatedAt;
+      }
+      return left.requestId.localeCompare(right.requestId);
+    })[0] ?? null
+  );
 }
 
-function formatRequestList(requests: readonly RuntimeInspectionRequestListItem[], endpoint: string): string {
+function formatRequestList(
+  requests: readonly RuntimeInspectionRequestListItem[],
+  endpoint: string,
+): string {
   if (requests.length === 0) {
     return `No recent Role-Model runtime requests were found at ${endpoint}.`;
   }
@@ -119,8 +121,7 @@ function collectRuntimeSignals(detail: JsonRecord, decisionDetail: JsonRecord | 
   const hybridArbitration =
     asRecord(routingDiagnostics.hybridArbitration) ??
     asRecord(decisionDiagnostics?.hybridArbitration);
-  const rewrite =
-    asRecord(routingDiagnostics.rewrite) ?? asRecord(decisionDiagnostics?.rewrite);
+  const rewrite = asRecord(routingDiagnostics.rewrite) ?? asRecord(decisionDiagnostics?.rewrite);
   const endpointProfile = asRecord(detail.endpointProfile);
   const latestProfile = asRecord(endpointProfile?.latestProfile);
 
@@ -163,32 +164,17 @@ function formatRequestExplanation(
   const usageEvent = asRecord(request.usageEvent);
   const telemetrySnapshot = asRecord(request.telemetrySnapshot);
   const taxonomyDimensions =
-    asRecord(request.taxonomyDimensions) ??
-    asRecord(telemetrySnapshot?.taxonomyDimensions);
+    asRecord(request.taxonomyDimensions) ?? asRecord(telemetrySnapshot?.taxonomyDimensions);
   const selectedEndpointId =
-    readString(decisionDetail, "selectedEndpointId") ??
-    readString(request, "endpointId");
+    readString(decisionDetail, "selectedEndpointId") ?? readString(request, "endpointId");
   const selectedModelId =
-    readString(decisionDetail, "selectedModelId") ??
-    readString(usageEvent, "model_id", "modelId");
+    readString(decisionDetail, "selectedModelId") ?? readString(usageEvent, "model_id", "modelId");
   const strategyLabel =
     readString(decisionDetail, "strategyLabel") ??
     readString(asRecord(asRecord(request.routingDiagnostics)?.routingMode), "effectiveMode");
-  const taxonomyGroupId = readString(
-    taxonomyDimensions,
-    "taxonomy_group_id",
-    "taxonomyGroupId",
-  );
-  const taxonomyRoleId = readString(
-    taxonomyDimensions,
-    "taxonomy_role_id",
-    "taxonomyRoleId",
-  );
-  const taxonomyTaskType = readString(
-    taxonomyDimensions,
-    "taxonomy_task_type",
-    "taxonomyTaskType",
-  );
+  const taxonomyGroupId = readString(taxonomyDimensions, "taxonomy_group_id", "taxonomyGroupId");
+  const taxonomyRoleId = readString(taxonomyDimensions, "taxonomy_role_id", "taxonomyRoleId");
+  const taxonomyTaskType = readString(taxonomyDimensions, "taxonomy_task_type", "taxonomyTaskType");
   const latencyMs = readNumber(usageEvent, "latency_ms", "latencyMs");
   const totalAvoidedCostUsd =
     readNumber(request, "totalAvoidedCostUsd") ??

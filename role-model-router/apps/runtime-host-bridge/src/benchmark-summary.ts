@@ -95,7 +95,9 @@ export interface BenchmarkSummarySubject {
   readonly passingCaseIds: readonly string[];
   readonly caseCount: number;
   readonly taxonomyScores?: Partial<TaxonomyDimensionScoreMap>;
-  readonly taxonomyCoverage?: Partial<Record<keyof TaxonomyDimensionScoreMap, Record<string, number>>>;
+  readonly taxonomyCoverage?: Partial<
+    Record<keyof TaxonomyDimensionScoreMap, Record<string, number>>
+  >;
 }
 
 export interface BenchmarkSummaryResponse {
@@ -231,13 +233,9 @@ function computeTaxonomyAggregates(
       byRole: Object.fromEntries(Object.entries(byRole).map(([k, v]) => [k, v.count])),
       byTask: Object.fromEntries(Object.entries(byTask).map(([k, v]) => [k, v.count])),
       byVariant: Object.fromEntries(Object.entries(byVariant).map(([k, v]) => [k, v.count])),
-      byCapability: Object.fromEntries(
-        Object.entries(byCapability).map(([k, v]) => [k, v.count]),
-      ),
+      byCapability: Object.fromEntries(Object.entries(byCapability).map(([k, v]) => [k, v.count])),
       byModality: Object.fromEntries(Object.entries(byModality).map(([k, v]) => [k, v.count])),
-      byToolClass: Object.fromEntries(
-        Object.entries(byToolClass).map(([k, v]) => [k, v.count]),
-      ),
+      byToolClass: Object.fromEntries(Object.entries(byToolClass).map(([k, v]) => [k, v.count])),
     },
   };
 }
@@ -271,7 +269,10 @@ function buildGroupScores(input: {
   }
 
   const groupsByRoleId = new Map(
-    canonicalTaxonomy.roles.map((role) => [role.id, [role.primaryGroupId, ...role.secondaryGroupIds]]),
+    canonicalTaxonomy.roles.map((role) => [
+      role.id,
+      [role.primaryGroupId, ...role.secondaryGroupIds],
+    ]),
   );
   const totalsByGroupId: Record<string, number> = {};
   const countsByGroupId: Record<string, number> = {};
@@ -433,7 +434,10 @@ async function buildBenchmarkSummaryResponse(input: {
         caseCount: grade.caseResults.length,
         ...(grade.caseTaxonomyTags
           ? (() => {
-              const aggregates = computeTaxonomyAggregates(grade.caseResults, grade.caseTaxonomyTags);
+              const aggregates = computeTaxonomyAggregates(
+                grade.caseResults,
+                grade.caseTaxonomyTags,
+              );
               return {
                 taxonomyScores: aggregates.scores,
                 taxonomyCoverage: aggregates.coverage,

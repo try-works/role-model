@@ -458,12 +458,16 @@ export function getQualityMetric(
     .filter((score): score is number => typeof score === "number");
   const groupScore =
     groupScoreCandidates.length > 0 ? Math.max(...groupScoreCandidates) : undefined;
-  const lowCoverageRoleIds = new Set(candidate.benchmarkCapability?.coverage?.lowCoverageRoleIds ?? []);
+  const lowCoverageRoleIds = new Set(
+    candidate.benchmarkCapability?.coverage?.lowCoverageRoleIds ?? [],
+  );
   const lowCoverageGroupIds = new Set(
     candidate.benchmarkCapability?.coverage?.lowCoverageGroupIds ?? [],
   );
   const roleScoreLowCoverage = requestedRoleId ? lowCoverageRoleIds.has(requestedRoleId) : false;
-  const groupScoreLowCoverage = benchmarkGroupIds.some((groupId) => lowCoverageGroupIds.has(groupId));
+  const groupScoreLowCoverage = benchmarkGroupIds.some((groupId) =>
+    lowCoverageGroupIds.has(groupId),
+  );
 
   if (typeof benchmarkScore === "number") {
     const freshness = resolveQualityFreshness(input, candidate);
@@ -471,11 +475,7 @@ export function getQualityMetric(
     const config = input.observedDataConfig;
     const blendWeight = config?.benchmarkTaskBlendWeight ?? 0.7;
     let benchmarkReferenceScore = benchmarkScore;
-    let benchmarkReason:
-      | "task"
-      | "role"
-      | "group"
-      | "overall" = "overall";
+    let benchmarkReason: "task" | "role" | "group" | "overall" = "overall";
     if (typeof taskScore === "number") {
       benchmarkReferenceScore = blendWeight * benchmarkScore + (1 - blendWeight) * taskScore;
       benchmarkReason = "task";
@@ -505,7 +505,7 @@ export function getQualityMetric(
       raw.benchmark_role_score_low_coverage = true;
       raw.benchmark_role_case_count =
         requestedRoleId !== undefined
-          ? candidate.benchmarkCapability?.coverage?.roleCases?.[requestedRoleId] ?? null
+          ? (candidate.benchmarkCapability?.coverage?.roleCases?.[requestedRoleId] ?? null)
           : null;
     }
     if (groupScoreLowCoverage) {

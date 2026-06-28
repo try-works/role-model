@@ -8,14 +8,14 @@ function readNumber(value: unknown): number | null {
 
 function uniqueSortedStrings(values: readonly unknown[]): string[] | null {
   const strings = Array.from(
-    new Set(values.filter((value): value is string => typeof value === "string" && value.length > 0)),
+    new Set(
+      values.filter((value): value is string => typeof value === "string" && value.length > 0),
+    ),
   ).sort((left, right) => left.localeCompare(right));
   return strings.length > 0 ? strings : null;
 }
 
-function readAlternatives(
-  value: unknown,
-): readonly Readonly<Record<string, unknown>>[] | null {
+function readAlternatives(value: unknown): readonly Readonly<Record<string, unknown>>[] | null {
   if (!Array.isArray(value)) {
     return null;
   }
@@ -35,7 +35,9 @@ export function extractTaxonomyDimensions(
   const task = normalizedIntent.task as Record<string, unknown> | undefined;
   const capabilities = normalizedIntent.capabilities as Record<string, unknown> | undefined;
   const modalities = normalizedIntent.modalities as Record<string, unknown> | undefined;
-  const toolClasses = Array.isArray(normalizedIntent.toolClasses) ? normalizedIntent.toolClasses : [];
+  const toolClasses = Array.isArray(normalizedIntent.toolClasses)
+    ? normalizedIntent.toolClasses
+    : [];
   const alternatives = readAlternatives(normalizedIntent.alternatives);
   const capabilityIds = uniqueSortedStrings([
     ...((Array.isArray(capabilities?.required) ? capabilities.required : []) as readonly unknown[]),

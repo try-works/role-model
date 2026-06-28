@@ -535,7 +535,8 @@ describe("telemetry analytics view models", () => {
         scannedRowCount: 33,
         aggregationRowCount: 33,
         truncated: true,
-        truncationReason: "Ranking limited to top 5 endpointId value(s) out of 33 matched value(s).",
+        truncationReason:
+          "Ranking limited to top 5 endpointId value(s) out of 33 matched value(s).",
       },
       metricSupport: {
         requestCount: {

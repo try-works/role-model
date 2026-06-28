@@ -154,7 +154,8 @@ export function LocalModelRolePicker({
                                 benchmarkCapability.eligibleRoleScores[role.role_id] ?? 0,
                               )}
                             </span>
-                          ) : typeof benchmarkCapability?.roleScores?.[role.role_id] === "number" ? (
+                          ) : typeof benchmarkCapability?.roleScores?.[role.role_id] ===
+                            "number" ? (
                             <span className="rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[var(--rm-secondary)]">
                               Unassigned evidence{" "}
                               {formatBenchmarkPercent(

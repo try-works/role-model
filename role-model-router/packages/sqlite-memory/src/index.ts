@@ -2178,9 +2178,9 @@ function mapRuntimeTelemetryRecord(row: {
 }): RuntimeTelemetryRecord {
   const parseStringList = (value: string | null): readonly string[] =>
     value
-      ? ((JSON.parse(value) as unknown[]).filter(
+      ? (JSON.parse(value) as unknown[]).filter(
           (entry): entry is string => typeof entry === "string",
-        ))
+        )
       : [];
   return {
     requestId: row.request_id,
@@ -2459,7 +2459,8 @@ function toRuntimeTelemetryRecord(
     retentionClass: observation.capturePolicy?.retentionClass ?? null,
     structuredInspectionMode: observation.capturePolicy?.structuredInspectionMode ?? null,
     rawCaptureAvailable: observation.capturePolicy?.rawCaptureAvailable ?? false,
-    structuredInspectionAvailable: observation.capturePolicy?.structuredInspectionAvailable ?? false,
+    structuredInspectionAvailable:
+      observation.capturePolicy?.structuredInspectionAvailable ?? false,
     taxonomyGroupId: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_group_id),
     taxonomyRoleId: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_role_id),
     taxonomyTaskType: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_task_type),

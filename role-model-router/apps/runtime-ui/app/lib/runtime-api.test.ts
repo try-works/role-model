@@ -536,7 +536,9 @@ describe("fetchModelTelemetryRollup", () => {
         });
       }
 
-      if ((payload.ranking as { dimension?: string } | null)?.dimension === "taxonomyCapabilityId") {
+      if (
+        (payload.ranking as { dimension?: string } | null)?.dimension === "taxonomyCapabilityId"
+      ) {
         return jsonResponse({
           startAtMs: 1_700_000_000_000,
           endAtMs: 1_700_604_800_000,

@@ -5,8 +5,8 @@ import {
   injectRoleModelIntentIntoPayload,
   injectRoleModelIntentIntoPayloadWithRuntimeTasks,
 } from "./request-intent.js";
-import { createRuntimeInspectionClient } from "./runtime-inspection.js";
 import { discoverRoleModelRuntime } from "./runtime-discovery.js";
+import { createRuntimeInspectionClient } from "./runtime-inspection.js";
 import type { CompactRoleTask, CompactTaxonomy } from "./taxonomy/compact-data.js";
 import {
   type EffectiveTaxonomyResolution,

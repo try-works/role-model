@@ -2184,8 +2184,7 @@ export async function fetchModelTelemetryRollup(
     .map(([taskType, aggregate]) => ({
       taskType,
       requestCount: aggregate.requestCount,
-      successRate:
-        aggregate.requestCount > 0 ? aggregate.successCount / aggregate.requestCount : 0,
+      successRate: aggregate.requestCount > 0 ? aggregate.successCount / aggregate.requestCount : 0,
       avgLatencyMs:
         aggregate.latencyWeightedCount > 0
           ? Math.round(aggregate.latencyWeightedTotal / aggregate.latencyWeightedCount)
@@ -2230,7 +2229,10 @@ export async function fetchModelTelemetryRollup(
     );
 
   const warnings = [...tasks]
-    .sort((left, right) => left.successRate - right.successRate || right.requestCount - left.requestCount)
+    .sort(
+      (left, right) =>
+        left.successRate - right.successRate || right.requestCount - left.requestCount,
+    )
     .filter((task) => task.requestCount > 0 && task.successRate < 0.8)
     .slice(0, 2)
     .map(
