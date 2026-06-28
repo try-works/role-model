@@ -1,0 +1,4 @@
+
+> @try-works/pi-role-model@0.1.1 build D:\DEV\role-model\.worktrees\59-observe-taxonomy-analytics-completion\packages\pi-role-model
+> tsc --noEmit -p tsconfig.json
+

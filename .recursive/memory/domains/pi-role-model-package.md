@@ -4,14 +4,15 @@ Status: `CURRENT`
 Owns-Paths: `packages/pi-role-model/**`
 Watch-Paths: `role-model-router/apps/runtime-host-bridge/src/index.ts` (taxonomy APIs consumed by Pi)
 Created: `2026-06-24`
-Last Validated: `2026-06-24`
-Validated By: `260624-clever-seal`
+Last Validated: `2026-06-28`
+Validated By: `run-59`
 
 ## Package Identity
 
 - npm: `@try-works/pi-role-model@0.1.1`
 - Installed via: `pi install @try-works/pi-role-model` or worktree path
 - Does NOT: start runtime, open browser, copy credentials, read Pi auth files, make hidden model calls
+- Runtime-owned inspection commands: `/role-model requests`, `/role-model explain latest`
 
 ## Request Metadata Injection Flow
 
@@ -58,6 +59,7 @@ Two-tier progressive classifier in `classify-with-progressive-disclosure.ts`:
 | `resolve-effective-taxonomy.ts` | Runtime vs package taxonomy comparison and precedence |
 | `request-intent.ts` | Context extraction and intent injection into payload |
 | `extension.ts` | Pi extension hook wiring |
+| `runtime-inspection.ts` | Runtime-owned request list/detail and latest explanation reads |
 | `skills/role-model/SKILL.md` | Pi skill documentation |
 
 ## Compact Taxonomy Data
@@ -74,3 +76,9 @@ Two-tier progressive classifier in `classify-with-progressive-disclosure.ts`:
 - No hidden model calls for classification
 - Fail-closed for auth-required endpoints
 - Remote endpoint trust required
+
+## Durable Behavior Added After Run 57
+
+- `extension.ts` must refresh effective taxonomy on startup, `/role-model setup`, and `/role-model alias refresh`; otherwise runtime and package taxonomy can drift after runtime-side updates.
+- `runtime-inspection.ts` must honor `options.endpoint ?? process.env.ROLE_MODEL_ENDPOINT ?? DEFAULT_ROLE_MODEL_ENDPOINT` so operator diagnostics can target rebuilt runtimes without mutating package state.
+- Pi inspection remains read-only: request lists, request detail, and latest explanation come from Role-Model runtime APIs and Pi must not synthesize routing reasons on its own.

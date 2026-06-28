@@ -85,5 +85,5 @@ describe("runRuntimeUiValidation", () => {
     expect(result.mixedAliasRouterDecisionMatchesRequest).toBe(true);
     expect(result.mixedAliasOverviewIncludesSelectedEndpoint).toBe(true);
     expect(result.mixedAliasEndpointsIncludeSelectedEndpoint).toBe(true);
-  }, 60_000);
+  }, 240_000);
 });

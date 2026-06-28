@@ -50,8 +50,10 @@ Source-Runs:
 - `55-pi-role-model-package`
 - `56-pi-role-model-gap-closure`
 - `57-role-model-taxonomy-v1-phase-1-4`
+- `58-role-model-taxonomy-v1-benchmark-telemetry`
+- `59-observe-taxonomy-analytics-completion`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-23T11:55:19Z`
+Last-Validated: `2026-06-28T20:50:00Z`
 Tags:
 - `runtime`
 - `routing`
@@ -118,12 +120,14 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
   - unresolved env-backed credentials remain `credentials-missing`
   - Studio and related consumers must not imply execution readiness before credentials and endpoint activation are actually satisfied
 - The telemetry query path is backend-owned and powers Overview plus Observe analytics surfaces; setup and control pages should not regress into chart dashboards.
+- Richer taxonomy telemetry dimensions now include original role/task hints, normalized role/task, group, variant, capability, modality, and tool-class data. Observe analytics and request-ledger enrichment should read those dimensions from persisted telemetry-ledger fields first; reparsing large raw `runtime_observations.observation_json` bundles is now a fallback path for request detail, not the normal analytics path.
 - The telemetry analytics contract now returns applied query metadata, slice metadata, metric support, and dimension support. Analytics aggregation is full-slice by default and must not silently inherit request-ledger pagination caps.
 - Request-ledger reads and telemetry analytics reads share overlapping filter semantics for operator-visible dimensions while preserving separate ledger pagination behavior.
 - Runtime UI telemetry charts consume shared semantic states (`loading`, `refreshing`, `empty`, `unsupported`, `partial`, `truncated`, `error`, `populated`) instead of treating missing buckets as the only source of chart truth.
 - Horizontal ranking telemetry charts use bottom legends for long technical labels and a concrete plot height so Recharts has stable geometry.
 - The current runtime telemetry graph matrix architecture reference is `/docs/architecture/11-runtime-ui-telemetry-graph-matrix.md`.
 - `runtime:validate-ui` teardown must shut down cleanly after backend shutdown; validator cleanup is part of the durable runtime baseline, not a one-off test harness fix.
+- Benchmark-backed quality precedence in live routing is now: task score → eligible role score → eligible group score → overall benchmark fallback → measured quality. Measured latency, throughput, and reliability remain advisory non-quality metrics and benchmark evidence must not create hard eligibility by itself.
 
 ## Validation Path
 

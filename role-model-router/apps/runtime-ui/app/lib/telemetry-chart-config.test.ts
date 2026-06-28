@@ -32,6 +32,13 @@ describe("telemetry chart config", () => {
         "modelId",
         "providerId",
         "selectedStrategy",
+        "taxonomyGroupId",
+        "taxonomyRoleId",
+        "taxonomyTaskType",
+        "taxonomyTaskVariant",
+        "taxonomyCapabilityId",
+        "taxonomyModalityId",
+        "taxonomyToolClassId",
       ]),
     );
     expect(telemetryChartColorTokens).toEqual(

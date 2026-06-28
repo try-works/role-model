@@ -1,0 +1,482 @@
+{
+  "runId": "3f937a1f-4bb7-4348-9519-efceb579ba21",
+  "completedAtMs": 1782659388547,
+  "mode": "full",
+  "suiteId": "routing-capability-v2",
+  "suiteVersion": "3.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "judgeModelId": "deepseek/deepseek-v4-pro",
+  "artifactRoot": "3f937a1f-4bb7-4348-9519-efceb579ba21",
+  "subjects": [
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "modelId": "deepseek/deepseek-v4-flash",
+      "overallScore": 1,
+      "scoresByBucket": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 1,
+          "score": 1
+        },
+        "hard": {
+          "cases": 2,
+          "score": 1
+        }
+      },
+      "passingCaseIds": [
+        "p08-medium-summarize",
+        "h01-implement-two-sum",
+        "h07-multi-turn-sla-guard"
+      ],
+      "caseCount": 3,
+      "taxonomyScores": {
+        "byRole": {
+          "analyst": 1,
+          "coder": 1,
+          "operator": 1
+        },
+        "byTask": {
+          "analyst.metrics.define": 1,
+          "coder.edit": 1,
+          "operator.debug.startup": 1
+        },
+        "byVariant": {},
+        "byCapability": {
+          "text.chat": 1,
+          "reasoning.multi_step": 1,
+          "code.read": 1,
+          "code.write": 1
+        },
+        "byModality": {
+          "text": 1
+        },
+        "byToolClass": {
+          "filesystem.read": 1,
+          "filesystem.write": 1,
+          "shell.execute": 1
+        }
+      },
+      "taxonomyCoverage": {
+        "byRole": {
+          "analyst": 1,
+          "coder": 1,
+          "operator": 1
+        },
+        "byTask": {
+          "analyst.metrics.define": 1,
+          "coder.edit": 1,
+          "operator.debug.startup": 1
+        },
+        "byVariant": {},
+        "byCapability": {
+          "text.chat": 1,
+          "reasoning.multi_step": 2,
+          "code.read": 2,
+          "code.write": 1
+        },
+        "byModality": {
+          "text": 3
+        },
+        "byToolClass": {
+          "filesystem.read": 2,
+          "filesystem.write": 1,
+          "shell.execute": 1
+        }
+      }
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "overallScore": 1,
+      "scoresByBucket": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 1,
+          "score": 1
+        },
+        "hard": {
+          "cases": 2,
+          "score": 1
+        }
+      },
+      "passingCaseIds": [
+        "p08-medium-summarize",
+        "h01-implement-two-sum",
+        "h07-multi-turn-sla-guard"
+      ],
+      "caseCount": 3,
+      "taxonomyScores": {
+        "byRole": {
+          "analyst": 1,
+          "coder": 1,
+          "operator": 1
+        },
+        "byTask": {
+          "analyst.metrics.define": 1,
+          "coder.edit": 1,
+          "operator.debug.startup": 1
+        },
+        "byVariant": {},
+        "byCapability": {
+          "text.chat": 1,
+          "reasoning.multi_step": 1,
+          "code.read": 1,
+          "code.write": 1
+        },
+        "byModality": {
+          "text": 1
+        },
+        "byToolClass": {
+          "filesystem.read": 1,
+          "filesystem.write": 1,
+          "shell.execute": 1
+        }
+      },
+      "taxonomyCoverage": {
+        "byRole": {
+          "analyst": 1,
+          "coder": 1,
+          "operator": 1
+        },
+        "byTask": {
+          "analyst.metrics.define": 1,
+          "coder.edit": 1,
+          "operator.debug.startup": 1
+        },
+        "byVariant": {},
+        "byCapability": {
+          "text.chat": 1,
+          "reasoning.multi_step": 2,
+          "code.read": 2,
+          "code.write": 1
+        },
+        "byModality": {
+          "text": 3
+        },
+        "byToolClass": {
+          "filesystem.read": 2,
+          "filesystem.write": 1,
+          "shell.execute": 1
+        }
+      }
+    },
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "modelId": "moonshot/kimi-k2.7-code",
+      "overallScore": 1,
+      "scoresByBucket": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 1,
+          "score": 1
+        },
+        "hard": {
+          "cases": 2,
+          "score": 1
+        }
+      },
+      "passingCaseIds": [
+        "p08-medium-summarize",
+        "h01-implement-two-sum",
+        "h07-multi-turn-sla-guard"
+      ],
+      "caseCount": 3,
+      "taxonomyScores": {
+        "byRole": {
+          "analyst": 1,
+          "coder": 1,
+          "operator": 1
+        },
+        "byTask": {
+          "analyst.metrics.define": 1,
+          "coder.edit": 1,
+          "operator.debug.startup": 1
+        },
+        "byVariant": {},
+        "byCapability": {
+          "text.chat": 1,
+          "reasoning.multi_step": 1,
+          "code.read": 1,
+          "code.write": 1
+        },
+        "byModality": {
+          "text": 1
+        },
+        "byToolClass": {
+          "filesystem.read": 1,
+          "filesystem.write": 1,
+          "shell.execute": 1
+        }
+      },
+      "taxonomyCoverage": {
+        "byRole": {
+          "analyst": 1,
+          "coder": 1,
+          "operator": 1
+        },
+        "byTask": {
+          "analyst.metrics.define": 1,
+          "coder.edit": 1,
+          "operator.debug.startup": 1
+        },
+        "byVariant": {},
+        "byCapability": {
+          "text.chat": 1,
+          "reasoning.multi_step": 2,
+          "code.read": 2,
+          "code.write": 1
+        },
+        "byModality": {
+          "text": 3
+        },
+        "byToolClass": {
+          "filesystem.read": 2,
+          "filesystem.write": 1,
+          "shell.execute": 1
+        }
+      }
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "modelId": "chatgpt/gpt-5.4",
+      "overallScore": 1,
+      "scoresByBucket": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 1,
+          "score": 1
+        },
+        "hard": {
+          "cases": 2,
+          "score": 1
+        }
+      },
+      "passingCaseIds": [
+        "p08-medium-summarize",
+        "h01-implement-two-sum",
+        "h07-multi-turn-sla-guard"
+      ],
+      "caseCount": 3,
+      "taxonomyScores": {
+        "byRole": {
+          "analyst": 1,
+          "coder": 1,
+          "operator": 1
+        },
+        "byTask": {
+          "analyst.metrics.define": 1,
+          "coder.edit": 1,
+          "operator.debug.startup": 1
+        },
+        "byVariant": {},
+        "byCapability": {
+          "text.chat": 1,
+          "reasoning.multi_step": 1,
+          "code.read": 1,
+          "code.write": 1
+        },
+        "byModality": {
+          "text": 1
+        },
+        "byToolClass": {
+          "filesystem.read": 1,
+          "filesystem.write": 1,
+          "shell.execute": 1
+        }
+      },
+      "taxonomyCoverage": {
+        "byRole": {
+          "analyst": 1,
+          "coder": 1,
+          "operator": 1
+        },
+        "byTask": {
+          "analyst.metrics.define": 1,
+          "coder.edit": 1,
+          "operator.debug.startup": 1
+        },
+        "byVariant": {},
+        "byCapability": {
+          "text.chat": 1,
+          "reasoning.multi_step": 2,
+          "code.read": 2,
+          "code.write": 1
+        },
+        "byModality": {
+          "text": 3
+        },
+        "byToolClass": {
+          "filesystem.read": 2,
+          "filesystem.write": 1,
+          "shell.execute": 1
+        }
+      }
+    }
+  ],
+  "caseComparisons": [
+    {
+      "caseId": "h01-implement-two-sum",
+      "relativeRanking": [
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+      ],
+      "rationale": "All implementations correctly define twoSum, use a Map or hash map, iterate the array exactly once, and return two numeric indices in O(n) time. None uses nested loops or placeholders. Each matches the required patterns (function twoSum, new Map, nums, target, return). They are substantively equivalent with only minor stylistic variations (variable names, error message, check for undefined vs. ha…",
+      "compareFallback": false,
+      "compareError": null
+    },
+    {
+      "caseId": "h07-multi-turn-sla-guard",
+      "relativeRanking": [
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ],
+      "rationale": "Moonshot best incorporates multi-turn context via remoteOnly check, filters for allowListed, and strictly matches denial reasons to 'throughput_sla'. DeepSeek V4 Pro is similar but omits allowListed filtering and remoteOnly. DeepSeek V4 Flash uses booleans but lacks allowListed filtering and context. OpenAI GPT-5.4 is least precise due to overly permissive throughput-reason matching, reducing sub…",
+      "compareFallback": false,
+      "compareError": null
+    },
+    {
+      "caseId": "p08-medium-summarize",
+      "relativeRanking": [
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      ],
+      "rationale": "All answers correctly address the benefits of difficulty-based routing with relevant technical detail. The moonshot and openai responses are more comprehensive, covering additional dimensions such as privacy/compliance, system resilience, and fallback scenarios, which elevates them above the deepseek answers. Deepseek-pro is slightly more detailed than deepseek-flash in terms of scaling and offlo…",
+      "compareFallback": false,
+      "compareError": null
+    }
+  ],
+  "caseAudits": [
+    {
+      "caseId": "p08-medium-summarize",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "latencyMs": 12452,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "h01-implement-two-sum",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "latencyMs": 17175,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "h07-multi-turn-sla-guard",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "latencyMs": 34013,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "p08-medium-summarize",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "latencyMs": 16437,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "h01-implement-two-sum",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "latencyMs": 14537,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "h07-multi-turn-sla-guard",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "latencyMs": 39463,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "p08-medium-summarize",
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "latencyMs": 22422,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "h01-implement-two-sum",
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "latencyMs": 24758,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "h07-multi-turn-sla-guard",
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "latencyMs": 52380,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "p08-medium-summarize",
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "latencyMs": 13402,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "h01-implement-two-sum",
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "latencyMs": 13134,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    },
+    {
+      "caseId": "h07-multi-turn-sla-guard",
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "latencyMs": 42825,
+      "parseSuccess": true,
+      "judgeError": null,
+      "judgeUnavailable": false,
+      "cappedByValidator": false
+    }
+  ],
+  "manifest": {
+    "executionCompletedAtMs": 1782658874195,
+    "gradingCompletedAtMs": 1782659388547,
+    "judgeArtifactCount": 24,
+    "compareArtifactCount": 3
+  }
+}

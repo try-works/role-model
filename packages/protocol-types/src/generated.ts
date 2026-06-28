@@ -423,6 +423,9 @@ export interface RouterDecision {
     | "TASK_POLICY_APPLIED"
     | "FALLBACK_CHAIN_COMPUTED"
     | "BENCHMARK_TASK_SCORE"
+    | "BENCHMARK_ROLE_SCORE"
+    | "BENCHMARK_GROUP_SCORE"
+    | "BENCHMARK_FALLBACK_OVERALL_SCORE"
     | "TELEMETRY_TASK_PERFORMANCE"
   )[];
   used_measured: boolean;

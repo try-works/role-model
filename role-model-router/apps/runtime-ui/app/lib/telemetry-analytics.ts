@@ -429,11 +429,17 @@ export function buildTelemetryRankingChartModel(
         usedColorTokens,
       ),
     })) ?? [];
+  const state = resolveTelemetryChartState(response, {
+    metrics: [input.metric],
+    breakdown: dimension,
+    visibleSeriesCount: rows.length,
+  });
 
   return {
     title: input.title,
     metric: input.metric,
-    isEmpty: rows.length === 0,
+    isEmpty: rows.length === 0 || isBlockingTelemetryChartState(state),
+    ...(state ? { state } : {}),
     rows,
   };
 }

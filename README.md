@@ -92,6 +92,8 @@ Inside Pi, run:
 /role-model alias list
 /role-model alias choose
 /role-model alias use <alias>
+/role-model requests
+/role-model explain latest
 ```
 
 By default the package connects to `http://127.0.0.1:3456` and registers Role-Model as the
@@ -217,4 +219,3 @@ the [Contributor License Agreement](CLA.md) before they can be merged.
 Only individual contributions are accepted. Please do not submit work owned by
 an employer, client, company, or other entity unless you personally have the
 right to contribute it under this project's terms.
-

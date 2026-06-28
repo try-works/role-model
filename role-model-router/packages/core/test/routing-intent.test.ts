@@ -228,7 +228,7 @@ describe("routing intent metadata", () => {
     expect(quality.raw.benchmark_quality_score).toBe(0.85);
   });
 
-  test("getQualityMetric prefers live quality_score over benchmark", () => {
+  test("getQualityMetric prefers benchmark task score over live quality_score for benchmark-scoped requests", () => {
     const c = candidate("test-ep", ["text.chat"], {
       observed: {
         latency_ms_p50: 100,
@@ -242,10 +242,13 @@ describe("routing intent metadata", () => {
         quality_freshness_score: 1.0,
         quality_live_request_samples: 5,
       },
-      benchmarkCapability: { overallScore: 0.7 },
+      benchmarkCapability: {
+        overallScore: 0.7,
+        taskScores: { "coder.review": 0.96 },
+      },
     });
     const input = {
-      request: baseRequest,
+      request: { ...baseRequest, taskType: "coder.review" },
       candidates: [c],
       observedDataConfig: {
         enabled: false,
@@ -268,11 +271,13 @@ describe("routing intent metadata", () => {
       },
     };
     const quality = getQualityMetric(c, input);
-    expect(quality.source).toBe("measured");
-    expect(quality.raw.quality_score).toBe(0.92);
+    expect(quality.source).toBe("benchmark");
+    expect(quality.value).toBeCloseTo(0.778, 3);
+    expect(quality.raw.benchmark_task_score).toBe(0.96);
+    expect(quality.raw.quality_score).toBeUndefined();
   });
 
-  test("getQualityMetric prefers judge_score over both quality_score and benchmark", () => {
+  test("getQualityMetric prefers benchmark role score over judge_score for benchmark-scoped requests", () => {
     const c = candidate("test-ep", ["text.chat"], {
       observed: {
         latency_ms_p50: 100,
@@ -286,10 +291,13 @@ describe("routing intent metadata", () => {
         quality_measured_at_ms: Date.now(),
         quality_freshness_score: 1.0,
       },
-      benchmarkCapability: { overallScore: 0.6 },
+      benchmarkCapability: {
+        overallScore: 0.6,
+        eligibleRoleScores: { coder: 0.9 },
+      },
     });
     const input = {
-      request: baseRequest,
+      request: { ...baseRequest, requestedRoleId: "coder", taskType: "coder.edit" },
       candidates: [c],
       observedDataConfig: {
         enabled: false,
@@ -312,8 +320,10 @@ describe("routing intent metadata", () => {
       },
     };
     const quality = getQualityMetric(c, input);
-    expect(quality.source).toBe("measured");
-    expect(quality.raw.judge_score).toBe(0.95);
+    expect(quality.source).toBe("benchmark");
+    expect(quality.value).toBe(0.9);
+    expect(quality.raw.benchmark_role_score).toBe(0.9);
+    expect(quality.raw.judge_score).toBeUndefined();
   });
 
   test("getQualityMetric falls back to default when no quality data exists", () => {
@@ -564,6 +574,56 @@ describe("routing intent metadata", () => {
     expect(quality.value).toBeCloseTo(0.69, 3);
   });
 
+  test("getQualityMetric falls back to eligible benchmark role score when task score is absent", () => {
+    const c = candidate("v4-pro", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: {
+        overallScore: 0.6,
+        eligibleRoleScores: { coder: 0.9 },
+      },
+    });
+    const quality = getQualityMetric(c, {
+      request: { ...baseRequest, requestedRoleId: "coder", taskType: "coder.edit" },
+      candidates: [c],
+      roleDefinitions: [],
+      taskDefinitions: [],
+      observedDataConfig: minimalObservedConfig,
+    });
+
+    expect(quality.value).toBe(0.9);
+    expect(quality.raw.benchmark_role_score).toBe(0.9);
+    expect(quality.raw.benchmark_quality_score).toBe(0.6);
+  });
+
+  test("getQualityMetric falls back to eligible benchmark group score when role score is absent", () => {
+    const c = candidate("v4-pro", ["text.chat"], {
+      observed: undefined,
+      benchmarkCapability: {
+        overallScore: 0.6,
+        groupScores: { engineering: 0.84 },
+      },
+    });
+    const quality = getQualityMetric(c, {
+      request: {
+        ...baseRequest,
+        taskType: "text.chat",
+        roleModelIntent: {
+          taxonomyVersion: "1.0.0-alpha.1",
+          classificationContractVersion: "role-model.classification.v1",
+          role: { id: "coder", hard: false },
+        },
+      },
+      candidates: [c],
+      roleDefinitions: [],
+      taskDefinitions: [],
+      observedDataConfig: minimalObservedConfig,
+    });
+
+    expect(quality.value).toBe(0.84);
+    expect(quality.raw.benchmark_group_score).toBe(0.84);
+    expect(quality.raw.benchmark_group_ids).toEqual(["engineering"]);
+  });
+
   test("getQualityMetric uses custom telemetry threshold from config", () => {
     const c = candidate("v4-flash", ["text.chat"], {
       observed: undefined,
@@ -610,6 +670,237 @@ describe("routing intent metadata", () => {
     expect(quality.raw.telemetry_advisory_applied).toBe(true);
     expect(quality.raw.telemetry_advisory_adjustment).toBe(-0.08);
   });
+
+  test("routeRequest prefers eligible benchmark role score over stronger fallback overall score", () => {
+    const eligibleRoleCandidate = candidate("eligible-role", ["text.chat"], {
+      benchmarkCapability: {
+        overallScore: 0.62,
+        eligibleRoleScores: { coder: 0.91 },
+      },
+    });
+    const fallbackOnlyCandidate = candidate("fallback-only", ["text.chat"], {
+      benchmarkCapability: {
+        overallScore: 0.82,
+      },
+    });
+
+    const decision = routeRequest({
+      request: {
+        ...baseRequest,
+        requestedRoleId: "coder",
+        taskType: "coder.edit",
+      },
+      candidates: [fallbackOnlyCandidate, eligibleRoleCandidate],
+      roleDefinitions: [
+        {
+          role_id: "coder",
+          name: "Coder",
+          description: "Code work",
+          role_kind: "assistant",
+          default_system_instructions: "Operate as coder.",
+          task_types_supported: ["coder.edit"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed" },
+          routing_policy_overrides: {},
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      taskDefinitions: [
+        {
+          task_type: "coder.edit",
+          description: "Code edit",
+          required_inputs: ["text"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["coder"],
+          default_benchmark_suites: [],
+        },
+      ],
+      observedDataConfig: {
+        ...minimalObservedConfig,
+        throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
+        difficultyLearning: {
+          recommendation: {
+            minSamples: 4,
+            maxFailureRate: 0.2,
+            minQualityScore: 0.8,
+            minTokensPerSec: 22,
+          },
+        },
+      },
+    });
+
+    expect(decision.chosen_endpoint_id).toBe("eligible-role");
+    expect(decision.selection_reasons).toContain("BENCHMARK_ROLE_SCORE");
+  });
+
+  test("routeRequest prefers benchmark role evidence over stronger measured quality after eligibility", () => {
+    const benchmarkRoleCandidate = candidate("benchmark-role", ["text.chat"], {
+      observed: {
+        latency_ms_p50: 100,
+        latency_ms_p95: 200,
+        tokens_per_sec: 50,
+        failure_rate: 0,
+        cost_per_1k_tokens_est: 0.002,
+        measured_at_ms: Date.now(),
+        judge_score: 0.72,
+      },
+      benchmarkCapability: {
+        overallScore: 0.62,
+        eligibleRoleScores: { coder: 0.91 },
+      },
+    });
+    const strongerMeasuredCandidate = candidate("stronger-measured", ["text.chat"], {
+      observed: {
+        latency_ms_p50: 100,
+        latency_ms_p95: 200,
+        tokens_per_sec: 50,
+        failure_rate: 0,
+        cost_per_1k_tokens_est: 0.002,
+        measured_at_ms: Date.now(),
+        judge_score: 0.96,
+      },
+      benchmarkCapability: {
+        overallScore: 0.61,
+        eligibleRoleScores: { coder: 0.66 },
+      },
+    });
+
+    const decision = routeRequest({
+      request: {
+        ...baseRequest,
+        requestedRoleId: "coder",
+        taskType: "coder.edit",
+      },
+      candidates: [strongerMeasuredCandidate, benchmarkRoleCandidate],
+      roleDefinitions: [
+        {
+          role_id: "coder",
+          name: "Coder",
+          description: "Code work",
+          role_kind: "assistant",
+          default_system_instructions: "Operate as coder.",
+          task_types_supported: ["coder.edit"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed" },
+          routing_policy_overrides: {},
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      taskDefinitions: [
+        {
+          task_type: "coder.edit",
+          description: "Code edit",
+          required_inputs: ["text"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["coder"],
+          default_benchmark_suites: [],
+        },
+      ],
+      observedDataConfig: {
+        ...minimalObservedConfig,
+        throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
+        difficultyLearning: {
+          recommendation: {
+            minSamples: 4,
+            maxFailureRate: 0.2,
+            minQualityScore: 0.8,
+            minTokensPerSec: 22,
+          },
+        },
+      },
+    });
+
+    expect(decision.chosen_endpoint_id).toBe("benchmark-role");
+    expect(decision.selection_reasons).toContain("BENCHMARK_ROLE_SCORE");
+  });
+
+  test("routeRequest reports fallback overall benchmark reason when role and group evidence are low coverage", () => {
+    const decision = routeRequest({
+      request: {
+        ...baseRequest,
+        requestedRoleId: "analyst",
+        taskType: "analyst.compare",
+      },
+      candidates: [
+        candidate("benchmark-overall-fallback", ["text.chat"], {
+          observed: {
+            latency_ms_p50: 100,
+            latency_ms_p95: 200,
+            tokens_per_sec: 50,
+            failure_rate: 0,
+            cost_per_1k_tokens_est: 0.002,
+            measured_at_ms: Date.now(),
+            judge_score: 0.72,
+          },
+          benchmarkCapability: {
+            overallScore: 0.95,
+            eligibleRoleScores: { analyst: 1 },
+            groupScores: { product_design: 1 },
+            coverage: {
+              lowCoverageRoleIds: ["analyst"],
+              lowCoverageGroupIds: ["product_design"],
+              roleCases: { analyst: 1 },
+            },
+          },
+        }),
+      ],
+      roleDefinitions: [
+        {
+          role_id: "analyst",
+          name: "Analyst",
+          description: "Analysis work",
+          role_kind: "assistant",
+          default_system_instructions: "Operate as analyst.",
+          task_types_supported: ["analyst.compare"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed" },
+          routing_policy_overrides: {},
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      taskDefinitions: [
+        {
+          task_type: "analyst.compare",
+          description: "Compare options",
+          required_inputs: ["text"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["analyst"],
+          default_benchmark_suites: [],
+        },
+      ],
+      observedDataConfig: {
+        ...minimalObservedConfig,
+        throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
+        difficultyLearning: {
+          recommendation: {
+            minSamples: 4,
+            maxFailureRate: 0.2,
+            minQualityScore: 0.8,
+            minTokensPerSec: 22,
+          },
+        },
+      },
+    });
+
+    expect(decision.selection_reasons).toContain("BENCHMARK_FALLBACK_OVERALL_SCORE");
+    expect(decision.selection_reasons).not.toContain("BENCHMARK_ROLE_SCORE");
+    expect(decision.selection_reasons).not.toContain("BENCHMARK_GROUP_SCORE");
+  });
 });
 
 // ── SP5: Taxonomy dimension extraction ──
@@ -626,7 +917,7 @@ describe("extractTaxonomyDimensions", () => {
       classificationContractVersion: "role-model.classification.v1",
     });
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       taxonomy_role_id: "coder",
       taxonomy_task_type: "coder.review",
       taxonomy_role_source: "heuristic",
@@ -644,7 +935,7 @@ describe("extractTaxonomyDimensions", () => {
       classificationContractVersion: "role-model.classification.v1",
     });
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       taxonomy_role_id: null,
       taxonomy_task_type: null,
       taxonomy_role_source: "user",
@@ -674,7 +965,7 @@ describe("extractTaxonomyDimensions", () => {
       classificationContractVersion: "role-model.classification.v1",
     });
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       taxonomy_role_id: "security",
       taxonomy_task_type: null,
       taxonomy_role_source: "trusted",

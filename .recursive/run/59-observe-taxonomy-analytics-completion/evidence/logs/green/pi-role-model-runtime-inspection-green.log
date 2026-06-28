@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/packages/pi-role-model
+
+ ✓ test/docs-and-safety.test.ts (2 tests) 16ms
+ ✓ test/runtime-inspection.test.ts (4 tests) 26ms
+ ✓ test/commands.test.ts (10 tests) 19ms
+ ✓ test/extension.test.ts (6 tests) 177ms
+
+ Test Files  4 passed (4)
+      Tests  22 passed (22)
+   Start at  09:35:47
+   Duration  1.87s (transform 755ms, setup 0ms, collect 1.60s, tests 238ms, environment 2ms, prepare 1.70s)
+

@@ -1,0 +1,24 @@
+{
+  "prompt": "A Windows-hosted production runtime is returning sporadic 429 responses from a remote provider. Summarize the first two operator triage steps.",
+  "piExitCode": 0,
+  "piResponse": "The first two operator triage steps for sporadic 429 (Too Many Requests) responses from a remote provider are:\r\n\r\n1. **Check rate‑limit headers and local usage logs.**  \r\n   On the Windows host, inspect the HTTP response headers (e.g., `Retry-After`, `X-RateLimit-*`) from the provider to see if they indicate burst or daily limits. Concurrently, review the application’s outbound request logs (using Windows Event Viewer, IIS logs, or the app’s own logging) to confirm the volume of requests sent to that provider in the period before the 429s.\r\n\r\n2. **Verify no unintended retry loop or concurrency spike.**  \r\n   Look for any sudden increase in parallelism or a tight retry loop in the application code or configuration (e.g., default retry policies in .NET `HttpClient`, background jobs, or scheduled tasks). Also confirm that the local Windows machine is not running multiple instances of the service or duplicate cron tasks that could amplify the request rate beyond the provider’s limits.",
+  "newRequestIds": [
+    "req-6689cfa6-ee92-489b-bff2-69764a366d90"
+  ],
+  "latestRequest": {
+    "requestId": "req-6689cfa6-ee92-489b-bff2-69764a366d90",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "createdAtMs": 1782646995261
+  },
+  "latestDetail": {
+    "requestId": "req-6689cfa6-ee92-489b-bff2-69764a366d90",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "requestedModel": "hybrid.remote-only",
+    "routingMode": "hybrid",
+    "taxonomyRole": "operator",
+    "taxonomyTask": null,
+    "taskAction": "general",
+    "observeRequestPath": null,
+    "selectedModelId": null
+  }
+}

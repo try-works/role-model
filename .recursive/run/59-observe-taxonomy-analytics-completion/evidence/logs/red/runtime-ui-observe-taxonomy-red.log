@@ -1,0 +1,13 @@
+RUN: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/telemetry-chart-config.test.ts app/lib/telemetry-route-models.test.ts app/lib/runtime-api.test.ts app/lib/design-system.test.ts
+DATE: 2026-06-28T09:04:00Z
+STATUS: FAIL
+
+FAILED TESTS
+- app/lib/telemetry-route-models.test.ts > telemetry route chart definitions > builds observe requests charts from shared filters and ranked-comparison selectors
+  - failure: expected the new Observe requests taxonomy chart contract and ranking index, but the route-model test still matched the pre-taxonomy chart order.
+- app/lib/runtime-api.test.ts > telemetry APIs > serializes taxonomy telemetry request filters into the request query string
+  - failure: telemetry request fetches emitted `/api/role-model/telemetry/requests` without a query string because taxonomy filter families were not serialized.
+- app/lib/design-system.test.ts > runtime design system > requests and request detail stay telemetry-first while exposing raw-host handoffs
+  - failure: requests route source did not contain `Taxonomy group id` or `Taxonomy capability ids`, confirming the Observe requests controls had not been upgraded.
+- app/lib/design-system.test.ts > runtime design system > routing analytics controls expose richer taxonomy pivots for observe charts
+  - failure: observe-routing route source did not contain `Taxonomy group id`, `Taxonomy task variant`, `Taxonomy capability ids`, or `Taxonomy tool class ids`.

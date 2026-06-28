@@ -31,6 +31,13 @@ export const telemetryBreakdownOptions: ReadonlyArray<{
   { label: "Model", value: "modelId" },
   { label: "Provider", value: "providerId" },
   { label: "Strategy", value: "selectedStrategy" },
+  { label: "Taxonomy group", value: "taxonomyGroupId" },
+  { label: "Taxonomy role", value: "taxonomyRoleId" },
+  { label: "Taxonomy task", value: "taxonomyTaskType" },
+  { label: "Task variant", value: "taxonomyTaskVariant" },
+  { label: "Capability", value: "taxonomyCapabilityId" },
+  { label: "Modality", value: "taxonomyModalityId" },
+  { label: "Tool class", value: "taxonomyToolClassId" },
 ];
 
 export const telemetryChartColorTokens = {

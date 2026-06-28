@@ -1,0 +1,27 @@
+
+> @try-works/pi-role-model@0.1.1 test D:\DEV\role-model\.worktrees\59-observe-taxonomy-analytics-completion\packages\pi-role-model
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/packages/pi-role-model
+
+ ✓ test/package-manifest.test.ts (1 test) 15ms
+ ✓ test/alias-store.test.ts (1 test) 32ms
+ ✓ test/request-intent.test.ts (12 tests) 93ms
+ ✓ test/effective-taxonomy.test.ts (5 tests) 116ms
+ ✓ test/runtime-discovery.test.ts (4 tests) 38ms
+ ✓ test/taxonomy-classification.test.ts (14 tests) 238ms
+ ✓ test/taxonomy-data-files.test.ts (5 tests) 278ms
+ ✓ test/config.test.ts (4 tests) 13ms
+ ✓ test/taxonomy-staged-loader.test.ts (2 tests) 17ms
+ ✓ test/runtime-inspection.test.ts (4 tests) 29ms
+ ✓ test/commands.test.ts (10 tests) 30ms
+ ✓ test/downstream-openai.test.ts (7 tests) 22ms
+ ✓ test/docs-and-safety.test.ts (2 tests) 33ms
+ ✓ test/extension.test.ts (6 tests) 214ms
+
+ Test Files  14 passed (14)
+      Tests  77 passed (77)
+   Start at  09:36:04
+   Duration  3.13s (transform 3.47s, setup 0ms, collect 7.86s, tests 1.17s, environment 7ms, prepare 7.15s)
+

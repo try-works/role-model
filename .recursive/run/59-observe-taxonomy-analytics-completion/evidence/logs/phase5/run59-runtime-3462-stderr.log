@@ -1,0 +1,19 @@
+node:internal/modules/esm/loader:436
+      throw new ERR_REQUIRE_CYCLE_MODULE(message);
+            ^
+
+Error [ERR_REQUIRE_CYCLE_MODULE]: Cannot require() ES Module C:\Users\erikb\AppData\Local\Temp\run59-runtime-3462.ts in a cycle. A cycle involving require(esm) is not allowed to maintain invariants mandated by the ECMAScript specification. Try making at least part of the dependency in the graph lazily loaded.
+    at ModuleLoader.importSyncForRequire (node:internal/modules/esm/loader:436:13)
+    at loadESMFromCJS (node:internal/modules/cjs/loader:1577:24)
+    at Module._compile (node:internal/modules/cjs/loader:1742:5)
+    at Object..js (node:internal/modules/cjs/loader:1893:10)
+    at Module.load (node:internal/modules/cjs/loader:1480:32)
+    at Module._load (node:internal/modules/cjs/loader:1299:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:244:24)
+    at cjsLoader (node:internal/modules/esm/translators:342:5)
+    at ModuleWrap.<anonymous> (node:internal/modules/esm/translators:234:7) {
+  code: 'ERR_REQUIRE_CYCLE_MODULE'
+}
+
+Node.js v24.11.0

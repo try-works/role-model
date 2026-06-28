@@ -13,6 +13,8 @@ export interface RoleModelCommandDependencies {
   readSelectedAlias?: () => Promise<string | null>;
   writeSelectedAlias?: (alias: string) => Promise<void>;
   setActiveModel?: (model: PiModelSelection) => Promise<boolean>;
+  listRuntimeRequests?: () => Promise<string>;
+  explainLatestRuntimeRequest?: () => Promise<string>;
 }
 
 const HELP = [
@@ -26,6 +28,8 @@ const HELP = [
   "/role-model alias choose <alias> - choose the alias Pi should use",
   "/role-model alias refresh - refresh Role-Model provider aliases from runtime discovery",
   "/role-model alias current - show the selected alias",
+  "/role-model requests - show recent runtime requests from Role-Model",
+  "/role-model explain latest - explain the latest runtime request using runtime-owned diagnostics",
 ].join("\n");
 
 function ok(text: string): RoleModelCommandResult {
@@ -134,6 +138,32 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
           `recommended alias: ${result.discovery.setup.recommendedModel ?? "none"}`,
         ].join("\n"),
       );
+    }
+
+    if (command === "requests") {
+      if (!dependencies.listRuntimeRequests) {
+        return fail("Role-Model runtime request inspection is unavailable in this context.");
+      }
+      try {
+        return ok(await dependencies.listRuntimeRequests());
+      } catch (error) {
+        return fail(
+          `Role-Model runtime request inspection failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
+    if (command === "explain" && subcommand === "latest") {
+      if (!dependencies.explainLatestRuntimeRequest) {
+        return fail("Role-Model runtime request explanation is unavailable in this context.");
+      }
+      try {
+        return ok(await dependencies.explainLatestRuntimeRequest());
+      } catch (error) {
+        return fail(
+          `Role-Model runtime request explanation failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
     }
 
     if (command === "alias" && subcommand === "list") {

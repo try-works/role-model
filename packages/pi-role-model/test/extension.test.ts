@@ -81,6 +81,46 @@ describe("Pi extension registration", () => {
     ]);
   });
 
+  test("refreshes effective taxonomy during setup and alias refresh", async () => {
+    const commands: Array<{ name: string; config: RegisteredCommandConfig }> = [];
+    const taxonomyResolutions: string[] = [];
+    const extension = createRoleModelExtension({
+      discover: async () => ({
+        discovery: createDiscovery(),
+        state: "ready",
+        warnings: [],
+        modelDiagnostics: [],
+      }),
+      resolveTaxonomy: async () => {
+        taxonomyResolutions.push("resolved");
+        return {
+          source: "runtime",
+          taxonomy: loadCompactTaxonomy(),
+        };
+      },
+    });
+
+    await extension({
+      registerProvider() {
+        // registered during setup and refresh
+      },
+      registerCommand(name: string, config: RegisteredCommandConfig) {
+        commands.push({ name, config });
+      },
+    });
+
+    await commands[0]?.config.handler("setup", {
+      ui: { notify: () => undefined },
+      isProjectTrusted: () => true,
+    });
+    await commands[0]?.config.handler("alias refresh", {
+      ui: { notify: () => undefined },
+      isProjectTrusted: () => true,
+    });
+
+    expect(taxonomyResolutions).toHaveLength(3);
+  });
+
   test("injects provider requests with the resolved runtime taxonomy when available", async () => {
     const callbacks: Array<
       (event: { type: "before_provider_request"; payload: unknown }) => unknown

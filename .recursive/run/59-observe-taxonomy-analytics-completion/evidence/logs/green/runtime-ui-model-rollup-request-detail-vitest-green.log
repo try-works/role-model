@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/runtime-api.test.ts (45 tests) 76ms
+ ✓ app/lib/design-system.test.ts (55 tests) 145ms
+
+ Test Files  2 passed (2)
+      Tests  100 passed (100)
+   Start at  09:19:34
+   Duration  3.03s (transform 1.29s, setup 0ms, collect 2.01s, tests 222ms, environment 1ms, prepare 802ms)
+

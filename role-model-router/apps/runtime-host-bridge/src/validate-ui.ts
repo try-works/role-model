@@ -25,6 +25,12 @@ async function readJson<T>(filePath: string): Promise<T> {
   return JSON.parse(await readFile(filePath, "utf8")) as T;
 }
 
+function traceValidation(message: string): void {
+  if (process.env.ROLE_MODEL_VALIDATE_UI_TRACE === "1") {
+    console.error(`[validate-ui] ${message}`);
+  }
+}
+
 async function waitForSessionBootstrapIdle(
   baseUrl: string,
   headers: Record<string, string>,
@@ -124,7 +130,13 @@ export async function runRuntimeUiValidation(
 ): Promise<RuntimeUiValidationResult> {
   const previousMoonshotApiKey = process.env.MOONSHOT_API_KEY;
   process.env.MOONSHOT_API_KEY = previousMoonshotApiKey || "runtime-ui-validation-key";
-  const backend = await createRuntimeBridgeBackend(options);
+  traceValidation("createRuntimeBridgeBackend:start");
+  const backend = await createRuntimeBridgeBackend({
+    ...options,
+    runtimeVendorStartup: "disabled",
+  });
+  traceValidation("createRuntimeBridgeBackend:done");
+  traceValidation("startBridgeServer:start");
   const server = await startBridgeServer({
     host: "127.0.0.1",
     port: 0,
@@ -157,12 +169,15 @@ export async function runRuntimeUiValidation(
     getRoutableInventory: backend.getEffectiveRoutableInventory,
     readHealthStatus: backend.readHealthStatus,
   });
+  traceValidation("startBridgeServer:done");
 
   try {
     const baseUrl = `http://127.0.0.1:${server.port}`;
+    traceValidation(`baseUrl:${baseUrl}`);
     const requestHeaders = {
       connection: "close",
     };
+    traceValidation("initial-control-plane-fetches:start");
     const summaryResponse = await fetch(`${baseUrl}/api/role-model/runtime/summary`, {
       headers: requestHeaders,
     });
@@ -201,6 +216,7 @@ export async function runRuntimeUiValidation(
     const roles = (await rolesResponse.json()) as Array<{
       roleId: string;
     }>;
+    traceValidation("initial-control-plane-fetches:done");
     let runtimeConfigPath: string | null = null;
     let runtimeConfigInitialApplied = false;
     let runtimeConfigUpdatedVersion: string | null = null;
@@ -209,6 +225,7 @@ export async function runRuntimeUiValidation(
     const mixedAliasModelIds = ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.5"] as const;
 
     if (options.unifiedRuntimeConfigPath) {
+      traceValidation("runtime-config:read-update:start");
       const runtimeConfigResponse = await fetch(`${baseUrl}/api/role-model/runtime/config`, {
         headers: requestHeaders,
       });
@@ -293,9 +310,11 @@ export async function runRuntimeUiValidation(
       runtimeConfigUpdatedVersion = updatedRuntimeConfigRecord.config?.version ?? null;
       runtimeConfigUpdatedRoutingStrategy =
         updatedRuntimeConfigRecord.config?.routingStrategy ?? null;
+      traceValidation("runtime-config:read-update:done");
     }
 
     const upsertedAccountId = "moonshot.personal.primary";
+    traceValidation("account-upsert:start");
     const upsertResponse = await fetch(`${baseUrl}/api/role-model/accounts`, {
       method: "POST",
       headers: {
@@ -355,8 +374,10 @@ export async function runRuntimeUiValidation(
         roleIds: string[];
       }>;
     }>;
+    traceValidation("account-upsert:done");
 
     const activatedEndpointId = "moonshot.personal.primary.global.kimi-k2.5";
+    traceValidation("endpoint-activation:start");
     const activateEndpointResponse = await fetch(`${baseUrl}/api/role-model/endpoints`, {
       method: "POST",
       headers: {
@@ -402,9 +423,13 @@ export async function runRuntimeUiValidation(
     };
     const activatedEndpoint =
       updatedEndpoints.find((endpoint) => endpoint.endpointId === activatedEndpointId) ?? null;
+    traceValidation("endpoint-activation:done");
 
+    traceValidation("session-bootstrap:wait-before-load:start");
     await waitForSessionBootstrapIdle(baseUrl, requestHeaders);
+    traceValidation("session-bootstrap:wait-before-load:done");
 
+    traceValidation("llama-swap-load:start");
     const llamaSwapLoadResponse = await fetch(
       `${baseUrl}/api/role-model/local/llama-swap/models/lfm2.5-1.2b-instruct/load`,
       {
@@ -417,8 +442,11 @@ export async function runRuntimeUiValidation(
       },
     );
     if (llamaSwapLoadResponse.ok) {
+      traceValidation("session-bootstrap:wait-after-load:start");
       await waitForSessionBootstrapIdle(baseUrl, requestHeaders);
+      traceValidation("session-bootstrap:wait-after-load:done");
     }
+    traceValidation(`llama-swap-load:status:${llamaSwapLoadResponse.status}`);
 
     const runtimeConfigAfterSetup = await backend.readRuntimeConfig();
     const configuredAliases = runtimeConfigAfterSetup.config?.modelAliases ?? [];
@@ -430,6 +458,7 @@ export async function runRuntimeUiValidation(
     const mixedAliasModelListIncludesAlias =
       inProcessModelListIncludesAlias ||
       (await waitForModelListAlias(baseUrl, requestHeaders, mixedAliasId, 5_000));
+    traceValidation(`mixed-alias:model-list:${mixedAliasModelListIncludesAlias ? "present" : "missing"}`);
 
     const mixedAliasRequestId = "req-runtime-ui-mixed-alias-001";
     const mixedAliasPlan = mapChatCompletionsRequest(
@@ -454,12 +483,14 @@ export async function runRuntimeUiValidation(
     const policy = await readJson<
       Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
     >(path.join(options.repoRoot, "testdata", "router-runtime", "observability-policy.json"));
+    traceValidation("runRuntimeAdapterValidation:start");
     const validation = await runRuntimeAdapterValidation({
       repoRoot: options.repoRoot,
       fixtureRoot,
       runtimeStateRoot: options.runtimeStateRoot,
       scopeId: `${options.scopeId}-routing-proof`,
     });
+    traceValidation("runRuntimeAdapterValidation:done");
     const routedRequestId = "req-runtime-ui-routing-001";
     const routedObservation = createRuntimeObservationBundle({
       decision: {
@@ -504,6 +535,7 @@ export async function runRuntimeUiValidation(
       }),
       observation: routedObservation,
     });
+    traceValidation("routed-observation:persisted");
 
     const mixedAliasRoutingDecisionId = "route-runtime-ui-mixed-alias-001";
     const mixedAliasSelectedModelId = activatedEndpoint?.modelId ?? "moonshot/kimi-k2.5";
@@ -622,7 +654,9 @@ export async function runRuntimeUiValidation(
       }),
       observation: mixedAliasObservation,
     });
+    traceValidation("mixed-alias-observation:persisted");
 
+    traceValidation("final-readback:start");
     const telemetryRequestsResponse = await fetch(
       `${baseUrl}/api/role-model/telemetry/requests?limit=10`,
       {
@@ -708,6 +742,7 @@ export async function runRuntimeUiValidation(
       ).find((decision) => decision.requestId === mixedAliasRequestId) ?? null;
     const mixedAliasTelemetryRequest =
       telemetryRequests.find((request) => request.requestId === mixedAliasRequestId) ?? null;
+    traceValidation("final-readback:done");
 
     return {
       providerCount: finalSummary.providerCount,
@@ -762,11 +797,13 @@ export async function runRuntimeUiValidation(
       ),
     };
   } finally {
+    traceValidation("cleanup:start");
     await cleanupRuntimeUiValidationResources({
       server,
       backend,
     });
     await delay(10);
+    traceValidation("cleanup:done");
     if (previousMoonshotApiKey === undefined) {
       process.env.MOONSHOT_API_KEY = undefined;
     } else {

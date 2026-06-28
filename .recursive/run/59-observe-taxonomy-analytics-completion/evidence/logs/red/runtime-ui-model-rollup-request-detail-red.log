@@ -1,0 +1,9 @@
+RUN: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/runtime-api.test.ts app/lib/design-system.test.ts
+DATE: 2026-06-28T09:15:21Z
+STATUS: FAIL
+
+FAILED TESTS
+- app/lib/runtime-api.test.ts > fetchModelTelemetryRollup > aggregates richer taxonomy rollups for model detail telemetry
+  - failure: the richer model rollup contract did not exist yet, so the new `fetchModelTelemetryRollup` expectation failed before the runtime-api export/aggregation changes landed.
+- app/lib/design-system.test.ts > runtime design system > request detail and model detail expose structured taxonomy evidence rather than raw-only telemetry
+  - failure: `request-detail.tsx` and `control-models.tsx` still lacked the required structured taxonomy section titles and model-rollup strings (`Taxonomy classification`, `Recent groups`, `Observed strengths`, `Observed warnings`).

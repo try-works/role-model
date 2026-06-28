@@ -494,6 +494,13 @@ export interface RuntimeTelemetryRequestRecord {
   readonly actualCostUsd?: number | null;
   readonly estimatedCostUsd?: number | null;
   readonly currency?: string | null;
+  readonly taxonomyGroupId?: string | null;
+  readonly taxonomyRoleId?: string | null;
+  readonly taxonomyTaskType?: string | null;
+  readonly taxonomyTaskVariant?: string | null;
+  readonly taxonomyCapabilityIds?: readonly string[];
+  readonly taxonomyModalityIds?: readonly string[];
+  readonly taxonomyToolClassIds?: readonly string[];
 }
 
 export interface RuntimeTelemetryDashboard {
@@ -547,8 +554,13 @@ export type RuntimeTelemetryAnalyticsDimension =
   | "difficultyBucket"
   | "statusFamily"
   | "requestOperation"
+  | "taxonomyGroupId"
   | "taxonomyRoleId"
-  | "taxonomyTaskType";
+  | "taxonomyTaskType"
+  | "taxonomyTaskVariant"
+  | "taxonomyCapabilityId"
+  | "taxonomyModalityId"
+  | "taxonomyToolClassId";
 
 export interface RuntimeTelemetryAnalyticsFilters {
   readonly sourceTypes?: readonly ("local" | "remote")[];
@@ -564,8 +576,13 @@ export interface RuntimeTelemetryAnalyticsFilters {
   readonly difficultyBuckets?: readonly ("easy" | "medium" | "hard")[];
   readonly statusFamilies?: readonly ("success" | "failure" | "unknown")[];
   readonly requestOperations?: readonly string[];
+  readonly taxonomyGroupIds?: readonly string[];
   readonly taxonomyRoleIds?: readonly string[];
   readonly taxonomyTaskTypes?: readonly string[];
+  readonly taxonomyTaskVariants?: readonly string[];
+  readonly taxonomyCapabilityIds?: readonly string[];
+  readonly taxonomyModalityIds?: readonly string[];
+  readonly taxonomyToolClassIds?: readonly string[];
 }
 
 export interface RuntimeTelemetryAnalyticsRanking {
@@ -648,6 +665,13 @@ export interface RuntimeTelemetryAnalyticsResponse {
     readonly truncated: boolean;
     readonly truncationReason: string | null;
     readonly generatedAtMs?: number;
+    readonly taxonomyCoverage?: {
+      readonly matchedRowCount: number;
+      readonly richerTaxonomyRowCount: number;
+      readonly legacyRowCount: number;
+      readonly coverageRate: number;
+      readonly backfillPerformed: false;
+    };
   };
   readonly metricSupport?: Partial<
     Record<RuntimeTelemetryAnalyticsMetric, RuntimeTelemetryAnalyticsMetricSupport>
@@ -905,6 +929,17 @@ export interface BenchmarkCapability {
   readonly scoresByBucket?: Partial<
     Record<"easy" | "medium" | "hard", { readonly score: number; readonly cases?: number }>
   >;
+  readonly taskScores?: Record<string, number>;
+  readonly roleScores?: Record<string, number>;
+  readonly eligibleRoleScores?: Record<string, number>;
+  readonly groupScores?: Record<string, number>;
+  readonly coverage?: {
+    readonly overallCases: number;
+    readonly roleCases?: Record<string, number>;
+    readonly groupCases?: Record<string, number>;
+    readonly lowCoverageRoleIds?: readonly string[];
+    readonly lowCoverageGroupIds?: readonly string[];
+  };
   readonly benchmarkSamples: number;
   readonly sampleCount: number;
   readonly measuredAtMs: number | null;
@@ -998,6 +1033,14 @@ export interface BenchmarkSummarySubject {
   readonly passingCaseIds: readonly string[];
   readonly caseCount: number;
   readonly taxonomyScores?: {
+    readonly byRole?: Record<string, number>;
+    readonly byTask?: Record<string, number>;
+    readonly byVariant?: Record<string, number>;
+    readonly byCapability?: Record<string, number>;
+    readonly byModality?: Record<string, number>;
+    readonly byToolClass?: Record<string, number>;
+  };
+  readonly taxonomyCoverage?: {
     readonly byRole?: Record<string, number>;
     readonly byTask?: Record<string, number>;
     readonly byVariant?: Record<string, number>;
@@ -1230,6 +1273,13 @@ function buildTelemetryQueryString(input?: {
   appendFilterValues("difficultyBuckets", input?.filters?.difficultyBuckets);
   appendFilterValues("statusFamilies", input?.filters?.statusFamilies);
   appendFilterValues("requestOperations", input?.filters?.requestOperations);
+  appendFilterValues("taxonomyGroupIds", input?.filters?.taxonomyGroupIds);
+  appendFilterValues("taxonomyRoleIds", input?.filters?.taxonomyRoleIds);
+  appendFilterValues("taxonomyTaskTypes", input?.filters?.taxonomyTaskTypes);
+  appendFilterValues("taxonomyTaskVariants", input?.filters?.taxonomyTaskVariants);
+  appendFilterValues("taxonomyCapabilityIds", input?.filters?.taxonomyCapabilityIds);
+  appendFilterValues("taxonomyModalityIds", input?.filters?.taxonomyModalityIds);
+  appendFilterValues("taxonomyToolClassIds", input?.filters?.taxonomyToolClassIds);
   const query = params.toString();
   return query.length > 0 ? `?${query}` : "";
 }
@@ -2011,12 +2061,26 @@ export async function checkPeerHealth(
 }
 
 export interface ModelTelemetryRollup {
+  readonly groups: readonly {
+    groupId: string;
+    requestCount: number;
+  }[];
+  readonly roles: readonly {
+    roleId: string;
+    requestCount: number;
+  }[];
+  readonly capabilities: readonly {
+    capabilityId: string;
+    requestCount: number;
+  }[];
   readonly tasks: readonly {
     taskType: string;
     requestCount: number;
     successRate: number;
     avgLatencyMs: number | null;
   }[];
+  readonly strengths: readonly string[];
+  readonly warnings: readonly string[];
   readonly totalRequests: number;
   readonly windowDays: number;
 }
@@ -2025,37 +2089,169 @@ export async function fetchModelTelemetryRollup(
   modelId: string,
   fetcher: RuntimeFetcher = fetch,
 ): Promise<ModelTelemetryRollup> {
-  const resp = await fetchTelemetryAnalytics(
+  const windowDays = 7;
+  const windowMs = windowDays * 24 * 3600 * 1000;
+  const baseFilters = { modelIds: [modelId] } as const;
+  const [taskResponse, groupResponse, roleResponse, capabilityResponse] = await Promise.all([
+    fetchTelemetryAnalytics(
+      {
+        granularity: "day",
+        metrics: ["requestCount", "successCount", "averageLatencyMs"],
+        breakdown: "taxonomyTaskType",
+        filters: baseFilters,
+        windowMs,
+      },
+      fetcher,
+    ),
+    fetchTelemetryAnalytics(
+      {
+        granularity: "day",
+        metrics: ["requestCount"],
+        filters: baseFilters,
+        ranking: {
+          dimension: "taxonomyGroupId",
+          metric: "requestCount",
+          limit: 5,
+        },
+        windowMs,
+      },
+      fetcher,
+    ),
+    fetchTelemetryAnalytics(
+      {
+        granularity: "day",
+        metrics: ["requestCount"],
+        filters: baseFilters,
+        ranking: {
+          dimension: "taxonomyRoleId",
+          metric: "requestCount",
+          limit: 5,
+        },
+        windowMs,
+      },
+      fetcher,
+    ),
+    fetchTelemetryAnalytics(
+      {
+        granularity: "day",
+        metrics: ["requestCount"],
+        filters: baseFilters,
+        ranking: {
+          dimension: "taxonomyCapabilityId",
+          metric: "requestCount",
+          limit: 5,
+        },
+        windowMs,
+      },
+      fetcher,
+    ),
+  ]);
+
+  const taskMap = new Map<
+    string,
     {
-      granularity: "day",
-      metrics: ["requestCount", "successCount", "averageLatencyMs"],
-      breakdown: "taxonomyTaskType",
-      filters: { modelIds: [modelId] },
-      windowMs: 7 * 24 * 3600 * 1000,
-    },
-    fetcher,
-  );
-  const tasks: ModelTelemetryRollup["tasks"][number][] = [];
-  let totalRequests = 0;
-  for (const bucket of resp.buckets ?? []) {
+      requestCount: number;
+      successCount: number;
+      latencyWeightedTotal: number;
+      latencyWeightedCount: number;
+    }
+  >();
+  for (const bucket of taskResponse.buckets ?? []) {
     for (const series of bucket.series ?? []) {
       const count = (series.metrics?.requestCount as number) ?? 0;
+      if (count <= 0 || !series.key) {
+        continue;
+      }
       const success = (series.metrics?.successCount as number) ?? 0;
       const latency = series.metrics?.averageLatencyMs as number | null | undefined;
-      if (count > 0 && series.key) {
-        tasks.push({
-          taskType: series.key,
-          requestCount: count,
-          successRate: count > 0 ? success / count : 0,
-          avgLatencyMs: latency ?? null,
-        });
-        totalRequests += count;
+      const existing = taskMap.get(series.key) ?? {
+        requestCount: 0,
+        successCount: 0,
+        latencyWeightedTotal: 0,
+        latencyWeightedCount: 0,
+      };
+      existing.requestCount += count;
+      existing.successCount += success;
+      if (typeof latency === "number" && Number.isFinite(latency)) {
+        existing.latencyWeightedTotal += latency * count;
+        existing.latencyWeightedCount += count;
       }
+      taskMap.set(series.key, existing);
     }
   }
+
+  const tasks = [...taskMap.entries()]
+    .map(([taskType, aggregate]) => ({
+      taskType,
+      requestCount: aggregate.requestCount,
+      successRate:
+        aggregate.requestCount > 0 ? aggregate.successCount / aggregate.requestCount : 0,
+      avgLatencyMs:
+        aggregate.latencyWeightedCount > 0
+          ? Math.round(aggregate.latencyWeightedTotal / aggregate.latencyWeightedCount)
+          : null,
+    }))
+    .sort(
+      (left, right) =>
+        right.requestCount - left.requestCount ||
+        right.successRate - left.successRate ||
+        left.taskType.localeCompare(right.taskType, "en"),
+    );
+
+  const groups = (groupResponse.ranking?.rows ?? [])
+    .filter((row) => typeof row.value === "number" && row.value > 0)
+    .map((row) => ({
+      groupId: row.key,
+      requestCount: row.value as number,
+    }));
+
+  const roles = (roleResponse.ranking?.rows ?? [])
+    .filter((row) => typeof row.value === "number" && row.value > 0)
+    .map((row) => ({
+      roleId: row.key,
+      requestCount: row.value as number,
+    }));
+
+  const capabilities = (capabilityResponse.ranking?.rows ?? [])
+    .filter((row) => typeof row.value === "number" && row.value > 0)
+    .map((row) => ({
+      capabilityId: row.key,
+      requestCount: row.value as number,
+    }));
+
+  const strengths = tasks
+    .filter((task) => task.requestCount > 0 && task.successRate >= 0.95)
+    .slice(0, 2)
+    .map(
+      (task) =>
+        `Strong recent success for ${task.taskType} (${task.requestCount} req, ${Math.round(
+          task.successRate * 100,
+        )}% success).`,
+    );
+
+  const warnings = [...tasks]
+    .sort((left, right) => left.successRate - right.successRate || right.requestCount - left.requestCount)
+    .filter((task) => task.requestCount > 0 && task.successRate < 0.8)
+    .slice(0, 2)
+    .map(
+      (task) =>
+        `Watch ${task.taskType} (${task.requestCount} req, ${Math.round(
+          task.successRate * 100,
+        )}% success).`,
+    );
+
+  const totalRequests =
+    (taskResponse.totals.requestCount as number | null | undefined) ??
+    tasks.reduce((total, task) => total + task.requestCount, 0);
+
   return {
-    tasks: tasks.sort((a, b) => b.requestCount - a.requestCount),
+    groups,
+    roles,
+    capabilities,
+    tasks,
+    strengths,
+    warnings,
     totalRequests,
-    windowDays: 7,
+    windowDays,
   };
 }

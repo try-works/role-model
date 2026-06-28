@@ -55,11 +55,14 @@ describe("telemetry route chart definitions", () => {
 
     expect(charts.map((chart) => chart.title)).toEqual([
       "Request Volume Over Time",
+      "Taxonomy Demand By Group",
+      "Task Success vs Failure",
       "Token Usage Over Time",
       "Effective Cost Over Time",
       "Latency Trend",
       "Cache Efficiency Trend",
       "Failure Trend",
+      "Capability Leaders",
       "Ranked Comparison",
     ]);
     expect(charts[0]?.query).toEqual(
@@ -73,7 +76,37 @@ describe("telemetry route chart definitions", () => {
         },
       }),
     );
-    expect(charts[6]).toEqual(
+    expect(charts[1]).toEqual(
+      expect.objectContaining({
+        kind: "bar",
+        query: expect.objectContaining({
+          breakdown: "taxonomyGroupId",
+          metrics: ["requestCount"],
+        }),
+      }),
+    );
+    expect(charts[2]).toEqual(
+      expect.objectContaining({
+        kind: "bar",
+        query: expect.objectContaining({
+          breakdown: "taxonomyTaskType",
+          metrics: ["successCount", "failureCount"],
+        }),
+      }),
+    );
+    expect(charts[8]).toEqual(
+      expect.objectContaining({
+        kind: "ranking",
+        query: expect.objectContaining({
+          ranking: {
+            dimension: "taxonomyCapabilityId",
+            limit: 8,
+            metric: "requestCount",
+          },
+        }),
+      }),
+    );
+    expect(charts[9]).toEqual(
       expect.objectContaining({
         kind: "ranking",
         query: expect.objectContaining({
@@ -102,9 +135,13 @@ describe("telemetry route chart definitions", () => {
     expect(charts.map((chart) => chart.title)).toEqual([
       "Cost Avoided By Routing",
       "Routing Decision Volume",
+      "Routing Volume By Taxonomy Role",
+      "Avoided Cost By Taxonomy Task",
       "Difficulty Distribution",
       "Strategy Selection Trend",
       "Role Demand",
+      "Capability Routing Mix",
+      "Tool Class Routing Mix",
       "Model Selection",
     ]);
     expect(charts[0]).toEqual(
@@ -123,10 +160,43 @@ describe("telemetry route chart definitions", () => {
     );
     expect(charts[2]).toEqual(
       expect.objectContaining({
+        kind: "bar",
+        query: expect.objectContaining({
+          breakdown: "taxonomyRoleId",
+          metrics: ["requestCount"],
+        }),
+      }),
+    );
+    expect(charts[3]).toEqual(
+      expect.objectContaining({
+        kind: "ranking",
+        query: expect.objectContaining({
+          ranking: {
+            dimension: "taxonomyTaskType",
+            limit: 8,
+            metric: "totalAvoidedCostUsd",
+          },
+        }),
+      }),
+    );
+    expect(charts[4]).toEqual(
+      expect.objectContaining({
         kind: "ranking",
         query: expect.objectContaining({
           ranking: {
             dimension: "difficultyBucket",
+            limit: 8,
+            metric: "requestCount",
+          },
+        }),
+      }),
+    );
+    expect(charts[7]).toEqual(
+      expect.objectContaining({
+        kind: "ranking",
+        query: expect.objectContaining({
+          ranking: {
+            dimension: "taxonomyCapabilityId",
             limit: 8,
             metric: "requestCount",
           },

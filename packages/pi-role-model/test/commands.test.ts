@@ -68,6 +68,8 @@ describe("role-model command dispatcher", () => {
     expect(result.ok).toBe(true);
     expect(result.text).toContain("/role-model setup");
     expect(result.text).toContain("/role-model alias choose");
+    expect(result.text).toContain("/role-model requests");
+    expect(result.text).toContain("/role-model explain latest");
   });
 
   test("reports status and doctor results from the configured endpoint", async () => {
@@ -122,6 +124,25 @@ describe("role-model command dispatcher", () => {
 
     expect(refreshed).toEqual(["http://127.0.0.1:3456", "http://127.0.0.1:3456"]);
     expect(selectedAlias).toBe("role-model/auto");
+  });
+
+  test("dispatches runtime-owned request list and latest explanation commands", async () => {
+    const handler = createRoleModelCommandHandler({
+      discover: async () => ({ discovery, version: { version: "0.0.0-test" } }),
+      listRuntimeRequests: async () =>
+        "Recent Role-Model requests (1) from http://127.0.0.1:3456:\n- req-001",
+      explainLatestRuntimeRequest: async () =>
+        "Role-Model runtime explanation for req-001:\n- strategy: hybrid",
+    });
+
+    await expect(handler("requests")).resolves.toMatchObject({
+      ok: true,
+      text: expect.stringContaining("Recent Role-Model requests"),
+    });
+    await expect(handler("explain latest")).resolves.toMatchObject({
+      ok: true,
+      text: expect.stringContaining("Role-Model runtime explanation"),
+    });
   });
 
   test("lists and chooses aliases without leaking secrets", async () => {

@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/role-model-router/packages/runtime-observability
+
+(node:80640) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (4 tests) 618ms
+   ✓ runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates  340ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  08:40:48
+   Duration  7.12s (transform 852ms, setup 0ms, collect 2.63s, tests 618ms, environment 0ms, prepare 872ms)
+

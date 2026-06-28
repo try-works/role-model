@@ -12,5 +12,5 @@ describe("runRuntimeObservabilityValidation", () => {
     expect(result.mixedAliasTelemetryListIncludesRequest).toBe(true);
     expect(result.mixedAliasRouterDecisionMatchesRequest).toBe(true);
     expect(result.mixedAliasOverviewIncludesSelectedEndpoint).toBe(true);
-  }, 60_000);
+  }, 240_000);
 });

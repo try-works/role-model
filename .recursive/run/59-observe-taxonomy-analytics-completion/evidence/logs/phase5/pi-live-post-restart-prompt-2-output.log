@@ -1,0 +1,1 @@
+Check the `Retry-After` response header (or the provider's rate limit documentation) to understand the required wait time before retrying.
