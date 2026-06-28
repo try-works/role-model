@@ -309,7 +309,7 @@ export interface RuntimeObservationCapturePolicyReceipt {
   readonly retentionClass: string;
   readonly structuredInspectionMode: string;
   readonly rawCaptureAvailable: boolean;
-  readonly structuredInspectionAvailable: true;
+  readonly structuredInspectionAvailable: boolean;
   readonly redactedFields: readonly string[];
   readonly suppressedFields: readonly string[];
 }
@@ -343,12 +343,26 @@ export interface RuntimeObservationBundle {
   };
   readonly capturePolicy: RuntimeObservationCapturePolicyReceipt;
   readonly taxonomyDimensions?: {
+    readonly taxonomy_original_role_hint_id: unknown;
+    readonly taxonomy_original_task_type: unknown;
+    readonly taxonomy_group_id: unknown;
     readonly taxonomy_role_id: unknown;
     readonly taxonomy_task_type: unknown;
+    readonly taxonomy_task_action: unknown;
+    readonly taxonomy_task_variant: unknown;
+    readonly taxonomy_capability_ids: unknown;
+    readonly taxonomy_modality_ids: unknown;
+    readonly taxonomy_tool_class_ids: unknown;
     readonly taxonomy_role_source: unknown;
     readonly taxonomy_task_source: unknown;
+    readonly taxonomy_classification_source: unknown;
     readonly taxonomy_confidence: unknown;
+    readonly taxonomy_task_confidence: unknown;
+    readonly taxonomy_alternative_count: unknown;
+    readonly taxonomy_alternative_role_ids: unknown;
+    readonly taxonomy_alternative_task_types: unknown;
     readonly taxonomy_version: unknown;
+    readonly taxonomy_content_revision: unknown;
     readonly classification_contract_version: unknown;
   };
   readonly privacyReceipt: {

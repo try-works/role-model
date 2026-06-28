@@ -70,6 +70,53 @@
   - Pi uses run 57 pi-role-model extension by default; run 58 extension installed but classification not verified live.
   - Adding a new taxonomy dimension touches 12+ files across all layers.
 
+### Run `59-observe-taxonomy-analytics-completion`
+
+- Run folder: `/.recursive/run/59-observe-taxonomy-analytics-completion/`
+- Worktree: `.worktrees/59-observe-taxonomy-analytics-completion`
+- Branch: `recursive/59-observe-taxonomy-analytics-completion`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - completed the richer taxonomy telemetry/operator surface that run 58 left partial:
+    - canonical taxonomy extraction now preserves original role/task hints, normalized role/task, group/variant/capability/modality/tool-class dimensions, alternatives, and source/confidence metadata
+    - richer taxonomy dimensions are persisted and queried through the runtime telemetry ledger instead of only being reparsed from raw observations
+    - Observe Requests and Observe Routing now expose richer taxonomy graphs and URL-backed filters
+    - `/app/models` now shows richer taxonomy telemetry rollups plus benchmark-advisory role/group evidence
+    - request detail now renders structured taxonomy, telemetry-handling, and cost-audit sections
+  - completed Pi/runtime parity for the repo-owned Pi package:
+    - added runtime-owned `/role-model requests` and `/role-model explain latest`
+    - refreshed effective taxonomy on startup, setup, and alias refresh
+    - made runtime inspection honor `ROLE_MODEL_ENDPOINT`
+    - kept the package read-only with no runtime-process or credential ownership
+  - repaired three real defects found during verification:
+    - `runtime-inspection.ts` ignored `ROLE_MODEL_ENDPOINT`
+    - rebuilt runtime could crash on late committed-response errors with `ERR_HTTP_HEADERS_SENT`
+    - Observe analytics reparsed large raw observation bundles, causing minute-scale page loads and `database is locked` follow-on behavior
+  - repaired a later rebuilt-runtime router defect where measured quality shadowed benchmark task/role/group quality; live receipts now emit benchmark precedence reasons correctly
+- Why:
+  - the original proposal Phase 6 operator-facing taxonomy telemetry work and the run-58 requirements were not actually complete in shipped Observe, model-rollup, request-detail, and Pi diagnostic surfaces
+  - live rebuilt-runtime QA exposed both correctness and performance gaps that had to be fixed before the richer taxonomy telemetry story could be considered complete
+- How:
+  - implemented with strict TDD and late-phase repair discipline: RED→GREEN evidence for telemetry contract, Observe UI, request detail, Pi runtime inspection, telemetry-ledger denormalization/performance, and benchmark-precedence routing
+  - verified with focused builds/tests, rebuilt-runtime browser/manual QA on `:3462`, live Pi command/prompt receipts, live benchmark-routing reruns, and a final handoff proof on rebuilt runtime `:3456`
+- What was not done:
+  - no benchmark-program redesign, benchmark retagging, or new top-level navigation was added
+  - Pi still does not own runtime startup, runtime upgrades, or credential syncing
+- Known issues / follow-ups:
+  - residual Observe latency is now ordinary client/chart fan-out rather than raw-bundle reparsing, but it is still slower than a minimal empty page because the dashboard fans out many analytics reads
+  - the local Pi CLI on Windows may still emit the known libuv teardown assertion after otherwise successful commands; the package behavior and runtime receipts remain the source of truth
+
 ### Session `260624-clever-seal` — Post-Implementation Audit, Gap Closure, and E2E Verification
 
 - Date: 2026-06-24

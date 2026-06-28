@@ -101,8 +101,18 @@ export interface EndpointCandidate {
   runtimeEligibility?: RuntimeEligibilitySignals;
   routingSignals?: RuntimeRoutingSignals;
   readonly benchmarkCapability?: {
-    readonly overallScore?: number;
+    readonly overallScore?: number | null;
     readonly taskScores?: Record<string, number>;
+    readonly roleScores?: Record<string, number>;
+    readonly eligibleRoleScores?: Record<string, number>;
+    readonly groupScores?: Record<string, number>;
+    readonly coverage?: {
+      readonly overallCases: number;
+      readonly roleCases?: Record<string, number>;
+      readonly groupCases?: Record<string, number>;
+      readonly lowCoverageRoleIds?: readonly string[];
+      readonly lowCoverageGroupIds?: readonly string[];
+    };
   };
   readonly telemetryScores?: {
     readonly taskSuccessRates?: Record<string, number>;
@@ -156,7 +166,10 @@ export interface RoutingIntent {
   };
   toolClasses?: readonly string[];
   source?: "explicit_user" | "trusted_context" | "heuristic" | "runtime" | (string & {});
+  roleSource?: "explicit_user" | "trusted_context" | "heuristic" | "runtime" | (string & {});
+  taskSource?: "explicit_user" | "trusted_context" | "heuristic" | "runtime" | (string & {});
   confidence?: number;
+  taskConfidence?: number;
   taskAction?: string;
   taskVariant?: string | null;
   evidence?: readonly string[];

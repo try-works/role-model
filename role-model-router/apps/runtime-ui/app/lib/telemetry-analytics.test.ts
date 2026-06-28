@@ -437,6 +437,132 @@ describe("telemetry analytics view models", () => {
     );
   });
 
+  test("surfaces explicit mixed-version taxonomy coverage messaging for partial taxonomy breakdowns", () => {
+    const response = {
+      startAtMs: Date.UTC(2026, 5, 10, 0, 0, 0),
+      endAtMs: Date.UTC(2026, 5, 17, 0, 0, 0),
+      granularity: "day",
+      metrics: ["requestCount"],
+      breakdown: "taxonomyTaskType",
+      buckets: [
+        {
+          startAtMs: Date.UTC(2026, 5, 10, 0, 0, 0),
+          endAtMs: Date.UTC(2026, 5, 11, 0, 0, 0),
+          totals: {
+            requestCount: 3,
+          },
+          series: [{ key: "coder.review", label: "coder.review", metrics: { requestCount: 2 } }],
+        },
+      ],
+      totals: {
+        requestCount: 3,
+      },
+      ranking: null,
+      labels: {},
+      metadata: {
+        matchedRowCount: 3,
+        scannedRowCount: 3,
+        aggregationRowCount: 3,
+        truncated: false,
+        truncationReason: null,
+        taxonomyCoverage: {
+          matchedRowCount: 3,
+          richerTaxonomyRowCount: 2,
+          legacyRowCount: 1,
+          coverageRate: 0.666667,
+          backfillPerformed: false,
+        },
+      },
+      metricSupport: {
+        requestCount: {
+          metric: "requestCount",
+          status: "supported",
+          matchedRowCount: 3,
+          supportedRowCount: 3,
+          unsupportedRowCount: 0,
+          nullValueCount: 0,
+          reason: null,
+        },
+      },
+      dimensionSupport: {
+        taxonomyTaskType: {
+          dimension: "taxonomyTaskType",
+          status: "partial",
+          matchedRowCount: 3,
+          populatedRowCount: 2,
+          sparseRowCount: 1,
+          reason:
+            "1 row(s) in this slice do not include taxonomyTaskType. Richer taxonomy coverage in this range is 2/3 rows (66.7%); rows without richer taxonomy remain included and richer-taxonomy backfill is not performed.",
+        },
+      },
+    } as unknown as RuntimeTelemetryAnalyticsResponse;
+
+    const model = buildTelemetryTimeSeriesChartModel(response, {
+      title: "Request Volume By Task",
+      metrics: ["requestCount"],
+      breakdown: "taxonomyTaskType",
+    });
+
+    expect(model.state).toEqual({
+      kind: "partial",
+      message:
+        "1 row(s) in this slice do not include taxonomyTaskType. Richer taxonomy coverage in this range is 2/3 rows (66.7%); rows without richer taxonomy remain included and richer-taxonomy backfill is not performed.",
+    });
+  });
+
+  test("surfaces backend truncation metadata in ranking chart states", () => {
+    const response = {
+      startAtMs: Date.UTC(2026, 5, 10, 0, 0, 0),
+      endAtMs: Date.UTC(2026, 5, 17, 0, 0, 0),
+      granularity: "day",
+      metrics: ["requestCount"],
+      breakdown: null,
+      buckets: [],
+      totals: {
+        requestCount: 33,
+      },
+      ranking: {
+        dimension: "endpointId",
+        metric: "requestCount",
+        rows: [
+          { key: "endpoint-a", label: "endpoint-a", value: 4 },
+          { key: "endpoint-b", label: "endpoint-b", value: 3 },
+        ],
+      },
+      labels: {},
+      metadata: {
+        matchedRowCount: 33,
+        scannedRowCount: 33,
+        aggregationRowCount: 33,
+        truncated: true,
+        truncationReason:
+          "Ranking limited to top 5 endpointId value(s) out of 33 matched value(s).",
+      },
+      metricSupport: {
+        requestCount: {
+          metric: "requestCount",
+          status: "supported",
+          matchedRowCount: 33,
+          supportedRowCount: 33,
+          unsupportedRowCount: 0,
+          nullValueCount: 0,
+          reason: null,
+        },
+      },
+      dimensionSupport: {},
+    } as unknown as RuntimeTelemetryAnalyticsResponse;
+
+    const model = buildTelemetryRankingChartModel(response, {
+      title: "Requests By Endpoint",
+      metric: "requestCount",
+    });
+
+    expect(model.state).toEqual({
+      kind: "truncated",
+      message: "Ranking limited to top 5 endpointId value(s) out of 33 matched value(s).",
+    });
+  });
+
   test("selects stable query granularity from approved time ranges", () => {
     expect(resolveTelemetryGranularity(24 * 60 * 60 * 1000)).toBe("hour");
     expect(resolveTelemetryGranularity(7 * 24 * 60 * 60 * 1000)).toBe("day");

@@ -1,0 +1,134 @@
+
+===== get_commands =====
+[
+  {
+    "name": "role-model",
+    "description": "Configure and inspect the Role-Model provider for Pi.",
+    "source": "extension",
+    "sourceInfo": {
+      "path": "D:\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model\\extensions\\role-model.ts",
+      "source": "..\\..\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model",
+      "scope": "user",
+      "origin": "package",
+      "baseDir": "D:\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model"
+    }
+  },
+  {
+    "name": "skill:role-model",
+    "description": "Use when Pi should route model requests through a locally running Role-Model runtime, inspect Role-Model aliases, diagnose Role-Model provider setup, or inspect runtime-owned request explanations.",
+    "source": "skill",
+    "sourceInfo": {
+      "path": "D:\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model\\skills\\role-model\\SKILL.md",
+      "source": "..\\..\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model",
+      "scope": "user",
+      "origin": "package",
+      "baseDir": "D:\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model"
+    }
+  }
+]
+
+===== /role-model setup =====
+Role-Model provider configured at http://127.0.0.1:3462
+recommended alias: default.decision-only
+
+===== /role-model status =====
+Role Model Runtime
+state: ready
+endpoint: http://127.0.0.1:3462
+version: 0.0.0-run59
+aliases: 15
+selected alias: hybrid.remote-only
+provider: registered
+auth: placeholder
+endpoint trust: local
+fallback: no
+warnings: none
+
+===== /role-model doctor =====
+doctor: ok
+endpoint: http://127.0.0.1:3462
+health: ok
+version: ok
+downstream discovery: ok
+fallback: no
+auth: ok
+endpoint trust: ok
+provider: ok
+aliases: ok
+degraded models: none
+models: 19
+recommended alias: default.decision-only
+
+===== /role-model alias list =====
+- baseline.decision-only [ready]
+- baseline.hybrid [ready]
+- baseline.remote-only [ready]
+- controller.decision-only [ready]
+- controller.hybrid [ready]
+- controller.remote-only [ready]
+- default.decision-only (recommended) [ready, recommended]
+- default.hybrid [ready]
+- default.remote-only [ready]
+- difficulty.decision-only [ready]
+- difficulty.hybrid [ready]
+- difficulty.remote-only [ready]
+- hybrid.decision-only [ready]
+- hybrid.hybrid [ready]
+- hybrid.remote-only [ready, selected]
+
+===== /role-model alias recommended =====
+Recommended Role-Model alias: default.decision-only
+
+===== /role-model alias use hybrid.remote-only =====
+selected alias: hybrid.remote-only
+active model: role-model/hybrid.remote-only
+
+===== /role-model alias current =====
+Current Role-Model alias: hybrid.remote-only
+
+===== /role-model requests =====
+Recent Role-Model requests (5) from http://127.0.0.1:3462:
+- req-de9784fd-9126-4ad1-9e8a-2ae8644e35ca | 2026-06-27T19:12:40.103Z | unclassified | deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | unknown
+- req-195dfc05-a9dd-456d-81a8-420cb5a78d9b | 2026-06-27T19:12:19.760Z | unclassified | deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | unknown
+- req-ff141654-c0ae-4072-b47a-447e2b253826 | 2026-06-27T19:11:53.998Z | unclassified | deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | unknown
+- req-d9b5dc49-19be-47c1-bff0-a069f6968f5c | 2026-06-27T19:11:33.124Z | unclassified | deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | unknown
+- req-8977c397-3405-4f98-a7d4-4823bfcbe4fd | 2026-06-27T19:11:15.199Z | unclassified | deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | unknown
+
+===== prompt coding-review =====
+{
+  "prompt": "Review a TypeScript telemetry aggregation patch and list the highest-risk regressions to check before release.",
+  "notifyLines": [],
+  "newRequests": []
+}
+
+===== prompt operator-triage =====
+{
+  "prompt": "A Windows-hosted production runtime is returning sporadic 429 responses from a remote provider. Summarize the first operator triage steps.",
+  "notifyLines": [],
+  "newRequests": []
+}
+
+===== /role-model requests =====
+Recent Role-Model requests (5) from http://127.0.0.1:3462:
+- req-de9784fd-9126-4ad1-9e8a-2ae8644e35ca | 2026-06-27T19:12:40.103Z | unclassified | deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | unknown
+- req-195dfc05-a9dd-456d-81a8-420cb5a78d9b | 2026-06-27T19:12:19.760Z | unclassified | deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | unknown
+- req-ff141654-c0ae-4072-b47a-447e2b253826 | 2026-06-27T19:11:53.998Z | unclassified | deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | unknown
+- req-d9b5dc49-19be-47c1-bff0-a069f6968f5c | 2026-06-27T19:11:33.124Z | unclassified | deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | unknown
+- req-8977c397-3405-4f98-a7d4-4823bfcbe4fd | 2026-06-27T19:11:15.199Z | unclassified | deepseek.personal.deepseek-api-key.global.deepseek-v4-pro | unknown
+
+===== /role-model explain latest =====
+Role-Model runtime explanation for req-de9784fd-9126-4ad1-9e8a-2ae8644e35ca:
+- endpoint: deepseek.personal.deepseek-api-key.global.deepseek-v4-pro
+- model: deepseek/deepseek-v4-pro
+- strategy: controller
+- taxonomy group: unknown
+- taxonomy role: coder
+- taxonomy task: unknown
+- latency ms: 292
+- avoided cost usd: $0.0132
+- observe request: /app/observe/requests/req-de9784fd-9126-4ad1-9e8a-2ae8644e35ca
+- runtime signals:
+- routing mode: controller
+- controller strategy: quality
+- controller task: data.schema.review
+- rewrite reason: requested-model-rewritten-for-selected-endpoint

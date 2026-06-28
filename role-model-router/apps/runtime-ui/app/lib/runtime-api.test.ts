@@ -13,6 +13,7 @@ import {
   fetchControllerAssignment,
   fetchDownstreamOpenAIProviderConfig,
   fetchLocalModels,
+  fetchModelTelemetryRollup,
   fetchRequestDetail,
   fetchRolePolicy,
   fetchRouterCandidates,
@@ -347,6 +348,27 @@ describe("fetchRequestDetail", () => {
             requestId: "req-001",
             clientRequestId: "req-client-001",
             endpointId: "openai.personal.primary.us-east-1.fast",
+            capturePolicy: {
+              redactionLevel: "strict",
+              retentionClass: "standard",
+              structuredInspectionAvailable: true,
+            },
+            privacyReceipt: {
+              samplingRate: 1,
+              retentionTtlHours: 720,
+              retainUntil: 1_700_100_000_000,
+            },
+            observationAvailability: {
+              source: "raw-observation",
+              rawObservationAvailable: true,
+            },
+            taxonomyDimensions: {
+              taxonomy_original_role_hint_id: "engineer",
+              taxonomy_group_id: "engineering",
+              taxonomy_role_id: "coder",
+              taxonomy_task_type: "coder.review",
+              taxonomy_capability_ids: ["tool-use", "traceability"],
+            },
           });
         case "/api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile":
           return jsonResponse({
@@ -364,12 +386,216 @@ describe("fetchRequestDetail", () => {
         requestId: "req-001",
         clientRequestId: "req-client-001",
         endpointId: "openai.personal.primary.us-east-1.fast",
+        capturePolicy: {
+          redactionLevel: "strict",
+          retentionClass: "standard",
+          structuredInspectionAvailable: true,
+        },
+        privacyReceipt: {
+          samplingRate: 1,
+          retentionTtlHours: 720,
+          retainUntil: 1_700_100_000_000,
+        },
+        observationAvailability: {
+          source: "raw-observation",
+          rawObservationAvailable: true,
+        },
+        taxonomyDimensions: {
+          taxonomy_original_role_hint_id: "engineer",
+          taxonomy_group_id: "engineering",
+          taxonomy_role_id: "coder",
+          taxonomy_task_type: "coder.review",
+          taxonomy_capability_ids: ["tool-use", "traceability"],
+        },
       },
       endpointProfile: {
         endpointId: "openai.personal.primary.us-east-1.fast",
         latestProfile: { endpoint_id: "openai.personal.primary.us-east-1.fast" },
         recentSamples: [],
       },
+    });
+  });
+});
+
+describe("fetchModelTelemetryRollup", () => {
+  test("aggregates richer taxonomy rollups for model detail telemetry", async () => {
+    const fetcher = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+      expect(init?.method).toBe("POST");
+      const payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+
+      if (payload.breakdown === "taxonomyTaskType") {
+        return jsonResponse({
+          startAtMs: 1_700_000_000_000,
+          endAtMs: 1_700_604_800_000,
+          granularity: "day",
+          metrics: ["requestCount", "successCount", "averageLatencyMs"],
+          breakdown: "taxonomyTaskType",
+          buckets: [
+            {
+              startAtMs: 1_700_000_000_000,
+              endAtMs: 1_700_086_400_000,
+              totals: {
+                requestCount: 3,
+                successCount: 2,
+                averageLatencyMs: 450,
+              },
+              series: [
+                {
+                  key: "coder.review",
+                  label: "coder.review",
+                  metrics: {
+                    requestCount: 2,
+                    successCount: 2,
+                    averageLatencyMs: 320,
+                  },
+                },
+                {
+                  key: "coder.debug",
+                  label: "coder.debug",
+                  metrics: {
+                    requestCount: 1,
+                    successCount: 0,
+                    averageLatencyMs: 710,
+                  },
+                },
+              ],
+            },
+            {
+              startAtMs: 1_700_086_400_000,
+              endAtMs: 1_700_172_800_000,
+              totals: {
+                requestCount: 2,
+                successCount: 1,
+                averageLatencyMs: 510,
+              },
+              series: [
+                {
+                  key: "coder.review",
+                  label: "coder.review",
+                  metrics: {
+                    requestCount: 1,
+                    successCount: 0,
+                    averageLatencyMs: 480,
+                  },
+                },
+                {
+                  key: "coder.plan",
+                  label: "coder.plan",
+                  metrics: {
+                    requestCount: 1,
+                    successCount: 1,
+                    averageLatencyMs: 540,
+                  },
+                },
+              ],
+            },
+          ],
+          totals: {
+            requestCount: 5,
+            successCount: 3,
+            averageLatencyMs: 474,
+          },
+          ranking: null,
+          labels: {},
+        });
+      }
+
+      if ((payload.ranking as { dimension?: string } | null)?.dimension === "taxonomyGroupId") {
+        return jsonResponse({
+          startAtMs: 1_700_000_000_000,
+          endAtMs: 1_700_604_800_000,
+          granularity: "day",
+          metrics: ["requestCount"],
+          breakdown: null,
+          buckets: [],
+          totals: { requestCount: 5 },
+          ranking: {
+            dimension: "taxonomyGroupId",
+            metric: "requestCount",
+            rows: [{ key: "engineering", label: "Engineering", value: 5 }],
+          },
+          labels: {},
+        });
+      }
+
+      if ((payload.ranking as { dimension?: string } | null)?.dimension === "taxonomyRoleId") {
+        return jsonResponse({
+          startAtMs: 1_700_000_000_000,
+          endAtMs: 1_700_604_800_000,
+          granularity: "day",
+          metrics: ["requestCount"],
+          breakdown: null,
+          buckets: [],
+          totals: { requestCount: 5 },
+          ranking: {
+            dimension: "taxonomyRoleId",
+            metric: "requestCount",
+            rows: [{ key: "coder", label: "Coder", value: 5 }],
+          },
+          labels: {},
+        });
+      }
+
+      if (
+        (payload.ranking as { dimension?: string } | null)?.dimension === "taxonomyCapabilityId"
+      ) {
+        return jsonResponse({
+          startAtMs: 1_700_000_000_000,
+          endAtMs: 1_700_604_800_000,
+          granularity: "day",
+          metrics: ["requestCount"],
+          breakdown: null,
+          buckets: [],
+          totals: { requestCount: 5 },
+          ranking: {
+            dimension: "taxonomyCapabilityId",
+            metric: "requestCount",
+            rows: [
+              { key: "tool-use", label: "Tool use", value: 4 },
+              { key: "traceability", label: "Traceability", value: 3 },
+            ],
+          },
+          labels: {},
+        });
+      }
+
+      throw new Error(`Unexpected telemetry rollup payload: ${JSON.stringify(payload)}`);
+    });
+
+    await expect(fetchModelTelemetryRollup("openai/gpt-5.4", fetcher)).resolves.toEqual({
+      groups: [{ groupId: "engineering", requestCount: 5 }],
+      roles: [{ roleId: "coder", requestCount: 5 }],
+      capabilities: [
+        { capabilityId: "tool-use", requestCount: 4 },
+        { capabilityId: "traceability", requestCount: 3 },
+      ],
+      tasks: [
+        {
+          taskType: "coder.review",
+          requestCount: 3,
+          successRate: 2 / 3,
+          avgLatencyMs: 373,
+        },
+        {
+          taskType: "coder.plan",
+          requestCount: 1,
+          successRate: 1,
+          avgLatencyMs: 540,
+        },
+        {
+          taskType: "coder.debug",
+          requestCount: 1,
+          successRate: 0,
+          avgLatencyMs: 710,
+        },
+      ],
+      strengths: ["Strong recent success for coder.plan (1 req, 100% success)."],
+      warnings: [
+        "Watch coder.debug (1 req, 0% success).",
+        "Watch coder.review (3 req, 67% success).",
+      ],
+      totalRequests: 5,
+      windowDays: 7,
     });
   });
 });
@@ -801,6 +1027,39 @@ describe("telemetry APIs", () => {
         sourceType: "local",
       },
     ]);
+  });
+
+  test("serializes taxonomy telemetry request filters into the request query string", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      expect(url).toContain("/api/role-model/telemetry/requests?");
+      expect(url).toContain("taxonomyGroupIds=engineering");
+      expect(url).toContain("taxonomyRoleIds=coder");
+      expect(url).toContain("taxonomyTaskTypes=coder.review");
+      expect(url).toContain("taxonomyTaskVariants=deep-audit");
+      expect(url).toContain("taxonomyCapabilityIds=tool-use%2Ctraceability");
+      expect(url).toContain("taxonomyModalityIds=text");
+      expect(url).toContain("taxonomyToolClassIds=github");
+      return jsonResponse([]);
+    });
+
+    await expect(
+      fetchTelemetryRequests(
+        {
+          filters: {
+            taxonomyGroupIds: ["engineering"],
+            taxonomyRoleIds: ["coder"],
+            taxonomyTaskTypes: ["coder.review"],
+            taxonomyTaskVariants: ["deep-audit"],
+            taxonomyCapabilityIds: ["tool-use", "traceability"],
+            taxonomyModalityIds: ["text"],
+            taxonomyToolClassIds: ["github"],
+          },
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual([]);
   });
 
   test("posts the generic telemetry analytics query payload", async () => {

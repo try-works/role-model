@@ -1,3 +1,4 @@
+import { canonicalTaxonomy } from "./taxonomy/index.js";
 import type {
   CandidateExclusion,
   EndpointCandidate,
@@ -177,6 +178,15 @@ function getEffectivePreferredCapabilities(input: RouteRequestInput): string[] {
     ...(requestedRole?.preferred_capabilities ?? []),
     ...(requestedTask?.preferred_capabilities ?? []),
   ]);
+}
+
+function resolveBenchmarkGroupIdsForRequest(input: RouteRequestInput): string[] {
+  const requestedRoleId = input.request.requestedRoleId ?? input.request.roleModelIntent?.role?.id;
+  if (!requestedRoleId) {
+    return [];
+  }
+  const role = canonicalTaxonomy.roles.find((entry) => entry.id === requestedRoleId);
+  return role ? [role.primaryGroupId, ...role.secondaryGroupIds] : [];
 }
 
 function toPolicyStrategy(
@@ -433,6 +443,97 @@ export function getQualityMetric(
   candidate: EndpointCandidate,
   input: RouteRequestInput,
 ): MetricEntry {
+  // Benchmark quality is the primary advisory quality signal after hard eligibility
+  // so task/role/group taxonomy evidence can influence live routing decisions.
+  const benchmarkScore = candidate.benchmarkCapability?.overallScore;
+  const taskType = input.request.taskType;
+  const taskScore = candidate.benchmarkCapability?.taskScores?.[taskType];
+  const requestedRoleId = input.request.requestedRoleId ?? input.request.roleModelIntent?.role?.id;
+  const roleScore = requestedRoleId
+    ? candidate.benchmarkCapability?.eligibleRoleScores?.[requestedRoleId]
+    : undefined;
+  const benchmarkGroupIds = resolveBenchmarkGroupIdsForRequest(input);
+  const groupScoreCandidates = benchmarkGroupIds
+    .map((groupId) => candidate.benchmarkCapability?.groupScores?.[groupId])
+    .filter((score): score is number => typeof score === "number");
+  const groupScore =
+    groupScoreCandidates.length > 0 ? Math.max(...groupScoreCandidates) : undefined;
+  const lowCoverageRoleIds = new Set(
+    candidate.benchmarkCapability?.coverage?.lowCoverageRoleIds ?? [],
+  );
+  const lowCoverageGroupIds = new Set(
+    candidate.benchmarkCapability?.coverage?.lowCoverageGroupIds ?? [],
+  );
+  const roleScoreLowCoverage = requestedRoleId ? lowCoverageRoleIds.has(requestedRoleId) : false;
+  const groupScoreLowCoverage = benchmarkGroupIds.some((groupId) =>
+    lowCoverageGroupIds.has(groupId),
+  );
+
+  if (typeof benchmarkScore === "number") {
+    const freshness = resolveQualityFreshness(input, candidate);
+    const freshnessWeight = freshness.freshnessWeight;
+    const config = input.observedDataConfig;
+    const blendWeight = config?.benchmarkTaskBlendWeight ?? 0.7;
+    let benchmarkReferenceScore = benchmarkScore;
+    let benchmarkReason: "task" | "role" | "group" | "overall" = "overall";
+    if (typeof taskScore === "number") {
+      benchmarkReferenceScore = blendWeight * benchmarkScore + (1 - blendWeight) * taskScore;
+      benchmarkReason = "task";
+    } else if (typeof roleScore === "number" && !roleScoreLowCoverage) {
+      benchmarkReferenceScore = roleScore;
+      benchmarkReason = "role";
+    } else if (typeof groupScore === "number" && !groupScoreLowCoverage) {
+      benchmarkReferenceScore = groupScore;
+      benchmarkReason = "group";
+    }
+
+    let value = config?.enabled
+      ? decayToNeutral(benchmarkReferenceScore, FRESHNESS_NEUTRAL, freshnessWeight)
+      : benchmarkReferenceScore;
+    const raw: Record<string, unknown> = {
+      benchmark_quality_score: benchmarkScore,
+      ...(typeof taskScore === "number" ? { benchmark_task_score: taskScore } : {}),
+      ...(typeof roleScore === "number" ? { benchmark_role_score: roleScore } : {}),
+      ...(typeof groupScore === "number" ? { benchmark_group_score: groupScore } : {}),
+      ...(benchmarkGroupIds.length > 0 ? { benchmark_group_ids: benchmarkGroupIds } : {}),
+      benchmark_reason: benchmarkReason,
+      benchmark_source: "routing-capability-benchmark",
+      freshness_weight: freshnessWeight,
+      neutral_value: FRESHNESS_NEUTRAL,
+    };
+    if (roleScoreLowCoverage) {
+      raw.benchmark_role_score_low_coverage = true;
+      raw.benchmark_role_case_count =
+        requestedRoleId !== undefined
+          ? (candidate.benchmarkCapability?.coverage?.roleCases?.[requestedRoleId] ?? null)
+          : null;
+    }
+    if (groupScoreLowCoverage) {
+      raw.benchmark_group_score_low_coverage = true;
+    }
+
+    // Telemetry-derived advisory adjustment.
+    // Threshold and penalty are configurable via observedDataConfig (defaults: 0.20, -0.05).
+    const telemetrySuccessRate = candidate.telemetryScores?.taskSuccessRates?.[taskType];
+    if (typeof telemetrySuccessRate === "number") {
+      const failureThreshold = config?.telemetryAdvisoryFailureThreshold ?? 0.2;
+      const advisoryAdjustment = config?.telemetryAdvisoryPenalty ?? -0.05;
+      if (1 - telemetrySuccessRate > failureThreshold) {
+        value = Math.max(0, value + advisoryAdjustment);
+        raw.telemetry_advisory_applied = true;
+        raw.telemetry_success_rate = telemetrySuccessRate;
+        raw.telemetry_advisory_adjustment = advisoryAdjustment;
+        raw.telemetry_effective_value = value;
+      }
+    }
+
+    return {
+      value,
+      source: "benchmark" as const,
+      raw: { ...raw, effective_value: raw.effective_value ?? value },
+    };
+  }
+
   if (typeof candidate.observed?.judge_score === "number") {
     const freshness = resolveQualityFreshness(input, candidate);
     const freshnessWeight = freshness.freshnessWeight;
@@ -472,55 +573,6 @@ export function getQualityMetric(
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
       },
-    };
-  }
-
-  // Benchmark-derived quality (from benchmarkCapability.overallScore)
-  const benchmarkScore = candidate.benchmarkCapability?.overallScore;
-  const taskType = input.request.taskType;
-  const taskScore = candidate.benchmarkCapability?.taskScores?.[taskType];
-
-  if (typeof benchmarkScore === "number") {
-    const freshness = resolveQualityFreshness(input, candidate);
-    const freshnessWeight = freshness.freshnessWeight;
-    // Blend overall benchmark quality with task-specific score if available.
-    // Blend weight is configurable via observedDataConfig.benchmarkTaskBlendWeight (default 0.7).
-    const config = input.observedDataConfig;
-    const blendWeight = config?.benchmarkTaskBlendWeight ?? 0.7;
-    const blendedScore =
-      typeof taskScore === "number"
-        ? blendWeight * benchmarkScore + (1 - blendWeight) * taskScore
-        : benchmarkScore;
-    let value = config?.enabled
-      ? decayToNeutral(blendedScore, FRESHNESS_NEUTRAL, freshnessWeight)
-      : blendedScore;
-    const raw: Record<string, unknown> = {
-      benchmark_quality_score: benchmarkScore,
-      ...(typeof taskScore === "number" ? { benchmark_task_score: taskScore } : {}),
-      benchmark_source: "routing-capability-benchmark",
-      freshness_weight: freshnessWeight,
-      neutral_value: FRESHNESS_NEUTRAL,
-    };
-
-    // Telemetry-derived advisory adjustment.
-    // Threshold and penalty are configurable via observedDataConfig (defaults: 0.20, -0.05).
-    const telemetrySuccessRate = candidate.telemetryScores?.taskSuccessRates?.[taskType];
-    if (typeof telemetrySuccessRate === "number") {
-      const failureThreshold = config?.telemetryAdvisoryFailureThreshold ?? 0.2;
-      const advisoryAdjustment = config?.telemetryAdvisoryPenalty ?? -0.05;
-      if (1 - telemetrySuccessRate > failureThreshold) {
-        value = Math.max(0, value + advisoryAdjustment);
-        raw.telemetry_advisory_applied = true;
-        raw.telemetry_success_rate = telemetrySuccessRate;
-        raw.telemetry_advisory_adjustment = advisoryAdjustment;
-        raw.telemetry_effective_value = value;
-      }
-    }
-
-    return {
-      value,
-      source: "benchmark" as const,
-      raw: { ...raw, effective_value: raw.effective_value ?? value },
     };
   }
 
@@ -1182,6 +1234,30 @@ function scoreCandidate(
   }
   if (hasDefaultMetric) {
     selectionReasons.push("DEFAULT_PROFILE_USED");
+  }
+  if (metricScores.quality.source === "benchmark") {
+    const qualityRaw = metricScores.quality.raw ?? {};
+    const benchmarkReason = qualityRaw.benchmark_reason;
+    if (benchmarkReason === "task") {
+      selectionReasons.push("BENCHMARK_TASK_SCORE");
+    } else if (benchmarkReason === "role") {
+      selectionReasons.push("BENCHMARK_ROLE_SCORE");
+    } else if (benchmarkReason === "group") {
+      selectionReasons.push("BENCHMARK_GROUP_SCORE");
+    } else if (benchmarkReason === "overall") {
+      selectionReasons.push("BENCHMARK_FALLBACK_OVERALL_SCORE");
+    } else if (typeof qualityRaw.benchmark_task_score === "number") {
+      selectionReasons.push("BENCHMARK_TASK_SCORE");
+    } else if (typeof qualityRaw.benchmark_role_score === "number") {
+      selectionReasons.push("BENCHMARK_ROLE_SCORE");
+    } else if (typeof qualityRaw.benchmark_group_score === "number") {
+      selectionReasons.push("BENCHMARK_GROUP_SCORE");
+    } else if (typeof qualityRaw.benchmark_quality_score === "number") {
+      selectionReasons.push("BENCHMARK_FALLBACK_OVERALL_SCORE");
+    }
+    if (qualityRaw.telemetry_advisory_applied === true) {
+      selectionReasons.push("TELEMETRY_TASK_PERFORMANCE");
+    }
   }
 
   if (policySnapshot.compute_preference === "local" && isLocalCandidate(candidate)) {

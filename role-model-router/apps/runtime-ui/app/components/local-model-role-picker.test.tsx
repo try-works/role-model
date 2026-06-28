@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
 
-import type { RuntimeRolePolicy } from "../lib/runtime-api";
+import type { BenchmarkCapability, RuntimeRolePolicy } from "../lib/runtime-api";
 import { LocalModelRolePicker, getLocalModelRolePickerState } from "./local-model-role-picker";
 
 const rolePolicy = {
@@ -63,6 +63,26 @@ const rolePolicy = {
   taskDefinitions: [],
 } satisfies RuntimeRolePolicy;
 
+const benchmarkCapabilityFixture = {
+  overallScore: 0.91,
+  benchmarkSamples: 4,
+  sampleCount: 4,
+  measuredAtMs: null,
+  freshnessScore: null,
+  lastRunId: null,
+  lastRunCompletedAtMs: null,
+  judgeEndpointId: null,
+  eligibleRoleScores: { coder: 0.91 },
+  roleScores: { coder: 0.91, security: 0.88 },
+  coverage: {
+    overallCases: 4,
+    roleCases: { coder: 3, security: 1 },
+    groupCases: { engineering: 4 },
+    lowCoverageRoleIds: ["security"],
+    lowCoverageGroupIds: [],
+  },
+} satisfies BenchmarkCapability;
+
 describe("LocalModelRolePicker", () => {
   test("shows grouped roles with an all-roles default checkbox", () => {
     const markup = renderToStaticMarkup(
@@ -80,6 +100,25 @@ describe("LocalModelRolePicker", () => {
     expect(markup).toContain("High risk");
     expect(markup).toContain("Governance Safety");
     expect(markup).toContain("Writer");
+  });
+
+  test("shows benchmark-backed assignment evidence without auto-selecting unassigned roles", () => {
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <LocalModelRolePicker
+          rolePolicy={rolePolicy}
+          selectedRoleIds={["coder"]}
+          onChange={() => {}}
+          defaultAllRoles={false}
+          benchmarkCapability={benchmarkCapabilityFixture}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(markup).toContain("Benchmarked 91%");
+    expect(markup).toContain("Unassigned evidence 88%");
+    expect(markup).toContain("Low coverage");
+    expect(markup).not.toContain('value="security" checked=""');
   });
 
   test("derives explicit role assignment states without treating empty as all", () => {

@@ -34,10 +34,14 @@ Then use these Pi commands:
 /role-model alias use <alias>
 /role-model alias choose <alias>
 /role-model alias refresh
+/role-model requests
+/role-model explain latest
 ```
 
 The package registers a Pi provider named `role-model` from Role-Model's downstream OpenAI discovery endpoint at `/api/role-model/downstream/openai`.
 
 `/role-model alias use <alias>` stores the selected alias and asks Pi to make the corresponding `role-model/<alias>` model active when Pi exposes active model selection in the command context. If Pi rejects the model switch, the command reports that the active model was not changed.
+
+`/role-model requests` and `/role-model explain latest` read runtime-owned request diagnostics from `/api/role-model/requests`, `/api/role-model/requests/:requestId`, and `/api/role-model/router/decisions/:requestId`. They surface the runtime's own request, routing, benchmark, and telemetry evidence when available; the Pi package does not invent or score routing reasons locally.
 
 This package does not install, start, stop, or update the Role-Model runtime. It also does not copy or sync Pi provider credentials. Start Role-Model outside Pi, then run `/role-model setup`.

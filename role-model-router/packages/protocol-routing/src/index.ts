@@ -41,6 +41,10 @@ export interface ProjectRuntimeRouteInputInput {
   roleBindings: readonly RoleBindingRecord[];
   routingModel?: RoutingModelSelection;
   maxOutputTokens?: number;
+  benchmarkCapabilitiesByEndpointId?: Record<
+    string,
+    CoreEndpointCandidate["benchmarkCapability"] | null | undefined
+  >;
 }
 
 export interface ProjectRuntimeRouteInputResult {
@@ -133,6 +137,12 @@ function toCoreCandidate(
     identity: candidate.identity,
     declared: candidate.declared,
     observed,
+    ...(input.benchmarkCapabilitiesByEndpointId?.[candidate.identity.endpoint_id]
+      ? {
+          benchmarkCapability:
+            input.benchmarkCapabilitiesByEndpointId[candidate.identity.endpoint_id] ?? undefined,
+        }
+      : {}),
     status: candidate.status,
     deniedByPolicy: candidate.deniedByPolicy,
     runtimeEligibility: candidate.runtimeEligibility,

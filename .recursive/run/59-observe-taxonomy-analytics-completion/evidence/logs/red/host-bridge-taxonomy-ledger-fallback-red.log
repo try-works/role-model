@@ -1,0 +1,10 @@
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/index.test.ts --testNamePattern "aggregates generic telemetry analytics from persisted request-time routing and cost facts"
+Timestamp: 2026-06-28T14:17Z
+Expected: taxonomy analytics should still resolve taxonomyTaskType from persisted telemetry after the raw runtime_observations row is deleted.
+Observed failure: queryTelemetryAnalytics returned breakdown taxonomyTaskType with an empty series array and dimensionSupport.taxonomyTaskType status "unsupported" because the analytics path reparsed runtime_observations instead of using persisted ledger facts.
+Additional diagnosis:
+- direct analytics POST latency before fix: ~3330 ms without breakdown, ~1809 ms with taxonomyCapabilityId breakdown
+- runtime_observations count: 633
+- average observation_json size: ~315267 bytes
+- max observation_json size: ~4695425 bytes
+Root cause: Observe pages fan out many analytics calls; each call reparsed large observation_json payloads for richer taxonomy instead of reading narrow ledger columns.

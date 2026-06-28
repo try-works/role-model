@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
+import { LocalModelRolePicker } from "../components/local-model-role-picker";
 import {
   CodeBlock,
   DisclosureSection,
@@ -234,21 +235,6 @@ export default function ControlModelsRoute() {
     );
   }, [allRuntimeRoleIds, selectedCard, selectedModelAccounts]);
 
-  const toggleAccountRole = (providerAccountId: string, roleId: string) => {
-    setDraftRolesByAccountId((current) => {
-      const next = new Set(current[providerAccountId] ?? []);
-      if (next.has(roleId)) {
-        next.delete(roleId);
-      } else {
-        next.add(roleId);
-      }
-      return {
-        ...current,
-        [providerAccountId]: [...next].sort((left, right) => left.localeCompare(right, "en")),
-      };
-    });
-  };
-
   const saveAccountRoles = async (account: RuntimeAccount) => {
     if (!selectedCard) {
       return;
@@ -290,16 +276,63 @@ export default function ControlModelsRoute() {
   const activeModelCount = cards.filter((card) => card.status === "active").length;
 
   const capabilityByModelId = new Map<string, number>();
+  const benchmarkCapabilityByModelId = new Map<
+    string,
+    NonNullable<RouterCandidate["benchmarkCapability"]>
+  >();
   for (const candidate of candidates) {
-    const score = candidate.benchmarkCapability?.overallScore;
+    const benchmarkCapability = candidate.benchmarkCapability;
+    const score = benchmarkCapability?.overallScore;
     if (typeof score !== "number") {
       continue;
     }
     const current = capabilityByModelId.get(candidate.modelId);
     if (current === undefined || score > current) {
       capabilityByModelId.set(candidate.modelId, score);
+      if (benchmarkCapability) {
+        benchmarkCapabilityByModelId.set(candidate.modelId, benchmarkCapability);
+      }
     }
   }
+
+  const selectedBenchmarkCapability = selectedCard
+    ? (benchmarkCapabilityByModelId.get(selectedCard.modelId) ?? null)
+    : null;
+  const benchmarkAssignedRoleRows = (rolePolicy?.roleDefinitions ?? [])
+    .filter(
+      (role) =>
+        selectedCard?.roleIds.includes(role.role_id) &&
+        typeof selectedBenchmarkCapability?.eligibleRoleScores?.[role.role_id] === "number",
+    )
+    .map((role) => ({
+      roleId: role.role_id,
+      label: role.name,
+      score: selectedBenchmarkCapability?.eligibleRoleScores?.[role.role_id] ?? 0,
+    }));
+  const benchmarkSuggestedRoleRows = (rolePolicy?.roleDefinitions ?? [])
+    .filter(
+      (role) =>
+        !selectedCard?.roleIds.includes(role.role_id) &&
+        typeof selectedBenchmarkCapability?.roleScores?.[role.role_id] === "number",
+    )
+    .map((role) => ({
+      roleId: role.role_id,
+      label: role.name,
+      score: selectedBenchmarkCapability?.roleScores?.[role.role_id] ?? 0,
+      lowCoverage: (selectedBenchmarkCapability?.coverage?.lowCoverageRoleIds ?? []).includes(
+        role.role_id,
+      ),
+    }))
+    .sort((left, right) => right.score - left.score);
+  const benchmarkGroupRows = Object.entries(selectedBenchmarkCapability?.groupScores ?? {})
+    .map(([groupId, score]) => ({
+      groupId,
+      score,
+      lowCoverage: (selectedBenchmarkCapability?.coverage?.lowCoverageGroupIds ?? []).includes(
+        groupId,
+      ),
+    }))
+    .sort((left, right) => right.score - left.score);
 
   return (
     <>
@@ -500,6 +533,80 @@ export default function ControlModelsRoute() {
               </div>
 
               <div className={`${mutedPanelClassName} p-4`}>
+                <p className="font-semibold text-[var(--rm-fg)]">Benchmark role fit (advisory)</p>
+                <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                  Benchmark evidence can recommend strong roles and groups for this model, but it
+                  does not change runtime eligibility or save role assignments automatically.
+                </p>
+                {selectedBenchmarkCapability ? (
+                  <div className="mt-4 space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                        Assigned role evidence
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {benchmarkAssignedRoleRows.length > 0 ? (
+                          benchmarkAssignedRoleRows.map((role) => (
+                            <StatusPill key={role.roleId} tone="success">
+                              {role.label} • {Math.round(role.score * 100)}%
+                            </StatusPill>
+                          ))
+                        ) : (
+                          <StatusPill tone="warning">
+                            No assigned-role benchmark evidence yet
+                          </StatusPill>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                        Unassigned recommendations
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {benchmarkSuggestedRoleRows.length > 0 ? (
+                          benchmarkSuggestedRoleRows.map((role) => (
+                            <StatusPill
+                              key={role.roleId}
+                              tone={role.lowCoverage ? "warning" : "neutral"}
+                            >
+                              {role.label} • {Math.round(role.score * 100)}%
+                              {role.lowCoverage ? " • low coverage" : ""}
+                            </StatusPill>
+                          ))
+                        ) : (
+                          <StatusPill tone="neutral">No unassigned benchmark evidence</StatusPill>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
+                        Group evidence
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {benchmarkGroupRows.length > 0 ? (
+                          benchmarkGroupRows.map((group) => (
+                            <StatusPill
+                              key={group.groupId}
+                              tone={group.lowCoverage ? "warning" : "neutral"}
+                            >
+                              {group.groupId} • {Math.round(group.score * 100)}%
+                              {group.lowCoverage ? " • low coverage" : ""}
+                            </StatusPill>
+                          ))
+                        ) : (
+                          <StatusPill tone="neutral">No group benchmark evidence</StatusPill>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-[var(--rm-secondary)]">
+                    No routing benchmark evidence is available for this model yet.
+                  </p>
+                )}
+              </div>
+
+              <div className={`${mutedPanelClassName} p-4`}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-[var(--rm-fg)]">
@@ -540,46 +647,19 @@ export default function ControlModelsRoute() {
                             {account.healthStatus ?? "unknown"}
                           </StatusPill>
                         </div>
-                        <label className="mt-4 flex items-center gap-2 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-fg)]">
-                          <input
-                            checked={
-                              allRuntimeRoleIds.length > 0 &&
-                              allRuntimeRoleIds.every((roleId) =>
-                                (draftRolesByAccountId[account.providerAccountId] ?? []).includes(
-                                  roleId,
-                                ),
-                              )
-                            }
-                            type="checkbox"
-                            disabled={allRuntimeRoleIds.length === 0}
-                            onChange={(event) => {
-                              const checked = event.currentTarget.checked;
+                        <div className="mt-4">
+                          <LocalModelRolePicker
+                            rolePolicy={rolePolicy}
+                            selectedRoleIds={draftRolesByAccountId[account.providerAccountId] ?? []}
+                            defaultAllRoles={allRuntimeRoleIds.length > 0}
+                            benchmarkCapability={selectedBenchmarkCapability}
+                            onChange={(roleIds) =>
                               setDraftRolesByAccountId((current) => ({
                                 ...current,
-                                [account.providerAccountId]: checked ? [...allRuntimeRoleIds] : [],
-                              }));
-                            }}
+                                [account.providerAccountId]: [...roleIds],
+                              }))
+                            }
                           />
-                          <span className="font-semibold">All roles</span>
-                        </label>
-                        <div className="mt-4 flex flex-wrap gap-3">
-                          {(rolePolicy?.roleDefinitions ?? []).map((role) => (
-                            <label
-                              key={`${account.providerAccountId}:${role.role_id}`}
-                              className="flex items-center gap-2 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
-                            >
-                              <input
-                                checked={(
-                                  draftRolesByAccountId[account.providerAccountId] ?? []
-                                ).includes(role.role_id)}
-                                type="checkbox"
-                                onChange={() =>
-                                  toggleAccountRole(account.providerAccountId, role.role_id)
-                                }
-                              />
-                              <span>{role.name}</span>
-                            </label>
-                          ))}
                         </div>
                         <div className="mt-4 flex flex-wrap gap-3">
                           <button
@@ -660,14 +740,58 @@ export default function ControlModelsRoute() {
                 </div>
               </DisclosureSection>
 
-              <DisclosureSection summary="Telemetry rollup (advisory)">
-                {telemetryRollup && telemetryRollup.tasks.length > 0 ? (
+              <DisclosureSection summary="Telemetry taxonomy rollup (advisory)">
+                {telemetryRollup && telemetryRollup.totalRequests > 0 ? (
                   <div className="space-y-3 text-sm">
                     <p className="text-xs text-[var(--rm-muted)]">
                       Based on {telemetryRollup.totalRequests} request
                       {telemetryRollup.totalRequests === 1 ? "" : "s"} over the last{" "}
                       {telemetryRollup.windowDays} days.
                     </p>
+                    <div className="grid gap-4 xl:grid-cols-3">
+                      <div className="space-y-2">
+                        <p className="font-semibold text-[var(--rm-fg)]">Recent groups</p>
+                        <div className="flex flex-wrap gap-2">
+                          {telemetryRollup.groups.length > 0 ? (
+                            telemetryRollup.groups.map((group) => (
+                              <StatusPill key={group.groupId} tone="neutral">
+                                {group.groupId} • {group.requestCount}
+                              </StatusPill>
+                            ))
+                          ) : (
+                            <StatusPill tone="warning">No recent groups</StatusPill>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="font-semibold text-[var(--rm-fg)]">Recent roles</p>
+                        <div className="flex flex-wrap gap-2">
+                          {telemetryRollup.roles.length > 0 ? (
+                            telemetryRollup.roles.map((role) => (
+                              <StatusPill key={role.roleId} tone="neutral">
+                                {role.roleId} • {role.requestCount}
+                              </StatusPill>
+                            ))
+                          ) : (
+                            <StatusPill tone="warning">No recent roles</StatusPill>
+                          )}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="font-semibold text-[var(--rm-fg)]">Recent capabilities</p>
+                        <div className="flex flex-wrap gap-2">
+                          {telemetryRollup.capabilities.length > 0 ? (
+                            telemetryRollup.capabilities.map((capability) => (
+                              <StatusPill key={capability.capabilityId} tone="neutral">
+                                {capability.capabilityId} • {capability.requestCount}
+                              </StatusPill>
+                            ))
+                          ) : (
+                            <StatusPill tone="warning">No recent capabilities</StatusPill>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       {telemetryRollup.tasks.map((task) => (
                         <div
@@ -697,11 +821,41 @@ export default function ControlModelsRoute() {
                         </div>
                       ))}
                     </div>
+                    <div className="grid gap-4 xl:grid-cols-2">
+                      <div className="space-y-2">
+                        <p className="font-semibold text-[var(--rm-fg)]">Observed strengths</p>
+                        {telemetryRollup.strengths.length > 0 ? (
+                          telemetryRollup.strengths.map((strength) => (
+                            <p key={strength} className="text-[var(--rm-secondary)]">
+                              {strength}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-[var(--rm-secondary)]">
+                            No high-confidence strengths have emerged from recent telemetry yet.
+                          </p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <p className="font-semibold text-[var(--rm-fg)]">Observed warnings</p>
+                        {telemetryRollup.warnings.length > 0 ? (
+                          telemetryRollup.warnings.map((warning) => (
+                            <p key={warning} className="text-[var(--rm-secondary)]">
+                              {warning}
+                            </p>
+                          ))
+                        ) : (
+                          <p className="text-[var(--rm-secondary)]">
+                            No warning-level patterns are visible in the recent telemetry slice.
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <p className="text-sm text-[var(--rm-secondary)]">
-                    No telemetry data available yet for this model. Send requests to populate
-                    per-task performance and advisory warnings.
+                    No taxonomy-tagged telemetry data available yet for this model. Send requests to
+                    populate taxonomy rollups, per-task performance, and advisory warnings.
                   </p>
                 )}
               </DisclosureSection>

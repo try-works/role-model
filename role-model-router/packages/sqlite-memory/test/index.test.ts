@@ -2107,13 +2107,21 @@ describe("initializeSqliteMemory", () => {
     }>;
     const persistedRow = database
       .prepare(
-        "SELECT effective_cost_usd, cost_calculation_basis, cost_calculation_version FROM runtime_telemetry_records WHERE request_id = ?",
+        "SELECT effective_cost_usd, cost_calculation_basis, cost_calculation_version, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available FROM runtime_telemetry_records WHERE request_id = ?",
       )
       .get("req-failure-cost-001") as
       | {
           effective_cost_usd: number;
           cost_calculation_basis: string;
           cost_calculation_version: string;
+          sampling_rate: number | null;
+          retention_ttl_hours: number | null;
+          retain_until_ms: number | null;
+          redaction_level: string | null;
+          retention_class: string | null;
+          structured_inspection_mode: string | null;
+          raw_capture_available: number;
+          structured_inspection_available: number;
         }
       | undefined;
     database.close();
@@ -2123,12 +2131,106 @@ describe("initializeSqliteMemory", () => {
         "effective_cost_usd",
         "cost_calculation_basis",
         "cost_calculation_version",
+        "sampling_rate",
+        "retention_ttl_hours",
+        "retain_until_ms",
+        "redaction_level",
+        "retention_class",
+        "structured_inspection_mode",
+        "raw_capture_available",
+        "structured_inspection_available",
       ]),
     );
     expect(persistedRow).toEqual({
       effective_cost_usd: 0,
       cost_calculation_basis: "no_execution_zero",
       cost_calculation_version: "run49.v1",
+      sampling_rate: null,
+      retention_ttl_hours: null,
+      retain_until_ms: null,
+      redaction_level: null,
+      retention_class: null,
+      structured_inspection_mode: null,
+      raw_capture_available: 0,
+      structured_inspection_available: 0,
+    });
+  });
+
+  test("persistRuntimeObservationBundle projects telemetry handling receipts into the telemetry ledger", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+      telemetryConfig: {
+        samplingRate: 0.25,
+        retentionTtlHours: 48,
+      },
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    const database = new DatabaseSync(validation.databasePath);
+    const persistedRow = database
+      .prepare(
+        "SELECT sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available FROM runtime_telemetry_records WHERE request_id = ?",
+      )
+      .get(validation.decision.request_id) as
+      | {
+          sampling_rate: number;
+          retention_ttl_hours: number;
+          retain_until_ms: number;
+          redaction_level: string;
+          retention_class: string;
+          structured_inspection_mode: string;
+          raw_capture_available: number;
+          structured_inspection_available: number;
+        }
+      | undefined;
+    database.close();
+
+    expect(persistedRow).toEqual({
+      sampling_rate: 0.25,
+      retention_ttl_hours: 48,
+      retain_until_ms: bundle.privacyReceipt.retainUntil,
+      redaction_level: "strict",
+      retention_class: "standard",
+      structured_inspection_mode: bundle.capturePolicy.structuredInspectionMode,
+      raw_capture_available: bundle.capturePolicy.rawCaptureAvailable ? 1 : 0,
+      structured_inspection_available: 1,
     });
   });
 
@@ -2842,6 +2944,179 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
       ).toMatchObject({
         recommendedMaxDifficulty: null,
       });
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+  });
+
+  test("waits through a transient sqlite lock when listing runtime telemetry records", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-telemetry-lock-read",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        validation.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(requireChildStdout(locker), "data");
+      expect(
+        sqliteMemory.listRuntimeTelemetryRecords({
+          databasePath: validation.databasePath,
+          windowMs: 60_000,
+          limit: 10,
+        }),
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            requestId: validation.decision.request_id,
+          }),
+        ]),
+      );
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+  });
+
+  test("waits through a transient sqlite lock when reading batched observation telemetry columns", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-observation-columns-lock-read",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        validation.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(requireChildStdout(locker), "data");
+      expect(
+        sqliteMemory.readObservationTelemetryColumnsBatch({
+          databasePath: validation.databasePath,
+          requestIds: [validation.decision.request_id],
+        }),
+      ).toEqual(
+        new Map([
+          [
+            validation.decision.request_id,
+            {
+              clientRequestId: null,
+              requestClass: "live_request",
+              taxonomyRoleId: null,
+              taxonomyTaskType: null,
+            },
+          ],
+        ]),
+      );
       await once(locker, "exit");
     } finally {
       if (!locker.killed) {

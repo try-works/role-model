@@ -1,0 +1,142 @@
+[
+  {
+    "requestId": "req-5777f1db-35f4-45f6-bf15-c94c900f86a7",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-5777f1db-35f4-45f6-bf15-c94c900f86a7",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782666646049
+  },
+  {
+    "requestId": "req-5b4ebcca-521a-41c5-a743-af09c0682ea8",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-5b4ebcca-521a-41c5-a743-af09c0682ea8",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782666594403
+  },
+  {
+    "requestId": "req-d807ad20-5c84-43ec-a889-477bcedfbd2b",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-d807ad20-5c84-43ec-a889-477bcedfbd2b",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782663276150
+  },
+  {
+    "requestId": "req-69352f62-2e2d-4388-afc1-c32ce52e7934",
+    "clientRequestId": "manual-proof-baseline-role-analyst-001",
+    "routingDecisionId": "decision-req-69352f62-2e2d-4388-afc1-c32ce52e7934",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782662848673
+  },
+  {
+    "requestId": "req-efa9741b-a8ff-4d73-acd7-47854799f0dd",
+    "clientRequestId": "manual-proof-baseline-role-004",
+    "routingDecisionId": "decision-req-efa9741b-a8ff-4d73-acd7-47854799f0dd",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782662630398
+  },
+  {
+    "requestId": "req-8cc605c4-e66c-4e9c-8f9c-69f16aa88a86",
+    "clientRequestId": "manual-proof-baseline-group-002",
+    "routingDecisionId": "decision-req-8cc605c4-e66c-4e9c-8f9c-69f16aa88a86",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782662507908
+  },
+  {
+    "requestId": "req-b18247be-315d-4be5-8805-b19c109b9ed8",
+    "clientRequestId": "manual-proof-baseline-task-003",
+    "routingDecisionId": "decision-req-b18247be-315d-4be5-8805-b19c109b9ed8",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782662500432
+  },
+  {
+    "requestId": "req-bb86b5f0-c5da-46ba-84ed-40785c4ca53d",
+    "clientRequestId": "manual-proof-baseline-role-002",
+    "routingDecisionId": "decision-req-bb86b5f0-c5da-46ba-84ed-40785c4ca53d",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782662498661
+  },
+  {
+    "requestId": "req-9582dc6c-a3c7-49a2-9cb7-2fefc2989598",
+    "clientRequestId": "manual-proof-baseline-task-002",
+    "routingDecisionId": "decision-req-9582dc6c-a3c7-49a2-9cb7-2fefc2989598",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782662404552
+  },
+  {
+    "requestId": "req-be9d84cb-c74e-4e2f-bb30-e3ccbba137a4",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-be9d84cb-c74e-4e2f-bb30-e3ccbba137a4",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782659561117
+  },
+  {
+    "requestId": "req-1eea37d9-b6bf-4965-8640-fe8e6b5df419",
+    "clientRequestId": "manual-proof-baseline-group-001",
+    "routingDecisionId": "decision-req-1eea37d9-b6bf-4965-8640-fe8e6b5df419",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782659391901
+  },
+  {
+    "requestId": "req-78fea2bb-ecd2-4fad-93e7-f02053c98689",
+    "clientRequestId": "manual-proof-baseline-role-001",
+    "routingDecisionId": "decision-req-78fea2bb-ecd2-4fad-93e7-f02053c98689",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782659391491
+  },
+  {
+    "requestId": "req-32f4581a-7b08-4e3f-ae8b-2a1d400dcff0",
+    "clientRequestId": "manual-proof-baseline-task-001",
+    "routingDecisionId": "decision-req-32f4581a-7b08-4e3f-ae8b-2a1d400dcff0",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "createdAtMs": 1782658798171
+  },
+  {
+    "requestId": "req-26534fd4-cb2d-42d1-9699-beccdc894d50",
+    "clientRequestId": "manual-proof-probe-002",
+    "routingDecisionId": "decision-req-26534fd4-cb2d-42d1-9699-beccdc894d50",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782658645080
+  },
+  {
+    "requestId": "req-6689cfa6-ee92-489b-bff2-69764a366d90",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-6689cfa6-ee92-489b-bff2-69764a366d90",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "createdAtMs": 1782646995261
+  },
+  {
+    "requestId": "req-db03ce23-ca9d-4ba5-9240-7e7cb6882a88",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-db03ce23-ca9d-4ba5-9240-7e7cb6882a88",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "createdAtMs": 1782646737350
+  },
+  {
+    "requestId": "req-a42a820f-ae9b-43a6-88b0-f9e85a2f19f4",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-a42a820f-ae9b-43a6-88b0-f9e85a2f19f4",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "createdAtMs": 1782646730384
+  },
+  {
+    "requestId": "req-de9784fd-9126-4ad1-9e8a-2ae8644e35ca",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-de9784fd-9126-4ad1-9e8a-2ae8644e35ca",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782587560103
+  },
+  {
+    "requestId": "req-195dfc05-a9dd-456d-81a8-420cb5a78d9b",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-195dfc05-a9dd-456d-81a8-420cb5a78d9b",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782587539760
+  },
+  {
+    "requestId": "req-ff141654-c0ae-4072-b47a-447e2b253826",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-ff141654-c0ae-4072-b47a-447e2b253826",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1782587513998
+  }
+]

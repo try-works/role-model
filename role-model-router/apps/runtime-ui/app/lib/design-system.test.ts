@@ -133,6 +133,10 @@ const requestsRouteSource = readFileSync(
   new URL("../routes/requests.tsx", import.meta.url),
   "utf8",
 );
+const observeRoutingRouteSource = readFileSync(
+  new URL("../routes/observe-routing.tsx", import.meta.url),
+  "utf8",
+);
 const rootSource = readFileSync(new URL("../root.tsx", import.meta.url), "utf8");
 const runtimeRouteSource = readFileSync(new URL("../routes/runtime.tsx", import.meta.url), "utf8");
 const requestDetailRouteSource = readFileSync(
@@ -1060,10 +1064,19 @@ describe("runtime design system", () => {
     expect(requestsRouteSource).toContain("fetchTelemetryAnalytics");
     expect(requestsRouteSource).toContain("buildObserveRequestsChartDefinitions");
     expect(requestsRouteSource).toContain("Analytics controls");
+    expect(requestsRouteSource).toContain("Taxonomy group id");
+    expect(requestsRouteSource).toContain("Taxonomy capability ids");
     expect(requestsRouteSource).toContain("/app/observe/activity");
     expect(requestsRouteSource).toContain("/app/observe/logs");
     expect(requestDetailRouteSource).toContain("/app/observe/activity");
     expect(requestDetailRouteSource).toContain("/app/observe/logs");
+  });
+
+  test("routing analytics controls expose richer taxonomy pivots for observe charts", () => {
+    expect(observeRoutingRouteSource).toContain("Taxonomy group id");
+    expect(observeRoutingRouteSource).toContain("Taxonomy task variant");
+    expect(observeRoutingRouteSource).toContain("Taxonomy capability ids");
+    expect(observeRoutingRouteSource).toContain("Taxonomy tool class ids");
   });
 
   test("activity route frames raw-host metrics as adjacent to canonical telemetry", () => {
@@ -1123,6 +1136,19 @@ describe("runtime design system", () => {
     expect(requestsRouteSource).toContain("routingDecisionLabel");
     expect(requestDetailRouteSource).toContain("Routing receipts");
     expect(requestDetailRouteSource).toContain("hybridArbitration");
+  });
+
+  test("request detail and model detail expose structured taxonomy evidence rather than raw-only telemetry", () => {
+    expect(requestDetailRouteSource).toContain("Taxonomy classification");
+    expect(requestDetailRouteSource).toContain("Telemetry handling");
+    expect(requestDetailRouteSource).toContain("Ledger fallback only");
+    expect(requestDetailRouteSource).toContain("Original role hint");
+    expect(requestDetailRouteSource).toContain("Derived capabilities");
+    expect(requestDetailRouteSource).toContain("predates the richer taxonomy contract");
+    expect(controlModelsSource).toContain("Telemetry taxonomy rollup (advisory)");
+    expect(controlModelsSource).toContain("Recent groups");
+    expect(controlModelsSource).toContain("Observed strengths");
+    expect(controlModelsSource).toContain("Observed warnings");
   });
 
   test("request detail route renders authoritative stored cost metadata", () => {

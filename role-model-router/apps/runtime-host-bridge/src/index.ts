@@ -43,6 +43,7 @@ import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
 import {
   type RuntimeCapturePolicy,
   type RuntimeObservationBundle,
+  type RuntimeObservationCapturePolicyReceipt,
   type RuntimeRoutingDiagnostics,
   type RuntimeRoutingMode,
   type RuntimeTelemetrySnapshot,
@@ -70,8 +71,6 @@ import {
   readDifficultyClassificationCache,
   readLatestObservedProfile,
   readLatestObservedProfilesByEndpointIds,
-  readObservationTelemetryColumns,
-  readObservationTelemetryColumnsBatch,
   readObservedPerformanceSamples,
   readObservedThroughputPenaltyState,
   readProviderDeviceAuthSession,
@@ -1700,8 +1699,13 @@ export type BridgeTelemetryAnalyticsDimension =
   | "difficultyBucket"
   | "statusFamily"
   | "requestOperation"
+  | "taxonomyGroupId"
   | "taxonomyRoleId"
-  | "taxonomyTaskType";
+  | "taxonomyTaskType"
+  | "taxonomyTaskVariant"
+  | "taxonomyCapabilityId"
+  | "taxonomyModalityId"
+  | "taxonomyToolClassId";
 
 export interface BridgeTelemetryAnalyticsFilters {
   readonly sourceTypes?: readonly ("local" | "remote")[];
@@ -1717,6 +1721,13 @@ export interface BridgeTelemetryAnalyticsFilters {
   readonly difficultyBuckets?: readonly ("easy" | "medium" | "hard")[];
   readonly statusFamilies?: readonly ("success" | "failure" | "unknown")[];
   readonly requestOperations?: readonly string[];
+  readonly taxonomyGroupIds?: readonly string[];
+  readonly taxonomyRoleIds?: readonly string[];
+  readonly taxonomyTaskTypes?: readonly string[];
+  readonly taxonomyTaskVariants?: readonly string[];
+  readonly taxonomyCapabilityIds?: readonly string[];
+  readonly taxonomyModalityIds?: readonly string[];
+  readonly taxonomyToolClassIds?: readonly string[];
 }
 
 export interface BridgeTelemetryAnalyticsRanking {
@@ -1799,6 +1810,13 @@ export interface BridgeTelemetryAnalyticsResponse {
     readonly truncated: boolean;
     readonly truncationReason: string | null;
     readonly generatedAtMs: number;
+    readonly taxonomyCoverage?: {
+      readonly matchedRowCount: number;
+      readonly richerTaxonomyRowCount: number;
+      readonly legacyRowCount: number;
+      readonly coverageRate: number;
+      readonly backfillPerformed: false;
+    };
   };
   readonly metricSupport: Partial<
     Record<BridgeTelemetryAnalyticsMetric, BridgeTelemetryAnalyticsMetricSupport>
@@ -1983,8 +2001,13 @@ export type BridgeTelemetryRequestRecord = ReturnType<
   readonly healthStatus: string;
   readonly status: string;
   readonly roleIds: readonly string[];
+  readonly taxonomyGroupId?: string | null;
   readonly taxonomyRoleId?: string | null;
   readonly taxonomyTaskType?: string | null;
+  readonly taxonomyTaskVariant?: string | null;
+  readonly taxonomyCapabilityIds?: readonly string[];
+  readonly taxonomyModalityIds?: readonly string[];
+  readonly taxonomyToolClassIds?: readonly string[];
 };
 
 export type BridgeTelemetryEndpointMeta = Pick<
@@ -1997,6 +2020,64 @@ export type BridgeTelemetryEndpointMeta = Pick<
   | "status"
   | "roleIds"
 >;
+
+type BridgeRequestObservation = RuntimeObservationBundle &
+  BridgeTelemetryEndpointMeta & {
+    readonly observationAvailability: {
+      readonly source: "raw-observation" | "telemetry-ledger-fallback";
+      readonly rawObservationAvailable: boolean;
+      readonly structuredInspectionAvailable: boolean;
+      readonly reason: string;
+    };
+    readonly effectiveCostUsd?: number;
+    readonly costCalculationBasis?: string;
+    readonly costCalculationVersion?: string;
+    readonly selectedUncachedCostUsd?: number | null;
+    readonly baselineMaxEligibleCostUsd?: number | null;
+    readonly routingCostSavingsUsd?: number;
+    readonly cacheCostSavingsUsd?: number;
+    readonly totalAvoidedCostUsd?: number;
+    readonly costBaselineSource?: string | null;
+    readonly costSavingsSupport?: string | null;
+  };
+
+function synthesizeFallbackCapturePolicy(
+  record: ReturnType<typeof listRuntimeTelemetryRecords>[number],
+): RuntimeObservationCapturePolicyReceipt {
+  return {
+    environment: "telemetry-ledger-fallback",
+    redactionLevel: record.redactionLevel ?? "unknown",
+    retentionClass: record.retentionClass ?? "unknown",
+    structuredInspectionMode: record.structuredInspectionMode ?? "unavailable",
+    rawCaptureAvailable: false,
+    structuredInspectionAvailable: false,
+    redactedFields: [],
+    suppressedFields: [],
+  };
+}
+
+function synthesizeFallbackPrivacyReceipt(
+  record: ReturnType<typeof listRuntimeTelemetryRecords>[number],
+):
+  | {
+      readonly samplingRate?: number;
+      readonly retentionTtlHours?: number;
+      readonly retainUntil?: number;
+    }
+  | undefined {
+  if (
+    record.samplingRate === null &&
+    record.retentionTtlHours === null &&
+    record.retainUntil === null
+  ) {
+    return undefined;
+  }
+  return {
+    ...(record.samplingRate !== null ? { samplingRate: record.samplingRate } : {}),
+    ...(record.retentionTtlHours !== null ? { retentionTtlHours: record.retentionTtlHours } : {}),
+    ...(record.retainUntil !== null ? { retainUntil: record.retainUntil } : {}),
+  };
+}
 
 export type BridgeTelemetryComparisonRow = ReturnType<
   typeof listRuntimeTelemetryComparisonRows
@@ -2298,9 +2379,7 @@ export interface RuntimeBridgeBackend {
   ): Promise<readonly BridgeTelemetryRequestRecord[]>;
   queryTelemetryAnalytics(body: Record<string, unknown>): Promise<BridgeTelemetryAnalyticsResponse>;
   subscribeTelemetry(listener: (event: RuntimeTelemetryStreamEvent) => void): () => void;
-  readRequestObservation(
-    requestId: string,
-  ): Promise<(RuntimeObservationBundle & BridgeTelemetryEndpointMeta) | null>;
+  readRequestObservation(requestId: string): Promise<BridgeRequestObservation | null>;
   readEndpointProfile(endpointId: string): Promise<{
     endpointId: string;
     latestProfile: ReturnType<typeof readLatestObservedProfile>;
@@ -4704,8 +4783,15 @@ export function createRoleModelNormalizedIntentObservation(
       : {}),
     classificationContractVersion: roleModelIntent.classificationContractVersion,
     ...(roleModelIntent.source ? { source: roleModelIntent.source } : {}),
+    ...(roleModelIntent.role?.id ? { originalRoleHintId: roleModelIntent.role.id } : {}),
+    ...(roleModelIntent.task?.id ? { originalTaskType: roleModelIntent.task.id } : {}),
+    ...(roleModelIntent.roleSource ? { roleSource: roleModelIntent.roleSource } : {}),
+    ...(roleModelIntent.taskSource ? { taskSource: roleModelIntent.taskSource } : {}),
     ...(typeof roleModelIntent.confidence === "number"
       ? { confidence: roleModelIntent.confidence }
+      : {}),
+    ...(typeof roleModelIntent.taskConfidence === "number"
+      ? { taskConfidence: roleModelIntent.taskConfidence }
       : {}),
     ...(roleModelIntent.taskAction ? { taskAction: roleModelIntent.taskAction } : {}),
     ...(roleModelIntent.taskVariant !== undefined
@@ -6132,6 +6218,8 @@ function readRoleModelIntentFromRequestBody(
         ? { contentRevision: record.content_revision }
         : {}),
       classificationContractVersion: record.classification_contract_version,
+      ...(roleHintId ? { originalRoleHintId: roleHintId } : {}),
+      ...(taskType ? { originalTaskType: taskType } : {}),
       ...(requestedRoleId
         ? { role: { id: requestedRoleId, hard: false } }
         : roleHintId
@@ -6144,11 +6232,16 @@ function readRoleModelIntentFromRequestBody(
         ? { toolClasses: readStringList(record.tool_classes) }
         : {}),
       ...(source ? { source } : {}),
+      ...(typeof record.role_source === "string" ? { roleSource: record.role_source } : {}),
+      ...(typeof record.task_source === "string" ? { taskSource: record.task_source } : {}),
       ...(typeof record.confidence === "number"
         ? { confidence: record.confidence }
         : typeof record.task_confidence === "number"
           ? { confidence: record.task_confidence }
           : {}),
+      ...(typeof record.task_confidence === "number"
+        ? { taskConfidence: record.task_confidence }
+        : {}),
       ...(typeof record.task_action === "string" ? { taskAction: record.task_action } : {}),
       ...(readNullableString(record.task_variant) !== undefined
         ? { taskVariant: readNullableString(record.task_variant) }
@@ -6550,6 +6643,20 @@ function writeJson(
     response.setHeader(key, value);
   }
   response.end(`${JSON.stringify(body)}\n`);
+}
+
+export function writeUnhandledBridgeError(response: ServerResponse, error: unknown): boolean {
+  if (response.headersSent || response.writableEnded) {
+    return false;
+  }
+  if (error instanceof BridgeHttpError) {
+    writeJson(response, error.statusCode, error.body);
+    return true;
+  }
+  writeJson(response, 500, {
+    error: error instanceof Error ? error.message : "runtime host bridge request failed",
+  });
+  return true;
 }
 
 function taxonomyEtag(body: unknown): string {
@@ -11864,13 +11971,9 @@ function listen(server: Server, host: string, port: number): Promise<number> {
 export async function startBridgeServer(options: StartBridgeServerOptions): Promise<BridgeServer> {
   const server = createServer((request, response) => {
     void createRequestHandler(options)(request, response).catch((error: unknown) => {
-      if (error instanceof BridgeHttpError) {
-        writeJson(response, error.statusCode, error.body);
-        return;
+      if (!writeUnhandledBridgeError(response, error)) {
+        console.error("runtime host bridge request failed after response commit", error);
       }
-      writeJson(response, 500, {
-        error: error instanceof Error ? error.message : "runtime host bridge request failed",
-      });
     });
   });
   const port = await listen(server, options.host, options.port);
@@ -13834,8 +13937,13 @@ export async function createRuntimeBridgeBackend(
     "difficultyBucket",
     "statusFamily",
     "requestOperation",
+    "taxonomyGroupId",
     "taxonomyRoleId",
     "taxonomyTaskType",
+    "taxonomyTaskVariant",
+    "taxonomyCapabilityId",
+    "taxonomyModalityId",
+    "taxonomyToolClassId",
   ];
   const readTelemetryAnalyticsMetric = (value: string): BridgeTelemetryAnalyticsMetric => {
     if (!SUPPORTED_TELEMETRY_ANALYTICS_METRICS.includes(value as BridgeTelemetryAnalyticsMetric)) {
@@ -13950,42 +14058,60 @@ export async function createRuntimeBridgeBackend(
       }
     }
   };
-  const getTelemetryDimensionValue = (
+  const getTelemetryDimensionValues = (
     record: BridgeTelemetryRequestRecord,
     dimension: BridgeTelemetryAnalyticsDimension,
-  ): string | null => {
+  ): readonly string[] => {
     switch (dimension) {
       case "sourceType":
-        return record.sourceType;
+        return [record.sourceType];
       case "endpointId":
-        return record.endpointId;
+        return [record.endpointId];
       case "modelId":
-        return record.modelId;
+        return record.modelId ? [record.modelId] : [];
       case "providerId":
-        return record.providerId;
+        return record.providerId ? [record.providerId] : [];
       case "providerKind":
-        return record.providerKind;
+        return record.providerKind ? [record.providerKind] : [];
       case "providerFamily":
-        return record.providerFamily;
+        return record.providerFamily ? [record.providerFamily] : [];
       case "providerAccountId":
-        return record.providerAccountId;
+        return record.providerAccountId ? [record.providerAccountId] : [];
       case "requestedRoleId":
-        return record.requestedRoleId;
+        return record.requestedRoleId ? [record.requestedRoleId] : [];
       case "selectedStrategy":
-        return record.selectedStrategy;
+        return record.selectedStrategy ? [record.selectedStrategy] : [];
       case "routingMode":
-        return record.routingMode;
+        return record.routingMode ? [record.routingMode] : [];
       case "difficultyBucket":
-        return record.difficultyBucket;
+        return record.difficultyBucket ? [record.difficultyBucket] : [];
       case "statusFamily":
-        return record.statusFamily;
+        return record.statusFamily ? [record.statusFamily] : [];
       case "requestOperation":
-        return record.requestOperation;
+        return record.requestOperation ? [record.requestOperation] : [];
+      case "taxonomyGroupId":
+        return record.taxonomyGroupId ? [record.taxonomyGroupId] : [];
       case "taxonomyRoleId":
-        return record.taxonomyRoleId ?? null;
+        return record.taxonomyRoleId ? [record.taxonomyRoleId] : [];
       case "taxonomyTaskType":
-        return record.taxonomyTaskType ?? null;
+        return record.taxonomyTaskType ? [record.taxonomyTaskType] : [];
+      case "taxonomyTaskVariant":
+        return record.taxonomyTaskVariant ? [record.taxonomyTaskVariant] : [];
+      case "taxonomyCapabilityId":
+        return record.taxonomyCapabilityIds ?? [];
+      case "taxonomyModalityId":
+        return record.taxonomyModalityIds ?? [];
+      case "taxonomyToolClassId":
+        return record.taxonomyToolClassIds ?? [];
     }
+  };
+  const matchesTelemetryDimensionFilter = (
+    record: BridgeTelemetryRequestRecord,
+    dimension: BridgeTelemetryAnalyticsDimension,
+    filterValues: readonly string[],
+  ): boolean => {
+    const recordValues = getTelemetryDimensionValues(record, dimension);
+    return recordValues.some((value) => filterValues.includes(value));
   };
   const getTelemetryDimensionLabel = (
     dimension: BridgeTelemetryAnalyticsDimension,
@@ -14095,12 +14221,56 @@ export async function createRuntimeBridgeBackend(
             : null,
     };
   };
+  const isTaxonomyTelemetryDimension = (dimension: BridgeTelemetryAnalyticsDimension): boolean =>
+    dimension.startsWith("taxonomy");
+  const buildTelemetryTaxonomyCoverage = (
+    records: readonly BridgeTelemetryRequestRecord[],
+  ): {
+    readonly matchedRowCount: number;
+    readonly richerTaxonomyRowCount: number;
+    readonly legacyRowCount: number;
+    readonly coverageRate: number;
+    readonly backfillPerformed: false;
+  } => {
+    const richerTaxonomyRowCount = records.filter(
+      (record) =>
+        Boolean(record.taxonomyGroupId) ||
+        Boolean(record.taxonomyRoleId) ||
+        Boolean(record.taxonomyTaskType) ||
+        Boolean(record.taxonomyTaskVariant) ||
+        (record.taxonomyCapabilityIds?.length ?? 0) > 0 ||
+        (record.taxonomyModalityIds?.length ?? 0) > 0 ||
+        (record.taxonomyToolClassIds?.length ?? 0) > 0,
+    ).length;
+    const matchedRowCount = records.length;
+    return {
+      matchedRowCount,
+      richerTaxonomyRowCount,
+      legacyRowCount: matchedRowCount - richerTaxonomyRowCount,
+      coverageRate:
+        matchedRowCount === 0 ? 0 : Number((richerTaxonomyRowCount / matchedRowCount).toFixed(6)),
+      backfillPerformed: false,
+    };
+  };
+  const describeTelemetryTaxonomyCoverage = (
+    dimension: BridgeTelemetryAnalyticsDimension,
+    coverage: ReturnType<typeof buildTelemetryTaxonomyCoverage>,
+  ): string => {
+    if (!isTaxonomyTelemetryDimension(dimension) || coverage.matchedRowCount === 0) {
+      return "";
+    }
+    if (coverage.richerTaxonomyRowCount === coverage.matchedRowCount) {
+      return "";
+    }
+    return ` Richer taxonomy coverage in this range is ${coverage.richerTaxonomyRowCount}/${coverage.matchedRowCount} rows (${(coverage.coverageRate * 100).toFixed(1)}%); rows without richer taxonomy remain included and richer-taxonomy backfill is not performed.`;
+  };
   const buildTelemetryDimensionSupport = (
     dimension: BridgeTelemetryAnalyticsDimension,
     records: readonly BridgeTelemetryRequestRecord[],
   ): BridgeTelemetryAnalyticsDimensionSupport => {
-    const populatedRowCount = records.filter((record) =>
-      Boolean(getTelemetryDimensionValue(record, dimension)),
+    const taxonomyCoverage = buildTelemetryTaxonomyCoverage(records);
+    const populatedRowCount = records.filter(
+      (record) => getTelemetryDimensionValues(record, dimension).length > 0,
     ).length;
     const status: BridgeTelemetryAnalyticsSupportStatus =
       records.length === 0 || populatedRowCount === records.length
@@ -14116,9 +14286,15 @@ export async function createRuntimeBridgeBackend(
       sparseRowCount: records.length - populatedRowCount,
       reason:
         status === "unsupported"
-          ? `No rows in this slice include ${dimension}.`
+          ? `No rows in this slice include ${dimension}.${describeTelemetryTaxonomyCoverage(
+              dimension,
+              taxonomyCoverage,
+            )}`
           : status === "partial"
-            ? `${records.length - populatedRowCount} row(s) in this slice do not include ${dimension}.`
+            ? `${records.length - populatedRowCount} row(s) in this slice do not include ${dimension}.${describeTelemetryTaxonomyCoverage(
+                dimension,
+                taxonomyCoverage,
+              )}`
             : null,
     };
   };
@@ -14330,6 +14506,62 @@ export async function createRuntimeBridgeBackend(
                     ),
                   }
                 : {}),
+              ...(readStringList(filtersBody.taxonomyGroupIds, "filters.taxonomyGroupIds")
+                ? {
+                    taxonomyGroupIds: readStringList(
+                      filtersBody.taxonomyGroupIds,
+                      "filters.taxonomyGroupIds",
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.taxonomyRoleIds, "filters.taxonomyRoleIds")
+                ? {
+                    taxonomyRoleIds: readStringList(
+                      filtersBody.taxonomyRoleIds,
+                      "filters.taxonomyRoleIds",
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.taxonomyTaskTypes, "filters.taxonomyTaskTypes")
+                ? {
+                    taxonomyTaskTypes: readStringList(
+                      filtersBody.taxonomyTaskTypes,
+                      "filters.taxonomyTaskTypes",
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.taxonomyTaskVariants, "filters.taxonomyTaskVariants")
+                ? {
+                    taxonomyTaskVariants: readStringList(
+                      filtersBody.taxonomyTaskVariants,
+                      "filters.taxonomyTaskVariants",
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.taxonomyCapabilityIds, "filters.taxonomyCapabilityIds")
+                ? {
+                    taxonomyCapabilityIds: readStringList(
+                      filtersBody.taxonomyCapabilityIds,
+                      "filters.taxonomyCapabilityIds",
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.taxonomyModalityIds, "filters.taxonomyModalityIds")
+                ? {
+                    taxonomyModalityIds: readStringList(
+                      filtersBody.taxonomyModalityIds,
+                      "filters.taxonomyModalityIds",
+                    ),
+                  }
+                : {}),
+              ...(readStringList(filtersBody.taxonomyToolClassIds, "filters.taxonomyToolClassIds")
+                ? {
+                    taxonomyToolClassIds: readStringList(
+                      filtersBody.taxonomyToolClassIds,
+                      "filters.taxonomyToolClassIds",
+                    ),
+                  }
+                : {}),
             },
           }
         : {}),
@@ -14427,6 +14659,60 @@ export async function createRuntimeBridgeBackend(
       ) {
         return false;
       }
+      if (
+        filters.taxonomyGroupIds &&
+        !matchesTelemetryDimensionFilter(record, "taxonomyGroupId", filters.taxonomyGroupIds)
+      ) {
+        return false;
+      }
+      if (
+        filters.taxonomyRoleIds &&
+        !matchesTelemetryDimensionFilter(record, "taxonomyRoleId", filters.taxonomyRoleIds)
+      ) {
+        return false;
+      }
+      if (
+        filters.taxonomyTaskTypes &&
+        !matchesTelemetryDimensionFilter(record, "taxonomyTaskType", filters.taxonomyTaskTypes)
+      ) {
+        return false;
+      }
+      if (
+        filters.taxonomyTaskVariants &&
+        !matchesTelemetryDimensionFilter(
+          record,
+          "taxonomyTaskVariant",
+          filters.taxonomyTaskVariants,
+        )
+      ) {
+        return false;
+      }
+      if (
+        filters.taxonomyCapabilityIds &&
+        !matchesTelemetryDimensionFilter(
+          record,
+          "taxonomyCapabilityId",
+          filters.taxonomyCapabilityIds,
+        )
+      ) {
+        return false;
+      }
+      if (
+        filters.taxonomyModalityIds &&
+        !matchesTelemetryDimensionFilter(record, "taxonomyModalityId", filters.taxonomyModalityIds)
+      ) {
+        return false;
+      }
+      if (
+        filters.taxonomyToolClassIds &&
+        !matchesTelemetryDimensionFilter(
+          record,
+          "taxonomyToolClassId",
+          filters.taxonomyToolClassIds,
+        )
+      ) {
+        return false;
+      }
       return true;
     });
   };
@@ -14460,42 +14746,6 @@ export async function createRuntimeBridgeBackend(
       averageLatencyMs: latencies.length > 0 ? Math.round(totalLatency / latencies.length) : null,
       p95LatencyMs: p95Index >= 0 ? (latencies[p95Index] ?? null) : null,
       lastSeenAtMs: records[0]?.createdAtMs ?? null,
-    };
-  };
-  const readObservationTelemetryMeta = (
-    requestId: string,
-  ): Pick<
-    BridgeTelemetryRequestRecord,
-    "clientRequestId" | "requestClass" | "taxonomyRoleId" | "taxonomyTaskType"
-  > => {
-    const columns = readObservationTelemetryColumns({
-      databasePath: initialization.databasePath,
-      requestId,
-    });
-    if (columns) {
-      return {
-        clientRequestId: columns.clientRequestId,
-        requestClass:
-          (columns.requestClass as "benchmark" | "live_request" | "unknown") ?? "unknown",
-        taxonomyRoleId: columns.taxonomyRoleId,
-        taxonomyTaskType: columns.taxonomyTaskType,
-      };
-    }
-    // Fallback: parse JSON for records that predate the column migration
-    const observation = readRuntimeObservationBundle({
-      databasePath: initialization.databasePath,
-      requestId,
-    }) as Record<string, unknown> | null;
-    const observedPerformance = asObjectRecord(observation?.observedPerformance);
-    const sample = asObjectRecord(observedPerformance?.sample);
-    const sourceType = asStringValue(sample?.source_type);
-    const taxonomyDimensions = asObjectRecord(observation?.taxonomyDimensions);
-    return {
-      clientRequestId: asStringValue(observation?.clientRequestId) ?? null,
-      requestClass:
-        sourceType === "benchmark" || sourceType === "live_request" ? sourceType : "unknown",
-      taxonomyRoleId: asStringValue(taxonomyDimensions?.taxonomy_role_id) ?? null,
-      taxonomyTaskType: asStringValue(taxonomyDimensions?.taxonomy_task_type) ?? null,
     };
   };
   const getTelemetryEndpointMeta = (endpointId: string): BridgeTelemetryEndpointMeta => {
@@ -14548,12 +14798,11 @@ export async function createRuntimeBridgeBackend(
     });
     return filterTelemetryRequestRecords(
       records.map((record) => {
-        const observationMeta = readObservationTelemetryMeta(record.requestId);
         const endpointMeta = getTelemetryEndpointMeta(record.endpointId);
         return {
           ...record,
-          clientRequestId: record.clientRequestId ?? observationMeta.clientRequestId,
-          requestClass: record.requestClass ?? observationMeta.requestClass,
+          clientRequestId: record.clientRequestId,
+          requestClass: record.requestClass ?? "unknown",
           ...endpointMeta,
           sourceType: record.sourceType ?? endpointMeta.sourceType,
           providerId: record.providerId ?? endpointMeta.providerId,
@@ -14562,6 +14811,13 @@ export async function createRuntimeBridgeBackend(
           healthStatus: record.healthStatusAtRequest ?? endpointMeta.healthStatus,
           status: record.lifecycleStateAtRequest ?? endpointMeta.status,
           roleIds: record.roleIds.length > 0 ? record.roleIds : endpointMeta.roleIds,
+          taxonomyGroupId: record.taxonomyGroupId,
+          taxonomyRoleId: record.taxonomyRoleId,
+          taxonomyTaskType: record.taxonomyTaskType,
+          taxonomyTaskVariant: record.taxonomyTaskVariant,
+          taxonomyCapabilityIds: record.taxonomyCapabilityIds,
+          taxonomyModalityIds: record.taxonomyModalityIds,
+          taxonomyToolClassIds: record.taxonomyToolClassIds,
         };
       }),
       normalizedQuery.filters,
@@ -14570,20 +14826,12 @@ export async function createRuntimeBridgeBackend(
   const enrichTelemetryRequestRecords = (
     records: readonly ReturnType<typeof listRuntimeTelemetryRecords>[number][],
   ): readonly BridgeTelemetryRequestRecord[] => {
-    const observationMetaBatch = readObservationTelemetryColumnsBatch({
-      databasePath: initialization.databasePath,
-      requestIds: records.map((r) => r.requestId),
-    });
     return records.map((record) => {
-      const observationMeta = observationMetaBatch.get(record.requestId);
       const endpointMeta = getTelemetryEndpointMeta(record.endpointId);
       return {
         ...record,
-        clientRequestId: record.clientRequestId ?? observationMeta?.clientRequestId ?? null,
-        requestClass:
-          (record.requestClass as BridgeTelemetryRequestRecord["requestClass"]) ??
-          (observationMeta?.requestClass as BridgeTelemetryRequestRecord["requestClass"]) ??
-          "unknown",
+        clientRequestId: record.clientRequestId,
+        requestClass: record.requestClass ?? "unknown",
         ...endpointMeta,
         sourceType: record.sourceType ?? endpointMeta.sourceType,
         providerId: record.providerId ?? endpointMeta.providerId,
@@ -14592,8 +14840,13 @@ export async function createRuntimeBridgeBackend(
         healthStatus: record.healthStatusAtRequest ?? endpointMeta.healthStatus,
         status: record.lifecycleStateAtRequest ?? endpointMeta.status,
         roleIds: record.roleIds.length > 0 ? record.roleIds : endpointMeta.roleIds,
-        taxonomyRoleId: observationMeta?.taxonomyRoleId ?? null,
-        taxonomyTaskType: observationMeta?.taxonomyTaskType ?? null,
+        taxonomyGroupId: record.taxonomyGroupId,
+        taxonomyRoleId: record.taxonomyRoleId,
+        taxonomyTaskType: record.taxonomyTaskType,
+        taxonomyTaskVariant: record.taxonomyTaskVariant,
+        taxonomyCapabilityIds: record.taxonomyCapabilityIds,
+        taxonomyModalityIds: record.taxonomyModalityIds,
+        taxonomyToolClassIds: record.taxonomyToolClassIds,
       };
     });
   };
@@ -14685,14 +14938,14 @@ export async function createRuntimeBridgeBackend(
         return [
           ...new Set(
             bucketRecords
-              .map((record) => getTelemetryDimensionValue(record, breakdownDimension))
+              .flatMap((record) => getTelemetryDimensionValues(record, breakdownDimension))
               .filter((value): value is string => Boolean(value)),
           ),
         ]
           .sort((left, right) => left.localeCompare(right))
           .map((key) => {
-            const seriesRecords = bucketRecords.filter(
-              (record) => getTelemetryDimensionValue(record, breakdownDimension) === key,
+            const seriesRecords = bucketRecords.filter((record) =>
+              getTelemetryDimensionValues(record, breakdownDimension).includes(key),
             );
             return {
               key,
@@ -14736,6 +14989,13 @@ export async function createRuntimeBridgeBackend(
         ...(query.filters?.difficultyBuckets ? (["difficultyBucket"] as const) : []),
         ...(query.filters?.statusFamilies ? (["statusFamily"] as const) : []),
         ...(query.filters?.requestOperations ? (["requestOperation"] as const) : []),
+        ...(query.filters?.taxonomyGroupIds ? (["taxonomyGroupId"] as const) : []),
+        ...(query.filters?.taxonomyRoleIds ? (["taxonomyRoleId"] as const) : []),
+        ...(query.filters?.taxonomyTaskTypes ? (["taxonomyTaskType"] as const) : []),
+        ...(query.filters?.taxonomyTaskVariants ? (["taxonomyTaskVariant"] as const) : []),
+        ...(query.filters?.taxonomyCapabilityIds ? (["taxonomyCapabilityId"] as const) : []),
+        ...(query.filters?.taxonomyModalityIds ? (["taxonomyModalityId"] as const) : []),
+        ...(query.filters?.taxonomyToolClassIds ? (["taxonomyToolClassId"] as const) : []),
       ].filter((value): value is BridgeTelemetryAnalyticsDimension => Boolean(value)),
     );
     const dimensionSupport = Object.fromEntries(
@@ -14754,6 +15014,13 @@ export async function createRuntimeBridgeBackend(
         ...(query.filters?.sourceTypes ? (["sourceType"] as const) : []),
         ...(query.filters?.requestedRoleIds ? (["requestedRoleId"] as const) : []),
         ...(query.filters?.selectedStrategies ? (["selectedStrategy"] as const) : []),
+        ...(query.filters?.taxonomyGroupIds ? (["taxonomyGroupId"] as const) : []),
+        ...(query.filters?.taxonomyRoleIds ? (["taxonomyRoleId"] as const) : []),
+        ...(query.filters?.taxonomyTaskTypes ? (["taxonomyTaskType"] as const) : []),
+        ...(query.filters?.taxonomyTaskVariants ? (["taxonomyTaskVariant"] as const) : []),
+        ...(query.filters?.taxonomyCapabilityIds ? (["taxonomyCapabilityId"] as const) : []),
+        ...(query.filters?.taxonomyModalityIds ? (["taxonomyModalityId"] as const) : []),
+        ...(query.filters?.taxonomyToolClassIds ? (["taxonomyToolClassId"] as const) : []),
       ].filter((value): value is BridgeTelemetryAnalyticsDimension => Boolean(value)),
     );
     for (const dimension of labelDimensions) {
@@ -14761,7 +15028,7 @@ export async function createRuntimeBridgeBackend(
         [
           ...new Set(
             requestRecords
-              .map((record) => getTelemetryDimensionValue(record, dimension))
+              .flatMap((record) => getTelemetryDimensionValues(record, dimension))
               .filter((value): value is string => Boolean(value)),
           ),
         ]
@@ -14769,37 +15036,47 @@ export async function createRuntimeBridgeBackend(
           .map((key) => [key, getTelemetryDimensionLabel(dimension, key)]),
       );
     }
-    const ranking = (() => {
+    const rankingResult = (() => {
       const rankingQuery = query.ranking;
       if (rankingQuery === null || rankingQuery === undefined) {
-        return null;
+        return {
+          ranking: null,
+          truncated: false,
+          truncationReason: null,
+        } as const;
       }
       const grouped = new Map<string, BridgeTelemetryRequestRecord[]>();
       for (const record of requestRecords) {
-        const key = getTelemetryDimensionValue(record, rankingQuery.dimension);
-        if (!key) {
-          continue;
+        for (const key of getTelemetryDimensionValues(record, rankingQuery.dimension)) {
+          const existing = grouped.get(key) ?? [];
+          existing.push(record);
+          grouped.set(key, existing);
         }
-        const existing = grouped.get(key) ?? [];
-        existing.push(record);
-        grouped.set(key, existing);
       }
+      const limit = rankingQuery.limit ?? DEFAULT_TELEMETRY_LIMIT;
+      const rows = [...grouped.entries()]
+        .map(([key, groupedRecords]) => ({
+          key,
+          label: getTelemetryDimensionLabel(rankingQuery.dimension, key),
+          value: computeTelemetryMetricValue(rankingQuery.metric, groupedRecords),
+        }))
+        .sort(
+          (left, right) =>
+            (right.value ?? Number.NEGATIVE_INFINITY) - (left.value ?? Number.NEGATIVE_INFINITY) ||
+            left.key.localeCompare(right.key),
+        );
+      const truncated = rows.length > limit;
       return {
-        dimension: rankingQuery.dimension,
-        metric: rankingQuery.metric,
-        rows: [...grouped.entries()]
-          .map(([key, groupedRecords]) => ({
-            key,
-            label: getTelemetryDimensionLabel(rankingQuery.dimension, key),
-            value: computeTelemetryMetricValue(rankingQuery.metric, groupedRecords),
-          }))
-          .sort(
-            (left, right) =>
-              (right.value ?? Number.NEGATIVE_INFINITY) -
-                (left.value ?? Number.NEGATIVE_INFINITY) || left.key.localeCompare(right.key),
-          )
-          .slice(0, rankingQuery.limit ?? DEFAULT_TELEMETRY_LIMIT),
-      };
+        ranking: {
+          dimension: rankingQuery.dimension,
+          metric: rankingQuery.metric,
+          rows: rows.slice(0, limit),
+        },
+        truncated,
+        truncationReason: truncated
+          ? `Ranking limited to top ${limit} ${rankingQuery.dimension} value(s) out of ${rows.length} matched value(s).`
+          : null,
+      } as const;
     })();
     return {
       startAtMs,
@@ -14810,15 +15087,16 @@ export async function createRuntimeBridgeBackend(
       breakdown: query.breakdown ?? null,
       buckets,
       totals,
-      ranking,
+      ranking: rankingResult.ranking,
       labels,
       metadata: {
         scannedRowCount: scannedRequestRecords.length,
         matchedRowCount: requestRecords.length,
         aggregationRowCount: requestRecords.length,
-        truncated: false,
-        truncationReason: null,
+        truncated: rankingResult.truncated,
+        truncationReason: rankingResult.truncationReason,
         generatedAtMs: Date.now(),
+        taxonomyCoverage: buildTelemetryTaxonomyCoverage(requestRecords),
       },
       metricSupport,
       dimensionSupport,
@@ -15124,6 +15402,34 @@ export async function createRuntimeBridgeBackend(
       artifactRoot: benchmarkArtifactRoot,
       resolveModelId: resolveBenchmarkEndpointModelId,
     });
+  const resolveEndpointAvailableRoleIds = (endpointId: string) =>
+    getEndpointRoleIds(
+      endpointId,
+      runtimeEndpoints,
+      currentAccounts,
+      currentRegistry,
+      currentRolePolicy.roleDefinitions,
+      getLlamaSwapRoleIdsByModelId(),
+    );
+  const buildBenchmarkCapabilityByEndpointId = async () => {
+    const benchmarkSummary = await readBenchmarkSummaryData();
+    return Object.fromEntries(
+      currentRegistry.endpoints.map((endpoint) => {
+        const endpointId = endpoint.identity.endpoint_id;
+        const profile = readEndpointProfileData(endpointId);
+        return [
+          endpointId,
+          buildBenchmarkCapabilityForEndpoint({
+            endpointId,
+            latestProfile: profile.latestProfile as Record<string, unknown> | null,
+            difficultyProfiles: profile.difficultyProfiles as Record<string, unknown> | null,
+            summary: benchmarkSummary,
+            availableRoleIds: resolveEndpointAvailableRoleIds(endpointId),
+          }),
+        ] as const;
+      }),
+    );
+  };
   const resolveHealthyEndpoint = (endpointId: string): boolean => {
     const runtimeEndpoint = runtimeEndpoints.find((entry) => entry.endpointId === endpointId);
     if (!runtimeEndpoint) {
@@ -15136,19 +15442,14 @@ export async function createRuntimeBridgeBackend(
   const listRouterCandidateData = async () => {
     const controller = getCurrentControllerAssignment();
     const guidance = getRouterGuidance();
-    const benchmarkSummary = await readBenchmarkSummaryData();
+    const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId();
     const executionEndpointIds = new Set(
       getRouterEffectiveRegistry().endpoints.map((endpoint) => endpoint.identity.endpoint_id),
     );
     return currentRegistry.endpoints.map((endpoint) => {
       const endpointId = endpoint.identity.endpoint_id;
       const profile = readEndpointProfileData(endpointId);
-      const benchmarkCapability = buildBenchmarkCapabilityForEndpoint({
-        endpointId,
-        latestProfile: profile.latestProfile as Record<string, unknown> | null,
-        difficultyProfiles: profile.difficultyProfiles as Record<string, unknown> | null,
-        summary: benchmarkSummary,
-      });
+      const benchmarkCapability = benchmarkCapabilitiesByEndpointId[endpointId] ?? null;
       const benchmarkSamples = profile.recentSamples.filter(
         (sample) => sample.source_type === "benchmark",
       );
@@ -15166,14 +15467,7 @@ export async function createRuntimeBridgeBackend(
         healthStatus:
           runtimeEndpoints.find((entry) => entry.endpointId === endpointId)?.healthStatus ??
           (endpoint.deniedByPolicy ? "policy-blocked" : "healthy"),
-        roleBindings: getEndpointRoleIds(
-          endpointId,
-          runtimeEndpoints,
-          currentAccounts,
-          currentRegistry,
-          currentRolePolicy.roleDefinitions,
-          getLlamaSwapRoleIdsByModelId(),
-        ),
+        roleBindings: resolveEndpointAvailableRoleIds(endpointId),
         capabilities: endpoint.declared.capabilities,
         toolCallingSupported: endpoint.declared.tool_calling.supported,
         toolCallingStyle: endpoint.declared.tool_calling.style,
@@ -15354,6 +15648,7 @@ export async function createRuntimeBridgeBackend(
       registry: currentRegistry,
       catalog: currentNormalizedCatalog,
       observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
+      benchmarkCapabilitiesByEndpointId: await buildBenchmarkCapabilityByEndpointId(),
       observedDataConfig,
       throughputPenaltyStateByEndpointId:
         runtimeObservedProfiles.throughputPenaltyStateByEndpointId,
@@ -18135,9 +18430,7 @@ export async function createRuntimeBridgeBackend(
         telemetryListeners.delete(listener);
       };
     },
-    async readRequestObservation(
-      requestId: string,
-    ): Promise<(RuntimeObservationBundle & BridgeTelemetryEndpointMeta) | null> {
+    async readRequestObservation(requestId: string): Promise<BridgeRequestObservation | null> {
       const telemetryRecord = listTelemetryRequestRecords({
         startAtMs: 0,
         endAtMs: Date.now() + DEFAULT_TELEMETRY_WINDOW_MS,
@@ -18151,6 +18444,8 @@ export async function createRuntimeBridgeBackend(
         if (!telemetryRecord) {
           return null;
         }
+        const capturePolicy = synthesizeFallbackCapturePolicy(telemetryRecord);
+        const privacyReceipt = synthesizeFallbackPrivacyReceipt(telemetryRecord);
         return {
           requestId: telemetryRecord.requestId,
           routingDecisionId: telemetryRecord.routingDecisionId,
@@ -18220,6 +18515,48 @@ export async function createRuntimeBridgeBackend(
             costSavingsSupport: telemetryRecord.costSavingsSupport,
             ...(telemetryRecord.dimensions ? { dimensions: telemetryRecord.dimensions } : {}),
           },
+          ...(telemetryRecord.taxonomyGroupId ||
+          telemetryRecord.taxonomyRoleId ||
+          telemetryRecord.taxonomyTaskType ||
+          telemetryRecord.taxonomyTaskVariant ||
+          telemetryRecord.taxonomyCapabilityIds.length > 0 ||
+          telemetryRecord.taxonomyModalityIds.length > 0 ||
+          telemetryRecord.taxonomyToolClassIds.length > 0
+            ? {
+                taxonomyDimensions: {
+                  ...(telemetryRecord.taxonomyGroupId
+                    ? { taxonomy_group_id: telemetryRecord.taxonomyGroupId }
+                    : {}),
+                  ...(telemetryRecord.taxonomyRoleId
+                    ? { taxonomy_role_id: telemetryRecord.taxonomyRoleId }
+                    : {}),
+                  ...(telemetryRecord.taxonomyTaskType
+                    ? { taxonomy_task_type: telemetryRecord.taxonomyTaskType }
+                    : {}),
+                  ...(telemetryRecord.taxonomyTaskVariant
+                    ? { taxonomy_task_variant: telemetryRecord.taxonomyTaskVariant }
+                    : {}),
+                  ...(telemetryRecord.taxonomyCapabilityIds.length > 0
+                    ? { taxonomy_capability_ids: telemetryRecord.taxonomyCapabilityIds }
+                    : {}),
+                  ...(telemetryRecord.taxonomyModalityIds.length > 0
+                    ? { taxonomy_modality_ids: telemetryRecord.taxonomyModalityIds }
+                    : {}),
+                  ...(telemetryRecord.taxonomyToolClassIds.length > 0
+                    ? { taxonomy_tool_class_ids: telemetryRecord.taxonomyToolClassIds }
+                    : {}),
+                },
+              }
+            : {}),
+          capturePolicy,
+          ...(privacyReceipt ? { privacyReceipt } : {}),
+          observationAvailability: {
+            source: "telemetry-ledger-fallback",
+            rawObservationAvailable: false,
+            structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
+            reason:
+              "Raw observation retention has expired or the preserved observation bundle is unavailable; canonical request detail is reconstructed from the telemetry ledger.",
+          },
           effectiveCostUsd: telemetryRecord.effectiveCostUsd,
           costCalculationBasis: telemetryRecord.costCalculationBasis,
           costCalculationVersion: telemetryRecord.costCalculationVersion,
@@ -18230,11 +18567,18 @@ export async function createRuntimeBridgeBackend(
           totalAvoidedCostUsd: telemetryRecord.totalAvoidedCostUsd,
           costBaselineSource: telemetryRecord.costBaselineSource,
           costSavingsSupport: telemetryRecord.costSavingsSupport,
-        } as unknown as RuntimeObservationBundle & BridgeTelemetryEndpointMeta;
+        } as unknown as BridgeRequestObservation;
       }
       return {
         ...observation,
         ...getTelemetryEndpointMeta(observation.endpointId),
+        observationAvailability: {
+          source: "raw-observation",
+          rawObservationAvailable: true,
+          structuredInspectionAvailable: observation.capturePolicy.structuredInspectionAvailable,
+          reason:
+            "Request detail is backed by the preserved runtime observation bundle plus telemetry ledger supplements.",
+        },
         ...(telemetryRecord
           ? {
               effectiveCostUsd: telemetryRecord.effectiveCostUsd,
@@ -18249,7 +18593,7 @@ export async function createRuntimeBridgeBackend(
               costSavingsSupport: telemetryRecord.costSavingsSupport,
             }
           : {}),
-      };
+      } satisfies BridgeRequestObservation;
     },
     async listRecentRequestObservations(): Promise<
       readonly ReturnType<typeof listRecentRuntimeObservations>[number][]

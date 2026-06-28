@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/role-model-router/apps/runtime-host-bridge
+
+(node:85212) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (156 tests | 155 skipped) 659ms
+   ✓ runtime-host-bridge > startup retention cleanup removes expired raw observations while preserving telemetry ledger evidence  655ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 155 skipped (156)
+   Start at  12:34:34
+   Duration  4.13s (transform 1.76s, setup 0ms, collect 2.46s, tests 659ms, environment 0ms, prepare 324ms)
+

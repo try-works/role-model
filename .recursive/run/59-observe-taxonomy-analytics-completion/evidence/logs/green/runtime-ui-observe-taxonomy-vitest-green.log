@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/telemetry-chart-config.test.ts (2 tests) 10ms
+ ✓ app/lib/runtime-api.test.ts (44 tests) 79ms
+ ✓ app/lib/telemetry-route-models.test.ts (3 tests) 15ms
+ ✓ app/lib/design-system.test.ts (54 tests) 137ms
+
+ Test Files  4 passed (4)
+      Tests  103 passed (103)
+   Start at  09:09:03
+   Duration  3.19s (transform 1.55s, setup 0ms, collect 2.72s, tests 241ms, environment 2ms, prepare 1.95s)
+

@@ -1,0 +1,198 @@
+
+ RUN  v3.2.4 D:/r59red/packages/pi-role-model
+
+ ❯ test/docs-and-safety.test.ts (2 tests | 1 failed) 46ms
+   × Pi installation docs, skill, and safety guardrails > ships the role-model skill and README Installation for Pi section 35ms
+     → expected '# pi-role-model\n\nPi package for con…' to contain '/role-model requests'
+   ✓ Pi installation docs, skill, and safety guardrails > does not couple the package to auth storage, launchers, or managed runtime processes 8ms
+ ❯ test/commands.test.ts (10 tests | 2 failed) 57ms
+   × role-model command dispatcher > handles help through one command with internal subcommands 25ms
+     → expected '/role-model setup - discover the loca…' to contain '/role-model requests'
+   ✓ role-model command dispatcher > reports status and doctor results from the configured endpoint 7ms
+   ✓ role-model command dispatcher > supports setup, ui, recommended alias, use alias, and refresh workflows 3ms
+   × role-model command dispatcher > dispatches runtime-owned request list and latest explanation commands 12ms
+     → expected { ok: false, …(1) } to match object { ok: true, text: StringContaining{…} }
+   ✓ role-model command dispatcher > lists and chooses aliases without leaking secrets 2ms
+   ✓ role-model command dispatcher > status reports rich provider, trust, auth, fallback, selected alias, and warning state 2ms
+   ✓ role-model command dispatcher > doctor gives remediation for blocked remote endpoints 1ms
+   ✓ role-model command dispatcher > alias list marks recommended, selected, ready, and degraded aliases 1ms
+   ✓ role-model command dispatcher > alias use sets Pi's active Role-Model model when supported 1ms
+   ✓ role-model command dispatcher > alias use reports active-model failure without claiming Pi switched models 1ms
+ ❯ test/extension.test.ts (6 tests | 1 failed) 247ms
+   ✓ Pi extension registration > registers the role-model provider and one role-model command 75ms
+   ✓ Pi extension registration > passes Pi setModel into alias selection command dependencies 21ms
+   × Pi extension registration > refreshes effective taxonomy during setup and alias refresh 52ms
+     → expected [ 'resolved' ] to have a length of 3 but got 1
+   ✓ Pi extension registration > injects provider requests with the resolved runtime taxonomy when available 55ms
+   ✓ Pi extension registration > loads runtime task chunks for request candidate roles before injecting intent 25ms
+   ✓ Pi extension registration > injects provider requests for direct Role-Model model records 16ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/runtime-inspection.test.ts [ test/runtime-inspection.test.ts ]
+Error: Cannot find module '../src/runtime-inspection.js' imported from 'D:/r59red/packages/pi-role-model/test/runtime-inspection.test.ts'
+ ❯ test/runtime-inspection.test.ts:3:1
+      1| import { describe, expect, test, vi } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   createRuntimeInspectionClient,
+      5|   selectLatestRuntimeRequest,
+
+Caused by: Error: Failed to load url ../src/runtime-inspection.js (resolved id: ../src/runtime-inspection.js) in D:/r59red/packages/pi-role-model/test/runtime-inspection.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/commands.test.ts > role-model command dispatcher > handles help through one command with internal subcommands
+AssertionError: expected '/role-model setup - discover the loca…' to contain '/role-model requests'
+
+- Expected
++ Received
+
+- /role-model requests
++ /role-model setup - discover the local Role-Model runtime and register the provider
++ /role-model status - show runtime and discovery status
++ /role-model doctor - run endpoint diagnostics
++ /role-model ui - show the configured Role-Model UI/runtime URL
++ /role-model alias list - list Role-Model aliases visible to Pi
++ /role-model alias recommended - show the runtime-recommended alias
++ /role-model alias use <alias> - choose the alias Pi should use
++ /role-model alias choose <alias> - choose the alias Pi should use
++ /role-model alias refresh - refresh Role-Model provider aliases from runtime discovery
++ /role-model alias current - show the selected alias
+
+ ❯ test/commands.test.ts:71:25
+     69|     expect(result.text).toContain("/role-model setup");
+     70|     expect(result.text).toContain("/role-model alias choose");
+     71|     expect(result.text).toContain("/role-model requests");
+       |                         ^
+     72|     expect(result.text).toContain("/role-model explain latest");
+     73|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  test/commands.test.ts > role-model command dispatcher > dispatches runtime-owned request list and latest explanation commands
+AssertionError: expected { ok: false, …(1) } to match object { ok: true, text: StringContaining{…} }
+
+- Expected
++ Received
+
+  {
+-   "ok": true,
+-   "text": StringContaining "Recent Role-Model requests",
++   "ok": false,
++   "text": "Unknown /role-model command: requests
++
++ /role-model setup - discover the local Role-Model runtime and register the provider
++ /role-model status - show runtime and discovery status
++ /role-model doctor - run endpoint diagnostics
++ /role-model ui - show the configured Role-Model UI/runtime URL
++ /role-model alias list - list Role-Model aliases visible to Pi
++ /role-model alias recommended - show the runtime-recommended alias
++ /role-model alias use <alias> - choose the alias Pi should use
++ /role-model alias choose <alias> - choose the alias Pi should use
++ /role-model alias refresh - refresh Role-Model provider aliases from runtime discovery
++ /role-model alias current - show the selected alias",
+  }
+
+ ❯ test/commands.test.ts:138:5
+    136|     });
+    137| 
+    138|     await expect(handler("requests")).resolves.toMatchObject({
+       |     ^
+    139|       ok: true,
+    140|       text: expect.stringContaining("Recent Role-Model requests"),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  test/docs-and-safety.test.ts > Pi installation docs, skill, and safety guardrails > ships the role-model skill and README Installation for Pi section
+AssertionError: expected '# pi-role-model\n\nPi package for con…' to contain '/role-model requests'
+
+- Expected
++ Received
+
+- /role-model requests
++ # pi-role-model
++
++ Pi package for connecting Pi to an already-running Role-Model runtime.
++
++ Install the public package:
++
++ ```bash
++ pi install npm:@try-works/pi-role-model
++ ```
++
++ For local development from this repository root:
++
++ ```bash
++ pi install ./packages/pi-role-model
++ ```
++
++ By default the package connects to `http://127.0.0.1:3456`. To point Pi at a different local Role-Model runtime, set `ROLE_MODEL_ENDPOINT` before starting Pi:
++
++ ```bash
++ ROLE_MODEL_ENDPOINT=http://127.0.0.1:4567 pi
++ ```
++
++ Remote endpoints are blocked by default. Enable remote runtime access only for a trusted endpoint and trusted project context with explicit `allowRemote` behavior, for example by setting `ROLE_MODEL_ALLOW_REMOTE=1` when launching Pi. A runtime whose downstream discovery reports `authentication.required` fails closed unless a future explicit supported token source is added; the package does not read Pi auth files.
++
++ Then use these Pi commands:
++
++ ```text
++ /role-model setup
++ /role-model status
++ /role-model doctor
++ /role-model ui
++ /role-model alias list
++ /role-model alias recommended
++ /role-model alias use <alias>
++ /role-model alias choose <alias>
++ /role-model alias refresh
++ ```
++
++ The package registers a Pi provider named `role-model` from Role-Model's downstream OpenAI discovery endpoint at `/api/role-model/downstream/openai`.
++
++ `/role-model alias use <alias>` stores the selected alias and asks Pi to make the corresponding `role-model/<alias>` model active when Pi exposes active model selection in the command context. If Pi rejects the model switch, the command reports that the active model was not changed.
++
++ This package does not install, start, stop, or update the Role-Model runtime. It also does not copy or sync Pi provider credentials. Start Role-Model outside Pi, then run `/role-model setup`.
++
+
+ ❯ test/docs-and-safety.test.ts:47:27
+     45|     expect(packageReadme).toContain("pi install ./packages/pi-role-mod…
+     46|     expect(packageReadme).toContain("/role-model alias recommended");
+     47|     expect(packageReadme).toContain("/role-model requests");
+       |                           ^
+     48|     expect(packageReadme).toContain("/role-model explain latest");
+     49|     expect(packageReadme).toContain("ROLE_MODEL_ENDPOINT");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  test/extension.test.ts > Pi extension registration > refreshes effective taxonomy during setup and alias refresh
+AssertionError: expected [ 'resolved' ] to have a length of 3 but got 1
+
+- Expected
++ Received
+
+- 3
++ 1
+
+ ❯ test/extension.test.ts:121:33
+    119|     });
+    120| 
+    121|     expect(taxonomyResolutions).toHaveLength(3);
+       |                                 ^
+    122|   });
+    123| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  4 failed | 14 passed (18)
+   Start at  09:35:31
+   Duration  1.95s (transform 1.08s, setup 0ms, collect 1.26s, tests 349ms, environment 2ms, prepare 1.81s)
+

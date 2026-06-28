@@ -310,6 +310,110 @@ describe("benchmark-summary", () => {
     expect(capability?.scoresByBucket?.hard?.score).toBe(0.4);
   });
 
+  test("builds assignment-aware role and group benchmark fit from taxonomy summary data", async () => {
+    const capability = buildBenchmarkCapabilityForEndpoint({
+      endpointId: "moonshot.kimi",
+      latestProfile: {
+        judge_score: 0.74,
+        quality_score: 0.74,
+        sample_size: 6,
+        measured_at_ms: 1_700_000_000_000,
+        freshness_score: 0.8,
+        sources: {
+          benchmark_samples: 6,
+          live_request_samples: 0,
+        },
+      },
+      difficultyProfiles: {
+        hard: { judge_score: 0.7 },
+      },
+      availableRoleIds: ["coder"],
+      summary: {
+        runId: "run-role-fit",
+        completedAtMs: 30,
+        mode: "quick",
+        suiteId: "routing-capability-v2",
+        suiteVersion: "2.0",
+        judgeEndpointId: "judge.new",
+        judgeModelId: "kimi-k2.6",
+        artifactRoot: "run-role-fit",
+        subjects: [
+          {
+            endpointId: "moonshot.kimi",
+            modelId: "kimi-k2.6",
+            overallScore: 0.74,
+            scoresByBucket: {
+              easy: { score: 0.8, cases: 2 },
+              medium: { score: 0.7, cases: 2 },
+              hard: { score: 0.72, cases: 2 },
+            },
+            passingCaseIds: ["h01", "h03", "h04"],
+            caseCount: 4,
+            taxonomyScores: {
+              byRole: {
+                coder: 0.9,
+                writer: 0.55,
+              },
+              byTask: {
+                "coder.review": 0.92,
+                "writer.docs.write": 0.55,
+              },
+              byVariant: {},
+              byCapability: {},
+              byModality: {},
+              byToolClass: {},
+            },
+            taxonomyCoverage: {
+              byRole: {
+                coder: 3,
+                writer: 1,
+              },
+              byTask: {
+                "coder.review": 3,
+                "writer.docs.write": 1,
+              },
+              byVariant: {},
+              byCapability: {},
+              byModality: {},
+              byToolClass: {},
+            },
+          },
+        ],
+        caseComparisons: [],
+        caseAudits: [],
+        manifest: {
+          executionCompletedAtMs: 20,
+          gradingCompletedAtMs: 30,
+          judgeArtifactCount: 2,
+          compareArtifactCount: 1,
+        },
+      },
+    });
+
+    expect(capability?.roleScores).toEqual({
+      coder: 0.9,
+      writer: 0.55,
+    });
+    expect(capability?.eligibleRoleScores).toEqual({
+      coder: 0.9,
+    });
+    expect(capability?.groupScores).toEqual({
+      engineering: 0.9,
+    });
+    expect(capability?.coverage).toEqual({
+      overallCases: 4,
+      roleCases: {
+        coder: 3,
+        writer: 1,
+      },
+      groupCases: {
+        engineering: 3,
+      },
+      lowCoverageRoleIds: ["writer"],
+      lowCoverageGroupIds: [],
+    });
+  });
+
   test("lists completed runs and resolves latest summary per mode", async () => {
     const root = await createArtifactRoot();
     const fullRunId = "run-full";
@@ -551,6 +655,18 @@ describe("benchmark-summary", () => {
       "filesystem.read": 0.5,
       "filesystem.write": 1,
       "shell.execute": 1,
+    });
+    expect(summary.subjects[0]?.taxonomyCoverage).toEqual({
+      byRole: { coder: 2 },
+      byTask: { "coder.review": 1, "coder.write": 1 },
+      byVariant: { root_cause: 1, e2e: 1 },
+      byCapability: { "code.read": 2, "code.write": 1 },
+      byModality: { text: 2, structured_json: 1 },
+      byToolClass: {
+        "filesystem.read": 1,
+        "filesystem.write": 1,
+        "shell.execute": 1,
+      },
     });
   });
 

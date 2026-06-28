@@ -6,7 +6,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { stringify } from "yaml";
 
 import type { NormalizedCatalog } from "@role-model-router/catalog";
@@ -754,7 +754,7 @@ describe("runtime-host-bridge", () => {
       >,
     );
 
-    expect(calls).toEqual([
+    const expectedCalls: Array<{ kind: string; body: Record<string, unknown> }> = [
       {
         kind: "account",
         body: {
@@ -797,7 +797,68 @@ describe("runtime-host-bridge", () => {
           region: "global",
         },
       },
-    ]);
+    ];
+
+    if (process.env.DEEPSEEK_API_KEY) {
+      expectedCalls.push(
+        {
+          kind: "account",
+          body: {
+            providerAccountId: "deepseek.personal.deepseek-api-key",
+            providerId: "deepseek",
+            providerKind: "provider-openai",
+            orgScope: "personal",
+            accountScope: "workspace-default",
+            credentialRef: {
+              backend: "env",
+              ref: "DEEPSEEK_API_KEY",
+            },
+            authMode: "api-key-static",
+            regionPolicy: {
+              mode: "prefer",
+              regions: ["global"],
+            },
+            baseUrlOverride: "https://api.deepseek.com/v1",
+            allowedModels: ["deepseek/deepseek-v4-flash", "deepseek/deepseek-v4-pro"],
+            modelRoleBindings: [
+              {
+                modelId: "deepseek/deepseek-v4-flash",
+                roleIds: ["general.chat"],
+              },
+              {
+                modelId: "deepseek/deepseek-v4-pro",
+                roleIds: ["general.chat"],
+              },
+            ],
+            deniedModels: [],
+            entitlementTags: ["chat", "benchmark"],
+            budgetPolicyRef: "budget.default",
+            quotaPolicyRef: "quota.default",
+            status: "active",
+            healthStatus: "healthy",
+            rotationState: "stable",
+          },
+        },
+        {
+          kind: "endpoint",
+          body: {
+            providerAccountId: "deepseek.personal.deepseek-api-key",
+            modelId: "deepseek/deepseek-v4-flash",
+            region: "global",
+          },
+        },
+        {
+          kind: "endpoint",
+          body: {
+            providerAccountId: "deepseek.personal.deepseek-api-key",
+            modelId: "deepseek/deepseek-v4-pro",
+            region: "global",
+          },
+        },
+      );
+    }
+
+    expect(calls).toEqual(expectedCalls);
   });
 
   test("builds packaged CLI options with static UI, router surfaces, and fixture-root defaults", () => {
@@ -1403,6 +1464,8 @@ describe("runtime-host-bridge", () => {
         classificationContractVersion: "role-model.classification.v1",
         role: { id: "security", hard: false },
         task: { id: "security.audit", hard: false },
+        originalRoleHintId: "coder",
+        originalTaskType: "security.audit",
         contentRevision: "taxonomy-v1-alpha.1",
         contractVersion: 1,
         taskAction: "audit",
@@ -1413,6 +1476,9 @@ describe("runtime-host-bridge", () => {
         modalities: { required: ["text"] },
         toolClasses: ["filesystem.read"],
         source: "client.rule",
+        roleSource: "user",
+        taskSource: "client.rule",
+        taskConfidence: 0.98,
         confidence: 0.98,
         evidence: ["explicit security review request"],
         alternatives: [{ roleId: "coder", taskType: "coder.review", confidence: 0.42 }],
@@ -1438,6 +1504,8 @@ describe("runtime-host-bridge", () => {
         taxonomyVersion: "1.0.0-alpha.1",
         contentRevision: "taxonomy-v1-alpha.1",
         classificationContractVersion: "role-model.classification.v1",
+        originalRoleHintId: "unknown.role",
+        originalTaskType: "unknown.task",
         role: { id: "unknown.role", hard: false },
         task: { id: "unknown.task", hard: false },
         capabilities: {
@@ -1446,7 +1514,10 @@ describe("runtime-host-bridge", () => {
         modalities: { required: ["text", "unknown_modality"] },
         toolClasses: ["filesystem.read", "unknown.tool"],
         source: "heuristic",
+        roleSource: "heuristic.group",
+        taskSource: "heuristic.rule",
         confidence: 0.74,
+        taskConfidence: 0.61,
       },
       [{ role_id: "security" }],
       [{ task_type: "security.audit", allowed_roles: ["security"] }],
@@ -1456,6 +1527,13 @@ describe("runtime-host-bridge", () => {
       taxonomyVersion: "1.0.0-alpha.1",
       contentRevision: "taxonomy-v1-alpha.1",
       classificationContractVersion: "role-model.classification.v1",
+      originalRoleHintId: "unknown.role",
+      originalTaskType: "unknown.task",
+      source: "heuristic",
+      roleSource: "heuristic.group",
+      taskSource: "heuristic.rule",
+      confidence: 0.74,
+      taskConfidence: 0.61,
       capabilities: { preferred: ["security.analysis"] },
       modalities: { required: ["text"] },
       toolClasses: ["filesystem.read"],
@@ -5569,6 +5647,31 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("does not attempt to write a fallback error after the response is already committed", () => {
+    const end = vi.fn();
+    const setHeader = vi.fn();
+    const response = {
+      headersSent: true,
+      writableEnded: true,
+      statusCode: 200,
+      setHeader,
+      end,
+    } as unknown as import("node:http").ServerResponse;
+
+    const wrote = (
+      bridge as {
+        writeUnhandledBridgeError: (
+          response: import("node:http").ServerResponse,
+          error: unknown,
+        ) => boolean;
+      }
+    ).writeUnhandledBridgeError(response, new Error("late failure"));
+
+    expect(wrote).toBe(false);
+    expect(setHeader).not.toHaveBeenCalled();
+    expect(end).not.toHaveBeenCalled();
+  });
+
   test("generates a unique canonical request id for each request when headers omit request ids", async () => {
     const capturedRequestIds: string[] = [];
     const server = await (
@@ -7581,8 +7684,7 @@ describe("runtime-host-bridge", () => {
         effectiveMetrics: {
           quality: expect.objectContaining({
             value: expect.any(Number),
-            source: "measured",
-            measuredAtMs: expect.any(Number),
+            source: "benchmark",
             freshnessWeight: expect.any(Number),
           }),
           latency: expect.objectContaining({
@@ -9260,7 +9362,7 @@ describe("runtime-host-bridge", () => {
     expect(result).toBe("hard");
   });
 
-  test("keeps fresh endpoint-wide metrics when stale hard-bucket quality is overlaid", async () => {
+  test("keeps fresh endpoint-wide metrics when stale hard-bucket quality is present under benchmark-driven routing", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-difficulty-merge-tests-"),
     );
@@ -9526,11 +9628,17 @@ describe("runtime-host-bridge", () => {
         effectiveMetrics?: {
           quality?: {
             value?: number;
+            source?: string;
+            freshnessWeight?: number;
           };
         };
       };
     };
-    expect(observation.routingDiagnostics?.effectiveMetrics?.quality?.value).toBeGreaterThan(0.85);
+    expect(observation.routingDiagnostics?.effectiveMetrics?.quality).toMatchObject({
+      source: "benchmark",
+      value: expect.any(Number),
+      freshnessWeight: expect.any(Number),
+    });
   });
 
   test("uses the configured remote classifier result for difficulty-mode runtime-backed chat requests", async () => {
@@ -14620,6 +14728,10 @@ describe("runtime-host-bridge", () => {
           capturePolicy: expect.objectContaining({
             structuredInspectionAvailable: true,
           }),
+          observationAvailability: expect.objectContaining({
+            source: "raw-observation",
+            rawObservationAvailable: true,
+          }),
         }),
       );
 
@@ -14707,6 +14819,15 @@ describe("runtime-host-bridge", () => {
       requestId: "req-telemetry-analytics-remote-001",
       routingDecisionId: "decision-telemetry-analytics-remote-001",
       endpointId: "openai.personal.primary.us-east-1.fast",
+      taxonomyDimensions: {
+        taxonomy_group_id: "engineering",
+        taxonomy_role_id: "coder",
+        taxonomy_task_type: "coder.review",
+        taxonomy_task_variant: "security",
+        taxonomy_capability_ids: ["code.read", "security.analysis"],
+        taxonomy_modality_ids: ["json", "text"],
+        taxonomy_tool_class_ids: ["filesystem.read", "shell.execute"],
+      },
       routingDiagnostics: {
         ...baseBundle.routingDiagnostics,
         routingMode: {
@@ -14890,6 +15011,15 @@ describe("runtime-host-bridge", () => {
       requestId: "req-telemetry-analytics-local-001",
       routingDecisionId: "decision-telemetry-analytics-local-001",
       endpointId: "llama-swap.local.local-mock-llama",
+      taxonomyDimensions: {
+        taxonomy_group_id: "governance_safety",
+        taxonomy_role_id: "security",
+        taxonomy_task_type: "security.audit",
+        taxonomy_task_variant: "deep",
+        taxonomy_capability_ids: ["security.analysis"],
+        taxonomy_modality_ids: ["text"],
+        taxonomy_tool_class_ids: ["filesystem.read"],
+      },
       usageEvent: {
         ...baseBundle.usageEvent,
         request_id: "req-telemetry-analytics-local-001",
@@ -15024,6 +15154,65 @@ describe("runtime-host-bridge", () => {
       databasePath,
       observation: localBundle,
     });
+    const legacyTimestampMs = localTimestampMs + 1_200;
+    persistRuntimeObservationBundle({
+      databasePath,
+      observation: {
+        ...baseBundle,
+        requestId: "req-telemetry-analytics-legacy-001",
+        routingDecisionId: "decision-telemetry-analytics-legacy-001",
+        endpointId: "openai.personal.primary.us-east-1.legacy",
+        usageEvent: {
+          ...baseBundle.usageEvent,
+          request_id: "req-telemetry-analytics-legacy-001",
+          routing_decision_id: "decision-telemetry-analytics-legacy-001",
+          endpoint_id: "openai.personal.primary.us-east-1.legacy",
+          model_id: "openai/gpt-4.1-mini-fast",
+          provider_kind: "remote_openai_compat",
+          tokens_in: 80,
+          tokens_out: 24,
+          latency_ms: 640,
+          cost_actual: 0.0031,
+          cost_estimate: 0.0031,
+          currency: "USD",
+          timestamp_ms: legacyTimestampMs,
+        },
+        observedPerformance: {
+          ...baseBundle.observedPerformance,
+          sample: {
+            ...baseBundle.observedPerformance.sample,
+            request_id: "req-telemetry-analytics-legacy-001",
+            routing_decision_id: "decision-telemetry-analytics-legacy-001",
+            endpoint_id: "openai.personal.primary.us-east-1.legacy",
+            timestamp_ms: legacyTimestampMs,
+            latency_ms: 640,
+            latency_ms_p95: 640,
+            source_type: "live_request",
+          },
+          profile: {
+            ...baseBundle.observedPerformance.profile,
+            endpoint_id: "openai.personal.primary.us-east-1.legacy",
+            measured_at_ms: legacyTimestampMs,
+          },
+        },
+        telemetrySnapshot: {
+          ...remoteBundle.telemetrySnapshot,
+          requestedModelId: "legacy/openai-generic",
+        },
+        inspection: {
+          ...baseBundle.inspection,
+          request: {
+            ...baseBundle.inspection.request,
+            requestId: "req-telemetry-analytics-legacy-001",
+            routingDecisionId: "decision-telemetry-analytics-legacy-001",
+            responseCapture: {
+              ...baseBundle.inspection.request.responseCapture,
+              statusCode: 200,
+            },
+          },
+        },
+      },
+    });
     persistRuntimeTelemetryFailure({
       databasePath,
       requestId: "req-telemetry-analytics-failure-only-001",
@@ -15104,47 +15293,103 @@ describe("runtime-host-bridge", () => {
     await expect(
       backend.queryTelemetryAnalytics?.({
         startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: legacyTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["requestCount"],
+        breakdown: "taxonomyTaskType",
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          taxonomyCoverage: {
+            matchedRowCount: 3,
+            richerTaxonomyRowCount: 2,
+            legacyRowCount: 1,
+            coverageRate: 0.666667,
+            backfillPerformed: false,
+          },
+        }),
+        dimensionSupport: expect.objectContaining({
+          taxonomyTaskType: expect.objectContaining({
+            status: "partial",
+            matchedRowCount: 3,
+            populatedRowCount: 2,
+            sparseRowCount: 1,
+            reason:
+              "1 row(s) in this slice do not include taxonomyTaskType. Richer taxonomy coverage in this range is 2/3 rows (66.7%); rows without richer taxonomy remain included and richer-taxonomy backfill is not performed.",
+          }),
+        }),
+      }),
+    );
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
         endAtMs: localTimestampMs + 1_000,
         granularity: "hour",
-        metrics: ["requestCount", "routingCostSavingsUsd"],
-        breakdown: "selectedStrategy",
+        metrics: ["requestCount", "averageLatencyMs"],
+        breakdown: "taxonomyToolClassId",
         filters: {
-          requestedRoleIds: ["coder.patch"],
+          taxonomyCapabilityIds: ["security.analysis"],
         },
         ranking: {
-          dimension: "selectedStrategy",
-          metric: "routingCostSavingsUsd",
+          dimension: "taxonomyCapabilityId",
+          metric: "requestCount",
           limit: 5,
         },
       }),
     ).resolves.toEqual(
       expect.objectContaining({
+        breakdown: "taxonomyToolClassId",
         buckets: [
           expect.objectContaining({
             totals: expect.objectContaining({
-              requestCount: 1,
-              routingCostSavingsUsd: 0.0054,
+              requestCount: 2,
+              averageLatencyMs: 1020,
             }),
-            series: [
+            series: expect.arrayContaining([
               expect.objectContaining({
-                key: "quality",
+                key: "filesystem.read",
                 metrics: expect.objectContaining({
-                  requestCount: 1,
-                  routingCostSavingsUsd: 0.0054,
+                  requestCount: 2,
+                  averageLatencyMs: 1020,
                 }),
               }),
-            ],
+              expect.objectContaining({
+                key: "shell.execute",
+                metrics: expect.objectContaining({
+                  requestCount: 1,
+                  averageLatencyMs: 840,
+                }),
+              }),
+            ]),
           }),
         ],
         ranking: expect.objectContaining({
-          dimension: "selectedStrategy",
-          metric: "routingCostSavingsUsd",
-          rows: [
+          dimension: "taxonomyCapabilityId",
+          metric: "requestCount",
+          rows: expect.arrayContaining([
             expect.objectContaining({
-              key: "quality",
-              value: 0.0054,
+              key: "security.analysis",
+              value: 2,
             }),
-          ],
+            expect.objectContaining({
+              key: "code.read",
+              value: 1,
+            }),
+          ]),
+        }),
+        dimensionSupport: expect.objectContaining({
+          taxonomyToolClassId: expect.objectContaining({
+            dimension: "taxonomyToolClassId",
+            status: "supported",
+            populatedRowCount: 2,
+          }),
+          taxonomyCapabilityId: expect.objectContaining({
+            dimension: "taxonomyCapabilityId",
+            status: "supported",
+            populatedRowCount: 2,
+          }),
         }),
       }),
     );
@@ -15289,6 +15534,51 @@ describe("runtime-host-bridge", () => {
         costSavingsSupport: null,
       }),
     );
+
+    const database = new DatabaseSync(databasePath);
+    database
+      .prepare("DELETE FROM runtime_observations WHERE request_id = ?")
+      .run("req-telemetry-analytics-local-001");
+    database.close();
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: localTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
+        metrics: ["requestCount"],
+        breakdown: "taxonomyTaskType",
+        filters: {
+          sourceTypes: ["local"],
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        totals: expect.objectContaining({
+          requestCount: 1,
+        }),
+        buckets: [
+          expect.objectContaining({
+            series: expect.arrayContaining([
+              expect.objectContaining({
+                key: "security.audit",
+                metrics: expect.objectContaining({
+                  requestCount: 1,
+                }),
+              }),
+            ]),
+          }),
+        ],
+        dimensionSupport: expect.objectContaining({
+          taxonomyTaskType: expect.objectContaining({
+            dimension: "taxonomyTaskType",
+            status: "supported",
+            matchedRowCount: 1,
+            populatedRowCount: 1,
+          }),
+        }),
+      }),
+    );
   });
 
   test("aggregates telemetry analytics over the full requested slice with contract metadata and aligned ledger filters", async () => {
@@ -15393,6 +15683,31 @@ describe("runtime-host-bridge", () => {
     );
 
     await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs,
+        endAtMs,
+        granularity: "hour",
+        metrics: ["requestCount"],
+        ranking: {
+          dimension: "endpointId",
+          metric: "requestCount",
+          limit: 5,
+        },
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        ranking: expect.objectContaining({
+          rows: expect.any(Array),
+        }),
+        metadata: expect.objectContaining({
+          truncated: true,
+          truncationReason:
+            "Ranking limited to top 5 endpointId value(s) out of 65 matched value(s).",
+        }),
+      }),
+    );
+
+    await expect(
       backend.listTelemetryRequests?.({
         startAtMs,
         endAtMs,
@@ -15404,6 +15719,124 @@ describe("runtime-host-bridge", () => {
     ).resolves.toSatisfy((requests: readonly Record<string, unknown>[]) => {
       return requests.length === 33 && requests.every((request) => request.sourceType === "remote");
     });
+  });
+
+  test("startup retention cleanup removes expired raw observations while preserving telemetry ledger evidence", async () => {
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-host-retention-cleanup-"),
+    );
+    const scopeId = "runtime-host-retention-cleanup";
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const databasePath = resolveSqliteMemoryLocation({
+      runtimeStateRoot,
+      scopeId,
+    });
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId,
+    });
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: {},
+      accountState: {
+        providerAccountId: validation.execution.target.providerAccountId,
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      },
+      telemetryConfig: {
+        samplingRate: 1,
+        retentionTtlHours: 1,
+      },
+    });
+
+    persistRuntimeObservationBundle({
+      databasePath,
+      observation: {
+        ...bundle,
+        requestId: "req-retention-expired-001",
+        routingDecisionId: "decision-retention-expired-001",
+        privacyReceipt: {
+          ...bundle.privacyReceipt,
+          retainUntil: Date.now() - 60_000,
+        },
+      },
+    });
+
+    const beforeCleanupDatabase = new DatabaseSync(initialized.databasePath);
+    try {
+      const beforeCleanupCount = beforeCleanupDatabase
+        .prepare("SELECT COUNT(*) AS count FROM runtime_observations")
+        .get() as { count: number };
+      expect(beforeCleanupCount.count).toBe(1);
+    } finally {
+      beforeCleanupDatabase.close();
+    }
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+        }) => Promise<{
+          listTelemetryRequests?: () => Promise<readonly { requestId: string }[]>;
+          readRequestObservation?: (requestId: string) => Promise<Record<string, unknown> | null>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+    });
+
+    const database = new DatabaseSync(initialized.databasePath);
+    try {
+      const afterCleanupCount = database
+        .prepare("SELECT COUNT(*) AS count FROM runtime_observations")
+        .get() as { count: number };
+      expect(afterCleanupCount.count).toBe(0);
+    } finally {
+      database.close();
+    }
+
+    await expect(backend.listTelemetryRequests?.()).resolves.toEqual(
+      expect.arrayContaining([expect.objectContaining({ requestId: "req-retention-expired-001" })]),
+    );
+    await expect(backend.readRequestObservation?.("req-retention-expired-001")).resolves.toEqual(
+      expect.objectContaining({
+        requestId: "req-retention-expired-001",
+        capturePolicy: expect.objectContaining({
+          environment: "telemetry-ledger-fallback",
+          rawCaptureAvailable: false,
+          structuredInspectionAvailable: false,
+        }),
+        privacyReceipt: expect.objectContaining({
+          samplingRate: 1,
+          retentionTtlHours: 1,
+        }),
+        observationAvailability: expect.objectContaining({
+          source: "telemetry-ledger-fallback",
+          rawObservationAvailable: false,
+        }),
+      }),
+    );
   });
 
   test("keeps duplicate caller request ids as separate canonical telemetry rows", async () => {

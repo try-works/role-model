@@ -44,6 +44,8 @@ describe("Pi installation docs, skill, and safety guardrails", () => {
     expect(packageReadme).toContain("pi install npm:@try-works/pi-role-model");
     expect(packageReadme).toContain("pi install ./packages/pi-role-model");
     expect(packageReadme).toContain("/role-model alias recommended");
+    expect(packageReadme).toContain("/role-model requests");
+    expect(packageReadme).toContain("/role-model explain latest");
     expect(packageReadme).toContain("ROLE_MODEL_ENDPOINT");
     expect(packageReadme).toContain("allowRemote");
     expect(packageReadme).toContain("active model");
@@ -54,6 +56,9 @@ describe("Pi installation docs, skill, and safety guardrails", () => {
     expect(skill).toContain("compact taxonomy snapshot");
     expect(skill).toContain("progressive classification");
     expect(skill).toContain("role_model.intent");
+    expect(skill).toContain("/role-model requests");
+    expect(skill).toContain("/role-model explain latest");
+    expect(skill).toContain("runtime-owned request");
     expect(skill).toContain("Taxonomy-aware benchmarks and telemetry are later Role-Model phases");
     expect(skill).toContain("benchmarks");
     expect(skill).toContain("Do not read, print, copy, or sync Pi auth files");

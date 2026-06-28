@@ -82,6 +82,21 @@ const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
   "cost_calculation_version",
   "cost_baseline_source",
   "cost_savings_support",
+  "sampling_rate",
+  "retention_ttl_hours",
+  "retain_until_ms",
+  "redaction_level",
+  "retention_class",
+  "structured_inspection_mode",
+  "raw_capture_available",
+  "structured_inspection_available",
+  "taxonomy_group_id",
+  "taxonomy_role_id",
+  "taxonomy_task_type",
+  "taxonomy_task_variant",
+  "taxonomy_capability_ids_json",
+  "taxonomy_modality_ids_json",
+  "taxonomy_tool_class_ids_json",
   "currency",
   "dimensions_json",
 ] as const;
@@ -366,6 +381,21 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   cost_calculation_version TEXT NOT NULL DEFAULT 'run49.v1',
   cost_baseline_source TEXT,
   cost_savings_support TEXT,
+  sampling_rate REAL,
+  retention_ttl_hours INTEGER,
+  retain_until_ms INTEGER,
+  redaction_level TEXT,
+  retention_class TEXT,
+  structured_inspection_mode TEXT,
+  raw_capture_available INTEGER NOT NULL DEFAULT 0,
+  structured_inspection_available INTEGER NOT NULL DEFAULT 0,
+  taxonomy_group_id TEXT,
+  taxonomy_role_id TEXT,
+  taxonomy_task_type TEXT,
+  taxonomy_task_variant TEXT,
+  taxonomy_capability_ids_json TEXT,
+  taxonomy_modality_ids_json TEXT,
+  taxonomy_tool_class_ids_json TEXT,
   currency TEXT,
   dimensions_json TEXT
  );
@@ -838,6 +868,21 @@ export interface RuntimeTelemetryRecord {
   readonly costCalculationVersion: string;
   readonly costBaselineSource: string | null;
   readonly costSavingsSupport: string | null;
+  readonly samplingRate: number | null;
+  readonly retentionTtlHours: number | null;
+  readonly retainUntil: number | null;
+  readonly redactionLevel: string | null;
+  readonly retentionClass: string | null;
+  readonly structuredInspectionMode: string | null;
+  readonly rawCaptureAvailable: boolean;
+  readonly structuredInspectionAvailable: boolean;
+  readonly taxonomyGroupId: string | null;
+  readonly taxonomyRoleId: string | null;
+  readonly taxonomyTaskType: string | null;
+  readonly taxonomyTaskVariant: string | null;
+  readonly taxonomyCapabilityIds: readonly string[];
+  readonly taxonomyModalityIds: readonly string[];
+  readonly taxonomyToolClassIds: readonly string[];
   readonly currency: string | null;
   readonly dimensions: Record<string, unknown> | null;
 }
@@ -999,14 +1044,29 @@ export interface PersistedRuntimeObservationBundle {
       };
     };
   };
+  readonly capturePolicy?: {
+    readonly environment?: string;
+    readonly redactionLevel?: string;
+    readonly retentionClass?: string;
+    readonly structuredInspectionMode?: string;
+    readonly rawCaptureAvailable?: boolean;
+    readonly structuredInspectionAvailable?: boolean;
+    readonly redactedFields?: readonly string[];
+    readonly suppressedFields?: readonly string[];
+  };
   readonly privacyReceipt?: {
     readonly samplingRate?: number;
     readonly retentionTtlHours?: number;
     readonly retainUntil?: number;
   };
   readonly taxonomyDimensions?: {
+    readonly taxonomy_group_id?: unknown;
     readonly taxonomy_role_id?: unknown;
     readonly taxonomy_task_type?: unknown;
+    readonly taxonomy_task_variant?: unknown;
+    readonly taxonomy_capability_ids?: unknown;
+    readonly taxonomy_modality_ids?: unknown;
+    readonly taxonomy_tool_class_ids?: unknown;
   };
 }
 
@@ -1128,6 +1188,21 @@ function initializeSchema(database: DatabaseSync): void {
     `cost_calculation_version TEXT NOT NULL DEFAULT '${COST_CALCULATION_VERSION}'`,
     "cost_baseline_source TEXT",
     "cost_savings_support TEXT",
+    "sampling_rate REAL",
+    "retention_ttl_hours INTEGER",
+    "retain_until_ms INTEGER",
+    "redaction_level TEXT",
+    "retention_class TEXT",
+    "structured_inspection_mode TEXT",
+    "raw_capture_available INTEGER NOT NULL DEFAULT 0",
+    "structured_inspection_available INTEGER NOT NULL DEFAULT 0",
+    "taxonomy_group_id TEXT",
+    "taxonomy_role_id TEXT",
+    "taxonomy_task_type TEXT",
+    "taxonomy_task_variant TEXT",
+    "taxonomy_capability_ids_json TEXT",
+    "taxonomy_modality_ids_json TEXT",
+    "taxonomy_tool_class_ids_json TEXT",
     "dimensions_json TEXT",
   ] as const;
   for (const definition of telemetryColumnDefinitions) {
@@ -1136,6 +1211,54 @@ function initializeSchema(database: DatabaseSync): void {
       database.exec(`ALTER TABLE runtime_telemetry_records ADD COLUMN ${definition}`);
     }
   }
+  database.exec(
+    `UPDATE runtime_telemetry_records SET
+      client_request_id = COALESCE(
+        client_request_id,
+        (SELECT client_request_id FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      request_class = COALESCE(
+        request_class,
+        (SELECT request_class FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      taxonomy_group_id = COALESCE(
+        taxonomy_group_id,
+        (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_group_id') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      taxonomy_role_id = COALESCE(
+        taxonomy_role_id,
+        (SELECT taxonomy_role_id FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      taxonomy_task_type = COALESCE(
+        taxonomy_task_type,
+        (SELECT taxonomy_task_type FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      taxonomy_task_variant = COALESCE(
+        taxonomy_task_variant,
+        (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_task_variant') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      taxonomy_capability_ids_json = COALESCE(
+        taxonomy_capability_ids_json,
+        (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_capability_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      taxonomy_modality_ids_json = COALESCE(
+        taxonomy_modality_ids_json,
+        (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_modality_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      taxonomy_tool_class_ids_json = COALESCE(
+        taxonomy_tool_class_ids_json,
+        (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_tool_class_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      )
+    WHERE client_request_id IS NULL
+      OR request_class IS NULL
+      OR taxonomy_group_id IS NULL
+      OR taxonomy_role_id IS NULL
+      OR taxonomy_task_type IS NULL
+      OR taxonomy_task_variant IS NULL
+      OR taxonomy_capability_ids_json IS NULL
+      OR taxonomy_modality_ids_json IS NULL
+      OR taxonomy_tool_class_ids_json IS NULL`,
+  );
 }
 
 function seedMaintenanceDefaults(database: DatabaseSync, nowMs: number): void {
@@ -2035,9 +2158,30 @@ function mapRuntimeTelemetryRecord(row: {
   cost_calculation_version: string | null;
   cost_baseline_source: string | null;
   cost_savings_support: string | null;
+  sampling_rate: number | null;
+  retention_ttl_hours: number | null;
+  retain_until_ms: number | null;
+  redaction_level: string | null;
+  retention_class: string | null;
+  structured_inspection_mode: string | null;
+  raw_capture_available: number;
+  structured_inspection_available: number;
+  taxonomy_group_id: string | null;
+  taxonomy_role_id: string | null;
+  taxonomy_task_type: string | null;
+  taxonomy_task_variant: string | null;
+  taxonomy_capability_ids_json: string | null;
+  taxonomy_modality_ids_json: string | null;
+  taxonomy_tool_class_ids_json: string | null;
   currency: string | null;
   dimensions_json: string | null;
 }): RuntimeTelemetryRecord {
+  const parseStringList = (value: string | null): readonly string[] =>
+    value
+      ? (JSON.parse(value) as unknown[]).filter(
+          (entry): entry is string => typeof entry === "string",
+        )
+      : [];
   return {
     requestId: row.request_id,
     routingDecisionId: row.routing_decision_id,
@@ -2142,11 +2286,37 @@ function mapRuntimeTelemetryRecord(row: {
     costCalculationVersion: row.cost_calculation_version ?? COST_CALCULATION_VERSION,
     costBaselineSource: row.cost_baseline_source,
     costSavingsSupport: row.cost_savings_support,
+    samplingRate: row.sampling_rate,
+    retentionTtlHours: row.retention_ttl_hours,
+    retainUntil: row.retain_until_ms,
+    redactionLevel: row.redaction_level,
+    retentionClass: row.retention_class,
+    structuredInspectionMode: row.structured_inspection_mode,
+    rawCaptureAvailable: row.raw_capture_available === 1,
+    structuredInspectionAvailable: row.structured_inspection_available === 1,
+    taxonomyGroupId: row.taxonomy_group_id,
+    taxonomyRoleId: row.taxonomy_role_id,
+    taxonomyTaskType: row.taxonomy_task_type,
+    taxonomyTaskVariant: row.taxonomy_task_variant,
+    taxonomyCapabilityIds: parseStringList(row.taxonomy_capability_ids_json),
+    taxonomyModalityIds: parseStringList(row.taxonomy_modality_ids_json),
+    taxonomyToolClassIds: parseStringList(row.taxonomy_tool_class_ids_json),
     currency: row.currency,
     dimensions: row.dimensions_json
       ? (JSON.parse(row.dimensions_json) as Record<string, unknown>)
       : null,
   };
+}
+
+function readPersistedTelemetryString(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function readPersistedTelemetryStringList(value: unknown): readonly string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter((entry): entry is string => typeof entry === "string");
 }
 
 function toRuntimeTelemetryRecord(
@@ -2199,6 +2369,7 @@ function toRuntimeTelemetryRecord(
       : errorClass
         ? "failure"
         : "unknown";
+  const taxonomyDimensions = observation.taxonomyDimensions;
   return {
     requestId: observation.requestId,
     routingDecisionId: observation.routingDecisionId,
@@ -2281,6 +2452,28 @@ function toRuntimeTelemetryRecord(
     costCalculationVersion: COST_CALCULATION_VERSION,
     costBaselineSource: telemetrySnapshot?.costBaselineSource ?? null,
     costSavingsSupport: telemetrySnapshot?.costSavingsSupport ?? null,
+    samplingRate: observation.privacyReceipt?.samplingRate ?? null,
+    retentionTtlHours: observation.privacyReceipt?.retentionTtlHours ?? null,
+    retainUntil: observation.privacyReceipt?.retainUntil ?? null,
+    redactionLevel: observation.capturePolicy?.redactionLevel ?? null,
+    retentionClass: observation.capturePolicy?.retentionClass ?? null,
+    structuredInspectionMode: observation.capturePolicy?.structuredInspectionMode ?? null,
+    rawCaptureAvailable: observation.capturePolicy?.rawCaptureAvailable ?? false,
+    structuredInspectionAvailable:
+      observation.capturePolicy?.structuredInspectionAvailable ?? false,
+    taxonomyGroupId: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_group_id),
+    taxonomyRoleId: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_role_id),
+    taxonomyTaskType: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_task_type),
+    taxonomyTaskVariant: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_task_variant),
+    taxonomyCapabilityIds: readPersistedTelemetryStringList(
+      taxonomyDimensions?.taxonomy_capability_ids,
+    ),
+    taxonomyModalityIds: readPersistedTelemetryStringList(
+      taxonomyDimensions?.taxonomy_modality_ids,
+    ),
+    taxonomyToolClassIds: readPersistedTelemetryStringList(
+      taxonomyDimensions?.taxonomy_tool_class_ids,
+    ),
     currency: observation.usageEvent.currency ?? null,
     dimensions: telemetrySnapshot?.dimensions ?? null,
   };
@@ -2358,6 +2551,21 @@ function runtimeTelemetryInsertValues(
     record.costCalculationVersion,
     record.costBaselineSource,
     record.costSavingsSupport,
+    record.samplingRate,
+    record.retentionTtlHours,
+    record.retainUntil,
+    record.redactionLevel,
+    record.retentionClass,
+    record.structuredInspectionMode,
+    record.rawCaptureAvailable ? 1 : 0,
+    record.structuredInspectionAvailable ? 1 : 0,
+    record.taxonomyGroupId,
+    record.taxonomyRoleId,
+    record.taxonomyTaskType,
+    record.taxonomyTaskVariant,
+    JSON.stringify(record.taxonomyCapabilityIds),
+    JSON.stringify(record.taxonomyModalityIds),
+    JSON.stringify(record.taxonomyToolClassIds),
     record.currency,
     record.dimensions ? JSON.stringify(record.dimensions) : null,
   ];
@@ -2438,6 +2646,21 @@ function toFailureRuntimeTelemetryRecord(
     costCalculationVersion: COST_CALCULATION_VERSION,
     costBaselineSource: null,
     costSavingsSupport: null,
+    samplingRate: null,
+    retentionTtlHours: null,
+    retainUntil: null,
+    redactionLevel: null,
+    retentionClass: null,
+    structuredInspectionMode: null,
+    rawCaptureAvailable: false,
+    structuredInspectionAvailable: false,
+    taxonomyGroupId: null,
+    taxonomyRoleId: null,
+    taxonomyTaskType: null,
+    taxonomyTaskVariant: null,
+    taxonomyCapabilityIds: [],
+    taxonomyModalityIds: [],
+    taxonomyToolClassIds: [],
     currency: null,
     dimensions: input.dimensions ?? null,
   };
@@ -2466,7 +2689,7 @@ function listRuntimeTelemetryRecordsInternal(
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, status_family, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
+      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, status_family, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
         " AND ",
       )} ORDER BY created_at_ms DESC, request_id DESC${limitClause}`,
     )
@@ -2539,6 +2762,21 @@ function listRuntimeTelemetryRecordsInternal(
     cost_calculation_version: string | null;
     cost_baseline_source: string | null;
     cost_savings_support: string | null;
+    sampling_rate: number | null;
+    retention_ttl_hours: number | null;
+    retain_until_ms: number | null;
+    redaction_level: string | null;
+    retention_class: string | null;
+    structured_inspection_mode: string | null;
+    raw_capture_available: number;
+    structured_inspection_available: number;
+    taxonomy_group_id: string | null;
+    taxonomy_role_id: string | null;
+    taxonomy_task_type: string | null;
+    taxonomy_task_variant: string | null;
+    taxonomy_capability_ids_json: string | null;
+    taxonomy_modality_ids_json: string | null;
+    taxonomy_tool_class_ids_json: string | null;
     currency: string | null;
     dimensions_json: string | null;
   }>;
@@ -3042,7 +3280,7 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
 export function readRuntimeObservationBundle(
   input: ReadRuntimeObservationBundleInput,
 ): PersistedRuntimeObservationBundle | null {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const row = database
     .prepare("SELECT observation_json FROM runtime_observations WHERE request_id = ?")
     .get(input.requestId) as
@@ -3072,10 +3310,14 @@ export interface ObservationTelemetryColumns {
   readonly taxonomyTaskType: string | null;
 }
 
+export interface ObservationTelemetrySnapshot extends ObservationTelemetryColumns {
+  readonly observationJson: string | null;
+}
+
 export function readObservationTelemetryColumns(
   input: ReadObservationTelemetryColumnsInput,
 ): ObservationTelemetryColumns | null {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const row = database
     .prepare(
       "SELECT client_request_id, request_class, taxonomy_role_id, taxonomy_task_type FROM runtime_observations WHERE request_id = ?",
@@ -3102,7 +3344,10 @@ export function readObservationTelemetryColumns(
 export function readObservationTelemetryColumnsBatch(
   input: ReadObservationTelemetryColumnsBatchInput,
 ): Map<string, ObservationTelemetryColumns> {
-  const database = new DatabaseSync(input.databasePath);
+  if (input.requestIds.length === 0) {
+    return new Map();
+  }
+  const database = openSqliteDatabase(input.databasePath);
   const placeholders = input.requestIds.map(() => "?").join(", ");
   const rows = database
     .prepare(
@@ -3123,6 +3368,40 @@ export function readObservationTelemetryColumnsBatch(
       requestClass: row.request_class,
       taxonomyRoleId: row.taxonomy_role_id,
       taxonomyTaskType: row.taxonomy_task_type,
+    });
+  }
+  return result;
+}
+
+export function readObservationTelemetrySnapshotsBatch(
+  input: ReadObservationTelemetryColumnsBatchInput,
+): Map<string, ObservationTelemetrySnapshot> {
+  if (input.requestIds.length === 0) {
+    return new Map();
+  }
+  const database = openSqliteDatabase(input.databasePath);
+  const placeholders = input.requestIds.map(() => "?").join(", ");
+  const rows = database
+    .prepare(
+      `SELECT request_id, client_request_id, request_class, taxonomy_role_id, taxonomy_task_type, observation_json FROM runtime_observations WHERE request_id IN (${placeholders})`,
+    )
+    .all(...input.requestIds) as unknown as ReadonlyArray<{
+    request_id: string;
+    client_request_id: string | null;
+    request_class: string | null;
+    taxonomy_role_id: string | null;
+    taxonomy_task_type: string | null;
+    observation_json: string | null;
+  }>;
+  database.close();
+  const result = new Map<string, ObservationTelemetrySnapshot>();
+  for (const row of rows) {
+    result.set(row.request_id, {
+      clientRequestId: row.client_request_id,
+      requestClass: row.request_class,
+      taxonomyRoleId: row.taxonomy_role_id,
+      taxonomyTaskType: row.taxonomy_task_type,
+      observationJson: row.observation_json,
     });
   }
   return result;
@@ -3314,7 +3593,7 @@ export function readDifficultyClassificationCache(
 export function listRecentRuntimeObservations(
   input: ListRecentRuntimeObservationsInput,
 ): readonly RuntimeObservationSummaryRecord[] {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const rows = database
     .prepare(
       "SELECT request_id, routing_decision_id, endpoint_id, created_at_ms, observation_json FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
@@ -3345,7 +3624,7 @@ export function listRecentRuntimeObservations(
 export function listRuntimeTelemetryRecords(
   input: RuntimeTelemetryQueryInput,
 ): readonly RuntimeTelemetryRecord[] {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const rows = listRuntimeTelemetryRecordsInternal(database, input);
   database.close();
   return rows;
@@ -3354,7 +3633,7 @@ export function listRuntimeTelemetryRecords(
 export function readRuntimeTelemetrySummary(
   input: RuntimeTelemetryQueryInput,
 ): RuntimeTelemetrySummary {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const records = listRuntimeTelemetryRecordsInternal(database, input);
   database.close();
 
@@ -3390,7 +3669,7 @@ export function readRuntimeTelemetrySummary(
 export function listRuntimeTelemetryComparisonRows(
   input: RuntimeTelemetryQueryInput,
 ): readonly RuntimeTelemetryComparisonRow[] {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const records = listRuntimeTelemetryRecordsInternal(database, input);
   database.close();
 

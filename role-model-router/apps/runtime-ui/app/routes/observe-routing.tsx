@@ -15,6 +15,7 @@ import type {
   RuntimeTelemetryAnalyticsResponse,
 } from "../lib/runtime-api";
 import { fetchTelemetryAnalytics, subscribeTelemetryStream } from "../lib/runtime-api";
+import { telemetryBreakdownOptions } from "../lib/telemetry-chart-config";
 import type {
   TelemetryRouteChartDefinition,
   TelemetryTimeRangeValue,
@@ -23,13 +24,37 @@ import { buildObserveRoutingChartDefinitions } from "../lib/telemetry-route-mode
 
 const routingBreakdownOptions = [
   { label: "Total", value: "" },
-  { label: "By source", value: "sourceType" },
   { label: "By requested role", value: "requestedRoleId" },
-  { label: "By model", value: "modelId" },
-  { label: "By strategy", value: "selectedStrategy" },
-  { label: "By taxonomy role", value: "taxonomyRoleId" },
-  { label: "By taxonomy task", value: "taxonomyTaskType" },
+  ...telemetryBreakdownOptions
+    .filter((option) =>
+      [
+        "sourceType",
+        "modelId",
+        "selectedStrategy",
+        "taxonomyGroupId",
+        "taxonomyRoleId",
+        "taxonomyTaskType",
+        "taxonomyTaskVariant",
+        "taxonomyCapabilityId",
+        "taxonomyModalityId",
+        "taxonomyToolClassId",
+      ].includes(option.value),
+    )
+    .map((option) => ({ label: `By ${option.label.toLowerCase()}`, value: option.value })),
 ];
+
+function normalizeOptionalId(value: string): string | undefined {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function normalizeOptionalCsvIds(value: string): readonly string[] | undefined {
+  const normalized = value
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+  return normalized.length > 0 ? normalized : undefined;
+}
 
 type RoutingChartRecord = {
   readonly definition: TelemetryRouteChartDefinition;
@@ -47,9 +72,14 @@ export default function ObserveRoutingRoute() {
   const difficulty =
     (searchParams.get("difficulty") as "all" | "easy" | "medium" | "hard") || "all";
   const selectedStrategy = searchParams.get("strategy") || "";
+  const taxonomyGroupId = searchParams.get("taxGroup") || "";
   const requestedRoleId = searchParams.get("roleId") || "";
   const taxonomyRoleId = searchParams.get("taxRole") || "";
   const taxonomyTaskType = searchParams.get("taxTask") || "";
+  const taxonomyTaskVariant = searchParams.get("taxVariant") || "";
+  const taxonomyCapabilityIds = searchParams.get("taxCapability") || "";
+  const taxonomyModalityIds = searchParams.get("taxModality") || "";
+  const taxonomyToolClassIds = searchParams.get("taxTool") || "";
 
   const updateParam = (key: string, value: string) => {
     setSearchParams((prev) => {
@@ -67,21 +97,51 @@ export default function ObserveRoutingRoute() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const filters: RuntimeTelemetryAnalyticsFilters = useMemo(
-    () => ({
+  const filters: RuntimeTelemetryAnalyticsFilters = useMemo(() => {
+    const normalizedRequestedRoleId = normalizeOptionalId(requestedRoleId);
+    const normalizedSelectedStrategy = normalizeOptionalId(selectedStrategy);
+    const normalizedTaxonomyGroupId = normalizeOptionalId(taxonomyGroupId);
+    const normalizedTaxonomyRoleId = normalizeOptionalId(taxonomyRoleId);
+    const normalizedTaxonomyTaskType = normalizeOptionalId(taxonomyTaskType);
+    const normalizedTaxonomyTaskVariant = normalizeOptionalId(taxonomyTaskVariant);
+    const normalizedTaxonomyCapabilityIds = normalizeOptionalCsvIds(taxonomyCapabilityIds);
+    const normalizedTaxonomyModalityIds = normalizeOptionalCsvIds(taxonomyModalityIds);
+    const normalizedTaxonomyToolClassIds = normalizeOptionalCsvIds(taxonomyToolClassIds);
+
+    return {
       ...(sourceFilter === "all" ? {} : { sourceTypes: [sourceFilter] }),
       ...(difficulty === "all" ? {} : { difficultyBuckets: [difficulty] }),
-      ...(requestedRoleId.trim().length > 0 ? { requestedRoleIds: [requestedRoleId.trim()] } : {}),
-      ...(selectedStrategy.trim().length > 0
-        ? { selectedStrategies: [selectedStrategy.trim()] }
+      ...(normalizedRequestedRoleId ? { requestedRoleIds: [normalizedRequestedRoleId] } : {}),
+      ...(normalizedSelectedStrategy ? { selectedStrategies: [normalizedSelectedStrategy] } : {}),
+      ...(normalizedTaxonomyGroupId ? { taxonomyGroupIds: [normalizedTaxonomyGroupId] } : {}),
+      ...(normalizedTaxonomyRoleId ? { taxonomyRoleIds: [normalizedTaxonomyRoleId] } : {}),
+      ...(normalizedTaxonomyTaskType ? { taxonomyTaskTypes: [normalizedTaxonomyTaskType] } : {}),
+      ...(normalizedTaxonomyTaskVariant
+        ? { taxonomyTaskVariants: [normalizedTaxonomyTaskVariant] }
         : {}),
-      ...(taxonomyRoleId.trim().length > 0 ? { taxonomyRoleIds: [taxonomyRoleId.trim()] } : {}),
-      ...(taxonomyTaskType.trim().length > 0
-        ? { taxonomyTaskTypes: [taxonomyTaskType.trim()] }
+      ...(normalizedTaxonomyCapabilityIds
+        ? { taxonomyCapabilityIds: normalizedTaxonomyCapabilityIds }
         : {}),
-    }),
-    [difficulty, requestedRoleId, selectedStrategy, sourceFilter, taxonomyRoleId, taxonomyTaskType],
-  );
+      ...(normalizedTaxonomyModalityIds
+        ? { taxonomyModalityIds: normalizedTaxonomyModalityIds }
+        : {}),
+      ...(normalizedTaxonomyToolClassIds
+        ? { taxonomyToolClassIds: normalizedTaxonomyToolClassIds }
+        : {}),
+    };
+  }, [
+    difficulty,
+    requestedRoleId,
+    selectedStrategy,
+    sourceFilter,
+    taxonomyCapabilityIds,
+    taxonomyGroupId,
+    taxonomyModalityIds,
+    taxonomyRoleId,
+    taxonomyTaskType,
+    taxonomyTaskVariant,
+    taxonomyToolClassIds,
+  ]);
 
   const breakdown: RuntimeTelemetryAnalyticsDimension | null =
     (breakdownValue as string) === ""
@@ -190,35 +250,65 @@ export default function ObserveRoutingRoute() {
               value={requestedRoleId}
             />
           </div>
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] xl:items-end">
+          <div className="grid gap-4 xl:grid-cols-4">
             <TelemetryTextField
               label="Selected strategy"
               onChange={(value) => updateParam("strategy", value)}
               placeholder="Filter a specific selected strategy"
               value={selectedStrategy}
             />
-            <div className="grid gap-4 grid-cols-2">
-              <TelemetryTextField
-                label="Taxonomy role id"
-                onChange={(value) => updateParam("taxRole", value)}
-                placeholder="e.g. coder"
-                value={taxonomyRoleId}
-              />
-              <TelemetryTextField
-                label="Taxonomy task type"
-                onChange={(value) => updateParam("taxTask", value)}
-                placeholder="e.g. coder.review"
-                value={taxonomyTaskType}
-              />
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link className={secondaryButtonClassName} to="/app/router">
-                Open router configuration
-              </Link>
-              <Link className={secondaryButtonClassName} to="/app/observe/requests">
-                Open request analytics
-              </Link>
-            </div>
+            <TelemetryTextField
+              label="Taxonomy group id"
+              onChange={(value) => updateParam("taxGroup", value)}
+              placeholder="e.g. engineering"
+              value={taxonomyGroupId}
+            />
+            <TelemetryTextField
+              label="Taxonomy role id"
+              onChange={(value) => updateParam("taxRole", value)}
+              placeholder="e.g. coder"
+              value={taxonomyRoleId}
+            />
+            <TelemetryTextField
+              label="Taxonomy task type"
+              onChange={(value) => updateParam("taxTask", value)}
+              placeholder="e.g. coder.review"
+              value={taxonomyTaskType}
+            />
+          </div>
+          <div className="grid gap-4 xl:grid-cols-4">
+            <TelemetryTextField
+              label="Taxonomy task variant"
+              onChange={(value) => updateParam("taxVariant", value)}
+              placeholder="e.g. deep-audit"
+              value={taxonomyTaskVariant}
+            />
+            <TelemetryTextField
+              label="Taxonomy capability ids"
+              onChange={(value) => updateParam("taxCapability", value)}
+              placeholder="Comma-separated capability ids"
+              value={taxonomyCapabilityIds}
+            />
+            <TelemetryTextField
+              label="Taxonomy modality ids"
+              onChange={(value) => updateParam("taxModality", value)}
+              placeholder="Comma-separated modality ids"
+              value={taxonomyModalityIds}
+            />
+            <TelemetryTextField
+              label="Taxonomy tool class ids"
+              onChange={(value) => updateParam("taxTool", value)}
+              placeholder="Comma-separated tool class ids"
+              value={taxonomyToolClassIds}
+            />
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link className={secondaryButtonClassName} to="/app/router">
+              Open router configuration
+            </Link>
+            <Link className={secondaryButtonClassName} to="/app/observe/requests">
+              Open request analytics
+            </Link>
           </div>
         </div>
       </SectionCard>
