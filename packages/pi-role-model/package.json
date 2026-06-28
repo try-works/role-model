@@ -1,6 +1,6 @@
 {
   "name": "@try-works/pi-role-model",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "Pi package for connecting Pi to an externally running Role-Model runtime.",
   "license": "BUSL-1.1",
