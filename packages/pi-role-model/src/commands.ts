@@ -6,6 +6,7 @@ import type {
 import { RoleModelDiscoveryError } from "./runtime-discovery.js";
 import type {
   DiscoveryResult,
+  PiCommandContext,
   PiModelSelection,
   RoleModelCommandResult,
   RoleModelModelDiagnostic,
@@ -165,15 +166,49 @@ function versionText(result: DiscoveryResult): string {
   return typeof result.version?.version === "string" ? result.version.version : "unknown";
 }
 
+function releaseVersionText(result: DiscoveryResult): string | null {
+  return typeof result.version?.release_version === "string" ? result.version.release_version : null;
+}
+
+function runtimeDisplayVersionText(result: DiscoveryResult): string {
+  return releaseVersionText(result) ?? versionText(result);
+}
+
+function runtimeBuildText(result: DiscoveryResult): string | null {
+  const releaseVersion = releaseVersionText(result);
+  const buildVersion = versionText(result);
+  if (!releaseVersion || releaseVersion === buildVersion || buildVersion === "unknown") {
+    return null;
+  }
+  return buildVersion;
+}
+
+function currentPiRoleModelAlias(context?: Pick<PiCommandContext, "getModel">): string | null {
+  const model = context?.getModel?.();
+  if (!model || model.provider !== "role-model" || typeof model.id !== "string") {
+    return null;
+  }
+  return model.id.startsWith("role-model/") ? model.id.slice("role-model/".length) : model.id;
+}
+
 async function selectedAliasText(
   result: DiscoveryResult,
   readSelectedAlias?: () => Promise<string | null>,
+  context?: Pick<PiCommandContext, "getModel">,
 ): Promise<string> {
-  return (await readSelectedAlias?.()) ?? result.discovery.setup.recommendedModel ?? "none";
+  return (
+    currentPiRoleModelAlias(context) ??
+    (await readSelectedAlias?.()) ??
+    result.discovery.setup.recommendedModel ??
+    "none"
+  );
 }
 
 export function createRoleModelCommandHandler(dependencies: RoleModelCommandDependencies) {
-  return async function handleRoleModelCommand(args = ""): Promise<RoleModelCommandResult> {
+  return async function handleRoleModelCommand(
+    args = "",
+    context?: Pick<PiCommandContext, "getModel">,
+  ): Promise<RoleModelCommandResult> {
     const [command = "help", subcommand, ...rest] = args.trim().split(/\s+/).filter(Boolean);
 
     if (command === "help") {
@@ -200,22 +235,30 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
     }
 
     if (command === "status") {
-      const selected = await selectedAliasText(result, dependencies.readSelectedAlias);
+      const storedAlias = await dependencies.readSelectedAlias?.();
+      const activeAlias = currentPiRoleModelAlias(context);
+      const selected = await selectedAliasText(result, dependencies.readSelectedAlias, context);
       const aliases = aliasRecords(result);
       return ok(
         [
           result.discovery.displayName,
           `state: ${result.state ?? "ready"}`,
           `endpoint: ${result.discovery.baseUrl}`,
-          `version: ${versionText(result)}`,
+          `runtime version: ${runtimeDisplayVersionText(result)}`,
+          ...(runtimeBuildText(result) ? [`runtime build: ${runtimeBuildText(result)}`] : []),
           `aliases: ${aliases.length}`,
           `selected alias: ${selected}`,
+          activeAlias && storedAlias && activeAlias !== storedAlias
+            ? `stored alias: ${storedAlias}`
+            : null,
           `provider: ${result.providerRegistered === false ? "not registered" : "registered"}`,
           `auth: ${result.discovery.authentication.required ? "required" : "placeholder"}`,
           `endpoint trust: ${result.discovery.baseUrl.startsWith("http://127.0.0.1") || result.discovery.baseUrl.startsWith("http://localhost") ? "local" : "remote"}`,
           `fallback: ${(result.state ?? "ready") === "fallback" ? "yes" : "no"}`,
           `warnings: ${result.warnings && result.warnings.length > 0 ? result.warnings.join("; ") : "none"}`,
-        ].join("\n"),
+        ]
+          .filter((line): line is string => line !== null)
+          .join("\n"),
       );
     }
 
@@ -227,7 +270,7 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
           "doctor: ok",
           `endpoint: ${result.discovery.baseUrl}`,
           "health: ok",
-          `version: ${versionText(result) === "unknown" ? "unknown" : "ok"}`,
+          `runtime version: ${versionText(result) === "unknown" ? "unknown" : "ok"}`,
           "downstream discovery: ok",
           `fallback: ${(result.state ?? "ready") === "fallback" ? "yes" : "no"}`,
           `auth: ${result.discovery.authentication.required ? "required" : "ok"}`,
@@ -334,10 +377,7 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
     }
 
     if (command === "alias" && subcommand === "current") {
-      const selected =
-        (await dependencies.readSelectedAlias?.()) ??
-        result.discovery.setup.recommendedModel ??
-        "none";
+      const selected = (await selectedAliasText(result, dependencies.readSelectedAlias, context)) ?? "none";
       return ok(`Current Role-Model alias: ${selected}`);
     }
 

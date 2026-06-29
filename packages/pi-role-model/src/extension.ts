@@ -129,7 +129,7 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
     pi.registerCommand("role-model", {
       description: "Configure and inspect the Role-Model provider for Pi.",
       async handler(args = "", context?: PiCommandContext) {
-        const result = await command(args);
+        const result = await command(args, context);
         context?.ui?.notify?.(result.text, result.ok ? "info" : "error");
       },
     });

@@ -28,6 +28,7 @@ const qaPlaceholderApiKey = "role-model-runtime-qa-placeholder";
 type QaBridgeBackend = Pick<
   RuntimeBridgeBackend,
   | "registry"
+  | "readVersionInfo"
   | "executeChatCompletions"
   | "executeResponses"
   | "listActivityMetrics"
@@ -53,6 +54,7 @@ type QaBridgeBackend = Pick<
   | "upsertProviderAccount"
   | "startProviderDeviceAuthorization"
   | "pollProviderDeviceAuthorization"
+  | "removeProviderAccountModel"
   | "activateEndpoint"
   | "readControllerAssignment"
   | "updateControllerAssignment"
@@ -239,7 +241,7 @@ export function createQaServerOptions(
     getRegistry: () => backend.effectiveRegistry,
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
-    readVersionInfo: async () => ({ version: "0.0.0-qa", build: "dev" }),
+    readVersionInfo: backend.readVersionInfo,
     listActivityMetrics: backend.listActivityMetrics,
     readActivityCapture: backend.readActivityCapture,
     readLogs: async () => "No logs available in QA mode.",
@@ -265,6 +267,7 @@ export function createQaServerOptions(
     upsertProviderAccount: backend.upsertProviderAccount,
     startProviderDeviceAuthorization: backend.startProviderDeviceAuthorization,
     pollProviderDeviceAuthorization: backend.pollProviderDeviceAuthorization,
+    removeProviderAccountModel: backend.removeProviderAccountModel,
     activateEndpoint: backend.activateEndpoint,
     readControllerAssignment: backend.readControllerAssignment,
     updateControllerAssignment: backend.updateControllerAssignment,

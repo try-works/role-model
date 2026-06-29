@@ -4,6 +4,7 @@ import type { RuntimeAccount } from "../lib/runtime-api";
 import {
   buildModelRoleAssignmentForSelection,
   createAccountMutationPayload,
+  resolveConfiguredModelEjectLabel,
 } from "./control-models";
 
 const account = {
@@ -70,5 +71,10 @@ describe("control model role assignment helpers", () => {
       enabledRoleIds: [],
       disabledRoleIds: [],
     });
+  });
+
+  test("uses explicit eject labels for peer-backed and remote-backed configured models", () => {
+    expect(resolveConfiguredModelEjectLabel(true)).toBe("Eject from router");
+    expect(resolveConfiguredModelEjectLabel(false)).toBe("Eject from pool");
   });
 });

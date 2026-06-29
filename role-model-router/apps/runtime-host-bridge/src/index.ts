@@ -108,6 +108,7 @@ import {
   inferChatCompletionsCapabilityRequirements,
   inferResponsesCapabilityRequirements,
 } from "./request-capability-inference.js";
+import { resolveRuntimeVersionInfo } from "./runtime-version.js";
 
 import {
   type ProviderRequestCapture,
@@ -2141,6 +2142,10 @@ export interface StartBridgeServerOptions {
   readonly upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly reconnectProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly updateProviderApiKey?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly removeProviderAccountModel?: (
+    providerAccountId: string,
+    modelId: string,
+  ) => Promise<{ success: boolean; removedAccount: boolean }>;
   readonly startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readRuntimeConfig?: () => Promise<unknown>;
@@ -2327,6 +2332,10 @@ export interface RuntimeBridgeBackend {
   upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord>;
   reconnectProviderAccount(body: Record<string, unknown>): Promise<DeviceAuthorizationStartResult>;
   updateProviderApiKey(body: Record<string, unknown>): Promise<ProviderAccountRecord>;
+  removeProviderAccountModel(
+    providerAccountId: string,
+    modelId: string,
+  ): Promise<{ success: boolean; removedAccount: boolean }>;
   startProviderDeviceAuthorization(
     body: Record<string, unknown>,
   ): Promise<DeviceAuthorizationStartResult>;
@@ -5803,8 +5812,14 @@ function resolveRequestedModelAlias(
 async function resolveConfiguredModelAliases(
   readRuntimeConfig: StartBridgeServerOptions["readRuntimeConfig"],
 ): Promise<readonly UnifiedRuntimeModelAliasConfig[]> {
+  return (await resolveConfiguredRuntimeConfig(readRuntimeConfig))?.modelAliases ?? [];
+}
+
+async function resolveConfiguredRuntimeConfig(
+  readRuntimeConfig: StartBridgeServerOptions["readRuntimeConfig"],
+): Promise<ReturnType<typeof normalizeUnifiedRuntimeConfigInput> | null> {
   if (!readRuntimeConfig) {
-    return [];
+    return null;
   }
   const runtimeConfig = await readRuntimeConfig();
   if (
@@ -5813,13 +5828,13 @@ async function resolveConfiguredModelAliases(
     Array.isArray(runtimeConfig) ||
     !("config" in runtimeConfig)
   ) {
-    return [];
+    return null;
   }
   const configValue = runtimeConfig.config;
   if (!configValue || typeof configValue !== "object" || Array.isArray(configValue)) {
-    return [];
+    return null;
   }
-  return normalizeUnifiedRuntimeConfigInput(configValue).modelAliases ?? [];
+  return normalizeUnifiedRuntimeConfigInput(configValue);
 }
 
 function readForwardedHeaderValue(value: string | string[] | undefined): string | undefined {
@@ -5954,6 +5969,7 @@ export function createDownstreamOpenAIProviderConfig(
   options: {
     readonly catalog?: NormalizedCatalog;
     readonly inventory?: RoutableInventory | null;
+    readonly recommendedModelId?: string | null;
   } = {},
 ): BridgeDownstreamOpenAIProviderConfig {
   if (options.catalog) {
@@ -5963,13 +5979,21 @@ export function createDownstreamOpenAIProviderConfig(
       catalog: options.catalog,
       modelAliases,
       inventory: options.inventory ?? null,
+      recommendedModelId: options.recommendedModelId ?? null,
     }) as unknown as BridgeDownstreamOpenAIProviderConfig;
   }
 
   const models = createModelListResponse(registry, modelAliases).data.map((model) =>
     enrichFallbackDownstreamModelRecord({ model, registry, modelAliases }),
   );
-  const recommendedModel = modelAliases[0]?.aliasId ?? models[0]?.id ?? null;
+  const recommendedModel =
+    (options.recommendedModelId &&
+    models.some((model) => model.id === options.recommendedModelId)
+      ? options.recommendedModelId
+      : null) ??
+    modelAliases[0]?.aliasId ??
+    models[0]?.id ??
+    null;
 
   return {
     contractVersion: "role-model.downstream.openai.v1",
@@ -10930,8 +10954,15 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "GET" && url.pathname === "/api/role-model/downstream/openai") {
-      const modelAliases = await resolveConfiguredModelAliases(options.readRuntimeConfig);
+      const configuredRuntimeConfig = await resolveConfiguredRuntimeConfig(options.readRuntimeConfig);
+      const modelAliases = configuredRuntimeConfig?.modelAliases ?? [];
       const inventory = options.getRoutableInventory?.() ?? null;
+      const recommendedModelId = configuredRuntimeConfig
+        ? deriveUnifiedRuntimeRoutingAliasId({
+            routingStrategy: configuredRuntimeConfig.routingStrategy,
+            executionMode: configuredRuntimeConfig.executionMode,
+          })
+        : null;
       writeJson(
         response,
         200,
@@ -10945,6 +10976,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           {
             catalog: options.getExecutionCatalog?.(),
             inventory,
+            recommendedModelId,
           },
         ),
       );
@@ -11494,6 +11526,44 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (
+      request.method === "DELETE" &&
+      url.pathname.startsWith("/api/role-model/accounts/") &&
+      url.pathname.includes("/models/")
+    ) {
+      if (!options.removeProviderAccountModel) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      const suffix = url.pathname.slice("/api/role-model/accounts/".length);
+      const segments = suffix.split("/");
+      if (segments.length !== 3 || segments[1] !== "models") {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      const providerAccountId = decodeURIComponent(segments[0] ?? "").trim();
+      const modelId = decodeURIComponent(segments[2] ?? "").trim();
+      if (!providerAccountId || !modelId) {
+        writeJson(response, 400, { error: "providerAccountId and modelId are required" });
+        return;
+      }
+
+      try {
+        writeJson(
+          response,
+          200,
+          await options.removeProviderAccountModel(providerAccountId, modelId),
+        );
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "provider model removal failed",
+        });
+      }
+      return;
+    }
+
     if (request.method === "POST" && url.pathname === "/api/role-model/accounts/repair/reconnect") {
       if (!options.reconnectProviderAccount) {
         writeJson(response, 404, { error: "not found" });
@@ -12016,6 +12086,10 @@ export async function createRuntimeBridgeBackend(
   const initialUnifiedRuntimeConfig = initialUnifiedRuntimeConfigText
     ? parseUnifiedRuntimeConfigText(initialUnifiedRuntimeConfigText)
     : null;
+  const runtimeVersionInfo = await resolveRuntimeVersionInfo({
+    repoRoot: options.repoRoot,
+    fallbackConfigVersion: initialUnifiedRuntimeConfig?.version ?? null,
+  });
   if (
     options.unifiedRuntimeConfigPath &&
     initialUnifiedRuntimeConfigText !== null &&
@@ -16651,9 +16725,10 @@ export async function createRuntimeBridgeBackend(
       build_date: string;
     }> {
       return {
-        version: currentUnifiedRuntimeConfig?.version ?? "unversioned",
-        commit: "runtime-derived",
-        build_date: "runtime-derived",
+        ...runtimeVersionInfo,
+        ...(currentUnifiedRuntimeConfig?.version
+          ? { configVersion: currentUnifiedRuntimeConfig.version }
+          : {}),
       };
     },
     async listActivityMetrics(): Promise<readonly unknown[]> {
@@ -17609,6 +17684,73 @@ export async function createRuntimeBridgeBackend(
         rebuildCurrentState();
         return validatedAccount;
       });
+    },
+    async removeProviderAccountModel(
+      providerAccountId: string,
+      modelId: string,
+    ): Promise<{ success: boolean; removedAccount: boolean }> {
+      if (isLocalPeerProviderAccountId(providerAccountId)) {
+        return { success: false, removedAccount: false };
+      }
+      const existingAccount = currentAccounts.find(
+        (entry) => entry.providerAccountId === providerAccountId,
+      );
+      if (!existingAccount) {
+        return { success: false, removedAccount: false };
+      }
+
+      const nextAllowedModels = existingAccount.allowedModels.filter(
+        (candidate) => candidate !== modelId,
+      );
+      const nextModelRoleBindings = (existingAccount.modelRoleBindings ?? []).filter(
+        (binding) => binding.modelId !== modelId,
+      );
+      const hadEndpoint = runtimeEndpoints.some(
+        (endpoint) =>
+          endpoint.providerAccountId === providerAccountId && endpoint.modelId === modelId,
+      );
+      const modelChanged =
+        nextAllowedModels.length !== existingAccount.allowedModels.length ||
+        nextModelRoleBindings.length !== (existingAccount.modelRoleBindings?.length ?? 0) ||
+        hadEndpoint;
+      if (!modelChanged) {
+        return { success: false, removedAccount: false };
+      }
+
+      deleteRuntimeEndpointsByModelId(initialization.databasePath, modelId, [providerAccountId]);
+      if (nextAllowedModels.length === 0) {
+        deleteProviderDeviceAuthorizationsByAccountId(initialization.databasePath, [
+          providerAccountId,
+        ]);
+        deleteProviderAccountsById(initialization.databasePath, [providerAccountId]);
+        rebuildCurrentState();
+        return { success: true, removedAccount: true };
+      }
+
+      const normalizedAccount = normalizeProviderAccountRoleBindings({
+        ...existingAccount,
+        allowedModels: nextAllowedModels,
+        modelRoleBindings: nextModelRoleBindings,
+      });
+      const validationResult = validateProviderAccounts({
+        catalog: currentNormalizedCatalog,
+        additionalProviders: liteLLMProviders,
+        allowedRoleIds: getAllowedRoleIds(),
+        accounts: [normalizedAccount],
+      });
+      if (validationResult.diagnostics.length > 0 || validationResult.accounts.length !== 1) {
+        throw new Error(
+          validationResult.diagnostics[0]?.message ??
+            "Provider account model removal validation failed.",
+        );
+      }
+
+      upsertSqliteProviderAccount({
+        databasePath: initialization.databasePath,
+        account: validationResult.accounts[0],
+      });
+      rebuildCurrentState();
+      return { success: true, removedAccount: false };
     },
     async upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord> {
       const credentialRef = account.credentialRef as { backend: string; ref: string } | undefined;

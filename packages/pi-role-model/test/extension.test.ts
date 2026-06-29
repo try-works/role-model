@@ -81,6 +81,51 @@ describe("Pi extension registration", () => {
     ]);
   });
 
+  test("forwards command context so status can reflect Pi's live active role-model selection", async () => {
+    const commands: Array<{ name: string; config: RegisteredCommandConfig }> = [];
+    const notifications: Array<{ message: string; level?: "info" | "error" }> = [];
+    const extension = createRoleModelExtension({
+      discover: async () => ({
+        discovery: createDiscovery(),
+        state: "ready",
+        warnings: [],
+        modelDiagnostics: [],
+      }),
+      readSelectedAlias: async () => "hybrid.remote-only",
+    });
+
+    await extension({
+      registerProvider() {
+        // registered during setup and startup discovery
+      },
+      registerCommand(name: string, config: RegisteredCommandConfig) {
+        commands.push({ name, config });
+      },
+    });
+
+    await commands[0]?.config.handler("status", {
+      ui: {
+        notify: (message, level) => {
+          notifications.push({ message, level });
+        },
+      },
+      getModel: () => ({
+        id: "difficulty.remote-only",
+        provider: "role-model",
+        api: "openai-completions",
+        input: ["text"],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      }),
+      isProjectTrusted: () => true,
+    });
+
+    expect(notifications).toEqual([
+      expect.objectContaining({
+        level: "info",
+        message: expect.stringContaining("selected alias: difficulty.remote-only"),
+      }),
+    ]);
+  });
   test("injects provider requests with the resolved runtime taxonomy when available", async () => {
     const callbacks: Array<
       (event: { type: "before_provider_request"; payload: unknown }) => unknown

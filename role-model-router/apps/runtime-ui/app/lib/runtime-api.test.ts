@@ -32,6 +32,7 @@ import {
   loadPeerModel,
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
+  removeRuntimeAccountModel,
   roleIdsToExplicitAssignment,
   setLlamaSwapModelRoles,
   setPeerModelRoles,
@@ -1807,6 +1808,31 @@ describe("reconnectRuntimeAccount", () => {
       authRequestId: "auth-001",
       providerAccountId: "moonshot.personal.kimi-code",
       status: "pending",
+    });
+  });
+});
+
+describe("removeRuntimeAccountModel", () => {
+  test("deletes the configured model from the runtime account pool", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe(
+        "/api/role-model/accounts/moonshot.personal.primary/models/moonshot%2Fkimi-k2.5",
+      );
+      expect(init?.method).toBe("DELETE");
+
+      return jsonResponse({
+        success: true,
+        removedAccount: false,
+      });
+    });
+
+    await expect(
+      removeRuntimeAccountModel("moonshot.personal.primary", "moonshot/kimi-k2.5", fetcher),
+    ).resolves.toEqual({
+      success: true,
+      removedAccount: false,
     });
   });
 });
