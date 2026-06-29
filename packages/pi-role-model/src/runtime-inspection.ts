@@ -38,7 +38,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function readNullableString(record: Record<string, unknown>, ...keys: readonly string[]): string | null {
+function readNullableString(
+  record: Record<string, unknown>,
+  ...keys: readonly string[]
+): string | null {
   for (const key of keys) {
     const value = record[key];
     if (typeof value === "string" && value.length > 0) {
@@ -48,7 +51,10 @@ function readNullableString(record: Record<string, unknown>, ...keys: readonly s
   return null;
 }
 
-function readNullableNumber(record: Record<string, unknown>, ...keys: readonly string[]): number | null {
+function readNullableNumber(
+  record: Record<string, unknown>,
+  ...keys: readonly string[]
+): number | null {
   for (const key of keys) {
     const value = record[key];
     if (typeof value === "number" && Number.isFinite(value)) {
@@ -58,7 +64,11 @@ function readNullableNumber(record: Record<string, unknown>, ...keys: readonly s
   return null;
 }
 
-async function fetchJson(url: string, timeoutMs: number, fetchImpl: typeof fetch): Promise<unknown> {
+async function fetchJson(
+  url: string,
+  timeoutMs: number,
+  fetchImpl: typeof fetch,
+): Promise<unknown> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -116,7 +126,13 @@ function parseRequestRecord(value: unknown): RoleModelRecentRequest {
     modelId: readNullableString(value, "modelId", "model_id"),
     providerId: readNullableString(value, "providerId", "provider_id"),
     status: readNullableString(value, "status"),
-    createdAtMs: readNullableNumber(value, "createdAtMs", "created_at_ms", "timestampMs", "timestamp_ms"),
+    createdAtMs: readNullableNumber(
+      value,
+      "createdAtMs",
+      "created_at_ms",
+      "timestampMs",
+      "timestamp_ms",
+    ),
     normalizedIntent: isRecord(value.normalizedIntent) ? value.normalizedIntent : null,
     roleModel: isRecord(value.role_model) ? value.role_model : null,
   };
