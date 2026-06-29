@@ -456,8 +456,7 @@ export function createDownstreamOpenAIDiscovery(
 
   const models = modelRecords.sort((left, right) => compareText(left.id, right.id));
   const recommendedModel =
-    (input.recommendedModelId &&
-    models.some((model) => model.id === input.recommendedModelId)
+    (input.recommendedModelId && models.some((model) => model.id === input.recommendedModelId)
       ? input.recommendedModelId
       : null) ??
     modelAliases.find((alias) => models.some((model) => model.id === alias.aliasId))?.aliasId ??

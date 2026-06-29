@@ -167,7 +167,9 @@ function versionText(result: DiscoveryResult): string {
 }
 
 function releaseVersionText(result: DiscoveryResult): string | null {
-  return typeof result.version?.release_version === "string" ? result.version.release_version : null;
+  return typeof result.version?.release_version === "string"
+    ? result.version.release_version
+    : null;
 }
 
 function runtimeDisplayVersionText(result: DiscoveryResult): string {
@@ -377,7 +379,8 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
     }
 
     if (command === "alias" && subcommand === "current") {
-      const selected = (await selectedAliasText(result, dependencies.readSelectedAlias, context)) ?? "none";
+      const selected =
+        (await selectedAliasText(result, dependencies.readSelectedAlias, context)) ?? "none";
       return ok(`Current Role-Model alias: ${selected}`);
     }
 

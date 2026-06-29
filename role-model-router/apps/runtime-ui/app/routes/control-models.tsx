@@ -306,7 +306,10 @@ export default function ControlModelsRoute() {
         await refreshModelState();
         setStatusMessage(`Removed ${selectedCard.modelId} from the peer-backed router pool.`);
       } else {
-        const result = await removeRuntimeAccountModel(account.providerAccountId, selectedCard.modelId);
+        const result = await removeRuntimeAccountModel(
+          account.providerAccountId,
+          selectedCard.modelId,
+        );
         await refreshModelState();
         setStatusMessage(
           result.removedAccount
@@ -721,60 +724,64 @@ export default function ControlModelsRoute() {
                           key={account.providerAccountId}
                           className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
                         >
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold text-[var(--rm-fg)]">
-                              {account.providerAccountId}
-                            </p>
-                            <p className="mt-1 text-sm text-[var(--rm-secondary)]">
-                              {account.providerId} · {account.authMode ?? "unknown auth"}
-                            </p>
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-[var(--rm-fg)]">
+                                {account.providerAccountId}
+                              </p>
+                              <p className="mt-1 text-sm text-[var(--rm-secondary)]">
+                                {account.providerId} · {account.authMode ?? "unknown auth"}
+                              </p>
+                            </div>
+                            <StatusPill
+                              tone={account.healthStatus === "healthy" ? "success" : "warning"}
+                            >
+                              {account.healthStatus ?? "unknown"}
+                            </StatusPill>
                           </div>
-                          <StatusPill
-                            tone={account.healthStatus === "healthy" ? "success" : "warning"}
-                          >
-                            {account.healthStatus ?? "unknown"}
-                          </StatusPill>
-                        </div>
-                        <div className="mt-4">
-                          <LocalModelRolePicker
-                            rolePolicy={rolePolicy}
-                            selectedRoleIds={draftRolesByAccountId[account.providerAccountId] ?? []}
-                            defaultAllRoles={allRuntimeRoleIds.length > 0}
-                            benchmarkCapability={selectedBenchmarkCapability}
-                            onChange={(roleIds) =>
-                              setDraftRolesByAccountId((current) => ({
-                                ...current,
-                                [account.providerAccountId]: [...roleIds],
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="mt-4 flex flex-wrap gap-3">
-                          <button
-                            className={primaryButtonClassName}
-                            type="button"
-                            disabled={
-                              savingAccountId === account.providerAccountId ||
-                              removingTargetKey === `account:${account.providerAccountId}`
-                            }
-                            onClick={() => void saveAccountRoles(account)}
-                          >
-                            {savingAccountId === account.providerAccountId
-                              ? "Saving…"
-                              : "Save bindings"}
-                          </button>
-                          <button
-                            className={secondaryButtonClassName}
-                            type="button"
-                            disabled={removingTargetKey === `account:${account.providerAccountId}`}
-                            onClick={() => void removeConfiguredModel(account)}
-                          >
-                            {removingTargetKey === `account:${account.providerAccountId}`
-                              ? "Removing…"
-                              : resolveConfiguredModelEjectLabel(hasLocalPeerEndpoint)}
-                          </button>
-                        </div>
+                          <div className="mt-4">
+                            <LocalModelRolePicker
+                              rolePolicy={rolePolicy}
+                              selectedRoleIds={
+                                draftRolesByAccountId[account.providerAccountId] ?? []
+                              }
+                              defaultAllRoles={allRuntimeRoleIds.length > 0}
+                              benchmarkCapability={selectedBenchmarkCapability}
+                              onChange={(roleIds) =>
+                                setDraftRolesByAccountId((current) => ({
+                                  ...current,
+                                  [account.providerAccountId]: [...roleIds],
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="mt-4 flex flex-wrap gap-3">
+                            <button
+                              className={primaryButtonClassName}
+                              type="button"
+                              disabled={
+                                savingAccountId === account.providerAccountId ||
+                                removingTargetKey === `account:${account.providerAccountId}`
+                              }
+                              onClick={() => void saveAccountRoles(account)}
+                            >
+                              {savingAccountId === account.providerAccountId
+                                ? "Saving…"
+                                : "Save bindings"}
+                            </button>
+                            <button
+                              className={secondaryButtonClassName}
+                              type="button"
+                              disabled={
+                                removingTargetKey === `account:${account.providerAccountId}`
+                              }
+                              onClick={() => void removeConfiguredModel(account)}
+                            >
+                              {removingTargetKey === `account:${account.providerAccountId}`
+                                ? "Removing…"
+                                : resolveConfiguredModelEjectLabel(hasLocalPeerEndpoint)}
+                            </button>
+                          </div>
                         </div>
                       );
                     })}

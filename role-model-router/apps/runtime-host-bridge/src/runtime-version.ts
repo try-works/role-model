@@ -89,7 +89,10 @@ export async function resolveRuntimeVersionInfo(
     return {
       version: manifestVersion,
       release_version: manifestVersion,
-      commit: readNonEmptyString(manifest?.commit) ?? readNonEmptyString(env.GITHUB_SHA) ?? "runtime-derived",
+      commit:
+        readNonEmptyString(manifest?.commit) ??
+        readNonEmptyString(env.GITHUB_SHA) ??
+        "runtime-derived",
       build_date:
         readNonEmptyString(manifest?.build_date) ??
         readNonEmptyString(env.BUILD_DATE) ??
@@ -117,7 +120,9 @@ export async function resolveRuntimeVersionInfo(
 
   const runGitCommand = options.runGitCommand ?? defaultRunGitCommand;
   const latestReleaseVersion = normalizeTaggedVersion(
-    readFirstLine(runGitCommand(["tag", "--list", "v[0-9]*", "--sort=-version:refname"], options.repoRoot)),
+    readFirstLine(
+      runGitCommand(["tag", "--list", "v[0-9]*", "--sort=-version:refname"], options.repoRoot),
+    ),
   );
   const describedVersion = normalizeTaggedVersion(
     runGitCommand(

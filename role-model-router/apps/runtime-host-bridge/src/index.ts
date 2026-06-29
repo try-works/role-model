@@ -5987,8 +5987,7 @@ export function createDownstreamOpenAIProviderConfig(
     enrichFallbackDownstreamModelRecord({ model, registry, modelAliases }),
   );
   const recommendedModel =
-    (options.recommendedModelId &&
-    models.some((model) => model.id === options.recommendedModelId)
+    (options.recommendedModelId && models.some((model) => model.id === options.recommendedModelId)
       ? options.recommendedModelId
       : null) ??
     modelAliases[0]?.aliasId ??
@@ -10954,7 +10953,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "GET" && url.pathname === "/api/role-model/downstream/openai") {
-      const configuredRuntimeConfig = await resolveConfiguredRuntimeConfig(options.readRuntimeConfig);
+      const configuredRuntimeConfig = await resolveConfiguredRuntimeConfig(
+        options.readRuntimeConfig,
+      );
       const modelAliases = configuredRuntimeConfig?.modelAliases ?? [];
       const inventory = options.getRoutableInventory?.() ?? null;
       const recommendedModelId = configuredRuntimeConfig

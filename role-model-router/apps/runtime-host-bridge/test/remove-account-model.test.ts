@@ -4,7 +4,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, test } from "vitest";
 
-import { resolveSqliteMemoryLocation, upsertRuntimeEndpoint } from "@role-model-router/sqlite-memory";
+import {
+  resolveSqliteMemoryLocation,
+  upsertRuntimeEndpoint,
+} from "@role-model-router/sqlite-memory";
 
 import * as bridge from "../src/index.js";
 
@@ -15,7 +18,9 @@ const fixtureRoot = path.join(__dirname, "fixtures");
 const runtimeStateRoots: string[] = [];
 
 afterEach(async () => {
-  await Promise.all(runtimeStateRoots.splice(0).map((entry) => rm(entry, { recursive: true, force: true })));
+  await Promise.all(
+    runtimeStateRoots.splice(0).map((entry) => rm(entry, { recursive: true, force: true })),
+  );
 });
 
 async function createBackend(scopeId: string) {
