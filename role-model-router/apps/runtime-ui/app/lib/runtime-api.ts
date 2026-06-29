@@ -772,6 +772,7 @@ export interface RuntimeActivityCapture {
 export interface RuntimeVersionInfo {
   readonly build_date: string;
   readonly commit: string;
+  readonly release_version?: string;
   readonly version: string;
 }
 
@@ -1713,6 +1714,20 @@ export async function upsertRuntimeAccount(
     },
     body: JSON.stringify(payload),
   });
+}
+
+export async function removeRuntimeAccountModel(
+  providerAccountId: string,
+  modelId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ success: boolean; removedAccount: boolean }> {
+  return fetchJson<{ success: boolean; removedAccount: boolean }>(
+    `/api/role-model/accounts/${encodeURIComponent(providerAccountId)}/models/${encodeURIComponent(modelId)}`,
+    fetcher,
+    {
+      method: "DELETE",
+    },
+  );
 }
 
 export async function startRuntimeDeviceAuthorization(

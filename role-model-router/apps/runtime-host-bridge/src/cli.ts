@@ -35,6 +35,7 @@ type CliBackend = Pick<
   | "upsertProviderAccount"
   | "startProviderDeviceAuthorization"
   | "pollProviderDeviceAuthorization"
+  | "removeProviderAccountModel"
   | "reconnectProviderAccount"
   | "updateProviderApiKey"
   | "activateEndpoint"
@@ -137,6 +138,7 @@ export function createCliServerOptions(
     pollProviderDeviceAuthorization: backend.pollProviderDeviceAuthorization,
     reconnectProviderAccount: backend.reconnectProviderAccount,
     updateProviderApiKey: backend.updateProviderApiKey,
+    removeProviderAccountModel: backend.removeProviderAccountModel,
     activateEndpoint: backend.activateEndpoint,
     readControllerAssignment: backend.readControllerAssignment,
     updateControllerAssignment: backend.updateControllerAssignment,

@@ -9,6 +9,8 @@ import { gzipSync } from "node:zlib";
 
 import { build as buildBundle } from "esbuild";
 
+import { resolveRuntimeVersionInfo } from "./runtime-version.js";
+
 export interface BuildTarget {
   readonly platform: NodeJS.Platform;
   readonly arch: string;
@@ -467,6 +469,16 @@ export async function packageSeaRuntime(): Promise<{
   if (!buildTarget) {
     throw new Error(`Unsupported runtime packaging target: ${process.platform}-${process.arch}`);
   }
+  const versionInfo = await resolveRuntimeVersionInfo({
+    repoRoot,
+    env: {
+      ...process.env,
+      BUILD_DATE:
+        process.env.BUILD_DATE && process.env.BUILD_DATE.trim().length > 0
+          ? process.env.BUILD_DATE
+          : new Date().toISOString(),
+    },
+  });
   const releaseTarget = `${buildTarget.platform}-${buildTarget.arch}`;
   runOrThrow(
     process.execPath,
@@ -518,6 +530,9 @@ export async function packageSeaRuntime(): Promise<{
         arch: process.arch,
         target: releaseTarget,
         sha256,
+        version: versionInfo.version,
+        commit: versionInfo.commit,
+        build_date: versionInfo.build_date,
       },
       null,
       2,

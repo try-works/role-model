@@ -30,6 +30,9 @@ import {
   fetchRolePolicy,
   fetchRouterCandidates,
   fetchRuntimeSnapshot,
+  removeRuntimeAccountModel,
+  unloadLocalModel,
+  unloadPeerModel,
   upsertRuntimeAccount,
 } from "../lib/runtime-api";
 import { buildConfiguredModelCards, buildConfiguredModelMetadataRows } from "../lib/view-models";
@@ -82,6 +85,10 @@ export function buildModelRoleAssignmentForSelection(
   };
 }
 
+export function resolveConfiguredModelEjectLabel(hasLocalPeerEndpoint: boolean): string {
+  return hasLocalPeerEndpoint ? "Eject from router" : "Eject from pool";
+}
+
 export function createAccountMutationPayload(
   account: RuntimeAccount,
   modelId: string,
@@ -128,6 +135,7 @@ export default function ControlModelsRoute() {
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [draftRolesByAccountId, setDraftRolesByAccountId] = useState<Record<string, string[]>>({});
   const [savingAccountId, setSavingAccountId] = useState<string | null>(null);
+  const [removingTargetKey, setRemovingTargetKey] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
@@ -181,6 +189,9 @@ export default function ControlModelsRoute() {
     snapshot && selectedCard
       ? snapshot.endpoints.filter((endpoint) => endpoint.modelId === selectedCard.modelId)
       : [];
+  const selectedLlamaSwapEndpoints = selectedEndpoints.filter(
+    (endpoint) => endpoint.sourceType === "local" && endpoint.localModelSource === "llama-swap",
+  );
   const selectedCapabilities = [
     ...new Set([
       ...(selectedCard?.capabilities ?? []),
@@ -265,6 +276,73 @@ export default function ControlModelsRoute() {
     }
   };
 
+  const refreshModelState = async () => {
+    const [nextSnapshot, nextController, nextRolePolicy, nextCandidates] = await Promise.all([
+      fetchRuntimeSnapshot(),
+      fetchControllerAssignment(),
+      fetchRolePolicy(),
+      fetchRouterCandidates(),
+    ]);
+    setSnapshot(nextSnapshot);
+    setController(nextController);
+    setRolePolicy(nextRolePolicy);
+    setCandidates(nextCandidates);
+  };
+
+  const removeConfiguredModel = async (account: RuntimeAccount) => {
+    if (!selectedCard) {
+      return;
+    }
+    const removalKey = `account:${account.providerAccountId}`;
+    const usesLocalPeerEndpoint = selectedEndpoints.some(
+      (endpoint) =>
+        endpoint.providerAccountId === account.providerAccountId && endpoint.sourceType === "local",
+    );
+    setRemovingTargetKey(removalKey);
+    setStatusMessage(null);
+    try {
+      if (usesLocalPeerEndpoint) {
+        await unloadPeerModel(selectedCard.modelId);
+        await refreshModelState();
+        setStatusMessage(`Removed ${selectedCard.modelId} from the peer-backed router pool.`);
+      } else {
+        const result = await removeRuntimeAccountModel(
+          account.providerAccountId,
+          selectedCard.modelId,
+        );
+        await refreshModelState();
+        setStatusMessage(
+          result.removedAccount
+            ? `Removed ${selectedCard.modelId} and deleted ${account.providerAccountId} because it was the last configured model on that account.`
+            : `Removed ${selectedCard.modelId} from ${account.providerAccountId}.`,
+        );
+      }
+      setError(null);
+    } catch (value) {
+      setError(value instanceof Error ? value.message : "Could not remove the configured model.");
+    } finally {
+      setRemovingTargetKey(null);
+    }
+  };
+
+  const unloadSelectedLocalModel = async () => {
+    if (!selectedCard) {
+      return;
+    }
+    setRemovingTargetKey(`local:${selectedCard.modelId}`);
+    setStatusMessage(null);
+    try {
+      await unloadLocalModel(selectedCard.modelId);
+      await refreshModelState();
+      setStatusMessage(`Unloaded ${selectedCard.modelId} from the local runtime pool.`);
+      setError(null);
+    } catch (value) {
+      setError(value instanceof Error ? value.message : "Could not unload the local model.");
+    } finally {
+      setRemovingTargetKey(null);
+    }
+  };
+
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -337,6 +415,14 @@ export default function ControlModelsRoute() {
   return (
     <>
       <div className="space-y-6">
+        {statusMessage ? (
+          <SectionCard
+            title="Last model change"
+            description="Recent inventory mutations are reported here after the runtime snapshot refreshes."
+          >
+            <p className="text-sm text-[var(--rm-secondary)]">{statusMessage}</p>
+          </SectionCard>
+        ) : null}
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <FactCard
             label="Configured models"
@@ -627,57 +713,104 @@ export default function ControlModelsRoute() {
                   </p>
                 ) : (
                   <div className="mt-4 space-y-4">
-                    {selectedModelAccounts.map((account) => (
-                      <div
-                        key={account.providerAccountId}
-                        className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
-                      >
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold text-[var(--rm-fg)]">
-                              {account.providerAccountId}
-                            </p>
-                            <p className="mt-1 text-sm text-[var(--rm-secondary)]">
-                              {account.providerId} · {account.authMode ?? "unknown auth"}
-                            </p>
+                    {selectedModelAccounts.map((account) => {
+                      const hasLocalPeerEndpoint = selectedEndpoints.some(
+                        (endpoint) =>
+                          endpoint.providerAccountId === account.providerAccountId &&
+                          endpoint.sourceType === "local",
+                      );
+                      return (
+                        <div
+                          key={account.providerAccountId}
+                          className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-[var(--rm-fg)]">
+                                {account.providerAccountId}
+                              </p>
+                              <p className="mt-1 text-sm text-[var(--rm-secondary)]">
+                                {account.providerId} · {account.authMode ?? "unknown auth"}
+                              </p>
+                            </div>
+                            <StatusPill
+                              tone={account.healthStatus === "healthy" ? "success" : "warning"}
+                            >
+                              {account.healthStatus ?? "unknown"}
+                            </StatusPill>
                           </div>
-                          <StatusPill
-                            tone={account.healthStatus === "healthy" ? "success" : "warning"}
-                          >
-                            {account.healthStatus ?? "unknown"}
-                          </StatusPill>
+                          <div className="mt-4">
+                            <LocalModelRolePicker
+                              rolePolicy={rolePolicy}
+                              selectedRoleIds={
+                                draftRolesByAccountId[account.providerAccountId] ?? []
+                              }
+                              defaultAllRoles={allRuntimeRoleIds.length > 0}
+                              benchmarkCapability={selectedBenchmarkCapability}
+                              onChange={(roleIds) =>
+                                setDraftRolesByAccountId((current) => ({
+                                  ...current,
+                                  [account.providerAccountId]: [...roleIds],
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="mt-4 flex flex-wrap gap-3">
+                            <button
+                              className={primaryButtonClassName}
+                              type="button"
+                              disabled={
+                                savingAccountId === account.providerAccountId ||
+                                removingTargetKey === `account:${account.providerAccountId}`
+                              }
+                              onClick={() => void saveAccountRoles(account)}
+                            >
+                              {savingAccountId === account.providerAccountId
+                                ? "Saving…"
+                                : "Save bindings"}
+                            </button>
+                            <button
+                              className={secondaryButtonClassName}
+                              type="button"
+                              disabled={
+                                removingTargetKey === `account:${account.providerAccountId}`
+                              }
+                              onClick={() => void removeConfiguredModel(account)}
+                            >
+                              {removingTargetKey === `account:${account.providerAccountId}`
+                                ? "Removing…"
+                                : resolveConfiguredModelEjectLabel(hasLocalPeerEndpoint)}
+                            </button>
+                          </div>
                         </div>
-                        <div className="mt-4">
-                          <LocalModelRolePicker
-                            rolePolicy={rolePolicy}
-                            selectedRoleIds={draftRolesByAccountId[account.providerAccountId] ?? []}
-                            defaultAllRoles={allRuntimeRoleIds.length > 0}
-                            benchmarkCapability={selectedBenchmarkCapability}
-                            onChange={(roleIds) =>
-                              setDraftRolesByAccountId((current) => ({
-                                ...current,
-                                [account.providerAccountId]: [...roleIds],
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="mt-4 flex flex-wrap gap-3">
-                          <button
-                            className={primaryButtonClassName}
-                            type="button"
-                            disabled={savingAccountId === account.providerAccountId}
-                            onClick={() => void saveAccountRoles(account)}
-                          >
-                            {savingAccountId === account.providerAccountId
-                              ? "Saving…"
-                              : "Save bindings"}
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
+
+              {selectedLlamaSwapEndpoints.length > 0 ? (
+                <div className={`${mutedPanelClassName} p-4`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-[var(--rm-fg)]">Local runtime pool</p>
+                      <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                        This model is currently loaded through the managed local runtime pool.
+                      </p>
+                    </div>
+                    <button
+                      className={secondaryButtonClassName}
+                      type="button"
+                      disabled={removingTargetKey === `local:${selectedCard.modelId}`}
+                      onClick={() => void unloadSelectedLocalModel()}
+                    >
+                      {removingTargetKey === `local:${selectedCard.modelId}`
+                        ? "Unloading…"
+                        : "Unload local model"}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
 
               <DisclosureSection summary="Capabilities">
                 <div className="flex flex-wrap gap-2">
@@ -872,10 +1005,6 @@ export default function ControlModelsRoute() {
                 Review providers
               </Link>
             </div>
-            {statusMessage ? (
-              <p className="mt-4 text-sm text-[var(--rm-secondary)]">{statusMessage}</p>
-            ) : null}
-
             <div className="mt-4">
               <p className="mb-2 font-semibold text-[var(--rm-fg)]">Endpoint and model ids</p>
               <CodeBlock>

@@ -554,6 +554,11 @@ describe("runtime-host-bridge", () => {
     const readPeers = async () => [];
     const updatePeers = async () => [];
     const checkPeerHealth = async () => ({ healthy: true });
+    const readVersionInfo = async () => ({
+      version: "0.0.2",
+      commit: "abc123",
+      build_date: "2026-06-29T00:00:00.000Z",
+    });
     const readBenchmarkSuite = async () => ({ cases: [] });
     const runBenchmark = async () => ({ runId: "run-1", status: "running" });
     const readBenchmarkRun = async () => ({ runId: "run-1", status: "completed" });
@@ -568,6 +573,7 @@ describe("runtime-host-bridge", () => {
 
     const backend = {
       registry,
+      readVersionInfo,
       executeChatCompletions: async () => {
         throw new Error("unused");
       },
@@ -689,6 +695,7 @@ describe("runtime-host-bridge", () => {
     expect(options.readBenchmarkSummariesByMode).toBe(readBenchmarkSummariesByMode);
     expect(options.readBenchmarkPreferences).toBe(readBenchmarkPreferences);
     expect(options.updateBenchmarkPreferences).toBe(updateBenchmarkPreferences);
+    expect(options.readVersionInfo).toBe(readVersionInfo);
   });
 
   test("builds QA backend options that start managed mock vendors for end-to-end Pi QA", () => {
@@ -5187,6 +5194,50 @@ describe("runtime-host-bridge", () => {
 
     expect(result.models.map((entry) => entry.id)).toEqual(["gpt-5.4", "moonshot/kimi-k2.5"]);
     expect(result.setup.recommendedModel).toBe("gpt-5.4");
+  });
+
+  test("prefers the alias derived from the live runtime routing config in downstream OpenAI provider config", () => {
+    const result = (
+      bridge as {
+        createDownstreamOpenAIProviderConfig: (
+          value: EndpointRegistryResult,
+          baseUrl: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            modelIds: readonly string[];
+          }[],
+          options?: {
+            recommendedModelId?: string | null;
+          },
+        ) => {
+          models: readonly { id: string }[];
+          setup: { recommendedModel: string | null };
+        };
+      }
+    ).createDownstreamOpenAIProviderConfig(
+      registry,
+      "http://127.0.0.1:4010",
+      [
+        {
+          aliasId: "default.decision-only",
+          modelIds: ["moonshot/kimi-k2.5"],
+        },
+        {
+          aliasId: "difficulty.remote-only",
+          modelIds: ["moonshot/kimi-k2.5"],
+        },
+      ],
+      {
+        recommendedModelId: "difficulty.remote-only",
+      },
+    );
+
+    expect(result.models.map((entry) => entry.id)).toEqual([
+      "default.decision-only",
+      "difficulty.remote-only",
+      "moonshot/kimi-k2.5",
+    ]);
+    expect(result.setup.recommendedModel).toBe("difficulty.remote-only");
   });
 
   test("fallback downstream OpenAI provider config remains compatible with pi-role-model", () => {

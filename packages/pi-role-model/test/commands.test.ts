@@ -77,12 +77,29 @@ describe("role-model command dispatcher", () => {
 
     await expect(handler("status")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("Role-Model Runtime"),
+      text: expect.stringContaining("runtime version: 0.0.0-test"),
     });
     await expect(handler("doctor")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("downstream discovery: ok"),
+      text: expect.stringContaining("runtime version: ok"),
     });
+  });
+
+  test("prefers release version in status while preserving the local runtime build identity", async () => {
+    const handler = createRoleModelCommandHandler({
+      discover: async () => ({
+        discovery,
+        version: {
+          version: "0.0.1-alpha.3-15-g61b8bdad-dirty",
+          release_version: "0.0.2",
+        },
+      }),
+    });
+
+    const result = await handler("status");
+    expect(result.ok).toBe(true);
+    expect(result.text).toContain("runtime version: 0.0.2");
+    expect(result.text).toContain("runtime build: 0.0.1-alpha.3-15-g61b8bdad-dirty");
   });
 
   test("supports setup, ui, recommended alias, use alias, and refresh workflows", async () => {
@@ -179,7 +196,9 @@ describe("role-model command dispatcher", () => {
     });
     await expect(handler("explain latest")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("selection reasons: BENCHMARK_TASK_SCORE, TELEMETRY_TASK_PERFORMANCE"),
+      text: expect.stringContaining(
+        "selection reasons: BENCHMARK_TASK_SCORE, TELEMETRY_TASK_PERFORMANCE",
+      ),
     });
   });
 
@@ -232,6 +251,35 @@ describe("role-model command dispatcher", () => {
     expect(result.text).toContain("auth: placeholder");
     expect(result.text).toContain("endpoint trust: local");
     expect(result.text).toContain("fallback: no");
+  });
+
+  test("status prefers the live Pi role-model selection over a stale stored alias", async () => {
+    const handler = createRoleModelCommandHandler({
+      discover: async () => ({
+        discovery: createDiscovery(),
+        version: { version: "0.0.0-test" },
+        health: { status: "healthy" },
+        state: "ready",
+        warnings: [],
+        providerRegistered: true,
+        modelDiagnostics: [],
+      }),
+      readSelectedAlias: async () => "hybrid.remote-only",
+    });
+
+    const result = await handler("status", {
+      getModel: () => ({
+        id: "difficulty.remote-only",
+        provider: "role-model",
+        api: "openai-completions",
+        input: ["text"],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+      }),
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.text).toContain("selected alias: difficulty.remote-only");
+    expect(result.text).toContain("stored alias: hybrid.remote-only");
   });
 
   test("doctor gives remediation for blocked remote endpoints", async () => {
