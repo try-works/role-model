@@ -1,9 +1,6 @@
 import { createPiModelSelection } from "./downstream-openai.js";
-import type {
-  RoleModelRecentRequest,
-  RoleModelRequestInspection,
-} from "./runtime-inspection.js";
 import { RoleModelDiscoveryError } from "./runtime-discovery.js";
+import type { RoleModelRecentRequest, RoleModelRequestInspection } from "./runtime-inspection.js";
 import type {
   DiscoveryResult,
   PiCommandContext,
@@ -57,7 +54,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function readNullableString(record: Record<string, unknown>, ...keys: readonly string[]): string | null {
+function readNullableString(
+  record: Record<string, unknown>,
+  ...keys: readonly string[]
+): string | null {
   for (const key of keys) {
     const value = record[key];
     if (typeof value === "string" && value.length > 0) {
@@ -68,10 +68,15 @@ function readNullableString(record: Record<string, unknown>, ...keys: readonly s
 }
 
 function readStringArray(value: unknown): readonly string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }
 
-function extractRoleTask(record: RoleModelRecentRequest): { roleId: string | null; taskType: string | null } {
+function extractRoleTask(record: RoleModelRecentRequest): {
+  roleId: string | null;
+  taskType: string | null;
+} {
   const normalizedIntent = record.normalizedIntent;
   const roleModel = record.roleModel;
   const intent = isRecord(roleModel?.intent) ? roleModel.intent : null;
@@ -117,10 +122,9 @@ function formatInspection(inspection: RoleModelRequestInspection): string {
   const routerDecision = inspection.routerDecision;
   const { roleId, taskType } = extractRoleTask(request);
   const reasonCodes = readSelectionReasons(inspection);
-  const observeUrl =
-    routerDecision?.observeRequestPath && routerDecision.observeRequestPath.startsWith("/")
-      ? `${inspection.runtimeBaseUrl}${routerDecision.observeRequestPath}`
-      : null;
+  const observeUrl = routerDecision?.observeRequestPath?.startsWith("/")
+    ? `${inspection.runtimeBaseUrl}${routerDecision.observeRequestPath}`
+    : null;
   return [
     `request: ${request.requestId}`,
     `status: ${request.status ?? "unknown"}`,

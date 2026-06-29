@@ -1,10 +1,10 @@
-import { DEFAULT_ROLE_MODEL_ENDPOINT, normalizeEndpoint } from "./config.js";
 import { createFileAliasStore } from "./alias-store.js";
 import { type RoleModelCommandDependencies, createRoleModelCommandHandler } from "./commands.js";
+import { DEFAULT_ROLE_MODEL_ENDPOINT, normalizeEndpoint } from "./config.js";
 import { registerRoleModelProvider } from "./provider-registration.js";
 import { injectRoleModelIntentIntoPayloadWithRuntimeTasks } from "./request-intent.js";
-import { inspectRequest, listRecentRequests } from "./runtime-inspection.js";
 import { discoverRoleModelRuntime } from "./runtime-discovery.js";
+import { inspectRequest, listRecentRequests } from "./runtime-inspection.js";
 import type { CompactRoleTask, CompactTaxonomy } from "./taxonomy/compact-data.js";
 import {
   type EffectiveTaxonomyResolution,

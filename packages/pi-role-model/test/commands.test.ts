@@ -196,7 +196,9 @@ describe("role-model command dispatcher", () => {
     });
     await expect(handler("explain latest")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("selection reasons: BENCHMARK_TASK_SCORE, TELEMETRY_TASK_PERFORMANCE"),
+      text: expect.stringContaining(
+        "selection reasons: BENCHMARK_TASK_SCORE, TELEMETRY_TASK_PERFORMANCE",
+      ),
     });
   });
 
