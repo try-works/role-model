@@ -2657,7 +2657,7 @@ describe("runtime-host-bridge", () => {
     ).toBe("function");
   });
 
-  test("createRequestScopedToolRegistry produces a working registry with correct tool names and passthrough execution", async () => {
+  test("createRequestScopedToolRegistry produces explicit failures for unimplemented bridged tool names", async () => {
     const createRequestScopedToolRegistry = (
       bridge as {
         createRequestScopedToolRegistry: (
@@ -2697,11 +2697,12 @@ describe("runtime-host-bridge", () => {
     });
 
     expect(result.executions).toHaveLength(1);
-    expect(result.executions[0].status).toBe("succeeded");
+    expect(result.executions[0].status).toBe("failed");
     expect(result.executions[0].toolName).toBe("lookupRegistry");
-    expect(result.executions[0].output).toEqual({
-      endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
-    });
+    expect(result.executions[0].output).toBeNull();
+    expect(result.executions[0].diagnostics[0]?.message).toContain(
+      "is not implemented by the Codex Subscription bridge",
+    );
   });
 
   test("seedManagedCodexWorkspaceFixture stages benchmark files for Codex tool-heavy cases", async () => {
@@ -2735,7 +2736,7 @@ describe("runtime-host-bridge", () => {
     }
   });
 
-  test("createRequestScopedToolRegistry executes read_file, grep_search, and apply_patch against a staged workspace", async () => {
+  test("createRequestScopedToolRegistry executes read/list/write tools and apply_patch against a staged workspace", async () => {
     const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-codex-tools-"));
     try {
       await (
@@ -2781,6 +2782,35 @@ describe("runtime-host-bridge", () => {
             },
           },
           {
+            name: "list_dir",
+            description: "List a directory from the benchmark workspace.",
+            inputSchema: {
+              type: "object",
+              properties: { path: { type: "string" } },
+            },
+          },
+          {
+            name: "write_file",
+            description: "Write a file into the benchmark workspace.",
+            inputSchema: {
+              type: "object",
+              properties: {
+                path: { type: "string" },
+                content: { type: "string" },
+              },
+              required: ["path", "content"],
+            },
+          },
+          {
+            name: "create_directory",
+            description: "Create a directory in the benchmark workspace.",
+            inputSchema: {
+              type: "object",
+              properties: { path: { type: "string" } },
+              required: ["path"],
+            },
+          },
+          {
             name: "apply_patch",
             description: "Apply a unified diff patch in the benchmark workspace.",
             inputSchema: {
@@ -2820,6 +2850,48 @@ describe("runtime-host-bridge", () => {
       expect(String(grepResult.executions[0]?.output)).toContain("src/router.ts");
       expect(String(grepResult.executions[0]?.output)).toContain("evaluateEligibility");
 
+      const listDirResult = await executeToolCalls(registry, {
+        requestId: "codex-tool-list-dir",
+        toolCalls: [
+          {
+            name: "list_dir",
+            arguments: { path: "src" },
+            providerToolId: "call-list-dir",
+          },
+        ],
+      });
+      expect(listDirResult.executions[0]?.status).toBe("succeeded");
+      expect(String(listDirResult.executions[0]?.output)).toContain("Directory src:");
+      expect(String(listDirResult.executions[0]?.output)).toContain("router.ts");
+
+      const createDirectoryResult = await executeToolCalls(registry, {
+        requestId: "codex-tool-create-dir",
+        toolCalls: [
+          {
+            name: "create_directory",
+            arguments: { path: "notes" },
+            providerToolId: "call-create-dir",
+          },
+        ],
+      });
+      expect(createDirectoryResult.executions[0]?.status).toBe("succeeded");
+      expect(String(createDirectoryResult.executions[0]?.output)).toContain("Created directory");
+
+      const writeFileResult = await executeToolCalls(registry, {
+        requestId: "codex-tool-write-file",
+        toolCalls: [
+          {
+            name: "write_file",
+            arguments: { path: "notes/summary.md", content: "# summary\n" },
+            providerToolId: "call-write-file",
+          },
+        ],
+      });
+      expect(writeFileResult.executions[0]?.status).toBe("succeeded");
+      expect(readFileSync(path.join(workspaceRoot, "notes", "summary.md"), "utf8")).toContain(
+        "# summary",
+      );
+
       const patchResult = await executeToolCalls(registry, {
         requestId: "codex-tool-patch",
         toolCalls: [
@@ -2845,6 +2917,114 @@ describe("runtime-host-bridge", () => {
       );
     } finally {
       await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("createRequestScopedToolRegistry fails explicitly for unsupported bridged tools", async () => {
+    const createRequestScopedToolRegistry = (
+      bridge as {
+        createRequestScopedToolRegistry: (
+          dynamicTools: readonly {
+            readonly name: string;
+            readonly description?: string;
+            readonly inputSchema: Record<string, unknown>;
+          }[],
+          options?: {
+            readonly workspaceRoot?: string;
+            readonly applyPatchMode?: "ack" | "mutate";
+          },
+        ) => { connectors: readonly { tools: readonly { name: string }[] }[] };
+      }
+    ).createRequestScopedToolRegistry;
+
+    const registry = createRequestScopedToolRegistry([
+      {
+        name: "nonstandard_runtime_tool",
+        description: "A tool the Codex bridge cannot execute.",
+        inputSchema: {
+          type: "object",
+        },
+      },
+    ]);
+
+    const result = await executeToolCalls(registry, {
+      requestId: "codex-tool-unsupported",
+      toolCalls: [
+        {
+          name: "nonstandard_runtime_tool",
+          arguments: {},
+          providerToolId: "call-unsupported",
+        },
+      ],
+    });
+
+    expect(result.executions[0]?.status).toBe("failed");
+    expect(result.executions[0]?.diagnostics[0]?.message).toContain(
+      "is not implemented by the Codex Subscription bridge",
+    );
+  });
+
+  test("createRequestScopedToolRegistry tells Codex to use shell tools for external file paths", async () => {
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-codex-tools-"));
+    const externalRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-codex-external-"));
+    try {
+      await (
+        bridge as {
+          seedManagedCodexWorkspaceFixture: (workspaceRoot: string) => Promise<void>;
+        }
+      ).seedManagedCodexWorkspaceFixture(workspaceRoot);
+      const externalPath = path.join(externalRoot, "notes.md");
+      await writeFile(externalPath, "# external notes\n", "utf8");
+
+      const createRequestScopedToolRegistry = (
+        bridge as {
+          createRequestScopedToolRegistry: (
+            dynamicTools: readonly {
+              readonly name: string;
+              readonly description?: string;
+              readonly inputSchema: Record<string, unknown>;
+            }[],
+            options?: {
+              readonly workspaceRoot?: string;
+              readonly applyPatchMode?: "ack" | "mutate";
+            },
+          ) => { connectors: readonly { tools: readonly { name: string }[] }[] };
+        }
+      ).createRequestScopedToolRegistry;
+
+      const registry = createRequestScopedToolRegistry(
+        [
+          {
+            name: "read_file",
+            description: "Read a file from the benchmark workspace.",
+            inputSchema: {
+              type: "object",
+              properties: { path: { type: "string" } },
+              required: ["path"],
+            },
+          },
+        ],
+        { workspaceRoot },
+      );
+
+      const readResult = await executeToolCalls(registry, {
+        requestId: "codex-tool-read-external",
+        toolCalls: [
+          {
+            name: "read_file",
+            arguments: { path: externalPath },
+            providerToolId: "call-read-external",
+          },
+        ],
+      });
+
+      expect(readResult.executions[0]?.status).toBe("failed");
+      expect(readResult.executions[0]?.diagnostics[0]?.message).toContain(
+        "Use shell commands for external filesystem paths",
+      );
+    } finally {
+      await rm(workspaceRoot, { recursive: true, force: true });
+      await rm(externalRoot, { recursive: true, force: true });
     }
   });
 
@@ -3069,6 +3249,10 @@ describe("runtime-host-bridge", () => {
           "    return;",
           "  }",
           "  if (message.id === 3 && message.method === 'turn/start') {",
+          "    if (message.params?.sandboxPolicy?.type !== 'danger-full-access') {",
+          "      send({ method: 'turn/failed', params: { error: { message: 'sandbox policy mismatch', code: 'invalid_request', data: { received: message.params?.sandboxPolicy } } } });",
+          "      return;",
+          "    }",
           "    send({ id: 3, result: { accepted: true } });",
           "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 11, outputTokens: 0 } } } });",
           "    send({ id: 91, method: 'item/tool/call', params: { callId: 'call_stdio_1', tool: 'request_read_file', arguments: { path: 'README.md' } } });",
@@ -3205,6 +3389,75 @@ describe("runtime-host-bridge", () => {
       expect(result.dynamicToolExecutions).toEqual([{ toolName: "request_read_file" }]);
     } finally {
       fakeAppServer.kill();
+      await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("executeCodexAppServerTurnOverStdio preserves nested app-server error details for fallback classification", async () => {
+    const fakeAppServer = spawn(
+      process.execPath,
+      [
+        "-e",
+        [
+          "const { createInterface } = require('node:readline');",
+          "const rl = createInterface({ input: process.stdin, crlfDelay: Infinity });",
+          "const send = (payload) => process.stdout.write(JSON.stringify(payload) + '\\n');",
+          "rl.on('line', (line) => {",
+          "  const message = JSON.parse(line);",
+          "  if (message.id === 1 && message.method === 'initialize') {",
+          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
+          "    return;",
+          "  }",
+          "  if (message.method === 'initialized') {",
+          "    return;",
+          "  }",
+          "  if (message.id === 2 && message.method === 'thread/start') {",
+          "    send({ id: 2, result: { thread: { id: 'thr_test_stdio_error' } } });",
+          "    return;",
+          "  }",
+          "  if (message.id === 3 && message.method === 'turn/start') {",
+          "    send({ method: 'turn/failed', params: { error: { message: 'Invalid Request: The API rejected this request.', code: 'invalid_request', data: { code: 'insufficient_quota', detail: 'The authenticated ChatGPT account has no remaining credits for this turn.' } } } });",
+          "    setTimeout(() => process.exit(0), 0);",
+          "  }",
+          "});",
+        ].join(" "),
+      ],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+      },
+    );
+
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-error-"));
+
+    try {
+      await expect(
+        (
+          bridge as {
+            executeCodexAppServerTurnOverStdio: (input: {
+              child: ReturnType<typeof spawn>;
+              model: string;
+              requestCapture: {
+                url: string;
+                body: Record<string, unknown>;
+              };
+              workspaceRoot: string;
+            }) => Promise<unknown>;
+          }
+        ).executeCodexAppServerTurnOverStdio({
+          child: fakeAppServer,
+          model: "gpt-5.4",
+          requestCapture: {
+            url: "https://api.openai.com/v1/responses",
+            body: {
+              model: "gpt-5.4",
+              input: "Check the fallback behavior.",
+            },
+          },
+          workspaceRoot,
+        }),
+      ).rejects.toThrow(/insufficient_quota|no remaining credits/i);
+    } finally {
       await rm(workspaceRoot, { recursive: true, force: true });
     }
   });
@@ -3481,7 +3734,7 @@ describe("runtime-host-bridge", () => {
     }
   });
 
-  test("Codex tool path produces judged execution results in packaged-runtime-like environment (not file errors)", async () => {
+  test("Codex tool path surfaces explicit failures for unimplemented request-scoped tool names in packaged-runtime-like environments", async () => {
     const tempDir = await mkdtemp(path.join(os.tmpdir(), "role-model-packaged-sim-"));
     try {
       const loadMcpConnectorConfigs = (
@@ -3548,12 +3801,12 @@ describe("runtime-host-bridge", () => {
       });
 
       expect(result.executions).toHaveLength(1);
-      expect(result.executions[0].status).toBe("succeeded");
+      expect(result.executions[0].status).toBe("failed");
       expect(result.executions[0].toolName).toBe("lookupRegistry");
-      expect(result.executions[0].output).toEqual({
-        endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
-      });
-      expect(result.executions[0].diagnostics).toEqual([]);
+      expect(result.executions[0].output).toBeNull();
+      expect(result.executions[0].diagnostics[0]?.message).toContain(
+        "is not implemented by the Codex Subscription bridge",
+      );
     } finally {
       await rm(tempDir, { recursive: true, force: true });
     }
@@ -3605,6 +3858,22 @@ describe("runtime-host-bridge", () => {
       body: {
         model: "gpt-5.4",
         input: "Find the current Cloudflare stock price with a source.",
+        tools: [
+          {
+            type: "function",
+            name: "read_file",
+            description: "Read a file.",
+            parameters: {
+              type: "object",
+              properties: {
+                path: {
+                  type: "string",
+                },
+              },
+              required: ["path"],
+            },
+          },
+        ],
       },
     });
 
@@ -3615,6 +3884,12 @@ describe("runtime-host-bridge", () => {
     expect(prompt).toContain("Built-in web search is allowed when helpful.");
     expect(prompt).toContain(
       "Use any available hosted or request-scoped tools whenever they help satisfy the request",
+    );
+    expect(prompt).toContain(
+      "Request-scoped file tools only operate inside the managed Codex workspace.",
+    );
+    expect(prompt).toContain(
+      "use shell tools to inspect and read it instead of assuming the path is inaccessible",
     );
   });
 

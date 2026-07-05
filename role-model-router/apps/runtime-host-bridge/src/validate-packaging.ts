@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { type ChildProcess, spawn, spawnSync } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
 import { createServer as createHttpServer } from "node:http";
 import { createServer } from "node:net";
@@ -63,6 +63,37 @@ async function fetchJson<TValue>(url: string, init?: RequestInit): Promise<TValu
     throw new Error(`Request to ${url} failed with ${response.status}: ${await response.text()}`);
   }
   return (await response.json()) as TValue;
+}
+
+async function stopProcessTree(child: ChildProcess): Promise<void> {
+  if (child.pid == null || child.exitCode !== null) {
+    return;
+  }
+
+  if (process.platform === "win32") {
+    spawnSync("taskkill", ["/PID", String(child.pid), "/T", "/F"], {
+      stdio: "ignore",
+      windowsHide: true,
+    });
+  } else {
+    child.kill("SIGTERM");
+  }
+
+  const deadline = Date.now() + 10_000;
+  while (child.exitCode === null && Date.now() < deadline) {
+    await delay(100);
+  }
+
+  if (child.exitCode === null && child.pid != null) {
+    if (process.platform === "win32") {
+      spawnSync("taskkill", ["/PID", String(child.pid), "/T", "/F"], {
+        stdio: "ignore",
+        windowsHide: true,
+      });
+    } else {
+      child.kill("SIGKILL");
+    }
+  }
 }
 
 function extractChatOutputText(payload: unknown): string {
@@ -565,9 +596,15 @@ export async function runRuntimePackagingValidation(): Promise<{
   } catch (error) {
     validationError = error;
   } finally {
-    child.kill("SIGTERM");
-    await mockUpstream.close();
-    await rm(runtimeStateRoot, { recursive: true, force: true });
+    try {
+      await stopProcessTree(child);
+    } finally {
+      try {
+        await mockUpstream.close();
+      } finally {
+        await rm(runtimeStateRoot, { recursive: true, force: true });
+      }
+    }
   }
 
   const stderrOutput = stderrChunks.join("").trim();

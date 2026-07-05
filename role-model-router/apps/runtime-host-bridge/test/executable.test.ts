@@ -354,6 +354,24 @@ describe("runtime-host-bridge executable packaging", () => {
     expect(validatePackagingText).toContain("security.audit");
   });
 
+  test("packaged runtime validation tears down the packaged process tree before cleaning release artifacts", async () => {
+    const validatePackagingPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "src",
+      "validate-packaging.ts",
+    );
+    const validatePackagingText = await readFile(validatePackagingPath, "utf8");
+
+    expect(validatePackagingText).toContain("async function stopProcessTree");
+    expect(validatePackagingText).toContain(
+      'spawnSync("taskkill", ["/PID", String(child.pid), "/T", "/F"]',
+    );
+    expect(validatePackagingText).toContain("await stopProcessTree(child);");
+  });
+
   test("packaged runtime validation rebuilds the bridge before creating the SEA executable", async () => {
     const manifest = await readManifest("role-model-router/apps/runtime-host-bridge/package.json");
 
