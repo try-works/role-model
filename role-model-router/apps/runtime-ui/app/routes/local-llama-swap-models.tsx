@@ -1,20 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link } from "react-router";
 
 import { LlamaSwapSetupHint, useLlamaSwapConfigStatus } from "../components/llama-swap-setup-hint";
 import { LocalModelRolePicker } from "../components/local-model-role-picker";
-import {
-  EmptyState,
-  ErrorState,
-  LoadingState,
-  SectionCard,
-  StatusPill,
-} from "../components/page-primitives";
+import { ErrorState, LoadingState, SectionCard, StatusPill } from "../components/page-primitives";
 import {
   fieldClassName,
+  inlineTitleClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type ModelOverride,
@@ -29,11 +26,7 @@ import {
   updateModelOverrides,
 } from "../lib/runtime-api";
 
-type ModelViewMode = "list" | "grid";
-
 export default function LocalLlamaSwapModelsRoute() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const viewMode: ModelViewMode = searchParams.get("view") === "grid" ? "grid" : "list";
   const [models, setModels] = useState<RuntimeLocalModel[]>([]);
   const [rolePolicy, setRolePolicy] = useState<RuntimeRolePolicy | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +42,7 @@ export default function LocalLlamaSwapModelsRoute() {
   const declaredModelIds = llamaSwapStatus?.declaredModelIds ?? [];
   const loadPlaceholder =
     declaredModelIds.length > 0 ? declaredModelIds.join(", ") : "lfm2.5-8b-a1b";
+  const loadRoleSummary = loadRoleIds.length > 0 ? loadRoleIds.join(", ") : "all roles";
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -101,253 +95,290 @@ export default function LocalLlamaSwapModelsRoute() {
     }
   };
 
+  const handleLoadDraftModel = async () => {
+    const modelId = loadModelId.trim();
+    if (!modelId) return;
+    setActioning((prev) => ({ ...prev, __load__: true }));
+    try {
+      await loadLlamaSwapModel(modelId, loadRoleIds);
+      setLoadModelId("");
+      setLoadRoleIds([]);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to load ${modelId}`);
+    } finally {
+      setActioning((prev) => ({ ...prev, __load__: false }));
+    }
+  };
+
+  const handleUnload = async (modelId: string) => {
+    setActioning((prev) => ({ ...prev, [modelId]: true }));
+    try {
+      await unloadLocalModel(modelId);
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to unload ${modelId}`);
+    } finally {
+      setActioning((prev) => ({ ...prev, [modelId]: false }));
+    }
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {error ? <ErrorState label={error} /> : null}
       {!llamaSwapStatusLoading && llamaSwapStatus && !llamaSwapStatus.operational ? (
         <LlamaSwapSetupHint variant="prominent" status={llamaSwapStatus} />
       ) : null}
 
+      <section className={`${mutedPanelClassName} space-y-2 p-5`}>
+        <h2 className={inlineTitleClassName}>Llama-swap models</h2>
+        <p className={supportingTextClassName}>
+          Load a runtime-config-declared model, assign route roles, and manage the in-memory
+          llama-swap inventory from this page.
+        </p>
+      </section>
+
       <SectionCard
         title="Load model"
-        description="Model must be declared in runtime config. Loading triggers llama-swap to start or swap to this model."
+        description="Model must already be declared in runtime config. Loading triggers llama-swap to start or swap to this model instead of inventing a separate registration flow."
       >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label
-              htmlFor="llama-swap-model-id"
-              className="block text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]"
-            >
-              Model ID
-            </label>
-            <input
-              id="llama-swap-model-id"
-              type="text"
-              value={loadModelId}
-              onChange={(event) => setLoadModelId(event.target.value)}
-              placeholder={loadPlaceholder}
-              className={fieldClassName}
-            />
-            {declaredModelIds.length > 0 ? (
-              <p className="text-sm text-[var(--rm-secondary)]">
-                Declared in config: {declaredModelIds.join(", ")}
-              </p>
-            ) : null}
+        <div className="space-y-3">
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_220px_auto]">
+            <div className="space-y-2">
+              <label htmlFor="llama-swap-model-id" className={utilityLabelClassName}>
+                Model ID
+              </label>
+              <input
+                id="llama-swap-model-id"
+                type="text"
+                value={loadModelId}
+                onChange={(event) => setLoadModelId(event.target.value)}
+                placeholder={loadPlaceholder}
+                className={fieldClassName}
+              />
+            </div>
+            <div className="space-y-2">
+              <p className={utilityLabelClassName}>Role summary</p>
+              <div className={`${mutedPanelClassName} flex min-h-[44px] items-center px-4 py-3`}>
+                <p className="break-words font-mono text-[13px] leading-[18px] text-[var(--rm-fg)]">
+                  {`roles: ${loadRoleSummary}`}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={handleLoadDraftModel}
+                disabled={!loadModelId.trim() || actioning.__load__ || !llamaSwapOperational}
+                className={primaryButtonClassName}
+              >
+                {actioning.__load__ ? "Loading…" : "Load model"}
+              </button>
+            </div>
           </div>
+
+          {declaredModelIds.length > 0 ? (
+            <p className={supportingTextClassName}>
+              Declared in config: {declaredModelIds.join(", ")}
+            </p>
+          ) : null}
+
           <LocalModelRolePicker
             rolePolicy={rolePolicy}
             selectedRoleIds={loadRoleIds}
             onChange={setLoadRoleIds}
             disabled={actioning.__load__ || !llamaSwapOperational}
           />
-          <p className="text-sm text-[var(--rm-secondary)]">
+
+          <p className={supportingTextClassName}>
             Assign roles before loading so routing can prefer this endpoint for matching tasks.
           </p>
+
           {!llamaSwapOperational ? (
-            <p className="text-sm text-[var(--rm-secondary)]">
+            <p className={supportingTextClassName}>
               Load model stays disabled until runtime config declares a llama-swap model with a
-              valid GGUF path. Open Setup guide above to copy the scaffold.
+              valid GGUF path. Open the setup guide above to copy the required scaffold.
             </p>
           ) : null}
-          <button
-            type="button"
-            onClick={async () => {
-              const modelId = loadModelId.trim();
-              if (!modelId) return;
-              setActioning((prev) => ({ ...prev, __load__: true }));
-              try {
-                await loadLlamaSwapModel(modelId, loadRoleIds);
-                setLoadModelId("");
-                setLoadRoleIds([]);
-                await refresh();
-              } finally {
-                setActioning((prev) => ({ ...prev, __load__: false }));
-              }
-            }}
-            disabled={!loadModelId.trim() || actioning.__load__ || !llamaSwapOperational}
-            className={primaryButtonClassName}
-          >
-            {actioning.__load__ ? "Loading…" : "Load model"}
-          </button>
-          <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
-            Open runtime config
-          </Link>
+
+          <div className="flex flex-wrap gap-2">
+            <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
+              Open runtime config
+            </Link>
+          </div>
         </div>
       </SectionCard>
 
-      <SectionCard title="Loaded models" description="Models currently in memory via llama-swap.">
-        <div className="mb-4 flex gap-2">
-          <button
-            type="button"
-            className={viewMode === "list" ? primaryButtonClassName : secondaryButtonClassName}
-            onClick={() => setSearchParams({})}
-          >
-            List
-          </button>
-          <button
-            type="button"
-            className={viewMode === "grid" ? primaryButtonClassName : secondaryButtonClassName}
-            onClick={() => setSearchParams({ view: "grid" })}
-          >
-            Grid
-          </button>
-          <Link className={secondaryButtonClassName} to="/app/local/llama-swap/matrix">
-            Open matrix
-          </Link>
-        </div>
+      <SectionCard
+        title="Loaded models"
+        description="Models currently resident in memory via llama-swap."
+      >
         {loading && models.length === 0 ? (
           <LoadingState label="Loading llama-swap models…" />
         ) : models.length === 0 ? (
-          <EmptyState label="No llama-swap models loaded. Load a configured model above." />
+          <div className={`${mutedPanelClassName} p-4`}>
+            <p className={inlineTitleClassName}>No llama-swap models loaded yet.</p>
+            <p className={`${supportingTextClassName} mt-1`}>
+              Load a configured model above to start or swap the in-memory runtime inventory.
+            </p>
+          </div>
         ) : (
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-                : "grid gap-4 md:grid-cols-2 xl:grid-cols-3"
-            }
-          >
-            {models.map((model) => (
-              <div key={model.modelId} className={`${mutedPanelClassName} p-5`}>
-                <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
-                  <p className="break-words font-mono text-sm font-semibold text-[var(--rm-fg)]">
-                    {model.modelId}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <StatusPill tone="neutral">Llama-swap</StatusPill>
-                    <StatusPill tone="success">Loaded</StatusPill>
-                  </div>
-                </div>
-                <div className="mb-4 flex flex-wrap gap-2">
-                  {(model.roleIds ?? []).length === 0 ? (
-                    <StatusPill tone="warning">No roles</StatusPill>
-                  ) : (
-                    (model.roleIds ?? []).map((roleId) => (
-                      <StatusPill key={roleId} tone="neutral">
-                        {roleId}
+          <div className="space-y-3">
+            {models.map((model) => {
+              const roleIds = draftRolesByModelId[model.modelId] ?? [];
+              const overrideDraft = editingOverrides[model.modelId];
+
+              return (
+                <section key={model.modelId} className={`${mutedPanelClassName} space-y-4 p-4`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 space-y-1">
+                      <p className={utilityLabelClassName}>Llama-swap</p>
+                      <p className="break-words font-mono text-[13px] leading-[18px] text-[var(--rm-fg)]">
+                        {model.modelId}
+                      </p>
+                      <p className={supportingTextClassName}>
+                        loaded • active in memory • role assignments ready
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                      <StatusPill tone="accent">Loaded</StatusPill>
+                      <StatusPill tone="neutral">
+                        {roleIds.length === 0 ? "No roles" : `${roleIds.length} roles`}
                       </StatusPill>
-                    ))
-                  )}
-                </div>
-                <LocalModelRolePicker
-                  rolePolicy={rolePolicy}
-                  selectedRoleIds={draftRolesByModelId[model.modelId] ?? []}
-                  onChange={(roleIds) =>
-                    setDraftRolesByModelId((current) => ({
-                      ...current,
-                      [model.modelId]: [...roleIds],
-                    }))
-                  }
-                  disabled={actioning[`roles:${model.modelId}`]}
-                />
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleSaveRoles(model.modelId)}
-                    disabled={actioning[`roles:${model.modelId}`]}
-                    className={primaryButtonClassName}
-                  >
-                    Save roles
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleLoad(model.modelId)}
-                    disabled={actioning[model.modelId]}
-                    className={secondaryButtonClassName}
-                  >
-                    Reload
-                  </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setActioning((prev) => ({ ...prev, [model.modelId]: true }));
-                      try {
-                        await unloadLocalModel(model.modelId);
-                        await refresh();
-                      } finally {
-                        setActioning((prev) => ({ ...prev, [model.modelId]: false }));
-                      }
-                    }}
-                    disabled={actioning[model.modelId]}
-                    className={secondaryButtonClassName}
-                  >
-                    Unload
-                  </button>
-                </div>
-                {editingOverrides[model.modelId] ? (
-                  <div className="mt-4 space-y-2 border border-[var(--rm-border)] p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                      Overrides
-                    </p>
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      <input
-                        type="number"
-                        placeholder="TTL"
-                        value={editingOverrides[model.modelId]?.ttl ?? ""}
-                        onChange={(event) =>
-                          setEditingOverrides((current) => ({
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {roleIds.length === 0 ? (
+                      <StatusPill tone="neutral">No roles</StatusPill>
+                    ) : (
+                      roleIds.map((roleId) => (
+                        <StatusPill key={roleId} tone="neutral">
+                          {roleId}
+                        </StatusPill>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+                    <div className="space-y-2">
+                      <p className={utilityLabelClassName}>Assigned roles</p>
+                      <LocalModelRolePicker
+                        rolePolicy={rolePolicy}
+                        selectedRoleIds={roleIds}
+                        onChange={(nextRoleIds) =>
+                          setDraftRolesByModelId((current) => ({
                             ...current,
-                            [model.modelId]: {
-                              ...current[model.modelId],
-                              ttl: event.target.value ? Number(event.target.value) : undefined,
-                            },
+                            [model.modelId]: [...nextRoleIds],
                           }))
                         }
-                        className={fieldClassName}
-                      />
-                      <input
-                        type="number"
-                        placeholder="Context window"
-                        value={editingOverrides[model.modelId]?.contextWindow ?? ""}
-                        onChange={(event) =>
-                          setEditingOverrides((current) => ({
-                            ...current,
-                            [model.modelId]: {
-                              ...current[model.modelId],
-                              contextWindow: event.target.value
-                                ? Number(event.target.value)
-                                : undefined,
-                            },
-                          }))
-                        }
-                        className={fieldClassName}
-                      />
-                      <input
-                        type="number"
-                        placeholder="Concurrency"
-                        value={editingOverrides[model.modelId]?.concurrencyLimit ?? ""}
-                        onChange={(event) =>
-                          setEditingOverrides((current) => ({
-                            ...current,
-                            [model.modelId]: {
-                              ...current[model.modelId],
-                              concurrencyLimit: event.target.value
-                                ? Number(event.target.value)
-                                : undefined,
-                            },
-                          }))
-                        }
-                        className={fieldClassName}
+                        disabled={actioning[`roles:${model.modelId}`]}
                       />
                     </div>
-                    <button
-                      type="button"
-                      className={secondaryButtonClassName}
-                      onClick={async () => {
-                        const next = {
-                          ...overrides,
-                          [model.modelId]: editingOverrides[model.modelId] ?? {},
-                        };
-                        await updateModelOverrides(next);
-                        setOverrides(next);
-                      }}
-                    >
-                      Save overrides
-                    </button>
+
+                    <div className="flex flex-wrap gap-2 xl:justify-end">
+                      <button
+                        type="button"
+                        onClick={() => handleSaveRoles(model.modelId)}
+                        disabled={actioning[`roles:${model.modelId}`]}
+                        className={primaryButtonClassName}
+                      >
+                        Save roles
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleLoad(model.modelId)}
+                        disabled={actioning[model.modelId]}
+                        className={secondaryButtonClassName}
+                      >
+                        Reload
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUnload(model.modelId)}
+                        disabled={actioning[model.modelId]}
+                        className={secondaryButtonClassName}
+                      >
+                        Unload
+                      </button>
+                    </div>
                   </div>
-                ) : null}
-              </div>
-            ))}
+
+                  {overrideDraft ? (
+                    <div
+                      className={`${mutedPanelClassName} space-y-3 border border-[var(--rm-border)] p-4`}
+                    >
+                      <p className={utilityLabelClassName}>Overrides</p>
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        <input
+                          type="number"
+                          placeholder="TTL"
+                          value={overrideDraft.ttl ?? ""}
+                          onChange={(event) =>
+                            setEditingOverrides((current) => ({
+                              ...current,
+                              [model.modelId]: {
+                                ...current[model.modelId],
+                                ttl: event.target.value ? Number(event.target.value) : undefined,
+                              },
+                            }))
+                          }
+                          className={fieldClassName}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Context window"
+                          value={overrideDraft.contextWindow ?? ""}
+                          onChange={(event) =>
+                            setEditingOverrides((current) => ({
+                              ...current,
+                              [model.modelId]: {
+                                ...current[model.modelId],
+                                contextWindow: event.target.value
+                                  ? Number(event.target.value)
+                                  : undefined,
+                              },
+                            }))
+                          }
+                          className={fieldClassName}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Concurrency"
+                          value={overrideDraft.concurrencyLimit ?? ""}
+                          onChange={(event) =>
+                            setEditingOverrides((current) => ({
+                              ...current,
+                              [model.modelId]: {
+                                ...current[model.modelId],
+                                concurrencyLimit: event.target.value
+                                  ? Number(event.target.value)
+                                  : undefined,
+                              },
+                            }))
+                          }
+                          className={fieldClassName}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className={secondaryButtonClassName}
+                        onClick={async () => {
+                          const next = {
+                            ...overrides,
+                            [model.modelId]: overrideDraft ?? {},
+                          };
+                          await updateModelOverrides(next);
+                          setOverrides(next);
+                        }}
+                      >
+                        Save overrides
+                      </button>
+                    </div>
+                  ) : null}
+                </section>
+              );
+            })}
           </div>
         )}
       </SectionCard>

@@ -23,6 +23,7 @@ import {
   fetchRouterSummary,
   fetchRuntimeConfig,
   fetchRuntimeSnapshot,
+  fetchRuntimeSummary,
   fetchTelemetryAnalytics,
   fetchTelemetryDashboard,
   fetchTelemetryRequests,
@@ -55,6 +56,15 @@ import {
 function jsonResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
+    headers: {
+      "content-type": "application/json",
+    },
+  });
+}
+
+function responseWithStatus(status: number, body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status,
     headers: {
       "content-type": "application/json",
     },
@@ -218,6 +228,40 @@ describe("fetchRuntimeSnapshot", () => {
       ],
       roles: [{ roleId: "general.chat", label: "General chat" }],
     });
+  });
+});
+
+describe("fetchRuntimeSummary", () => {
+  test("retries transient runtime summary failures before surfacing an error", async () => {
+    vi.useFakeTimers();
+    const responses = [
+      responseWithStatus(500, { error: "bridge bootstrap still running" }),
+      responseWithStatus(500, { error: "registry warming" }),
+      jsonResponse({
+        providerCount: 3,
+        accountCount: 2,
+        endpointCount: 4,
+      }),
+    ];
+    const fetcher = vi.fn(async () => {
+      const next = responses.shift();
+      if (!next) {
+        throw new Error("Unexpected extra runtime summary fetch.");
+      }
+      return next;
+    });
+
+    const pending = fetchRuntimeSummary(fetcher);
+    await vi.runAllTimersAsync();
+
+    await expect(pending).resolves.toEqual({
+      providerCount: 3,
+      accountCount: 2,
+      endpointCount: 4,
+    });
+    expect(fetcher).toHaveBeenCalledTimes(3);
+
+    vi.useRealTimers();
   });
 });
 
@@ -653,7 +697,7 @@ describe("router APIs", () => {
             },
             sources: {
               runtimeConfigPath: "D:\\runtime-config.yaml",
-              routingModel: "fixture",
+              routingModel: "sample",
               policyInputs: "runtime",
             },
             policySources: {
@@ -749,7 +793,7 @@ describe("router APIs", () => {
       },
       sources: {
         runtimeConfigPath: "D:\\runtime-config.yaml",
-        routingModel: "fixture",
+        routingModel: "sample",
         policyInputs: "runtime",
       },
       policySources: {
@@ -1624,6 +1668,22 @@ describe("studio vendor API helpers", () => {
     await expect(fetchAudioVoices("moonshot/kimi-audio", fetcher)).resolves.toEqual([
       { id: "alloy", name: "Alloy" },
     ]);
+  });
+
+  test("reports a clear error when the voice inventory endpoint returns HTML instead of JSON", async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response("<!DOCTYPE html><html><body>fallback</body></html>", {
+          status: 200,
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+          },
+        }),
+    );
+
+    await expect(fetchAudioVoices("moonshot/kimi-audio", fetcher)).rejects.toThrow(
+      "Request to /v1/audio/voices?model=moonshot%2Fkimi-audio returned HTML instead of JSON.",
+    );
   });
 
   test("posts a speech-generation request and returns audio bytes as a blob", async () => {

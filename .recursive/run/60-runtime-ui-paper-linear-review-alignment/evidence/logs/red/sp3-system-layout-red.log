@@ -1,0 +1,273 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/60-runtime-ui-paper-linear-review-alignment/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/design-system.test.ts (58 tests | 1 failed) 205ms
+   ✓ runtime design system > defines navigation groups and layout templates for every runtime route 6ms
+   ✓ runtime design system > uses analytics charts as the primary Observe entry point 2ms
+   ✓ runtime design system > keeps the shell on the Paper Linear baseline with explicit chart tokens 1ms
+   ✓ runtime design system > chart tokens used together resolve to distinct visual colors in each theme 1ms
+   ✓ runtime design system > global shell chrome keeps legacy vendor ui out of the main runtime contract 68ms
+   ✓ runtime design system > studio implementation targets render repo-owned workspace sections instead of placeholder blueprints 21ms
+   ✓ runtime design system > integration and system implementation targets render live upstream and peer surfaces 8ms
+   ✓ runtime design system > router implementation targets render repo-owned routing explanation surfaces 0ms
+   ✓ runtime design system > router, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler 1ms
+   ✓ runtime design system > providers surface exposes explicit in-place maintenance actions for saved remote accounts 1ms
+   ✓ runtime design system > providers surface uses an explicit save-cancel modal for api-key maintenance 0ms
+   ✓ runtime design system > providers surface keeps oauth reconnect as a one-click saved-account action 0ms
+   ✓ runtime design system > providers maintenance flows call explicit repair APIs instead of generic account writes 0ms
+   ✓ runtime design system > providers saved-account cards use canonical lifecycle rows and bounded archived diagnostics 1ms
+   ✓ runtime design system > runtime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics 1ms
+   ✓ runtime design system > router routes preserve empty-state and observe-link affordances 0ms
+   ✓ runtime design system > merged router overview stays observational while routing strategy owns editing controls 1ms
+   ✓ runtime design system > router overview presents runtime-config posture as source of truth 0ms
+   ✓ runtime design system > router overview lists the concrete candidate endpoints behind routing posture 0ms
+   ✓ runtime design system > routing strategy benchmark advisory does not leak JSX control flow as page text 0ms
+   ✓ runtime design system > routing strategy settings separate saved posture from draft edits and refresh derived state after save 0ms
+   ✓ runtime design system > meta-guidance panels stay removed from overview and observe routes 0ms
+   ✓ runtime design system > design system doc marks the converted pages as live routes 1ms
+   ✓ runtime design system > control routes tolerate an unassigned controller before endpoint activation 1ms
+   ✓ runtime design system > applies the Paper Linear palette, Inter typography, and explicit theme contract in shared app chrome 1ms
+   ✓ runtime design system > shared panels and provider selectors are owned by Apple-theme primitives 1ms
+   ✓ runtime design system > router strategy execution mode uses the themed select primitive 0ms
+   ✓ runtime design system > production UI dropdowns use themed select primitives instead of native selects 2ms
+   ✓ runtime design system > shared route effects avoid action identity loops and peer refresh feedback 0ms
+   ✓ runtime design system > keeps shared states on solid token-backed pills and no section divider chrome 0ms
+   ✓ runtime design system > configured model chips follow the Paper tone map instead of generic success pills 1ms
+   ✓ runtime design system > benchmark score badges use a dedicated centered circular badge instead of loose pill text 0ms
+   × runtime design system > remaining system boards follow the Paper runtime-page layout contracts 51ms
+     → expected 'import { useEffect, useState } from "…' to contain 'xl:grid-cols-[minmax(0,1.08fr)_minmax…'
+   ✓ runtime design system > remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy 14ms
+   ✓ runtime design system > runtime roles route preserves role-first drill-down language for task detail 0ms
+   ✓ runtime design system > local setup surfaces stay discoverable from navigation and empty registry states 0ms
+   ✓ runtime design system > observe and local log surfaces render structured ledgers rather than raw iframe placeholders 0ms
+   ✓ runtime design system > observe ownership keeps requests canonical and raw-host surfaces adjacent 0ms
+   ✓ runtime design system > requests and request detail stay telemetry-first while exposing raw-host handoffs 0ms
+   ✓ runtime design system > routing analytics controls expose richer taxonomy pivots for observe charts 0ms
+   ✓ runtime design system > activity route frames raw-host metrics as adjacent to canonical telemetry 0ms
+   ✓ runtime design system > logs route exposes request-detail handoffs while preserving raw-host framing 0ms
+   ✓ runtime design system > registry and system layouts avoid redundant KPI strips and placeholder note panels 0ms
+   ✓ runtime design system > dashboard is chart-led and keeps routing analytics as a first-class handoff 0ms
+   ✓ runtime design system > overview metadata and design doc describe a telemetry-first summary with an interaction rail 1ms
+   ✓ runtime design system > workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces 0ms
+   ✓ runtime design system > request detail and model detail expose structured taxonomy evidence rather than raw-only telemetry 1ms
+   ✓ runtime design system > request detail route renders authoritative stored cost metadata 1ms
+   ✓ runtime design system > shell header owns route metadata and page actions without duplicate page headers 2ms
+   ✓ runtime design system > shell headers do not render section eyebrow labels 0ms
+   ✓ runtime design system > routes do not register refresh controls as shell header actions 0ms
+   ✓ runtime design system > long fact-card values use compact text roles instead of display value typography 0ms
+   ✓ runtime design system > production UI sources do not bypass Apple theme token primitives 3ms
+   ✓ runtime design system > production UI sources keep the approved Apple radius grammar 1ms
+   ✓ runtime design system > production UI sources avoid unsupported Apple typography weight 500 0ms
+   ✓ runtime design system > chart primitives use shared design-system geometry and type tokens 1ms
+   ✓ runtime design system > telemetry chart states are shared design-system vocabulary 1ms
+   ✓ runtime design system > runtime route definitions stay slim and future scaffolds avoid duplicate header props 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > remaining system boards follow the Paper runtime-page layout contracts
+AssertionError: expected 'import { useEffect, useState } from "…' to contain 'xl:grid-cols-[minmax(0,1.08fr)_minmax…'
+
+- Expected
++ Received
+
+- xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.72fr)]
++ import { useEffect, useState } from "react";
++ import { Link } from "react-router";
++
++ import {
++   EmptyState,
++   ErrorState,
++   LoadingState,
++   SectionCard,
++   StatusPill,
++ } from "../components/page-primitives";
++ import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
++ import {
++   type RuntimeControllerAssignment,
++   type RuntimeSnapshot,
++   type RuntimeVersionInfo,
++   fetchControllerAssignment,
++   fetchRuntimeSnapshot,
++   fetchVersionInfo,
++ } from "../lib/runtime-api";
++ import { usePageActions } from "../lib/shell-header-context";
++ import { buildCredentialLifecycleBanner } from "../lib/view-models";
++
++ export default function RuntimeRoute() {
++   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
++   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
++   const [controllerLoaded, setControllerLoaded] = useState(false);
++   const [version, setVersion] = useState<RuntimeVersionInfo | null>(null);
++   const [error, setError] = useState<string | null>(null);
++
++   useEffect(() => {
++     void Promise.all([fetchRuntimeSnapshot(), fetchControllerAssignment(), fetchVersionInfo()])
++       .then(([nextSnapshot, nextController, nextVersion]) => {
++         setSnapshot(nextSnapshot);
++         setController(nextController);
++         setControllerLoaded(true);
++         setVersion(nextVersion);
++       })
++       .catch((value: unknown) =>
++         setError(value instanceof Error ? value.message : "Could not load runtime summary."),
++       );
++   }, []);
++
++   usePageActions(
++     <>
++       <a className={secondaryButtonClassName} href="/api/role-model/runtime/summary">
++         Runtime JSON
++       </a>
++       <a className={secondaryButtonClassName} href="/api/role-model/controller">
++         Controller JSON
++       </a>
++     </>,
++     [],
++   );
++
++   if (error) {
++     return <ErrorState label={error} />;
++   }
++   if (!snapshot || !controllerLoaded || !version) {
++     return <LoadingState label="Loading runtime summary…" />;
++   }
++
++   const lifecycleBanner = buildCredentialLifecycleBanner(snapshot.summary);
++
++   return (
++     <div className="space-y-6">
++       <SectionCard title="Session readiness">
++         <p className="text-sm text-[var(--rm-secondary)]">
++           Bootstrap receipts, routable inventory, and alias drift warnings live on the dedicated
++           session readiness surface.
++         </p>
++         <div className="mt-4">
++           <Link className={secondaryButtonClassName} to="/app/system/session-readiness">
++             Open session readiness
++           </Link>
++         </div>
++       </SectionCard>
++
++       <SectionCard title="Lifecycle summary">
++         <div className="flex flex-wrap gap-3">
++           <StatusPill tone="success">
++             Active {snapshot.summary.lifecycleSummary?.active ?? 0}
++           </StatusPill>
++           <StatusPill tone="warning">
++             Degraded {snapshot.summary.lifecycleSummary?.degraded ?? 0}
++           </StatusPill>
++           <StatusPill tone="neutral">
++             Offline {snapshot.summary.lifecycleSummary?.offline ?? 0}
++           </StatusPill>
++         </div>
++       </SectionCard>
++
++       <SectionCard title="Execution readiness">
++         <div className="mb-4 flex flex-wrap gap-3">
++           {lifecycleBanner ? (
++             <>
++               <StatusPill tone={lifecycleBanner.authorityTone}>
++                 {lifecycleBanner.authorityLabel}
++               </StatusPill>
++               {lifecycleBanner.archivedStaleCount > 0 ? (
++                 <StatusPill tone="neutral">
++                   Archived stale {lifecycleBanner.archivedStaleCount}
++                 </StatusPill>
++               ) : null}
++             </>
++           ) : (
++             <StatusPill tone="neutral">Lifecycle contract unavailable</StatusPill>
++           )}
++         </div>
++         {lifecycleBanner ? (
++           <p className="mb-4 text-sm text-[var(--rm-secondary)]">{lifecycleBanner.detail}</p>
++         ) : null}
++         <div className="flex flex-wrap gap-3">
++           {!lifecycleBanner || lifecycleBanner.blockingRows.length === 0 ? (
++             <StatusPill tone="neutral">No blocking credential lifecycle rows</StatusPill>
++           ) : (
++             lifecycleBanner.blockingRows.map((row) => (
++               <StatusPill key={row.key} tone={row.tone}>
++                 {row.label} {row.value}
++               </StatusPill>
++             ))
++           )}
++         </div>
++       </SectionCard>
++
++       <SectionCard title="Controller posture">
++         {controller ? (
++           <div className="grid gap-3 md:grid-cols-3">
++             <div className={`${mutedPanelClassName} p-4`}>
++               <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
++                 Endpoint
++               </p>
++               <p className="mt-2 break-all text-sm font-semibold text-[var(--rm-fg)]">
++                 {controller.endpointId}
++               </p>
++             </div>
++             <div className={`${mutedPanelClassName} p-4`}>
++               <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
++                 Model
++               </p>
++               <p className="mt-2 text-sm font-semibold text-[var(--rm-fg)]">{controller.modelId}</p>
++             </div>
++             <div className={`${mutedPanelClassName} p-4`}>
++               <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
++                 Source
++               </p>
++               <div className="mt-2">
++                 <StatusPill tone={controller.sourceType === "local" ? "accent" : "neutral"}>
++                   {controller.sourceType}
++                 </StatusPill>
++               </div>
++             </div>
++           </div>
++         ) : (
++           <EmptyState label="No controller assigned yet. Activate a local or remote endpoint before pinning a controller." />
++         )}
++       </SectionCard>
++
++       <SectionCard title="Version and boundary facts">
++         <div className="grid gap-3 md:grid-cols-2">
++           <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
++             <p className="font-semibold text-[var(--rm-fg)]">Vendor host version</p>
++             <p className="mt-2 text-base text-[var(--rm-fg)]">{version.version}</p>
++             <p className="mt-2 break-all">Commit {version.commit}</p>
++             <p className="mt-1">Built {version.build_date}</p>
++           </div>
++           <a
++             className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
++             href="/api/role-model/runtime/summary"
++           >
++             <span className="block font-semibold text-[var(--rm-fg)]">
++               /api/role-model/runtime/summary
++             </span>
++             Repo-owned runtime topology and lifecycle summary
++           </a>
++         </div>
++       </SectionCard>
++     </div>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:1016:32
+    1014| 
+    1015|   test("remaining system boards follow the Paper runtime-page layout c…
+    1016|     expect(runtimeRouteSource).toContain(
+       |                                ^
+    1017|       'xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.72fr)]',
+    1018|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 57 passed (58)
+   Start at  21:29:11
+   Duration  2.98s (transform 899ms, setup 0ms, collect 1.44s, tests 205ms, environment 0ms, prepare 314ms)
+
+undefined
+D:\DEV\role-model\.worktrees\60-runtime-ui-paper-linear-review-alignment\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/design-system.test.ts

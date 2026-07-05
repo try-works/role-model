@@ -14,6 +14,7 @@ import {
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
@@ -35,6 +36,8 @@ type ImageResult =
       readonly images: readonly string[];
       readonly rawPayload: string;
     };
+
+const formFieldLabelClassName = utilityLabelClassName;
 
 export default function StudioImagesRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
@@ -175,8 +178,8 @@ export default function StudioImagesRoute() {
                   </option>
                 ))}
               </SelectField>
-              <label className="grid gap-2 text-sm">
-                <span className="font-semibold text-[var(--rm-fg)]">Prompt</span>
+              <label className="grid gap-2">
+                <span className={formFieldLabelClassName}>Prompt</span>
                 <textarea
                   className={`${fieldClassName} min-h-36`}
                   value={prompt}
@@ -191,8 +194,8 @@ export default function StudioImagesRoute() {
                 </SelectField>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-                  <label className="grid gap-2 text-sm">
-                    <span className="font-semibold text-[var(--rm-fg)]">Width</span>
+                  <label className="grid gap-2">
+                    <span className={formFieldLabelClassName}>Width</span>
                     <input
                       className={fieldClassName}
                       inputMode="numeric"
@@ -200,8 +203,8 @@ export default function StudioImagesRoute() {
                       onChange={(event) => setWidth(event.target.value)}
                     />
                   </label>
-                  <label className="grid gap-2 text-sm">
-                    <span className="font-semibold text-[var(--rm-fg)]">Height</span>
+                  <label className="grid gap-2">
+                    <span className={formFieldLabelClassName}>Height</span>
                     <input
                       className={fieldClassName}
                       inputMode="numeric"
@@ -246,7 +249,7 @@ export default function StudioImagesRoute() {
             title="Raw response"
             description="Payloads stay adjacent to the stage so operators can compare visual output and transport details together."
           >
-            <CodeBlock className="min-h-60 text-sm">
+            <CodeBlock className="min-h-60">
               {result?.rawPayload ?? '{\n  "status": "No image request yet"\n}'}
             </CodeBlock>
           </SectionCard>

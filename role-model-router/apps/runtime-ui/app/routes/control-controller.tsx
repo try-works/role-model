@@ -7,7 +7,15 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
+import {
+  bodyStrongTextClassName,
+  cardClassName,
+  foregroundEmphasisClassName,
+  mutedPanelClassName,
+  primaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
+} from "../lib/design-system";
 import {
   type RuntimeControllerAssignment,
   type RuntimeEndpoint,
@@ -20,6 +28,27 @@ import {
 function toDisplayLabel(modelId: string): string {
   const segment = modelId.includes("/") ? (modelId.split("/").at(-1) ?? modelId) : modelId;
   return segment.replace(/[-_]+/g, " ");
+}
+
+function summarizeRoleCoverage(roleIds: readonly string[] | undefined): {
+  readonly countLabel: string;
+  readonly preview: string;
+} {
+  if (!roleIds || roleIds.length === 0) {
+    return {
+      countLabel: "No roles",
+      preview: "This endpoint does not currently advertise runtime role coverage.",
+    };
+  }
+  const visibleRoles = roleIds.slice(0, 4);
+  const remainingCount = Math.max(roleIds.length - visibleRoles.length, 0);
+  return {
+    countLabel: `${roleIds.length} role${roleIds.length === 1 ? "" : "s"}`,
+    preview:
+      remainingCount > 0
+        ? `${visibleRoles.join(", ")}, +${remainingCount} more`
+        : visibleRoles.join(", "),
+  };
 }
 
 export default function ControlControllerRoute() {
@@ -63,6 +92,24 @@ export default function ControlControllerRoute() {
       }));
   }, [controller?.endpointId, snapshot]);
 
+  const candidatePosture = useMemo(() => {
+    return candidates.reduce(
+      (summary, endpoint) => {
+        summary.localCount += endpoint.sourceType === "local" ? 1 : 0;
+        summary.remoteCount += endpoint.sourceType === "remote" ? 1 : 0;
+        summary.healthyCount += endpoint.healthStatus === "healthy" ? 1 : 0;
+        summary.toolReadyCount += endpoint.toolCallingSupported ? 1 : 0;
+        return summary;
+      },
+      {
+        healthyCount: 0,
+        localCount: 0,
+        remoteCount: 0,
+        toolReadyCount: 0,
+      },
+    );
+  }, [candidates]);
+
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -73,134 +120,167 @@ export default function ControlControllerRoute() {
   return (
     <div className="space-y-6">
       <SectionCard
-        title="Current assignment"
-        description="The controller is persisted in the runtime control plane and can be changed without editing seed data."
+        title="Controller assignment"
+        description={`Assign the persisted routing controller here. Candidate cards keep health, source type, role coverage, and tooling posture visible before promotion. ${candidates.length} endpoints are currently available for review.`}
       >
-        {controller ? (
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                Endpoint
-              </p>
-              <p className="mt-2 break-all text-sm font-semibold text-[var(--rm-fg)]">
-                {controller.endpointId}
-              </p>
-            </div>
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                Model
-              </p>
-              <p className="mt-2 text-sm font-semibold text-[var(--rm-fg)]">{controller.modelId}</p>
-            </div>
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                Source
-              </p>
-              <div className="mt-2">
-                <StatusPill tone={controller.sourceType === "local" ? "accent" : "neutral"}>
-                  {controller.sourceType}
-                </StatusPill>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <EmptyState label="No controller is assigned yet. Activate an endpoint first, then return here to pin the controller." />
-        )}
-      </SectionCard>
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]">
+          <div className="space-y-4">
+            {candidates.length === 0 ? (
+              <EmptyState label="No endpoints are available yet. Configure runtime config or activate a provider endpoint to continue." />
+            ) : (
+              <div className="grid gap-3 xl:grid-cols-2">
+                {candidates.map((endpoint) => {
+                  const roleCoverage = summarizeRoleCoverage(endpoint.roleIds);
 
-      <SectionCard
-        title="Controller candidates"
-        description={`Candidates show source type, health, role coverage, and tooling posture before you promote them. ${candidates.length} endpoints are currently available for review.`}
-      >
-        {candidates.length === 0 ? (
-          <EmptyState label="No endpoints are available yet. Configure runtime config or activate a provider endpoint to continue." />
-        ) : (
-          <div className="grid grid-cols-12 gap-4">
-            {candidates.map((endpoint) => (
-              <div
-                key={endpoint.endpointId}
-                className="col-span-12 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5 xl:col-span-6"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                      {endpoint.sourceType ?? "unknown"}
-                    </p>
-                    <h3 className="mt-2 text-lg font-semibold text-[var(--rm-fg)]">
-                      {toDisplayLabel(endpoint.modelId)}
-                    </h3>
-                    <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">
-                      {endpoint.endpointId}
-                    </p>
+                  return (
+                    <div key={endpoint.endpointId} className={`${cardClassName} p-4`}>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className={utilityLabelClassName}>
+                            {endpoint.sourceType ?? "unknown source"}
+                          </p>
+                          <p className={`mt-2 ${foregroundEmphasisClassName}`}>
+                            {toDisplayLabel(endpoint.modelId)}
+                          </p>
+                          <p className={`mt-2 break-all ${supportingTextClassName}`}>
+                            {endpoint.endpointId}
+                          </p>
+                        </div>
+                        <StatusPill
+                          tone={
+                            endpoint.isActiveController
+                              ? "accent"
+                              : endpoint.status === "active"
+                                ? "success"
+                                : "warning"
+                          }
+                        >
+                          {endpoint.isActiveController
+                            ? "controller"
+                            : (endpoint.status ?? "candidate")}
+                        </StatusPill>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <StatusPill tone={endpoint.toolCallingSupported ? "accent" : "neutral"}>
+                          {endpoint.toolCallingSupported
+                            ? `tooling ${endpoint.toolCallingStyle ?? "enabled"}`
+                            : "no tool calling"}
+                        </StatusPill>
+                        <StatusPill
+                          tone={endpoint.healthStatus === "healthy" ? "success" : "warning"}
+                        >
+                          {endpoint.healthStatus ?? "unknown health"}
+                        </StatusPill>
+                        <StatusPill tone="neutral">{roleCoverage.countLabel}</StatusPill>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <p className={utilityLabelClassName}>Role coverage</p>
+                          <p className={`mt-2 ${supportingTextClassName}`}>
+                            {roleCoverage.preview}
+                          </p>
+                        </div>
+                        <div>
+                          <p className={utilityLabelClassName}>Serving source</p>
+                          <p className={`mt-2 ${supportingTextClassName}`}>
+                            {endpoint.servingSource ?? "unknown"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-5">
+                        <button
+                          className={primaryButtonClassName}
+                          type="button"
+                          disabled={
+                            endpoint.isActiveController || pendingEndpointId === endpoint.endpointId
+                          }
+                          onClick={() => {
+                            setPendingEndpointId(endpoint.endpointId);
+                            setError(null);
+                            void updateControllerAssignment({ endpointId: endpoint.endpointId })
+                              .then((nextController) => setController(nextController))
+                              .catch((value: unknown) =>
+                                setError(
+                                  value instanceof Error
+                                    ? value.message
+                                    : "Could not update the controller assignment.",
+                                ),
+                              )
+                              .finally(() => setPendingEndpointId(null));
+                          }}
+                        >
+                          {endpoint.isActiveController
+                            ? "Current controller"
+                            : pendingEndpointId === endpoint.endpointId
+                              ? "Saving…"
+                              : "Use as controller"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-3">
+            <div className={`${mutedPanelClassName} p-4 text-[var(--rm-secondary)]`}>
+              <p className={foregroundEmphasisClassName}>Current controller</p>
+              {controller ? (
+                <>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <StatusPill tone="success">controller assigned</StatusPill>
+                    <StatusPill tone={controller.sourceType === "local" ? "accent" : "neutral"}>
+                      {controller.sourceType ?? "unknown source"}
+                    </StatusPill>
                   </div>
-                  <StatusPill
-                    tone={
-                      endpoint.isActiveController
-                        ? "accent"
-                        : endpoint.status === "active"
-                          ? "success"
-                          : "warning"
-                    }
-                  >
-                    {endpoint.isActiveController ? "controller" : (endpoint.status ?? "candidate")}
-                  </StatusPill>
-                </div>
-
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <StatusPill tone={endpoint.toolCallingSupported ? "success" : "neutral"}>
-                    {endpoint.toolCallingSupported
-                      ? `tooling ${endpoint.toolCallingStyle ?? "enabled"}`
-                      : "no tool calling"}
-                  </StatusPill>
-                  <StatusPill tone={endpoint.healthStatus === "healthy" ? "success" : "warning"}>
-                    {endpoint.healthStatus ?? "unknown health"}
-                  </StatusPill>
-                </div>
-
-                <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
-                  <p>
-                    <span className="font-semibold text-[var(--rm-fg)]">Roles:</span>{" "}
-                    {endpoint.roleIds?.join(", ") || "None"}
+                  <p className={`mt-4 break-all ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                    {controller.endpointId}
                   </p>
-                  <p>
-                    <span className="font-semibold text-[var(--rm-fg)]">Serving source:</span>{" "}
-                    {endpoint.servingSource ?? "unknown"}
+                  <p className={`mt-2 ${supportingTextClassName}`}>{controller.modelId}</p>
+                </>
+              ) : (
+                <p className={`mt-3 ${supportingTextClassName}`}>
+                  No controller is assigned yet. Activate an endpoint first, then return here to pin
+                  the controller.
+                </p>
+              )}
+            </div>
+
+            <div className={`${mutedPanelClassName} p-4 text-[var(--rm-secondary)]`}>
+              <p className={foregroundEmphasisClassName}>Candidate posture</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className={utilityLabelClassName}>Available endpoints</p>
+                  <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                    {candidates.length}
                   </p>
                 </div>
-
-                <div className="mt-5">
-                  <button
-                    className={primaryButtonClassName}
-                    type="button"
-                    disabled={
-                      endpoint.isActiveController || pendingEndpointId === endpoint.endpointId
-                    }
-                    onClick={() => {
-                      setPendingEndpointId(endpoint.endpointId);
-                      setError(null);
-                      void updateControllerAssignment({ endpointId: endpoint.endpointId })
-                        .then((nextController) => setController(nextController))
-                        .catch((value: unknown) =>
-                          setError(
-                            value instanceof Error
-                              ? value.message
-                              : "Could not update the controller assignment.",
-                          ),
-                        )
-                        .finally(() => setPendingEndpointId(null));
-                    }}
-                  >
-                    {endpoint.isActiveController
-                      ? "Current controller"
-                      : pendingEndpointId === endpoint.endpointId
-                        ? "Saving…"
-                        : "Use as controller"}
-                  </button>
+                <div>
+                  <p className={utilityLabelClassName}>Healthy endpoints</p>
+                  <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                    {candidatePosture.healthyCount}
+                  </p>
+                </div>
+                <div>
+                  <p className={utilityLabelClassName}>Local / Remote</p>
+                  <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                    {candidatePosture.localCount} / {candidatePosture.remoteCount}
+                  </p>
+                </div>
+                <div>
+                  <p className={utilityLabelClassName}>Tool-ready endpoints</p>
+                  <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                    {candidatePosture.toolReadyCount}
+                  </p>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        )}
+        </div>
       </SectionCard>
     </div>
   );

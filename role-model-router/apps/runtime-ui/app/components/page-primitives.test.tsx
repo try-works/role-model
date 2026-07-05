@@ -2,8 +2,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import {
+  FactCard,
   SelectField,
   type SelectOptionModel,
+  StatusPill,
   getSelectTypeaheadMatchIndex,
 } from "./page-primitives";
 
@@ -42,5 +44,47 @@ describe("SelectField rendering", () => {
     expect(markup).toContain("justify-between");
     expect(markup).toContain("flex min-w-0 items-center");
     expect(markup).toContain("min-w-0 flex-1 truncate");
+  });
+});
+
+describe("StatusPill rendering", () => {
+  test("renders solid token-backed pills with contrasting text", () => {
+    const markup = renderToStaticMarkup(<StatusPill tone="accent">Selected</StatusPill>);
+
+    expect(markup).toContain("bg-[var(--rm-pill-accent-bg)]");
+    expect(markup).toContain("text-[var(--rm-pill-accent-ink)]");
+    expect(markup).toContain("border-transparent");
+    expect(markup).toContain("text-[13px]");
+    expect(markup).not.toContain("bg-transparent");
+  });
+
+  test("supports advisory and info semantic tones through shared tokens", () => {
+    const advisoryMarkup = renderToStaticMarkup(
+      <StatusPill tone={"advisory" as never}>Group evidence</StatusPill>,
+    );
+    const infoMarkup = renderToStaticMarkup(
+      <StatusPill tone={"info" as never}>Tool capable</StatusPill>,
+    );
+
+    expect(advisoryMarkup).toContain("bg-[var(--rm-pill-advisory-bg)]");
+    expect(advisoryMarkup).toContain("text-[var(--rm-pill-advisory-ink)]");
+    expect(infoMarkup).toContain("bg-[var(--rm-pill-info-bg)]");
+    expect(infoMarkup).toContain("text-[var(--rm-pill-info-ink)]");
+  });
+});
+
+describe("FactCard rendering", () => {
+  test("keeps the same panel surface whether emphasis is requested or not", () => {
+    const standardMarkup = renderToStaticMarkup(<FactCard label="Models" value={4} />);
+    const emphasisMarkup = renderToStaticMarkup(<FactCard label="Models" value={4} emphasis />);
+
+    const standardSurface = standardMarkup.match(/bg-\[var\(--rm-[^)]*\)\]/)?.[0];
+    const emphasisSurface = emphasisMarkup.match(/bg-\[var\(--rm-[^)]*\)\]/)?.[0];
+
+    expect(standardSurface).toBeTruthy();
+    expect(emphasisSurface).toBeTruthy();
+    expect(emphasisSurface).toBe(standardSurface);
+    expect(standardMarkup).toContain("border-[var(--rm-border)]");
+    expect(emphasisMarkup).toContain("border-[var(--rm-border)]");
   });
 });

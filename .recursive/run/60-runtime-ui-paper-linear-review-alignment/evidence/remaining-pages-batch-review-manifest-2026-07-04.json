@@ -1,0 +1,249 @@
+[
+  {
+    "slug": "studio-chat",
+    "route": "/app/studio/chat",
+    "heading": "Chat workspace",
+    "group": "studio",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\studio-chat-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "studio-images",
+    "route": "/app/studio/images",
+    "heading": "Image workflows",
+    "group": "studio",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\studio-images-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "studio-audio",
+    "route": "/app/studio/audio",
+    "heading": "Audio workflows",
+    "group": "studio",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\studio-audio-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "studio-rerank",
+    "route": "/app/studio/rerank",
+    "heading": "Rerank",
+    "group": "studio",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\studio-rerank-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "studio-advanced",
+    "route": "/app/studio/advanced",
+    "heading": "Advanced APIs",
+    "group": "studio",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\studio-advanced-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "local-choose",
+    "route": "/app/local/choose",
+    "heading": "Choose local backend",
+    "group": "local",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\local-choose-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "local-peer-models",
+    "route": "/app/local/peer-models",
+    "heading": "Peer models",
+    "group": "local",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\local-peer-models-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "local-matrix",
+    "route": "/app/local/llama-swap/matrix",
+    "heading": "Llama-swap matrix",
+    "group": "local",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\local-matrix-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "local-policy",
+    "route": "/app/local/llama-swap/policy",
+    "heading": "Llama-swap host policy",
+    "group": "local",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\local-policy-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "local-endpoints",
+    "route": "/app/local/endpoints",
+    "heading": "Local endpoints",
+    "group": "local",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\local-endpoints-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "local-swap",
+    "route": "/app/local/llama-swap/swap",
+    "heading": "Llama-swap swap history",
+    "group": "local",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\local-swap-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "local-logs",
+    "route": "/app/local/llama-swap/logs",
+    "heading": "Llama-swap logs",
+    "group": "local",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\local-logs-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "remote-providers",
+    "route": "/app/remote/providers",
+    "heading": "Remote providers",
+    "group": "remote",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\remote-providers-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "configured-models",
+    "route": "/app/models",
+    "heading": "Configured models",
+    "group": "models-router",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\configured-models-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "runtime-roles",
+    "route": "/app/models/roles",
+    "heading": "Runtime roles",
+    "group": "models-router",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\runtime-roles-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "capability-benchmark",
+    "route": "/app/models/benchmark",
+    "heading": "Capability benchmark",
+    "group": "models-router",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\capability-benchmark-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "router-overview",
+    "route": "/app/router",
+    "heading": "Routing overview",
+    "group": "models-router",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\router-overview-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "router-decisions",
+    "route": "/app/router/decisions",
+    "heading": "Routing decisions",
+    "group": "models-router",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\router-decisions-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "router-strategy",
+    "route": "/app/router/strategy",
+    "heading": "Routing strategy",
+    "group": "models-router",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\router-strategy-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "router-controller",
+    "route": "/app/router/controller",
+    "heading": "Routing controller",
+    "group": "models-router",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\router-controller-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "router-config",
+    "route": "/app/router/config",
+    "heading": "Routing config",
+    "group": "models-router",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\router-config-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "router-candidates",
+    "route": "/app/router/candidates",
+    "heading": "Candidate inventory",
+    "group": "models-router",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\router-candidates-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "observe-logs",
+    "route": "/app/observe/logs",
+    "heading": "Host logs",
+    "group": "observe",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\observe-logs-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "observe-activity",
+    "route": "/app/observe/activity",
+    "heading": "Host activity and metrics",
+    "group": "observe",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\observe-activity-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "observe-requests",
+    "route": "/app/observe/requests",
+    "heading": "Telemetry request ledger",
+    "group": "observe",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\observe-requests-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "observe-routing",
+    "route": "/app/observe/routing",
+    "heading": "Routing analytics",
+    "group": "observe",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\observe-routing-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "connect-registry",
+    "route": "/app/connect",
+    "heading": "Available models & endpoints",
+    "group": "connect-system",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\connect-registry-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "connect-downstream",
+    "route": "/app/connect/downstream",
+    "heading": "Connect your application",
+    "group": "connect-system",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\connect-downstream-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "connect-upstream",
+    "route": "/app/connect/upstream",
+    "heading": "Upstream passthrough",
+    "group": "connect-system",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\connect-upstream-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "system-runtime",
+    "route": "/app/system/runtime",
+    "heading": "Runtime topology",
+    "group": "connect-system",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\system-runtime-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "runtime-config",
+    "route": "/app/system/runtime-config",
+    "heading": "Runtime config",
+    "group": "connect-system",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\runtime-config-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "session-readiness",
+    "route": "/app/system/session-readiness",
+    "heading": "Session readiness",
+    "group": "connect-system",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\session-readiness-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "system-peers",
+    "route": "/app/system/peers",
+    "heading": "Peers",
+    "group": "connect-system",
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\60-runtime-ui-paper-linear-review-alignment\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence\\system-peers-batch-review-2026-07-04.png"
+  },
+  {
+    "slug": "observe-request-detail",
+    "route": "/app/observe/requests/:requestId",
+    "heading": "Telemetry request detail",
+    "group": "observe",
+    "screenshotPath": null,
+    "unavailable": true
+  },
+  {
+    "slug": "router-decision-detail",
+    "route": "/app/router/decisions/:requestId",
+    "heading": "Routing decision detail",
+    "group": "models-router",
+    "screenshotPath": null,
+    "unavailable": true
+  }
+]

@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
 
 import {
+  DisclosureSection,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { secondaryButtonClassName } from "../lib/design-system";
+import {
+  bodyStrongTextClassName,
+  foregroundEmphasisClassName,
+  mutedPanelClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
+} from "../lib/design-system";
 import {
   type RouterCandidate,
   type RouterSummary,
@@ -20,7 +25,6 @@ import {
   fetchRuntimeConfig,
   fetchRuntimeSnapshot,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import { buildAliasReadinessRows } from "../lib/view-models";
 
 export default function RouterOverviewRoute() {
@@ -103,18 +107,6 @@ export default function RouterOverviewRoute() {
       };
     });
   }, [configRecord, snapshot, summary]);
-  usePageActions(
-    <>
-      <Link className={secondaryButtonClassName} to="/app/router/strategy">
-        Edit strategy
-      </Link>
-      <Link className={secondaryButtonClassName} to="/app/router/decisions">
-        Open decisions
-      </Link>
-    </>,
-    [],
-  );
-
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -124,75 +116,184 @@ export default function RouterOverviewRoute() {
   const config = configRecord.config;
   const configuredStrategy = config?.routingStrategy ?? null;
   const configuredExecutionMode = config?.executionMode ?? summary.executionMode;
+  const controllerModelId = summary.controller?.modelId ?? null;
+  const configuredAliasId =
+    configuredExecutionMode && configuredExecutionMode.length > 0
+      ? `${configuredStrategy ?? "default"}.${configuredExecutionMode.replaceAll("_", "-")}`
+      : null;
+  const activeAliasRow =
+    (configuredAliasId
+      ? (configuredAliasRows.find((row) => row.aliasId === configuredAliasId) ?? null)
+      : null) ??
+    (controllerModelId
+      ? (configuredAliasRows.find((row) => row.effectiveModels.includes(controllerModelId)) ?? null)
+      : null);
+  const activeAliasLabel = activeAliasRow?.aliasId ?? "unresolved";
+  const aliasReadinessSummary = configuredAliasRows.reduce(
+    (summaryValue, row) => {
+      summaryValue[row.readinessLabel] += 1;
+      return summaryValue;
+    },
+    {
+      degraded: 0,
+      ready: 0,
+      unavailable: 0,
+    },
+  );
+  const aliasModeSummary = configuredAliasRows.reduce<Record<string, number>>(
+    (summaryValue, row) => {
+      summaryValue[row.modeLabel] = (summaryValue[row.modeLabel] ?? 0) + 1;
+      return summaryValue;
+    },
+    {},
+  );
+  const aliasModeSummaryLabel =
+    Object.entries(aliasModeSummary)
+      .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "en"))
+      .slice(0, 3)
+      .map(([modeLabel, count]) => `${modeLabel} ${count}`)
+      .join(" • ") || "No alias modes";
+  const overviewCandidates = candidates.slice(0, 3);
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard label="Strategy" value={configuredStrategy ?? "unset"} emphasis />
-        <FactCard label="Execution mode" value={configuredExecutionMode ?? "decision_only"} />
-        <FactCard label="Controller" value={summary.controller?.modelId ?? "unassigned"} />
-        <FactCard label="Alias pools" value={String(configuredAliasRows.length)} />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        {[
+          {
+            label: "Strategy",
+            value: configuredStrategy ?? "unset",
+          },
+          {
+            label: "Execution mode",
+            value: configuredExecutionMode ?? "decision_only",
+          },
+          {
+            label: "Controller",
+            value: summary.controller?.modelId ?? "unassigned",
+          },
+          {
+            label: "Alias pools",
+            value: String(configuredAliasRows.length),
+          },
+          {
+            label: "Active alias",
+            value: activeAliasLabel,
+          },
+        ].map((item) => (
+          <div key={item.label} className={`${mutedPanelClassName} space-y-2 p-4`}>
+            <p className={utilityLabelClassName}>{item.label}</p>
+            <p className={`${bodyStrongTextClassName} break-words text-[var(--rm-fg)]`}>
+              {item.value}
+            </p>
+          </div>
+        ))}
       </div>
 
-      <SectionCard title="Alias inventory">
+      <SectionCard
+        title="Alias inventory"
+        description="Keep the current alias posture visible in-page, then expand into the full alias registry only when you need the complete inventory."
+      >
         {configuredAliasRows.length === 0 ? (
           <EmptyState label="No model aliases are configured yet." />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="text-[var(--rm-muted)]">
-                <tr>
-                  <th className="pb-3 font-semibold">Alias</th>
-                  <th className="pb-3 font-semibold">Mode</th>
-                  <th className="pb-3 font-semibold">Effective models</th>
-                  <th className="pb-3 font-semibold">Candidate expansion</th>
-                  <th className="pb-3 font-semibold">Readiness</th>
-                </tr>
-              </thead>
-              <tbody>
-                {configuredAliasRows.map((row) => (
-                  <tr key={row.aliasId} className="border-t border-[var(--rm-border)]">
-                    <td className="py-3 font-semibold text-[var(--rm-fg)]">{row.aliasId}</td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.modeLabel}</td>
-                    <td className="py-3 text-[var(--rm-secondary)]">
-                      {row.effectiveModels.length > 0 ? (
-                        <div className="space-y-1">
-                          {row.effectiveModels.map((modelId) => (
-                            <div key={`${row.aliasId}-effective-${modelId}`}>{modelId}</div>
-                          ))}
-                        </div>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="py-3 text-[var(--rm-secondary)]">
-                      {row.candidateExpansionLabel}
-                    </td>
-                    <td className="py-3">
-                      <div className="space-y-1">
-                        <StatusPill
-                          tone={
-                            row.readinessLabel === "ready"
-                              ? "success"
-                              : row.readinessLabel === "degraded"
-                                ? "warning"
-                                : "neutral"
-                          }
-                        >
-                          {row.readinessLabel}
-                        </StatusPill>
-                        {"driftWarnings" in row && row.driftWarnings.length > 0 ? (
-                          <div className="text-xs text-[var(--rm-muted)]">
-                            {row.driftWarnings.length} drift warning
-                            {row.driftWarnings.length === 1 ? "" : "s"}
+          <div className="space-y-4">
+            <div className="grid gap-4 xl:grid-cols-3">
+              <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                <p className={utilityLabelClassName}>Current active alias</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className={`${bodyStrongTextClassName} break-words text-[var(--rm-fg)]`}>
+                    {activeAliasLabel}
+                  </p>
+                  {activeAliasRow ? <StatusPill tone="accent">active</StatusPill> : null}
+                </div>
+                <p className={supportingTextClassName}>
+                  {activeAliasRow
+                    ? `${activeAliasRow.modeLabel} mode • ${activeAliasRow.candidateExpansionLabel}`
+                    : "The current strategy and execution mode do not resolve to a visible alias row."}
+                </p>
+              </div>
+              <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                <p className={utilityLabelClassName}>Alias readiness</p>
+                <div className="mt-1 flex flex-wrap gap-2">
+                  <StatusPill tone="success">{aliasReadinessSummary.ready} ready</StatusPill>
+                  <StatusPill tone="warning">{aliasReadinessSummary.degraded} degraded</StatusPill>
+                  <StatusPill tone="neutral">
+                    {aliasReadinessSummary.unavailable} unavailable
+                  </StatusPill>
+                </div>
+                <p className={supportingTextClassName}>
+                  Readiness is derived from matching endpoint availability, active state, and health
+                  posture.
+                </p>
+              </div>
+              <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                <p className={utilityLabelClassName}>Alias modes</p>
+                <p className={`${bodyStrongTextClassName} break-words text-[var(--rm-fg)]`}>
+                  {aliasModeSummaryLabel}
+                </p>
+                <p className={supportingTextClassName}>
+                  Mode mix across the full alias registry without forcing the entire table open.
+                </p>
+              </div>
+            </div>
+
+            <DisclosureSection summary={`Browse all alias pools (${configuredAliasRows.length})`}>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="text-[var(--rm-muted)]">
+                    <tr>
+                      <th className="pb-3 font-semibold">Alias</th>
+                      <th className="pb-3 font-semibold">Mode</th>
+                      <th className="pb-3 font-semibold">Effective models</th>
+                      <th className="pb-3 font-semibold">Candidate expansion</th>
+                      <th className="pb-3 font-semibold">Readiness</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {configuredAliasRows.map((row) => (
+                      <tr key={row.aliasId} className="border-t border-[var(--rm-border)]">
+                        <td className="py-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={bodyStrongTextClassName}>{row.aliasId}</span>
+                            {activeAliasRow?.aliasId === row.aliasId ? (
+                              <StatusPill tone="accent">active</StatusPill>
+                            ) : null}
                           </div>
-                        ) : null}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        </td>
+                        <td className="py-3 text-[var(--rm-secondary)]">{row.modeLabel}</td>
+                        <td className="py-3 text-[var(--rm-secondary)]">
+                          {row.effectiveModels.length > 0 ? row.effectiveModels.join(", ") : "—"}
+                        </td>
+                        <td className="py-3 text-[var(--rm-secondary)]">
+                          {row.candidateExpansionLabel}
+                        </td>
+                        <td className="py-3">
+                          <div className="space-y-1">
+                            <StatusPill
+                              tone={
+                                row.readinessLabel === "ready"
+                                  ? "success"
+                                  : row.readinessLabel === "degraded"
+                                    ? "warning"
+                                    : "neutral"
+                              }
+                            >
+                              {row.readinessLabel}
+                            </StatusPill>
+                            {"driftWarnings" in row && row.driftWarnings.length > 0 ? (
+                              <div className="text-xs text-[var(--rm-muted)]">
+                                {row.driftWarnings.length} drift warning
+                                {row.driftWarnings.length === 1 ? "" : "s"}
+                              </div>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </DisclosureSection>
           </div>
         )}
       </SectionCard>
@@ -204,7 +305,7 @@ export default function RouterOverviewRoute() {
         {candidates.length === 0 ? (
           <EmptyState label="No routing candidates are available." />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="space-y-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="text-[var(--rm-muted)]">
                 <tr>
@@ -216,9 +317,9 @@ export default function RouterOverviewRoute() {
                 </tr>
               </thead>
               <tbody>
-                {candidates.map((candidate) => (
+                {overviewCandidates.map((candidate) => (
                   <tr key={candidate.endpointId} className="border-t border-[var(--rm-border)]">
-                    <td className="py-3 font-semibold text-[var(--rm-fg)]">{candidate.modelId}</td>
+                    <td className={`py-3 ${bodyStrongTextClassName}`}>{candidate.modelId}</td>
                     <td className="max-w-[32rem] break-all py-3 text-[var(--rm-secondary)]">
                       {candidate.endpointId}
                     </td>
@@ -228,7 +329,9 @@ export default function RouterOverviewRoute() {
                         tone={
                           candidate.healthStatus === "healthy"
                             ? "success"
-                            : candidate.healthStatus === "offline"
+                            : candidate.healthStatus === "offline" ||
+                                candidate.healthStatus === "warming" ||
+                                candidate.status === "warming"
                               ? "warning"
                               : "neutral"
                         }
@@ -252,7 +355,7 @@ export default function RouterOverviewRoute() {
                         !candidate.preferred &&
                         !candidate.ignored &&
                         candidate.executionModeEligible !== false ? (
-                          <span className="text-[var(--rm-muted)]">candidate</span>
+                          <span className={supportingTextClassName}>candidate</span>
                         ) : null}
                       </div>
                     </td>
@@ -263,6 +366,30 @@ export default function RouterOverviewRoute() {
           </div>
         )}
       </SectionCard>
+
+      <div className={`${mutedPanelClassName} grid gap-4 p-4 xl:grid-cols-3`}>
+        <div className="space-y-2">
+          <p className={foregroundEmphasisClassName}>Config-owned posture</p>
+          <p className={supportingTextClassName}>
+            Routing overview stays observational. Strategy and controller edits live on their
+            dedicated Router pages.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <p className={foregroundEmphasisClassName}>Alias source of truth</p>
+          <p className={supportingTextClassName}>
+            Effective models and expansion counts are derived from runtime config plus the current
+            endpoint snapshot instead of placeholder overview state.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <p className={foregroundEmphasisClassName}>Candidate visibility</p>
+          <p className={supportingTextClassName}>
+            The overview intentionally samples the current candidate set so routing posture can be
+            read without opening the full candidate ledger immediately.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

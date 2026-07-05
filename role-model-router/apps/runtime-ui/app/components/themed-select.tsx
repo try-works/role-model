@@ -1,7 +1,7 @@
 import { Check, ChevronDown } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
-import { fieldClassName } from "../lib/design-system";
+import { bodyTextClassName, fieldClassName, navLabelClassName } from "../lib/design-system";
 
 export interface ThemedSelectOption {
   readonly value: string;
@@ -182,7 +182,7 @@ export function ThemedSelect({
                 className={[
                   "flex w-full items-start justify-between gap-3 rounded-[var(--rm-radius-md)] px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rm-accent-subtle)]",
                   selected
-                    ? "bg-[var(--rm-accent-ghost)] text-[var(--rm-fg)]"
+                    ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
                     : "text-[var(--rm-secondary)] hover:bg-[var(--rm-panel)] hover:text-[var(--rm-fg)]",
                 ].join(" ")}
                 role="option"
@@ -213,11 +213,11 @@ export function ThemedSelect({
                 }}
               >
                 <span className="min-w-0">
-                  <span className="block text-[17px] font-normal leading-[25px] tracking-[-0.022em]">
-                    {option.label}
-                  </span>
+                  <span className={`block ${navLabelClassName}`}>{option.label}</span>
                   {option.description ? (
-                    <span className="block text-[14px] leading-[20px] tracking-[-0.016em] text-[var(--rm-muted)]">
+                    <span
+                      className={`block ${bodyTextClassName} ${selected ? "text-[color:var(--rm-on-primary)] opacity-80" : "text-[var(--rm-muted)]"}`}
+                    >
                       {option.description}
                     </span>
                   ) : null}
@@ -226,7 +226,7 @@ export function ThemedSelect({
                   aria-hidden="true"
                   className={[
                     "mt-0.5 h-4 w-4 shrink-0 transition-opacity",
-                    selected ? "opacity-100 text-[var(--rm-accent-ink)]" : "opacity-0",
+                    selected ? "opacity-100 text-[color:var(--rm-on-primary)]" : "opacity-0",
                   ].join(" ")}
                 />
               </button>

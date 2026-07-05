@@ -605,87 +605,97 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
 ] as const;
 
 export const runtimeTheme = {
-  maxContentWidth: "1440px",
+  maxContentWidth: "1840px",
   radii: {
     sm: "8px",
-    md: "11px",
-    lg: "18px",
+    md: "12px",
+    lg: "16px",
     pill: "9999px",
-    shell: "18px",
-    panel: "18px",
-    field: "11px",
+    shell: "28px",
+    panel: "16px",
+    field: "12px",
     badge: "9999px",
   },
   colors: {
     light: {
-      bg: "#f5f5f7",
-      surface: "#ffffff",
-      surfaceStrong: "#ffffff",
-      panel: "#fafafc",
-      fg: "#1d1d1f",
-      secondary: "rgba(29, 29, 31, 0.72)",
-      muted: "rgba(29, 29, 31, 0.48)",
-      border: "#e0e0e0",
-      borderStrong: "#d2d2d7",
-      accent: "#0066CC",
-      accentFocus: "#0071E3",
-      accentOnDark: "#2997FF",
-      accentMuted: "rgba(0, 102, 204, 0.72)",
-      accentSubtle: "rgba(0, 102, 204, 0.14)",
-      accentGhost: "rgba(0, 102, 204, 0.08)",
-      dividerSoft: "#f0f0f0",
-      hairline: "#e0e0e0",
-      chipTranslucent: "rgba(210, 210, 215, 0.64)",
-      telemetryLocal: "#1d1d1f",
-      telemetryRemote: "#0066CC",
-      telemetryHealthy: "#166534",
-      telemetryDegraded: "#b45309",
-      telemetryRaw: "#7a7a7a",
-      error: "#C8102E",
-      errorMuted: "rgba(200, 16, 46, 0.72)",
-      errorSubtle: "rgba(200, 16, 46, 0.14)",
-      errorGhost: "rgba(200, 16, 46, 0.08)",
-      success: "#166534",
-      successMuted: "rgba(22, 101, 52, 0.72)",
-      successSubtle: "rgba(22, 101, 52, 0.14)",
-      warning: "#b45309",
-      warningMuted: "rgba(180, 83, 9, 0.72)",
-      warningSubtle: "rgba(180, 83, 9, 0.14)",
+      bg: "#FFFFFF",
+      panelMuted: "#ECEEF2",
+      surface: "#F7F8F8",
+      surfaceStrong: "#FFFFFF",
+      panel: "#F3F4F6",
+      fg: "#0F1115",
+      secondary: "#3A4150",
+      muted: "#69707D",
+      border: "#E3E6EC",
+      borderStrong: "#CED3DE",
+      accent: "#5E6AD2",
+      accentInk: "#5E6AD2",
+      accentFocus: "#828FFF",
+      accentOnDark: "#828FFF",
+      accentMuted: "rgba(94, 106, 210, 0.78)",
+      accentSubtle: "rgba(94, 106, 210, 0.14)",
+      accentGhost: "rgba(94, 106, 210, 0.08)",
+      dividerSoft: "#E3E6EC",
+      hairline: "#E3E6EC",
+      chipTranslucent: "rgba(9, 11, 17, 0.06)",
+      onPrimary: "#FFFFFF",
+      telemetryLocal: "#0F1115",
+      telemetryRemote: "#5E6AD2",
+      telemetryHealthy: "#27A644",
+      telemetryDegraded: "#B67A11",
+      telemetryRaw: "#69707D",
+      error: "#D84F6A",
+      errorMuted: "rgba(216, 79, 106, 0.76)",
+      errorSubtle: "rgba(216, 79, 106, 0.14)",
+      errorGhost: "rgba(216, 79, 106, 0.10)",
+      success: "#27A644",
+      successMuted: "rgba(39, 166, 68, 0.76)",
+      successSubtle: "rgba(39, 166, 68, 0.10)",
+      warning: "#B67A11",
+      warningMuted: "rgba(182, 122, 17, 0.78)",
+      warningSubtle: "rgba(182, 122, 17, 0.14)",
+      info: "#3F87F5",
+      advisory: "#9664E8",
     },
     dark: {
-      bg: "#000000",
-      surface: "#272729",
-      surfaceStrong: "#2a2a2c",
-      panel: "#252527",
-      fg: "#FFFFFF",
-      secondary: "rgba(255, 255, 255, 0.72)",
-      muted: "rgba(255, 255, 255, 0.48)",
-      border: "rgba(255, 255, 255, 0.12)",
-      borderStrong: "rgba(255, 255, 255, 0.18)",
-      accent: "#0066CC",
-      accentFocus: "#0071E3",
-      accentOnDark: "#2997FF",
-      accentMuted: "rgba(0, 102, 204, 0.72)",
-      accentSubtle: "rgba(41, 151, 255, 0.18)",
-      accentGhost: "rgba(41, 151, 255, 0.10)",
-      dividerSoft: "rgba(255, 255, 255, 0.1)",
-      hairline: "rgba(255, 255, 255, 0.12)",
-      chipTranslucent: "rgba(210, 210, 215, 0.24)",
-      telemetryLocal: "#FFFFFF",
-      telemetryRemote: "#2997FF",
-      telemetryHealthy: "#86efac",
-      telemetryDegraded: "#fbbf24",
-      telemetryRaw: "#cccccc",
-      error: "#FB7185",
-      errorMuted: "rgba(251, 113, 133, 0.72)",
-      errorSubtle: "rgba(251, 113, 133, 0.18)",
-      errorGhost: "rgba(251, 113, 133, 0.10)",
-      success: "#86EFAC",
-      successMuted: "rgba(134, 239, 172, 0.72)",
-      successSubtle: "rgba(134, 239, 172, 0.18)",
-      warning: "#FBBF24",
-      warningMuted: "rgba(251, 191, 36, 0.72)",
-      warningSubtle: "rgba(251, 191, 36, 0.18)",
+      bg: "#010102",
+      surface: "#0F1011",
+      surfaceStrong: "#141516",
+      panel: "#18191A",
+      panelMuted: "#191A1B",
+      fg: "#F7F8F8",
+      secondary: "#D0D6E0",
+      muted: "#8A8F98",
+      border: "#23252A",
+      borderStrong: "#34343A",
+      accent: "#5E6AD2",
+      accentInk: "#F7F8F8",
+      accentFocus: "#828FFF",
+      accentOnDark: "#828FFF",
+      accentMuted: "rgba(130, 143, 255, 0.86)",
+      accentSubtle: "rgba(94, 106, 210, 0.20)",
+      accentGhost: "rgba(94, 106, 210, 0.12)",
+      dividerSoft: "rgba(247, 248, 248, 0.06)",
+      hairline: "#23252A",
+      chipTranslucent: "rgba(247, 248, 248, 0.08)",
+      onPrimary: "#FFFFFF",
+      telemetryLocal: "#9DA8C8",
+      telemetryRemote: "#5E6AD2",
+      telemetryHealthy: "#27A644",
+      telemetryDegraded: "#D9A441",
+      telemetryRaw: "#62666D",
+      error: "#E06C89",
+      errorMuted: "rgba(224, 108, 137, 0.82)",
+      errorSubtle: "rgba(224, 108, 137, 0.20)",
+      errorGhost: "rgba(255, 125, 166, 0.10)",
+      success: "#27A644",
+      successMuted: "rgba(39, 166, 68, 0.82)",
+      successSubtle: "rgba(39, 166, 68, 0.14)",
+      warning: "#D9A441",
+      warningMuted: "rgba(217, 164, 65, 0.82)",
+      warningSubtle: "rgba(217, 164, 65, 0.12)",
+      info: "#6EA8FF",
+      advisory: "#B479FF",
     },
   },
 } as const;
@@ -779,6 +789,19 @@ export const telemetryChartStates = {
   },
 } as const;
 
+export function getTelemetryChartStatePillTone(
+  stateKind: keyof typeof telemetryChartStates,
+): "neutral" | "warning" | "error" {
+  const tone = telemetryChartStates[stateKind].tone;
+  if (tone === "warning") {
+    return "warning";
+  }
+  if (tone === "error") {
+    return "error";
+  }
+  return "neutral";
+}
+
 export const shellQuickLinks = [
   { label: "Controller JSON", href: "/api/role-model/controller" },
   { label: "Runtime JSON", href: "/api/role-model/runtime/summary" },
@@ -796,32 +819,99 @@ export const raisedPanelClassName =
 export const mutedPanelClassName =
   "rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)]";
 
+export const insetPanelClassName = `${mutedPanelClassName} p-4 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-secondary)]`;
+
+export const errorNoticeClassName =
+  "rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-error)]";
+
 export const eyebrowClassName =
-  "text-[11px] font-normal uppercase tracking-[0.24em] text-[var(--rm-muted)]";
+  "text-[12px] font-normal uppercase leading-4 tracking-[0.08em] text-[var(--rm-muted)]";
 
-export const navLabelClassName = "text-[15px] font-normal leading-[20px] tracking-[-0.016em]";
+export const navLabelClassName = "text-[13px] font-normal leading-[18px] tracking-[0em]";
+export const navLabelTextStyle = {
+  fontSize: "13px",
+  fontWeight: 400,
+  lineHeight: "18px",
+  letterSpacing: "0em",
+} as const;
+export const pillLabelClassName = navLabelClassName;
 
-export const utilityLabelClassName = "text-[14px] font-normal leading-[18px] tracking-[-0.016em]";
+export function getPrimarySectionLinkClassName(isActive: boolean): string {
+  return [
+    `flex min-h-[41px] items-center rounded-[var(--linear-radius-8)] px-3 py-2.5 transition-colors ${navLabelClassName}`,
+    isActive
+      ? "bg-[var(--rm-surface-strong)] text-[var(--rm-fg)]"
+      : "text-[var(--rm-secondary)] hover:bg-[var(--rm-surface-strong)] hover:text-[var(--rm-fg)]",
+  ].join(" ");
+}
 
-export const bodyTextClassName = "text-[17px] font-normal leading-[25px] tracking-[-0.022em]";
+export function getSecondaryNavigationLinkClassName(isActive: boolean): string {
+  return [
+    `inline-flex min-h-[31px] items-center rounded-[var(--rm-radius-pill)] px-3.5 py-1.5 ${navLabelClassName} transition-colors`,
+    isActive
+      ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
+      : "bg-[var(--rm-panel-muted)] text-[var(--rm-secondary)] hover:text-[var(--rm-fg)]",
+  ].join(" ");
+}
 
-export const bodyStrongTextClassName =
-  "text-[17px] font-semibold leading-[21px] tracking-[-0.022em]";
+export const utilityLabelClassName =
+  "text-[12px] font-normal uppercase leading-4 tracking-[0.08em]";
+
+export const supportingTextClassName = "text-[14px] leading-[21px] text-[var(--rm-secondary)]";
+
+export const rightAlignedSupportingTextClassName =
+  "text-right text-[14px] leading-[21px] text-[var(--rm-secondary)]";
+
+export const foregroundEmphasisClassName = "font-semibold text-[var(--rm-fg)]";
+
+export const utilityStrongTextClassName =
+  "text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
+
+export const inlineTitleClassName = "text-[16px] font-semibold leading-[22px] text-[var(--rm-fg)]";
+
+export const compactTitleClassName = "text-[15px] font-semibold leading-5 text-[var(--rm-fg)]";
+
+export const metaTextClassName = "text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]";
+
+export const accentActionTextClassName = "text-sm font-semibold text-[var(--rm-accent)]";
+
+export const bodyTextClassName = "text-[14px] font-normal leading-[21px] tracking-[0em]";
+
+export const bodyStrongTextClassName = "text-[14px] font-semibold leading-[21px] tracking-[0em]";
+
+export const panelBodyTextClassName = `${bodyTextClassName} text-[var(--rm-secondary)]`;
 
 export const displayTitleClassName =
-  "[font-family:var(--rm-font-display)] text-[34px] font-semibold leading-[40px] tracking-[-0.022em]";
+  "[font-family:var(--rm-font-display)] text-[22px] font-normal leading-[28px] tracking-[-0.018em]";
 
 export const sectionTitleClassName =
-  "[font-family:var(--rm-font-display)] text-[21px] font-semibold leading-[25px] tracking-[0.011em]";
+  "[font-family:var(--rm-font-display)] text-[18px] font-normal leading-6 tracking-[-0.016em]";
 
 export const largeValueClassName =
-  "[font-family:var(--rm-font-display)] text-[28px] font-normal leading-8 tracking-[0.007em] md:text-[34px] md:leading-[40px] md:tracking-[-0.022em]";
+  "[font-family:var(--rm-font-display)] text-[22px] font-semibold leading-[28px] tracking-[-0.018em]";
+
+export const monoUtilityStrongTextClassName =
+  "break-words font-mono text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
+
+export const modalEyebrowClassName = eyebrowClassName;
+
+export const modalTitleClassName =
+  "[font-family:var(--rm-font-display)] text-[28px] font-normal leading-[34px] tracking-[-0.022em] text-[var(--rm-fg)]";
+
+export const monoCodeValueClassName =
+  "font-mono text-[28px] font-normal leading-[34px] tracking-[0.28em] text-[var(--rm-fg)]";
+
+export const monoMetaTextClassName =
+  "break-all font-mono text-[13px] font-normal leading-[18px] text-[var(--rm-muted)]";
+
+export const inlineLinkClassName =
+  "text-[13px] font-normal leading-[18px] text-[var(--rm-accent)] underline-offset-2 hover:underline";
 
 export const fieldClassName =
-  "w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-[20px] py-3 text-[17px] font-normal leading-[25px] tracking-[-0.022em] text-[var(--rm-fg)] outline-none transition placeholder:text-[var(--rm-muted)] focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+  "w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-[20px] py-3 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-[var(--rm-fg)] outline-none transition placeholder:text-[var(--rm-muted)] focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
 
 export const selectFieldClassName =
-  "w-full min-h-[44px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] py-2 pl-[20px] pr-10 text-[17px] font-normal leading-[25px] tracking-[-0.022em] text-[var(--rm-fg)] outline-none transition focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+  "w-full min-h-[40px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] py-2 pl-[20px] pr-10 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-[var(--rm-fg)] outline-none transition focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
 
 export const selectChevronStyle = {
   appearance: "none",
@@ -832,13 +922,13 @@ export const selectChevronStyle = {
 } as const;
 
 export const primaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-[var(--rm-on-primary)] transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-[22px] py-[11px] text-[15px] font-semibold leading-5 tracking-[-0.01em] text-[color:var(--rm-on-primary)] transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[17px] font-normal leading-[17px] tracking-[-0.022em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[15px] font-semibold leading-5 tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
 
 export const utilityButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-md)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-[15px] py-2 text-[14px] font-normal leading-[18px] tracking-[-0.016em] text-[var(--rm-fg)] transition hover:border-[var(--rm-border-strong)] hover:bg-[var(--rm-panel)]";
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-md)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-[15px] py-2 text-[13px] font-semibold leading-4 tracking-[-0.01em] text-[var(--rm-fg)] transition hover:border-[var(--rm-border-strong)] hover:bg-[var(--rm-panel)]";
 
 export function getSelectablePanelClassName(selected: boolean): string {
   return [

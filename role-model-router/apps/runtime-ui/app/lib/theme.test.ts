@@ -22,13 +22,13 @@ describe("runtime theme helpers", () => {
     expect(resolveInitialTheme({ storedTheme: "dark", systemPrefersDark: false })).toBe("dark");
   });
 
-  test("falls back to system preference only before an explicit operator choice exists", () => {
+  test("defaults to the dark runtime shell before an explicit operator choice exists", () => {
     expect(resolveInitialTheme({ storedTheme: null, systemPrefersDark: true })).toBe("dark");
-    expect(resolveInitialTheme({ storedTheme: null, systemPrefersDark: false })).toBe("light");
+    expect(resolveInitialTheme({ storedTheme: null, systemPrefersDark: false })).toBe("dark");
   });
 
-  test("maps active themes to the browser chrome colors used by the runtime shell", () => {
-    expect(getThemeColor("light")).toBe("#f5f5f7");
-    expect(getThemeColor("dark")).toBe("#000000");
+  test("maps active themes to the browser chrome colors used by the Linear review shell", () => {
+    expect(getThemeColor("light")).toBe("#ffffff");
+    expect(getThemeColor("dark")).toBe("#010102");
   });
 });

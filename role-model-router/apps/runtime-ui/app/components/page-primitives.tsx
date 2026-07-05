@@ -12,12 +12,18 @@ import {
 
 import { cn } from "../lib/cn";
 import {
+  bodyStrongTextClassName,
   bodyTextClassName,
   cardClassName,
   codeBlockClassName,
+  errorNoticeClassName,
   eyebrowClassName,
+  insetPanelClassName,
   largeValueClassName,
   mutedPanelClassName,
+  navLabelClassName,
+  navLabelTextStyle,
+  pillLabelClassName,
   raisedPanelClassName,
   sectionTitleClassName,
   selectChevronStyle,
@@ -76,12 +82,7 @@ export function FactCard({
   valueClassName?: string;
 }) {
   return (
-    <div
-      className={cn(
-        `${emphasis ? raisedPanelClassName : mutedPanelClassName} p-4 md:p-5`,
-        className,
-      )}
-    >
+    <div className={cn(`${mutedPanelClassName} p-4 md:p-5`, className)}>
       <p className={eyebrowClassName}>{label}</p>
       <p className={`mt-3 break-words tabular-nums text-[var(--rm-fg)] ${valueClassName}`}>
         {value}
@@ -100,23 +101,29 @@ export function StatusPill({
   children,
   className,
 }: {
-  tone: "neutral" | "accent" | "warning" | "success";
+  tone: "neutral" | "accent" | "warning" | "success" | "error" | "info" | "advisory";
   children: ReactNode;
   className?: string;
 }) {
   const toneClass =
     tone === "accent"
-      ? "border-[color:var(--rm-accent-muted)] bg-transparent text-[var(--rm-accent)]"
-      : tone === "warning"
-        ? "border-[var(--rm-warning)] bg-transparent text-[var(--rm-warning)]"
-        : tone === "success"
-          ? "border-[var(--rm-success)] bg-transparent text-[var(--rm-success)]"
-          : "border-[var(--rm-border)] bg-transparent text-[var(--rm-secondary)]";
+      ? "border-transparent bg-[var(--rm-pill-accent-bg)] text-[var(--rm-pill-accent-ink)]"
+      : tone === "info"
+        ? "border-transparent bg-[var(--rm-pill-info-bg)] text-[var(--rm-pill-info-ink)]"
+        : tone === "advisory"
+          ? "border-transparent bg-[var(--rm-pill-advisory-bg)] text-[var(--rm-pill-advisory-ink)]"
+          : tone === "warning"
+            ? "border-transparent bg-[var(--rm-pill-warning-bg)] text-[var(--rm-pill-warning-ink)]"
+            : tone === "error"
+              ? "border-transparent bg-[var(--rm-pill-error-bg)] text-[var(--rm-pill-error-ink)]"
+              : tone === "success"
+                ? "border-transparent bg-[var(--rm-pill-success-bg)] text-[var(--rm-pill-success-ink)]"
+                : "border-transparent bg-[var(--rm-pill-neutral-bg)] text-[var(--rm-pill-neutral-ink)]";
 
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-[var(--rm-radius-pill)] border px-3 py-1.5 text-[12px] font-normal uppercase tracking-[0.16em] leading-3",
+        `inline-flex items-center rounded-[var(--rm-radius-pill)] border px-2.5 py-1 ${pillLabelClassName}`,
         toneClass,
         className,
       )}
@@ -374,9 +381,9 @@ export function SelectField({
                 aria-disabled={option.disabled || undefined}
                 aria-selected={selected}
                 className={cn(
-                  "flex min-h-[40px] w-full items-center rounded-[var(--rm-radius-md)] px-3 py-2 text-left text-[15px] font-normal leading-5 tracking-[-0.016em] transition",
+                  `flex min-h-[32px] w-full items-center rounded-[var(--rm-radius-md)] px-3 py-2 text-left ${navLabelClassName} transition`,
                   selected
-                    ? "bg-[var(--rm-accent)] text-[var(--rm-on-primary)]"
+                    ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
                     : active
                       ? "bg-[var(--rm-accent-ghost)] text-[var(--rm-fg)]"
                       : "bg-transparent text-[var(--rm-secondary)] hover:bg-[var(--rm-panel)] hover:text-[var(--rm-fg)]",
@@ -403,6 +410,7 @@ export function SelectField({
                   optionRefs.current[index] = node;
                 }}
                 role="option"
+                style={navLabelTextStyle}
                 tabIndex={active ? 0 : -1}
                 type="button"
               >
@@ -417,27 +425,15 @@ export function SelectField({
 }
 
 export function LoadingState({ label }: { label: string }) {
-  return (
-    <p className={`${mutedPanelClassName} border-dashed p-6 text-sm text-[var(--rm-secondary)]`}>
-      {label}
-    </p>
-  );
+  return <p className={`${insetPanelClassName} border-dashed p-6`}>{label}</p>;
 }
 
 export function EmptyState({ label }: { label: string }) {
-  return (
-    <p className={`${mutedPanelClassName} border-dashed p-6 text-sm text-[var(--rm-secondary)]`}>
-      {label}
-    </p>
-  );
+  return <p className={`${insetPanelClassName} border-dashed p-6`}>{label}</p>;
 }
 
 export function ErrorState({ label }: { label: string }) {
-  return (
-    <p className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-sm text-[var(--rm-error)]">
-      {label}
-    </p>
-  );
+  return <p className={errorNoticeClassName}>{label}</p>;
 }
 
 export function CodeBlock({ children, className }: { children: ReactNode; className?: string }) {
@@ -448,19 +444,67 @@ export function DisclosureSection({
   summary,
   children,
   defaultOpen = false,
+  compact = false,
 }: {
   summary: string;
   children: ReactNode;
   defaultOpen?: boolean;
+  compact?: boolean;
 }) {
   return (
-    <details className={`${cardClassName} px-5 py-4 md:px-6`} open={defaultOpen ? true : undefined}>
+    <details
+      className={
+        compact
+          ? "group w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-[20px] py-0"
+          : `${cardClassName} group px-5 py-4 md:px-6`
+      }
+      open={defaultOpen ? true : undefined}
+    >
       <summary
-        className={`cursor-pointer list-none text-[var(--rm-fg)] marker:content-none [&::-webkit-details-marker]:hidden ${sectionTitleClassName}`}
+        className={`flex ${compact ? "min-h-[40px]" : "min-h-[40px]"} cursor-pointer list-none items-center justify-between gap-4 text-[var(--rm-fg)] marker:content-none [&::-webkit-details-marker]:hidden ${compact ? navLabelClassName : bodyStrongTextClassName}`}
       >
-        {summary}
+        <span className="text-balance">{summary}</span>
+        {compact ? (
+          <span
+            className={`inline-flex shrink-0 items-center gap-1.5 ${navLabelClassName} text-[var(--rm-secondary)]`}
+          >
+            <span className="group-open:hidden">Expand</span>
+            <span className="hidden group-open:inline">Collapse</span>
+            <svg
+              aria-hidden="true"
+              className="size-3.5 transition-transform duration-150 ease-out group-open:rotate-180"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+              viewBox="0 0 16 16"
+            >
+              <path d="M4 6.5 8 10l4-3.5" />
+            </svg>
+          </span>
+        ) : (
+          <span
+            aria-hidden="true"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--rm-radius-pill)] bg-[var(--rm-panel-muted)] text-[var(--rm-secondary)] transition-transform duration-150 ease-out group-open:rotate-180"
+          >
+            <svg
+              aria-hidden="true"
+              className="size-4"
+              focusable="false"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+              viewBox="0 0 16 16"
+            >
+              <path d="M4 6.5 8 10l4-3.5" />
+            </svg>
+          </span>
+        )}
       </summary>
-      <div className="mt-4">{children}</div>
+      <div className={compact ? "pb-4" : "mt-4"}>{children}</div>
     </details>
   );
 }

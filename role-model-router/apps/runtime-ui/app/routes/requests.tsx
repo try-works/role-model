@@ -1,14 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
-import { EmptyState, ErrorState, SectionCard } from "../components/page-primitives";
+import {
+  DisclosureSection,
+  EmptyState,
+  ErrorState,
+  SectionCard,
+} from "../components/page-primitives";
 import { TelemetryAnalyticsChartCard } from "../components/telemetry-charts";
 import {
   TelemetrySelectField,
   TelemetryTextField,
   TelemetryTimeRangeControl,
 } from "../components/telemetry-controls";
-import { listRowClassName, secondaryButtonClassName } from "../lib/design-system";
+import {
+  accentActionTextClassName,
+  bodyTextClassName,
+  foregroundEmphasisClassName,
+  listRowClassName,
+  metaTextClassName,
+  secondaryButtonClassName,
+  supportingTextClassName,
+} from "../lib/design-system";
 import type {
   RuntimeTelemetryAnalyticsDimension,
   RuntimeTelemetryAnalyticsFilters,
@@ -173,8 +186,14 @@ function matchesRequestFilters(
 
 type RequestsChartRecord = {
   readonly definition: TelemetryRouteChartDefinition;
-  readonly response: RuntimeTelemetryAnalyticsResponse;
+  readonly response?: RuntimeTelemetryAnalyticsResponse;
+  readonly errorMessage?: string;
 };
+
+function getChartLoadErrorMessage(title: string, value: unknown): string {
+  const detail = value instanceof Error ? value.message : "Could not load telemetry analytics.";
+  return `${title}: ${detail}`;
+}
 
 export default function RequestsRoute() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -265,6 +284,19 @@ export default function RequestsRoute() {
     taxonomyToolClassIds,
   ]);
 
+  const hasAdvancedFilters =
+    endpointId.trim().length > 0 ||
+    modelId.trim().length > 0 ||
+    providerId.trim().length > 0 ||
+    statusFamily !== "all" ||
+    taxonomyGroupId.trim().length > 0 ||
+    taxonomyRoleId.trim().length > 0 ||
+    taxonomyTaskType.trim().length > 0 ||
+    taxonomyTaskVariant.trim().length > 0 ||
+    taxonomyCapabilityIds.trim().length > 0 ||
+    taxonomyModalityIds.trim().length > 0 ||
+    taxonomyToolClassIds.trim().length > 0;
+
   const breakdown = breakdownValue === "" ? null : breakdownValue;
 
   useEffect(() => {
@@ -285,23 +317,45 @@ export default function RequestsRoute() {
           rankingDimension,
           filters,
         });
-        const [nextRequests, ...responses] = await Promise.all([
+        const [nextRequests, chartResults] = await Promise.all([
           fetchTelemetryRequests({
             limit: 200,
             windowMs: getWindowMs(timeRange),
             filters,
           }),
-          ...definitions.map((definition) => fetchTelemetryAnalytics(definition.query)),
+          Promise.allSettled(
+            definitions.map((definition) => fetchTelemetryAnalytics(definition.query)),
+          ),
         ]);
         if (disposed) {
           return;
         }
         setRequests(nextRequests);
-        setCharts(
-          definitions.map((definition, index) => ({
-            definition,
-            response: responses[index] as RuntimeTelemetryAnalyticsResponse,
-          })),
+        setCharts((previousCharts) =>
+          definitions.map((definition, index) => {
+            const result = chartResults[index];
+            if (result?.status === "fulfilled") {
+              return {
+                definition,
+                response: result.value,
+              };
+            }
+
+            const previousChart = previousCharts.find(
+              (chart) => chart.definition.title === definition.title,
+            );
+            if (background && previousChart?.response) {
+              return {
+                definition,
+                response: previousChart.response,
+              };
+            }
+
+            return {
+              definition,
+              errorMessage: getChartLoadErrorMessage(definition.title, result?.reason),
+            };
+          }),
         );
         setError(null);
       } catch (value) {
@@ -378,83 +432,87 @@ export default function RequestsRoute() {
               value={sourceFilter}
             />
           </div>
-          <div className="grid gap-4 xl:grid-cols-4">
-            <TelemetryTextField
-              label="Endpoint id"
-              onChange={(value) => updateParam("endpointId", value)}
-              placeholder="Filter a specific endpoint id"
-              value={endpointId}
-            />
-            <TelemetryTextField
-              label="Model id"
-              onChange={(value) => updateParam("modelId", value)}
-              placeholder="Filter a specific model id"
-              value={modelId}
-            />
-            <TelemetryTextField
-              label="Provider id"
-              onChange={(value) => updateParam("providerId", value)}
-              placeholder="Filter a specific provider id"
-              value={providerId}
-            />
-            <TelemetrySelectField
-              label="Status family"
-              onChange={(value) => updateParam("status", value)}
-              options={[
-                { label: "All statuses", value: "all" },
-                { label: "Success only", value: "success" },
-                { label: "Failure only", value: "failure" },
-                { label: "Unknown only", value: "unknown" },
-              ]}
-              value={statusFamily}
-            />
-          </div>
-          <div className="grid gap-4 xl:grid-cols-4">
-            <TelemetryTextField
-              label="Taxonomy group id"
-              onChange={(value) => updateParam("taxGroup", value)}
-              placeholder="e.g. engineering"
-              value={taxonomyGroupId}
-            />
-            <TelemetryTextField
-              label="Taxonomy role id"
-              onChange={(value) => updateParam("taxRole", value)}
-              placeholder="e.g. coder"
-              value={taxonomyRoleId}
-            />
-            <TelemetryTextField
-              label="Taxonomy task type"
-              onChange={(value) => updateParam("taxTask", value)}
-              placeholder="e.g. coder.review"
-              value={taxonomyTaskType}
-            />
-            <TelemetryTextField
-              label="Taxonomy task variant"
-              onChange={(value) => updateParam("taxVariant", value)}
-              placeholder="e.g. deep-audit"
-              value={taxonomyTaskVariant}
-            />
-          </div>
-          <div className="grid gap-4 xl:grid-cols-3">
-            <TelemetryTextField
-              label="Taxonomy capability ids"
-              onChange={(value) => updateParam("taxCapability", value)}
-              placeholder="Comma-separated capability ids"
-              value={taxonomyCapabilityIds}
-            />
-            <TelemetryTextField
-              label="Taxonomy modality ids"
-              onChange={(value) => updateParam("taxModality", value)}
-              placeholder="Comma-separated modality ids"
-              value={taxonomyModalityIds}
-            />
-            <TelemetryTextField
-              label="Taxonomy tool class ids"
-              onChange={(value) => updateParam("taxTool", value)}
-              placeholder="Comma-separated tool class ids"
-              value={taxonomyToolClassIds}
-            />
-          </div>
+          <DisclosureSection compact defaultOpen={hasAdvancedFilters} summary="Advanced controls">
+            <div className="space-y-4">
+              <div className="grid gap-4 xl:grid-cols-4">
+                <TelemetryTextField
+                  label="Endpoint id"
+                  onChange={(value) => updateParam("endpointId", value)}
+                  placeholder="Filter a specific endpoint id"
+                  value={endpointId}
+                />
+                <TelemetryTextField
+                  label="Model id"
+                  onChange={(value) => updateParam("modelId", value)}
+                  placeholder="Filter a specific model id"
+                  value={modelId}
+                />
+                <TelemetryTextField
+                  label="Provider id"
+                  onChange={(value) => updateParam("providerId", value)}
+                  placeholder="Filter a specific provider id"
+                  value={providerId}
+                />
+                <TelemetrySelectField
+                  label="Status family"
+                  onChange={(value) => updateParam("status", value)}
+                  options={[
+                    { label: "All statuses", value: "all" },
+                    { label: "Success only", value: "success" },
+                    { label: "Failure only", value: "failure" },
+                    { label: "Unknown only", value: "unknown" },
+                  ]}
+                  value={statusFamily}
+                />
+              </div>
+              <div className="grid gap-4 xl:grid-cols-4">
+                <TelemetryTextField
+                  label="Taxonomy group id"
+                  onChange={(value) => updateParam("taxGroup", value)}
+                  placeholder="e.g. engineering"
+                  value={taxonomyGroupId}
+                />
+                <TelemetryTextField
+                  label="Taxonomy role id"
+                  onChange={(value) => updateParam("taxRole", value)}
+                  placeholder="e.g. coder"
+                  value={taxonomyRoleId}
+                />
+                <TelemetryTextField
+                  label="Taxonomy task type"
+                  onChange={(value) => updateParam("taxTask", value)}
+                  placeholder="e.g. coder.review"
+                  value={taxonomyTaskType}
+                />
+                <TelemetryTextField
+                  label="Taxonomy task variant"
+                  onChange={(value) => updateParam("taxVariant", value)}
+                  placeholder="e.g. deep-audit"
+                  value={taxonomyTaskVariant}
+                />
+              </div>
+              <div className="grid gap-4 xl:grid-cols-3">
+                <TelemetryTextField
+                  label="Taxonomy capability ids"
+                  onChange={(value) => updateParam("taxCapability", value)}
+                  placeholder="Comma-separated capability ids"
+                  value={taxonomyCapabilityIds}
+                />
+                <TelemetryTextField
+                  label="Taxonomy modality ids"
+                  onChange={(value) => updateParam("taxModality", value)}
+                  placeholder="Comma-separated modality ids"
+                  value={taxonomyModalityIds}
+                />
+                <TelemetryTextField
+                  label="Taxonomy tool class ids"
+                  onChange={(value) => updateParam("taxTool", value)}
+                  placeholder="Comma-separated tool class ids"
+                  value={taxonomyToolClassIds}
+                />
+              </div>
+            </div>
+          </DisclosureSection>
         </div>
       </SectionCard>
 
@@ -463,6 +521,7 @@ export default function RequestsRoute() {
           <div key={chart.definition.title} className={chart.definition.className ?? "col-span-12"}>
             <TelemetryAnalyticsChartCard
               definition={chart.definition}
+              errorMessage={chart.errorMessage}
               loading={loading && charts.length === 0}
               refreshing={refreshing}
               response={chart.response}
@@ -498,27 +557,25 @@ export default function RequestsRoute() {
             {ledgerRows.map((request) => (
               <div key={request.requestId} className={`${listRowClassName} md:items-center`}>
                 <div>
-                  <p className="font-semibold text-[var(--rm-fg)]">{request.requestId}</p>
+                  <p className={foregroundEmphasisClassName}>{request.requestId}</p>
                   {request.clientRequestId && request.clientRequestId !== request.requestId ? (
-                    <p className="text-sm text-[var(--rm-secondary)]">
+                    <p className={supportingTextClassName}>
                       Correlation • {request.clientRequestId}
                     </p>
                   ) : null}
-                  <p className="text-sm text-[var(--rm-secondary)]">{request.endpointId}</p>
-                  <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                  <p className={supportingTextClassName}>{request.endpointId}</p>
+                  <p className={`mt-2 ${supportingTextClassName}`}>
                     Routing decision • {request.routingDecisionLabel}
                   </p>
-                  <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                  <p className={`mt-2 ${supportingTextClassName}`}>
                     {request.sourceLabel} • {request.statusLabel} • {request.latencyLabel} •{" "}
                     {request.tokenLabel} • {request.costLabel}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                    {request.createdAtLabel}
-                  </p>
+                  <p className={metaTextClassName}>{request.createdAtLabel}</p>
                   <Link
-                    className="mt-2 inline-block text-sm font-semibold text-[var(--rm-accent)]"
+                    className={`mt-2 inline-block ${accentActionTextClassName}`}
                     to={`/app/observe/requests/${request.requestId}`}
                   >
                     Inspect

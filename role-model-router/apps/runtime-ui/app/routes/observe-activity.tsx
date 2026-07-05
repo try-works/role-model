@@ -11,9 +11,14 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import {
+  accentActionTextClassName,
+  bodyStrongTextClassName,
+  compactTitleClassName,
   listRowClassName,
+  metaTextClassName,
   mutedPanelClassName,
   secondaryButtonClassName,
+  supportingTextClassName,
 } from "../lib/design-system";
 import {
   type RuntimeActivityCapture,
@@ -153,13 +158,13 @@ export default function ObserveActivityRoute() {
                 <div key={row.id} className={listRowClassName}>
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-[var(--rm-fg)]">{row.model}</p>
+                      <p className={compactTitleClassName}>{row.model}</p>
                       <StatusPill tone={Number(row.status) >= 400 ? "warning" : "success"}>
                         {row.status}
                       </StatusPill>
                     </div>
-                    <p className="text-sm text-[var(--rm-secondary)]">{row.path}</p>
-                    <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">
+                    <p className={supportingTextClassName}>{row.path}</p>
+                    <div className={`flex flex-wrap gap-x-4 gap-y-2 ${metaTextClassName}`}>
                       <span>Id {row.id}</span>
                       <span>{row.durationLabel}</span>
                       <span>{row.inputTokens} input</span>
@@ -168,19 +173,17 @@ export default function ObserveActivityRoute() {
                     </div>
                   </div>
                   <div className="flex flex-col items-start gap-2 md:items-end">
-                    <p className="text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">
-                      {new Date(row.timestamp).toLocaleString()}
-                    </p>
+                    <p className={metaTextClassName}>{new Date(row.timestamp).toLocaleString()}</p>
                     {row.hasCapture ? (
                       <button
-                        className="text-sm font-semibold text-[var(--rm-accent)]"
+                        className={accentActionTextClassName}
                         onClick={() => setSelectedCaptureId(row.id)}
                         type="button"
                       >
                         Inspect capture
                       </button>
                     ) : (
-                      <span className="text-sm text-[var(--rm-secondary)]">{row.captureLabel}</span>
+                      <span className={supportingTextClassName}>{row.captureLabel}</span>
                     )}
                   </div>
                 </div>
@@ -201,32 +204,24 @@ export default function ObserveActivityRoute() {
               <EmptyState label={`Capture ${selectedCaptureId} is not available.`} />
             ) : (
               <>
-                <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                  <p className="font-semibold text-[var(--rm-fg)]">{selectedCapture.req_path}</p>
-                  <p className="mt-2">Capture {selectedCapture.id}</p>
+                <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                  <p className={compactTitleClassName}>{selectedCapture.req_path}</p>
+                  <p className={bodyStrongTextClassName}>Capture {selectedCapture.id}</p>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
-                    Request headers
-                  </p>
+                  <p className={`mb-2 ${metaTextClassName}`}>Request headers</p>
                   <CodeBlock>{JSON.stringify(selectedCapture.req_headers, null, 2)}</CodeBlock>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
-                    Request body
-                  </p>
+                  <p className={`mb-2 ${metaTextClassName}`}>Request body</p>
                   <CodeBlock>{decodeCaptureBody(selectedCapture.req_body) || "(empty)"}</CodeBlock>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
-                    Response headers
-                  </p>
+                  <p className={`mb-2 ${metaTextClassName}`}>Response headers</p>
                   <CodeBlock>{JSON.stringify(selectedCapture.resp_headers, null, 2)}</CodeBlock>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
-                    Response body
-                  </p>
+                  <p className={`mb-2 ${metaTextClassName}`}>Response body</p>
                   <CodeBlock>{decodeCaptureBody(selectedCapture.resp_body) || "(empty)"}</CodeBlock>
                 </div>
               </>

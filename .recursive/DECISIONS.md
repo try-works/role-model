@@ -2,6 +2,41 @@
 
 ## Recursive Run Index
 
+### Run `60-runtime-ui-paper-linear-review-alignment`
+
+- Run folder: `/.recursive/run/60-runtime-ui-paper-linear-review-alignment/`
+- Worktree: `.worktrees/60-runtime-ui-paper-linear-review-alignment`
+- Branch: `recursive/60-runtime-ui-paper-linear-review-alignment`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - Phase-5 addenda: rollback, route matrix, QA-fail remediation
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - replaced the older Apple-reference runtime-ui styling contract with the Paper Linear review design-system authority and rewrote the repo-owned `runtime-ui/DESIGN_SYSTEM.md` to match that baseline
+  - retokenized the shared runtime shell, theme wiring, pill/select/text styling, and Recharts-backed telemetry/chart primitives so route families consume one Paper-driven design system instead of mixed route-local styling
+  - realigned every shipped runtime page family against the authoritative Paper runtime-page board, including Overview, Studio, Local, Remote, Models, Router, Observe, Connect, and System surfaces
+  - repaired late manual-QA regressions discovered after the page-by-page audit: fixed shell-contained scrolling, hid the content-frame scrollbar, reduced wasted chart margin, added runtime-summary retry resilience, normalized advanced-controls affordances, and unified grouped role-selection behavior across Remote and Models
+  - removed review-only preview/mock scaffolds after approval so the shipped runtime remains live-data-driven rather than carrying Paper-review fixtures
+- Why:
+  - the shipped runtime UI and repo-owned design docs had drifted away from the current Paper/Linear source of truth, causing inconsistent tokens, stale typography, mismatched route layouts, and route-specific styling that bypassed the shared design system
+  - the run needed to re-establish one visual authority, push it into the shared primitives first, and then bring the real runtime pages into parity without breaking rebuilt-runtime behavior
+- How:
+  - implemented with strict TDD on shared design-system and route regressions, rebuilt-runtime browser verification, Playwright regression coverage, and a hybrid Phase-5 rerun that paired agent-operated browser evidence with explicit user approval of the page-by-page screenshot matrix
+- What was not done:
+  - the run did not edit the Paper file itself; Paper remains the visual authority consumed by the repo
+  - no mock telemetry or preview-only route data remains in the shipped runtime after the approval pass
+- Known issues / follow-ups:
+  - the Paper file is now slightly behind the latest approved implementation details; the repo-owned design system and runtime implementation are the current shipped truth until the Paper file is refreshed
+  - the run’s earlier Phase 3-5 base receipts predated the stricter audited-artifact template and rely on locked Phase-5 addenda to express the final hybrid QA truth
+
 ### Run `57-role-model-taxonomy-v1-phase-1-4`
 
 - Run folder: `/.recursive/run/57-role-model-taxonomy-v1-phase-1-4/`

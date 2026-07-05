@@ -9,7 +9,11 @@ import {
 describe("telemetry route chart definitions", () => {
   test("defines the approved overview telemetry charts and query contracts", () => {
     const charts = buildOverviewChartDefinitions({
-      sourceTypes: [],
+      filters: {
+        sourceTypes: ["remote"],
+        statusFamilies: ["failure"],
+        providerIds: ["openai"],
+      },
       timeRange: "week",
     });
 
@@ -18,8 +22,8 @@ describe("telemetry route chart definitions", () => {
       "Effective Cost Over Time",
       "Cost Avoided Over Time",
       "Latency Trend",
-      "Cache Efficiency Trend",
-      "Success vs Failure Volume",
+      "Cache Efficiency",
+      "Success vs Failure",
     ]);
     expect(charts[0]).toEqual(
       expect.objectContaining({
@@ -28,6 +32,11 @@ describe("telemetry route chart definitions", () => {
         query: expect.objectContaining({
           granularity: "day",
           metrics: ["inputTokens", "outputTokens", "totalTokens"],
+          filters: {
+            sourceTypes: ["remote"],
+            statusFamilies: ["failure"],
+            providerIds: ["openai"],
+          },
         }),
       }),
     );

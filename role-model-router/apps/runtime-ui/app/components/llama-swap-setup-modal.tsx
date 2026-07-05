@@ -1,7 +1,16 @@
 import { useEffect } from "react";
 import { Link } from "react-router";
 
-import { primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
+import {
+  bodyStrongTextClassName,
+  compactTitleClassName,
+  modalEyebrowClassName,
+  modalTitleClassName,
+  monoMetaTextClassName,
+  panelBodyTextClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+} from "../lib/design-system";
 import {
   LLAMA_SWAP_SCAFFOLD_YAML,
   type LlamaSwapConfigStatus,
@@ -49,27 +58,20 @@ export function LlamaSwapSetupModal({
       >
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-              Llama-swap setup
-            </p>
-            <h2
-              id="llama-swap-setup-title"
-              className="mt-2 text-2xl font-light tracking-tight text-[var(--rm-fg)]"
-            >
+            <p className={modalEyebrowClassName}>Llama-swap setup</p>
+            <h2 id="llama-swap-setup-title" className={`mt-2 ${modalTitleClassName}`}>
               Enable role-model-managed llama-swap
             </h2>
-            <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
-              {llamaSwapHintDetail()}
-            </p>
+            <p className={`mt-2 max-w-[60ch] ${panelBodyTextClassName}`}>{llamaSwapHintDetail()}</p>
           </div>
           <button className={secondaryButtonClassName} type="button" onClick={onClose}>
             Close
           </button>
         </div>
 
-        <div className="mt-6 space-y-6 text-sm leading-6 text-[var(--rm-secondary)]">
+        <div className={`mt-6 space-y-6 ${panelBodyTextClassName}`}>
           <section>
-            <h3 className="text-base font-semibold text-[var(--rm-fg)]">What llama-swap does</h3>
+            <h3 className={compactTitleClassName}>What llama-swap does</h3>
             <p className="mt-2">
               role-model runs the llama-swap process, swaps one GGUF model at a time on your GPU,
               and exposes it through the same local routing surface as peer-backed models.
@@ -79,7 +81,7 @@ export function LlamaSwapSetupModal({
           </section>
 
           <section>
-            <h3 className="text-base font-semibold text-[var(--rm-fg)]">Setup steps</h3>
+            <h3 className={compactTitleClassName}>Setup steps</h3>
             <ol className="mt-2 list-decimal space-y-2 pl-5">
               <li>
                 Place a GGUF weights file on disk (for example under your user models folder).
@@ -99,7 +101,7 @@ export function LlamaSwapSetupModal({
 
           <section>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-base font-semibold text-[var(--rm-fg)]">YAML scaffold</h3>
+              <h3 className={compactTitleClassName}>YAML scaffold</h3>
               <button
                 className={secondaryButtonClassName}
                 type="button"
@@ -115,9 +117,7 @@ export function LlamaSwapSetupModal({
 
           <section>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-base font-semibold text-[var(--rm-fg)]">
-                JSON llamaSwap snippet
-              </h3>
+              <h3 className={compactTitleClassName}>JSON llamaSwap snippet</h3>
               <button
                 className={secondaryButtonClassName}
                 type="button"
@@ -133,14 +133,14 @@ export function LlamaSwapSetupModal({
 
           <section className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4">
             <p>
-              <span className="font-semibold text-[var(--rm-fg)]">Live status:</span>{" "}
+              <span className={bodyStrongTextClassName}>Live status:</span>{" "}
               {status.operational ? "operational" : status.variant.replaceAll("_", " ")}
             </p>
             <p className="mt-2">
-              <span className="font-semibold text-[var(--rm-fg)]">Execution mode:</span>{" "}
+              <span className={bodyStrongTextClassName}>Execution mode:</span>{" "}
               {status.executionMode ?? "pending"}
             </p>
-            <p className="mt-2 break-all font-mono text-xs text-[var(--rm-muted)]">
+            <p className={`mt-2 ${monoMetaTextClassName}`}>
               {status.configPath ?? "Config path unavailable"}
             </p>
           </section>

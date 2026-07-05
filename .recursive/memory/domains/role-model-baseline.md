@@ -55,8 +55,9 @@ Source-Runs:
 - `49-runtime-telemetry-analytics-charts`
 - `50-openai-codex-subscription`
 - `53-runtime-telemetry-analytics-contract-hardening`
+- `60-runtime-ui-paper-linear-review-alignment`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-21T19:25:00Z`
+Last-Validated: `2026-07-05T00:00:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -119,7 +120,8 @@ This repository now has a real product baseline rather than only recursive scaff
 - The runtime now also exposes a canonical unified telemetry baseline for mixed local and remote execution, including summary, ledger, request-detail, and `/api/role-model/telemetry/stream` SSE surfaces in `/role-model-router/apps/runtime-host-bridge/` and matching dashboard, requests, and request-detail consumers in `/role-model-router/apps/runtime-ui/`
 - Detailed runtime routing, provider-capability, alias-matrix, Codex Subscription lifecycle, and hosted-search/tool semantics now live in `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`.
 - Run 49 extended unified telemetry into backend-owned historical analytics, run 50 extended the same runtime baseline into Codex Subscription plus routing/provider-capability truth, and run 53 hardened telemetry analytics into an explicit backend contract with applied query metadata, metric/dimension support, full-slice aggregation, shared semantic chart states, aligned ledger filters, and a current graph matrix architecture reference. Detailed operator-routing, provider, and telemetry semantics live in the dedicated routing/provider domain shard.
-- The runtime UI design baseline remains Apple-reference themed: shared typography/control roles, quiet rounded panels, themed keyboard-searchable listbox/dropdown controls, distinct same-chart series colors, compact fact-card values, and removal of redundant eyebrow/divider/context panels.
+- The runtime UI design baseline now follows the Paper Linear review authority captured in `role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md`: tokenized Inter/IBM Plex Mono typography, a fixed-shell runtime chrome with pinned sidebar/header and scrolling content frame, solid semantic pills with contrasting text, shared select/filter text sizing, icon-only theme toggle, and Recharts-backed chart primitives tuned to the current Paper route compositions.
+- Paper remains the visual source of truth for shared design-system and route-composition work, but the repo-owned design-system doc and shipped runtime implementation are the authoritative shipped baseline whenever the Paper file temporarily lags the latest approved runtime adjustments.
 - Failed execution rows in that canonical telemetry ledger now preserve caller correlation, request classification, source posture, and explicit failure-stage endpoint markers, so summary failures and request-ledger truth no longer diverge for new requests
 - The repo-owned control plane now includes mutable runtime-config read and write routes, `Control > Runtime Config`, live account save and Kimi device-OAuth state, endpoint activation, and honest zero-endpoint `decision_only` controller or models or runtime empty states instead of 500 or loading traps
 - The runtime now also owns router-grade role/task policy persistence at `runtimeStateRoot\role-policy.json`, with bridge CRUD/readback routes and router inputs consuming the runtime-owned policy instead of the earlier fixture-fed `adapter-role-task.json` source

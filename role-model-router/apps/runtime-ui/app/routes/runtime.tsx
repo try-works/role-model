@@ -8,31 +8,45 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
 import {
+  bodyStrongTextClassName,
+  mutedPanelClassName,
+  secondaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
+} from "../lib/design-system";
+import {
+  type RuntimeConfigRecord,
   type RuntimeControllerAssignment,
   type RuntimeSnapshot,
   type RuntimeVersionInfo,
   fetchControllerAssignment,
+  fetchRuntimeConfig,
   fetchRuntimeSnapshot,
   fetchVersionInfo,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import { buildCredentialLifecycleBanner } from "../lib/view-models";
 
 export default function RuntimeRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
   const [controllerLoaded, setControllerLoaded] = useState(false);
+  const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
   const [version, setVersion] = useState<RuntimeVersionInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void Promise.all([fetchRuntimeSnapshot(), fetchControllerAssignment(), fetchVersionInfo()])
-      .then(([nextSnapshot, nextController, nextVersion]) => {
+    void Promise.all([
+      fetchRuntimeSnapshot(),
+      fetchControllerAssignment(),
+      fetchRuntimeConfig(),
+      fetchVersionInfo(),
+    ])
+      .then(([nextSnapshot, nextController, nextConfigRecord, nextVersion]) => {
         setSnapshot(nextSnapshot);
         setController(nextController);
         setControllerLoaded(true);
+        setConfigRecord(nextConfigRecord);
         setVersion(nextVersion);
       })
       .catch((value: unknown) =>
@@ -40,140 +54,165 @@ export default function RuntimeRoute() {
       );
   }, []);
 
-  usePageActions(
-    <>
-      <a className={secondaryButtonClassName} href="/api/role-model/runtime/summary">
-        Runtime JSON
-      </a>
-      <a className={secondaryButtonClassName} href="/api/role-model/controller">
-        Controller JSON
-      </a>
-    </>,
-    [],
-  );
-
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!snapshot || !controllerLoaded || !version) {
+  if (!snapshot || !controllerLoaded || !configRecord || !version) {
     return <LoadingState label="Loading runtime summary…" />;
   }
 
   const lifecycleBanner = buildCredentialLifecycleBanner(snapshot.summary);
+  const currentConfig = configRecord.config;
+  const remoteMappingCount =
+    currentConfig?.liteLLM.providers.reduce(
+      (count, provider) => count + provider.modelMappings.length,
+      0,
+    ) ?? 0;
+  const lifecycleSummaryRows = [
+    { label: "active endpoints", value: snapshot.summary.lifecycleSummary?.active ?? 0 },
+    { label: "degraded routes", value: snapshot.summary.lifecycleSummary?.degraded ?? 0 },
+    { label: "offline records", value: snapshot.summary.lifecycleSummary?.offline ?? 0 },
+  ];
+  const appliedPolicyRows = [
+    ["Config path", configRecord.path ?? "not configured"],
+    ["Execution mode", currentConfig?.executionMode ?? snapshot.summary.executionMode ?? "pending"],
+    ["Routing strategy", currentConfig?.routingStrategy ?? "pending"],
+    ["Local models", String(currentConfig?.llamaSwap.models.length ?? 0)],
+    ["Remote mappings", String(remoteMappingCount)],
+  ] as const;
+  const controllerRows = controller
+    ? ([
+        ["Endpoint", controller.endpointId],
+        ["Model", controller.modelId],
+        ["Source", controller.sourceType],
+      ] as const)
+    : [];
+  const versionRows = [
+    ["Vendor host", version.version],
+    ["Commit", version.commit],
+    ["Build date", version.build_date],
+    ["Runtime state root", snapshot.summary.runtimeStateRoot ?? "unavailable"],
+    ["Summary endpoint", "/api/role-model/runtime/summary"],
+  ] as const;
 
   return (
     <div className="space-y-6">
-      <SectionCard title="Session readiness">
-        <p className="text-sm text-[var(--rm-secondary)]">
-          Bootstrap receipts, routable inventory, and alias drift warnings live on the dedicated
-          session readiness surface.
-        </p>
-        <div className="mt-4">
-          <Link className={secondaryButtonClassName} to="/app/system/session-readiness">
-            Open session readiness
-          </Link>
-        </div>
-      </SectionCard>
+      <div className="flex flex-wrap gap-3">
+        <StatusPill tone="success">
+          Active {snapshot.summary.lifecycleSummary?.active ?? 0}
+        </StatusPill>
+        <StatusPill tone="warning">
+          Degraded {snapshot.summary.lifecycleSummary?.degraded ?? 0}
+        </StatusPill>
+        <StatusPill tone="neutral">
+          Offline {snapshot.summary.lifecycleSummary?.offline ?? 0}
+        </StatusPill>
+      </div>
 
-      <SectionCard title="Lifecycle summary">
-        <div className="flex flex-wrap gap-3">
-          <StatusPill tone="success">
-            Active {snapshot.summary.lifecycleSummary?.active ?? 0}
-          </StatusPill>
-          <StatusPill tone="warning">
-            Degraded {snapshot.summary.lifecycleSummary?.degraded ?? 0}
-          </StatusPill>
-          <StatusPill tone="neutral">
-            Offline {snapshot.summary.lifecycleSummary?.offline ?? 0}
-          </StatusPill>
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Execution readiness">
-        <div className="mb-4 flex flex-wrap gap-3">
-          {lifecycleBanner ? (
-            <>
-              <StatusPill tone={lifecycleBanner.authorityTone}>
-                {lifecycleBanner.authorityLabel}
-              </StatusPill>
-              {lifecycleBanner.archivedStaleCount > 0 ? (
-                <StatusPill tone="neutral">
-                  Archived stale {lifecycleBanner.archivedStaleCount}
-                </StatusPill>
-              ) : null}
-            </>
-          ) : (
-            <StatusPill tone="neutral">Lifecycle contract unavailable</StatusPill>
-          )}
-        </div>
-        {lifecycleBanner ? (
-          <p className="mb-4 text-sm text-[var(--rm-secondary)]">{lifecycleBanner.detail}</p>
-        ) : null}
-        <div className="flex flex-wrap gap-3">
-          {!lifecycleBanner || lifecycleBanner.blockingRows.length === 0 ? (
-            <StatusPill tone="neutral">No blocking credential lifecycle rows</StatusPill>
-          ) : (
-            lifecycleBanner.blockingRows.map((row) => (
-              <StatusPill key={row.key} tone={row.tone}>
-                {row.label} {row.value}
-              </StatusPill>
-            ))
-          )}
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Controller posture">
-        {controller ? (
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                Endpoint
-              </p>
-              <p className="mt-2 break-all text-sm font-semibold text-[var(--rm-fg)]">
-                {controller.endpointId}
-              </p>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.72fr)]">
+        <div className="space-y-4">
+          <SectionCard title="Applied runtime policy">
+            <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+              {appliedPolicyRows.map(([label, value]) => (
+                <div key={label} className="flex flex-wrap items-start justify-between gap-3">
+                  <p className={utilityLabelClassName}>{label}</p>
+                  <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
+                    {value}
+                  </p>
+                </div>
+              ))}
             </div>
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                Model
-              </p>
-              <p className="mt-2 text-sm font-semibold text-[var(--rm-fg)]">{controller.modelId}</p>
+            <p className={`mt-4 ${supportingTextClassName}`}>
+              Runtime config remains the authority for execution mode, routing strategy, and the
+              current local plus remote model inventory.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
+                Runtime config
+              </Link>
+              <Link className={secondaryButtonClassName} to="/app/system/session-readiness">
+                Readiness diagnostics
+              </Link>
             </div>
-            <div className={`${mutedPanelClassName} p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                Source
-              </p>
-              <div className="mt-2">
-                <StatusPill tone={controller.sourceType === "local" ? "accent" : "neutral"}>
-                  {controller.sourceType}
-                </StatusPill>
+          </SectionCard>
+
+          <SectionCard title="Execution readiness">
+            <div className="mb-4 flex flex-wrap gap-3">
+              {lifecycleBanner ? (
+                <>
+                  <StatusPill tone={lifecycleBanner.authorityTone}>
+                    {lifecycleBanner.authorityLabel}
+                  </StatusPill>
+                  {lifecycleBanner.archivedStaleCount > 0 ? (
+                    <StatusPill tone="neutral">
+                      archived stale {lifecycleBanner.archivedStaleCount}
+                    </StatusPill>
+                  ) : null}
+                </>
+              ) : (
+                <StatusPill tone="neutral">Lifecycle contract unavailable</StatusPill>
+              )}
+            </div>
+            {lifecycleBanner ? (
+              <p className={supportingTextClassName}>{lifecycleBanner.detail}</p>
+            ) : null}
+            <div className="mt-4 flex flex-wrap gap-3">
+              {!lifecycleBanner || lifecycleBanner.blockingRows.length === 0 ? (
+                <StatusPill tone="neutral">No blocking credential lifecycle rows</StatusPill>
+              ) : (
+                lifecycleBanner.blockingRows.map((row) => (
+                  <StatusPill key={row.key} tone={row.tone}>
+                    {row.label} {row.value}
+                  </StatusPill>
+                ))
+              )}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Controller posture">
+            {controller ? (
+              <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+                {controllerRows.map(([label, value]) => (
+                  <div key={label} className="flex flex-wrap items-start justify-between gap-3">
+                    <p className={utilityLabelClassName}>{label}</p>
+                    <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
+                      {value}
+                    </p>
+                  </div>
+                ))}
               </div>
-            </div>
-          </div>
-        ) : (
-          <EmptyState label="No controller assigned yet. Activate a local or remote endpoint before pinning a controller." />
-        )}
-      </SectionCard>
-
-      <SectionCard title="Version and boundary facts">
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-            <p className="font-semibold text-[var(--rm-fg)]">Vendor host version</p>
-            <p className="mt-2 text-base text-[var(--rm-fg)]">{version.version}</p>
-            <p className="mt-2 break-all">Commit {version.commit}</p>
-            <p className="mt-1">Built {version.build_date}</p>
-          </div>
-          <a
-            className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-            href="/api/role-model/runtime/summary"
-          >
-            <span className="block font-semibold text-[var(--rm-fg)]">
-              /api/role-model/runtime/summary
-            </span>
-            Repo-owned runtime topology and lifecycle summary
-          </a>
+            ) : (
+              <EmptyState label="No controller assigned yet. Activate a local or remote endpoint before pinning a controller." />
+            )}
+          </SectionCard>
         </div>
-      </SectionCard>
+
+        <div className="space-y-4">
+          <SectionCard title="Lifecycle summary">
+            <div className="space-y-3">
+              {lifecycleSummaryRows.map((row) => (
+                <div key={row.label} className="flex items-center justify-between gap-3">
+                  <p className={supportingTextClassName}>{row.label}</p>
+                  <p className={bodyStrongTextClassName}>{row.value}</p>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Version facts">
+            <div className="space-y-3">
+              {versionRows.map(([label, value]) => (
+                <div key={label} className="flex flex-wrap items-start justify-between gap-3">
+                  <p className={utilityLabelClassName}>{label}</p>
+                  <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
+                    {value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        </div>
+      </div>
     </div>
   );
 }

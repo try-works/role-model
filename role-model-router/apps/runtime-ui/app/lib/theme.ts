@@ -16,11 +16,11 @@ export function resolveInitialTheme(input: {
   if (input.storedTheme) {
     return input.storedTheme;
   }
-  return input.systemPrefersDark ? "dark" : "light";
+  return "dark";
 }
 
 export function getThemeColor(theme: RuntimeTheme): string {
-  return theme === "dark" ? "#000000" : "#f5f5f7";
+  return theme === "dark" ? "#010102" : "#ffffff";
 }
 
 export function syncDocumentTheme(theme: RuntimeTheme): void {
