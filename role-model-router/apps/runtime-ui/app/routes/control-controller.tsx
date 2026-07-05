@@ -240,14 +240,12 @@ export default function ControlControllerRoute() {
                   <p className={`mt-4 break-all ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
                     {controller.endpointId}
                   </p>
-                  <p className={`mt-2 ${supportingTextClassName}`}>
-                    {controller.modelId}
-                  </p>
+                  <p className={`mt-2 ${supportingTextClassName}`}>{controller.modelId}</p>
                 </>
               ) : (
                 <p className={`mt-3 ${supportingTextClassName}`}>
-                  No controller is assigned yet. Activate an endpoint first, then return here to
-                  pin the controller.
+                  No controller is assigned yet. Activate an endpoint first, then return here to pin
+                  the controller.
                 </p>
               )}
             </div>

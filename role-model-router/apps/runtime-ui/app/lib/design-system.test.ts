@@ -112,7 +112,10 @@ const localLlamaSwapModelsSource = readFileSync(
   new URL("../routes/local-llama-swap-models.tsx", import.meta.url),
   "utf8",
 );
-const localMatrixSource = readFileSync(new URL("../routes/local-matrix.tsx", import.meta.url), "utf8");
+const localMatrixSource = readFileSync(
+  new URL("../routes/local-matrix.tsx", import.meta.url),
+  "utf8",
+);
 const localPolicySource = readFileSync(
   new URL("../routes/local-policy.tsx", import.meta.url),
   "utf8",
@@ -710,13 +713,13 @@ describe("runtime design system", () => {
     expect(studioAdvancedRouteSource).not.toContain('CodeBlock className="min-h-72 text-sm"');
     expect(studioAdvancedRouteSource).not.toContain('CodeBlock className="min-h-52 text-sm"');
     expect(workbenchRouteSource).not.toContain('CodeBlock className="min-h-72 text-sm"');
-    expect(workbenchRouteSource).not.toContain('${utilityLabelClassName} text-[var(--rm-fg)]');
-    expect(studioImagesRouteSource).not.toContain('${utilityLabelClassName} text-[var(--rm-fg)]');
-    expect(studioAudioRouteSource).not.toContain('${utilityLabelClassName} text-[var(--rm-fg)]');
-    expect(studioRerankRouteSource).not.toContain('${utilityLabelClassName} text-[var(--rm-fg)]');
-    expect(studioAdvancedRouteSource).not.toContain('${utilityLabelClassName} text-[var(--rm-fg)]');
-    expect(workbenchRouteSource).not.toContain('${bodyTextClassName} text-[var(--rm-fg)]');
-    expect(studioAudioRouteSource).not.toContain('${bodyTextClassName} text-[var(--rm-fg)]');
+    expect(workbenchRouteSource).not.toContain("${utilityLabelClassName} text-[var(--rm-fg)]");
+    expect(studioImagesRouteSource).not.toContain("${utilityLabelClassName} text-[var(--rm-fg)]");
+    expect(studioAudioRouteSource).not.toContain("${utilityLabelClassName} text-[var(--rm-fg)]");
+    expect(studioRerankRouteSource).not.toContain("${utilityLabelClassName} text-[var(--rm-fg)]");
+    expect(studioAdvancedRouteSource).not.toContain("${utilityLabelClassName} text-[var(--rm-fg)]");
+    expect(workbenchRouteSource).not.toContain("${bodyTextClassName} text-[var(--rm-fg)]");
+    expect(studioAudioRouteSource).not.toContain("${bodyTextClassName} text-[var(--rm-fg)]");
   });
 
   test("integration and system implementation targets render live upstream and peer surfaces", () => {
@@ -903,7 +906,7 @@ describe("runtime design system", () => {
   test("router overview lists the concrete candidate endpoints behind routing posture", () => {
     expect(routerRouteSource).toContain("fetchRouterCandidates");
     expect(routerRouteSource).toContain("Routing candidates");
-    expect(routerRouteSource).toContain("StatusPill tone=\"accent\">active</StatusPill>");
+    expect(routerRouteSource).toContain('StatusPill tone="accent">active</StatusPill>');
     expect(routerRouteSource).toContain("DisclosureSection");
     expect(routerRouteSource).toContain("candidate.endpointId");
     expect(routerRouteSource).toContain("candidate.modelId");
@@ -924,10 +927,12 @@ describe("runtime design system", () => {
     expect(routerDecisionDetailRouteSource).not.toContain("Open Observe detail");
     expect(routerDecisionDetailRouteSource).not.toContain("FactCard");
     expect(routerDecisionDetailRouteSource).toContain(
-      'xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]',
+      "xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]",
     );
     expect(routerDecisionDetailRouteSource).toContain("Models → Benchmark");
-    expect(routerDecisionDetailRouteSource).toContain('fallback ${String(index + 1).padStart(2, "0")}');
+    expect(routerDecisionDetailRouteSource).toContain(
+      'fallback ${String(index + 1).padStart(2, "0")}',
+    );
     expect(routerDecisionDetailRouteSource).toContain("Judge score");
     expect(routerDecisionDetailRouteSource).toContain("Profile measured");
     expect(routerDecisionDetailRouteSource).toContain("Benchmark samples");
@@ -956,9 +961,9 @@ describe("runtime design system", () => {
     expect(controlRoutingStrategySource).not.toContain("Advanced config");
     expect(controlRoutingStrategySource).not.toContain("Router detail");
     expect(controlRoutingStrategySource).toContain(
-      'xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]',
+      "xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]",
     );
-    expect(controlRoutingStrategySource).toContain('grid gap-3 xl:grid-cols-3');
+    expect(controlRoutingStrategySource).toContain("grid gap-3 xl:grid-cols-3");
   });
 
   test("routing controller uses the tokenized registry-detail split instead of generic summary strips", () => {
@@ -967,13 +972,11 @@ describe("runtime design system", () => {
     expect(controlControllerSource).toContain("controller assigned");
     expect(controlControllerSource).toContain("summarizeRoleCoverage");
     expect(controlControllerSource).toContain("Role coverage");
-    expect(controlControllerSource).toContain(
-      'xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]',
-    );
+    expect(controlControllerSource).toContain("xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]");
     expect(controlControllerSource).toContain("utilityLabelClassName");
     expect(controlControllerSource).toContain("cardClassName");
     expect(controlControllerSource).not.toContain("Current assignment");
-    expect(controlControllerSource).not.toContain('grid gap-3 md:grid-cols-3');
+    expect(controlControllerSource).not.toContain("grid gap-3 md:grid-cols-3");
   });
 
   test("routing candidates use a ledger-style inventory rail instead of detached fact cards", () => {
@@ -982,12 +985,12 @@ describe("runtime design system", () => {
     expect(routerCandidatesRouteSource).toContain("const availableCandidates = candidates ?? [];");
     expect(routerCandidatesRouteSource).toContain("summarizeRoleCoverage");
     expect(routerCandidatesRouteSource).toContain(
-      'xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]',
+      "xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]",
     );
     expect(routerCandidatesRouteSource).toContain("cardClassName");
     expect(routerCandidatesRouteSource).toContain("utilityLabelClassName");
     expect(routerCandidatesRouteSource).not.toContain("FactCard");
-    expect(routerCandidatesRouteSource).not.toContain('grid gap-4 md:grid-cols-3');
+    expect(routerCandidatesRouteSource).not.toContain("grid gap-4 md:grid-cols-3");
   });
 
   test("routing decisions use a ledger rail instead of a KPI strip", () => {
@@ -995,10 +998,10 @@ describe("runtime design system", () => {
     expect(routerDecisionsRouteSource).toContain("Decision posture");
     expect(routerDecisionsRouteSource).toContain("Latest decision");
     expect(routerDecisionsRouteSource).toContain(
-      'xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]',
+      "xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]",
     );
     expect(routerDecisionsRouteSource).not.toContain("FactCard");
-    expect(routerDecisionsRouteSource).not.toContain('grid gap-4 md:grid-cols-3');
+    expect(routerDecisionsRouteSource).not.toContain("grid gap-4 md:grid-cols-3");
   });
 
   test("routing config is a first-class read-only provenance surface instead of a redirect", () => {
@@ -1089,7 +1092,9 @@ describe("runtime design system", () => {
     expect(designSystemDocSource).toContain("Status pills use solid token-backed backgrounds");
     expect(designSystemDocSource).toContain('"Inter", "Segoe UI", sans-serif');
     expect(designSystemDocSource).toContain("Apple reference remains historical only.");
-    expect(designSystemDocSource).toContain("not allowed to override Paper, this document, or the live runtime UI");
+    expect(designSystemDocSource).toContain(
+      "not allowed to override Paper, this document, or the live runtime UI",
+    );
     expect(designSystemDocSource).not.toContain("Status pills stay transparent");
     expect(appCss).toContain("--rm-shadow-product: 0 3px 5px 30px rgb(0 0 0 / 22%);");
     expect(appCss).not.toContain("--rm-shadow-product: 0 24px 80px rgba(0, 0, 0, 0.22);");
@@ -1141,10 +1146,18 @@ describe("runtime design system", () => {
   });
 
   test("keeps shared states on solid token-backed pills and no section divider chrome", () => {
-    expect(pagePrimitivesSource).toContain("bg-[var(--rm-pill-accent-bg)] text-[var(--rm-pill-accent-ink)]");
-    expect(pagePrimitivesSource).toContain("bg-[var(--rm-pill-warning-bg)] text-[var(--rm-pill-warning-ink)]");
-    expect(pagePrimitivesSource).toContain("bg-[var(--rm-pill-success-bg)] text-[var(--rm-pill-success-ink)]");
-    expect(pagePrimitivesSource).toContain("bg-[var(--rm-pill-error-bg)] text-[var(--rm-pill-error-ink)]");
+    expect(pagePrimitivesSource).toContain(
+      "bg-[var(--rm-pill-accent-bg)] text-[var(--rm-pill-accent-ink)]",
+    );
+    expect(pagePrimitivesSource).toContain(
+      "bg-[var(--rm-pill-warning-bg)] text-[var(--rm-pill-warning-ink)]",
+    );
+    expect(pagePrimitivesSource).toContain(
+      "bg-[var(--rm-pill-success-bg)] text-[var(--rm-pill-success-ink)]",
+    );
+    expect(pagePrimitivesSource).toContain(
+      "bg-[var(--rm-pill-error-bg)] text-[var(--rm-pill-error-ink)]",
+    );
     expect(pagePrimitivesSource).not.toContain("bg-transparent text-[var(--rm-accent)]");
     expect(pagePrimitivesSource).not.toContain("border-b border-[var(--rm-border)] pb-4");
     expect(pagePrimitivesSource).not.toContain("border-t border-[var(--rm-border)] pt-4");
@@ -1158,11 +1171,19 @@ describe("runtime design system", () => {
     expect(controlModelsSource).toContain("buildSelectedModelEvidencePills");
     expect(controlModelsSource).toContain('tone: input.toolCallingSupported ? "info" : "neutral"');
     expect(controlModelsSource).toContain('tone: "neutral",');
-    expect(controlModelsSource).not.toContain('tone: input.toolCallingSupported ? "success" : "neutral"');
-    expect(controlModelsSource).not.toContain('<StatusPill tone="success">\r\n                          Capability');
-    expect(controlModelsSource).toContain('label: `assigned role evidence ${Math.round(strongestAssignedRoleScore * 100)}%`');
+    expect(controlModelsSource).not.toContain(
+      'tone: input.toolCallingSupported ? "success" : "neutral"',
+    );
+    expect(controlModelsSource).not.toContain(
+      '<StatusPill tone="success">\r\n                          Capability',
+    );
+    expect(controlModelsSource).toContain(
+      "label: `assigned role evidence ${Math.round(strongestAssignedRoleScore * 100)}%`",
+    );
     expect(controlModelsSource).toContain('tone: "info",');
-    expect(controlModelsSource).toContain('tone: strongestGroup.lowCoverage ? "warning" : "advisory"');
+    expect(controlModelsSource).toContain(
+      'tone: strongestGroup.lowCoverage ? "warning" : "advisory"',
+    );
   });
 
   test("configured models keeps the selected detail compact and moves deep diagnostics behind a disclosure", () => {
@@ -1216,13 +1237,17 @@ describe("runtime design system", () => {
     expect(controlBenchmarkSource).toContain("Preview routing profile inventory");
     expect(controlBenchmarkSource).toContain("role.planner");
     expect(controlBenchmarkSource).toContain("bench-2026-07-04-full");
-    expect(controlBenchmarkSource).toContain('items-end gap-3 md:w-[120px] md:shrink-0 md:self-start');
-    expect(controlBenchmarkSource).toContain('flex flex-col items-end gap-2');
-    expect(controlBenchmarkSource).toContain('self-end whitespace-nowrap rounded-[var(--rm-radius-pill)]');
-    expect(controlBenchmarkSource).not.toContain(
-      'flex flex-wrap items-start justify-end gap-2',
+    expect(controlBenchmarkSource).toContain(
+      "items-end gap-3 md:w-[120px] md:shrink-0 md:self-start",
     );
-    expect(controlBenchmarkSource).not.toContain('className={`${secondaryButtonClassName} w-full`}');
+    expect(controlBenchmarkSource).toContain("flex flex-col items-end gap-2");
+    expect(controlBenchmarkSource).toContain(
+      "self-end whitespace-nowrap rounded-[var(--rm-radius-pill)]",
+    );
+    expect(controlBenchmarkSource).not.toContain("flex flex-wrap items-start justify-end gap-2");
+    expect(controlBenchmarkSource).not.toContain(
+      "className={`${secondaryButtonClassName} w-full`}",
+    );
     expect(controlBenchmarkSource).not.toContain(
       "No benchmark scores are in routing profiles yet. Run the benchmark to grade each configured model and update observed routing profiles.",
     );
@@ -1238,17 +1263,21 @@ describe("runtime design system", () => {
     expect(controlBenchmarkSource).toContain("compactTitleClassName");
     expect(controlBenchmarkSource).toContain("supportingTextClassName");
     expect(controlBenchmarkSource).toContain("foregroundEmphasisClassName");
-    expect(controlBenchmarkSource).not.toContain('className="text-sm font-semibold text-[var(--rm-fg)]"');
-    expect(controlBenchmarkSource).not.toContain('className="mt-2 text-sm text-[var(--rm-secondary)]"');
-    expect(controlBenchmarkSource).not.toContain('className="text-xs font-semibold uppercase tracking-wider text-[var(--rm-secondary)]"');
+    expect(controlBenchmarkSource).not.toContain(
+      'className="text-sm font-semibold text-[var(--rm-fg)]"',
+    );
+    expect(controlBenchmarkSource).not.toContain(
+      'className="mt-2 text-sm text-[var(--rm-secondary)]"',
+    );
+    expect(controlBenchmarkSource).not.toContain(
+      'className="text-xs font-semibold uppercase tracking-wider text-[var(--rm-secondary)]"',
+    );
     expect(controlBenchmarkSource).not.toContain('className="font-semibold text-[var(--rm-fg)]"');
     expect(controlBenchmarkSource).not.toContain('className="text-sm text-[var(--rm-secondary)]"');
   });
 
   test("remaining system boards follow the Paper runtime-page layout contracts", () => {
-    expect(runtimeRouteSource).toContain(
-      'xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.72fr)]',
-    );
+    expect(runtimeRouteSource).toContain("xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.72fr)]");
     expect(runtimeRouteSource).toContain("Lifecycle summary");
     expect(runtimeRouteSource).toContain("Controller posture");
     expect(runtimeRouteSource).toContain("Applied runtime policy");
@@ -1259,19 +1288,19 @@ describe("runtime design system", () => {
 
     expect(controlRuntimeConfigSource).toContain('title="Page actions"');
     expect(controlRuntimeConfigSource).toContain(
-      'xl:grid-cols-[minmax(0,1fr)_minmax(240px,0.28fr)]',
+      "xl:grid-cols-[minmax(0,1fr)_minmax(240px,0.28fr)]",
     );
     expect(controlRuntimeConfigSource).not.toContain("usePageActions(");
 
     expect(sessionReadinessRouteSource).toContain(
-      'xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.72fr)]',
+      "xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.72fr)]",
     );
     expect(sessionReadinessRouteSource).toContain("Session bootstrap");
     expect(sessionReadinessRouteSource).toContain("Canonical lifecycle");
     expect(sessionReadinessRouteSource).toContain("Operator intent manifest");
     expect(sessionReadinessRouteSource).toContain("Alias drift warnings");
 
-    expect(systemPeersRouteSource).toContain('xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.68fr)]');
+    expect(systemPeersRouteSource).toContain("xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.68fr)]");
     expect(systemPeersRouteSource).toContain("fetchPeers");
     expect(systemPeersRouteSource).toContain("Peer config inventory");
     expect(systemPeersRouteSource).toContain("Auth configured");
@@ -1311,11 +1340,21 @@ describe("runtime design system", () => {
     expect(controlModelsSource).toContain("inlineTitleClassName");
     expect(controlModelsSource).toContain("sectionTitleClassName");
     expect(controlModelsSource).toContain("compactTitleClassName");
-    expect(controlModelsSource).not.toContain('className="text-xs uppercase tracking-[0.18em] text-[var(--rm-muted)]"');
-    expect(controlModelsSource).not.toContain('className="mt-2 truncate text-lg font-semibold leading-6 text-[var(--rm-fg)]"');
-    expect(controlModelsSource).not.toContain('className="mt-2 break-all text-sm leading-[18px] text-[var(--rm-secondary)]"');
-    expect(controlModelsSource).not.toContain('className="text-base font-semibold leading-5 text-[var(--rm-fg)]"');
-    expect(controlModelsSource).not.toContain('className="text-[22px] font-semibold leading-7 text-[var(--rm-fg)]"');
+    expect(controlModelsSource).not.toContain(
+      'className="text-xs uppercase tracking-[0.18em] text-[var(--rm-muted)]"',
+    );
+    expect(controlModelsSource).not.toContain(
+      'className="mt-2 truncate text-lg font-semibold leading-6 text-[var(--rm-fg)]"',
+    );
+    expect(controlModelsSource).not.toContain(
+      'className="mt-2 break-all text-sm leading-[18px] text-[var(--rm-secondary)]"',
+    );
+    expect(controlModelsSource).not.toContain(
+      'className="text-base font-semibold leading-5 text-[var(--rm-fg)]"',
+    );
+    expect(controlModelsSource).not.toContain(
+      'className="text-[22px] font-semibold leading-7 text-[var(--rm-fg)]"',
+    );
     expect(controlModelsSource).not.toContain("fixed inset-0 z-50");
   });
 
@@ -1340,14 +1379,18 @@ describe("runtime design system", () => {
 
   test("upstream passthrough overview counts configured providers in scope, not the full provider catalog", () => {
     expect(integrationsUpstreamRouteSource).toContain("value={providerCards.length}");
-    expect(integrationsUpstreamRouteSource).not.toContain("value={snapshot?.providers.length ?? 0}");
+    expect(integrationsUpstreamRouteSource).not.toContain(
+      "value={snapshot?.providers.length ?? 0}",
+    );
   });
 
   test("connect contract-reference routes expose live compatibility and passthrough guidance", () => {
     expect(integrationsDownstreamRouteSource).toContain("Compatibility notes");
     expect(integrationsDownstreamRouteSource).toContain("provider.setup.notes");
     expect(integrationsUpstreamRouteSource).toContain("Boundary guidance");
-    expect(integrationsUpstreamRouteSource).toContain("Alias routing and telemetry stay on the runtime shell");
+    expect(integrationsUpstreamRouteSource).toContain(
+      "Alias routing and telemetry stay on the runtime shell",
+    );
   });
 
   test("runtime roles route preserves role-first drill-down language for task detail", () => {
@@ -1363,8 +1406,12 @@ describe("runtime design system", () => {
     );
     expect(controlRolesSource).toContain('className="max-h-[68vh] overflow-auto pr-1"');
     expect(controlRolesSource).toContain('className="max-h-[52vh] overflow-auto pr-1"');
-    expect(controlRolesSource).toContain("The runtime page leads with a role-first catalog before task detail editing.");
-    expect(controlRolesSource).toContain("Add a new router-visible role with the runtime policy fields required by the bridge.");
+    expect(controlRolesSource).toContain(
+      "The runtime page leads with a role-first catalog before task detail editing.",
+    );
+    expect(controlRolesSource).toContain(
+      "Add a new router-visible role with the runtime policy fields required by the bridge.",
+    );
     expect(controlRolesSource).toContain("Open create role form");
     expect(controlRolesSource).toContain("Update the active runtime role definition in-place");
     expect(controlRolesSource).toContain('summary="Advanced policy fields"');
@@ -1394,9 +1441,7 @@ describe("runtime design system", () => {
   });
 
   test("routing strategy route uses shared text and field tokens instead of route-local small-text styling", () => {
-    expect(controlRoutingStrategySource).not.toContain(
-      'className="grid gap-2 text-sm"',
-    );
+    expect(controlRoutingStrategySource).not.toContain('className="grid gap-2 text-sm"');
     expect(controlRoutingStrategySource).not.toContain(
       'className="font-semibold text-[var(--rm-fg)]"',
     );
@@ -1404,7 +1449,7 @@ describe("runtime design system", () => {
       'className="text-sm text-[var(--rm-secondary)]"',
     );
     expect(controlRoutingStrategySource).not.toContain(
-      'className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`',
+      "className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`",
     );
   });
 
@@ -1425,15 +1470,13 @@ describe("runtime design system", () => {
     expect(routerDecisionDetailRouteSource).not.toContain(
       "bodyTextClassName} text-[var(--rm-secondary)]",
     );
-    expect(routerDecisionDetailRouteSource).not.toContain('text-[15px] text-[var(--rm-fg)]');
+    expect(routerDecisionDetailRouteSource).not.toContain("text-[15px] text-[var(--rm-fg)]");
     expect(routerDecisionDetailRouteSource).not.toContain("text-sm text-[var(--rm-secondary)]");
 
     expect(routerDecisionsRouteSource).not.toContain("text-sm text-[var(--rm-secondary)]");
 
     expect(controlControllerSource).toContain("supportingTextClassName");
-    expect(controlControllerSource).not.toContain(
-      "bodyTextClassName} text-[var(--rm-secondary)]",
-    );
+    expect(controlControllerSource).not.toContain("bodyTextClassName} text-[var(--rm-secondary)]");
   });
 
   test("observe routes use shared supporting, utility, and title tokens instead of route-local telemetry typography overrides", () => {
@@ -1448,7 +1491,7 @@ describe("runtime design system", () => {
       "bodyTextClassName} text-[var(--rm-secondary)]",
     );
     expect(observeActivityRouteSource).not.toContain(
-      'className={`${mutedPanelClassName} p-4 ${bodyTextClassName} text-[var(--rm-secondary)]`',
+      "className={`${mutedPanelClassName} p-4 ${bodyTextClassName} text-[var(--rm-secondary)]`",
     );
 
     expect(observeLogsSource).toContain("supportingTextClassName");
@@ -1503,7 +1546,7 @@ describe("runtime design system", () => {
     expect(localPeersSource).toContain("codeBlockClassName");
     expect(localPeersSource).toContain("supportingTextClassName");
     expect(localPeersSource).not.toContain("bodyTextClassName} text-[var(--rm-secondary)]");
-    expect(localPeersSource).not.toContain('font-mono text-sm text-[var(--rm-fg)]');
+    expect(localPeersSource).not.toContain("font-mono text-sm text-[var(--rm-fg)]");
     expect(localPeersSource).not.toContain("utilityLabelClassName} text-[var(--rm-muted)]");
 
     expect(localSwapSource).toContain("metaTextClassName");
@@ -1516,7 +1559,9 @@ describe("runtime design system", () => {
     expect(localLogsSource).toContain("metaTextClassName");
     expect(localLogsSource).toContain("compactTitleClassName");
     expect(localLogsSource).toContain("codeBlockClassName");
-    expect(localLogsSource).not.toContain('className="flex items-center gap-2 text-sm text-[var(--rm-fg)]');
+    expect(localLogsSource).not.toContain(
+      'className="flex items-center gap-2 text-sm text-[var(--rm-fg)]',
+    );
     expect(localLogsSource).not.toContain('className="min-w-full text-left text-sm"');
     expect(localLogsSource).not.toContain("text-xs text-[var(--rm-muted)]");
     expect(localLogsSource).not.toContain("text-sm font-semibold text-[var(--rm-fg)]");
@@ -1526,7 +1571,9 @@ describe("runtime design system", () => {
     expect(localChooseSource).toContain('className="grid gap-5 xl:grid-cols-2"');
     expect(localChooseSource).toContain("External server");
     expect(localChooseSource).toContain("Managed by role-model");
-    expect(localChooseSource).toContain("role-model routes to your server; it does not load GGUF files for you.");
+    expect(localChooseSource).toContain(
+      "role-model routes to your server; it does not load GGUF files for you.",
+    );
     expect(localChooseSource).toContain("role-model runs the local llama-swap process");
     expect(localChooseSource).toContain("Open peer models");
     expect(localChooseSource).toContain("Open llama-swap models");
@@ -1535,10 +1582,16 @@ describe("runtime design system", () => {
 
   test("peer models keeps the register surface visible and uses stacked registry rows", () => {
     expect(localPeerModelsSource).not.toContain("FactCard");
-    expect(localPeerModelsSource).not.toContain('className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"');
-    expect(localPeerModelsSource).toContain('className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto]"');
+    expect(localPeerModelsSource).not.toContain(
+      'className="grid gap-4 md:grid-cols-2 xl:grid-cols-3"',
+    );
+    expect(localPeerModelsSource).toContain(
+      'className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto]"',
+    );
     expect(localPeerModelsSource).toContain('className="space-y-3"');
-    expect(localPeerModelsSource).toContain("Open endpoints to start registering peer-backed models.");
+    expect(localPeerModelsSource).toContain(
+      "Open endpoints to start registering peer-backed models.",
+    );
     expect(localPeerModelsSource).toContain("No peer models registered yet.");
   });
 
@@ -1547,7 +1600,9 @@ describe("runtime design system", () => {
     expect(localLlamaSwapModelsSource).toContain("manage the in-memory");
     expect(localLlamaSwapModelsSource).not.toContain("Related routes");
     expect(localLlamaSwapModelsSource).not.toContain("View modes");
-    expect(localLlamaSwapModelsSource).not.toContain("Use list or grid for the same loaded-model inventory.");
+    expect(localLlamaSwapModelsSource).not.toContain(
+      "Use list or grid for the same loaded-model inventory.",
+    );
     expect(localLlamaSwapModelsSource).not.toContain("Open matrix");
     expect(localLlamaSwapModelsSource).not.toContain("md:grid-cols-2 xl:grid-cols-3");
     expect(localLlamaSwapModelsSource).toContain('className="space-y-3"');
@@ -1582,7 +1637,9 @@ describe("runtime design system", () => {
     expect(localPeersSource).toContain("Open peer models");
     expect(localPeersSource).toContain("role-model normalizes the URL");
     expect(localPeersSource).toContain("OpenAI-compatible peer endpoint");
-    expect(localSwapSource).toContain("Events appear here when the managed host loads a first model");
+    expect(localSwapSource).toContain(
+      "Events appear here when the managed host loads a first model",
+    );
     expect(localSwapSource).toContain("Ledger semantics");
     expect(localSwapSource).toContain("Open host policy");
   });
@@ -1693,9 +1750,7 @@ describe("runtime design system", () => {
     expect(dashboardRouteSource).toContain("usePageActions");
     expect(dashboardRouteSource).not.toContain(">Summary<");
     expect(dashboardRouteSource).toContain('useState<TelemetryTimeRangeValue>("day")');
-    expect(dashboardRouteSource).toContain(
-      'useState<"" | RuntimeTelemetryAnalyticsDimension>(',
-    );
+    expect(dashboardRouteSource).toContain('useState<"" | RuntimeTelemetryAnalyticsDimension>(');
     expect(dashboardRouteSource).toContain('"endpointId"');
     expect(dashboardRouteSource).toContain("Overview filters");
     expect(dashboardRouteSource).not.toContain('SectionCard title="Overview filters"');
@@ -1719,7 +1774,7 @@ describe("runtime design system", () => {
       'className="grid gap-4 xl:items-start xl:grid-cols-[minmax(0,1.45fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]"',
     );
     expect(dashboardRouteSource).toContain('SectionCard title="Latest requests"');
-    expect(dashboardRouteSource).toContain('xl:grid-cols-[repeat(3,minmax(0,1fr))]');
+    expect(dashboardRouteSource).toContain("xl:grid-cols-[repeat(3,minmax(0,1fr))]");
     expect(dashboardRouteSource.indexOf('SectionCard title="Latest requests"')).toBeLessThan(
       dashboardRouteSource.indexOf('SectionCard title="Current endpoint inventory"'),
     );
@@ -1730,7 +1785,9 @@ describe("runtime design system", () => {
     expect(dashboardRouteSource).toContain("request.primaryLabel");
     expect(designSystemSource).not.toContain("current-state cards and endpoint inventory");
     expect(dashboardRouteSource).toContain("Open request analytics");
-    expect(designSystemDocSource).toContain("horizontal latest-requests strip above current endpoint inventory");
+    expect(designSystemDocSource).toContain(
+      "horizontal latest-requests strip above current endpoint inventory",
+    );
   });
 
   test("workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces", () => {
@@ -1879,10 +1936,12 @@ describe("runtime design system", () => {
 
   test("shell chrome does not render separate card surfaces for the sidebar and header", () => {
     expect(appShellSource).not.toContain(
-      '<aside\n          className={`${cardClassName} flex flex-col p-5',
+      "<aside\n          className={`${cardClassName} flex flex-col p-5",
     );
-    expect(appShellSource).not.toContain('<header className={`${cardClassName} px-5 py-5`}>');
-    expect(appShellSource).toContain("rounded-[var(--rm-radius-shell)] border border-[var(--rm-border)]");
+    expect(appShellSource).not.toContain("<header className={`${cardClassName} px-5 py-5`}>");
+    expect(appShellSource).toContain(
+      "rounded-[var(--rm-radius-shell)] border border-[var(--rm-border)]",
+    );
     expect(appShellSource).not.toContain("lg:border-r");
   });
 
@@ -1890,11 +1949,21 @@ describe("runtime design system", () => {
     expect(appShellSource).toContain("useRef");
     expect(appShellSource).toContain("contentScrollRef");
     expect(appShellSource).toContain('scrollTo({ top: 0, behavior: "auto" })');
-    expect(appShellSource).toContain('className="h-screen overflow-hidden bg-[var(--rm-bg)] text-[var(--rm-fg)]"');
-    expect(appShellSource).toContain('className="mx-auto h-full max-w-[var(--rm-shell-width)] px-10 py-10"');
-    expect(appShellSource).toContain('className="h-full overflow-hidden rounded-[var(--rm-radius-shell)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-5 py-5"');
-    expect(appShellSource).toContain('className="grid h-full min-h-0 gap-5 lg:grid-cols-[240px_minmax(0,1fr)]"');
-    expect(appShellSource).toContain('className="flex h-full flex-col gap-3 overflow-hidden lg:pt-5"');
+    expect(appShellSource).toContain(
+      'className="h-screen overflow-hidden bg-[var(--rm-bg)] text-[var(--rm-fg)]"',
+    );
+    expect(appShellSource).toContain(
+      'className="mx-auto h-full max-w-[var(--rm-shell-width)] px-10 py-10"',
+    );
+    expect(appShellSource).toContain(
+      'className="h-full overflow-hidden rounded-[var(--rm-radius-shell)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-5 py-5"',
+    );
+    expect(appShellSource).toContain(
+      'className="grid h-full min-h-0 gap-5 lg:grid-cols-[240px_minmax(0,1fr)]"',
+    );
+    expect(appShellSource).toContain(
+      'className="flex h-full flex-col gap-3 overflow-hidden lg:pt-5"',
+    );
     expect(appShellSource).toContain('className="space-y-2 overflow-y-auto pr-1"');
     expect(appShellSource).toContain('className="flex min-h-0 min-w-0 flex-col gap-4"');
     expect(appShellSource).toContain('className="min-w-0 shrink-0"');
@@ -1921,22 +1990,38 @@ describe("runtime design system", () => {
     expect(designSystemDocSource).toContain("Sidebar navigation is text-only");
     expect(designSystemDocSource).toContain("No visible divider separates the sidebar");
     expect(designSystemDocSource).toContain("Overview analytics empty states stay compact");
-    expect(designSystemDocSource).toContain("Configured-model detail code blocks show the compact preview payload");
-    expect(designSystemDocSource).toContain("Compact advanced-filter rows use `DisclosureSection` in compact mode");
+    expect(designSystemDocSource).toContain(
+      "Configured-model detail code blocks show the compact preview payload",
+    );
+    expect(designSystemDocSource).toContain(
+      "Compact advanced-filter rows use `DisclosureSection` in compact mode",
+    );
     expect(designSystemDocSource).toContain("grouped category rows with a leading checkbox");
     expect(designSystemDocSource).toContain("`--rm-pill-info-bg`");
     expect(designSystemDocSource).toContain("`--rm-pill-advisory-bg`");
   });
 
   test("design artifacts clearly separate the current runtime authority from the historical Apple reference", () => {
-    expect(designSystemDocSource).toContain("The intended visual source of truth for both the design system and the actual runtime page implementations is the Paper Linear review file");
-    expect(designSystemDocSource).toContain("Approved runtime implementation may temporarily lead Paper");
-    expect(designSystemDocSource).toContain("Paper must be resynced after approved design/code changes");
-    expect(designSystemDocSource).toContain("older Apple reference as current runtime UI authority");
+    expect(designSystemDocSource).toContain(
+      "The intended visual source of truth for both the design system and the actual runtime page implementations is the Paper Linear review file",
+    );
+    expect(designSystemDocSource).toContain(
+      "Approved runtime implementation may temporarily lead Paper",
+    );
+    expect(designSystemDocSource).toContain(
+      "Paper must be resynced after approved design/code changes",
+    );
+    expect(designSystemDocSource).toContain(
+      "older Apple reference as current runtime UI authority",
+    );
     expect(appleReferenceDocSource).toContain("This document is historical reference only.");
-    expect(appleReferenceDocSource).toContain("It is **not** the active authority for the runtime UI.");
+    expect(appleReferenceDocSource).toContain(
+      "It is **not** the active authority for the runtime UI.",
+    );
     expect(appleReferenceDocSource).toContain("The active repo-owned authority is");
-    expect(appleReferenceDocSource).toContain("The current runtime shell follows the Paper Linear review system");
+    expect(appleReferenceDocSource).toContain(
+      "The current runtime shell follows the Paper Linear review system",
+    );
   });
 
   test("design system doc includes page-by-page layout and content contracts for live runtime pages", () => {
@@ -1987,8 +2072,12 @@ describe("runtime design system", () => {
     ]) {
       expect(designSystemDocSource).toContain(`| \`${routePath}\` |`);
     }
-    expect(designSystemDocSource).toContain("Redirect-only routes inherit the contract of their live destination");
-    expect(designSystemDocSource).toContain("Advanced controls stay behind a compact expand/collapse row");
+    expect(designSystemDocSource).toContain(
+      "Redirect-only routes inherit the contract of their live destination",
+    );
+    expect(designSystemDocSource).toContain(
+      "Advanced controls stay behind a compact expand/collapse row",
+    );
     expect(designSystemDocSource).toContain("Role groups default collapsed");
     expect(designSystemDocSource).toContain("The old right-hand request rail is not allowed");
   });
@@ -2001,35 +2090,33 @@ describe("runtime design system", () => {
     expect(designSystemSource).toContain(
       'export const navLabelClassName = "text-[13px] font-normal leading-[18px] tracking-[0em]"',
     );
-    expect(designSystemSource).toContain('min-h-[31px]');
+    expect(designSystemSource).toContain("min-h-[31px]");
     expect(designSystemSource).toContain("bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]");
     expect(designSystemSource).toContain("bg-[var(--rm-panel-muted)] text-[var(--rm-secondary)]");
   });
 
   test("shared form controls and telemetry filter pills stay at sidebar-scale typography", () => {
-    expect(designSystemSource).toContain(
-      'export const fieldClassName =',
-    );
+    expect(designSystemSource).toContain("export const fieldClassName =");
     expect(designSystemSource).toContain(
       '"w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-[20px] py-3 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-[var(--rm-fg)] outline-none transition placeholder:text-[var(--rm-muted)] focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]"',
     );
-    expect(designSystemSource).toContain(
-      'export const selectFieldClassName =',
-    );
+    expect(designSystemSource).toContain("export const selectFieldClassName =");
     expect(designSystemSource).toContain(
       '"w-full min-h-[40px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] py-2 pl-[20px] pr-10 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-[var(--rm-fg)] outline-none transition focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]"',
     );
-    expect(telemetryControlsSource).toContain("inline-flex min-h-[32px] items-center justify-center");
-    expect(telemetryControlsSource).toContain('!text-[13px] !font-normal !leading-[18px] !tracking-[0em] transition-colors');
+    expect(telemetryControlsSource).toContain(
+      "inline-flex min-h-[32px] items-center justify-center",
+    );
+    expect(telemetryControlsSource).toContain(
+      "!text-[13px] !font-normal !leading-[18px] !tracking-[0em] transition-colors",
+    );
     expect(themedSelectSource).toContain("bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]");
     expect(themedSelectSource).toContain("block ${navLabelClassName}");
     expect(pagePrimitivesSource).toContain("pillLabelClassName");
   });
 
   test("content-frame headings step down below the shell page title scale", () => {
-    expect(designSystemSource).toContain(
-      'export const sectionTitleClassName =',
-    );
+    expect(designSystemSource).toContain("export const sectionTitleClassName =");
     expect(designSystemSource).toContain(
       '"[font-family:var(--rm-font-display)] text-[18px] font-normal leading-6 tracking-[-0.016em]"',
     );
@@ -2129,7 +2216,7 @@ describe("runtime design system", () => {
 
   test("disclosure summaries use compact body tokens instead of section-heading scale", () => {
     expect(pagePrimitivesSource).toContain(
-      '${compact ? navLabelClassName : bodyStrongTextClassName}',
+      "${compact ? navLabelClassName : bodyStrongTextClassName}",
     );
   });
 });

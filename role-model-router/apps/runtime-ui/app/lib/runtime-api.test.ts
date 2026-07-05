@@ -22,8 +22,8 @@ import {
   fetchRouterDecisions,
   fetchRouterSummary,
   fetchRuntimeConfig,
-  fetchRuntimeSummary,
   fetchRuntimeSnapshot,
+  fetchRuntimeSummary,
   fetchTelemetryAnalytics,
   fetchTelemetryDashboard,
   fetchTelemetryRequests,
@@ -1671,13 +1671,14 @@ describe("studio vendor API helpers", () => {
   });
 
   test("reports a clear error when the voice inventory endpoint returns HTML instead of JSON", async () => {
-    const fetcher = vi.fn(async () =>
-      new Response("<!DOCTYPE html><html><body>fallback</body></html>", {
-        status: 200,
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-        },
-      }),
+    const fetcher = vi.fn(
+      async () =>
+        new Response("<!DOCTYPE html><html><body>fallback</body></html>", {
+          status: 200,
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+          },
+        }),
     );
 
     await expect(fetchAudioVoices("moonshot/kimi-audio", fetcher)).rejects.toThrow(

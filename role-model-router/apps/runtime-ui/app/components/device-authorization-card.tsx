@@ -3,8 +3,8 @@ import {
   inlineLinkClassName,
   monoCodeValueClassName,
   monoMetaTextClassName,
-  panelBodyTextClassName,
   mutedPanelClassName,
+  panelBodyTextClassName,
   raisedPanelClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
@@ -64,8 +64,7 @@ export function DeviceAuthorizationCard(input: {
         </div>
       ) : input.session.userCode ? (
         <p className="mt-2">
-          <span className={bodyStrongTextClassName}>User code:</span>{" "}
-          {input.session.userCode}
+          <span className={bodyStrongTextClassName}>User code:</span> {input.session.userCode}
         </p>
       ) : null}
 

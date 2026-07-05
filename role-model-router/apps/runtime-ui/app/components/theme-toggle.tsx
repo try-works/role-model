@@ -1,5 +1,5 @@
-import { startTransition, useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { startTransition, useEffect, useState } from "react";
 
 import { cn } from "../lib/cn";
 import {
@@ -54,7 +54,11 @@ export function ThemeToggle() {
           onClick={() => handleThemeChange(option)}
           type="button"
         >
-          {option === "light" ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
+          {option === "light" ? (
+            <Sun size={16} strokeWidth={2} />
+          ) : (
+            <Moon size={16} strokeWidth={2} />
+          )}
         </button>
       ))}
     </fieldset>

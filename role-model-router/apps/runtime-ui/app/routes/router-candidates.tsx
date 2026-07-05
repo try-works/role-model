@@ -146,9 +146,7 @@ export default function RouterCandidatesRoute() {
                         <p className={`mt-2 break-all ${foregroundEmphasisClassName}`}>
                           {candidate.endpointId}
                         </p>
-                        <p className={`mt-2 ${supportingTextClassName}`}>
-                          {candidate.modelId}
-                        </p>
+                        <p className={`mt-2 ${supportingTextClassName}`}>{candidate.modelId}</p>
                         <p className={`mt-2 ${supportingTextClassName}`}>
                           {candidate.endpointKind ?? "unknown kind"} •{" "}
                           {candidate.servingSource ?? "unknown source"}
@@ -176,9 +174,7 @@ export default function RouterCandidatesRoute() {
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
                       <div>
                         <p className={utilityLabelClassName}>Role coverage</p>
-                        <p className={`mt-2 ${supportingTextClassName}`}>
-                          {roleCoverage.preview}
-                        </p>
+                        <p className={`mt-2 ${supportingTextClassName}`}>{roleCoverage.preview}</p>
                       </div>
                       <div>
                         <p className={utilityLabelClassName}>Tooling posture</p>
@@ -217,10 +213,7 @@ export default function RouterCandidatesRoute() {
                             <p className={`mt-1 ${supportingTextClassName}`}>
                               {capability.benchmarkSamples} benchmark sample
                               {capability.benchmarkSamples === 1 ? "" : "s"} •{" "}
-                              {formatStaleness(
-                                capability.measuredAtMs,
-                                capability.freshnessScore,
-                              )}
+                              {formatStaleness(capability.measuredAtMs, capability.freshnessScore)}
                             </p>
                           </>
                         ) : (

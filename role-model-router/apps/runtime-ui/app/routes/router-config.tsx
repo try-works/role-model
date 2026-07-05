@@ -48,13 +48,15 @@ export default function RouterConfigRoute() {
       fetchControllerAssignment(),
       fetchRouterSummary(),
     ])
-      .then(([nextRouterConfig, nextRuntimeConfigRecord, nextControllerAssignment, nextSummary]) => {
-        setRouterConfig(nextRouterConfig);
-        setRuntimeConfigRecord(nextRuntimeConfigRecord);
-        setControllerAssignment(nextControllerAssignment);
-        setRouterSummary(nextSummary);
-        setError(null);
-      })
+      .then(
+        ([nextRouterConfig, nextRuntimeConfigRecord, nextControllerAssignment, nextSummary]) => {
+          setRouterConfig(nextRouterConfig);
+          setRuntimeConfigRecord(nextRuntimeConfigRecord);
+          setControllerAssignment(nextControllerAssignment);
+          setRouterSummary(nextSummary);
+          setError(null);
+        },
+      )
       .catch((value: unknown) =>
         setError(value instanceof Error ? value.message : "Could not load routing config."),
       );

@@ -19,8 +19,8 @@ export default function LocalChooseRoute() {
         <p className={utilityLabelClassName}>External server</p>
         <h2 className={inlineTitleClassName}>Peer-backed models</h2>
         <p className={bodyTextClassName}>
-          Use this when you already run an OpenAI-compatible server (LM Studio, llama.cpp, vLLM,
-          or similar). Register the server under Endpoints, then register models and roles here.
+          Use this when you already run an OpenAI-compatible server (LM Studio, llama.cpp, vLLM, or
+          similar). Register the server under Endpoints, then register models and roles here.
           role-model routes to your server; it does not load GGUF files for you.
         </p>
         <div className="mt-auto flex flex-wrap gap-2 pt-2">

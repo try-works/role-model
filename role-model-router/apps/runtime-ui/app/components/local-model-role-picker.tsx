@@ -1,4 +1,4 @@
-import { useCallback, type MouseEvent } from "react";
+import { type MouseEvent, useCallback, useId } from "react";
 import { Link } from "react-router";
 
 import {
@@ -77,14 +77,19 @@ export function getNextRoleSelectionForGroup({
   const next = new Set(pickerState.selectedRoleIds);
   const everyRoleSelected = groupRoleIds.every((roleId) => next.has(roleId));
   if (everyRoleSelected) {
-    groupRoleIds.forEach((roleId) => next.delete(roleId));
+    for (const roleId of groupRoleIds) {
+      next.delete(roleId);
+    }
   } else {
-    groupRoleIds.forEach((roleId) => next.add(roleId));
+    for (const roleId of groupRoleIds) {
+      next.add(roleId);
+    }
   }
   return allRoleIds.filter((roleId) => next.has(roleId));
 }
 
 function MixedStateCheckbox({
+  id,
   checked,
   disabled,
   mixed = false,
@@ -92,6 +97,7 @@ function MixedStateCheckbox({
   onChange,
   onClick,
 }: {
+  readonly id?: string;
   readonly checked: boolean;
   readonly disabled?: boolean;
   readonly mixed?: boolean;
@@ -110,6 +116,7 @@ function MixedStateCheckbox({
 
   return (
     <input
+      id={id}
       ref={setMixedRef}
       type="checkbox"
       className="mt-0"
@@ -173,6 +180,7 @@ export function LocalModelRolePicker({
   const formatBenchmarkPercent = (value: number): string => `${Math.round(value * 100)}%`;
   const lowCoverageRoleIds = new Set(benchmarkCapability?.coverage?.lowCoverageRoleIds ?? []);
   const formatRoleCount = (count: number): string => `${count} role${count === 1 ? "" : "s"}`;
+  const allRolesId = useId();
   const commitSelection = (next: Set<string>) => {
     onChange([...next].sort((left, right) => left.localeCompare(right, "en")));
   };
@@ -217,18 +225,21 @@ export function LocalModelRolePicker({
         <p className={bodyTextClassName}>No runtime roles are defined yet.</p>
       ) : (
         <div className="space-y-4">
-          <label
+          <div
             className={`flex cursor-pointer items-center gap-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2 ${bodyTextClassName} text-[var(--rm-fg)]`}
           >
             <MixedStateCheckbox
+              id={allRolesId}
               checked={allSelected}
               mixed={pickerState.partiallySelected}
               disabled={disabled}
               onChange={toggleAllRoles}
             />
-            <span className={bodyStrongTextClassName}>All roles</span>
-          </label>
-          {[...groupedRoles.entries()].map(([groupId, groupRoles]) => (
+            <label htmlFor={allRolesId} className={`${bodyStrongTextClassName} cursor-pointer`}>
+              All roles
+            </label>
+          </div>
+          {[...groupedRoles.entries()].map(([groupId, groupRoles]) =>
             (() => {
               const groupRoleIds = groupRoles.map((role) => role.role_id);
               const groupState = getLocalModelRolePickerGroupState({
@@ -260,7 +271,9 @@ export function LocalModelRolePicker({
                             node.indeterminate = groupState.partiallySelected;
                           }
                         }}
-                        aria-checked={groupState.partiallySelected ? "mixed" : groupState.allSelected}
+                        aria-checked={
+                          groupState.partiallySelected ? "mixed" : groupState.allSelected
+                        }
                         aria-label={`Select ${label} roles`}
                         disabled={disabled}
                         onClick={(event) => {
@@ -302,19 +315,13 @@ export function LocalModelRolePicker({
                             <span className="flex flex-wrap items-center gap-2">
                               <span className={bodyStrongTextClassName}>{role.name}</span>
                               {isHighRiskRole(role) ? (
-                                <StatusPill
-                                  className={modalEyebrowClassName}
-                                  tone="warning"
-                                >
+                                <StatusPill className={modalEyebrowClassName} tone="warning">
                                   High risk
                                 </StatusPill>
                               ) : null}
                               {typeof benchmarkCapability?.eligibleRoleScores?.[role.role_id] ===
                               "number" ? (
-                                <StatusPill
-                                  className={modalEyebrowClassName}
-                                  tone="accent"
-                                >
+                                <StatusPill className={modalEyebrowClassName} tone="accent">
                                   Benchmarked{" "}
                                   {formatBenchmarkPercent(
                                     benchmarkCapability.eligibleRoleScores[role.role_id] ?? 0,
@@ -322,10 +329,7 @@ export function LocalModelRolePicker({
                                 </StatusPill>
                               ) : typeof benchmarkCapability?.roleScores?.[role.role_id] ===
                                 "number" ? (
-                                <StatusPill
-                                  className={modalEyebrowClassName}
-                                  tone="neutral"
-                                >
+                                <StatusPill className={modalEyebrowClassName} tone="neutral">
                                   Unassigned evidence{" "}
                                   {formatBenchmarkPercent(
                                     benchmarkCapability.roleScores[role.role_id] ?? 0,
@@ -339,12 +343,16 @@ export function LocalModelRolePicker({
                               ) : null}
                             </span>
                             {role.secondaryGroupIds && role.secondaryGroupIds.length > 0 ? (
-                              <span className={`mt-1 block ${navLabelClassName} text-[var(--rm-muted)]`}>
+                              <span
+                                className={`mt-1 block ${navLabelClassName} text-[var(--rm-muted)]`}
+                              >
                                 Secondary: {role.secondaryGroupIds.map(groupLabel).join(", ")}
                               </span>
                             ) : null}
                             {role.description ? (
-                              <span className={`mt-1 block ${bodyTextClassName} text-[var(--rm-secondary)]`}>
+                              <span
+                                className={`mt-1 block ${bodyTextClassName} text-[var(--rm-secondary)]`}
+                              >
                                 {role.description}
                               </span>
                             ) : null}
@@ -355,8 +363,8 @@ export function LocalModelRolePicker({
                   </ul>
                 </details>
               );
-            })()
-          ))}
+            })(),
+          )}
         </div>
       )}
     </div>

@@ -5,9 +5,9 @@ import { describe, expect, test } from "vitest";
 import type { BenchmarkCapability, RuntimeRolePolicy } from "../lib/runtime-api";
 import {
   LocalModelRolePicker,
-  getNextRoleSelectionForGroup,
   getLocalModelRolePickerGroupState,
   getLocalModelRolePickerState,
+  getNextRoleSelectionForGroup,
 } from "./local-model-role-picker";
 
 const rolePolicy = {
@@ -129,7 +129,7 @@ describe("LocalModelRolePicker", () => {
     expect(markup).not.toContain("border-[var(--rm-warning)]");
     expect(markup).not.toContain("border-[var(--rm-accent)]");
     expect(markup).not.toContain(
-      'rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[var(--rm-secondary)]',
+      "rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[var(--rm-secondary)]",
     );
     expect(markup).not.toContain('value="security" checked=""');
   });

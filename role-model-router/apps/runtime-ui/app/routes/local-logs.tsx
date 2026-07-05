@@ -10,8 +10,8 @@ import {
 } from "../components/page-primitives";
 import {
   bodyTextClassName,
-  compactTitleClassName,
   codeBlockClassName,
+  compactTitleClassName,
   metaTextClassName,
   mutedPanelClassName,
   secondaryButtonClassName,

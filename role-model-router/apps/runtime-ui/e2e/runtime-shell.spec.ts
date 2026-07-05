@@ -9,11 +9,15 @@ test("shows seeded provider maintenance and session readiness over the rebuilt r
     page.getByRole("heading", { name: "Configured provider connections" }),
   ).toBeVisible();
 
-  const moonshotMaintenanceCard = page.getByTestId("provider-maintenance-moonshot.personal.primary");
+  const moonshotMaintenanceCard = page.getByTestId(
+    "provider-maintenance-moonshot.personal.primary",
+  );
   await expect(
     moonshotMaintenanceCard.getByRole("heading", { name: "moonshot.personal.primary" }),
   ).toBeVisible();
-  await expect(moonshotMaintenanceCard.getByText("Connection method: api-key-static")).toBeVisible();
+  await expect(
+    moonshotMaintenanceCard.getByText("Connection method: api-key-static"),
+  ).toBeVisible();
   await expect(moonshotMaintenanceCard.getByText("Active endpoints: 1")).toBeVisible();
   await expect(moonshotMaintenanceCard.getByText("moonshot/kimi-k2.5")).toBeVisible();
 

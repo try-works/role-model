@@ -819,8 +819,7 @@ export const raisedPanelClassName =
 export const mutedPanelClassName =
   "rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)]";
 
-export const insetPanelClassName =
-  `${mutedPanelClassName} p-4 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-secondary)]`;
+export const insetPanelClassName = `${mutedPanelClassName} p-4 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-secondary)]`;
 
 export const errorNoticeClassName =
   "rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-error)]";
@@ -865,7 +864,8 @@ export const rightAlignedSupportingTextClassName =
 
 export const foregroundEmphasisClassName = "font-semibold text-[var(--rm-fg)]";
 
-export const utilityStrongTextClassName = "text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
+export const utilityStrongTextClassName =
+  "text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
 
 export const inlineTitleClassName = "text-[16px] font-semibold leading-[22px] text-[var(--rm-fg)]";
 
@@ -877,8 +877,7 @@ export const accentActionTextClassName = "text-sm font-semibold text-[var(--rm-a
 
 export const bodyTextClassName = "text-[14px] font-normal leading-[21px] tracking-[0em]";
 
-export const bodyStrongTextClassName =
-  "text-[14px] font-semibold leading-[21px] tracking-[0em]";
+export const bodyStrongTextClassName = "text-[14px] font-semibold leading-[21px] tracking-[0em]";
 
 export const panelBodyTextClassName = `${bodyTextClassName} text-[var(--rm-secondary)]`;
 

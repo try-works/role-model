@@ -145,10 +145,7 @@ export default function LocalLlamaSwapModelsRoute() {
         <div className="space-y-3">
           <div className="grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_220px_auto]">
             <div className="space-y-2">
-              <label
-                htmlFor="llama-swap-model-id"
-                className={utilityLabelClassName}
-              >
+              <label htmlFor="llama-swap-model-id" className={utilityLabelClassName}>
                 Model ID
               </label>
               <input
@@ -235,9 +232,7 @@ export default function LocalLlamaSwapModelsRoute() {
                 <section key={model.modelId} className={`${mutedPanelClassName} space-y-4 p-4`}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0 space-y-1">
-                      <p className={utilityLabelClassName}>
-                        Llama-swap
-                      </p>
+                      <p className={utilityLabelClassName}>Llama-swap</p>
                       <p className="break-words font-mono text-[13px] leading-[18px] text-[var(--rm-fg)]">
                         {model.modelId}
                       </p>
@@ -267,9 +262,7 @@ export default function LocalLlamaSwapModelsRoute() {
 
                   <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
                     <div className="space-y-2">
-                      <p className={utilityLabelClassName}>
-                        Assigned roles
-                      </p>
+                      <p className={utilityLabelClassName}>Assigned roles</p>
                       <LocalModelRolePicker
                         rolePolicy={rolePolicy}
                         selectedRoleIds={roleIds}
@@ -315,9 +308,7 @@ export default function LocalLlamaSwapModelsRoute() {
                     <div
                       className={`${mutedPanelClassName} space-y-3 border border-[var(--rm-border)] p-4`}
                     >
-                      <p className={utilityLabelClassName}>
-                        Overrides
-                      </p>
+                      <p className={utilityLabelClassName}>Overrides</p>
                       <div className="grid gap-2 sm:grid-cols-3">
                         <input
                           type="number"

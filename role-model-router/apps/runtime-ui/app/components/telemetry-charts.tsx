@@ -15,8 +15,8 @@ import {
   YAxis,
 } from "recharts";
 
-import { cn } from "../lib/cn";
 import { StatusPill } from "../components/page-primitives";
+import { cn } from "../lib/cn";
 import {
   chartAxisTickStyle,
   chartBarRadius,
@@ -262,9 +262,7 @@ export function TelemetryChartCard({
       : undefined;
   const isCompactEmptyState = blockingState?.kind === "empty";
   const inlineState =
-    resolvedState &&
-    !blockingState &&
-    resolvedState.kind !== "populated"
+    resolvedState && !blockingState && resolvedState.kind !== "populated"
       ? resolvedState
       : undefined;
   const showStateBadge = resolvedState && resolvedState.kind !== "empty";
@@ -275,9 +273,7 @@ export function TelemetryChartCard({
         <div className="space-y-2">
           <h3 className={`text-[var(--rm-fg)] ${inlineTitleClassName}`}>{title}</h3>
           {description ? (
-            <p className={`${supportingTextClassName} max-w-[65ch]`}>
-              {description}
-            </p>
+            <p className={`${supportingTextClassName} max-w-[65ch]`}>{description}</p>
           ) : null}
         </div>
         {refreshing || resolvedState ? (

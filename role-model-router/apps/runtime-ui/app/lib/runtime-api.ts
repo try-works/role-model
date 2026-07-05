@@ -1167,9 +1167,7 @@ async function sleep(delayMs: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 
-async function fetchRuntimeSummaryWithRetry(
-  fetcher: RuntimeFetcher,
-): Promise<RuntimeSummary> {
+async function fetchRuntimeSummaryWithRetry(fetcher: RuntimeFetcher): Promise<RuntimeSummary> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= RUNTIME_SUMMARY_RETRY_DELAYS_MS.length; attempt += 1) {
     if (attempt > 0) {

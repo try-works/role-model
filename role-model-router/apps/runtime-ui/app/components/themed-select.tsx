@@ -213,9 +213,7 @@ export function ThemedSelect({
                 }}
               >
                 <span className="min-w-0">
-                  <span className={`block ${navLabelClassName}`}>
-                    {option.label}
-                  </span>
+                  <span className={`block ${navLabelClassName}`}>{option.label}</span>
                   {option.description ? (
                     <span
                       className={`block ${bodyTextClassName} ${selected ? "text-[color:var(--rm-on-primary)] opacity-80" : "text-[var(--rm-muted)]"}`}

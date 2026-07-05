@@ -191,11 +191,15 @@ export default function StudioAdvancedRoute() {
           description="Advanced request families use the same execution-ready model inventory as Workbench and the OpenAI-compatible bridge surfaces."
         >
           <div className="mb-4 flex flex-wrap gap-3">
-            <span className={`inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 ${metaTextClassName}`}>
+            <span
+              className={`inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 ${metaTextClassName}`}
+            >
               {lifecycleBanner.authorityLabel}
             </span>
             {lifecycleBanner.archivedStaleCount > 0 ? (
-              <span className={`inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 ${metaTextClassName}`}>
+              <span
+                className={`inline-flex items-center rounded-full border border-[var(--rm-border)] px-3 py-1 ${metaTextClassName}`}
+              >
                 Archived stale {lifecycleBanner.archivedStaleCount}
               </span>
             ) : null}

@@ -670,9 +670,7 @@ export default function ControlBenchmarkRoute() {
   );
   const excludedCandidates = useMemo(
     () =>
-      candidates
-        ? candidates.filter((candidate) => !isBenchmarkRunnableCandidate(candidate))
-        : [],
+      candidates ? candidates.filter((candidate) => !isBenchmarkRunnableCandidate(candidate)) : [],
     [candidates],
   );
 
@@ -769,7 +767,9 @@ export default function ControlBenchmarkRoute() {
 
       return modelScoreRows
         .map((row) => {
-          const subject = lastSummary?.subjects.find((entry) => entry.endpointId === row.endpointId);
+          const subject = lastSummary?.subjects.find(
+            (entry) => entry.endpointId === row.endpointId,
+          );
           const score = subject?.taxonomyScores?.[dimension]?.[filterValue];
           return score !== undefined
             ? {
@@ -961,7 +961,8 @@ export default function ControlBenchmarkRoute() {
   const quickJudgeLabel = quickSummary.runId ? resolveJudgeLabel(quickSummary, candidates) : null;
   const selectedJudgeCandidate =
     candidates.find((candidate) => candidate.endpointId === judgeEndpointId) ?? null;
-  const selectedJudgeModelLabel = selectedJudgeCandidate?.modelId.split("/").at(-1) ?? "not selected";
+  const selectedJudgeModelLabel =
+    selectedJudgeCandidate?.modelId.split("/").at(-1) ?? "not selected";
 
   return (
     <div className="space-y-6">
@@ -975,11 +976,7 @@ export default function ControlBenchmarkRoute() {
         <FactCard
           label="Run size"
           value={eligibleCaseCount}
-          detail={
-            mode === "quick"
-              ? "Quick mode hard subset."
-              : "Full eligible benchmark set."
-          }
+          detail={mode === "quick" ? "Quick mode hard subset." : "Full eligible benchmark set."}
           emphasis
         />
         <FactCard
@@ -1058,9 +1055,7 @@ export default function ControlBenchmarkRoute() {
                     onChange={() => toggleEndpoint(candidate.endpointId)}
                   />
                   <span className="space-y-1">
-                    <span className={`block ${bodyStrongTextClassName}`}>
-                      {candidate.modelId}
-                    </span>
+                    <span className={`block ${bodyStrongTextClassName}`}>{candidate.modelId}</span>
                     <span className={`block ${supportingTextClassName}`}>
                       {candidate.endpointId}
                     </span>
@@ -1148,7 +1143,9 @@ export default function ControlBenchmarkRoute() {
             </div>
           ) : null}
 
-          {error ? <p className={`mt-4 ${bodyTextClassName} text-[var(--rm-error)]`}>{error}</p> : null}
+          {error ? (
+            <p className={`mt-4 ${bodyTextClassName} text-[var(--rm-error)]`}>{error}</p>
+          ) : null}
         </SectionCard>
 
         <SectionCard
@@ -1247,8 +1244,8 @@ export default function ControlBenchmarkRoute() {
                           : ""}
                       </p>
                       <p>
-                        <span className={foregroundEmphasisClassName}>Benchmark latency:</span>{" "}
-                        p50 {formatLatencyMs(row.latencyP50)} • p95 {formatLatencyMs(row.latencyP95)}
+                        <span className={foregroundEmphasisClassName}>Benchmark latency:</span> p50{" "}
+                        {formatLatencyMs(row.latencyP50)} • p95 {formatLatencyMs(row.latencyP95)}
                       </p>
                     </div>
 
@@ -1301,7 +1298,9 @@ export default function ControlBenchmarkRoute() {
                                 </p>
                                 <div className="mt-1 flex flex-wrap gap-2 text-xs">
                                   {caseResult.gradingMethod ? (
-                                    <StatusPill tone="neutral">{caseResult.gradingMethod}</StatusPill>
+                                    <StatusPill tone="neutral">
+                                      {caseResult.gradingMethod}
+                                    </StatusPill>
                                   ) : null}
                                   {caseResult.judgeUnavailable ? (
                                     <StatusPill tone="warning">judge unavailable</StatusPill>
@@ -1315,7 +1314,9 @@ export default function ControlBenchmarkRoute() {
                                 </div>
                                 <p className={bodyTextClassName}>{caseResult.rationale}</p>
                                 {compareResult ? (
-                                  <p className={`mt-2 text-xs leading-[18px] ${supportingTextClassName}`}>
+                                  <p
+                                    className={`mt-2 text-xs leading-[18px] ${supportingTextClassName}`}
+                                  >
                                     <span className={foregroundEmphasisClassName}>
                                       Head-to-head ranking:
                                     </span>{" "}
@@ -1480,7 +1481,9 @@ export default function ControlBenchmarkRoute() {
                         >
                           <div className="min-w-0">
                             <p className={compactTitleClassName}>{row.modelId}</p>
-                            <p className={`truncate text-xs leading-[18px] ${supportingTextClassName}`}>
+                            <p
+                              className={`truncate text-xs leading-[18px] ${supportingTextClassName}`}
+                            >
                               {row.endpointId}
                             </p>
                           </div>
@@ -1502,7 +1505,8 @@ export default function ControlBenchmarkRoute() {
           {runHistory.length === 0 ? (
             <div className="space-y-4">
               <p className={supportingTextClassName}>
-                Preview recent run ledger until benchmark executions have been saved on this runtime.
+                Preview recent run ledger until benchmark executions have been saved on this
+                runtime.
               </p>
               <div className="space-y-3">
                 {benchmarkHistoryPreviewRows.map((run) => (

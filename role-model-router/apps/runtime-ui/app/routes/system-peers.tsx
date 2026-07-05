@@ -14,7 +14,12 @@ import {
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
-import { type PeerConfig, type RuntimeSnapshot, fetchPeers, fetchRuntimeSnapshot } from "../lib/runtime-api";
+import {
+  type PeerConfig,
+  type RuntimeSnapshot,
+  fetchPeers,
+  fetchRuntimeSnapshot,
+} from "../lib/runtime-api";
 
 export default function SystemPeersRoute() {
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);

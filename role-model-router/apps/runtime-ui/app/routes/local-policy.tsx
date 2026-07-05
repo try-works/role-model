@@ -85,10 +85,7 @@ export default function LocalPolicyRoute() {
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <label
-                  htmlFor={ttlFieldId}
-                  className={utilityLabelClassName}
-                >
+                <label htmlFor={ttlFieldId} className={utilityLabelClassName}>
                   TTL (seconds)
                 </label>
                 <input
@@ -105,10 +102,7 @@ export default function LocalPolicyRoute() {
               </div>
 
               <div className="space-y-2">
-                <label
-                  htmlFor={maxConcurrencyFieldId}
-                  className={utilityLabelClassName}
-                >
+                <label htmlFor={maxConcurrencyFieldId} className={utilityLabelClassName}>
                   Max concurrency
                 </label>
                 <input

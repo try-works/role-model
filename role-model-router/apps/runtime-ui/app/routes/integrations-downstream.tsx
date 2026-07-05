@@ -5,8 +5,8 @@ import {
   codeBlockClassName,
   compactTitleClassName,
   metaTextClassName,
-  mutedPanelClassName,
   monoUtilityStrongTextClassName,
+  mutedPanelClassName,
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";

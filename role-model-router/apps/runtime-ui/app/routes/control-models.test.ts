@@ -3,13 +3,13 @@ import { describe, expect, test } from "vitest";
 import type { RuntimeAccount } from "../lib/runtime-api";
 import {
   buildConfiguredModelInventoryPills,
-  buildSelectedModelPreviewPayload,
-  buildSelectedModelEvidencePills,
   buildModelRoleAssignmentForSelection,
+  buildSelectedModelEvidencePills,
+  buildSelectedModelPreviewPayload,
   createAccountMutationPayload,
-  resolveDefaultSelectedModelId,
   resolveConfiguredModelEjectLabel,
   resolveConfiguredModelStatusTone,
+  resolveDefaultSelectedModelId,
 } from "./control-models";
 
 const account = {
@@ -162,7 +162,9 @@ describe("control model role assignment helpers", () => {
       buildSelectedModelEvidencePills({
         assignedRoleRows: [{ roleId: "writer", label: "Writer", score: 0.94 }],
         groupRows: [{ groupId: "group.primary", score: 0.91, lowCoverage: false }],
-        suggestedRoleRows: [{ roleId: "code-hard", label: "Code hard", score: 0.73, lowCoverage: true }],
+        suggestedRoleRows: [
+          { roleId: "code-hard", label: "Code hard", score: 0.73, lowCoverage: true },
+        ],
       }),
     ).toEqual([
       { label: "assigned role evidence 94%", tone: "info" },
@@ -192,10 +194,7 @@ describe("control model role assignment helpers", () => {
       }),
     ).toEqual({
       modelId: "openai/gpt-4o-mini",
-      endpointIds: [
-        "openai.personal.default/gpt-4o-mini",
-        "openai.personal.fallback/gpt-4o-mini",
-      ],
+      endpointIds: ["openai.personal.default/gpt-4o-mini", "openai.personal.fallback/gpt-4o-mini"],
     });
   });
 });

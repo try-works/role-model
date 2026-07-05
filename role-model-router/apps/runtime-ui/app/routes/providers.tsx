@@ -173,23 +173,20 @@ export function buildProviderModelRoleCoverageSummary(input: {
   }
 
   const selectedRoleSet = new Set(totalSelectedRoleIds);
-  const groupedCoverage = input.rolePolicy.roleDefinitions.reduce(
-    (groups, roleDefinition) => {
-      const groupId = roleDefinition.primaryGroupId ?? "ungrouped";
-      const current = groups.get(groupId) ?? {
-        label: formatRuntimeRoleGroupLabel(groupId),
-        selectedCount: 0,
-        totalCount: 0,
-      };
-      current.totalCount += 1;
-      if (selectedRoleSet.has(roleDefinition.role_id)) {
-        current.selectedCount += 1;
-      }
-      groups.set(groupId, current);
-      return groups;
-    },
-    new Map<string, { label: string; selectedCount: number; totalCount: number }>(),
-  );
+  const groupedCoverage = input.rolePolicy.roleDefinitions.reduce((groups, roleDefinition) => {
+    const groupId = roleDefinition.primaryGroupId ?? "ungrouped";
+    const current = groups.get(groupId) ?? {
+      label: formatRuntimeRoleGroupLabel(groupId),
+      selectedCount: 0,
+      totalCount: 0,
+    };
+    current.totalCount += 1;
+    if (selectedRoleSet.has(roleDefinition.role_id)) {
+      current.selectedCount += 1;
+    }
+    groups.set(groupId, current);
+    return groups;
+  }, new Map<string, { label: string; selectedCount: number; totalCount: number }>());
 
   const selectedGroups = [...groupedCoverage.values()]
     .filter((group) => group.selectedCount > 0)
@@ -991,24 +988,18 @@ export default function ProvidersRoute() {
                       data-testid={`provider-maintenance-${row.providerAccountId}`}
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className={foregroundEmphasisClassName}>
-                          {row.providerAccountId}
-                        </h3>
+                        <h3 className={foregroundEmphasisClassName}>{row.providerAccountId}</h3>
                         <StatusPill tone="neutral">{row.providerId}</StatusPill>
                         <StatusPill tone={row.lifecycleTone}>{row.lifecycleLabel}</StatusPill>
                         <StatusPill tone="neutral">{row.storageLabel}</StatusPill>
                       </div>
                       <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
                         <p>
-                          <span className={foregroundEmphasisClassName}>
-                            Connection method:
-                          </span>{" "}
+                          <span className={foregroundEmphasisClassName}>Connection method:</span>{" "}
                           {row.authMode}
                         </p>
                         <p>
-                          <span className={foregroundEmphasisClassName}>
-                            Credential posture:
-                          </span>{" "}
+                          <span className={foregroundEmphasisClassName}>Credential posture:</span>{" "}
                           {row.storageDetail}
                         </p>
                         <p>
@@ -1016,27 +1007,19 @@ export default function ProvidersRoute() {
                           {row.baseUrlOverride ?? "Provider default"}
                         </p>
                         <p>
-                          <span className={foregroundEmphasisClassName}>
-                            Lifecycle reason:
-                          </span>{" "}
+                          <span className={foregroundEmphasisClassName}>Lifecycle reason:</span>{" "}
                           {row.reasonLabel}
                         </p>
                         <p>
-                          <span className={foregroundEmphasisClassName}>
-                            Source provenance:
-                          </span>{" "}
+                          <span className={foregroundEmphasisClassName}>Source provenance:</span>{" "}
                           {row.sourceProvenanceLabel}
                         </p>
                         <p>
-                          <span className={foregroundEmphasisClassName}>
-                            Available actions:
-                          </span>{" "}
+                          <span className={foregroundEmphasisClassName}>Available actions:</span>{" "}
                           {row.availableActionsLabel}
                         </p>
                         <p>
-                          <span className={foregroundEmphasisClassName}>
-                            Active endpoints:
-                          </span>{" "}
+                          <span className={foregroundEmphasisClassName}>Active endpoints:</span>{" "}
                           {row.activeEndpointCount}
                         </p>
                       </div>
@@ -1104,10 +1087,7 @@ export default function ProvidersRoute() {
                                     {roleCoverageSummary.groupPreviewLabels.length > 0 ? (
                                       <div className="flex flex-wrap items-center gap-2">
                                         {roleCoverageSummary.groupPreviewLabels.map((label) => (
-                                          <StatusPill
-                                            key={`${modelId}:${label}`}
-                                            tone="neutral"
-                                          >
+                                          <StatusPill key={`${modelId}:${label}`} tone="neutral">
                                             {label}
                                           </StatusPill>
                                         ))}
@@ -1134,9 +1114,7 @@ export default function ProvidersRoute() {
                   {archivedArtifactRows.length > 0 ? (
                     <div className={`${mutedPanelClassName} p-4`}>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className={foregroundEmphasisClassName}>
-                          Archived stale diagnostics
-                        </h3>
+                        <h3 className={foregroundEmphasisClassName}>Archived stale diagnostics</h3>
                         <StatusPill tone="neutral">{archivedArtifactRows.length}</StatusPill>
                       </div>
                       <p className="mt-2 text-sm text-[var(--rm-secondary)]">

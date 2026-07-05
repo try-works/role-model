@@ -513,17 +513,13 @@ export default function RequestDetailRoute() {
                 <p className={compactTitleClassName}>Original request hints</p>
                 <dl className="mt-3 space-y-3 text-sm">
                   <div>
-                    <dt className={utilityLabelClassName}>
-                      Original role hint
-                    </dt>
+                    <dt className={utilityLabelClassName}>Original role hint</dt>
                     <dd className={`mt-1 ${supportingTextClassName}`}>
                       {renderMetricValue(originalRoleHint)}
                     </dd>
                   </div>
                   <div>
-                    <dt className={utilityLabelClassName}>
-                      Original task type
-                    </dt>
+                    <dt className={utilityLabelClassName}>Original task type</dt>
                     <dd className={`mt-1 ${supportingTextClassName}`}>
                       {renderMetricValue(originalTaskType)}
                     </dd>
@@ -540,9 +536,7 @@ export default function RequestDetailRoute() {
                     ["Task variant", taxonomyTaskVariant],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <dt className={utilityLabelClassName}>
-                        {label}
-                      </dt>
+                      <dt className={utilityLabelClassName}>{label}</dt>
                       <dd className={`mt-1 ${supportingTextClassName}`}>
                         {renderMetricValue(value)}
                       </dd>
@@ -568,9 +562,7 @@ export default function RequestDetailRoute() {
                     ],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <dt className={utilityLabelClassName}>
-                        {label}
-                      </dt>
+                      <dt className={utilityLabelClassName}>{label}</dt>
                       <dd className={`mt-1 ${supportingTextClassName}`}>
                         {renderMetricValue(value)}
                       </dd>
@@ -609,12 +601,8 @@ export default function RequestDetailRoute() {
                   key={label}
                   className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                 >
-                  <dt className={utilityLabelClassName}>
-                    {label}
-                  </dt>
-                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>
-                    {renderMetricValue(value)}
-                  </dd>
+                  <dt className={utilityLabelClassName}>{label}</dt>
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
                 </div>
               ))}
             </dl>
@@ -653,9 +641,7 @@ export default function RequestDetailRoute() {
               key={label}
               className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel-muted)] p-3"
             >
-              <dt className={utilityLabelClassName}>
-                {label}
-              </dt>
+              <dt className={utilityLabelClassName}>{label}</dt>
               <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
             </div>
           ))}
@@ -708,12 +694,8 @@ export default function RequestDetailRoute() {
                 key={label}
                 className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
               >
-                <dt className={utilityLabelClassName}>
-                  {label}
-                </dt>
-                <dd className={`mt-1 ${bodyStrongTextClassName}`}>
-                  {renderMetricValue(value)}
-                </dd>
+                <dt className={utilityLabelClassName}>{label}</dt>
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
@@ -742,12 +724,8 @@ export default function RequestDetailRoute() {
               ["Stream deltas", streamSummary.length > 0 ? streamSummary : null],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className={utilityLabelClassName}>
-                  {label}
-                </dt>
-                <dd className={`mt-1 ${bodyStrongTextClassName}`}>
-                  {renderMetricValue(value)}
-                </dd>
+                <dt className={utilityLabelClassName}>{label}</dt>
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
@@ -773,12 +751,8 @@ export default function RequestDetailRoute() {
               ],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className={utilityLabelClassName}>
-                  {label}
-                </dt>
-                <dd className={`mt-1 ${bodyStrongTextClassName}`}>
-                  {renderMetricValue(value)}
-                </dd>
+                <dt className={utilityLabelClassName}>{label}</dt>
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
@@ -817,12 +791,8 @@ export default function RequestDetailRoute() {
               ["Rubric signals", rubricSignalSummary],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className={utilityLabelClassName}>
-                  {label}
-                </dt>
-                <dd className={`mt-1 ${bodyStrongTextClassName}`}>
-                  {renderMetricValue(value)}
-                </dd>
+                <dt className={utilityLabelClassName}>{label}</dt>
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>

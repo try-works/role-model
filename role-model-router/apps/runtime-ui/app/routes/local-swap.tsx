@@ -60,10 +60,12 @@ export default function LocalSwapRoute() {
         ) : events.length === 0 ? (
           <div className="space-y-3">
             <EmptyState label="No swap events recorded yet." />
-            <div className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-3 p-4`}>
+            <div
+              className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-3 p-4`}
+            >
               <p className={supportingTextClassName}>
-                Events appear here when the managed host loads a first model, swaps to a new one,
-                or records the operator-visible reason for a transition.
+                Events appear here when the managed host loads a first model, swaps to a new one, or
+                records the operator-visible reason for a transition.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Link className={secondaryButtonClassName} to="/app/local/llama-swap/models">
@@ -87,14 +89,14 @@ export default function LocalSwapRoute() {
                     <span className={metaTextClassName}>
                       {new Date(event.timestamp).toLocaleString()}
                     </span>
-                    <StatusPill tone="neutral">
-                      {event.reason}
-                    </StatusPill>
+                    <StatusPill tone="neutral">{event.reason}</StatusPill>
                   </div>
                   <div className="flex items-center gap-3">
                     {event.oldModel ? (
                       <>
-                        <span className={`break-words ${codeBlockClassName} text-[var(--rm-muted)] line-through`}>
+                        <span
+                          className={`break-words ${codeBlockClassName} text-[var(--rm-muted)] line-through`}
+                        >
                           {event.oldModel}
                         </span>
                         <span className={supportingTextClassName}>→</span>
@@ -102,7 +104,9 @@ export default function LocalSwapRoute() {
                     ) : (
                       <span className={supportingTextClassName}>Initial load →</span>
                     )}
-                    <span className={`break-words ${bodyStrongTextClassName} [font-family:var(--rm-font-mono)]`}>
+                    <span
+                      className={`break-words ${bodyStrongTextClassName} [font-family:var(--rm-font-mono)]`}
+                    >
                       {event.newModel}
                     </span>
                   </div>

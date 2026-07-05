@@ -82,12 +82,7 @@ export function FactCard({
   valueClassName?: string;
 }) {
   return (
-    <div
-      className={cn(
-        `${mutedPanelClassName} p-4 md:p-5`,
-        className,
-      )}
-    >
+    <div className={cn(`${mutedPanelClassName} p-4 md:p-5`, className)}>
       <p className={eyebrowClassName}>{label}</p>
       <p className={`mt-3 break-words tabular-nums text-[var(--rm-fg)] ${valueClassName}`}>
         {value}
@@ -117,13 +112,13 @@ export function StatusPill({
         ? "border-transparent bg-[var(--rm-pill-info-bg)] text-[var(--rm-pill-info-ink)]"
         : tone === "advisory"
           ? "border-transparent bg-[var(--rm-pill-advisory-bg)] text-[var(--rm-pill-advisory-ink)]"
-      : tone === "warning"
-        ? "border-transparent bg-[var(--rm-pill-warning-bg)] text-[var(--rm-pill-warning-ink)]"
-        : tone === "error"
-          ? "border-transparent bg-[var(--rm-pill-error-bg)] text-[var(--rm-pill-error-ink)]"
-        : tone === "success"
-          ? "border-transparent bg-[var(--rm-pill-success-bg)] text-[var(--rm-pill-success-ink)]"
-          : "border-transparent bg-[var(--rm-pill-neutral-bg)] text-[var(--rm-pill-neutral-ink)]";
+          : tone === "warning"
+            ? "border-transparent bg-[var(--rm-pill-warning-bg)] text-[var(--rm-pill-warning-ink)]"
+            : tone === "error"
+              ? "border-transparent bg-[var(--rm-pill-error-bg)] text-[var(--rm-pill-error-ink)]"
+              : tone === "success"
+                ? "border-transparent bg-[var(--rm-pill-success-bg)] text-[var(--rm-pill-success-ink)]"
+                : "border-transparent bg-[var(--rm-pill-neutral-bg)] text-[var(--rm-pill-neutral-ink)]";
 
   return (
     <span
@@ -494,7 +489,9 @@ export function DisclosureSection({
             className="inline-flex size-8 shrink-0 items-center justify-center rounded-[var(--rm-radius-pill)] bg-[var(--rm-panel-muted)] text-[var(--rm-secondary)] transition-transform duration-150 ease-out group-open:rotate-180"
           >
             <svg
+              aria-hidden="true"
               className="size-4"
+              focusable="false"
               fill="none"
               stroke="currentColor"
               strokeLinecap="round"

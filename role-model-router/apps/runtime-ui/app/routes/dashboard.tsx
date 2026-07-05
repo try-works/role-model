@@ -32,14 +32,17 @@ import {
   fetchTelemetryRequests,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
-import { telemetryBreakdownOptions, telemetryTimeRangeOptions } from "../lib/telemetry-chart-config";
+import { usePageActions } from "../lib/shell-header-context";
+import {
+  telemetryBreakdownOptions,
+  telemetryTimeRangeOptions,
+} from "../lib/telemetry-chart-config";
 import {
   type TelemetryRouteChartDefinition,
   type TelemetryTimeRangeValue,
   buildOverviewChartDefinitions,
 } from "../lib/telemetry-route-models";
 import { buildDashboardLatestRequestRows, buildEndpointCatalogRows } from "../lib/view-models";
-import { usePageActions } from "../lib/shell-header-context";
 
 const overviewBreakdownOptions: Array<{
   label: string;
@@ -264,9 +267,7 @@ export default function DashboardRoute() {
           value={requestedRoleFilter}
         />
       </div>
-      <p className={`${utilityLabelClassName} text-[var(--rm-secondary)]`}>
-        Overview filters
-      </p>
+      <p className={`${utilityLabelClassName} text-[var(--rm-secondary)]`}>Overview filters</p>
     </div>,
     [
       breakdownValue,
@@ -396,7 +397,14 @@ export default function DashboardRoute() {
             }),
           )
         : [],
-    [endpointIdFilter, modelIdFilter, providerIdFilter, requestedRoleFilter, snapshot, sourceFilter],
+    [
+      endpointIdFilter,
+      modelIdFilter,
+      providerIdFilter,
+      requestedRoleFilter,
+      snapshot,
+      sourceFilter,
+    ],
   );
   const requestRows = useMemo(() => buildDashboardLatestRequestRows(requests), [requests]);
 

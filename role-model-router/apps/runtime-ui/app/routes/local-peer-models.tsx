@@ -121,10 +121,7 @@ export default function LocalPeerModelsRoute() {
           <div className="space-y-3">
             <div className="grid gap-3 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)_auto]">
               <div className="space-y-2">
-                <label
-                  htmlFor="peer-model-id"
-                  className={utilityLabelClassName}
-                >
+                <label htmlFor="peer-model-id" className={utilityLabelClassName}>
                   Model ID
                 </label>
                 <input
@@ -162,12 +159,16 @@ export default function LocalPeerModelsRoute() {
             </p>
           </div>
         ) : (
-          <div className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-4 p-4`}>
+          <div
+            className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-4 p-4`}
+          >
             <div className="space-y-1">
-              <p className={inlineTitleClassName}>Open endpoints to start registering peer-backed models.</p>
+              <p className={inlineTitleClassName}>
+                Open endpoints to start registering peer-backed models.
+              </p>
               <p className={supportingTextClassName}>
-                Configure at least one peer endpoint first, then register a model id from that
-                peer catalog.
+                Configure at least one peer endpoint first, then register a model id from that peer
+                catalog.
               </p>
             </div>
             <Link to="/app/local/endpoints" className={primaryButtonClassName}>
@@ -216,8 +217,7 @@ export default function LocalPeerModelsRoute() {
                         {model.modelId}
                       </p>
                       <p className={supportingTextClassName}>
-                        {(summaryParts.length > 0 ? summaryParts.join(" • ") : "Peer endpoint") +
-                          ` • registered ${new Date(model.loadedAt).toLocaleString()}`}
+                        {`${summaryParts.length > 0 ? summaryParts.join(" • ") : "Peer endpoint"} • registered ${new Date(model.loadedAt).toLocaleString()}`}
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-wrap justify-end gap-2">
@@ -239,9 +239,7 @@ export default function LocalPeerModelsRoute() {
 
                   <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
                     <div className="space-y-2">
-                      <p className={utilityLabelClassName}>
-                        Assigned roles
-                      </p>
+                      <p className={utilityLabelClassName}>Assigned roles</p>
                       <LocalModelRolePicker
                         rolePolicy={rolePolicy}
                         selectedRoleIds={roleIds}

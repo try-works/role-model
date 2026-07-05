@@ -16,8 +16,8 @@ import {
   utilityLabelClassName,
 } from "../lib/design-system";
 import {
-  type RuntimeControllerAssignment,
   type RuntimeConfigRecord,
+  type RuntimeControllerAssignment,
   type RuntimeSnapshot,
   type RuntimeVersionInfo,
   fetchControllerAssignment,
@@ -81,11 +81,11 @@ export default function RuntimeRoute() {
     ["Remote mappings", String(remoteMappingCount)],
   ] as const;
   const controllerRows = controller
-    ? [
+    ? ([
         ["Endpoint", controller.endpointId],
         ["Model", controller.modelId],
         ["Source", controller.sourceType],
-      ] as const
+      ] as const)
     : [];
   const versionRows = [
     ["Vendor host", version.version],
@@ -98,7 +98,9 @@ export default function RuntimeRoute() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
-        <StatusPill tone="success">Active {snapshot.summary.lifecycleSummary?.active ?? 0}</StatusPill>
+        <StatusPill tone="success">
+          Active {snapshot.summary.lifecycleSummary?.active ?? 0}
+        </StatusPill>
         <StatusPill tone="warning">
           Degraded {snapshot.summary.lifecycleSummary?.degraded ?? 0}
         </StatusPill>
@@ -173,9 +175,7 @@ export default function RuntimeRoute() {
                 {controllerRows.map(([label, value]) => (
                   <div key={label} className="flex flex-wrap items-start justify-between gap-3">
                     <p className={utilityLabelClassName}>{label}</p>
-                    <p
-                      className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}
-                    >
+                    <p className={`${bodyStrongTextClassName} max-w-[70%] break-all text-right`}>
                       {value}
                     </p>
                   </div>

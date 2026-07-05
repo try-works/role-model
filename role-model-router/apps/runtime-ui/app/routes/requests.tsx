@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
-import { DisclosureSection, EmptyState, ErrorState, SectionCard } from "../components/page-primitives";
+import {
+  DisclosureSection,
+  EmptyState,
+  ErrorState,
+  SectionCard,
+} from "../components/page-primitives";
 import { TelemetryAnalyticsChartCard } from "../components/telemetry-charts";
 import {
   TelemetrySelectField,
@@ -427,11 +432,7 @@ export default function RequestsRoute() {
               value={sourceFilter}
             />
           </div>
-          <DisclosureSection
-            compact
-            defaultOpen={hasAdvancedFilters}
-            summary="Advanced controls"
-          >
+          <DisclosureSection compact defaultOpen={hasAdvancedFilters} summary="Advanced controls">
             <div className="space-y-4">
               <div className="grid gap-4 xl:grid-cols-4">
                 <TelemetryTextField

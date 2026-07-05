@@ -297,14 +297,10 @@ export default function StudioAudioRoute() {
             ) : result.kind === "speech" ? (
               <div className="space-y-4">
                 <div className={`${mutedPanelClassName} p-4`}>
-                  <p className={metaTextClassName}>
-                    Speech output
-                  </p>
+                  <p className={metaTextClassName}>Speech output</p>
                   <p className={`mt-2 ${supportingTextClassName}`}>
                     Voice{" "}
-                    <span className={bodyStrongTextClassName}>
-                      {result.voice || "unspecified"}
-                    </span>{" "}
+                    <span className={bodyStrongTextClassName}>{result.voice || "unspecified"}</span>{" "}
                     on model <span className={bodyStrongTextClassName}>{result.model}</span>
                   </p>
                 </div>
@@ -327,9 +323,7 @@ export default function StudioAudioRoute() {
               </div>
             ) : (
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className={metaTextClassName}>
-                  Transcript
-                </p>
+                <p className={metaTextClassName}>Transcript</p>
                 <p className={`mt-3 whitespace-pre-wrap ${bodyTextClassName}`}>
                   {result.text || "No transcript text was returned."}
                 </p>

@@ -125,7 +125,9 @@ export default function LocalPeersRoute() {
         ) : peers.length === 0 ? (
           <div className="space-y-3">
             <EmptyState label="No peer endpoints configured. Add a server URL below to use peer-backed local models." />
-            <div className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-3 p-4`}>
+            <div
+              className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-3 p-4`}
+            >
               <p className={supportingTextClassName}>
                 Registering endpoints here is the prerequisite for the peer-model inventory on the
                 next route.
@@ -193,10 +195,7 @@ export default function LocalPeersRoute() {
       >
         <div className="space-y-4">
           <div className="space-y-2">
-            <label
-              htmlFor="peer-url"
-              className={utilityLabelClassName}
-            >
+            <label htmlFor="peer-url" className={utilityLabelClassName}>
               Endpoint URL
             </label>
             <input
@@ -209,10 +208,7 @@ export default function LocalPeersRoute() {
             />
           </div>
           <div className="space-y-2">
-            <label
-              htmlFor="peer-auth-token"
-              className={utilityLabelClassName}
-            >
+            <label htmlFor="peer-auth-token" className={utilityLabelClassName}>
               Auth token (optional)
             </label>
             <input

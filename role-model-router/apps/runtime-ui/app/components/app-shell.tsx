@@ -1,11 +1,11 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useRef } from "react";
 import { NavLink, useLocation } from "react-router";
 
 import {
   displayTitleClassName,
   getPrimarySectionLinkClassName,
-  getSecondaryNavigationLinkClassName,
   getRuntimeRouteDefinition,
+  getSecondaryNavigationLinkClassName,
   navLabelClassName,
   runtimeNavigationSections,
 } from "../lib/design-system";
@@ -23,10 +23,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const title = override?.title ?? route?.title ?? "Runtime overview";
   const hasSecondaryNavigation = activeSection.items.length > 1;
 
-  useEffect(() => {
-    contentScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
-  }, [location.pathname]);
-
   return (
     <div className="h-screen overflow-hidden bg-[var(--rm-bg)] text-[var(--rm-fg)]">
       <div className="mx-auto h-full max-w-[var(--rm-shell-width)] px-10 py-10">
@@ -42,7 +38,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <NavLink
                       to={section.items[0]?.to ?? "/app"}
                       end={section.title === "Overview"}
-                      className={() => getPrimarySectionLinkClassName(route?.section === section.title)}
+                      className={() =>
+                        getPrimarySectionLinkClassName(route?.section === section.title)
+                      }
                     >
                       <span className={navLabelClassName}>{section.title}</span>
                     </NavLink>
@@ -55,9 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <header className="min-w-0 shrink-0">
                 <div className="flex items-start justify-between gap-4 pt-5">
                   <div className="min-w-0 max-w-[560px]">
-                    <h2
-                      className={`text-balance text-[var(--rm-fg)] ${displayTitleClassName}`}
-                    >
+                    <h2 className={`text-balance text-[var(--rm-fg)] ${displayTitleClassName}`}>
                       {title}
                     </h2>
                   </div>
@@ -93,6 +89,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ) : null}
               </header>
               <main
+                key={location.pathname}
                 ref={contentScrollRef}
                 className="runtime-shell-content-scroll min-h-0 flex-1 overflow-y-auto pr-2"
               >

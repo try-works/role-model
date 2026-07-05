@@ -144,12 +144,8 @@ export default function ObserveLogsRoute() {
               <tbody>
                 {filteredRows.map((row) => (
                   <tr key={row.key} className="border-t border-[var(--rm-border)] align-top">
-                    <td className={`py-3 ${supportingTextClassName}`}>
-                      {row.timestamp ?? "—"}
-                    </td>
-                    <td className={`py-3 ${supportingTextClassName}`}>
-                      {row.sourceClass}
-                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>{row.timestamp ?? "—"}</td>
+                    <td className={`py-3 ${supportingTextClassName}`}>{row.sourceClass}</td>
                     <td className="py-3">
                       {row.severity ? (
                         <StatusPill
@@ -181,9 +177,7 @@ export default function ObserveLogsRoute() {
                         "—"
                       )}
                     </td>
-                    <td className={`py-3 ${supportingTextClassName}`}>
-                      {row.message}
-                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>{row.message}</td>
                   </tr>
                 ))}
               </tbody>

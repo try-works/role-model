@@ -22,8 +22,8 @@ import {
   metaTextClassName,
   mutedPanelClassName,
   primaryButtonClassName,
-  sectionTitleClassName,
   secondaryButtonClassName,
+  sectionTitleClassName,
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
@@ -141,9 +141,7 @@ export function buildSelectedModelEvidencePills(
     });
   }
 
-  const strongestGroup = input.groupRows
-    .slice()
-    .sort((left, right) => right.score - left.score)[0];
+  const strongestGroup = input.groupRows.slice().sort((left, right) => right.score - left.score)[0];
   if (strongestGroup) {
     pills.push({
       label: `group evidence ${Math.round(strongestGroup.score * 100)}%`,
@@ -577,7 +575,7 @@ export default function ControlModelsRoute() {
     }))
     .sort((left, right) => right.score - left.score);
   const selectedCapabilityScore = selectedCard
-    ? capabilityByModelId.get(selectedCard.modelId) ?? null
+    ? (capabilityByModelId.get(selectedCard.modelId) ?? null)
     : null;
   const selectedPrimaryAccount = selectedModelAccounts[0] ?? null;
   const selectedPrimaryAccountHasLocalPeerEndpoint = selectedPrimaryAccount
@@ -588,8 +586,12 @@ export default function ControlModelsRoute() {
       )
     : false;
   const selectedPrimaryAccountRoleIds = selectedPrimaryAccount
-    ? draftRolesByAccountId[selectedPrimaryAccount.providerAccountId] ??
-      getAccountRoleIdsForModel(selectedPrimaryAccount, selectedCard?.modelId ?? "", allRuntimeRoleIds)
+    ? (draftRolesByAccountId[selectedPrimaryAccount.providerAccountId] ??
+      getAccountRoleIdsForModel(
+        selectedPrimaryAccount,
+        selectedCard?.modelId ?? "",
+        allRuntimeRoleIds,
+      ))
     : [];
   const selectedModelEvidencePills = buildSelectedModelEvidencePills({
     assignedRoleRows: benchmarkAssignedRoleRows,
@@ -602,9 +604,7 @@ export default function ControlModelsRoute() {
       {statusMessage ? (
         <section className={`${mutedPanelClassName} p-4`}>
           <p className={utilityLabelClassName}>Last model change</p>
-          <p className={`mt-2 ${supportingTextClassName}`}>
-            {statusMessage}
-          </p>
+          <p className={`mt-2 ${supportingTextClassName}`}>{statusMessage}</p>
         </section>
       ) : null}
 
@@ -694,7 +694,9 @@ export default function ControlModelsRoute() {
                           {card.modelId}
                         </p>
                       </div>
-                      <StatusPill tone={resolveConfiguredModelStatusTone(card.controllerState, card.status)}>
+                      <StatusPill
+                        tone={resolveConfiguredModelStatusTone(card.controllerState, card.status)}
+                      >
                         {card.controllerState === "active" ? "controller" : card.status}
                       </StatusPill>
                     </div>
@@ -792,7 +794,8 @@ export default function ControlModelsRoute() {
                         type="button"
                         disabled={
                           savingAccountId === selectedPrimaryAccount.providerAccountId ||
-                          removingTargetKey === `account:${selectedPrimaryAccount.providerAccountId}`
+                          removingTargetKey ===
+                            `account:${selectedPrimaryAccount.providerAccountId}`
                         }
                         onClick={() => void saveAccountRoles(selectedPrimaryAccount)}
                       >
@@ -804,7 +807,8 @@ export default function ControlModelsRoute() {
                         className={secondaryButtonClassName}
                         type="button"
                         disabled={
-                          removingTargetKey === `account:${selectedPrimaryAccount.providerAccountId}`
+                          removingTargetKey ===
+                          `account:${selectedPrimaryAccount.providerAccountId}`
                         }
                         onClick={() => void removeConfiguredModel(selectedPrimaryAccount)}
                       >
@@ -981,9 +985,7 @@ export default function ControlModelsRoute() {
 
                   <div className={`${cardClassName} p-4`}>
                     <p className={foregroundEmphasisClassName}>Metrics</p>
-                    <div
-                      className={`mt-3 grid gap-3 md:grid-cols-2 ${supportingTextClassName}`}
-                    >
+                    <div className={`mt-3 grid gap-3 md:grid-cols-2 ${supportingTextClassName}`}>
                       <p>
                         <span className={foregroundEmphasisClassName}>Requests observed:</span>{" "}
                         {selectedCard.requestCount}
@@ -1005,9 +1007,7 @@ export default function ControlModelsRoute() {
 
                   <div className={`${cardClassName} p-4`}>
                     <p className={foregroundEmphasisClassName}>Model specifications</p>
-                    <div
-                      className={`mt-3 grid gap-3 md:grid-cols-2 ${supportingTextClassName}`}
-                    >
+                    <div className={`mt-3 grid gap-3 md:grid-cols-2 ${supportingTextClassName}`}>
                       {selectedMetadataRows.map((row) => (
                         <p key={row.label}>
                           <span className={foregroundEmphasisClassName}>{row.label}:</span>{" "}
@@ -1034,7 +1034,9 @@ export default function ControlModelsRoute() {
                   </div>
 
                   <div className={`${cardClassName} p-4`}>
-                    <p className={foregroundEmphasisClassName}>Telemetry taxonomy rollup (advisory)</p>
+                    <p className={foregroundEmphasisClassName}>
+                      Telemetry taxonomy rollup (advisory)
+                    </p>
                     {telemetryRollup && telemetryRollup.totalRequests > 0 ? (
                       <div className={`mt-3 space-y-3 ${bodyTextClassName}`}>
                         <p className={`${supportingTextClassName} text-[var(--rm-muted)]`}>

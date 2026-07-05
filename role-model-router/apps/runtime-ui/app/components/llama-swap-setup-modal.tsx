@@ -62,9 +62,7 @@ export function LlamaSwapSetupModal({
             <h2 id="llama-swap-setup-title" className={`mt-2 ${modalTitleClassName}`}>
               Enable role-model-managed llama-swap
             </h2>
-            <p className={`mt-2 max-w-[60ch] ${panelBodyTextClassName}`}>
-              {llamaSwapHintDetail()}
-            </p>
+            <p className={`mt-2 max-w-[60ch] ${panelBodyTextClassName}`}>{llamaSwapHintDetail()}</p>
           </div>
           <button className={secondaryButtonClassName} type="button" onClick={onClose}>
             Close

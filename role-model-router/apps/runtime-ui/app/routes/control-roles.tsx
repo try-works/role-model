@@ -737,9 +737,7 @@ export default function ControlRolesRoute() {
                                   if (!current) {
                                     return current;
                                   }
-                                  return typeof updater === "function"
-                                    ? updater(current)
-                                    : updater;
+                                  return typeof updater === "function" ? updater(current) : updater;
                                 })
                               }
                             />
@@ -750,9 +748,7 @@ export default function ControlRolesRoute() {
                                   if (!current) {
                                     return current;
                                   }
-                                  return typeof updater === "function"
-                                    ? updater(current)
-                                    : updater;
+                                  return typeof updater === "function" ? updater(current) : updater;
                                 })
                               }
                             />
@@ -764,9 +760,7 @@ export default function ControlRolesRoute() {
                                   if (!current) {
                                     return current;
                                   }
-                                  return typeof updater === "function"
-                                    ? updater(current)
-                                    : updater;
+                                  return typeof updater === "function" ? updater(current) : updater;
                                 })
                               }
                             />
@@ -797,9 +791,7 @@ export default function ControlRolesRoute() {
                   </div>
                 </SectionCard>
 
-                {statusMessage ? (
-                  <p className={supportingTextClassName}>{statusMessage}</p>
-                ) : null}
+                {statusMessage ? <p className={supportingTextClassName}>{statusMessage}</p> : null}
               </div>
             </div>
           </div>

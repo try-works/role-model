@@ -164,9 +164,7 @@ export default function ControlRuntimeConfigRoute() {
                 Reset editor
               </button>
             </div>
-            {statusMessage ? (
-              <p className={supportingTextClassName}>{statusMessage}</p>
-            ) : null}
+            {statusMessage ? <p className={supportingTextClassName}>{statusMessage}</p> : null}
           </div>
         </SectionCard>
 

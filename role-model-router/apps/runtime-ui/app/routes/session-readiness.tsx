@@ -146,7 +146,9 @@ export default function SessionReadinessRoute() {
               {primaryLifecycleRow ? (
                 <div className={`${mutedPanelClassName} space-y-3 p-4`}>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className={bodyStrongTextClassName}>{primaryLifecycleRow.providerAccountId}</p>
+                    <p className={bodyStrongTextClassName}>
+                      {primaryLifecycleRow.providerAccountId}
+                    </p>
                     <StatusPill tone={primaryLifecycleRow.tone}>
                       {primaryLifecycleRow.lifecycleLabel}
                     </StatusPill>

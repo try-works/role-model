@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 
-import {
-  EmptyState,
-  ErrorState,
-  LoadingState,
-  SectionCard,
-} from "../components/page-primitives";
+import { EmptyState, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import {
   accentActionTextClassName,
   bodyStrongTextClassName,
@@ -166,7 +161,8 @@ export default function RouterDecisionsRoute() {
                   {latestDecision?.selectedModelId ?? "No decisions yet"}
                 </p>
                 <p className={`mt-2 ${supportingTextClassName}`}>
-                  {latestDecision?.selectedEndpointId ?? "A routed request will appear here once a decision is recorded."}
+                  {latestDecision?.selectedEndpointId ??
+                    "A routed request will appear here once a decision is recorded."}
                 </p>
               </div>
             </div>

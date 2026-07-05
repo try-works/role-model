@@ -20,8 +20,8 @@ import {
   metaTextClassName,
   mutedPanelClassName,
   primaryButtonClassName,
-  utilityLabelClassName,
   supportingTextClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
@@ -291,16 +291,12 @@ export default function WorkbenchRoute() {
           ) : (
             <div className="space-y-4">
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className={metaTextClassName}>
-                  Routing receipt handoff
-                </p>
+                <p className={metaTextClassName}>Routing receipt handoff</p>
                 <p className={`mt-3 ${bodyTextClassName}`}>
-                  Requested mode: <span className={bodyStrongTextClassName}>{routingModeLabel}</span>. Verify
-                  the persisted routing receipt in{" "}
-                  <Link
-                    className={accentActionTextClassName}
-                    to="/app/observe/requests"
-                  >
+                  Requested mode:{" "}
+                  <span className={bodyStrongTextClassName}>{routingModeLabel}</span>. Verify the
+                  persisted routing receipt in{" "}
+                  <Link className={accentActionTextClassName} to="/app/observe/requests">
                     Telemetry ledger
                   </Link>{" "}
                   after the request completes.
@@ -308,9 +304,7 @@ export default function WorkbenchRoute() {
               </div>
 
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className={metaTextClassName}>
-                  Assistant output
-                </p>
+                <p className={metaTextClassName}>Assistant output</p>
                 <p className={`mt-3 whitespace-pre-wrap ${bodyTextClassName}`}>
                   {resultSummary.outputText || "No assistant text was returned."}
                 </p>
@@ -331,7 +325,7 @@ export default function WorkbenchRoute() {
                       </p>
                     ) : (
                       resultSummary.toolCalls.map((toolCall) => (
-                       <div
+                        <div
                           key={toolCall.id ?? `${toolCall.name}-${toolCall.arguments}`}
                           className={`${mutedPanelClassName} p-3`}
                         >
@@ -364,7 +358,9 @@ export default function WorkbenchRoute() {
                           className={`${mutedPanelClassName} p-3`}
                         >
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className={compactTitleClassName}>{execution.toolName ?? "Unnamed tool"}</p>
+                            <p className={compactTitleClassName}>
+                              {execution.toolName ?? "Unnamed tool"}
+                            </p>
                             {execution.status ? (
                               <StatusPill
                                 tone={execution.status === "success" ? "success" : "warning"}
@@ -389,9 +385,7 @@ export default function WorkbenchRoute() {
               <div className="grid gap-3 md:grid-cols-2">
                 {resultSummary.usageRows.map((row) => (
                   <div key={row.label} className={`${mutedPanelClassName} p-4`}>
-                    <p className={metaTextClassName}>
-                      {row.label}
-                    </p>
+                    <p className={metaTextClassName}>{row.label}</p>
                     <p className={`mt-2 ${compactTitleClassName}`}>{row.value}</p>
                   </div>
                 ))}

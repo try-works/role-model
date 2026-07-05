@@ -4,8 +4,8 @@ import { describe, expect, test } from "vitest";
 import {
   FactCard,
   SelectField,
-  StatusPill,
   type SelectOptionModel,
+  StatusPill,
   getSelectTypeaheadMatchIndex,
 } from "./page-primitives";
 
@@ -75,12 +75,8 @@ describe("StatusPill rendering", () => {
 
 describe("FactCard rendering", () => {
   test("keeps the same panel surface whether emphasis is requested or not", () => {
-    const standardMarkup = renderToStaticMarkup(
-      <FactCard label="Models" value={4} />,
-    );
-    const emphasisMarkup = renderToStaticMarkup(
-      <FactCard label="Models" value={4} emphasis />,
-    );
+    const standardMarkup = renderToStaticMarkup(<FactCard label="Models" value={4} />);
+    const emphasisMarkup = renderToStaticMarkup(<FactCard label="Models" value={4} emphasis />);
 
     const standardSurface = standardMarkup.match(/bg-\[var\(--rm-[^)]*\)\]/)?.[0];
     const emphasisSurface = emphasisMarkup.match(/bg-\[var\(--rm-[^)]*\)\]/)?.[0];

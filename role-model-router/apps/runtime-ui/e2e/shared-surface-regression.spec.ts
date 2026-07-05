@@ -34,7 +34,9 @@ test("keeps shared typography and tokenized controls aligned on seeded QA routes
   await capture(page, "qa-shared-observe-requests.png");
 
   await page.goto("/app/remote/providers");
-  await expect(page.getByRole("heading", { name: "Configured provider connections" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Configured provider connections" }),
+  ).toBeVisible();
   await expect(page.getByText("Choose provider and models", { exact: true })).toBeVisible();
   await expect(page.getByText("All runtime roles assigned.", { exact: true })).toBeVisible();
   await capture(page, "qa-shared-remote-providers.png");

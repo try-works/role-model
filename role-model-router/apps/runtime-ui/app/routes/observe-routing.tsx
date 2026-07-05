@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
-import { DisclosureSection, ErrorState, SectionCard, StatusPill } from "../components/page-primitives";
+import {
+  DisclosureSection,
+  ErrorState,
+  SectionCard,
+  StatusPill,
+} from "../components/page-primitives";
 import { TelemetryAnalyticsChartCard } from "../components/telemetry-charts";
 import {
   TelemetrySelectField,
@@ -194,9 +199,7 @@ export default function ObserveRoutingRoute() {
           ? [{ label: "Capability ids", value: taxonomyCapabilityIds }]
           : []),
         ...(taxonomyModalityIds ? [{ label: "Modality ids", value: taxonomyModalityIds }] : []),
-        ...(taxonomyToolClassIds
-          ? [{ label: "Tool class ids", value: taxonomyToolClassIds }]
-          : []),
+        ...(taxonomyToolClassIds ? [{ label: "Tool class ids", value: taxonomyToolClassIds }] : []),
       ] satisfies ReadonlyArray<{ label: string; value: string }>,
     [
       breakdownValue,
@@ -347,11 +350,7 @@ export default function ObserveRoutingRoute() {
               value={difficulty}
             />
           </div>
-          <DisclosureSection
-            compact
-            defaultOpen={hasAdvancedFilters}
-            summary="Advanced controls"
-          >
+          <DisclosureSection compact defaultOpen={hasAdvancedFilters} summary="Advanced controls">
             <div className="space-y-4">
               <div className="grid gap-4 xl:grid-cols-4">
                 <TelemetryTextField
@@ -455,12 +454,8 @@ export default function ObserveRoutingRoute() {
                   key={row.label}
                   className={`${mutedPanelClassName} flex items-center justify-between gap-3 px-4 py-3`}
                 >
-                  <span className={supportingTextClassName}>
-                    {row.label}
-                  </span>
-                  <span className={`${utilityStrongTextClassName} text-right`}>
-                    {row.value}
-                  </span>
+                  <span className={supportingTextClassName}>{row.label}</span>
+                  <span className={`${utilityStrongTextClassName} text-right`}>{row.value}</span>
                 </div>
               ))}
             </div>

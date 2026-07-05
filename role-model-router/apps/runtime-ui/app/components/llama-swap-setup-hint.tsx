@@ -3,8 +3,8 @@ import { Link } from "react-router";
 
 import {
   bodyStrongTextClassName,
-  mutedPanelClassName,
   modalEyebrowClassName,
+  mutedPanelClassName,
   panelBodyTextClassName,
   primaryButtonClassName,
   secondaryButtonClassName,

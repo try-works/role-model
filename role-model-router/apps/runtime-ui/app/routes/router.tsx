@@ -123,10 +123,10 @@ export default function RouterOverviewRoute() {
       : null;
   const activeAliasRow =
     (configuredAliasId
-      ? configuredAliasRows.find((row) => row.aliasId === configuredAliasId) ?? null
+      ? (configuredAliasRows.find((row) => row.aliasId === configuredAliasId) ?? null)
       : null) ??
     (controllerModelId
-      ? configuredAliasRows.find((row) => row.effectiveModels.includes(controllerModelId)) ?? null
+      ? (configuredAliasRows.find((row) => row.effectiveModels.includes(controllerModelId)) ?? null)
       : null);
   const activeAliasLabel = activeAliasRow?.aliasId ?? "unresolved";
   const aliasReadinessSummary = configuredAliasRows.reduce(
@@ -140,10 +140,13 @@ export default function RouterOverviewRoute() {
       unavailable: 0,
     },
   );
-  const aliasModeSummary = configuredAliasRows.reduce<Record<string, number>>((summaryValue, row) => {
-    summaryValue[row.modeLabel] = (summaryValue[row.modeLabel] ?? 0) + 1;
-    return summaryValue;
-  }, {});
+  const aliasModeSummary = configuredAliasRows.reduce<Record<string, number>>(
+    (summaryValue, row) => {
+      summaryValue[row.modeLabel] = (summaryValue[row.modeLabel] ?? 0) + 1;
+      return summaryValue;
+    },
+    {},
+  );
   const aliasModeSummaryLabel =
     Object.entries(aliasModeSummary)
       .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0], "en"))
@@ -213,16 +216,14 @@ export default function RouterOverviewRoute() {
                 <p className={utilityLabelClassName}>Alias readiness</p>
                 <div className="mt-1 flex flex-wrap gap-2">
                   <StatusPill tone="success">{aliasReadinessSummary.ready} ready</StatusPill>
-                  <StatusPill tone="warning">
-                    {aliasReadinessSummary.degraded} degraded
-                  </StatusPill>
+                  <StatusPill tone="warning">{aliasReadinessSummary.degraded} degraded</StatusPill>
                   <StatusPill tone="neutral">
                     {aliasReadinessSummary.unavailable} unavailable
                   </StatusPill>
                 </div>
                 <p className={supportingTextClassName}>
-                  Readiness is derived from matching endpoint availability, active state, and
-                  health posture.
+                  Readiness is derived from matching endpoint availability, active state, and health
+                  posture.
                 </p>
               </div>
               <div className={`${mutedPanelClassName} space-y-2 p-4`}>
