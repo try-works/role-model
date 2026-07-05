@@ -986,7 +986,7 @@ describe("restart rehydration", () => {
     }
   });
 
-  test("rehydrates a pending Codex Subscription device-code session after restart", async () => {
+  test("cleans up a pending Codex Subscription device-code session after restart", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `restart-codex-subscription-${Date.now()}`);
     const scopeId = "restart-codex-subscription-tests";
 
@@ -1040,34 +1040,10 @@ describe("restart rehydration", () => {
             wsUrl: "ws://127.0.0.1:4512",
             pid: 4322,
           }),
-          readAccount: async ({ codexHome }) => {
-            await mkdir(codexHome, { recursive: true });
-            await writeFile(
-              path.join(codexHome, "auth.json"),
-              JSON.stringify(
-                {
-                  auth_mode: "chatgpt",
-                  tokens: {
-                    access_token: "codex-access-001",
-                    refresh_token: "codex-refresh-001",
-                    account_id: "codex-account-001",
-                  },
-                  last_refresh: "2026-06-18T18:00:00.000Z",
-                },
-                null,
-                2,
-              ),
-              "utf8",
-            );
-            return {
-              account: {
-                type: "chatgpt",
-                email: "user@example.com",
-                planType: "prolite",
-              },
-              requiresOpenaiAuth: true,
-            };
-          },
+          readAccount: async () => ({
+            account: null,
+            requiresOpenaiAuth: true,
+          }),
         },
         // biome-ignore lint/suspicious/noExplicitAny: test mock object
       } as any);
@@ -1088,8 +1064,9 @@ describe("restart rehydration", () => {
           expect.arrayContaining([
             expect.objectContaining({
               providerAccountId: "openai.personal.codex-subscription",
-              status: "connected",
+              status: "failed",
               userCode: "UDHG-2HKJV",
+              lastError: "Runtime shut down before OpenAI sign-in completed. Start OAuth again.",
             }),
           ]),
         );
@@ -1098,8 +1075,8 @@ describe("restart rehydration", () => {
             expect.objectContaining({
               providerAccountId: "openai.personal.codex-subscription",
               authMode: "oauth2-device-code",
-              status: "active",
-              healthStatus: "healthy",
+              status: "disabled",
+              healthStatus: "credentials-missing",
             }),
           ]),
         );

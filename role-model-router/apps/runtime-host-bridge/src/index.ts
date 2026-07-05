@@ -2141,6 +2141,7 @@ export interface StartBridgeServerOptions {
   readonly upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly reconnectProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly updateProviderApiKey?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly openExternalUrl?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly removeProviderAccountModel?: (
     providerAccountId: string,
     modelId: string,
@@ -2331,6 +2332,7 @@ export interface RuntimeBridgeBackend {
   upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord>;
   reconnectProviderAccount(body: Record<string, unknown>): Promise<DeviceAuthorizationStartResult>;
   updateProviderApiKey(body: Record<string, unknown>): Promise<ProviderAccountRecord>;
+  openExternalUrl(body: Record<string, unknown>): Promise<{ opened: true; url: string }>;
   removeProviderAccountModel(
     providerAccountId: string,
     modelId: string,
@@ -7963,6 +7965,46 @@ function readOptionalString(record: Record<string, unknown>, key: string): strin
   return typeof value === "string" && value.trim().length > 0 ? value : undefined;
 }
 
+function validateExternalUrl(value: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new Error("External URL must be a valid absolute URL.");
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error("External URL must use http or https.");
+  }
+
+  return parsed.toString();
+}
+
+function openUrlInDefaultBrowser(url: string): void {
+  const command =
+    process.platform === "win32"
+      ? {
+          file: "explorer.exe",
+          args: [url],
+        }
+      : process.platform === "darwin"
+        ? {
+            file: "open",
+            args: [url],
+          }
+        : {
+            file: "xdg-open",
+            args: [url],
+          };
+
+  const child = spawn(command.file, command.args, {
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+  });
+  child.unref();
+}
+
 function readStringArray(record: Record<string, unknown>, key: string): string[] | undefined {
   const value = record[key];
   if (value === undefined) {
@@ -8506,8 +8548,6 @@ function createSystemCodexAuthAdapter(): CodexAuthAdapter {
           env: {
             ...process.env,
             CODEX_HOME: input.codexHome,
-            HOME: input.codexHome,
-            USERPROFILE: input.codexHome,
           },
         },
       );
@@ -9241,7 +9281,7 @@ export async function executeCodexAppServerTurnOverStdio(input: {
           cwd: input.workspaceRoot,
           approvalPolicy: "never",
           sandboxPolicy: {
-            type: "danger-full-access",
+            type: "dangerFullAccess",
           },
           ...(structuredOutputSchema ? { outputSchema: structuredOutputSchema } : {}),
         },
@@ -12235,6 +12275,22 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "POST" && url.pathname === "/api/role-model/system/open-url") {
+      if (!options.openExternalUrl) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+
+      try {
+        writeJson(response, 200, await options.openExternalUrl(await readJsonBody(request)));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "external URL open failed",
+        });
+      }
+      return;
+    }
+
     if (request.method === "POST" && url.pathname === "/api/role-model/accounts/device/start") {
       if (!options.startProviderDeviceAuthorization) {
         writeJson(response, 404, { error: "not found" });
@@ -12976,6 +13032,69 @@ export async function createRuntimeBridgeBackend(
         expiresAtMs: session.expiresAtMs,
         ...(session.lastError ? { lastError: session.lastError } : {}),
       }));
+  const supersedePendingCodexSubscriptionSessions = async (
+    providerAccountId: string,
+  ): Promise<void> => {
+    const activeSessions = listProviderDeviceAuthSessions({
+      databasePath: initialization.databasePath,
+    }).filter(
+      (session) =>
+        session.providerAccountId === providerAccountId &&
+        session.providerId === OPENAI_PROVIDER_ID &&
+        session.variantId === OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID &&
+        session.status === "pending" &&
+        session.expiresAtMs > Date.now(),
+    );
+
+    for (const session of activeSessions) {
+      const payload = decodeCodexDeviceCodeSessionPayload(session.deviceCode);
+      if (payload) {
+        await cleanupManagedCodexDeviceCodeSession(payload);
+      }
+      upsertProviderDeviceAuthSession({
+        databasePath: initialization.databasePath,
+        session: {
+          ...session,
+          status: "failed",
+          lastError: "Superseded by a newer sign-in attempt.",
+        },
+      });
+    }
+  };
+  const cleanupPendingManagedCodexSubscriptionSessions = async (
+    reason: string,
+  ): Promise<{ cleanedCount: number }> => {
+    const activeSessions = listProviderDeviceAuthSessions({
+      databasePath: initialization.databasePath,
+    }).filter(
+      (session) =>
+        session.providerId === OPENAI_PROVIDER_ID &&
+        session.variantId === OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID &&
+        session.status === "pending",
+    );
+
+    let cleanedCount = 0;
+    for (const session of activeSessions) {
+      const payload = decodeCodexDeviceCodeSessionPayload(session.deviceCode);
+      if (payload) {
+        await cleanupManagedCodexDeviceCodeSession(payload);
+      }
+      upsertProviderDeviceAuthSession({
+        databasePath: initialization.databasePath,
+        session: {
+          ...session,
+          status: "failed",
+          lastError: reason,
+        },
+      });
+      cleanedCount += 1;
+    }
+
+    return { cleanedCount };
+  };
+  await cleanupPendingManagedCodexSubscriptionSessions(
+    "Previous runtime session ended before OpenAI sign-in completed. Start OAuth again.",
+  );
   const buildCredentialLifecycleSummary = (): RuntimeCredentialLifecycleSummary => {
     const persistedAccounts = listProviderAccounts({ databasePath: initialization.databasePath });
     const normalizedPersistedAccounts = persistedAccounts.map(
@@ -13548,6 +13667,20 @@ export async function createRuntimeBridgeBackend(
     syncRoutingModelSelection();
     refreshRoutableInventoryState();
   };
+  const createExecutionRuntimeSnapshot = (registry: EndpointRegistryResult) => ({
+    registry,
+    accounts: [...currentAccounts],
+    runtimeEndpoints: runtimeEndpoints.map((endpoint) => ({
+      endpointId: endpoint.endpointId,
+      providerAccountId: endpoint.providerAccountId,
+      modelId: endpoint.modelId,
+    })),
+    registrySources: getCurrentRegistrySources(),
+    executionCatalog: getCurrentExecutionCatalog(),
+    roleDefinitions: currentRuntimeRoles.roleDefinitions,
+    taskDefinitions: currentRolePolicy.taskDefinitions,
+    routingModel,
+  });
   const withProviderAccountRepairLock = async <T>(
     providerAccountId: string,
     operation: () => Promise<T>,
@@ -16334,13 +16467,16 @@ export async function createRuntimeBridgeBackend(
       readonly requestOptions?: BridgeExecutionRequestOptions;
       readonly requestedModel?: string;
       readonly requestOperation?: string;
+      readonly executionSnapshot?: ReturnType<typeof createExecutionRuntimeSnapshot>;
     },
   ) => {
+    const executionSnapshot =
+      executionOptions?.executionSnapshot ?? createExecutionRuntimeSnapshot(currentRegistry);
     const observedDataConfig = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig);
     const routingTimeMs = Date.now();
     const runtimeObservedProfiles = readObservedProfilesForRouting({
       databasePath: initialization.databasePath,
-      registry: currentRegistry,
+      registry: executionSnapshot.registry,
       observedDataConfig,
       difficultyBucket: resolveObservedDifficultyBucketForPlan(plan),
       routingTimeMs,
@@ -16355,51 +16491,92 @@ export async function createRuntimeBridgeBackend(
     const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId();
     const roleBindings = buildRuntimeRoleBindings(
       [],
-      runtimeEndpoints,
-      currentAccounts,
-      currentRegistry,
-      currentRuntimeRoles.roleDefinitions,
-      currentRolePolicy.taskDefinitions,
+      executionSnapshot.runtimeEndpoints,
+      executionSnapshot.accounts,
+      executionSnapshot.registry,
+      executionSnapshot.roleDefinitions,
+      executionSnapshot.taskDefinitions,
       getLlamaSwapRoleIdsByModelId(),
     );
+    const readMergedDeniedExecutionEndpoints = (
+      denyEndpoints: readonly string[],
+    ): readonly string[] => {
+      const cooldownDeniedEndpoints = readActiveExecutionFailureCooldownEndpointIds({
+        databasePath: initialization.databasePath,
+        nowMs: Date.now(),
+      });
+      return [...new Set([...denyEndpoints, ...cooldownDeniedEndpoints])];
+    };
     const routeExecutionRequest = (
       denyEndpoints: readonly string[],
-    ): ReturnType<typeof routeRuntimeRequest> =>
-      routeRuntimeRequest({
-        request: {
-          ...plan.routingRequest,
-          ...(() => {
-            const cooldownDeniedEndpoints = readActiveExecutionFailureCooldownEndpointIds({
-              databasePath: initialization.databasePath,
-              nowMs: Date.now(),
-            });
-            const mergedDenyEndpoints = [
-              ...new Set([...denyEndpoints, ...cooldownDeniedEndpoints]),
-            ];
-            return mergedDenyEndpoints.length > 0 ? { denyEndpoints: mergedDenyEndpoints } : {};
-          })(),
+    ): {
+      readonly deniedEndpointIds: readonly string[];
+      readonly routed: ReturnType<typeof routeRuntimeRequest>;
+    } => {
+      const mergedDenyEndpoints = readMergedDeniedExecutionEndpoints(denyEndpoints);
+      return {
+        deniedEndpointIds: mergedDenyEndpoints,
+        routed: routeRuntimeRequest({
+          request: {
+            ...plan.routingRequest,
+            ...(mergedDenyEndpoints.length > 0 ? { denyEndpoints: mergedDenyEndpoints } : {}),
+          },
+          registry: executionSnapshot.registry,
+          catalog: executionSnapshot.executionCatalog,
+          observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
+          benchmarkCapabilitiesByEndpointId,
+          observedDataConfig,
+          throughputPenaltyStateByEndpointId:
+            runtimeObservedProfiles.throughputPenaltyStateByEndpointId,
+          routingTimeMs,
+          maxOutputTokens:
+            typeof plan.executionRequest.maxOutputTokens === "number"
+              ? plan.executionRequest.maxOutputTokens
+              : undefined,
+          envelope,
+          retrievalReceipt,
+          roleDefinitions: executionSnapshot.roleDefinitions,
+          taskDefinitions: executionSnapshot.taskDefinitions,
+          roleBindings,
+          routingModel: plan.routingModel ?? executionSnapshot.routingModel ?? undefined,
+        }),
+      };
+    };
+    const throwUnavailableExecutionTarget = (input: {
+      readonly deniedEndpointIds: readonly string[];
+      readonly previousError?: UpstreamExecutionError;
+    }): never => {
+      if (input.previousError) {
+        throw input.previousError;
+      }
+      const requestedModel = executionOptions?.requestedModel ?? null;
+      const temporarilyUnavailable = input.deniedEndpointIds.length > 0;
+      throw new BridgeHttpError(temporarilyUnavailable ? 503 : 400, {
+        error: {
+          type: "routing_error",
+          code: "no_eligible_target",
+          message: requestedModel
+            ? temporarilyUnavailable
+              ? `All eligible endpoints for model ${requestedModel} are temporarily unavailable after recent execution failures.`
+              : `No execution target is currently eligible for model ${requestedModel}.`
+            : temporarilyUnavailable
+              ? "All eligible endpoints are temporarily unavailable after recent execution failures."
+              : "No execution target is currently eligible for this request.",
+          ...(requestedModel ? { requestedModel } : {}),
+          ...(input.deniedEndpointIds.length > 0
+            ? { deniedEndpointIds: [...input.deniedEndpointIds] }
+            : {}),
         },
-        registry: currentRegistry,
-        catalog: currentNormalizedCatalog,
-        observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
-        benchmarkCapabilitiesByEndpointId,
-        observedDataConfig,
-        throughputPenaltyStateByEndpointId:
-          runtimeObservedProfiles.throughputPenaltyStateByEndpointId,
-        routingTimeMs,
-        maxOutputTokens:
-          typeof plan.executionRequest.maxOutputTokens === "number"
-            ? plan.executionRequest.maxOutputTokens
-            : undefined,
-        envelope,
-        retrievalReceipt,
-        roleDefinitions: currentRuntimeRoles.roleDefinitions,
-        taskDefinitions: currentRolePolicy.taskDefinitions,
-        roleBindings,
-        routingModel: plan.routingModel ?? routingModel ?? undefined,
       });
+    };
     const deniedEndpointIds = [...(plan.routingRequest.denyEndpoints ?? [])];
-    let routed = routeExecutionRequest(deniedEndpointIds);
+    let { routed, deniedEndpointIds: initialDeniedEndpointIds } =
+      routeExecutionRequest(deniedEndpointIds);
+    if (routed.decision.chosen_endpoint_id.trim().length === 0) {
+      throwUnavailableExecutionTarget({
+        deniedEndpointIds: initialDeniedEndpointIds,
+      });
+    }
     let routingDecisionId = routed.decision.routing_decision_id;
     const adapters = [
       ...(currentUnifiedRuntimeConfig?.liteLLM.enabled ? [createLiteLLMProviderAdapter()] : []),
@@ -16806,11 +16983,11 @@ export async function createRuntimeBridgeBackend(
         try {
           const result = await executeLiveRoutedRequest({
             routeResult: routed,
-            catalog: getCurrentExecutionCatalog(),
+            catalog: executionSnapshot.executionCatalog,
             additionalProviders: liteLLMProviders,
-            accounts: currentAccounts,
-            registry: currentRegistry,
-            registrySources: getCurrentRegistrySources(),
+            accounts: executionSnapshot.accounts,
+            registry: executionSnapshot.registry,
+            registrySources: executionSnapshot.registrySources,
             executionRequest,
             adapters,
             executeProviderRequest,
@@ -16839,13 +17016,19 @@ export async function createRuntimeBridgeBackend(
             throw error;
           }
           deniedEndpointIds.push(error.endpointId);
-          let nextRouted: ReturnType<typeof routeRuntimeRequest>;
+          let nextRoute: ReturnType<typeof routeExecutionRequest>;
           try {
-            nextRouted = routeExecutionRequest(deniedEndpointIds);
+            nextRoute = routeExecutionRequest(deniedEndpointIds);
           } catch {
             throw error;
           }
-          routed = nextRouted;
+          if (nextRoute.routed.decision.chosen_endpoint_id.trim().length === 0) {
+            throwUnavailableExecutionTarget({
+              deniedEndpointIds: nextRoute.deniedEndpointIds,
+              previousError: error,
+            });
+          }
+          routed = nextRoute.routed;
           routingDecisionId = routed.decision.routing_decision_id;
         }
       }
@@ -16878,7 +17061,7 @@ export async function createRuntimeBridgeBackend(
       ) {
         runtimeToolRegistry ??= await createRuntimeToolRegistry(
           options.repoRoot,
-          currentRegistry,
+          executionSnapshot.registry,
           networkFetcher,
         );
         const currentToolCalls = continuationTurn.toolCalls.map((toolCall, index) =>
@@ -16936,7 +17119,7 @@ export async function createRuntimeBridgeBackend(
         ...bridgedToolExecutionResult.diagnostics,
       ],
     };
-    const providerAccount = currentAccounts.find(
+    const providerAccount = executionSnapshot.accounts.find(
       (account) => account.providerAccountId === execution.target.providerAccountId,
     );
     const observedProfileDiagnostic =
@@ -16971,8 +17154,8 @@ export async function createRuntimeBridgeBackend(
       });
       const normalizedIntentObservation = createRoleModelNormalizedIntentObservation(
         plan.routingRequest.roleModelIntent,
-        currentRolePolicy.roleDefinitions,
-        currentRolePolicy.taskDefinitions,
+        executionSnapshot.roleDefinitions,
+        executionSnapshot.taskDefinitions,
       );
       const bundle = createRuntimeObservationBundle({
         decision: routed.decision,
@@ -17536,6 +17719,7 @@ export async function createRuntimeBridgeBackend(
         });
         const executionRegistry = getRouterEffectiveRegistry();
         const executionInventory = getRouterEffectiveRoutableInventory();
+        const executionSnapshot = createExecutionRuntimeSnapshot(executionRegistry);
         const plan = mapChatCompletionsRequest(
           executionRegistry,
           body,
@@ -17581,6 +17765,7 @@ export async function createRuntimeBridgeBackend(
             requestedModel: body.model,
             requestOperation: "chat",
             persistObservation: !requestId.startsWith("bench-"),
+            executionSnapshot,
           },
         );
         const costUsd =
@@ -17672,6 +17857,7 @@ export async function createRuntimeBridgeBackend(
       });
       const executionRegistry = getRouterEffectiveRegistry();
       const executionInventory = getRouterEffectiveRoutableInventory();
+      const executionSnapshot = createExecutionRuntimeSnapshot(executionRegistry);
       const plan = mapResponsesRequest(
         executionRegistry,
         body,
@@ -17716,6 +17902,7 @@ export async function createRuntimeBridgeBackend(
           requestOptions,
           requestedModel: body.model,
           requestOperation: "responses",
+          executionSnapshot,
         },
       );
       const costUsd =
@@ -18214,25 +18401,6 @@ export async function createRuntimeBridgeBackend(
           );
         }
 
-        const activePendingSession = listCurrentProviderDeviceAuthorizations().find(
-          (session) =>
-            session.providerAccountId === providerAccountId &&
-            session.status === "pending" &&
-            session.expiresAtMs > Date.now(),
-        );
-        if (activePendingSession) {
-          return {
-            authRequestId: activePendingSession.authRequestId,
-            providerAccountId: activePendingSession.providerAccountId,
-            status: "pending",
-            userCode: activePendingSession.userCode,
-            verificationUri: activePendingSession.verificationUri,
-            verificationUriComplete: activePendingSession.verificationUriComplete,
-            intervalSeconds: activePendingSession.intervalSeconds,
-            expiresAtMs: activePendingSession.expiresAtMs,
-          };
-        }
-
         const catalogProvider = currentNormalizedCatalog.providers.find(
           (entry) => entry.providerId === existingAccount.providerId,
         );
@@ -18286,6 +18454,81 @@ export async function createRuntimeBridgeBackend(
           throw new Error(
             `Provider account ${providerAccountId} does not expose a reconnectable OAuth variant.`,
           );
+        }
+
+        const activePendingSession = listCurrentProviderDeviceAuthorizations().find(
+          (session) =>
+            session.providerAccountId === providerAccountId &&
+            session.status === "pending" &&
+            session.expiresAtMs > Date.now(),
+        );
+        const usesCodexSubscriptionHelper = isCodexSubscriptionEndpoint(
+          variant.oauth.deviceAuthorizationEndpoint,
+        );
+        if (activePendingSession && !usesCodexSubscriptionHelper) {
+          return {
+            authRequestId: activePendingSession.authRequestId,
+            providerAccountId: activePendingSession.providerAccountId,
+            status: "pending",
+            userCode: activePendingSession.userCode,
+            verificationUri: activePendingSession.verificationUri,
+            verificationUriComplete: activePendingSession.verificationUriComplete,
+            intervalSeconds: activePendingSession.intervalSeconds,
+            expiresAtMs: activePendingSession.expiresAtMs,
+          };
+        }
+        if (usesCodexSubscriptionHelper) {
+          await supersedePendingCodexSubscriptionSessions(providerAccountId);
+          const authRequestId = randomUUID();
+          const codexHome = resolveManagedCodexSubscriptionHome(
+            options.runtimeStateRoot,
+            options.scopeId,
+            authRequestId,
+          );
+          const login = await codexAuthAdapter.startDeviceCodeLogin({ codexHome });
+          const expiresAtMs = Date.now() + 15 * 60 * 1000;
+          upsertProviderDeviceAuthSession({
+            databasePath: initialization.databasePath,
+            session: {
+              authRequestId,
+              providerAccountId,
+              providerId: existingAccount.providerId,
+              variantId: variant.variantId,
+              credentialBackend:
+                existingAccount.credentialRef.backend === "local-encrypted-file"
+                  ? "local-file"
+                  : existingAccount.credentialRef.backend,
+              credentialRef:
+                existingAccount.credentialRef.ref ||
+                createCredentialRef(existingAccount.providerId, providerAccountId),
+              authMode: existingAccount.authMode,
+              verificationUri: login.verificationUrl,
+              verificationUriComplete: login.verificationUrl,
+              userCode: login.userCode,
+              deviceCode: encodeCodexDeviceCodeSessionPayload({
+                loginId: login.loginId,
+                wsUrl: login.wsUrl,
+                codexHome,
+                pid: login.pid,
+              }),
+              intervalSeconds: 5,
+              status: "pending",
+              lastError: null,
+              expiresAtMs,
+            },
+          });
+          rebuildCurrentState();
+
+          return {
+            authRequestId,
+            providerAccountId,
+            status: "pending",
+            userCode: login.userCode,
+            verificationUri: login.verificationUrl,
+            verificationUriComplete: login.verificationUrl,
+            intervalSeconds: 5,
+            expiresAtMs,
+          };
         }
 
         const deviceAuthParams = new URLSearchParams({
@@ -18422,6 +18665,14 @@ export async function createRuntimeBridgeBackend(
         rebuildCurrentState();
         return validatedAccount;
       });
+    },
+    async openExternalUrl(body: Record<string, unknown>): Promise<{ opened: true; url: string }> {
+      const url = validateExternalUrl(readRequiredString(body, "url", "openExternalUrl"));
+      openUrlInDefaultBrowser(url);
+      return {
+        opened: true,
+        url,
+      };
     },
     async removeProviderAccountModel(
       providerAccountId: string,
@@ -18711,6 +18962,7 @@ export async function createRuntimeBridgeBackend(
       }
 
       if (isCodexSubscriptionEndpoint(variant.oauth.deviceAuthorizationEndpoint)) {
+        await supersedePendingCodexSubscriptionSessions(providerAccountId);
         const authRequestId = randomUUID();
         const codexHome = resolveManagedCodexSubscriptionHome(
           options.runtimeStateRoot,
@@ -20058,6 +20310,9 @@ export async function createRuntimeBridgeBackend(
     },
     async shutdown(): Promise<void> {
       clearInterval(autoSwapInterval);
+      await cleanupPendingManagedCodexSubscriptionSessions(
+        "Runtime shut down before OpenAI sign-in completed. Start OAuth again.",
+      );
       await Promise.all([currentLlamaSwapVendor?.shutdown(), currentLiteLLMVendor?.shutdown()]);
       await supervisor?.shutdown();
     },

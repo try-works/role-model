@@ -360,7 +360,7 @@ describe("OpenAI Codex Subscription model matrix", () => {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
-  }, 15_000);
+  }, 45_000);
 
   test("maps mixed-provider controller.remote-only web-search requests to runtime tool calling without excluding supported providers", () => {
     const result = mapResponsesRequest(

@@ -83,6 +83,198 @@ describe("account repair mutations", () => {
     }
   });
 
+  test("reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `account-repair-codex-reconnect-${Date.now()}`);
+    const scopeId = "account-repair-codex-reconnect-tests";
+    let loginCount = 0;
+    let networkRequests = 0;
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      networkFetcher: async (input) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        networkRequests += 1;
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+      codexAuthAdapter: {
+        startDeviceCodeLogin: async () => {
+          loginCount += 1;
+          return {
+            loginId: `login-codex-${loginCount.toString().padStart(3, "0")}`,
+            verificationUrl: "https://auth.openai.com/codex/device",
+            userCode: `UDHG-2HKJ${loginCount}`,
+            wsUrl: `ws://127.0.0.1:${4510 + loginCount}`,
+            pid: 4300 + loginCount,
+          };
+        },
+        readAccount: async () => ({
+          account: null,
+          requiresOpenaiAuth: true,
+        }),
+      },
+      // biome-ignore lint/suspicious/noExplicitAny: test mock object
+    } as any);
+
+    try {
+      const firstPending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.3-codex"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+
+      const repairBackend = backend as typeof backend & {
+        reconnectProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
+      };
+      const secondPending = (await repairBackend.reconnectProviderAccount?.({
+        providerAccountId: "openai.personal.codex-subscription",
+      })) as {
+        authRequestId: string;
+        providerAccountId: string;
+        status: string;
+        userCode?: string;
+      };
+
+      expect(firstPending.status).toBe("pending");
+      expect(secondPending).toEqual(
+        expect.objectContaining({
+          providerAccountId: "openai.personal.codex-subscription",
+          status: "pending",
+          userCode: "UDHG-2HKJ2",
+        }),
+      );
+      expect(secondPending.authRequestId).not.toBe(firstPending.authRequestId);
+      expect(loginCount).toBe(2);
+      expect(networkRequests).toBe(0);
+
+      await expect(backend.listProviderDeviceAuthorizations()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            authRequestId: firstPending.authRequestId,
+            providerAccountId: "openai.personal.codex-subscription",
+            status: "failed",
+            lastError: "Superseded by a newer sign-in attempt.",
+          }),
+          expect.objectContaining({
+            authRequestId: secondPending.authRequestId,
+            providerAccountId: "openai.personal.codex-subscription",
+            status: "pending",
+            userCode: "UDHG-2HKJ2",
+          }),
+        ]),
+      );
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("starting Codex Subscription authorization again supersedes the older pending session", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `account-repair-codex-restart-${Date.now()}`);
+    const scopeId = "account-repair-codex-restart-tests";
+    let loginCount = 0;
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      networkFetcher: async (input) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+      codexAuthAdapter: {
+        startDeviceCodeLogin: async () => {
+          loginCount += 1;
+          return {
+            loginId: `login-codex-${loginCount.toString().padStart(3, "0")}`,
+            verificationUrl: "https://auth.openai.com/codex/device",
+            userCode: `FRESH-CODE-${loginCount}`,
+            wsUrl: `ws://127.0.0.1:${4610 + loginCount}`,
+            pid: 4400 + loginCount,
+          };
+        },
+        readAccount: async () => ({
+          account: null,
+          requiresOpenaiAuth: true,
+        }),
+      },
+      // biome-ignore lint/suspicious/noExplicitAny: test mock object
+    } as any);
+
+    try {
+      const firstPending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.3-codex"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+      const secondPending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.3-codex"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+
+      expect(firstPending.status).toBe("pending");
+      expect(secondPending).toEqual(
+        expect.objectContaining({
+          providerAccountId: "openai.personal.codex-subscription",
+          status: "pending",
+          userCode: "FRESH-CODE-2",
+        }),
+      );
+      expect(secondPending.authRequestId).not.toBe(firstPending.authRequestId);
+      expect(loginCount).toBe(2);
+
+      await expect(backend.listProviderDeviceAuthorizations()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            authRequestId: firstPending.authRequestId,
+            providerAccountId: "openai.personal.codex-subscription",
+            status: "failed",
+            lastError: "Superseded by a newer sign-in attempt.",
+          }),
+          expect.objectContaining({
+            authRequestId: secondPending.authRequestId,
+            providerAccountId: "openai.personal.codex-subscription",
+            status: "pending",
+            userCode: "FRESH-CODE-2",
+          }),
+        ]),
+      );
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
   test("update API key preserves account identity, bindings, and endpoint associations", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `account-repair-apikey-${Date.now()}`);
     const scopeId = "account-repair-apikey-tests";

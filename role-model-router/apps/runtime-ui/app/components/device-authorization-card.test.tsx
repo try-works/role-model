@@ -25,7 +25,7 @@ describe("DeviceAuthorizationCard", () => {
     expect(markup).toContain("Enter this code on the OpenAI page");
     expect(markup).toContain("ABCD-12345");
     expect(markup).toContain("Copy code");
-    expect(markup).toContain("Open OpenAI verification page");
+    expect(markup).toContain("Refresh code and open OpenAI verification page");
     expect(markup).toContain("OpenAI asks for this code after you sign in.");
   });
 

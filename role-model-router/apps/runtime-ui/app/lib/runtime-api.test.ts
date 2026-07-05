@@ -31,6 +31,7 @@ import {
   fetchVersionInfo,
   loadLlamaSwapModel,
   loadPeerModel,
+  openRuntimeExternalUrl,
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
   removeRuntimeAccountModel,
@@ -1958,6 +1959,34 @@ describe("updateRuntimeAccountApiKey", () => {
         backend: "local-file",
         ref: "api-key/moonshot/moonshot.personal.primary",
       },
+    });
+  });
+});
+
+describe("openRuntimeExternalUrl", () => {
+  test("posts the verification URL to the runtime system browser helper", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/system/open-url");
+      expect(init?.method).toBe("POST");
+      expect(init?.body).toBe(
+        JSON.stringify({
+          url: "https://auth.openai.com/device",
+        }),
+      );
+
+      return jsonResponse({
+        opened: true,
+        url: "https://auth.openai.com/device",
+      });
+    });
+
+    await expect(
+      openRuntimeExternalUrl("https://auth.openai.com/device", fetcher),
+    ).resolves.toEqual({
+      opened: true,
+      url: "https://auth.openai.com/device",
     });
   });
 });

@@ -7,6 +7,7 @@ coverage/
 role-model-router/rust/target/
 runtime-output/
 .cache/
+.tmp/executor-ref/
 .cursor/session.md
 role-model-router/apps/runtime-ui/build/
 role-model-router/apps/runtime-ui/test-results/

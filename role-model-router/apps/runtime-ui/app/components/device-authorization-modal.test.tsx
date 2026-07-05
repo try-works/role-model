@@ -26,7 +26,7 @@ describe("DeviceAuthorizationModal", () => {
     expect(markup).toContain("OpenAI verification code");
     expect(markup).toContain("UGLI-ABKUP");
     expect(markup).toContain("Copy code");
-    expect(markup).toContain("Open OpenAI verification page");
+    expect(markup).toContain("Refresh code and open OpenAI verification page");
     expect(markup).toContain("Dismiss");
   });
 });

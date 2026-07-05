@@ -29,6 +29,7 @@ import {
   restorePersistedDeviceAuthorization,
   shouldAutoOpenDeviceAuthorizationWindow,
   shouldAutoPollDeviceAuthorization,
+  shouldFallbackToCurrentBrowserForDeviceAuthorization,
   syncConnectedDeviceAuthorizationEndpoints,
 } from "../lib/device-authorization";
 import { resolveProviderAccountLifecycle } from "../lib/provider-account-state";
@@ -41,6 +42,7 @@ import {
   activateRuntimeEndpoint,
   fetchRolePolicy,
   fetchRuntimeSnapshot,
+  openRuntimeExternalUrl,
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
   roleIdsToExplicitAssignment,
@@ -252,6 +254,7 @@ function buildPendingDeviceAuthorizationModalKey(
 export default function ProvidersRoute() {
   const [searchParams] = useSearchParams();
   const initializedRef = useRef(false);
+  const allowPersistedOauthRestoreRef = useRef(false);
   const shownDeviceAuthorizationModalKeyRef = useRef<string | null>(null);
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -280,6 +283,9 @@ export default function ProvidersRoute() {
       nextSnapshot: RuntimeSnapshot,
       requestedProviderId?: string | null,
       requestedVariantId?: string | null,
+      options?: {
+        readonly allowPersistedOauthRestore?: boolean;
+      },
     ) => {
       const remoteProviders = nextSnapshot.providers.filter(
         (provider) => provider.providerKind !== "local-engine",
@@ -300,6 +306,7 @@ export default function ProvidersRoute() {
         provider: nextProvider,
         variantId: nextVariantId,
       });
+      allowPersistedOauthRestoreRef.current = options?.allowPersistedOauthRestore ?? false;
 
       setProviderId(nextProvider.providerId);
       setVariantId(nextVariantId);
@@ -331,6 +338,7 @@ export default function ProvidersRoute() {
           nextSnapshot,
           searchParams.get("providerId"),
           searchParams.get("variantId"),
+          { allowPersistedOauthRestore: true },
         );
         initializedRef.current = true;
         return;
@@ -341,7 +349,9 @@ export default function ProvidersRoute() {
           .filter((provider) => provider.providerKind !== "local-engine")
           .some((provider) => provider.providerId === providerId)
       ) {
-        applyProviderSelection(nextSnapshot, null, null);
+        applyProviderSelection(nextSnapshot, null, null, {
+          allowPersistedOauthRestore: false,
+        });
       }
     } catch (value: unknown) {
       setError(value instanceof Error ? value.message : "Could not load providers.");
@@ -357,6 +367,71 @@ export default function ProvidersRoute() {
       });
     },
     [selectedModel],
+  );
+
+  const refreshCodexSubscriptionAuthorization = useCallback(
+    async (session: RuntimeDeviceAuthorization): Promise<RuntimeDeviceAuthorization> => {
+      setAuthorizing(true);
+      setError(null);
+      setCopiedUserCode(false);
+      try {
+        const result = await reconnectRuntimeAccount({
+          providerAccountId: session.providerAccountId,
+        });
+        setOauthState(result);
+        await load();
+        return result;
+      } finally {
+        setAuthorizing(false);
+      }
+    },
+    [load],
+  );
+
+  const openVerificationUrl = useCallback(
+    async (session: RuntimeDeviceAuthorization | null) => {
+      if (!session) {
+        return;
+      }
+
+      let verificationSession = session;
+      if (isCodexSubscriptionDeviceAuthorization(session)) {
+        try {
+          verificationSession = await refreshCodexSubscriptionAuthorization(session);
+        } catch (value) {
+          setError(
+            value instanceof Error
+              ? value.message
+              : "Could not refresh the OpenAI verification code.",
+          );
+          return;
+        }
+      }
+
+      const verificationUrl = resolveVerificationWindowUrl(verificationSession);
+      if (!verificationUrl) {
+        return;
+      }
+
+      try {
+        await openRuntimeExternalUrl(verificationUrl);
+        return;
+      } catch {
+        if (!shouldFallbackToCurrentBrowserForDeviceAuthorization(session)) {
+          setError(
+            "Could not open the verification page in your default browser. Retry from the device-code card or copy the URL manually.",
+          );
+          return;
+        }
+      }
+
+      try {
+        window.open(verificationUrl, "_blank", "noopener,noreferrer");
+      } catch {
+        setError("Could not open the verification page. Copy the URL manually and continue.");
+      }
+    },
+    [refreshCodexSubscriptionAuthorization],
   );
 
   useEffect(() => {
@@ -399,13 +474,16 @@ export default function ProvidersRoute() {
       return;
     }
 
-    setOauthState((current) =>
-      restorePersistedDeviceAuthorization({
+    setOauthState((current) => {
+      const restored = restorePersistedDeviceAuthorization({
         current,
         providerAccountId,
         persistedSessions: snapshot.deviceAuthorizations,
-      }),
-    );
+        allowPersistedRestore: allowPersistedOauthRestoreRef.current,
+      });
+      allowPersistedOauthRestoreRef.current = false;
+      return restored;
+    });
   }, [providerAccountId, snapshot]);
 
   useEffect(() => {
@@ -523,15 +601,8 @@ export default function ProvidersRoute() {
         providerAccountId: account.providerAccountId,
       });
       setOauthState(result);
-      const verificationUrl = shouldAutoOpenDeviceAuthorizationWindow(result)
-        ? resolveVerificationWindowUrl(result)
-        : null;
-      if (verificationUrl) {
-        try {
-          window.open(verificationUrl, "_blank", "noopener,noreferrer");
-        } catch {
-          // Keep the inline verification link visible as the fallback path.
-        }
+      if (shouldAutoOpenDeviceAuthorizationWindow(result)) {
+        void openVerificationUrl(result);
       }
       await load();
     } catch (value) {
@@ -554,11 +625,15 @@ export default function ProvidersRoute() {
   }
 
   const onProviderChange = (nextProviderId: string) => {
-    applyProviderSelection(snapshot, nextProviderId, null);
+    applyProviderSelection(snapshot, nextProviderId, null, {
+      allowPersistedOauthRestore: false,
+    });
   };
 
   const onVariantChange = (nextVariantId: string) => {
-    applyProviderSelection(snapshot, selectedProvider?.providerId ?? providerId, nextVariantId);
+    applyProviderSelection(snapshot, selectedProvider?.providerId ?? providerId, nextVariantId, {
+      allowPersistedOauthRestore: false,
+    });
   };
 
   const onModelSelect = (modelId: string) => {
@@ -668,15 +743,8 @@ export default function ProvidersRoute() {
         quotaPolicyRef: "quota.default",
       });
       setOauthState(result);
-      const verificationUrl = shouldAutoOpenDeviceAuthorizationWindow(result)
-        ? resolveVerificationWindowUrl(result)
-        : null;
-      if (verificationUrl) {
-        try {
-          window.open(verificationUrl, "_blank", "noopener,noreferrer");
-        } catch {
-          // Keep the inline verification link visible as the fallback path.
-        }
+      if (shouldAutoOpenDeviceAuthorizationWindow(result)) {
+        void openVerificationUrl(result);
       }
       await load();
     } catch (value) {
@@ -974,6 +1042,7 @@ export default function ProvidersRoute() {
                   session={oauthState}
                   copyCodeLabel={copiedUserCode ? "Copied" : "Copy code"}
                   onCopyCode={() => void onCopyUserCode()}
+                  onOpenVerificationUrl={() => void openVerificationUrl(oauthState)}
                 />
               ) : null}
 
@@ -1149,6 +1218,7 @@ export default function ProvidersRoute() {
           copyCodeLabel={copiedUserCode ? "Copied" : "Copy code"}
           onClose={() => setDeviceAuthorizationModalSession(null)}
           onCopyCode={() => void onCopyUserCode()}
+          onOpenVerificationUrl={() => void openVerificationUrl(deviceAuthorizationModalSession)}
         />
       ) : null}
       {apiKeyModalAccount ? (

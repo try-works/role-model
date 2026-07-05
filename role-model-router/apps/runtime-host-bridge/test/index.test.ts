@@ -3249,7 +3249,7 @@ describe("runtime-host-bridge", () => {
           "    return;",
           "  }",
           "  if (message.id === 3 && message.method === 'turn/start') {",
-          "    if (message.params?.sandboxPolicy?.type !== 'danger-full-access') {",
+          "    if (message.params?.sandboxPolicy?.type !== 'dangerFullAccess') {",
           "      send({ method: 'turn/failed', params: { error: { message: 'sandbox policy mismatch', code: 'invalid_request', data: { received: message.params?.sandboxPolicy } } } });",
           "      return;",
           "    }",
@@ -9218,9 +9218,19 @@ describe("runtime-host-bridge", () => {
     );
     expect(source).toContain("const executionRegistry = getRouterEffectiveRegistry();");
     expect(source).toContain("const executionInventory = getRouterEffectiveRoutableInventory();");
+    expect(source).toContain(
+      "const executionSnapshot = createExecutionRuntimeSnapshot(executionRegistry);",
+    );
+    expect(source).toContain("registry: executionSnapshot.registry,");
+    expect(source).toContain("catalog: executionSnapshot.executionCatalog,");
+    expect(source).toContain("accounts: executionSnapshot.accounts,");
+    expect(source).toContain("registrySources: executionSnapshot.registrySources,");
     expect(source).not.toContain("mapChatCompletionsRequest(\n          currentRegistry,");
     expect(source).not.toContain("mapResponsesRequest(\n          currentRegistry,");
     expect(source).not.toContain("resolveRequestedModelPool(\n      currentRegistry,");
+    expect(source).not.toContain(
+      "executeLiveRoutedRequest({\n            routeResult: routed,\n            catalog: getCurrentExecutionCatalog(),",
+    );
   });
 
   test("persists difficulty-routing diagnostics for runtime-backed chat requests", async () => {
@@ -13115,6 +13125,426 @@ describe("runtime-host-bridge", () => {
       } else {
         process.env.MOONSHOT_BACKUP_API_KEY = originalBackupApiKey;
       }
+    }
+  });
+
+  test("preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "runtime-host-codex-timeout-"));
+    const scopeId = "runtime-host-codex-timeout-tests";
+    let executeAttempts = 0;
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          codexAuthAdapter?: {
+            startDeviceCodeLogin: (input: { codexHome: string }) => Promise<{
+              loginId: string;
+              verificationUrl: string;
+              userCode: string;
+              wsUrl: string;
+              pid: number;
+            }>;
+            readAccount: (input: { codexHome: string }) => Promise<{
+              account: {
+                type: string;
+                email: string;
+                planType: string;
+              } | null;
+              requiresOpenaiAuth: boolean;
+            }>;
+          };
+          codexExecutionAdapter?: {
+            executeRequest: (input: {
+              requestId: string;
+              modelId: string;
+              requestCapture: {
+                url: string;
+                body: Record<string, unknown>;
+              };
+            }) => Promise<unknown>;
+          };
+        }) => Promise<{
+          startProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<{
+            status: string;
+            authRequestId: string;
+          }>;
+          pollProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (body: Record<string, unknown>) => Promise<{
+            endpointId: string;
+          }>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          shutdown: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      codexAuthAdapter: {
+        startDeviceCodeLogin: async () => ({
+          loginId: "login-codex-timeout-001",
+          verificationUrl: "https://auth.openai.com/codex/device",
+          userCode: "TIME-OUT01",
+          wsUrl: "ws://127.0.0.1:4593",
+          pid: 4593,
+        }),
+        readAccount: async ({ codexHome }) => {
+          await mkdir(codexHome, { recursive: true });
+          await writeFile(
+            path.join(codexHome, "auth.json"),
+            JSON.stringify(
+              {
+                auth_mode: "chatgpt",
+                tokens: {
+                  access_token: "codex-access-timeout-001",
+                  refresh_token: "codex-refresh-timeout-001",
+                  account_id: "codex-account-timeout-001",
+                },
+                last_refresh: "2026-07-06T09:00:00.000Z",
+              },
+              null,
+              2,
+            ),
+            "utf8",
+          );
+          return {
+            account: {
+              type: "chatgpt",
+              email: "timeout@example.com",
+              planType: "pro",
+            },
+            requiresOpenaiAuth: true,
+          };
+        },
+      },
+      codexExecutionAdapter: {
+        executeRequest: async () => {
+          executeAttempts += 1;
+          throw new Error("Connection Error: Could not reach the AI service. Request timed out.");
+        },
+      },
+    });
+
+    try {
+      const pending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.4"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+
+      expect(pending.status).toBe("pending");
+      await expect(
+        backend.pollProviderDeviceAuthorization({
+          authRequestId: pending.authRequestId,
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          status: "connected",
+          providerAccountId: "openai.personal.codex-subscription",
+        }),
+      );
+
+      const endpoint = await backend.activateEndpoint({
+        providerAccountId: "openai.personal.codex-subscription",
+        modelId: "chatgpt/gpt-5.4",
+        region: "global",
+      });
+
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "chatgpt/gpt-5.4",
+            messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
+          },
+          "req-runtime-bridge-codex-timeout-001",
+        ),
+      ).rejects.toThrow(/could not reach the ai service|timed out/i);
+      expect(executeAttempts).toBe(2);
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "chatgpt/gpt-5.4",
+            messages: [{ role: "user", content: "Try again while the endpoint is cooling down." }],
+          },
+          "req-runtime-bridge-codex-timeout-002",
+        ),
+      ).rejects.toThrow(/temporarily unavailable|recent execution failures/i);
+      expect(executeAttempts).toBe(2);
+
+      const databasePath = resolveSqliteMemoryLocation({
+        runtimeStateRoot,
+        scopeId,
+      });
+      const database = new DatabaseSync(databasePath);
+      try {
+        const row = database
+          .prepare(
+            "SELECT maintenance_value FROM memory_maintenance WHERE maintenance_key = ? LIMIT 1",
+          )
+          .get("routing.execution-failure-cooldowns.v1") as
+          | {
+              maintenance_value: string;
+            }
+          | undefined;
+
+        expect(row).toBeDefined();
+        const cooldowns =
+          row && typeof row.maintenance_value === "string"
+            ? (JSON.parse(row.maintenance_value) as Record<string, Record<string, unknown>>)
+            : {};
+        expect(cooldowns).toEqual(
+          expect.objectContaining({
+            [endpoint.endpointId]: expect.objectContaining({
+              endpointId: endpoint.endpointId,
+              failureCount: 1,
+              lastErrorClass: "upstream_timeout",
+            }),
+          }),
+        );
+      } finally {
+        database.close();
+      }
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("executes direct exact-model chat requests through the Codex subscription endpoint", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "runtime-host-codex-direct-"));
+    const scopeId = "runtime-host-codex-direct-tests";
+    const seenRequests: Array<{
+      requestId: string;
+      modelId: string;
+      requestModel: string | null;
+    }> = [];
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          codexAuthAdapter?: {
+            startDeviceCodeLogin: (input: { codexHome: string }) => Promise<{
+              loginId: string;
+              verificationUrl: string;
+              userCode: string;
+              wsUrl: string;
+              pid: number;
+            }>;
+            readAccount: (input: { codexHome: string }) => Promise<{
+              account: {
+                type: string;
+                email: string;
+                planType: string;
+              } | null;
+              requiresOpenaiAuth: boolean;
+            }>;
+          };
+          codexExecutionAdapter?: {
+            executeRequest: (input: {
+              requestId: string;
+              modelId: string;
+              requestCapture: {
+                url: string;
+                body: Record<string, unknown>;
+              };
+            }) => Promise<{
+              statusCode: number;
+              body: Record<string, unknown>;
+              vendorMetadata?: Record<string, unknown>;
+            }>;
+          };
+        }) => Promise<{
+          startProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<{
+            status: string;
+            authRequestId: string;
+          }>;
+          pollProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (body: Record<string, unknown>) => Promise<{
+            endpointId: string;
+          }>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            requestOptions?: {
+              endpointId?: string;
+            },
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            outputText: string;
+          }>;
+          shutdown: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      codexAuthAdapter: {
+        startDeviceCodeLogin: async () => ({
+          loginId: "login-codex-direct-001",
+          verificationUrl: "https://auth.openai.com/codex/device",
+          userCode: "DRECT-001",
+          wsUrl: "ws://127.0.0.1:4594",
+          pid: 4594,
+        }),
+        readAccount: async ({ codexHome }) => {
+          await mkdir(codexHome, { recursive: true });
+          await writeFile(
+            path.join(codexHome, "auth.json"),
+            JSON.stringify(
+              {
+                auth_mode: "chatgpt",
+                tokens: {
+                  access_token: "codex-access-direct-001",
+                  refresh_token: "codex-refresh-direct-001",
+                  account_id: "codex-account-direct-001",
+                },
+                last_refresh: "2026-07-06T09:30:00.000Z",
+              },
+              null,
+              2,
+            ),
+            "utf8",
+          );
+          return {
+            account: {
+              type: "chatgpt",
+              email: "direct@example.com",
+              planType: "pro",
+            },
+            requiresOpenaiAuth: true,
+          };
+        },
+      },
+      codexExecutionAdapter: {
+        executeRequest: async ({ requestId, modelId, requestCapture }) => {
+          seenRequests.push({
+            requestId,
+            modelId,
+            requestModel:
+              typeof requestCapture.body.model === "string" ? requestCapture.body.model : null,
+          });
+          return {
+            statusCode: 200,
+            body: {
+              id: `chatcmpl-${requestId}`,
+              choices: [
+                {
+                  index: 0,
+                  finish_reason: "stop",
+                  message: {
+                    role: "assistant",
+                    content: `Direct Codex response for ${modelId}`,
+                  },
+                },
+              ],
+              usage: {
+                prompt_tokens: 28,
+                completion_tokens: 8,
+              },
+            },
+            vendorMetadata: {
+              vendorId: "codex-app-server",
+              latencyMs: 9,
+            },
+          };
+        },
+      },
+    });
+
+    try {
+      const pending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.4"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+
+      await expect(
+        backend.pollProviderDeviceAuthorization({
+          authRequestId: pending.authRequestId,
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          status: "connected",
+          providerAccountId: "openai.personal.codex-subscription",
+        }),
+      );
+
+      const endpoint = await backend.activateEndpoint({
+        providerAccountId: "openai.personal.codex-subscription",
+        modelId: "chatgpt/gpt-5.4",
+        region: "global",
+      });
+
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "chatgpt/gpt-5.4",
+            messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
+          },
+          "req-runtime-bridge-codex-direct-001",
+          undefined,
+          {
+            endpointId: endpoint.endpointId,
+          },
+        ),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          model: "chatgpt/gpt-5.4",
+          endpointId: endpoint.endpointId,
+          outputText: "Direct Codex response for chatgpt/gpt-5.4",
+        }),
+      );
+
+      expect(seenRequests).toEqual([
+        {
+          requestId: "req-runtime-bridge-codex-direct-001",
+          modelId: "chatgpt/gpt-5.4",
+          requestModel: "gpt-5.4",
+        },
+      ]);
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   });
 

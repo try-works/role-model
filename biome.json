@@ -25,6 +25,7 @@
       "**/.recursive/**",
       "**/.react-router/**",
       "**/.source/**",
+      ".tmp/executor-ref/**",
       "**/.worktrees/**",
       "**/build/**",
       "**/dist/**",
