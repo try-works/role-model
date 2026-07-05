@@ -70,6 +70,7 @@ describe("resolveRuntimeVersionInfo", () => {
       resolveRuntimeVersionInfo({
         repoRoot,
         fallbackConfigVersion: "1.1",
+        env: {},
         runGitCommand: (args) => {
           const command = args.join(" ");
           if (command.startsWith("tag --list")) {
