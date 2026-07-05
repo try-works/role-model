@@ -1136,7 +1136,9 @@ describe("restart rehydration", () => {
 
       const database = new DatabaseSync(databasePath);
       database
-        .prepare("UPDATE provider_accounts SET model_role_bindings_json = ? WHERE provider_account_id = ?")
+        .prepare(
+          "UPDATE provider_accounts SET model_role_bindings_json = ? WHERE provider_account_id = ?",
+        )
         .run(
           JSON.stringify([{ modelId: "lfm2.5-8b-a1b", roleIds: ["general.chat"] }]),
           "local-openai-compatible.personal.peer-a",
