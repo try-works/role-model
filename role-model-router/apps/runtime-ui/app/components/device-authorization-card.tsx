@@ -20,6 +20,7 @@ export function DeviceAuthorizationCard(input: {
   readonly session: RuntimeDeviceAuthorization;
   readonly copyCodeLabel: string;
   readonly onCopyCode: () => void;
+  readonly onOpenVerificationUrl?: () => void;
 }) {
   const verificationUrl = resolveVerificationWindowUrl(input.session);
   const isCodexSubscription = isCodexSubscriptionDeviceAuthorization(input.session);
@@ -51,14 +52,13 @@ export function DeviceAuthorizationCard(input: {
               {input.copyCodeLabel}
             </button>
             {verificationUrl ? (
-              <a
+              <button
                 className={secondaryButtonClassName}
-                href={verificationUrl}
-                rel="noreferrer"
-                target="_blank"
+                type="button"
+                onClick={input.onOpenVerificationUrl}
               >
-                Open OpenAI verification page
-              </a>
+                Refresh code and open OpenAI verification page
+              </button>
             ) : null}
           </div>
         </div>

@@ -30,6 +30,12 @@ export function shouldAutoOpenDeviceAuthorizationWindow(
   return !isCodexSubscriptionDeviceAuthorization(session);
 }
 
+export function shouldFallbackToCurrentBrowserForDeviceAuthorization(
+  session: Pick<RuntimeDeviceAuthorization, "providerId" | "variantId">,
+): boolean {
+  return !isCodexSubscriptionDeviceAuthorization(session);
+}
+
 export function shouldAutoPollDeviceAuthorization(
   session: RuntimeDeviceAuthorization | null,
 ): boolean {
@@ -52,6 +58,7 @@ export function restorePersistedDeviceAuthorization(input: {
   readonly current: RuntimeDeviceAuthorization | null;
   readonly providerAccountId: string;
   readonly persistedSessions: readonly RuntimeDeviceAuthorization[];
+  readonly allowPersistedRestore?: boolean;
 }): RuntimeDeviceAuthorization | null {
   const providerAccountId = input.providerAccountId.trim();
   if (providerAccountId.length === 0) {
@@ -60,6 +67,10 @@ export function restorePersistedDeviceAuthorization(input: {
 
   if (input.current?.providerAccountId === providerAccountId) {
     return input.current;
+  }
+
+  if (input.allowPersistedRestore === false) {
+    return null;
   }
 
   return (

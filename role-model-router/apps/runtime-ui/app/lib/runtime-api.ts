@@ -1819,6 +1819,19 @@ export async function updateRuntimeAccountApiKey(
   });
 }
 
+export async function openRuntimeExternalUrl(
+  url: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ opened: true; url: string }> {
+  return fetchJson<{ opened: true; url: string }>("/api/role-model/system/open-url", fetcher, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ url }),
+  });
+}
+
 export async function activateRuntimeEndpoint(
   payload: Record<string, unknown>,
   fetcher: RuntimeFetcher = fetch,

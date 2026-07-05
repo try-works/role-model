@@ -7,6 +7,7 @@ import {
   restorePersistedDeviceAuthorization,
   shouldAutoOpenDeviceAuthorizationWindow,
   shouldAutoPollDeviceAuthorization,
+  shouldFallbackToCurrentBrowserForDeviceAuthorization,
   syncConnectedDeviceAuthorizationEndpoints,
 } from "./device-authorization";
 
@@ -104,6 +105,26 @@ describe("isCodexSubscriptionDeviceAuthorization", () => {
         variantId: "kimi-code",
       }),
     ).toBe(false);
+  });
+});
+
+describe("shouldFallbackToCurrentBrowserForDeviceAuthorization", () => {
+  test("does not fall back to the current browser context for Codex Subscription", () => {
+    expect(
+      shouldFallbackToCurrentBrowserForDeviceAuthorization({
+        providerId: "openai",
+        variantId: "openai-codex-subscription",
+      }),
+    ).toBe(false);
+  });
+
+  test("still allows browser-context fallback for standard device-auth providers", () => {
+    expect(
+      shouldFallbackToCurrentBrowserForDeviceAuthorization({
+        providerId: "moonshot",
+        variantId: "kimi-code",
+      }),
+    ).toBe(true);
   });
 });
 
@@ -224,6 +245,26 @@ describe("restorePersistedDeviceAuthorization", () => {
       userCode: "ABCD-EFGH",
       verificationUriComplete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
     });
+  });
+
+  test("does not auto-restore a persisted session when restore is suppressed for manual selection changes", () => {
+    expect(
+      restorePersistedDeviceAuthorization({
+        current: null,
+        providerAccountId: "openai.personal.codex-subscription",
+        persistedSessions: [
+          {
+            authRequestId: "auth-001",
+            providerAccountId: "openai.personal.codex-subscription",
+            providerId: "openai",
+            variantId: "openai-codex-subscription",
+            status: "pending",
+            userCode: "STALE-CODE",
+          },
+        ],
+        allowPersistedRestore: false,
+      }),
+    ).toBeNull();
   });
 
   test("preserves the current session when it already matches the selected provider account", () => {

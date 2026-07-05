@@ -18,6 +18,7 @@ export function DeviceAuthorizationModal(input: {
   readonly copyCodeLabel: string;
   readonly onClose: () => void;
   readonly onCopyCode: () => void;
+  readonly onOpenVerificationUrl?: () => void;
 }) {
   const verificationUrl = resolveVerificationWindowUrl(input.session);
 
@@ -79,14 +80,13 @@ export function DeviceAuthorizationModal(input: {
             {input.copyCodeLabel}
           </button>
           {verificationUrl ? (
-            <a
+            <button
               className={secondaryButtonClassName}
-              href={verificationUrl}
-              rel="noreferrer"
-              target="_blank"
+              type="button"
+              onClick={input.onOpenVerificationUrl}
             >
-              Open OpenAI verification page
-            </a>
+              Refresh code and open OpenAI verification page
+            </button>
           ) : null}
         </div>
       </dialog>
