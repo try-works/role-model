@@ -7500,6 +7500,26 @@ export function createRequestScopedToolRegistry(
     return buildRequestScopedGrepResult(options.workspaceRoot, pattern);
   };
 
+  const executeListDir = async (toolArguments: unknown): Promise<unknown> => {
+    return buildRequestScopedListDirResult(options.workspaceRoot, toolArguments);
+  };
+
+  const executeWriteFile = async (toolArguments: unknown): Promise<unknown> => {
+    return await writeRequestScopedWorkspaceFile(options.workspaceRoot, toolArguments);
+  };
+
+  const executeCreateDirectory = async (toolArguments: unknown): Promise<unknown> => {
+    return await createRequestScopedWorkspaceDirectory(options.workspaceRoot, toolArguments);
+  };
+
+  const executeMoveFile = async (toolArguments: unknown): Promise<unknown> => {
+    return await moveRequestScopedWorkspacePath(options.workspaceRoot, toolArguments);
+  };
+
+  const executeDeleteFile = async (toolArguments: unknown): Promise<unknown> => {
+    return await deleteRequestScopedWorkspacePath(options.workspaceRoot, toolArguments);
+  };
+
   const executeApplyPatch = async (toolArguments: unknown): Promise<unknown> => {
     const diff = readRequestScopedDiffArgument(toolArguments);
     if (!diff) {
@@ -7527,6 +7547,20 @@ export function createRequestScopedToolRegistry(
                 return { content: await executeReadFile(toolArguments) };
               case "grep_search":
                 return { content: await executeGrepSearch(toolArguments) };
+              case "list_dir":
+                return { content: await executeListDir(toolArguments) };
+              case "write_file":
+                return { content: await executeWriteFile(toolArguments) };
+              case "create_directory":
+              case "create_folder":
+              case "mkdir":
+                return { content: await executeCreateDirectory(toolArguments) };
+              case "move_file":
+              case "rename_file":
+                return { content: await executeMoveFile(toolArguments) };
+              case "delete_file":
+              case "remove_file":
+                return { content: await executeDeleteFile(toolArguments) };
               case "apply_patch":
                 return { content: await executeApplyPatch(toolArguments) };
               case "list_endpoints":
@@ -7534,7 +7568,9 @@ export function createRequestScopedToolRegistry(
               case "get_metrics":
                 return { content: buildRequestScopedMetrics(toolArguments) };
               default:
-                return { content: toolArguments };
+                throw new Error(
+                  `Request-scoped tool ${tool.name} is not implemented by the Codex Subscription bridge.`,
+                );
             }
           },
         })),
@@ -7632,7 +7668,9 @@ function resolveRequestScopedWorkspacePath(
     normalizedResolvedPath !== normalizedWorkspaceRoot.toLowerCase() &&
     !normalizedResolvedPath.startsWith(workspacePrefix)
   ) {
-    throw new Error(`Path ${requestedPath} escapes the managed Codex workspace.`);
+    throw new Error(
+      `Path ${requestedPath} is outside the managed Codex workspace. Use shell commands for external filesystem paths instead of the request-scoped file tools.`,
+    );
   }
   return resolvedPath;
 }
@@ -7642,6 +7680,9 @@ function readRequestScopedPathArgument(toolArguments: unknown): string | null {
     "path",
     "file_path",
     "filepath",
+    "directory_path",
+    "dir_path",
+    "folder_path",
   ]);
 }
 
@@ -7651,6 +7692,34 @@ function readRequestScopedPatternArgument(toolArguments: unknown): string | null
 
 function readRequestScopedDiffArgument(toolArguments: unknown): string | null {
   return readRequestScopedStringValue(readRequestScopedObject(toolArguments), ["diff", "patch"]);
+}
+
+function readRequestScopedContentArgument(toolArguments: unknown): string | null {
+  return readRequestScopedStringValue(readRequestScopedObject(toolArguments), [
+    "content",
+    "contents",
+    "text",
+  ]);
+}
+
+function readRequestScopedSourcePathArgument(toolArguments: unknown): string | null {
+  return readRequestScopedStringValue(readRequestScopedObject(toolArguments), [
+    "source_path",
+    "sourcePath",
+    "from",
+    "old_path",
+    "oldPath",
+  ]);
+}
+
+function readRequestScopedDestinationPathArgument(toolArguments: unknown): string | null {
+  return readRequestScopedStringValue(readRequestScopedObject(toolArguments), [
+    "destination_path",
+    "destinationPath",
+    "to",
+    "new_path",
+    "newPath",
+  ]);
 }
 
 function collectRequestScopedWorkspaceFiles(rootPath: string): string[] {
@@ -7682,20 +7751,109 @@ function buildRequestScopedGrepResult(
     throw new Error("This runtime request did not include a workspace root.");
   }
   const matcher = new RegExp(patternText, "i");
-  const matches: string[] = [];
+  const matchBlocks: string[] = [];
   for (const filePath of collectRequestScopedWorkspaceFiles(workspaceRoot)) {
     const relativePath = path.relative(workspaceRoot, filePath).replace(/\\/g, "/");
     const lines = readFileSync(filePath, "utf8").split(/\r?\n/);
+    const fileMatches: string[] = [];
     lines.forEach((line, index) => {
       if (matcher.test(line)) {
-        matches.push(`line ${index + 1}: ${line}`);
+        fileMatches.push(`line ${index + 1}: ${line}`);
       }
     });
-    if (matches.length > 0) {
-      return `Found ${matches.length} matches in ${relativePath}:\n${matches.join("\n")}`;
+    if (fileMatches.length > 0) {
+      matchBlocks.push(`${relativePath}:\n${fileMatches.join("\n")}`);
     }
   }
+  if (matchBlocks.length > 0) {
+    const totalMatches = matchBlocks.reduce(
+      (sum, block) => sum + Math.max(0, block.split(/\r?\n/).length - 1),
+      0,
+    );
+    return `Found ${totalMatches} matches for ${patternText}:\n${matchBlocks.join("\n\n")}`;
+  }
   return `Found 0 matches for ${patternText}.`;
+}
+
+function buildRequestScopedListDirResult(
+  workspaceRoot: string | undefined,
+  toolArguments: unknown,
+): string {
+  if (!workspaceRoot) {
+    throw new Error("This runtime request did not include a workspace root.");
+  }
+  const requestedPath = readRequestScopedPathArgument(toolArguments) ?? ".";
+  const resolvedPath = resolveRequestScopedWorkspacePath(workspaceRoot, requestedPath);
+  const stats = statSync(resolvedPath);
+  if (!stats.isDirectory()) {
+    throw new Error(`Path ${requestedPath} is not a directory.`);
+  }
+  const relativePath = path.relative(workspaceRoot, resolvedPath).replace(/\\/g, "/");
+  const renderedPath = relativePath.length > 0 ? relativePath : ".";
+  const entries = readdirSync(resolvedPath, { withFileTypes: true })
+    .map((entry) => (entry.isDirectory() ? `${entry.name}/` : entry.name))
+    .sort(compareText);
+  return `Directory ${renderedPath}:\n${entries.join("\n")}`;
+}
+
+async function writeRequestScopedWorkspaceFile(
+  workspaceRoot: string | undefined,
+  toolArguments: unknown,
+): Promise<string> {
+  const requestedPath = readRequestScopedPathArgument(toolArguments);
+  if (!requestedPath) {
+    throw new Error("write_file requires a path string.");
+  }
+  const content = readRequestScopedContentArgument(toolArguments);
+  if (content === null) {
+    throw new Error("write_file requires content text.");
+  }
+  const resolvedPath = resolveRequestScopedWorkspacePath(workspaceRoot, requestedPath);
+  await mkdir(path.dirname(resolvedPath), { recursive: true });
+  await writeFile(resolvedPath, content, "utf8");
+  return `Wrote ${requestedPath}.`;
+}
+
+async function createRequestScopedWorkspaceDirectory(
+  workspaceRoot: string | undefined,
+  toolArguments: unknown,
+): Promise<string> {
+  const requestedPath = readRequestScopedPathArgument(toolArguments);
+  if (!requestedPath) {
+    throw new Error("create_directory requires a path string.");
+  }
+  const resolvedPath = resolveRequestScopedWorkspacePath(workspaceRoot, requestedPath);
+  await mkdir(resolvedPath, { recursive: true });
+  return `Created directory ${requestedPath}.`;
+}
+
+async function moveRequestScopedWorkspacePath(
+  workspaceRoot: string | undefined,
+  toolArguments: unknown,
+): Promise<string> {
+  const sourcePath = readRequestScopedSourcePathArgument(toolArguments);
+  const destinationPath = readRequestScopedDestinationPathArgument(toolArguments);
+  if (!sourcePath || !destinationPath) {
+    throw new Error("move_file requires source and destination path strings.");
+  }
+  const resolvedSourcePath = resolveRequestScopedWorkspacePath(workspaceRoot, sourcePath);
+  const resolvedDestinationPath = resolveRequestScopedWorkspacePath(workspaceRoot, destinationPath);
+  await mkdir(path.dirname(resolvedDestinationPath), { recursive: true });
+  await rename(resolvedSourcePath, resolvedDestinationPath);
+  return `Moved ${sourcePath} to ${destinationPath}.`;
+}
+
+async function deleteRequestScopedWorkspacePath(
+  workspaceRoot: string | undefined,
+  toolArguments: unknown,
+): Promise<string> {
+  const requestedPath = readRequestScopedPathArgument(toolArguments);
+  if (!requestedPath) {
+    throw new Error("delete_file requires a path string.");
+  }
+  const resolvedPath = resolveRequestScopedWorkspacePath(workspaceRoot, requestedPath);
+  await rm(resolvedPath, { recursive: true, force: true });
+  return `Deleted ${requestedPath}.`;
 }
 
 function parsePatchTargetPath(diff: string): string | null {
@@ -8065,10 +8223,43 @@ function readCodexAppServerMessageText(data: unknown): string {
 }
 
 function readCodexAppServerErrorMessage(error: unknown, fallback: string): string {
-  if (typeof error === "object" && error !== null && "message" in error) {
-    const message = (error as { readonly message?: unknown }).message;
-    if (typeof message === "string" && message.trim().length > 0) {
-      return message;
+  const parts: string[] = [];
+  const pending: unknown[] = [error];
+  const seen = new Set<unknown>();
+  while (pending.length > 0) {
+    const current = pending.shift();
+    if (current === null || current === undefined || seen.has(current)) {
+      continue;
+    }
+    seen.add(current);
+    if (typeof current === "string" && current.trim().length > 0) {
+      parts.push(current.trim());
+      continue;
+    }
+    if (typeof current !== "object") {
+      continue;
+    }
+    const record = current as Record<string, unknown>;
+    for (const key of ["message", "code", "type", "error_description", "detail", "details"]) {
+      const value = record[key];
+      if (typeof value === "string" && value.trim().length > 0) {
+        parts.push(value.trim());
+      }
+    }
+    for (const key of ["error", "cause", "data", "body", "response"]) {
+      if (key in record) {
+        pending.push(record[key]);
+      }
+    }
+  }
+  if (parts.length > 0) {
+    return [...new Set(parts)].join(" | ").slice(0, 2_000);
+  }
+  if (error !== undefined) {
+    try {
+      return JSON.stringify(error).slice(0, 2_000);
+    } catch {
+      return String(error);
     }
   }
   return fallback;
@@ -8583,10 +8774,27 @@ export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): st
         : Array.isArray(requestCapture.body.input)
           ? requestCapture.body.input
           : [];
-  const dynamicToolNames = buildCodexAppServerDynamicToolBindings(requestCapture).map((tool) =>
+  const dynamicToolBindings = buildCodexAppServerDynamicToolBindings(requestCapture);
+  const dynamicToolNames = dynamicToolBindings.map((tool) =>
     tool.originalName === tool.exposedName
       ? tool.originalName
       : `${tool.originalName} -> ${tool.exposedName}`,
+  );
+  const hasRequestScopedFileTools = dynamicToolBindings.some((tool) =>
+    [
+      "read_file",
+      "grep_search",
+      "list_dir",
+      "write_file",
+      "create_directory",
+      "create_folder",
+      "mkdir",
+      "move_file",
+      "rename_file",
+      "delete_file",
+      "remove_file",
+      "apply_patch",
+    ].includes(tool.originalName),
   );
   const hostedToolNames = readCodexHostedToolNames(requestCapture);
   const conversation = rawMessages
@@ -8623,6 +8831,13 @@ export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): st
     ...(dynamicToolNames.length > 0
       ? [
           `Request-scoped dynamic tools are available for this turn: ${dynamicToolNames.join(", ")}.`,
+        ]
+      : []),
+    ...(hasRequestScopedFileTools
+      ? [
+          "Request-scoped file tools only operate inside the managed Codex workspace.",
+          "When the user references an absolute or external filesystem path outside that workspace, use shell tools to inspect and read it instead of assuming the path is inaccessible.",
+          "If a shell command successfully lists or reads an external path, continue with shell-based inspection rather than asking the user to copy files into the workspace.",
         ]
       : []),
     "Use any available hosted or request-scoped tools whenever they help satisfy the request, including file and shell operations when exposed through those tools.",
@@ -9026,10 +9241,7 @@ export async function executeCodexAppServerTurnOverStdio(input: {
           cwd: input.workspaceRoot,
           approvalPolicy: "never",
           sandboxPolicy: {
-            type: "readOnly",
-            access: {
-              type: "fullAccess",
-            },
+            type: "danger-full-access",
           },
           ...(structuredOutputSchema ? { outputSchema: structuredOutputSchema } : {}),
         },
@@ -16375,6 +16587,7 @@ export async function createRuntimeBridgeBackend(
                   }) => {
                     runtimeToolRegistry ??= createRequestScopedToolRegistry(codexDynamicTools, {
                       workspaceRoot,
+                      applyPatchMode: "mutate",
                     });
                     const originalToolName =
                       originalToolNameByExposedName.get(toolName) ?? toolName;
