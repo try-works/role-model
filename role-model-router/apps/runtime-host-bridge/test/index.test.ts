@@ -1072,6 +1072,112 @@ describe("runtime-host-bridge", () => {
     expect(options.checkPeerHealth).toBe(backend.checkPeerHealth);
   });
 
+  test("passes the optional shutdown hook into CLI server options", async () => {
+    const shutdown = vi.fn(async () => undefined);
+    const backend = {
+      effectiveRegistry: registry,
+      getExecutionCatalog: async () => null,
+      executeChatCompletions: async () => {
+        throw new Error("unused");
+      },
+      executeResponses: async () => {
+        throw new Error("unused");
+      },
+      readVersionInfo: async () => ({}),
+      listActivityMetrics: async () => [],
+      readActivityCapture: async () => null,
+      getLocalLogs: async () => ({ logs: "" }),
+      proxyVendorLogStream: async () => null,
+      readRuntimeSummary: async () => ({}),
+      readRuntimeConfig: async () => ({ applied: false, path: null, config: null }),
+      updateRuntimeConfig: async () => ({ applied: false, path: null, config: null }),
+      readHealthStatus: async () => ({ status: "healthy" }),
+      readTelemetrySummary: async () => ({ totalRequests: 0 }),
+      listTelemetryComparisonRows: async () => [],
+      listTelemetryRequests: async () => [],
+      queryTelemetryAnalytics: async () => ({ buckets: [], ranking: null }),
+      subscribeTelemetry: () => () => undefined,
+      listProviders: async () => [],
+      listModels: async () => [],
+      listRoles: async () => [],
+      listAccounts: async () => [],
+      listProviderDeviceAuthorizations: async () => [],
+      upsertProviderAccount: async () => ({ providerAccountId: "acct-1" }),
+      startProviderDeviceAuthorization: async () => ({ status: "pending" }),
+      pollProviderDeviceAuthorization: async () => ({ status: "pending" }),
+      reconnectProviderAccount: async () => ({ status: "pending" }),
+      updateProviderApiKey: async () => ({ providerAccountId: "acct-1" }),
+      removeProviderAccountModel: async () => ({ success: true, removedAccount: false }),
+      activateEndpoint: async () => ({ success: true }),
+      readControllerAssignment: async () => null,
+      updateControllerAssignment: async () => null,
+      readRouterSummary: async () => ({}),
+      readRouterConfig: async () => ({}),
+      listRouterCandidates: async () => [],
+      listRouterDecisions: async () => [],
+      readRouterDecision: async () => null,
+      listEndpoints: async () => [],
+      listRecentRequestObservations: async () => [],
+      readRequestObservation: async () => null,
+      readEndpointProfile: async () => null,
+      readBenchmarkSuite: async () => null,
+      runBenchmark: async () => null,
+      readBenchmarkRun: async () => null,
+      readActiveBenchmarkRun: async () => null,
+      clearBenchmarkEndpointData: async () => ({ success: true }),
+      clearBenchmarkData: async () => ({ success: true }),
+      readBenchmarkSummary: async () => null,
+      listBenchmarkRuns: async () => [],
+      readBenchmarkSummariesByMode: async () => [],
+      readBenchmarkPreferences: async () => null,
+      updateBenchmarkPreferences: async () => null,
+      listLocalModels: async () => [],
+      listPeerLocalModels: async () => [],
+      listLlamaSwapLocalModels: async () => [],
+      loadLocalModel: async () => ({ success: true }),
+      loadPeerModel: async () => ({ success: true }),
+      loadLlamaSwapModel: async () => ({ success: true }),
+      setPeerModelRoles: async () => ({ success: true }),
+      setLlamaSwapModelRoles: async () => ({ success: true }),
+      unloadPeerModel: async () => ({ success: true }),
+      unloadLocalModel: async () => ({ success: true }),
+      readLocalPolicy: async () => ({}),
+      updateLocalPolicy: async () => ({}),
+      readRolePolicy: async () => ({ roleDefinitions: [], taskDefinitions: [] }),
+      createRolePolicyRole: async () => ({}),
+      updateRolePolicyRole: async () => ({}),
+      listTaskDefinitions: async () => [],
+      updateTaskDefinitions: async () => [],
+      listSwapHistory: async () => [],
+      readModelOverrides: async () => ({}),
+      updateModelOverrides: async () => ({}),
+      readPeers: async () => [],
+      updatePeers: async () => [],
+      checkPeerHealth: async () => ({ ok: true }),
+      getEffectiveRoutableInventory: async () => [],
+      shutdown,
+    };
+
+    const options = (
+      cli as {
+        createCliServerOptions: (
+          options: { host: string; port: number },
+          backend: typeof backend,
+          shutdown?: () => Promise<void>,
+        ) => { shutdown?: () => Promise<void> };
+      }
+    ).createCliServerOptions(
+      {
+        host: "127.0.0.1",
+        port: 3456,
+      },
+      backend,
+      shutdown,
+    );
+
+    expect(options.shutdown).toBe(shutdown);
+  });
+
   test("suppresses placeholder provider accounts when using the packaged CLI defaults", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-cli-fixtures-"),
@@ -3482,7 +3588,7 @@ describe("runtime-host-bridge", () => {
     expect((registry as { connectors: unknown[] }).connectors).toHaveLength(1);
   });
 
-  test("buildCodexTurnPrompt no longer forbids network access for Codex Subscription turns", () => {
+  test("buildCodexTurnPrompt allows full request-scoped tool usage for Codex Subscription turns", () => {
     expect(typeof (bridge as { buildCodexTurnPrompt?: unknown }).buildCodexTurnPrompt).toBe(
       "function",
     );
@@ -3505,7 +3611,11 @@ describe("runtime-host-bridge", () => {
     expect(prompt).not.toContain(
       "Do not run commands, modify files, access the network, or ask for approvals.",
     );
+    expect(prompt).not.toContain("Do not run shell commands, modify files, or ask for approvals.");
     expect(prompt).toContain("Built-in web search is allowed when helpful.");
+    expect(prompt).toContain(
+      "Use any available hosted or request-scoped tools whenever they help satisfy the request",
+    );
   });
 
   test("maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics", () => {
@@ -4272,17 +4382,17 @@ describe("runtime-host-bridge", () => {
       },
     );
 
-    expect(result.routingRequest.strategy).toBe("balanced");
+    expect(result.routingRequest.strategy).toBe("quality");
     expect(result.routingRequest.allowEndpoints).toEqual([
       "moonshot.personal.primary.global.kimi-k2.5",
     ]);
     expect(result.routingDiagnostics?.difficultyRouting).toEqual({
-      difficulty: "medium",
-      strategy: "balanced",
+      difficulty: "hard",
+      strategy: "quality",
       fallbackApplied: false,
       rubricSignals: expect.objectContaining({
-        toolCount: 0,
-        historyTurnCount: 2,
+        toolCount: 2,
+        historyTurnCount: 4,
         codeOrSchemaBurden: true,
       }),
     });
@@ -5334,6 +5444,45 @@ describe("runtime-host-bridge", () => {
           },
         ],
       });
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("accepts a local shutdown request when a shutdown hook is configured", async () => {
+    const shutdown = vi.fn(async () => undefined);
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          shutdown?: () => Promise<void>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      shutdown,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+    });
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/runtime/shutdown`,
+        { method: "POST" },
+      );
+      expect(response.status).toBe(202);
+      expect(await response.json()).toEqual({ status: "shutting_down" });
+      await delay(0);
+      expect(shutdown).toHaveBeenCalledOnce();
     } finally {
       await server.close();
     }
@@ -8925,8 +9074,8 @@ describe("runtime-host-bridge", () => {
           strategy: "quality",
           fallbackApplied: false,
           rubricSignals: expect.objectContaining({
-            toolCount: 0,
-            historyTurnCount: 2,
+            toolCount: 2,
+            historyTurnCount: 4,
             codeOrSchemaBurden: true,
           }),
         }),
@@ -12461,6 +12610,287 @@ describe("runtime-host-bridge", () => {
         process.env.MOONSHOT_API_KEY = originalMoonshotApiKey;
       }
     }
+  });
+
+  test("retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `runtime-host-live-fallback-tests-${Date.now()}`,
+    );
+    const originalPrimaryApiKey = process.env.MOONSHOT_PRIMARY_API_KEY;
+    const originalBackupApiKey = process.env.MOONSHOT_BACKUP_API_KEY;
+    process.env.MOONSHOT_PRIMARY_API_KEY = "moonshot-primary-live-key";
+    process.env.MOONSHOT_BACKUP_API_KEY = "moonshot-backup-live-key";
+
+    const seenAuthorizations: string[] = [];
+    let primaryAttempts = 0;
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            fixtureRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher?: typeof fetch;
+          }) => Promise<{
+            upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+            ) => Promise<{
+              model: string;
+              endpointId: string;
+              outputText: string;
+              finishReason: string;
+              usage: {
+                inputTokens: number;
+                outputTokens: number;
+              };
+            }>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        runtimeStateRoot,
+        scopeId: "runtime-host-live-fallback-tests",
+        networkFetcher: async (input, init) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url !== "https://api.moonshot.ai/v1/chat/completions") {
+            throw new Error(`Unexpected network request: ${url}`);
+          }
+
+          const headers = (init?.headers ?? {}) as Record<string, string>;
+          const authorization = headers.authorization ?? "";
+          seenAuthorizations.push(authorization);
+
+          if (authorization === "Bearer moonshot-primary-live-key") {
+            primaryAttempts += 1;
+            if (primaryAttempts === 1) {
+              throw new Error("Connection Error: Could not reach the AI service. Request timed out.");
+            }
+            return new Response(
+              JSON.stringify({
+                error: {
+                  message:
+                    "Codex Subscription execution failed because the authenticated ChatGPT account has hit its current usage limit or has no remaining credits for this turn.",
+                  code: "insufficient_quota",
+                },
+              }),
+              { status: 429, headers: { "content-type": "application/json" } },
+            );
+          }
+
+          if (authorization === "Bearer moonshot-backup-live-key") {
+            return new Response(
+              JSON.stringify({
+                id: "chatcmpl-moonshot-backup",
+                object: "chat.completion",
+                model: "moonshot/kimi-k2.5",
+                choices: [
+                  {
+                    index: 0,
+                    message: {
+                      role: "assistant",
+                      content: "backup endpoint handled the request",
+                    },
+                    finish_reason: "stop",
+                  },
+                ],
+                usage: {
+                  prompt_tokens: 24,
+                  completion_tokens: 7,
+                  total_tokens: 31,
+                },
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+
+          throw new Error(`Unexpected authorization header: ${authorization}`);
+        },
+      });
+
+      await backend.upsertProviderAccount({
+        providerAccountId: "moonshot.personal.a-primary",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "MOONSHOT_PRIMARY_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      await backend.upsertProviderAccount({
+        providerAccountId: "moonshot.personal.z-backup",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "MOONSHOT_BACKUP_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      await backend.activateEndpoint({
+        providerAccountId: "moonshot.personal.a-primary",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      });
+      await backend.activateEndpoint({
+        providerAccountId: "moonshot.personal.z-backup",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      });
+
+      const result = await backend.executeChatCompletions(
+        {
+          model: "moonshot/kimi-k2.5",
+          messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
+        },
+        "req-runtime-bridge-live-fallback-001",
+      );
+
+      expect(result.endpointId).toBe("moonshot.personal.z-backup.global.kimi-k2.5");
+      expect(result.outputText).toBe("backup endpoint handled the request");
+      expect(result.finishReason).toBe("stop");
+      expect(result.usage.inputTokens).toBe(24);
+      expect(result.usage.outputTokens).toBe(7);
+      const followUpResult = await backend.executeChatCompletions(
+        {
+          model: "moonshot/kimi-k2.5",
+          messages: [{ role: "user", content: "Summarize the chosen endpoint again." }],
+        },
+        "req-runtime-bridge-live-fallback-002",
+      );
+
+      expect(followUpResult.endpointId).toBe("moonshot.personal.z-backup.global.kimi-k2.5");
+      expect(followUpResult.outputText).toBe("backup endpoint handled the request");
+      expect(seenAuthorizations).toEqual([
+        "Bearer moonshot-primary-live-key",
+        "Bearer moonshot-primary-live-key",
+        "Bearer moonshot-backup-live-key",
+        "Bearer moonshot-backup-live-key",
+      ]);
+    } finally {
+      if (originalPrimaryApiKey === undefined) {
+        process.env.MOONSHOT_PRIMARY_API_KEY = undefined;
+      } else {
+        process.env.MOONSHOT_PRIMARY_API_KEY = originalPrimaryApiKey;
+      }
+      if (originalBackupApiKey === undefined) {
+        process.env.MOONSHOT_BACKUP_API_KEY = undefined;
+      } else {
+        process.env.MOONSHOT_BACKUP_API_KEY = originalBackupApiKey;
+      }
+    }
+  });
+
+  test("classifies subscription quota exhaustion as fallback-eligible without retrying the same endpoint", () => {
+    expect(
+      typeof (bridge as { classifyUpstreamExecutionFailure?: unknown }).classifyUpstreamExecutionFailure,
+    ).toBe("function");
+
+    const error = (
+      bridge as {
+        classifyUpstreamExecutionFailure: (input: {
+          endpointId: string;
+          message?: string;
+          fallbackStatusCode?: number;
+        }) => {
+          statusCode: number;
+          errorClass: string;
+          retryable: boolean;
+          fallbackEligible: boolean;
+        };
+      }
+    ).classifyUpstreamExecutionFailure({
+      endpointId: "openai.personal.a-codex.global.gpt-5.4",
+      message:
+        "Codex Subscription execution failed because the authenticated ChatGPT account has hit its current usage limit or has no remaining credits for this turn.",
+      fallbackStatusCode: 503,
+    });
+
+    expect(error.statusCode).toBe(429);
+    expect(error.errorClass).toBe("quota_exhausted");
+    expect(error.retryable).toBe(false);
+    expect(error.fallbackEligible).toBe(true);
+  });
+
+  test("uses an escalating execution-failure cooldown schedule", () => {
+    expect(
+      typeof (bridge as { resolveExecutionFailureCooldownDurationMs?: unknown })
+        .resolveExecutionFailureCooldownDurationMs,
+    ).toBe("function");
+
+    const resolveDuration = (
+      bridge as {
+        resolveExecutionFailureCooldownDurationMs: (failureCount: number) => number;
+      }
+    ).resolveExecutionFailureCooldownDurationMs;
+
+    expect(resolveDuration(1)).toBe(10 * 60 * 1000);
+    expect(resolveDuration(2)).toBe(30 * 60 * 1000);
+    expect(resolveDuration(3)).toBe(60 * 60 * 1000);
+    expect(resolveDuration(4)).toBe(5 * 60 * 60 * 1000);
+    expect(resolveDuration(5)).toBe(10 * 60 * 60 * 1000);
+    expect(resolveDuration(6)).toBe(20 * 60 * 60 * 1000);
+    expect(resolveDuration(12)).toBe(20 * 60 * 60 * 1000);
   });
 
   test("keeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog", async () => {

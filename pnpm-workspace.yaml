@@ -3,3 +3,8 @@ packages:
   - "packages/*"
   - "role-model-router/packages/*"
   - "role-model-router/apps/*"
+allowBuilds:
+  '@biomejs/biome': set this to true or false
+  esbuild: set this to true or false
+  sharp: set this to true or false
+  workerd: set this to true or false

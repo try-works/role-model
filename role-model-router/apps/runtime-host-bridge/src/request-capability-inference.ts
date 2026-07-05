@@ -65,6 +65,7 @@ function addContentModalities(value: unknown, modalities: Set<string>): void {
     modalities.add("text");
   }
   if (
+    type === "image" ||
     type === "image_url" ||
     type === "input_image" ||
     "image_url" in record ||

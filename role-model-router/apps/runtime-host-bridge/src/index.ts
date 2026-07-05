@@ -81,6 +81,7 @@ import {
   upsertDifficultyClassificationCache,
   upsertObservedThroughputPenaltyState,
   upsertProviderDeviceAuthSession,
+  upsertRuntimeMaintenanceValue,
   upsertRuntimeControllerAssignment,
   upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
@@ -638,10 +639,7 @@ function isDifficultyAskMode(input: {
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly declaredToolCount: number;
 }): boolean {
-  if (input.declaredToolCount === 0) {
-    return true;
-  }
-  return !hasActiveToolUsage(input.messages);
+  return input.declaredToolCount === 0 && !hasActiveToolUsage(input.messages);
 }
 
 function summarizeDifficultySignals(input: {
@@ -2125,6 +2123,7 @@ export interface StartBridgeServerOptions {
     requestOptions?: BridgeExecutionRequestOptions,
   ) => Promise<BridgeResponsesExecutionResult>;
   readonly readVersionInfo?: () => Promise<unknown>;
+  readonly shutdown?: () => Promise<void>;
   readonly listActivityMetrics?: () => Promise<unknown>;
   readonly readActivityCapture?: (captureId: number) => Promise<unknown>;
   readonly readLogs?: () => Promise<string>;
@@ -2732,7 +2731,66 @@ class BridgeHttpError extends Error {
   }
 }
 
+class UpstreamExecutionError extends BridgeHttpError {
+  readonly errorClass: string;
+
+  readonly retryable: boolean;
+
+  readonly fallbackEligible: boolean;
+
+  readonly endpointId: string;
+
+  constructor(input: {
+    readonly statusCode: number;
+    readonly errorClass: string;
+    readonly message: string;
+    readonly retryable: boolean;
+    readonly fallbackEligible: boolean;
+    readonly endpointId: string;
+    readonly upstreamBody?: unknown;
+  }) {
+    super(input.statusCode, {
+      error: {
+        message: input.message,
+        type: input.errorClass,
+        code: input.errorClass,
+        retryable: input.retryable,
+        fallbackEligible: input.fallbackEligible,
+        endpointId: input.endpointId,
+        ...(input.upstreamBody !== undefined ? { upstreamBody: input.upstreamBody } : {}),
+      },
+    });
+    this.errorClass = input.errorClass;
+    this.retryable = input.retryable;
+    this.fallbackEligible = input.fallbackEligible;
+    this.endpointId = input.endpointId;
+  }
+}
+
+const EXECUTION_FAILURE_COOLDOWN_MAINTENANCE_KEY = "routing.execution-failure-cooldowns.v1";
+const EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS = [
+  10 * 60 * 1000,
+  30 * 60 * 1000,
+  60 * 60 * 1000,
+  5 * 60 * 60 * 1000,
+  10 * 60 * 60 * 1000,
+  20 * 60 * 60 * 1000,
+] as const;
+
+interface ExecutionFailureCooldownRecord {
+  readonly endpointId: string;
+  readonly failureCount: number;
+  readonly cooldownUntilMs: number;
+  readonly lastFailureAtMs: number;
+  readonly lastErrorClass: string;
+}
+
+type ExecutionFailureCooldownState = Record<string, ExecutionFailureCooldownRecord>;
+
 function runtimeTelemetryErrorClassFor(error: unknown): string {
+  if (error instanceof UpstreamExecutionError) {
+    return error.errorClass;
+  }
   if (!(error instanceof BridgeHttpError)) {
     return "execution_failed";
   }
@@ -2751,6 +2809,308 @@ function runtimeTelemetryErrorClassFor(error: unknown): string {
     return bodyError;
   }
   return "execution_failed";
+}
+
+function readNestedProviderErrorField(body: unknown, field: string): string | null {
+  if (!body || typeof body !== "object") {
+    return null;
+  }
+  const record = body as Record<string, unknown>;
+  const nestedError = record.error;
+  if (nestedError && typeof nestedError === "object") {
+    const nestedRecord = nestedError as Record<string, unknown>;
+    const value = nestedRecord[field];
+    if (typeof value === "string" && value.trim().length > 0) {
+      return value.trim();
+    }
+  }
+  const value = record[field];
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
+}
+
+function isQuotaExhaustedErrorText(text: string): boolean {
+  return (
+    text.includes("insufficient_quota") ||
+    text.includes("out of quota") ||
+    text.includes("quota exceeded") ||
+    text.includes("usage limit") ||
+    text.includes("no remaining credits") ||
+    text.includes("has no remaining credits") ||
+    text.includes("credit balance") ||
+    text.includes("credits exhausted")
+  );
+}
+
+export function classifyUpstreamExecutionFailure(input: {
+  readonly endpointId: string;
+  readonly statusCode?: number;
+  readonly body?: unknown;
+  readonly message?: string;
+  readonly fallbackStatusCode?: number;
+}): UpstreamExecutionError {
+  const message =
+    input.message?.trim().length
+      ? input.message.trim()
+      : summarizeProviderError(input.statusCode ?? input.fallbackStatusCode ?? 502, input.body);
+  const searchText = [
+    message,
+    readNestedProviderErrorField(input.body, "message"),
+    readNestedProviderErrorField(input.body, "error_description"),
+    readNestedProviderErrorField(input.body, "type"),
+    readNestedProviderErrorField(input.body, "code"),
+    input.body !== undefined ? JSON.stringify(input.body) : null,
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .join("\n")
+    .toLowerCase();
+  const hasStatusCode = typeof input.statusCode === "number";
+  const statusCode = hasStatusCode ? input.statusCode : (input.fallbackStatusCode ?? 502);
+
+  if (
+    statusCode === 408 ||
+    statusCode === 504 ||
+    statusCode === 524 ||
+    searchText.includes("timed out") ||
+    searchText.includes("timeout") ||
+    searchText.includes("deadline exceeded")
+  ) {
+    return new UpstreamExecutionError({
+      statusCode,
+      errorClass: "upstream_timeout",
+      message,
+      retryable: true,
+      fallbackEligible: true,
+      endpointId: input.endpointId,
+      upstreamBody: input.body,
+    });
+  }
+
+  if (statusCode === 402 || statusCode === 429 || isQuotaExhaustedErrorText(searchText)) {
+    if (isQuotaExhaustedErrorText(searchText)) {
+      return new UpstreamExecutionError({
+        statusCode: statusCode === 429 || statusCode === 402 ? statusCode : 429,
+        errorClass: "quota_exhausted",
+        message,
+        retryable: false,
+        fallbackEligible: true,
+        endpointId: input.endpointId,
+        upstreamBody: input.body,
+      });
+    }
+    if (
+      statusCode === 429 ||
+      searchText.includes("rate limit") ||
+      searchText.includes("too many requests")
+    ) {
+      return new UpstreamExecutionError({
+        statusCode,
+        errorClass: "rate_limited",
+        message,
+        retryable: true,
+        fallbackEligible: true,
+        endpointId: input.endpointId,
+        upstreamBody: input.body,
+      });
+    }
+  }
+
+  if (
+    searchText.includes("could not reach the ai service") ||
+    searchText.includes("connection error") ||
+    searchText.includes("fetch failed") ||
+    searchText.includes("network error") ||
+    searchText.includes("socket hang up") ||
+    searchText.includes("econnrefused") ||
+    searchText.includes("econnreset") ||
+    searchText.includes("ehostunreach") ||
+    searchText.includes("enotfound")
+  ) {
+    return new UpstreamExecutionError({
+      statusCode,
+      errorClass: "upstream_connection_error",
+      message,
+      retryable: true,
+      fallbackEligible: true,
+      endpointId: input.endpointId,
+      upstreamBody: input.body,
+    });
+  }
+
+  if (
+    statusCode === 401 ||
+    statusCode === 403 ||
+    searchText.includes("unauthorized") ||
+    searchText.includes("forbidden") ||
+    searchText.includes("invalid api key")
+  ) {
+    return new UpstreamExecutionError({
+      statusCode,
+      errorClass: "provider_auth_error",
+      message,
+      retryable: false,
+      fallbackEligible: true,
+      endpointId: input.endpointId,
+      upstreamBody: input.body,
+    });
+  }
+
+  if (statusCode >= 500) {
+    return new UpstreamExecutionError({
+      statusCode,
+      errorClass: "upstream_error",
+      message,
+      retryable: true,
+      fallbackEligible: true,
+      endpointId: input.endpointId,
+      upstreamBody: input.body,
+    });
+  }
+
+  if (
+    statusCode === 400 ||
+    searchText.includes("bad request") ||
+    searchText.includes("invalid request") ||
+    searchText.includes("api rejected this request")
+  ) {
+    return new UpstreamExecutionError({
+      statusCode,
+      errorClass: "invalid_request",
+      message,
+      retryable: false,
+      fallbackEligible: false,
+      endpointId: input.endpointId,
+      upstreamBody: input.body,
+    });
+  }
+
+  return new UpstreamExecutionError({
+    statusCode,
+    errorClass: "execution_failed",
+    message,
+    retryable: false,
+    fallbackEligible: false,
+    endpointId: input.endpointId,
+    upstreamBody: input.body,
+  });
+}
+
+function parseExecutionFailureCooldownState(
+  rawValue: string | undefined,
+): ExecutionFailureCooldownState {
+  if (typeof rawValue !== "string" || rawValue.trim().length === 0) {
+    return {};
+  }
+  try {
+    const parsed = JSON.parse(rawValue) as Record<string, unknown>;
+    return Object.fromEntries(
+      Object.entries(parsed).flatMap(([endpointId, value]) => {
+        if (typeof value !== "object" || value === null) {
+          return [];
+        }
+        const record = value as Record<string, unknown>;
+        const failureCount = record.failureCount;
+        const cooldownUntilMs = record.cooldownUntilMs;
+        const lastFailureAtMs = record.lastFailureAtMs;
+        const lastErrorClass = record.lastErrorClass;
+        if (
+          typeof failureCount !== "number" ||
+          typeof cooldownUntilMs !== "number" ||
+          typeof lastFailureAtMs !== "number" ||
+          typeof lastErrorClass !== "string"
+        ) {
+          return [];
+        }
+        return [
+          [
+            endpointId,
+            {
+              endpointId,
+              failureCount,
+              cooldownUntilMs,
+              lastFailureAtMs,
+              lastErrorClass,
+            } satisfies ExecutionFailureCooldownRecord,
+          ],
+        ];
+      }),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function readExecutionFailureCooldownState(databasePath: string): ExecutionFailureCooldownState {
+  const maintenancePolicy = readRuntimeMaintenancePolicy({ databasePath });
+  return parseExecutionFailureCooldownState(
+    maintenancePolicy[EXECUTION_FAILURE_COOLDOWN_MAINTENANCE_KEY],
+  );
+}
+
+function writeExecutionFailureCooldownState(
+  databasePath: string,
+  state: ExecutionFailureCooldownState,
+): void {
+  upsertRuntimeMaintenanceValue({
+    databasePath,
+    key: EXECUTION_FAILURE_COOLDOWN_MAINTENANCE_KEY,
+    value: JSON.stringify(state),
+  });
+}
+
+function readActiveExecutionFailureCooldownEndpointIds(input: {
+  readonly databasePath: string;
+  readonly nowMs: number;
+}): readonly string[] {
+  return Object.values(readExecutionFailureCooldownState(input.databasePath))
+    .filter((record) => record.cooldownUntilMs > input.nowMs)
+    .map((record) => record.endpointId);
+}
+
+export function resolveExecutionFailureCooldownDurationMs(failureCount: number): number {
+  const scheduleIndex = Math.max(
+    0,
+    Math.min(
+      EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS.length - 1,
+      Math.max(1, Math.trunc(failureCount)) - 1,
+    ),
+  );
+  return EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS[scheduleIndex]!;
+}
+
+function recordExecutionFailureCooldown(input: {
+  readonly databasePath: string;
+  readonly endpointId: string;
+  readonly errorClass: string;
+  readonly nowMs: number;
+}): ExecutionFailureCooldownRecord {
+  const state = readExecutionFailureCooldownState(input.databasePath);
+  const previousRecord = state[input.endpointId];
+  const nextFailureCount = Math.max(1, (previousRecord?.failureCount ?? 0) + 1);
+  const cooldownDurationMs = resolveExecutionFailureCooldownDurationMs(nextFailureCount);
+  const nextRecord: ExecutionFailureCooldownRecord = {
+    endpointId: input.endpointId,
+    failureCount: nextFailureCount,
+    cooldownUntilMs: input.nowMs + cooldownDurationMs,
+    lastFailureAtMs: input.nowMs,
+    lastErrorClass: input.errorClass,
+  };
+  writeExecutionFailureCooldownState(input.databasePath, {
+    ...state,
+    [input.endpointId]: nextRecord,
+  });
+  return nextRecord;
+}
+
+function clearExecutionFailureCooldown(input: {
+  readonly databasePath: string;
+  readonly endpointId: string;
+}): void {
+  const state = readExecutionFailureCooldownState(input.databasePath);
+  if (!Object.prototype.hasOwnProperty.call(state, input.endpointId)) {
+    return;
+  }
+  const { [input.endpointId]: _ignored, ...nextState } = state;
+  writeExecutionFailureCooldownState(input.databasePath, nextState);
 }
 
 function stringArrayValue(value: unknown): readonly string[] | undefined {
@@ -8263,8 +8623,8 @@ export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): st
           `Request-scoped dynamic tools are available for this turn: ${dynamicToolNames.join(", ")}.`,
         ]
       : []),
-    "Do not run shell commands, modify files, or ask for approvals.",
-    "Return only the assistant response.",
+    "Use any available hosted or request-scoped tools whenever they help satisfy the request, including file and shell operations when exposed through those tools.",
+    "After completing any needed tool work, answer the conversation directly.",
     "",
     "Conversation:",
     conversation.length > 0 ? conversation : "[USER]\n(empty request)",
@@ -10611,6 +10971,19 @@ function createRequestHandler(options: StartBridgeServerOptions) {
 
     if (request.method === "GET" && url.pathname === "/health") {
       writeText(response, 200, "OK");
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/runtime/shutdown") {
+      if (!options.shutdown) {
+        writeJson(response, 404, { error: "runtime shutdown is not available" });
+        return;
+      }
+
+      writeJson(response, 202, { status: "shutting_down" });
+      setImmediate(() => {
+        void options.shutdown?.();
+      });
       return;
     }
 
@@ -15765,36 +16138,55 @@ export async function createRuntimeBridgeBackend(
           await streamWriter(chunk, metadata);
         }
       : undefined;
-    const routed = routeRuntimeRequest({
-      request: plan.routingRequest,
-      registry: currentRegistry,
-      catalog: currentNormalizedCatalog,
-      observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
-      benchmarkCapabilitiesByEndpointId: await buildBenchmarkCapabilityByEndpointId(),
-      observedDataConfig,
-      throughputPenaltyStateByEndpointId:
-        runtimeObservedProfiles.throughputPenaltyStateByEndpointId,
-      routingTimeMs,
-      maxOutputTokens:
-        typeof plan.executionRequest.maxOutputTokens === "number"
-          ? plan.executionRequest.maxOutputTokens
-          : undefined,
-      envelope,
-      retrievalReceipt,
-      roleDefinitions: currentRuntimeRoles.roleDefinitions,
-      taskDefinitions: currentRolePolicy.taskDefinitions,
-      roleBindings: buildRuntimeRoleBindings(
-        [],
-        runtimeEndpoints,
-        currentAccounts,
-        currentRegistry,
-        currentRuntimeRoles.roleDefinitions,
-        currentRolePolicy.taskDefinitions,
-        getLlamaSwapRoleIdsByModelId(),
-      ),
-      routingModel: plan.routingModel ?? routingModel ?? undefined,
-    });
-    const routingDecisionId = routed.decision.routing_decision_id;
+    const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId();
+    const roleBindings = buildRuntimeRoleBindings(
+      [],
+      runtimeEndpoints,
+      currentAccounts,
+      currentRegistry,
+      currentRuntimeRoles.roleDefinitions,
+      currentRolePolicy.taskDefinitions,
+      getLlamaSwapRoleIdsByModelId(),
+    );
+    const routeExecutionRequest = (
+      denyEndpoints: readonly string[],
+    ): ReturnType<typeof routeRuntimeRequest> =>
+      routeRuntimeRequest({
+        request: {
+          ...plan.routingRequest,
+          ...((() => {
+            const cooldownDeniedEndpoints = readActiveExecutionFailureCooldownEndpointIds({
+              databasePath: initialization.databasePath,
+              nowMs: Date.now(),
+            });
+            const mergedDenyEndpoints = [
+              ...new Set([...denyEndpoints, ...cooldownDeniedEndpoints]),
+            ];
+            return mergedDenyEndpoints.length > 0 ? { denyEndpoints: mergedDenyEndpoints } : {};
+          })()),
+        },
+        registry: currentRegistry,
+        catalog: currentNormalizedCatalog,
+        observedProfilesByEndpointId: runtimeObservedProfiles.observedProfilesByEndpointId,
+        benchmarkCapabilitiesByEndpointId,
+        observedDataConfig,
+        throughputPenaltyStateByEndpointId:
+          runtimeObservedProfiles.throughputPenaltyStateByEndpointId,
+        routingTimeMs,
+        maxOutputTokens:
+          typeof plan.executionRequest.maxOutputTokens === "number"
+            ? plan.executionRequest.maxOutputTokens
+            : undefined,
+        envelope,
+        retrievalReceipt,
+        roleDefinitions: currentRuntimeRoles.roleDefinitions,
+        taskDefinitions: currentRolePolicy.taskDefinitions,
+        roleBindings,
+        routingModel: plan.routingModel ?? routingModel ?? undefined,
+      });
+    const deniedEndpointIds = [...(plan.routingRequest.denyEndpoints ?? [])];
+    let routed = routeExecutionRequest(deniedEndpointIds);
+    let routingDecisionId = routed.decision.routing_decision_id;
     const adapters = [
       ...(currentUnifiedRuntimeConfig?.liteLLM.enabled ? [createLiteLLMProviderAdapter()] : []),
       createOpenAIProviderAdapter(),
@@ -15863,6 +16255,13 @@ export async function createRuntimeBridgeBackend(
                 }
               : undefined,
           );
+          if (result.statusCode >= 400) {
+            throw classifyUpstreamExecutionFailure({
+              endpointId: target.endpointId,
+              statusCode: result.statusCode,
+              body: result.body,
+            });
+          }
           return {
             providerFamily: target.adapterFamily,
             endpointId: target.endpointId,
@@ -15901,6 +16300,13 @@ export async function createRuntimeBridgeBackend(
               ...(fallbackModelIds?.length ? { fallbackModelIds } : {}),
             },
           );
+          if (result.statusCode >= 400) {
+            throw classifyUpstreamExecutionFailure({
+              endpointId: target.endpointId,
+              statusCode: result.statusCode,
+              body: result.body,
+            });
+          }
           return {
             providerFamily: target.adapterFamily,
             endpointId: target.endpointId,
@@ -15942,87 +16348,103 @@ export async function createRuntimeBridgeBackend(
           codexDynamicToolBindings.map((tool) => [tool.exposedName, tool.originalName]),
         );
         let runtimeToolRegistry: ToolRegistry | null = null;
-        const codexResponse = await codexExecutionAdapter.executeRequest({
-          runtimeStateRoot: options.runtimeStateRoot,
-          scopeId: options.scopeId,
-          requestId,
-          providerAccountId: codexAccount.providerAccountId,
-          modelId: target.modelId,
-          requestCapture,
-          authPayload,
-          ...(codexDynamicTools.length > 0
-            ? {
-                executeDynamicToolCall: async ({
-                  toolCallId,
-                  toolName,
-                  toolArguments,
-                  workspaceRoot,
-                }: {
-                  readonly toolCallId: string;
-                  readonly toolName: string;
-                  readonly toolArguments: unknown;
-                  readonly workspaceRoot: string;
-                }) => {
-                  runtimeToolRegistry ??= createRequestScopedToolRegistry(codexDynamicTools, {
-                    workspaceRoot,
-                  });
-                  const originalToolName = originalToolNameByExposedName.get(toolName) ?? toolName;
-                  const executionResult = dynamicToolNames.has(originalToolName)
-                    ? await executeToolCalls(runtimeToolRegistry, {
-                        requestId,
-                        toolCalls: [
-                          {
-                            name: originalToolName,
-                            arguments: toolArguments,
-                            providerToolId: toolCallId,
-                          },
-                        ],
-                      })
-                    : {
-                        executions: [
-                          {
-                            toolCallId,
-                            toolName: originalToolName,
-                            connectorId: "request-scoped",
-                            connectorKind: "dynamic-tool",
-                            status: "rejected" as const,
-                            output: null,
-                            diagnostics: [
-                              {
-                                code: "TOOL_NOT_ALLOWED",
-                                message: `Tool ${originalToolName} was not declared for this request.`,
-                              },
-                            ],
-                          },
-                        ],
-                        diagnostics: [],
-                      };
-                  const execution = executionResult.executions[0] ?? {
+        let codexResponse: Awaited<ReturnType<CodexExecutionAdapter["executeRequest"]>>;
+        try {
+          codexResponse = await codexExecutionAdapter.executeRequest({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            requestId,
+            providerAccountId: codexAccount.providerAccountId,
+            modelId: target.modelId,
+            requestCapture,
+            authPayload,
+            ...(codexDynamicTools.length > 0
+              ? {
+                  executeDynamicToolCall: async ({
                     toolCallId,
                     toolName,
-                    connectorId: "request-scoped",
-                    connectorKind: "dynamic-tool",
-                    status: "failed" as const,
-                    output: null,
-                    diagnostics: [
-                      {
-                        code: "TOOL_EXECUTION_FAILED",
-                        message: `Tool ${toolName} did not produce an execution record.`,
-                      },
-                    ],
-                  };
-                  const recordedExecutions =
-                    codexDynamicToolExecutionsByRequestId.get(requestId) ?? [];
-                  recordedExecutions.push(execution);
-                  codexDynamicToolExecutionsByRequestId.set(requestId, recordedExecutions);
-                  return {
-                    ...toCodexDynamicToolCallResult(execution),
-                    execution,
-                  };
-                },
-              }
-            : {}),
-        });
+                    toolArguments,
+                    workspaceRoot,
+                  }: {
+                    readonly toolCallId: string;
+                    readonly toolName: string;
+                    readonly toolArguments: unknown;
+                    readonly workspaceRoot: string;
+                  }) => {
+                    runtimeToolRegistry ??= createRequestScopedToolRegistry(codexDynamicTools, {
+                      workspaceRoot,
+                    });
+                    const originalToolName = originalToolNameByExposedName.get(toolName) ?? toolName;
+                    const executionResult = dynamicToolNames.has(originalToolName)
+                      ? await executeToolCalls(runtimeToolRegistry, {
+                          requestId,
+                          toolCalls: [
+                            {
+                              name: originalToolName,
+                              arguments: toolArguments,
+                              providerToolId: toolCallId,
+                            },
+                          ],
+                        })
+                      : {
+                          executions: [
+                            {
+                              toolCallId,
+                              toolName: originalToolName,
+                              connectorId: "request-scoped",
+                              connectorKind: "dynamic-tool",
+                              status: "rejected" as const,
+                              output: null,
+                              diagnostics: [
+                                {
+                                  code: "TOOL_NOT_ALLOWED",
+                                  message: `Tool ${originalToolName} was not declared for this request.`,
+                                },
+                              ],
+                            },
+                          ],
+                          diagnostics: [],
+                        };
+                    const execution = executionResult.executions[0] ?? {
+                      toolCallId,
+                      toolName,
+                      connectorId: "request-scoped",
+                      connectorKind: "dynamic-tool",
+                      status: "failed" as const,
+                      output: null,
+                      diagnostics: [
+                        {
+                          code: "TOOL_EXECUTION_FAILED",
+                          message: `Tool ${toolName} did not produce an execution record.`,
+                        },
+                      ],
+                    };
+                    const recordedExecutions =
+                      codexDynamicToolExecutionsByRequestId.get(requestId) ?? [];
+                    recordedExecutions.push(execution);
+                    codexDynamicToolExecutionsByRequestId.set(requestId, recordedExecutions);
+                    return {
+                      ...toCodexDynamicToolCallResult(execution),
+                      execution,
+                    };
+                  },
+                }
+              : {}),
+          });
+        } catch (error) {
+          throw classifyUpstreamExecutionFailure({
+            endpointId: target.endpointId,
+            message: error instanceof Error ? error.message : "Codex execution failed.",
+            fallbackStatusCode: 503,
+          });
+        }
+        if (codexResponse.statusCode >= 400) {
+          throw classifyUpstreamExecutionFailure({
+            endpointId: target.endpointId,
+            statusCode: codexResponse.statusCode,
+            body: codexResponse.body,
+          });
+        }
         return {
           providerFamily: target.adapterFamily,
           endpointId: target.endpointId,
@@ -16050,17 +16472,27 @@ export async function createRuntimeBridgeBackend(
       })();
       const performRequest = async (resolvedCredentialValue: string) => {
         const startedAtMs = Date.now();
-        const response = await networkFetcher(requestCapture.url, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            ...(useDirectExecution
-              ? createDeviceHeaders(deviceId, oauthVariant?.oauth?.requiredHeaders)
-              : {}),
-            ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
-          },
-          body: JSON.stringify(requestCapture.body),
-        });
+        let response: Response;
+        try {
+          response = await networkFetcher(requestCapture.url, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              ...(useDirectExecution
+                ? createDeviceHeaders(deviceId, oauthVariant?.oauth?.requiredHeaders)
+                : {}),
+              ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
+            },
+            body: JSON.stringify(requestCapture.body),
+          });
+        } catch (error) {
+          throw classifyUpstreamExecutionFailure({
+            endpointId: target.endpointId,
+            message:
+              error instanceof Error ? error.message : "Provider request could not be completed.",
+            fallbackStatusCode: 503,
+          });
+        }
         return {
           response,
           latencyMs: Math.max(0, Date.now() - startedAtMs),
@@ -16091,7 +16523,11 @@ export async function createRuntimeBridgeBackend(
       if (!response.ok) {
         const rawBody = await response.text();
         const parsedBody = parseProviderResponseBody(rawBody);
-        throw new Error(summarizeProviderError(response.status, parsedBody));
+        throw classifyUpstreamExecutionFailure({
+          endpointId: target.endpointId,
+          statusCode: response.status,
+          body: parsedBody,
+        });
       }
       if (trackedStreamWriter && requestCapture.body.stream === true) {
         const rawBody = await readProviderStreamTranscript(response, trackedStreamWriter, {
@@ -16148,18 +16584,56 @@ export async function createRuntimeBridgeBackend(
     };
     const executeCurrentExecutionRequest = async (
       executionRequest: RuntimeExecutionRequest,
-    ): Promise<RoutedExecutionResult> =>
-      executeLiveRoutedRequest({
-        routeResult: routed,
-        catalog: getCurrentExecutionCatalog(),
-        additionalProviders: liteLLMProviders,
-        accounts: currentAccounts,
-        registry: currentRegistry,
-        registrySources: getCurrentRegistrySources(),
-        executionRequest,
-        adapters,
-        executeProviderRequest,
-      });
+    ): Promise<RoutedExecutionResult> => {
+      const retriedEndpointIds = new Set<string>();
+      while (true) {
+        try {
+          const result = await executeLiveRoutedRequest({
+            routeResult: routed,
+            catalog: getCurrentExecutionCatalog(),
+            additionalProviders: liteLLMProviders,
+            accounts: currentAccounts,
+            registry: currentRegistry,
+            registrySources: getCurrentRegistrySources(),
+            executionRequest,
+            adapters,
+            executeProviderRequest,
+          });
+          clearExecutionFailureCooldown({
+            databasePath: initialization.databasePath,
+            endpointId: result.target.endpointId,
+          });
+          routingDecisionId = routed.decision.routing_decision_id;
+          return result;
+        } catch (error) {
+          if (!(error instanceof UpstreamExecutionError) || streamedChunkCount > 0) {
+            throw error;
+          }
+          if (error.retryable && !retriedEndpointIds.has(error.endpointId)) {
+            retriedEndpointIds.add(error.endpointId);
+            continue;
+          }
+          recordExecutionFailureCooldown({
+            databasePath: initialization.databasePath,
+            endpointId: error.endpointId,
+            errorClass: error.errorClass,
+            nowMs: Date.now(),
+          });
+          if (!error.fallbackEligible || deniedEndpointIds.includes(error.endpointId)) {
+            throw error;
+          }
+          deniedEndpointIds.push(error.endpointId);
+          let nextRouted: ReturnType<typeof routeRuntimeRequest>;
+          try {
+            nextRouted = routeExecutionRequest(deniedEndpointIds);
+          } catch {
+            throw error;
+          }
+          routed = nextRouted;
+          routingDecisionId = routed.decision.routing_decision_id;
+        }
+      }
+    };
     let currentExecutionRequest = plan.executionRequest as RuntimeExecutionRequest;
     let execution = await executeCurrentExecutionRequest(currentExecutionRequest);
     const continuedToolCalls: Array<{

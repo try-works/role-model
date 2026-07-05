@@ -2,14 +2,25 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
+)
+
+const (
+	runtimeHost           = "127.0.0.1"
+	runtimePort           = 3456
+	serverStartupAttempts = 30
+	serverStartupInterval = 1 * time.Second
+	shutdownWaitTimeout   = 10 * time.Second
+	frontendShutdownWait  = 5 * time.Second
 )
 
 func resolveRuntimeStateRoot(packageDir string) string {
@@ -26,22 +37,199 @@ func buildRuntimeArgs(packageDir string, runtimeStateRoot string) []string {
 		"--repo-root", packageDir,
 		"--runtime-state-root", runtimeStateRoot,
 		"--scope-id", "standalone-runtime",
-		"--host", "127.0.0.1",
-		"--port", "3456",
+		"--host", runtimeHost,
+		"--port", fmt.Sprintf("%d", runtimePort),
 		"--static-root", filepath.Join(packageDir, "build", "client"),
 	}
 }
 
-func main() {
-	// Determine the directory where the launcher executable is located
-	ex, err := os.Executable()
+func buildRuntimeBaseURL(host string, port int) string {
+	return fmt.Sprintf("http://%s:%d", host, port)
+}
+
+func runtimeShutdownURL(baseURL string) string {
+	return strings.TrimRight(baseURL, "/") + "/api/role-model/runtime/shutdown"
+}
+
+func waitForServerReady(baseURL string, attempts int, interval time.Duration) bool {
+	healthURL := strings.TrimRight(baseURL, "/") + "/healthz"
+	for attempt := 0; attempt < attempts; attempt++ {
+		time.Sleep(interval)
+		resp, err := http.Get(healthURL)
+		if err != nil {
+			continue
+		}
+
+		resp.Body.Close()
+		if resp.StatusCode == http.StatusOK {
+			return true
+		}
+	}
+
+	return false
+}
+
+func requestBackendShutdown(baseURL string) error {
+	request, err := http.NewRequest(http.MethodPost, runtimeShutdownURL(baseURL), nil)
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{Timeout: 5 * time.Second}
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusAccepted && response.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(io.LimitReader(response.Body, 1024))
+		return fmt.Errorf("unexpected shutdown status %d: %s", response.StatusCode, strings.TrimSpace(string(body)))
+	}
+
+	return nil
+}
+
+func requestBackendShutdownOrKill(baseURL string, backendCmd *exec.Cmd) {
+	if backendCmd == nil || backendCmd.Process == nil {
+		return
+	}
+
+	if err := requestBackendShutdown(baseURL); err == nil {
+		return
+	} else {
+		fmt.Fprintf(os.Stderr, "Failed to request graceful backend shutdown: %v\n", err)
+	}
+
+	_ = backendCmd.Process.Kill()
+}
+
+func waitForExitOrKill(cmd *exec.Cmd, resultCh <-chan error, timeout time.Duration) error {
+	select {
+	case err := <-resultCh:
+		return err
+	case <-time.After(timeout):
+		if cmd != nil && cmd.Process != nil {
+			_ = cmd.Process.Kill()
+		}
+		return <-resultCh
+	}
+}
+
+func buildChromiumAppArgs(baseURL string, profileDir string) []string {
+	return []string{
+		"--app=" + baseURL,
+		"--new-window",
+		"--user-data-dir=" + profileDir,
+		"--no-first-run",
+		"--no-default-browser-check",
+		"--disable-sync",
+	}
+}
+
+func windowsBrowserCandidates() []string {
+	return []string{
+		"msedge.exe",
+		"msedge",
+		"chrome.exe",
+		"chrome",
+		filepath.Join(os.Getenv("ProgramFiles(x86)"), "Microsoft", "Edge", "Application", "msedge.exe"),
+		filepath.Join(os.Getenv("ProgramFiles"), "Microsoft", "Edge", "Application", "msedge.exe"),
+		filepath.Join(os.Getenv("LOCALAPPDATA"), "Microsoft", "Edge", "Application", "msedge.exe"),
+		filepath.Join(os.Getenv("ProgramFiles"), "Google", "Chrome", "Application", "chrome.exe"),
+		filepath.Join(os.Getenv("ProgramFiles(x86)"), "Google", "Chrome", "Application", "chrome.exe"),
+		filepath.Join(os.Getenv("LOCALAPPDATA"), "Google", "Chrome", "Application", "chrome.exe"),
+	}
+}
+
+func darwinBrowserCandidates() []string {
+	return []string{
+		"/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+		"/Applications/Chromium.app/Contents/MacOS/Chromium",
+		"microsoft-edge",
+		"google-chrome",
+		"chromium",
+	}
+}
+
+func linuxBrowserCandidates() []string {
+	return []string{
+		"microsoft-edge",
+		"google-chrome",
+		"chromium",
+		"chromium-browser",
+	}
+}
+
+func resolveExecutable(candidates []string) (string, error) {
+	for _, candidate := range candidates {
+		if candidate == "" {
+			continue
+		}
+
+		if filepath.IsAbs(candidate) {
+			if _, err := os.Stat(candidate); err == nil {
+				return candidate, nil
+			}
+			continue
+		}
+
+		if resolved, err := exec.LookPath(candidate); err == nil {
+			return resolved, nil
+		}
+	}
+
+	return "", fmt.Errorf("no supported browser executable found")
+}
+
+func resolveBrowserExecutable() (string, error) {
+	switch runtime.GOOS {
+	case "windows":
+		return resolveExecutable(windowsBrowserCandidates())
+	case "darwin":
+		return resolveExecutable(darwinBrowserCandidates())
+	default:
+		return resolveExecutable(linuxBrowserCandidates())
+	}
+}
+
+func buildFrontendCommand(baseURL string, runtimeStateRoot string) (*exec.Cmd, string, error) {
+	browserExecutable, err := resolveBrowserExecutable()
+	if err != nil {
+		return nil, "", err
+	}
+
+	profileDir, err := os.MkdirTemp(runtimeStateRoot, "frontend-profile-")
+	if err != nil {
+		return nil, "", err
+	}
+
+	command := exec.Command(browserExecutable, buildChromiumAppArgs(baseURL, profileDir)...)
+	command.Dir = runtimeStateRoot
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+
+	return command, profileDir, nil
+}
+
+func terminateProcess(process *os.Process) {
+	if process == nil {
+		return
+	}
+
+	_ = process.Kill()
+}
+
+func run() int {
+	executablePath, err := os.Executable()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get executable path: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
-	exeDir := filepath.Dir(ex)
 
-	// Path to the bridge SEA binary
+	exeDir := filepath.Dir(executablePath)
+
 	var bridgeBinary string
 	if runtime.GOOS == "windows" {
 		bridgeBinary = filepath.Join(exeDir, "role-model-runtime.exe")
@@ -49,86 +237,112 @@ func main() {
 		bridgeBinary = filepath.Join(exeDir, "role-model-runtime")
 	}
 
-	// Path to the UI static files
 	runtimeStateRoot := resolveRuntimeStateRoot(exeDir)
 	if err := os.MkdirAll(runtimeStateRoot, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create runtime state directory: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
 
-	// Check if bridge binary exists
 	if _, err := os.Stat(bridgeBinary); os.IsNotExist(err) {
 		fmt.Fprintf(os.Stderr, "Bridge binary not found: %s\n", bridgeBinary)
-		os.Exit(1)
+		return 1
 	}
 
-	// Start the bridge server
+	baseURL := buildRuntimeBaseURL(runtimeHost, runtimePort)
+
 	fmt.Println("Starting Role Model Runtime...")
-	cmd := exec.Command(bridgeBinary, buildRuntimeArgs(exeDir, runtimeStateRoot)...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Dir = exeDir
+	backendCmd := exec.Command(bridgeBinary, buildRuntimeArgs(exeDir, runtimeStateRoot)...)
+	backendCmd.Stdout = os.Stdout
+	backendCmd.Stderr = os.Stderr
+	backendCmd.Dir = exeDir
 
-	if err := cmd.Start(); err != nil {
+	if err := backendCmd.Start(); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to start bridge: %v\n", err)
-		os.Exit(1)
+		return 1
 	}
+
+	backendResultCh := make(chan error, 1)
+	go func() {
+		backendResultCh <- backendCmd.Wait()
+	}()
 
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-signalChannel
-		if cmd.Process != nil {
-			_ = cmd.Process.Kill()
+	defer signal.Stop(signalChannel)
+
+	fmt.Println("Waiting for server to be ready...")
+	if !waitForServerReady(baseURL, serverStartupAttempts, serverStartupInterval) {
+		fmt.Fprintf(os.Stderr, "Server failed to start within %d seconds\n", serverStartupAttempts)
+		terminateProcess(backendCmd.Process)
+		_ = waitForExitOrKill(backendCmd, backendResultCh, shutdownWaitTimeout)
+		return 1
+	}
+
+	fmt.Printf("Server ready at %s\n", baseURL)
+	fmt.Println("Opening frontend...")
+
+	frontendCmd, frontendProfileDir, err := buildFrontendCommand(baseURL, runtimeStateRoot)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to prepare frontend window: %v\n", err)
+		requestBackendShutdownOrKill(baseURL, backendCmd)
+		if backendErr := waitForExitOrKill(backendCmd, backendResultCh, shutdownWaitTimeout); backendErr != nil {
+			fmt.Fprintf(os.Stderr, "Backend exited during shutdown: %v\n", backendErr)
 		}
-		os.Exit(0)
+		return 1
+	}
+	defer os.RemoveAll(frontendProfileDir)
+
+	if err := frontendCmd.Start(); err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to open frontend: %v\n", err)
+		requestBackendShutdownOrKill(baseURL, backendCmd)
+		if backendErr := waitForExitOrKill(backendCmd, backendResultCh, shutdownWaitTimeout); backendErr != nil {
+			fmt.Fprintf(os.Stderr, "Backend exited during shutdown: %v\n", backendErr)
+		}
+		return 1
+	}
+
+	frontendResultCh := make(chan error, 1)
+	go func() {
+		frontendResultCh <- frontendCmd.Wait()
 	}()
 
-	// Wait for the server to be ready
-	fmt.Println("Waiting for server to be ready...")
-	ready := false
-	for i := 0; i < 30; i++ {
-		time.Sleep(1 * time.Second)
-		resp, err := http.Get("http://127.0.0.1:3456/healthz")
-		if err == nil {
-			resp.Body.Close()
-			if resp.StatusCode == 200 {
-				ready = true
-				break
-			}
+	fmt.Println("Role Model is running. Close the app window or press Ctrl+C to stop.")
+
+	select {
+	case frontendErr := <-frontendResultCh:
+		if frontendErr != nil {
+			fmt.Fprintf(os.Stderr, "Frontend exited with error: %v\n", frontendErr)
+		} else {
+			fmt.Println("Frontend closed. Shutting down backend...")
 		}
+
+		requestBackendShutdownOrKill(baseURL, backendCmd)
+		if backendErr := waitForExitOrKill(backendCmd, backendResultCh, shutdownWaitTimeout); backendErr != nil {
+			fmt.Fprintf(os.Stderr, "Backend exited during shutdown: %v\n", backendErr)
+		}
+		return 0
+
+	case signalValue := <-signalChannel:
+		fmt.Printf("Received %s. Shutting down runtime...\n", signalValue)
+		terminateProcess(frontendCmd.Process)
+		_ = waitForExitOrKill(frontendCmd, frontendResultCh, frontendShutdownWait)
+		requestBackendShutdownOrKill(baseURL, backendCmd)
+		if backendErr := waitForExitOrKill(backendCmd, backendResultCh, shutdownWaitTimeout); backendErr != nil {
+			fmt.Fprintf(os.Stderr, "Backend exited during shutdown: %v\n", backendErr)
+		}
+		return 0
+
+	case backendErr := <-backendResultCh:
+		terminateProcess(frontendCmd.Process)
+		_ = waitForExitOrKill(frontendCmd, frontendResultCh, frontendShutdownWait)
+		if backendErr != nil {
+			fmt.Fprintf(os.Stderr, "Bridge exited with error: %v\n", backendErr)
+			return 1
+		}
+		return 0
 	}
+}
 
-	if !ready {
-		fmt.Fprintf(os.Stderr, "Server failed to start within 30 seconds\n")
-		cmd.Process.Kill()
-		os.Exit(1)
-	}
-
-	fmt.Println("Server ready at http://127.0.0.1:3456")
-
-	// Open the browser in app mode
-	fmt.Println("Opening browser...")
-	var browserCmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		// Use Edge in app mode for a dedicated window without browser chrome
-		browserCmd = exec.Command("cmd", "/c", "start", "msedge", "--app=http://127.0.0.1:3456")
-	} else if runtime.GOOS == "darwin" {
-		browserCmd = exec.Command("open", "http://127.0.0.1:3456")
-	} else {
-		browserCmd = exec.Command("xdg-open", "http://127.0.0.1:3456")
-	}
-
-	if err := browserCmd.Start(); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to open browser: %v\n", err)
-		// Continue anyway - user can open browser manually
-	}
-
-	fmt.Println("Role Model is running. Press Ctrl+C to stop.")
-
-	// Wait for the bridge process to exit
-	if err := cmd.Wait(); err != nil {
-		fmt.Fprintf(os.Stderr, "Bridge exited with error: %v\n", err)
-		os.Exit(1)
-	}
+func main() {
+	os.Exit(run())
 }

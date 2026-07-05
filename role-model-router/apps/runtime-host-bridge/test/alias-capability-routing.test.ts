@@ -87,6 +87,41 @@ describe("alias capability routing", () => {
     );
   });
 
+  test("treats Craft inline image content as image input before alias scoring", () => {
+    const plan = mapChatCompletionsRequest(
+      registry,
+      {
+        model: "hybrid.hybrid",
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: "Describe this." },
+              { type: "image", data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB" },
+            ],
+          },
+        ],
+      } as never,
+      "req-craft-inline-image-alias",
+      hybridAlias,
+    );
+
+    expect(plan.routingRequest.requiredModalities).toEqual(["image", "text"]);
+    expect(plan.routingRequest.allowEndpoints).toEqual([
+      "moonshot.personal.kimi-code.global.kimi-k2-7-code",
+      "openai.personal.codex.global.gpt-5-4",
+    ]);
+    expect(plan.routingDiagnostics?.capabilityEligibility?.excludedTargets).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash",
+          modelId: "deepseek/deepseek-v4-flash",
+          reasons: ["missing_input.image"],
+        }),
+      ]),
+    );
+  });
+
   test("returns a stable no-eligible-target error when alias targets cannot satisfy image input", () => {
     expect(() =>
       mapChatCompletionsRequest(

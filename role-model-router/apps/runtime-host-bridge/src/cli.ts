@@ -104,11 +104,13 @@ export function createCliServerOptions(
     staticRoot?: string;
   },
   backend: CliBackend,
+  shutdown?: () => Promise<void>,
 ): StartBridgeServerOptions {
   return {
     host: options.host,
     port: options.port,
     staticRoot: options.staticRoot,
+    shutdown,
     registry: backend.effectiveRegistry,
     getRegistry: () => backend.effectiveRegistry,
     getExecutionCatalog: backend.getExecutionCatalog,
@@ -261,7 +263,23 @@ export async function main(): Promise<void> {
     unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
   });
   const staticRoot = args.values["static-root"]?.trim() || options.staticRoot;
-  const server = await startBridgeServer(
+  let server: Awaited<ReturnType<typeof startBridgeServer>> | null = null;
+  let shutdownPromise: Promise<void> | null = null;
+  const shutdown = async (): Promise<void> => {
+    if (shutdownPromise) {
+      return shutdownPromise;
+    }
+
+    shutdownPromise = (async () => {
+      await server?.close();
+      await backend.shutdown();
+      process.exit(0);
+    })();
+
+    return shutdownPromise;
+  };
+
+  server = await startBridgeServer(
     createCliServerOptions(
       {
         host: options.host,
@@ -269,6 +287,7 @@ export async function main(): Promise<void> {
         staticRoot,
       },
       backend,
+      shutdown,
     ),
   );
 
@@ -287,12 +306,6 @@ export async function main(): Promise<void> {
   if (launchedWithoutRuntimeArgs) {
     openBrowser(`http://${options.host}:${server.port}/`);
   }
-
-  const shutdown = async (): Promise<void> => {
-    await server.close();
-    await backend.shutdown();
-    process.exit(0);
-  };
 
   process.on("SIGINT", () => {
     void shutdown();
