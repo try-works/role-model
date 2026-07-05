@@ -1,4 +1,4 @@
-import { type ReactNode, useRef } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router";
 
 import {
@@ -22,6 +22,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     runtimeNavigationSections[0];
   const title = override?.title ?? route?.title ?? "Runtime overview";
   const hasSecondaryNavigation = activeSection.items.length > 1;
+  const pathname = location.pathname;
+
+  useEffect(() => {
+    if (pathname) {
+      contentScrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }, [pathname]);
 
   return (
     <div className="h-screen overflow-hidden bg-[var(--rm-bg)] text-[var(--rm-fg)]">
@@ -89,7 +96,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ) : null}
               </header>
               <main
-                key={location.pathname}
                 ref={contentScrollRef}
                 className="runtime-shell-content-scroll min-h-0 flex-1 overflow-y-auto pr-2"
               >
