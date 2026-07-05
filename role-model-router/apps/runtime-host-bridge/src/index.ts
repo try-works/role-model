@@ -4149,6 +4149,50 @@ function normalizeProviderAccountModelRoleBinding(
   };
 }
 
+function sanitizeProviderAccountModelRoleBindingForAllowedRoles(
+  binding: ProviderAccountModelRoleBinding,
+  allowedRoleIds: ReadonlySet<string>,
+): ProviderAccountModelRoleBinding | null {
+  const normalizedBinding = normalizeProviderAccountModelRoleBinding(binding);
+  const nextRoleIds = normalizedBinding.roleIds.filter((roleId) => allowedRoleIds.has(roleId));
+  const nextEnabledRoleIds = normalizedBinding.enabledRoleIds?.filter((roleId) =>
+    allowedRoleIds.has(roleId),
+  );
+  const nextDisabledRoleIds = normalizedBinding.disabledRoleIds?.filter((roleId) =>
+    allowedRoleIds.has(roleId),
+  );
+
+  if (!normalizedBinding.roleAssignmentMode && nextRoleIds.length === 0) {
+    return null;
+  }
+
+  return {
+    ...normalizedBinding,
+    roleIds: nextRoleIds,
+    ...(nextEnabledRoleIds ? { enabledRoleIds: nextEnabledRoleIds } : {}),
+    ...(nextDisabledRoleIds ? { disabledRoleIds: nextDisabledRoleIds } : {}),
+  };
+}
+
+function sanitizeProviderAccountModelRoleBindingsForAllowedRoles(
+  bindings: readonly ProviderAccountModelRoleBinding[] | undefined,
+  allowedRoleIds: ReadonlySet<string>,
+): ProviderAccountRecord["modelRoleBindings"] {
+  if (!bindings || bindings.length === 0) {
+    return undefined;
+  }
+
+  const sanitizedBindings = bindings.flatMap((binding) => {
+    const sanitizedBinding = sanitizeProviderAccountModelRoleBindingForAllowedRoles(
+      binding,
+      allowedRoleIds,
+    );
+    return sanitizedBinding ? [sanitizedBinding] : [];
+  });
+
+  return sanitizedBindings.length > 0 ? sanitizedBindings : undefined;
+}
+
 function normalizeProviderAccountRoleBindings(
   account: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -12347,10 +12391,16 @@ export async function createRuntimeBridgeBackend(
       }));
   const buildCredentialLifecycleSummary = (): RuntimeCredentialLifecycleSummary => {
     const persistedAccounts = listProviderAccounts({ databasePath: initialization.databasePath });
+    const normalizedPersistedAccounts = persistedAccounts.map(
+      (account) =>
+        normalizeProviderAccountRoleBindings(
+          account as unknown as Record<string, unknown>,
+        ) as unknown as ProviderAccountRecord,
+    );
     const accountValidation = validateProviderAccounts({
       catalog: currentNormalizedCatalog,
       additionalProviders: liteLLMProviders,
-      accounts: persistedAccounts,
+      accounts: normalizedPersistedAccounts,
       allowedRoleIds: getAllowedRoleIds(),
     });
     const invalidAccountsById = new Map(
@@ -13142,6 +13192,7 @@ export async function createRuntimeBridgeBackend(
     const existingPeerAccounts = listProviderAccounts({
       databasePath: initialization.databasePath,
     }).filter((account) => account.providerId === LOCAL_OPENAI_PROVIDER_ID);
+    const allowedRoleIdSet = new Set(getAllowedRoleIds());
     const existingPeerAccountsById = new Map(
       existingPeerAccounts.map((account) => [account.providerAccountId, account] as const),
     );
@@ -13154,14 +13205,10 @@ export async function createRuntimeBridgeBackend(
       return {
         ...nextAccount,
         allowedModels: [...existingAccount.allowedModels],
-        modelRoleBindings: existingAccount.modelRoleBindings
-          ? existingAccount.modelRoleBindings.map((binding) => ({
-              ...binding,
-              roleIds: [...binding.roleIds],
-              ...(binding.enabledRoleIds ? { enabledRoleIds: [...binding.enabledRoleIds] } : {}),
-              ...(binding.disabledRoleIds ? { disabledRoleIds: [...binding.disabledRoleIds] } : {}),
-            }))
-          : undefined,
+        modelRoleBindings: sanitizeProviderAccountModelRoleBindingsForAllowedRoles(
+          existingAccount.modelRoleBindings,
+          allowedRoleIdSet,
+        ),
         deniedModels: [...existingAccount.deniedModels],
       };
     });

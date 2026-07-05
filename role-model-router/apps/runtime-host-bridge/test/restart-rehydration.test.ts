@@ -6,6 +6,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { describe, expect, test } from "vitest";
 
 import {
+  listProviderAccounts,
   listRuntimeEndpoints,
   resolveSqliteMemoryLocation,
 } from "@role-model-router/sqlite-memory";
@@ -1102,6 +1103,66 @@ describe("restart rehydration", () => {
             }),
           ]),
         );
+      } finally {
+        await secondBackend.shutdown();
+      }
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("normalizes legacy local peer role bindings during restart rehydration", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `restart-local-peer-legacy-role-${Date.now()}`);
+    const scopeId = "restart-local-peer-legacy-role-tests";
+    const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+
+    const createBackend = () =>
+      createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+      });
+
+    try {
+      const firstBackend = await createBackend();
+      await firstBackend.updatePeers([
+        {
+          id: "peer-a",
+          url: "http://127.0.0.1:1234/v1",
+        },
+      ]);
+      await firstBackend.shutdown();
+
+      const database = new DatabaseSync(databasePath);
+      database
+        .prepare("UPDATE provider_accounts SET model_role_bindings_json = ? WHERE provider_account_id = ?")
+        .run(
+          JSON.stringify([{ modelId: "lfm2.5-8b-a1b", roleIds: ["general.chat"] }]),
+          "local-openai-compatible.personal.peer-a",
+        );
+      database.close();
+
+      const secondBackend = await createBackend();
+
+      try {
+        let health = await secondBackend.readHealthStatus();
+        for (
+          let attempt = 0;
+          attempt < 20 && health.sessionBootstrap.status === "running";
+          attempt += 1
+        ) {
+          await delay(50);
+          health = await secondBackend.readHealthStatus();
+        }
+
+        expect(health.sessionBootstrap.status).not.toBe("failed");
+        const accounts = listProviderAccounts({ databasePath });
+        expect(
+          accounts.find(
+            (account) => account.providerAccountId === "local-openai-compatible.personal.peer-a",
+          )?.modelRoleBindings,
+        ).toEqual([{ modelId: "lfm2.5-8b-a1b", roleIds: ["writer"] }]);
       } finally {
         await secondBackend.shutdown();
       }
