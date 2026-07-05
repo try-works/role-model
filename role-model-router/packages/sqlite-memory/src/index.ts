@@ -2801,6 +2801,20 @@ export function readRuntimeMaintenancePolicy(
   return Object.fromEntries(rows.map((row) => [row.maintenance_key, row.maintenance_value]));
 }
 
+export function upsertRuntimeMaintenanceValue(input: {
+  readonly databasePath: string;
+  readonly key: string;
+  readonly value: string;
+}): void {
+  const database = openSqliteDatabase(input.databasePath);
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO memory_maintenance (maintenance_key, maintenance_value, updated_at_ms) VALUES (?, ?, ?)",
+    )
+    .run(input.key, input.value, Date.now());
+  database.close();
+}
+
 export function upsertObservedThroughputPenaltyState(
   input: UpsertObservedThroughputPenaltyStateInput,
 ): void {

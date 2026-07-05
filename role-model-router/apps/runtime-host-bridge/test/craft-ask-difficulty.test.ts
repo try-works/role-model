@@ -170,7 +170,7 @@ describe("Craft ask-mode difficulty (R11/R15)", () => {
 });
 
 describe("Craft declared-tools ask-mode difficulty (R2)", () => {
-  test("classifies declared-tools Craft chat without active tool usage as easy", () => {
+  test("treats declared-tools Craft chat as tool-capable even before the first tool call", () => {
     const result: MapResult = bridge.mapChatCompletionsRequest(
       registry,
       {
@@ -185,14 +185,11 @@ describe("Craft declared-tools ask-mode difficulty (R2)", () => {
       mixedAlias,
     );
 
-    expect(result.routingDiagnostics?.difficultyRouting).toMatchObject({
-      difficulty: "easy",
-      strategy: "cost",
-      rubricSignals: {
-        toolCount: 0,
-        historyTurnCount: 2,
-        codeOrSchemaBurden: false,
-      },
+    expect(result.routingDiagnostics?.difficultyRouting?.difficulty).not.toBe("easy");
+    expect(result.routingDiagnostics?.difficultyRouting?.strategy).not.toBe("cost");
+    expect(result.routingDiagnostics?.difficultyRouting?.rubricSignals).toMatchObject({
+      toolCount: 33,
+      historyTurnCount: 2,
     });
   });
 
