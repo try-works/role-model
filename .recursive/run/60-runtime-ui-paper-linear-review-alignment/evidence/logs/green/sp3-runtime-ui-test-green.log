@@ -1,0 +1,36 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\60-runtime-ui-paper-linear-review-alignment\role-model-router\apps\runtime-ui
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/60-runtime-ui-paper-linear-review-alignment/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/runtime-api.test.ts (46 tests) 136ms
+ ✓ app/lib/device-authorization.test.ts (16 tests) 21ms
+ ✓ app/lib/build-sync.test.ts (3 tests) 39ms
+ ✓ app/lib/view-models.test.ts (33 tests) 114ms
+ ✓ app/lib/telemetry-route-models.test.ts (3 tests) 14ms
+ ✓ app/lib/telemetry-analytics.test.ts (10 tests) 21ms
+ ✓ app/components/device-authorization-modal.test.tsx (1 test) 35ms
+ ✓ app/routes/providers.test.ts (3 tests) 50ms
+ ✓ app/components/local-model-role-picker.test.tsx (3 tests) 56ms
+ ✓ app/components/page-primitives.test.tsx (4 tests) 68ms
+ ✓ app/components/device-authorization-card.test.tsx (2 tests) 79ms
+ ✓ app/routes/control-models.test.ts (4 tests) 47ms
+ ✓ app/lib/role-task-hierarchy.test.tsx (3 tests) 112ms
+ ✓ app/lib/benchmark-model-cards.test.ts (5 tests) 11ms
+ ✓ app/lib/llama-swap-setup.test.ts (6 tests) 16ms
+ ✓ app/lib/telemetry-chart-config.test.ts (2 tests) 14ms
+ ✓ app/lib/provider-account-state.test.ts (2 tests) 8ms
+ ✓ app/lib/theme.test.ts (4 tests) 10ms
+ ✓ app/lib/benchmark-latency.test.ts (2 tests) 9ms
+ ✓ app/lib/format-score.test.ts (3 tests) 9ms
+ ✓ app/lib/router-candidate-labels.test.ts (3 tests) 8ms
+ ✓ app/lib/design-system.test.ts (58 tests) 165ms
+ ✓ app/components/telemetry-charts.test.tsx (6 tests) 42ms
+
+ Test Files  23 passed (23)
+      Tests  222 passed (222)
+   Start at  21:39:21
+   Duration  5.96s (transform 8.47s, setup 0ms, collect 28.37s, tests 1.08s, environment 11ms, prepare 14.48s)
+

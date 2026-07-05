@@ -1148,7 +1148,42 @@ async function fetchJson<TValue>(
   if (!response.ok) {
     throw new Error(await extractErrorMessage(response.clone(), path));
   }
-  return (await response.json()) as TValue;
+  const responseClone = response.clone();
+  try {
+    return (await response.json()) as TValue;
+  } catch {
+    const responseText = await responseClone.text().catch(() => "");
+    const normalizedText = responseText.trimStart();
+    if (normalizedText.startsWith("<!DOCTYPE html") || normalizedText.startsWith("<html")) {
+      throw new Error(`Request to ${path} returned HTML instead of JSON.`);
+    }
+    throw new Error(`Request to ${path} returned an invalid JSON response.`);
+  }
+}
+
+const RUNTIME_SUMMARY_RETRY_DELAYS_MS = [150, 300] as const;
+
+async function sleep(delayMs: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, delayMs));
+}
+
+async function fetchRuntimeSummaryWithRetry(
+  fetcher: RuntimeFetcher,
+): Promise<RuntimeSummary> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RUNTIME_SUMMARY_RETRY_DELAYS_MS.length; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(RUNTIME_SUMMARY_RETRY_DELAYS_MS[attempt - 1]);
+    }
+    try {
+      return await fetchJson<RuntimeSummary>("/api/role-model/runtime/summary", fetcher);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Request to /api/role-model/runtime/summary failed.");
 }
 
 async function fetchText(
@@ -1204,7 +1239,7 @@ export async function fetchRuntimeSnapshot(
 ): Promise<RuntimeSnapshot> {
   const [summary, providers, accounts, deviceAuthorizations, endpoints, roles, requests, models] =
     await Promise.all([
-      fetchJson<RuntimeSummary>("/api/role-model/runtime/summary", fetcher),
+      fetchRuntimeSummaryWithRetry(fetcher),
       fetchJson<RuntimeProvider[]>("/api/role-model/providers", fetcher),
       fetchJson<RuntimeAccount[]>("/api/role-model/accounts", fetcher),
       fetchJson<RuntimeDeviceAuthorization[]>("/api/role-model/accounts/device", fetcher),
@@ -1627,7 +1662,7 @@ export async function clearAllBenchmarkData(
 export async function fetchRuntimeSummary(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeSummary> {
-  return fetchJson<RuntimeSummary>("/api/role-model/runtime/summary", fetcher);
+  return fetchRuntimeSummaryWithRetry(fetcher);
 }
 
 export async function fetchHealthStatus(

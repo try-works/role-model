@@ -1,4 +1,5 @@
 import { startTransition, useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 
 import { cn } from "../lib/cn";
 import {
@@ -18,7 +19,7 @@ function readResolvedTheme(): RuntimeTheme {
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<RuntimeTheme>("light");
+  const [theme, setTheme] = useState<RuntimeTheme>("dark");
 
   useEffect(() => {
     const initialTheme = readResolvedTheme();
@@ -37,21 +38,23 @@ export function ThemeToggle() {
   return (
     <fieldset
       aria-label="Theme toggle"
-      className="mx-auto flex w-full max-w-[272px] items-center gap-1 rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-1"
+      className="ml-auto inline-flex h-[44px] w-[104px] items-center gap-1 rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] bg-[var(--rm-panel-muted)] p-1"
     >
-      {(["light", "dark"] as const).map((option) => (
+      {(["dark", "light"] as const).map((option) => (
         <button
           key={option}
+          aria-label={option === "light" ? "Switch to light theme" : "Switch to dark theme"}
+          aria-pressed={theme === option}
           className={cn(
-            "inline-flex min-h-[44px] flex-1 items-center justify-center rounded-[var(--rm-radius-pill)] px-4 text-[17px] font-normal leading-[17px] tracking-[-0.022em] transition active:scale-95",
+            "inline-flex h-[36px] w-[46px] items-center justify-center rounded-[var(--rm-radius-pill)] transition active:scale-95",
             theme === option
-              ? "border border-[var(--rm-accent)] bg-[var(--rm-accent)] text-[var(--rm-on-primary)]"
-              : "border border-transparent bg-transparent text-[var(--rm-secondary)] hover:border-[var(--rm-border)] hover:text-[var(--rm-fg)]",
+              ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
+              : "bg-transparent text-[var(--rm-secondary)] hover:text-[var(--rm-fg)]",
           )}
           onClick={() => handleThemeChange(option)}
           type="button"
         >
-          {option === "light" ? "Light" : "Dark"}
+          {option === "light" ? <Sun size={16} strokeWidth={2} /> : <Moon size={16} strokeWidth={2} />}
         </button>
       ))}
     </fieldset>

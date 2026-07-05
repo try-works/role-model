@@ -1,8 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router";
 
 import { LlamaSwapSetupBanner } from "../components/llama-swap-setup-hint";
-import { EmptyState, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
-import { mutedPanelClassName } from "../lib/design-system";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  SectionCard,
+  StatusPill,
+} from "../components/page-primitives";
+import {
+  bodyStrongTextClassName,
+  codeBlockClassName,
+  compactTitleClassName,
+  metaTextClassName,
+  mutedPanelClassName,
+  secondaryButtonClassName,
+  supportingTextClassName,
+} from "../lib/design-system";
 import { fetchSwapHistory } from "../lib/runtime-api";
 
 interface SwapEvent {
@@ -43,7 +58,23 @@ export default function LocalSwapRoute() {
         {loading && events.length === 0 ? (
           <LoadingState label="Loading swap history…" />
         ) : events.length === 0 ? (
-          <EmptyState label="No swap events recorded yet." />
+          <div className="space-y-3">
+            <EmptyState label="No swap events recorded yet." />
+            <div className={`${mutedPanelClassName} flex flex-wrap items-center justify-between gap-3 p-4`}>
+              <p className={supportingTextClassName}>
+                Events appear here when the managed host loads a first model, swaps to a new one,
+                or records the operator-visible reason for a transition.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link className={secondaryButtonClassName} to="/app/local/llama-swap/models">
+                  Open models
+                </Link>
+                <Link className={secondaryButtonClassName} to="/app/local/llama-swap/policy">
+                  Open host policy
+                </Link>
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="space-y-3">
             {events.map((event, index) => (
@@ -53,25 +84,25 @@ export default function LocalSwapRoute() {
               >
                 <div className="flex-1">
                   <div className="mb-2 flex flex-wrap items-center gap-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                    <span className={metaTextClassName}>
                       {new Date(event.timestamp).toLocaleString()}
                     </span>
-                    <span className="rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] bg-[var(--rm-bg)] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--rm-secondary)]">
+                    <StatusPill tone="neutral">
                       {event.reason}
-                    </span>
+                    </StatusPill>
                   </div>
                   <div className="flex items-center gap-3">
                     {event.oldModel ? (
                       <>
-                        <span className="break-words font-mono text-sm text-[var(--rm-muted)] line-through">
+                        <span className={`break-words ${codeBlockClassName} text-[var(--rm-muted)] line-through`}>
                           {event.oldModel}
                         </span>
-                        <span className="text-sm text-[var(--rm-muted)]">→</span>
+                        <span className={supportingTextClassName}>→</span>
                       </>
                     ) : (
-                      <span className="text-sm text-[var(--rm-muted)]">Initial load →</span>
+                      <span className={supportingTextClassName}>Initial load →</span>
                     )}
-                    <span className="break-words font-mono text-sm font-semibold text-[var(--rm-fg)]">
+                    <span className={`break-words ${bodyStrongTextClassName} [font-family:var(--rm-font-mono)]`}>
                       {event.newModel}
                     </span>
                   </div>
@@ -80,6 +111,35 @@ export default function LocalSwapRoute() {
             ))}
           </div>
         )}
+      </SectionCard>
+
+      <SectionCard
+        title="Ledger semantics"
+        description="Swap history stays narrow on purpose so each row can explain what changed without duplicating the full model-management surface."
+      >
+        <div className="grid gap-3 xl:grid-cols-3">
+          <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+            <p className={compactTitleClassName}>Initial load</p>
+            <p className={supportingTextClassName}>
+              Rows without an old model indicate the first model activation for the current managed
+              host window.
+            </p>
+          </div>
+          <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+            <p className={compactTitleClassName}>Swap reason</p>
+            <p className={supportingTextClassName}>
+              The reason badge records why a new model became active so policy and operator intent
+              remain inspectable later.
+            </p>
+          </div>
+          <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+            <p className={compactTitleClassName}>Timeline order</p>
+            <p className={supportingTextClassName}>
+              The newest host transition stays first so troubleshooting can start with the latest
+              local-runtime state.
+            </p>
+          </div>
+        </div>
       </SectionCard>
     </div>
   );

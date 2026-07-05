@@ -9,7 +9,12 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { secondaryButtonClassName } from "../lib/design-system";
+import {
+  accentActionTextClassName,
+  metaTextClassName,
+  secondaryButtonClassName,
+  supportingTextClassName,
+} from "../lib/design-system";
 import { fetchTextLogs } from "../lib/runtime-api";
 import { usePageActions } from "../lib/shell-header-context";
 import { buildStructuredLogRows } from "../lib/view-models";
@@ -126,21 +131,25 @@ export default function ObserveLogsRoute() {
           <EmptyState label="No logs recorded yet." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="text-[var(--rm-muted)]">
+            <table className="min-w-full text-left">
+              <thead className={metaTextClassName}>
                 <tr>
-                  <th className="pb-3 font-semibold">Timestamp</th>
-                  <th className="pb-3 font-semibold">Source</th>
-                  <th className="pb-3 font-semibold">Severity</th>
-                  <th className="pb-3 font-semibold">Request</th>
-                  <th className="pb-3 font-semibold">Entry</th>
+                  <th className="pb-3 font-normal">Timestamp</th>
+                  <th className="pb-3 font-normal">Source</th>
+                  <th className="pb-3 font-normal">Severity</th>
+                  <th className="pb-3 font-normal">Request</th>
+                  <th className="pb-3 font-normal">Entry</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredRows.map((row) => (
                   <tr key={row.key} className="border-t border-[var(--rm-border)] align-top">
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.timestamp ?? "—"}</td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.sourceClass}</td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.timestamp ?? "—"}
+                    </td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.sourceClass}
+                    </td>
                     <td className="py-3">
                       {row.severity ? (
                         <StatusPill
@@ -160,10 +169,10 @@ export default function ObserveLogsRoute() {
                         <span className="text-[var(--rm-muted)]">—</span>
                       )}
                     </td>
-                    <td className="py-3 text-[var(--rm-secondary)]">
+                    <td className={`py-3 ${supportingTextClassName}`}>
                       {row.requestId ? (
                         <Link
-                          className="font-semibold text-[var(--rm-accent)]"
+                          className={accentActionTextClassName}
                           to={`/app/observe/requests/${row.requestId}`}
                         >
                           {row.requestId}
@@ -172,7 +181,9 @@ export default function ObserveLogsRoute() {
                         "—"
                       )}
                     </td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.message}</td>
+                    <td className={`py-3 ${supportingTextClassName}`}>
+                      {row.message}
+                    </td>
                   </tr>
                 ))}
               </tbody>

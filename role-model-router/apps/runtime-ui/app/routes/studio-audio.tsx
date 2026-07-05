@@ -11,10 +11,15 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import {
+  bodyStrongTextClassName,
+  bodyTextClassName,
   fieldClassName,
+  metaTextClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeAudioVoiceRecord,
@@ -49,6 +54,12 @@ function getVoiceId(voice: RuntimeAudioVoiceRecord): string {
 
 function getVoiceLabel(voice: RuntimeAudioVoiceRecord): string {
   return voice.label ?? voice.name ?? voice.voice ?? voice.id ?? "Unnamed voice";
+}
+
+const formFieldLabelClassName = utilityLabelClassName;
+
+export function isVoiceInventoryUnavailableError(message: string | null): boolean {
+  return Boolean(message?.includes("returned HTML instead of JSON"));
 }
 
 export default function StudioAudioRoute() {
@@ -113,6 +124,7 @@ export default function StudioAudioRoute() {
     () => buildWorkbenchModelOptions(snapshot?.models ?? []),
     [snapshot?.models],
   );
+  const voiceInventoryUnavailable = isVoiceInventoryUnavailableError(voiceError);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -249,8 +261,8 @@ export default function StudioAudioRoute() {
                       );
                     })}
                   </SelectField>
-                  <label className="grid gap-2 text-sm">
-                    <span className="font-semibold text-[var(--rm-fg)]">Input</span>
+                  <label className="grid gap-2">
+                    <span className={formFieldLabelClassName}>Input</span>
                     <textarea
                       className={`${fieldClassName} min-h-32`}
                       value={speechInput}
@@ -259,8 +271,8 @@ export default function StudioAudioRoute() {
                   </label>
                 </>
               ) : (
-                <label className="grid gap-2 text-sm">
-                  <span className="font-semibold text-[var(--rm-fg)]">Audio file</span>
+                <label className="grid gap-2">
+                  <span className={formFieldLabelClassName}>Audio file</span>
                   <input
                     className={fieldClassName}
                     onChange={(event) => setTranscriptionFile(event.target.files?.[0] ?? null)}
@@ -285,16 +297,15 @@ export default function StudioAudioRoute() {
             ) : result.kind === "speech" ? (
               <div className="space-y-4">
                 <div className={`${mutedPanelClassName} p-4`}>
-                  <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
+                  <p className={metaTextClassName}>
                     Speech output
                   </p>
-                  <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                  <p className={`mt-2 ${supportingTextClassName}`}>
                     Voice{" "}
-                    <span className="font-semibold text-[var(--rm-fg)]">
+                    <span className={bodyStrongTextClassName}>
                       {result.voice || "unspecified"}
                     </span>{" "}
-                    on model{" "}
-                    <span className="font-semibold text-[var(--rm-fg)]">{result.model}</span>
+                    on model <span className={bodyStrongTextClassName}>{result.model}</span>
                   </p>
                 </div>
                 {result.audioUrl ? (
@@ -309,17 +320,17 @@ export default function StudioAudioRoute() {
                   <EmptyState label="Speech audio is available, but this environment cannot create a local audio URL." />
                 )}
                 {result.audioUrl ? (
-                  <p className="text-xs text-[var(--rm-muted)]">
+                  <p className={metaTextClassName}>
                     Captions are not available for generated speech playback in this preview.
                   </p>
                 ) : null}
               </div>
             ) : (
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
+                <p className={metaTextClassName}>
                   Transcript
                 </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">
+                <p className={`mt-3 whitespace-pre-wrap ${bodyTextClassName}`}>
                   {result.text || "No transcript text was returned."}
                 </p>
               </div>
@@ -332,6 +343,8 @@ export default function StudioAudioRoute() {
           >
             {voiceLoading ? (
               <LoadingState label="Loading voices…" />
+            ) : voiceInventoryUnavailable ? (
+              <EmptyState label="Voice inventory is unavailable on this runtime host." />
             ) : voiceError ? (
               <ErrorState label={voiceError} />
             ) : voices.length === 0 ? (
@@ -348,7 +361,7 @@ export default function StudioAudioRoute() {
                     );
                   })}
                 </div>
-                <CodeBlock className="min-h-44 text-sm">
+                <CodeBlock className="min-h-44">
                   {result?.rawPayload ?? JSON.stringify(voices, null, 2)}
                 </CodeBlock>
               </div>

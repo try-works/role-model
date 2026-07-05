@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/60-runtime-ui-paper-linear-review-alignment/role-model-router
+
+ ✓ apps/runtime-ui/app/lib/observe-mock-data.test.ts (4 tests | 3 skipped) 9ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 3 skipped (4)
+   Start at  18:43:09
+   Duration  2.24s (transform 366ms, setup 0ms, collect 435ms, tests 9ms, environment 0ms, prepare 907ms)
+

@@ -8,7 +8,14 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { mutedPanelClassName, secondaryButtonClassName } from "../lib/design-system";
+import {
+  accentActionTextClassName,
+  bodyStrongTextClassName,
+  metaTextClassName,
+  mutedPanelClassName,
+  secondaryButtonClassName,
+  supportingTextClassName,
+} from "../lib/design-system";
 import { type RuntimeSnapshot, fetchRuntimeConfig, fetchRuntimeSnapshot } from "../lib/runtime-api";
 import {
   buildConfiguredProviderRows,
@@ -24,6 +31,12 @@ function formatProviderReadiness(provider: ProviderRow): string {
     [
       provider.pendingDeviceAuthorizationCount > 0
         ? `${provider.pendingDeviceAuthorizationCount} pending OAuth`
+        : null,
+      provider.envUnresolvedAccountCount > 0
+        ? `${provider.envUnresolvedAccountCount} env unresolved`
+        : null,
+      provider.expiredAuthAccountCount > 0
+        ? `${provider.expiredAuthAccountCount} reconnect required`
         : null,
       provider.credentialsMissingAccountCount > 0
         ? `${provider.credentialsMissingAccountCount} missing credentials`
@@ -95,6 +108,8 @@ function buildRuntimeConnectionRows(input: {
     .map((provider) => {
       const blocking = [
         provider.pendingDeviceAuthorizationCount,
+        provider.envUnresolvedAccountCount,
+        provider.expiredAuthAccountCount,
         provider.credentialsMissingAccountCount,
         provider.connectedWithoutEndpointCount,
       ].some((value) => value > 0);
@@ -159,6 +174,7 @@ export default function EndpointsRoute() {
     () => buildRuntimeConnectionRows({ providerRows, endpointRows }),
     [providerRows, endpointRows],
   );
+  const tableValueCellClassName = `py-3 ${supportingTextClassName}`;
 
   if (error) {
     return <ErrorState label={error} />;
@@ -171,18 +187,18 @@ export default function EndpointsRoute() {
     <div className="space-y-6">
       {readinessRows.length > 0 ? (
         <div
-          className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 text-sm text-[var(--rm-secondary)]`}
+          className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 ${supportingTextClassName}`}
         >
-          <span className="font-semibold text-[var(--rm-fg)]">Provider onboarding pending:</span>
+          <span className={bodyStrongTextClassName}>Provider onboarding pending:</span>
           {readinessRows.map((row) => (
             <StatusPill key={row.key} tone={row.tone}>
               {row.label} {row.value}
             </StatusPill>
           ))}
-          <Link className="text-[var(--rm-accent)]" to="/app/remote/providers">
+          <Link className={accentActionTextClassName} to="/app/remote/providers">
             Remote → Providers
           </Link>
-          <Link className="text-[var(--rm-accent)]" to="/app/system/runtime">
+          <Link className={accentActionTextClassName} to="/app/system/runtime">
             System → Runtime
           </Link>
         </div>
@@ -215,26 +231,26 @@ export default function EndpointsRoute() {
           description="Provider, model, and endpoint state are merged into one registry view so operators can see what is usable without comparing duplicate tables."
         >
           <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="text-[var(--rm-muted)]">
+            <table className="min-w-full text-left">
+              <thead className={metaTextClassName}>
                 <tr>
-                  <th className="pb-3 font-semibold">Provider</th>
-                  <th className="pb-3 font-semibold">Connection</th>
-                  <th className="pb-3 font-semibold">Model</th>
-                  <th className="pb-3 font-semibold">Endpoint</th>
-                  <th className="pb-3 font-semibold">Source</th>
-                  <th className="pb-3 font-semibold">Health</th>
-                  <th className="pb-3 font-semibold">Readiness</th>
+                  <th className="pb-3 font-normal">Provider</th>
+                  <th className="pb-3 font-normal">Connection</th>
+                  <th className="pb-3 font-normal">Model</th>
+                  <th className="pb-3 font-normal">Endpoint</th>
+                  <th className="pb-3 font-normal">Source</th>
+                  <th className="pb-3 font-normal">Health</th>
+                  <th className="pb-3 font-normal">Readiness</th>
                 </tr>
               </thead>
               <tbody>
                 {connectionRows.map((row) => (
                   <tr key={row.key} className="border-t border-[var(--rm-border)]">
-                    <td className="py-3 font-semibold text-[var(--rm-fg)]">{row.providerLabel}</td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.connectionLabel}</td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.modelLabel}</td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.endpointLabel}</td>
-                    <td className="py-3 text-[var(--rm-secondary)]">{row.sourceLabel}</td>
+                    <td className={`py-3 ${bodyStrongTextClassName}`}>{row.providerLabel}</td>
+                    <td className={tableValueCellClassName}>{row.connectionLabel}</td>
+                    <td className={tableValueCellClassName}>{row.modelLabel}</td>
+                    <td className={tableValueCellClassName}>{row.endpointLabel}</td>
+                    <td className={tableValueCellClassName}>{row.sourceLabel}</td>
                     <td className="py-3">
                       <StatusPill tone={row.healthTone}>{row.healthLabel}</StatusPill>
                     </td>

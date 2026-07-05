@@ -3,8 +3,12 @@ import { useEffect, useState } from "react";
 import { ErrorState, LoadingState, SectionCard, StatusPill } from "../components/page-primitives";
 import {
   codeBlockClassName,
+  compactTitleClassName,
+  metaTextClassName,
   mutedPanelClassName,
+  monoUtilityStrongTextClassName,
   secondaryButtonClassName,
+  supportingTextClassName,
 } from "../lib/design-system";
 import {
   type RuntimeDownstreamOpenAIProviderConfig,
@@ -51,10 +55,8 @@ export default function IntegrationsDownstreamRoute() {
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {guide.connectionRows.map((row) => (
             <div key={row.label} className={`${mutedPanelClassName} p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                {row.label}
-              </p>
-              <p className="mt-2 break-all font-mono text-sm text-[var(--rm-fg)]">{row.value}</p>
+              <p className={metaTextClassName}>{row.label}</p>
+              <p className={`mt-2 break-all ${monoUtilityStrongTextClassName}`}>{row.value}</p>
             </div>
           ))}
         </div>
@@ -63,20 +65,26 @@ export default function IntegrationsDownstreamRoute() {
       <SectionCard title="Consumer setup">
         <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <div className={`${mutedPanelClassName} min-w-0 p-4`}>
-            <p className="font-semibold text-[var(--rm-fg)]">Setup steps</p>
-            <ol className="mt-3 space-y-2 text-sm text-[var(--rm-secondary)]">
+            <p className={compactTitleClassName}>Setup steps</p>
+            <ol className={`mt-3 space-y-2 ${supportingTextClassName}`}>
               {guide.opencodeSteps.map((step) => (
                 <li key={step}>{step}</li>
               ))}
             </ol>
-            <p className="mt-4 text-sm text-[var(--rm-secondary)]">
-              {provider.authentication.note}
-            </p>
+            <p className={`mt-4 ${supportingTextClassName}`}>{provider.authentication.note}</p>
+            <div className="mt-4">
+              <p className={compactTitleClassName}>Compatibility notes</p>
+              <ul className={`mt-3 space-y-2 ${supportingTextClassName}`}>
+                {provider.setup.notes.map((note) => (
+                  <li key={note}>{note}</li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           <div className="min-w-0 space-y-4">
             <div className={`${mutedPanelClassName} min-w-0 p-4`}>
-              <p className="font-semibold text-[var(--rm-fg)]">Available models</p>
+              <p className={compactTitleClassName}>Available models</p>
               <div className="mt-3 flex min-w-0 flex-wrap gap-2">
                 {guide.availableModels.map((modelId) => (
                   <StatusPill
@@ -91,7 +99,7 @@ export default function IntegrationsDownstreamRoute() {
             </div>
 
             <div className={`${mutedPanelClassName} min-w-0 p-4`}>
-              <p className="font-semibold text-[var(--rm-fg)]">Example commands</p>
+              <p className={compactTitleClassName}>Example commands</p>
               <pre className={`mt-3 ${codeBlockClassName}`}>{guide.examples.modelsCurl}</pre>
               <pre className={`mt-3 ${codeBlockClassName}`}>{guide.examples.chatCurl}</pre>
             </div>

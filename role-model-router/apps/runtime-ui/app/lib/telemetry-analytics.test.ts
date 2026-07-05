@@ -352,7 +352,7 @@ describe("telemetry analytics view models", () => {
     } as unknown as RuntimeTelemetryAnalyticsResponse;
 
     const model = buildTelemetryTimeSeriesChartModel(response, {
-      title: "Cache Efficiency Trend",
+      title: "Cache Efficiency",
       metrics: ["cacheHitTokenRate"],
     });
 

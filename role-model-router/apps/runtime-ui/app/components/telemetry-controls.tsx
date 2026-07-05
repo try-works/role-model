@@ -1,9 +1,4 @@
-import {
-  fieldClassName,
-  primaryButtonClassName,
-  secondaryButtonClassName,
-  utilityLabelClassName,
-} from "../lib/design-system";
+import { fieldClassName, utilityLabelClassName } from "../lib/design-system";
 import { telemetryTimeRangeOptions } from "../lib/telemetry-chart-config";
 import type { TelemetryTimeRangeValue } from "../lib/telemetry-route-models";
 import { SelectField } from "./page-primitives";
@@ -22,7 +17,12 @@ export function TelemetryTimeRangeControl({
         return (
           <button
             key={option.value}
-            className={selected ? primaryButtonClassName : secondaryButtonClassName}
+            className={[
+              "inline-flex min-h-[32px] items-center justify-center rounded-[var(--rm-radius-pill)] px-4 py-1 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] transition-colors",
+              selected
+                ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
+                : "border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] text-[var(--rm-accent-ink)] hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)]",
+            ].join(" ")}
             onClick={() => onChange(option.value)}
             type="button"
           >

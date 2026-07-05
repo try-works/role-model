@@ -20,7 +20,7 @@ export const links = () => [
   },
   {
     rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap",
+    href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap",
   },
 ];
 
@@ -32,14 +32,12 @@ const themeBootstrapScript = `
     const theme =
       stored === "light" || stored === "dark"
         ? stored
-        : window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
+        : "dark";
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute("content", theme === "dark" ? "#000000" : "#f5f5f7");
+      meta.setAttribute("content", theme === "dark" ? "#010102" : "#fbfbfc");
     }
   } catch {}
 })();
@@ -52,8 +50,8 @@ export function Layout({ children }: { children: ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light dark" />
-        <meta name="theme-color" content="#f5f5f7" />
-        <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#010102" />
+        <meta name="theme-color" content="#010102" media="(prefers-color-scheme: dark)" />
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Static bootstrap prevents a theme flash before React hydration. */}
         <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
         <Meta />

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router";
 
 import { DeviceAuthorizationCard } from "../components/device-authorization-card";
 import { DeviceAuthorizationModal } from "../components/device-authorization-modal";
+import { LocalModelRolePicker } from "../components/local-model-role-picker";
 import {
   EmptyState,
   ErrorState,
@@ -13,10 +14,13 @@ import {
 } from "../components/page-primitives";
 import {
   fieldClassName,
+  foregroundEmphasisClassName,
+  insetPanelClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   raisedPanelClassName,
   secondaryButtonClassName,
+  supportingTextClassName,
 } from "../lib/design-system";
 import {
   getDeviceAuthorizationPollDelayMs,
@@ -32,8 +36,10 @@ import {
   type RuntimeAccount,
   type RuntimeDeviceAuthorization,
   type RuntimeProvider,
+  type RuntimeRolePolicy,
   type RuntimeSnapshot,
   activateRuntimeEndpoint,
+  fetchRolePolicy,
   fetchRuntimeSnapshot,
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
@@ -52,6 +58,14 @@ const inputClass = fieldClassName;
 const buttonClass = primaryButtonClassName;
 
 type ModelRoleSelection = Record<string, string[]>;
+
+type ProviderModelRoleCoverageSummary = {
+  readonly totalSelectedCount: number;
+  readonly totalRoleCount: number;
+  readonly allRolesSelected: boolean;
+  readonly groupPreviewLabels: readonly string[];
+  readonly hiddenGroupCount: number;
+};
 
 function defaultVariantId(provider?: RuntimeProvider): string {
   return provider?.variants?.[0]?.variantId ?? "";
@@ -72,6 +86,14 @@ function defaultProviderAccountId(providerId: string, variantId: string): string
 
 function defaultCredentialRef(provider?: RuntimeProvider): string {
   return provider?.envVars?.[0] ?? "API_KEY";
+}
+
+function formatRuntimeRoleGroupLabel(groupId: string): string {
+  return groupId
+    .split(/[_-]+/)
+    .filter(Boolean)
+    .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
 }
 
 export function buildModelRoleSelection(
@@ -128,6 +150,67 @@ export function buildModelRoleBindings(
   });
 }
 
+export function buildProviderModelRoleCoverageSummary(input: {
+  readonly selectedRoleIds: readonly string[];
+  readonly allRoleIds: readonly string[];
+  readonly rolePolicy: RuntimeRolePolicy | null;
+  readonly previewGroupLimit?: number;
+}): ProviderModelRoleCoverageSummary {
+  const previewGroupLimit = Math.max(1, input.previewGroupLimit ?? 3);
+  const totalRoleCount = input.allRoleIds.length;
+  const totalSelectedRoleIds = [...new Set(input.selectedRoleIds)];
+  const allRolesSelected = totalRoleCount > 0 && totalSelectedRoleIds.length === totalRoleCount;
+
+  if (!input.rolePolicy || input.rolePolicy.roleDefinitions.length === 0) {
+    return {
+      totalSelectedCount: totalSelectedRoleIds.length,
+      totalRoleCount,
+      allRolesSelected,
+      groupPreviewLabels:
+        totalSelectedRoleIds.length > 0 ? [`${totalSelectedRoleIds.length} selected`] : [],
+      hiddenGroupCount: 0,
+    };
+  }
+
+  const selectedRoleSet = new Set(totalSelectedRoleIds);
+  const groupedCoverage = input.rolePolicy.roleDefinitions.reduce(
+    (groups, roleDefinition) => {
+      const groupId = roleDefinition.primaryGroupId ?? "ungrouped";
+      const current = groups.get(groupId) ?? {
+        label: formatRuntimeRoleGroupLabel(groupId),
+        selectedCount: 0,
+        totalCount: 0,
+      };
+      current.totalCount += 1;
+      if (selectedRoleSet.has(roleDefinition.role_id)) {
+        current.selectedCount += 1;
+      }
+      groups.set(groupId, current);
+      return groups;
+    },
+    new Map<string, { label: string; selectedCount: number; totalCount: number }>(),
+  );
+
+  const selectedGroups = [...groupedCoverage.values()]
+    .filter((group) => group.selectedCount > 0)
+    .sort(
+      (left, right) =>
+        right.selectedCount - left.selectedCount || left.label.localeCompare(right.label, "en"),
+    );
+
+  const groupPreviewLabels = selectedGroups
+    .slice(0, previewGroupLimit)
+    .map((group) => `${group.label} ${group.selectedCount}/${group.totalCount}`);
+
+  return {
+    totalSelectedCount: totalSelectedRoleIds.length,
+    totalRoleCount,
+    allRolesSelected,
+    groupPreviewLabels,
+    hiddenGroupCount: Math.max(0, selectedGroups.length - groupPreviewLabels.length),
+  };
+}
+
 function buildAvailableModels(input: {
   readonly snapshot: RuntimeSnapshot;
   readonly provider: RuntimeProvider | undefined;
@@ -181,6 +264,7 @@ export default function ProvidersRoute() {
   const [credentialRef, setCredentialRef] = useState("");
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [selectedModelRoles, setSelectedModelRoles] = useState<ModelRoleSelection>({});
+  const [rolePolicy, setRolePolicy] = useState<RuntimeRolePolicy | null>(null);
   const [oauthState, setOauthState] = useState<RuntimeDeviceAuthorization | null>(null);
   const [oauthConnected, setOauthConnected] = useState(false);
   const [copiedUserCode, setCopiedUserCode] = useState(false);
@@ -237,8 +321,12 @@ export default function ProvidersRoute() {
 
   const load = useCallback(async () => {
     try {
-      const nextSnapshot = await fetchRuntimeSnapshot();
+      const [nextSnapshot, nextRolePolicy] = await Promise.all([
+        fetchRuntimeSnapshot(),
+        fetchRolePolicy(),
+      ]);
       setSnapshot(nextSnapshot);
+      setRolePolicy(nextRolePolicy);
       setError(null);
 
       if (!initializedRef.current) {
@@ -377,8 +465,12 @@ export default function ProvidersRoute() {
       snapshot?.accounts.find((account) => account.providerAccountId === providerAccountId) ?? null,
     [providerAccountId, snapshot],
   );
-  const availableRoles = snapshot?.roles ?? [];
-  const availableRoleIds = availableRoles.map((role) => role.roleId);
+  const availableRoleIds = useMemo(() => {
+    if (rolePolicy && rolePolicy.roleDefinitions.length > 0) {
+      return rolePolicy.roleDefinitions.map((role) => role.role_id);
+    }
+    return snapshot?.roles.map((role) => role.roleId) ?? [];
+  }, [rolePolicy, snapshot]);
   const providerMaintenanceRows = useMemo(
     () =>
       snapshot
@@ -477,19 +569,6 @@ export default function ProvidersRoute() {
     setSelectedModelRoles((current) =>
       modelId ? { [modelId]: current[modelId] ?? availableRoleIds } : {},
     );
-  };
-
-  const toggleModelRole = (modelId: string, roleId: string) => {
-    setSelectedModelRoles((current) => {
-      const currentRoles = current[modelId] ?? [];
-      const nextRoles = currentRoles.includes(roleId)
-        ? currentRoles.filter((entry) => entry !== roleId)
-        : [...currentRoles, roleId];
-      return {
-        ...current,
-        [modelId]: nextRoles.sort((left, right) => left.localeCompare(right, "en")),
-      };
-    });
   };
 
   const buildProviderPayload = () => {
@@ -716,7 +795,7 @@ export default function ProvidersRoute() {
               </SelectField>
 
               <label className="grid gap-2 text-sm">
-                <span className="font-semibold text-[var(--rm-fg)]">Provider connection id</span>
+                <span className={foregroundEmphasisClassName}>Provider connection id</span>
                 <input
                   className={inputClass}
                   value={providerAccountId}
@@ -726,7 +805,7 @@ export default function ProvidersRoute() {
 
               {selectedVariant?.authMode === "api-key-static" ? (
                 <label className="grid gap-2 text-sm">
-                  <span className="font-semibold text-[var(--rm-fg)]">Credential reference</span>
+                  <span className={foregroundEmphasisClassName}>Credential reference</span>
                   <input
                     className={inputClass}
                     value={credentialRef}
@@ -734,8 +813,8 @@ export default function ProvidersRoute() {
                   />
                 </label>
               ) : (
-                <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-                  <p className="font-semibold text-[var(--rm-fg)]">
+                <div className={insetPanelClassName}>
+                  <p className={foregroundEmphasisClassName}>
                     Runtime-managed credential reference
                   </p>
                   <p className="mt-2">
@@ -757,47 +836,41 @@ export default function ProvidersRoute() {
               {selectedModel !== "" ? (
                 <div className="space-y-3 text-sm">
                   <div>
-                    <p className="font-semibold text-[var(--rm-fg)]">Model roles</p>
+                    <p className={foregroundEmphasisClassName}>Model roles</p>
                     <p className="text-[var(--rm-secondary)]">
                       Assign runtime roles to the selected model so the resulting endpoint registry
                       preserves operator intent.
                     </p>
                   </div>
                   <div className={`${mutedPanelClassName} space-y-3 p-4`}>
-                    <div className={`${raisedPanelClassName} space-y-2 p-3`}>
-                      <p className="font-semibold text-[var(--rm-fg)]">{selectedModel}</p>
-                      {availableRoles.length > 0 ? (
-                        <div className="flex flex-wrap gap-3">
-                          {availableRoles.map((role) => (
-                            <label
-                              key={`${selectedModel}:${role.roleId}`}
-                              className="flex items-center gap-2 rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] px-3 py-1.5"
-                            >
-                              <input
-                                checked={(
-                                  selectedModelRoles[selectedModel] ?? availableRoleIds
-                                ).includes(role.roleId)}
-                                type="checkbox"
-                                onChange={() => toggleModelRole(selectedModel, role.roleId)}
-                              />
-                              <span className="text-[var(--rm-secondary)]">{role.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      ) : (
+                    <p className={foregroundEmphasisClassName}>{selectedModel}</p>
+                    {availableRoleIds.length > 0 ? (
+                      <LocalModelRolePicker
+                        rolePolicy={rolePolicy}
+                        selectedRoleIds={selectedModelRoles[selectedModel] ?? availableRoleIds}
+                        expandSelectedGroupsByDefault={false}
+                        onChange={(nextRoleIds) =>
+                          setSelectedModelRoles((current) => ({
+                            ...current,
+                            [selectedModel]: [...nextRoleIds],
+                          }))
+                        }
+                      />
+                    ) : (
+                      <div className={insetPanelClassName}>
                         <p className="text-[var(--rm-secondary)]">
                           No runtime roles are available from the host bridge yet.
                         </p>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : null}
 
               {selectedVariant ? (
-                <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+                <div className={insetPanelClassName}>
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-[var(--rm-fg)]">{selectedVariant.label}</p>
+                    <p className={foregroundEmphasisClassName}>{selectedVariant.label}</p>
                     <StatusPill
                       tone={selectedVariant.availability === "ready" ? "success" : "warning"}
                     >
@@ -812,19 +885,19 @@ export default function ProvidersRoute() {
                   </p>
                   <div className="mt-3 grid gap-2 md:grid-cols-2">
                     <p>
-                      <span className="font-semibold text-[var(--rm-fg)]">Catalog models:</span>{" "}
+                      <span className={foregroundEmphasisClassName}>Catalog models:</span>{" "}
                       {availableModels.length}
                     </p>
                     <p>
-                      <span className="font-semibold text-[var(--rm-fg)]">API base:</span>{" "}
+                      <span className={foregroundEmphasisClassName}>API base:</span>{" "}
                       {selectedVariant.baseUrl ?? selectedProvider?.apiBase}
                     </p>
                     <p>
-                      <span className="font-semibold text-[var(--rm-fg)]">SDK package:</span>{" "}
+                      <span className={foregroundEmphasisClassName}>SDK package:</span>{" "}
                       {selectedProvider?.npmPackage ?? "Not cataloged"}
                     </p>
                     <p>
-                      <span className="font-semibold text-[var(--rm-fg)]">Docs:</span>{" "}
+                      <span className={foregroundEmphasisClassName}>Docs:</span>{" "}
                       {selectedProvider?.docsUrl ? (
                         <a
                           className="underline decoration-[var(--rm-border-strong)] underline-offset-4"
@@ -841,13 +914,13 @@ export default function ProvidersRoute() {
                   </div>
                   {selectedVariant.oauth ? (
                     <div className={`mt-3 ${raisedPanelClassName} p-3`}>
-                      <p className="font-semibold text-[var(--rm-fg)]">OAuth metadata</p>
+                      <p className={foregroundEmphasisClassName}>OAuth metadata</p>
                       <p className="mt-2">
-                        <span className="font-semibold text-[var(--rm-fg)]">Client id:</span>{" "}
+                        <span className={foregroundEmphasisClassName}>Client id:</span>{" "}
                         {selectedVariant.oauth.clientId}
                       </p>
                       <p>
-                        <span className="font-semibold text-[var(--rm-fg)]">Device endpoint:</span>{" "}
+                        <span className={foregroundEmphasisClassName}>Device endpoint:</span>{" "}
                         {selectedVariant.oauth.deviceAuthorizationEndpoint}
                       </p>
                     </div>
@@ -918,7 +991,7 @@ export default function ProvidersRoute() {
                       data-testid={`provider-maintenance-${row.providerAccountId}`}
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-[var(--rm-fg)]">
+                        <h3 className={foregroundEmphasisClassName}>
                           {row.providerAccountId}
                         </h3>
                         <StatusPill tone="neutral">{row.providerId}</StatusPill>
@@ -927,41 +1000,41 @@ export default function ProvidersRoute() {
                       </div>
                       <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
                         <p>
-                          <span className="font-semibold text-[var(--rm-fg)]">
+                          <span className={foregroundEmphasisClassName}>
                             Connection method:
                           </span>{" "}
                           {row.authMode}
                         </p>
                         <p>
-                          <span className="font-semibold text-[var(--rm-fg)]">
+                          <span className={foregroundEmphasisClassName}>
                             Credential posture:
                           </span>{" "}
                           {row.storageDetail}
                         </p>
                         <p>
-                          <span className="font-semibold text-[var(--rm-fg)]">Base URL:</span>{" "}
+                          <span className={foregroundEmphasisClassName}>Base URL:</span>{" "}
                           {row.baseUrlOverride ?? "Provider default"}
                         </p>
                         <p>
-                          <span className="font-semibold text-[var(--rm-fg)]">
+                          <span className={foregroundEmphasisClassName}>
                             Lifecycle reason:
                           </span>{" "}
                           {row.reasonLabel}
                         </p>
                         <p>
-                          <span className="font-semibold text-[var(--rm-fg)]">
+                          <span className={foregroundEmphasisClassName}>
                             Source provenance:
                           </span>{" "}
                           {row.sourceProvenanceLabel}
                         </p>
                         <p>
-                          <span className="font-semibold text-[var(--rm-fg)]">
+                          <span className={foregroundEmphasisClassName}>
                             Available actions:
                           </span>{" "}
                           {row.availableActionsLabel}
                         </p>
                         <p>
-                          <span className="font-semibold text-[var(--rm-fg)]">
+                          <span className={foregroundEmphasisClassName}>
                             Active endpoints:
                           </span>{" "}
                           {row.activeEndpointCount}
@@ -1011,22 +1084,46 @@ export default function ProvidersRoute() {
                               row.modelRoleBindings,
                             );
                             const effectiveRoleIds = modelRoleSelection[modelId] ?? [];
+                            const roleCoverageSummary = buildProviderModelRoleCoverageSummary({
+                              selectedRoleIds: effectiveRoleIds,
+                              allRoleIds: availableRoleIds,
+                              rolePolicy,
+                            });
                             return (
                               <div key={modelId} className={`${raisedPanelClassName} p-3`}>
                                 <div className="flex flex-wrap items-center gap-2">
                                   <StatusPill tone="accent">{modelId}</StatusPill>
-                                  {effectiveRoleIds.length > 0 ? (
-                                    effectiveRoleIds.map((roleId) => (
-                                      <StatusPill key={`${modelId}:${roleId}`} tone="neutral">
-                                        {roleId}
-                                      </StatusPill>
-                                    ))
-                                  ) : (
-                                    <span className="text-sm text-[var(--rm-secondary)]">
-                                      No roles assigned
-                                    </span>
-                                  )}
                                 </div>
+                                {effectiveRoleIds.length > 0 ? (
+                                  <div className="mt-2 space-y-2">
+                                    <p className={supportingTextClassName}>
+                                      {roleCoverageSummary.allRolesSelected
+                                        ? "All runtime roles assigned."
+                                        : `${roleCoverageSummary.totalSelectedCount} of ${roleCoverageSummary.totalRoleCount} runtime roles assigned.`}
+                                    </p>
+                                    {roleCoverageSummary.groupPreviewLabels.length > 0 ? (
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        {roleCoverageSummary.groupPreviewLabels.map((label) => (
+                                          <StatusPill
+                                            key={`${modelId}:${label}`}
+                                            tone="neutral"
+                                          >
+                                            {label}
+                                          </StatusPill>
+                                        ))}
+                                        {roleCoverageSummary.hiddenGroupCount > 0 ? (
+                                          <StatusPill tone="neutral">
+                                            +{roleCoverageSummary.hiddenGroupCount} more groups
+                                          </StatusPill>
+                                        ) : null}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                ) : (
+                                  <p className={`mt-2 ${supportingTextClassName}`}>
+                                    No roles assigned
+                                  </p>
+                                )}
                               </div>
                             );
                           })}
@@ -1037,7 +1134,7 @@ export default function ProvidersRoute() {
                   {archivedArtifactRows.length > 0 ? (
                     <div className={`${mutedPanelClassName} p-4`}>
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-[var(--rm-fg)]">
+                        <h3 className={foregroundEmphasisClassName}>
                           Archived stale diagnostics
                         </h3>
                         <StatusPill tone="neutral">{archivedArtifactRows.length}</StatusPill>
@@ -1053,10 +1150,10 @@ export default function ProvidersRoute() {
                               <StatusPill tone="warning">{artifact.label}</StatusPill>
                             </div>
                             <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                              <span className="font-semibold text-[var(--rm-fg)]">Account:</span>{" "}
+                              <span className={foregroundEmphasisClassName}>Account:</span>{" "}
                               {artifact.providerAccountId}
                             </p>
-                            <p className="text-sm text-[var(--rm-secondary)]">{artifact.detail}</p>
+                            <p className={supportingTextClassName}>{artifact.detail}</p>
                           </div>
                         ))}
                       </div>
@@ -1110,7 +1207,7 @@ export default function ProvidersRoute() {
                 </h2>
                 <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
                   Enter a replacement API key for{" "}
-                  <span className="font-semibold text-[var(--rm-fg)]">
+                  <span className={foregroundEmphasisClassName}>
                     {apiKeyModalAccount.providerAccountId}
                   </span>
                   . The key is saved into runtime-managed local credential storage after this dialog
@@ -1120,7 +1217,7 @@ export default function ProvidersRoute() {
             </div>
             <div className="mt-6 space-y-4">
               <label className="grid gap-2 text-sm">
-                <span className="font-semibold text-[var(--rm-fg)]">API key</span>
+                <span className={foregroundEmphasisClassName}>API key</span>
                 <input
                   className={inputClass}
                   type="password"
@@ -1131,7 +1228,7 @@ export default function ProvidersRoute() {
               {apiKeyError ? (
                 <ErrorState label={apiKeyError} />
               ) : (
-                <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+                <div className={insetPanelClassName}>
                   The existing saved-account identity, model bindings, and endpoint linkage stay in
                   place while the API key rotates.
                 </div>

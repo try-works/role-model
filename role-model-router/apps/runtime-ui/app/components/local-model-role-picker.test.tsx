@@ -3,7 +3,12 @@ import { MemoryRouter } from "react-router";
 import { describe, expect, test } from "vitest";
 
 import type { BenchmarkCapability, RuntimeRolePolicy } from "../lib/runtime-api";
-import { LocalModelRolePicker, getLocalModelRolePickerState } from "./local-model-role-picker";
+import {
+  LocalModelRolePicker,
+  getNextRoleSelectionForGroup,
+  getLocalModelRolePickerGroupState,
+  getLocalModelRolePickerState,
+} from "./local-model-role-picker";
 
 const rolePolicy = {
   roleDefinitions: [
@@ -118,7 +123,82 @@ describe("LocalModelRolePicker", () => {
     expect(markup).toContain("Benchmarked 91%");
     expect(markup).toContain("Unassigned evidence 88%");
     expect(markup).toContain("Low coverage");
+    expect(markup).toContain("bg-[var(--rm-pill-warning-bg)]");
+    expect(markup).toContain("bg-[var(--rm-pill-accent-bg)]");
+    expect(markup).toContain("bg-[var(--rm-pill-neutral-bg)]");
+    expect(markup).not.toContain("border-[var(--rm-warning)]");
+    expect(markup).not.toContain("border-[var(--rm-accent)]");
+    expect(markup).not.toContain(
+      'rounded-[var(--rm-radius-pill)] border border-[var(--rm-border)] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[var(--rm-secondary)]',
+    );
     expect(markup).not.toContain('value="security" checked=""');
+  });
+
+  test("renders grouped roles as collapsible sections and only pre-opens explicitly selected groups", () => {
+    const collapsedMarkup = renderToStaticMarkup(
+      <MemoryRouter>
+        <LocalModelRolePicker rolePolicy={rolePolicy} selectedRoleIds={[]} onChange={() => {}} />
+      </MemoryRouter>,
+    );
+
+    expect(collapsedMarkup).toContain("<details");
+    expect(collapsedMarkup).toContain("<summary");
+    expect(collapsedMarkup).toContain("Engineering");
+    expect(collapsedMarkup).toContain("Communication");
+    expect(collapsedMarkup).not.toContain('open=""');
+
+    const expandedMarkup = renderToStaticMarkup(
+      <MemoryRouter>
+        <LocalModelRolePicker
+          rolePolicy={rolePolicy}
+          selectedRoleIds={["writer"]}
+          onChange={() => {}}
+          defaultAllRoles={false}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(expandedMarkup).toContain('open=""');
+    expect(expandedMarkup).toContain("1 selected");
+  });
+
+  test("can keep selected groups collapsed by default when a route requests it", () => {
+    const collapsedSelectedMarkup = renderToStaticMarkup(
+      <MemoryRouter>
+        <LocalModelRolePicker
+          rolePolicy={rolePolicy}
+          selectedRoleIds={["coder", "security", "writer"]}
+          onChange={() => {}}
+          expandSelectedGroupsByDefault={false}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(collapsedSelectedMarkup).not.toContain('open=""');
+  });
+
+  test("renders category-level checkboxes that default to selected and expose partial state", () => {
+    const defaultMarkup = renderToStaticMarkup(
+      <MemoryRouter>
+        <LocalModelRolePicker rolePolicy={rolePolicy} selectedRoleIds={[]} onChange={() => {}} />
+      </MemoryRouter>,
+    );
+
+    expect(defaultMarkup).toContain('aria-label="Select Engineering roles"');
+    expect(defaultMarkup).toContain('aria-label="Select Communication roles"');
+    expect(defaultMarkup).toContain('aria-checked="true"');
+
+    expect(
+      getLocalModelRolePickerGroupState({
+        roleIds: ["coder", "security"],
+        selectedRoleIds: ["coder"],
+      }),
+    ).toMatchObject({
+      selectedRoleIds: ["coder"],
+      allSelected: false,
+      noneSelected: false,
+      partiallySelected: true,
+    });
   });
 
   test("derives explicit role assignment states without treating empty as all", () => {
@@ -149,5 +229,25 @@ describe("LocalModelRolePicker", () => {
         defaultAllRoles: false,
       }),
     ).toMatchObject({ allSelected: false, noneSelected: false, partiallySelected: true });
+  });
+
+  test("toggles a single group without mutating neighboring groups", () => {
+    expect(
+      getNextRoleSelectionForGroup({
+        allRoleIds: ["writer", "coordinator", "analyst", "designer"],
+        groupRoleIds: ["writer", "coordinator"],
+        selectedRoleIds: ["analyst", "designer"],
+        defaultAllRoles: false,
+      }),
+    ).toEqual(["writer", "coordinator", "analyst", "designer"]);
+
+    expect(
+      getNextRoleSelectionForGroup({
+        allRoleIds: ["writer", "coordinator", "analyst", "designer"],
+        groupRoleIds: ["writer", "coordinator"],
+        selectedRoleIds: [],
+        defaultAllRoles: true,
+      }),
+    ).toEqual(["analyst", "designer"]);
   });
 });

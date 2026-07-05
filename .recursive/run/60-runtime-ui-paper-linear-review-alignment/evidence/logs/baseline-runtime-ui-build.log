@@ -1,0 +1,81 @@
+
+> @role-model-router/runtime-ui@ build D:\DEV\role-model\.worktrees\60-runtime-ui-paper-linear-review-alignment\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+vite v7.3.2 building client environment for production...
+transforming...
+✓ 2370 modules transformed.
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                           22.17 kB │ gzip:   2.05 kB
+build/client/assets/root-MfRhlO6m.css                      39.87 kB │ gzip:   8.07 kB
+build/client/assets/index-_YM3yJ-p.js                       0.15 kB │ gzip:   0.15 kB
+build/client/assets/router-config-BRQeXCTv.js               0.15 kB │ gzip:   0.16 kB
+build/client/assets/local-models-DJPlNy3J.js                0.16 kB │ gzip:   0.16 kB
+build/client/assets/local-matrix-Bb2ef4_g.js                0.18 kB │ gzip:   0.18 kB
+build/client/assets/shell-header-context-Cj1zAnIg.js        0.78 kB │ gzip:   0.40 kB
+build/client/assets/not-found-BjTG4xTf.js                   1.01 kB │ gzip:   0.54 kB
+build/client/assets/routing-mode-0L6xYTH_.js                1.04 kB │ gzip:   0.48 kB
+build/client/assets/legacy-redirect-BdELbf4_.js             1.19 kB │ gzip:   0.43 kB
+build/client/assets/llama-swap-setup-DjrOlpYQ.js            1.50 kB │ gzip:   0.74 kB
+build/client/assets/local-choose-CnErcLUT.js                1.67 kB │ gzip:   0.79 kB
+build/client/assets/local-swap-i0lfJj9J.js                  2.11 kB │ gzip:   0.97 kB
+build/client/assets/router-decisions-co-U1Vke.js            2.31 kB │ gzip:   1.08 kB
+build/client/assets/root-kruIybVJ.js                        2.34 kB │ gzip:   1.15 kB
+build/client/assets/integrations-downstream-Fi3nTZ9L.js     2.52 kB │ gzip:   1.03 kB
+build/client/assets/integrations-upstream-Bs6_WYIb.js       3.07 kB │ gzip:   1.28 kB
+build/client/assets/system-peers-C8A1tvcV.js                3.10 kB │ gzip:   1.44 kB
+build/client/assets/control-runtime-config-Bds0T2ct.js      3.14 kB │ gzip:   1.47 kB
+build/client/assets/local-policy-BwFh6nZW.js                3.40 kB │ gzip:   1.41 kB
+build/client/assets/local-peers-DViFgWxM.js                 3.76 kB │ gzip:   1.56 kB
+build/client/assets/app-layout-Bn3MC5tP.js                  3.78 kB │ gzip:   1.62 kB
+build/client/assets/router-decision-detail-DW5klDo0.js      4.12 kB │ gzip:   1.67 kB
+build/client/assets/local-logs-D6YiM-Wa.js                  4.18 kB │ gzip:   1.57 kB
+build/client/assets/local-model-role-picker-CHffnWWo.js     4.20 kB │ gzip:   1.52 kB
+build/client/assets/router-candidates-BGiyIcpv.js           4.25 kB │ gzip:   1.74 kB
+build/client/assets/runtime-C3Egej8k.js                     4.35 kB │ gzip:   1.48 kB
+build/client/assets/studio-rerank-m814GFzD.js               4.45 kB │ gzip:   1.89 kB
+build/client/assets/control-controller-WLtfS5M-.js          4.58 kB │ gzip:   1.67 kB
+build/client/assets/local-peer-models-DozdsfCF.js           4.80 kB │ gzip:   1.89 kB
+build/client/assets/studio-images-z8kVDO4B.js               4.90 kB │ gzip:   1.95 kB
+build/client/assets/observe-logs-BzQsF0ky.js                4.95 kB │ gzip:   1.83 kB
+build/client/assets/dashboard-kHxAr7Hn.js                   4.97 kB │ gzip:   1.97 kB
+build/client/assets/observe-activity-Sft1oIbk.js            4.99 kB │ gzip:   1.77 kB
+build/client/assets/observe-routing-BO4wATNI.js             5.19 kB │ gzip:   2.03 kB
+build/client/assets/endpoints-ChlYCm42.js                   5.49 kB │ gzip:   1.85 kB
+build/client/assets/studio-advanced-CzsLsz3N.js             5.70 kB │ gzip:   2.19 kB
+build/client/assets/llama-swap-setup-hint-CfGIi87c.js       6.02 kB │ gzip:   2.03 kB
+build/client/assets/page-primitives-BocBUugL.js             6.12 kB │ gzip:   2.44 kB
+build/client/assets/session-readiness-CiIl-djz.js           6.27 kB │ gzip:   1.87 kB
+build/client/assets/local-llama-swap-models-DPwH_ERM.js     6.28 kB │ gzip:   2.20 kB
+build/client/assets/router-JLa9Bu-o.js                      6.40 kB │ gzip:   1.89 kB
+build/client/assets/studio-audio-96YJ5N7X.js                6.42 kB │ gzip:   2.43 kB
+build/client/assets/workbench-D9EK5PWF.js                   7.88 kB │ gzip:   2.66 kB
+build/client/assets/requests-Z0u_WV6E.js                    8.77 kB │ gzip:   3.09 kB
+build/client/assets/control-routing-strategy-D9UJQeSV.js    9.62 kB │ gzip:   3.17 kB
+build/client/assets/runtime-api-D4NbIyR-.js                13.02 kB │ gzip:   3.24 kB
+build/client/assets/control-roles-BbxNPfZH.js              14.86 kB │ gzip:   3.99 kB
+build/client/assets/request-detail-DYbL9Wha.js             20.32 kB │ gzip:   5.66 kB
+build/client/assets/control-models-MfpBwqkI.js             20.85 kB │ gzip:   5.51 kB
+build/client/assets/view-models-CzvTxYnX.js                21.61 kB │ gzip:   6.85 kB
+build/client/assets/control-benchmark-B3bL0Bff.js          23.11 kB │ gzip:   7.23 kB
+build/client/assets/providers-CSSVZPCM.js                  25.17 kB │ gzip:   7.03 kB
+build/client/assets/design-system-Dt6HMAG9.js              51.44 kB │ gzip:  16.12 kB
+build/client/assets/chunk-EVOBXE3Y-CoiKifzG.js            127.92 kB │ gzip:  43.10 kB
+build/client/assets/entry.client-BnhdNt5O.js              190.57 kB │ gzip:  60.05 kB
+build/client/assets/telemetry-route-models-D9ldEZl7.js    430.96 kB │ gzip: 115.68 kB
+✓ built in 19.59s
+vite v7.3.2 building ssr environment for production...
+transforming...
+✓ 9 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                0.23 kB
+build/server/assets/server-build-MfRhlO6m.css  39.87 kB
+build/server/index.js                          65.45 kB
+
+✓ 1 asset cleaned from React Router server build.
+build\server\assets\server-build-MfRhlO6m.css
+
+SPA Mode: Generated build\client\index.html
+Removing the server build in D:\DEV\role-model\.worktrees\60-runtime-ui-paper-linear-review-alignment\role-model-router\apps\runtime-ui\build\server due to ssr:false
+✓ built in 704ms

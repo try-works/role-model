@@ -1,22 +1,29 @@
 import { Link } from "react-router";
 
 import { LlamaSwapSetupHint, useLlamaSwapConfigStatus } from "../components/llama-swap-setup-hint";
-import { FactCard } from "../components/page-primitives";
-import { primaryButtonClassName, secondaryButtonClassName } from "../lib/design-system";
+import {
+  bodyTextClassName,
+  cardClassName,
+  inlineTitleClassName,
+  primaryButtonClassName,
+  secondaryButtonClassName,
+  utilityLabelClassName,
+} from "../lib/design-system";
 
 export default function LocalChooseRoute() {
   const { status: llamaSwapStatus, loading: llamaSwapStatusLoading } = useLlamaSwapConfigStatus();
 
   return (
-    <div className="grid gap-6 md:grid-cols-2">
-      <div className="space-y-4">
-        <FactCard
-          label="External server"
-          value="Peer-backed models"
-          detail="Use this when you already run an OpenAI-compatible server (LM Studio, llama.cpp, vLLM, or similar). Register the server under Endpoints, then register models and roles here. role-model routes to your server; it does not load GGUF files for you."
-          emphasis
-        />
-        <div className="flex flex-wrap gap-2">
+    <div className="grid gap-5 xl:grid-cols-2">
+      <section className={`${cardClassName} flex min-h-[280px] flex-col gap-3 p-5`}>
+        <p className={utilityLabelClassName}>External server</p>
+        <h2 className={inlineTitleClassName}>Peer-backed models</h2>
+        <p className={bodyTextClassName}>
+          Use this when you already run an OpenAI-compatible server (LM Studio, llama.cpp, vLLM,
+          or similar). Register the server under Endpoints, then register models and roles here.
+          role-model routes to your server; it does not load GGUF files for you.
+        </p>
+        <div className="mt-auto flex flex-wrap gap-2 pt-2">
           <Link to="/app/local/peer-models" className={primaryButtonClassName}>
             Open peer models
           </Link>
@@ -24,15 +31,17 @@ export default function LocalChooseRoute() {
             Configure endpoints
           </Link>
         </div>
-      </div>
+      </section>
 
-      <div className="space-y-4">
-        <FactCard
-          label="Managed by role-model"
-          value="Llama-swap models"
-          detail="Use this when role-model should run the local llama-swap process, swap models on one GPU, and apply TTL auto-unload. Models are declared in Runtime config; load and role assignment happen here."
-        />
-        <div className="flex flex-wrap gap-2">
+      <section className={`${cardClassName} flex min-h-[280px] flex-col gap-3 p-5`}>
+        <p className={utilityLabelClassName}>Managed by role-model</p>
+        <h2 className={inlineTitleClassName}>Llama-swap models</h2>
+        <p className={bodyTextClassName}>
+          Use this when role-model runs the local llama-swap process, swaps models on one GPU, and
+          applies TTL auto-unload. Models are declared in Runtime config; load and role assignment
+          happen here.
+        </p>
+        <div className="mt-auto flex flex-wrap gap-2 pt-2">
           <Link to="/app/local/llama-swap/models" className={primaryButtonClassName}>
             Open llama-swap models
           </Link>
@@ -41,9 +50,11 @@ export default function LocalChooseRoute() {
           </Link>
         </div>
         {!llamaSwapStatusLoading && llamaSwapStatus && !llamaSwapStatus.operational ? (
-          <LlamaSwapSetupHint variant="compact" status={llamaSwapStatus} />
+          <div className="pt-2">
+            <LlamaSwapSetupHint variant="compact" status={llamaSwapStatus} />
+          </div>
         ) : null}
-      </div>
+      </section>
     </div>
   );
 }

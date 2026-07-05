@@ -1,4 +1,9 @@
 import {
+  bodyStrongTextClassName,
+  inlineLinkClassName,
+  monoCodeValueClassName,
+  monoMetaTextClassName,
+  panelBodyTextClassName,
   mutedPanelClassName,
   raisedPanelClassName,
   secondaryButtonClassName,
@@ -20,9 +25,9 @@ export function DeviceAuthorizationCard(input: {
   const isCodexSubscription = isCodexSubscriptionDeviceAuthorization(input.session);
 
   return (
-    <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
+    <div className={`${mutedPanelClassName} p-4 ${panelBodyTextClassName}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <p className="font-semibold text-[var(--rm-fg)]">Current provider authorization</p>
+        <p className={bodyStrongTextClassName}>Current provider authorization</p>
         <StatusPill
           tone={
             input.session.status === "connected"
@@ -38,10 +43,8 @@ export function DeviceAuthorizationCard(input: {
 
       {isCodexSubscription && input.session.userCode ? (
         <div className={`mt-3 ${raisedPanelClassName} space-y-3 p-4`}>
-          <p className="font-semibold text-[var(--rm-fg)]">Enter this code on the OpenAI page</p>
-          <p className="font-mono text-2xl tracking-[0.28em] text-[var(--rm-fg)]">
-            {input.session.userCode}
-          </p>
+          <p className={bodyStrongTextClassName}>Enter this code on the OpenAI page</p>
+          <p className={monoCodeValueClassName}>{input.session.userCode}</p>
           <p>OpenAI asks for this code after you sign in.</p>
           <div className="flex flex-wrap gap-3">
             <button className={secondaryButtonClassName} type="button" onClick={input.onCopyCode}>
@@ -61,7 +64,7 @@ export function DeviceAuthorizationCard(input: {
         </div>
       ) : input.session.userCode ? (
         <p className="mt-2">
-          <span className="font-semibold text-[var(--rm-fg)]">User code:</span>{" "}
+          <span className={bodyStrongTextClassName}>User code:</span>{" "}
           {input.session.userCode}
         </p>
       ) : null}
@@ -81,9 +84,9 @@ export function DeviceAuthorizationCard(input: {
 
       {verificationUrl && !isCodexSubscription ? (
         <p className="mt-2 break-all">
-          <span className="font-semibold text-[var(--rm-fg)]">Verification URL:</span>{" "}
+          <span className={bodyStrongTextClassName}>Verification URL:</span>{" "}
           <a
-            className="text-[var(--rm-accent)] underline"
+            className={inlineLinkClassName}
             href={verificationUrl}
             rel="noreferrer"
             target="_blank"
@@ -94,7 +97,9 @@ export function DeviceAuthorizationCard(input: {
       ) : null}
 
       {input.session.lastError ? (
-        <p className="mt-2 text-[var(--rm-danger)]">{input.session.lastError}</p>
+        <p className={`mt-2 ${monoMetaTextClassName} text-[var(--rm-danger)]`}>
+          {input.session.lastError}
+        </p>
       ) : null}
     </div>
   );

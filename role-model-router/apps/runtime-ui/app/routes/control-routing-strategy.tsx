@@ -9,11 +9,15 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import {
+  bodyStrongTextClassName,
+  compactTitleClassName,
   fieldClassName,
   getSelectablePanelClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   ROUTING_MODE_OPTIONS,
@@ -26,17 +30,17 @@ import {
   type RuntimeConfig,
   type RuntimeConfigRecord,
   type RuntimeControllerAssignment,
-  type RuntimeSnapshot,
   fetchControllerAssignment,
   fetchRouterCandidates,
   fetchRuntimeConfig,
-  fetchRuntimeSnapshot,
   updateRuntimeConfig,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 
 type RoutingStrategyChoice = RuntimeRoutingMode | "unset" | "custom";
 type RuntimeExecutionMode = NonNullable<RuntimeConfig["executionMode"]>;
+
+const formFieldLabelClassName = `${utilityLabelClassName} text-[var(--rm-fg)]`;
+const panelDetailClassName = `${supportingTextClassName} leading-6`;
 
 const EXECUTION_MODE_OPTIONS: ReadonlyArray<{
   readonly value: RuntimeExecutionMode;
@@ -118,8 +122,8 @@ function RoutingStrategyOptionCard({
         value={value}
         onChange={() => onChange(value)}
       />
-      <span className="block font-semibold text-[var(--rm-fg)]">{label}</span>
-      <span className="mt-2 block text-sm text-[var(--rm-secondary)]">{description}</span>
+      <span className={`block ${bodyStrongTextClassName}`}>{label}</span>
+      <span className={`mt-2 block ${supportingTextClassName}`}>{description}</span>
     </label>
   );
 }
@@ -178,7 +182,6 @@ function applyExecutionMode(
 
 export default function ControlRoutingStrategyRoute() {
   const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -200,14 +203,12 @@ export default function ControlRoutingStrategyRoute() {
 
   const loadState = useCallback(async () => {
     try {
-      const [nextConfigRecord, nextSnapshot, nextController, nextCandidates] = await Promise.all([
+      const [nextConfigRecord, nextController, nextCandidates] = await Promise.all([
         fetchRuntimeConfig(),
-        fetchRuntimeSnapshot(),
         fetchControllerAssignment(),
         fetchRouterCandidates(),
       ]);
       setConfigRecord(nextConfigRecord);
-      setSnapshot(nextSnapshot);
       setController(nextController);
       setCandidates(nextCandidates);
       syncDrafts(nextConfigRecord);
@@ -222,22 +223,10 @@ export default function ControlRoutingStrategyRoute() {
     void loadState();
   }, [loadState]);
 
-  usePageActions(
-    <>
-      <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
-        Advanced config
-      </Link>
-      <Link className={secondaryButtonClassName} to="/app/router">
-        Router detail
-      </Link>
-    </>,
-    [],
-  );
-
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!configRecord || !snapshot) {
+  if (!configRecord) {
     return <LoadingState label="Loading routing strategy posture…" />;
   }
 
@@ -254,9 +243,8 @@ export default function ControlRoutingStrategyRoute() {
   const selectedStrategyDetails = (() => {
     if (selectedRoutingStrategy === "unset") {
       return {
-        label: "Unset strategy",
-        detail:
-          "Persist no explicit strategy and let the runtime fall back to its baseline default.",
+        label: "Use runtime default",
+        detail: "Leave the persisted routing mode unset.",
       };
     }
     if (selectedRoutingStrategy === "custom") {
@@ -309,12 +297,12 @@ export default function ControlRoutingStrategyRoute() {
     <div className="space-y-6">
       <SectionCard
         title="Persisted routing posture"
-        description="Change the saved Strategy A/B/C routing mode and the effective execution mode here; both write through the runtime config control-plane record instead of living as placeholder UI state."
+        description="Change the saved routing strategy and the effective execution mode here; both write through the runtime config control-plane record instead of living as placeholder UI state."
       >
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]">
           <div className="space-y-6">
             <div className="space-y-3" role="radiogroup" aria-label="Routing strategy">
-              <p className="text-sm font-semibold text-[var(--rm-fg)]">Routing strategy</p>
+              <p className={formFieldLabelClassName}>Routing strategy</p>
               <div className="grid gap-3 md:grid-cols-2">
                 <RoutingStrategyOptionCard
                   checked={selectedRoutingStrategy === "unset"}
@@ -345,8 +333,8 @@ export default function ControlRoutingStrategyRoute() {
                 />
               </div>
               {selectedRoutingStrategy === "custom" ? (
-                <label className="grid gap-2 text-sm">
-                  <span className="font-semibold text-[var(--rm-fg)]">Custom strategy</span>
+                <label className="grid gap-2">
+                  <span className={formFieldLabelClassName}>Custom strategy</span>
                   <input
                     className={fieldClassName}
                     value={customRoutingStrategy}
@@ -369,9 +357,7 @@ export default function ControlRoutingStrategyRoute() {
                   </option>
                 ))}
               </SelectField>
-              <p className="text-sm text-[var(--rm-secondary)]">
-                {selectedExecutionModeDetails.detail}
-              </p>
+              <p className={supportingTextClassName}>{selectedExecutionModeDetails.detail}</p>
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -396,15 +382,13 @@ export default function ControlRoutingStrategyRoute() {
                 Reset form
               </button>
             </div>
-            {statusMessage ? (
-              <p className="text-sm text-[var(--rm-secondary)]">{statusMessage}</p>
-            ) : null}
+            {statusMessage ? <p className={supportingTextClassName}>{statusMessage}</p> : null}
           </div>
 
-          <div className="space-y-4">
-            <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-              <p className="font-semibold text-[var(--rm-fg)]">Saved routing settings</p>
-              <p className="mt-3 leading-6">
+          <div className="space-y-3">
+            <div className={`${mutedPanelClassName} p-4`}>
+              <p className={compactTitleClassName}>Saved routing settings</p>
+              <p className={`mt-3 ${panelDetailClassName}`}>
                 These are the persisted settings returned by the runtime config control plane.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -418,12 +402,10 @@ export default function ControlRoutingStrategyRoute() {
               </div>
             </div>
 
-            <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-              <p className="font-semibold text-[var(--rm-fg)]">Draft selection</p>
-              <p className="mt-2 font-semibold text-[var(--rm-fg)]">
-                {selectedStrategyDetails.label}
-              </p>
-              <p className="mt-3 leading-6">{selectedStrategyDetails.detail}</p>
+            <div className={`${mutedPanelClassName} p-4`}>
+              <p className={compactTitleClassName}>Draft selection</p>
+              <p className={`mt-2 ${bodyStrongTextClassName}`}>{selectedStrategyDetails.label}</p>
+              <p className={`mt-3 ${panelDetailClassName}`}>{selectedStrategyDetails.detail}</p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <StatusPill tone={hasUnsavedChanges ? "warning" : "success"}>
                   {hasUnsavedChanges ? "unsaved changes" : "matches saved"}
@@ -439,21 +421,23 @@ export default function ControlRoutingStrategyRoute() {
               </div>
             </div>
 
-            <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-              <p className="font-semibold text-[var(--rm-fg)]">Current controller</p>
-              <p className="mt-3 break-all text-[var(--rm-fg)]">
+            <div className={`${mutedPanelClassName} p-4`}>
+              <p className={compactTitleClassName}>Current controller</p>
+              <p className={`mt-3 break-all ${bodyStrongTextClassName}`}>
                 {controller?.endpointId ?? "No controller assigned"}
               </p>
-              <p className="mt-2 leading-6">
+              <p className={`mt-2 ${panelDetailClassName}`}>
                 {controller
                   ? `${controller.modelId} (${controller.sourceType})`
                   : "Assign a controller when you want controller-guided routing posture to be explicit."}
               </p>
             </div>
 
-            <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
-              <p className="font-semibold text-[var(--rm-fg)]">Applied config record</p>
-              <p className="mt-3 break-all leading-6">{configRecord.path ?? "not configured"}</p>
+            <div className={`${mutedPanelClassName} p-4`}>
+              <p className={compactTitleClassName}>Applied config record</p>
+              <p className={`mt-3 break-all ${panelDetailClassName}`}>
+                {configRecord.path ?? "not configured"}
+              </p>
             </div>
           </div>
         </div>
@@ -464,9 +448,9 @@ export default function ControlRoutingStrategyRoute() {
         description="When Strategy C (difficulty) is active, per-endpoint quality scores from Models → Benchmark inform the recommended max difficulty ceiling."
       >
         {candidates.length === 0 ? (
-          <p className="text-sm text-[var(--rm-secondary)]">No routing candidates are available.</p>
+          <p className={supportingTextClassName}>No routing candidates are available.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="grid gap-3 xl:grid-cols-3">
             {candidates.map((candidate) => {
               const advisory =
                 typeof candidate.advisoryMaxDifficultyRecommendation === "object" &&
@@ -503,22 +487,22 @@ export default function ControlRoutingStrategyRoute() {
                     : "n/a";
 
               return (
-                <div key={candidate.endpointId} className={`${mutedPanelClassName} p-4 text-sm`}>
-                  <p className="font-semibold text-[var(--rm-fg)]">
+                <div key={candidate.endpointId} className={`${mutedPanelClassName} p-4`}>
+                  <p className={compactTitleClassName}>
                     {candidate.modelId} • {candidate.endpointId}
                   </p>
-                  <p className="mt-2 text-[var(--rm-secondary)]">
+                  <p className={`mt-2 ${supportingTextClassName}`}>
                     Recommended max difficulty:{" "}
-                    <span className="font-semibold text-[var(--rm-fg)]">{recommended}</span>
+                    <span className={bodyStrongTextClassName}>{recommended}</span>
                   </p>
-                  <p className="mt-1 text-[var(--rm-secondary)]">
+                  <p className={`mt-1 ${supportingTextClassName}`}>
                     Quality score{" "}
                     {qualityScore !== null ? `${Math.round(qualityScore * 100)}%` : "n/a"}
                     {minQualityScore !== null
                       ? ` vs threshold ${Math.round(minQualityScore * 100)}%`
                       : ""}
                   </p>
-                  <p className="mt-1 text-[var(--rm-secondary)]">
+                  <p className={`mt-1 ${supportingTextClassName}`}>
                     Score source:{" "}
                     {benchmarkSamples > 0
                       ? `Models → Benchmark (${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"})`

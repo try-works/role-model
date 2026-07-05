@@ -11,7 +11,15 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { secondaryButtonClassName } from "../lib/design-system";
+import {
+  bodyStrongTextClassName,
+  compactTitleClassName,
+  inlineTitleClassName,
+  metaTextClassName,
+  secondaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
+} from "../lib/design-system";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { fetchRequestDetail } from "../lib/runtime-api";
 import { useShellHeaderOverride } from "../lib/shell-header-context";
@@ -423,17 +431,21 @@ export default function RequestDetailRoute() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FactCard
           label="Endpoint"
           value={endpointId}
+          className="xl:col-span-2"
           detail="Endpoint id currently associated with the captured request."
           emphasis
+          valueClassName={inlineTitleClassName}
         />
         <FactCard
           label="Correlation"
           value={renderMetricValue(clientRequestId)}
+          className="xl:col-span-2"
           detail="Caller-supplied correlation id preserved alongside the canonical request ledger id."
+          valueClassName={inlineTitleClassName}
         />
         <FactCard
           label="Source"
@@ -498,28 +510,28 @@ export default function RequestDetailRoute() {
           <div className="space-y-4">
             <div className="grid gap-4 xl:grid-cols-3">
               <div className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-4">
-                <p className="font-semibold text-[var(--rm-fg)]">Original request hints</p>
+                <p className={compactTitleClassName}>Original request hints</p>
                 <dl className="mt-3 space-y-3 text-sm">
                   <div>
-                    <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                    <dt className={utilityLabelClassName}>
                       Original role hint
                     </dt>
-                    <dd className="mt-1 text-[var(--rm-secondary)]">
+                    <dd className={`mt-1 ${supportingTextClassName}`}>
                       {renderMetricValue(originalRoleHint)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                    <dt className={utilityLabelClassName}>
                       Original task type
                     </dt>
-                    <dd className="mt-1 text-[var(--rm-secondary)]">
+                    <dd className={`mt-1 ${supportingTextClassName}`}>
                       {renderMetricValue(originalTaskType)}
                     </dd>
                   </div>
                 </dl>
               </div>
               <div className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-4">
-                <p className="font-semibold text-[var(--rm-fg)]">Normalized classification</p>
+                <p className={compactTitleClassName}>Normalized classification</p>
                 <dl className="mt-3 space-y-3 text-sm">
                   {[
                     ["Taxonomy group", taxonomyGroupId],
@@ -528,10 +540,10 @@ export default function RequestDetailRoute() {
                     ["Task variant", taxonomyTaskVariant],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                      <dt className={utilityLabelClassName}>
                         {label}
                       </dt>
-                      <dd className="mt-1 text-[var(--rm-secondary)]">
+                      <dd className={`mt-1 ${supportingTextClassName}`}>
                         {renderMetricValue(value)}
                       </dd>
                     </div>
@@ -539,7 +551,7 @@ export default function RequestDetailRoute() {
                 </dl>
               </div>
               <div className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-4">
-                <p className="font-semibold text-[var(--rm-fg)]">Derived analytics tags</p>
+                <p className={compactTitleClassName}>Derived analytics tags</p>
                 <dl className="mt-3 space-y-3 text-sm">
                   {[
                     [
@@ -556,10 +568,10 @@ export default function RequestDetailRoute() {
                     ],
                   ].map(([label, value]) => (
                     <div key={label}>
-                      <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                      <dt className={utilityLabelClassName}>
                         {label}
                       </dt>
-                      <dd className="mt-1 text-[var(--rm-secondary)]">
+                      <dd className={`mt-1 ${supportingTextClassName}`}>
                         {renderMetricValue(value)}
                       </dd>
                     </div>
@@ -597,10 +609,10 @@ export default function RequestDetailRoute() {
                   key={label}
                   className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                 >
-                  <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                  <dt className={utilityLabelClassName}>
                     {label}
                   </dt>
-                  <dd className="mt-1 font-semibold text-[var(--rm-fg)]">
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>
                     {renderMetricValue(value)}
                   </dd>
                 </div>
@@ -641,10 +653,10 @@ export default function RequestDetailRoute() {
               key={label}
               className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel-muted)] p-3"
             >
-              <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+              <dt className={utilityLabelClassName}>
                 {label}
               </dt>
-              <dd className="mt-1 font-semibold text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+              <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
             </div>
           ))}
         </dl>
@@ -696,16 +708,16 @@ export default function RequestDetailRoute() {
                 key={label}
                 className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
               >
-                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                <dt className={utilityLabelClassName}>
                   {label}
                 </dt>
-                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>
                   {renderMetricValue(value)}
                 </dd>
               </div>
             ))}
           </dl>
-          <p className="text-sm text-[var(--rm-secondary)]">
+          <p className={supportingTextClassName}>
             {observationReason ??
               "This request detail view combines canonical telemetry ledger facts with any preserved runtime observation bundle still inside retention."}
           </p>
@@ -730,10 +742,10 @@ export default function RequestDetailRoute() {
               ["Stream deltas", streamSummary.length > 0 ? streamSummary : null],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                <dt className={utilityLabelClassName}>
                   {label}
                 </dt>
-                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>
                   {renderMetricValue(value)}
                 </dd>
               </div>
@@ -761,17 +773,17 @@ export default function RequestDetailRoute() {
               ],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                <dt className={utilityLabelClassName}>
                   {label}
                 </dt>
-                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>
                   {renderMetricValue(value)}
                 </dd>
               </div>
             ))}
           </dl>
           <div className="mt-4">
-            <p className="mb-2 font-semibold text-[var(--rm-fg)]">Latest profile snapshot</p>
+            <p className={`mb-2 ${compactTitleClassName}`}>Latest profile snapshot</p>
             <CodeBlock>{JSON.stringify(latestProfile, null, 2)}</CodeBlock>
           </div>
         </SectionCard>
@@ -805,10 +817,10 @@ export default function RequestDetailRoute() {
               ["Rubric signals", rubricSignalSummary],
             ].map(([label, value]) => (
               <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
-                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
+                <dt className={utilityLabelClassName}>
                   {label}
                 </dt>
-                <dd className="mt-1 font-semibold text-[var(--rm-fg)]">
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>
                   {renderMetricValue(value)}
                 </dd>
               </div>
@@ -827,7 +839,7 @@ export default function RequestDetailRoute() {
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between">
-              <p className="font-semibold text-[var(--rm-fg)]">Tool calls</p>
+              <p className={compactTitleClassName}>Tool calls</p>
               <StatusPill tone={toolCalls.length > 0 ? "accent" : "neutral"}>
                 {toolCalls.length}
               </StatusPill>
@@ -841,7 +853,7 @@ export default function RequestDetailRoute() {
                     key={String((asRecord(toolCall)?.toolCallId as string | undefined) ?? index)}
                     className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                   >
-                    <p className="font-semibold text-[var(--rm-fg)]">
+                    <p className={compactTitleClassName}>
                       {String(asRecord(toolCall)?.toolName ?? "unknown")}
                     </p>
                     <CodeBlock className="mt-3 text-xs">
@@ -855,7 +867,7 @@ export default function RequestDetailRoute() {
 
           <div>
             <div className="flex items-center justify-between">
-              <p className="font-semibold text-[var(--rm-fg)]">Execution receipts</p>
+              <p className={compactTitleClassName}>Execution receipts</p>
               <StatusPill tone={toolExecutions.length > 0 ? "success" : "neutral"}>
                 {toolExecutions.length}
               </StatusPill>
@@ -872,7 +884,7 @@ export default function RequestDetailRoute() {
                       className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold text-[var(--rm-fg)]">
+                        <p className={compactTitleClassName}>
                           {String(executionRecord.toolName ?? "Unnamed tool")}
                         </p>
                         {executionRecord.status ? (
@@ -883,7 +895,7 @@ export default function RequestDetailRoute() {
                           </StatusPill>
                         ) : null}
                       </div>
-                      <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                      <p className={`mt-2 ${supportingTextClassName}`}>
                         {String(executionRecord.connectorId ?? "Unknown connector")}
                       </p>
                     </div>
@@ -906,7 +918,7 @@ export default function RequestDetailRoute() {
           ) : null}
           <div className="grid gap-4 xl:grid-cols-2">
             <div>
-              <p className="mb-2 font-semibold text-[var(--rm-fg)]">Request capture</p>
+              <p className={`mb-2 ${compactTitleClassName}`}>Request capture</p>
               {hasRequestCapture ? (
                 <CodeBlock>{JSON.stringify(requestCapture, null, 2)}</CodeBlock>
               ) : (
@@ -914,7 +926,7 @@ export default function RequestDetailRoute() {
               )}
             </div>
             <div>
-              <p className="mb-2 font-semibold text-[var(--rm-fg)]">Response capture</p>
+              <p className={`mb-2 ${compactTitleClassName}`}>Response capture</p>
               {hasResponseCapture ? (
                 <CodeBlock>{JSON.stringify(responseCapture, null, 2)}</CodeBlock>
               ) : (
@@ -923,7 +935,7 @@ export default function RequestDetailRoute() {
             </div>
           </div>
           <div>
-            <p className="mb-2 font-semibold text-[var(--rm-fg)]">Endpoint profile history</p>
+            <p className={`mb-2 ${compactTitleClassName}`}>Endpoint profile history</p>
             <CodeBlock>{JSON.stringify({ latestProfile, recentSamples }, null, 2)}</CodeBlock>
           </div>
         </div>

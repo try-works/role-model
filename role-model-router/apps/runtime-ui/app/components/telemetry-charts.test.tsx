@@ -1,7 +1,11 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
-import { TelemetryChartCard, TelemetryRankingBarChart } from "./telemetry-charts";
+import {
+  TelemetryAnalyticsChartCard,
+  TelemetryChartCard,
+  TelemetryRankingBarChart,
+} from "./telemetry-charts";
 
 describe("TelemetryChartCard", () => {
   test("keeps populated chart content visible while a background refresh is in progress", () => {
@@ -19,6 +23,8 @@ describe("TelemetryChartCard", () => {
     expect(markup).toContain("Average and p95 latency for the selected slice.");
     expect(markup).toContain("Rendered chart body");
     expect(markup).toContain("Refreshing…");
+    expect(markup).toContain("text-[16px]");
+    expect(markup).not.toContain("text-[28px]");
   });
 
   test("renders stable loading and empty states without fake chart data", () => {
@@ -35,6 +41,95 @@ describe("TelemetryChartCard", () => {
     expect(loadingMarkup).toContain("Loading chart data…");
     expect(loadingMarkup).not.toContain("synthetic");
     expect(emptyMarkup).toContain("No request-time routing savings have been recorded yet.");
+    expect(emptyMarkup).not.toContain(">Empty<");
+  });
+
+  test("keeps empty chart states compact instead of reserving full plot height", () => {
+    const markup = renderToStaticMarkup(
+      <TelemetryChartCard
+        title="Latency Trend"
+        emptyMessage="No telemetry rows match the current filters."
+      />,
+    );
+
+    expect(markup).toContain("No telemetry rows match the current filters.");
+    expect(markup).not.toContain("min-h-[240px] flex items-center");
+  });
+
+  test("uses tighter empty-state padding so compact analytics cards do not create oversized blank panels", () => {
+    const markup = renderToStaticMarkup(
+      <TelemetryChartCard
+        title="Cache Efficiency"
+        emptyMessage="No cache activity has been recorded for this slice yet."
+      />,
+    );
+
+    expect(markup).toContain("No cache activity has been recorded for this slice yet.");
+    expect(markup).toContain("px-5");
+    expect(markup).toContain("py-4");
+    expect(markup).not.toContain("border-dashed p-6");
+  });
+
+  test("keeps populated chart content visible for partial telemetry warnings", () => {
+    const markup = renderToStaticMarkup(
+      <TelemetryChartCard
+        title="Request Volume Over Time"
+        state={{
+          kind: "partial",
+          message: "Some matching rows do not carry the selected metric or dimension.",
+        }}
+      >
+        <div>Rendered chart body</div>
+      </TelemetryChartCard>,
+    );
+
+    expect(markup).toContain("Partial");
+    expect(markup).toContain("Some matching rows do not carry the selected metric or dimension.");
+    expect(markup).toContain("Rendered chart body");
+  });
+
+  test("replaces the chart body for blocking unsupported states", () => {
+    const markup = renderToStaticMarkup(
+      <TelemetryChartCard
+        title="Latency Trend"
+        state={{
+          kind: "unsupported",
+          message: "The selected metric or dimension is not supported by this telemetry slice.",
+        }}
+      >
+        <div>Rendered chart body</div>
+      </TelemetryChartCard>,
+    );
+
+    expect(markup).toContain("Unsupported");
+    expect(markup).toContain(
+      "The selected metric or dimension is not supported by this telemetry slice.",
+    );
+    expect(markup).not.toContain("Rendered chart body");
+  });
+});
+
+describe("TelemetryAnalyticsChartCard", () => {
+  test("renders a per-card error state when a chart query fails", () => {
+    const markup = renderToStaticMarkup(
+      <TelemetryAnalyticsChartCard
+        definition={{
+          title: "Latency Trend",
+          description: "Average and p95 latency across the selected telemetry window.",
+          kind: "line",
+          metrics: ["averageLatencyMs", "p95LatencyMs"],
+          query: {
+            granularity: "day",
+            metrics: ["averageLatencyMs", "p95LatencyMs"],
+          },
+          emptyMessage: "Latency telemetry has not been recorded for this slice yet.",
+        }}
+        errorMessage="Latency Trend: upstream query timed out."
+      />,
+    );
+
+    expect(markup).toContain("Error");
+    expect(markup).toContain("Latency Trend: upstream query timed out.");
   });
 });
 

@@ -1206,6 +1206,8 @@ describe("buildConfiguredProviderRows", () => {
         activeEndpointCount: 1,
         healthStatuses: ["credentials-missing", "healthy"],
         pendingDeviceAuthorizationCount: 1,
+        envUnresolvedAccountCount: 0,
+        expiredAuthAccountCount: 0,
         credentialsMissingAccountCount: 0,
         connectedWithoutEndpointCount: 1,
         readyAccountCount: 1,
@@ -1251,9 +1253,47 @@ describe("buildConfiguredProviderRows", () => {
       expect.objectContaining({
         providerId: "moonshot",
         pendingDeviceAuthorizationCount: 2,
+        envUnresolvedAccountCount: 6,
+        expiredAuthAccountCount: 1,
         credentialsMissingAccountCount: 5,
         connectedWithoutEndpointCount: 3,
         readyAccountCount: 4,
+      }),
+    ]);
+  });
+
+  test("preserves env-unresolved and reconnect-required provider lifecycle counts from fallback account inference", () => {
+    expect(
+      buildConfiguredProviderRows({
+        accounts: [
+          {
+            providerAccountId: "openrouter.personal.primary",
+            providerId: "openrouter",
+            authMode: "api-key-static",
+            healthStatus: "env-unresolved",
+            status: "disabled",
+            allowedModels: ["openrouter/gpt-4.1-mini"],
+          },
+          {
+            providerAccountId: "openrouter.personal.backup",
+            providerId: "openrouter",
+            authMode: "oauth2-device-code",
+            healthStatus: "expired-auth",
+            status: "disabled",
+            allowedModels: ["openrouter/gpt-4.1-mini"],
+          },
+        ],
+        endpoints: [],
+        deviceAuthorizations: [],
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        providerId: "openrouter",
+        envUnresolvedAccountCount: 1,
+        expiredAuthAccountCount: 1,
+        credentialsMissingAccountCount: 0,
+        connectedWithoutEndpointCount: 0,
+        readyAccountCount: 0,
       }),
     ]);
   });

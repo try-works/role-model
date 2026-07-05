@@ -48,16 +48,9 @@ function buildBaseQuery(input: {
 
 export function buildOverviewChartDefinitions(input: {
   readonly timeRange: TelemetryTimeRangeValue;
-  readonly sourceTypes: readonly ("local" | "remote")[];
+  readonly filters?: RuntimeTelemetryAnalyticsFilters;
   readonly breakdown?: RuntimeTelemetryAnalyticsDimension | null;
 }): readonly TelemetryRouteChartDefinition[] {
-  const filters =
-    input.sourceTypes.length > 0
-      ? ({
-          sourceTypes: input.sourceTypes,
-        } satisfies RuntimeTelemetryAnalyticsFilters)
-      : undefined;
-
   return [
     {
       title: "Token Usage Over Time",
@@ -67,21 +60,21 @@ export function buildOverviewChartDefinitions(input: {
       query: buildBaseQuery({
         timeRange: input.timeRange,
         metrics: ["inputTokens", "outputTokens", "totalTokens"],
-        filters,
+        filters: input.filters,
       }),
       emptyMessage: "No token-bearing requests have been recorded yet.",
       className: "col-span-12",
     },
     {
       title: "Effective Cost Over Time",
-      description: "Authoritative effective cost based on stored request-time pricing facts.",
+      description: "Stored request-time pricing facts across the current slice.",
       kind: "line",
       metrics: ["actualCostUsd", "estimatedCostUsd", "effectiveCostUsd"],
       query: buildBaseQuery({
         timeRange: input.timeRange,
         metrics: ["actualCostUsd", "estimatedCostUsd", "effectiveCostUsd"],
         breakdown: input.breakdown ?? null,
-        filters,
+        filters: input.filters,
       }),
       emptyMessage: "No request costs have been recorded for this slice yet.",
       className: "col-span-12 xl:col-span-6",
@@ -96,7 +89,7 @@ export function buildOverviewChartDefinitions(input: {
         timeRange: input.timeRange,
         metrics: ["routingCostSavingsUsd", "cacheCostSavingsUsd", "totalAvoidedCostUsd"],
         breakdown: input.breakdown ?? null,
-        filters,
+        filters: input.filters,
       }),
       emptyMessage: "No routing or cache savings have been recorded yet.",
       className: "col-span-12 xl:col-span-6",
@@ -115,14 +108,14 @@ export function buildOverviewChartDefinitions(input: {
           input.breakdown === undefined
             ? (input.breakdown ?? null)
             : null,
-        filters,
+        filters: input.filters,
       }),
       emptyMessage: "Latency telemetry has not been recorded for this slice yet.",
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Cache Efficiency Trend",
-      description: "Cache-hit token volume and cache-hit rate across the selected window.",
+      title: "Cache Efficiency",
+      description: "cache-hit tokens / hit rate",
       kind: "line",
       metrics: ["cacheHitTokens", "cacheHitTokenRate"],
       query: buildBaseQuery({
@@ -134,14 +127,14 @@ export function buildOverviewChartDefinitions(input: {
           input.breakdown === undefined
             ? (input.breakdown ?? null)
             : null,
-        filters,
+        filters: input.filters,
       }),
       emptyMessage: "No cache activity has been recorded for this slice yet.",
       className: "col-span-12 xl:col-span-6",
     },
     {
-      title: "Success vs Failure Volume",
-      description: "Successful and failed request volume by time bucket.",
+      title: "Success vs Failure",
+      description: "success / failure",
       kind: "bar",
       metrics: ["successCount", "failureCount"],
       query: buildBaseQuery({
@@ -151,7 +144,7 @@ export function buildOverviewChartDefinitions(input: {
           input.breakdown === "sourceType" || input.breakdown === "statusFamily"
             ? input.breakdown
             : null,
-        filters,
+        filters: input.filters,
       }),
       emptyMessage: "No successful or failed requests have been recorded yet.",
       className: "col-span-12 xl:col-span-6",

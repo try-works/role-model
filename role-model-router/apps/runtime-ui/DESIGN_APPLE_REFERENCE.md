@@ -38,6 +38,7 @@ typography:
     fontSize: 40px
     fontWeight: 600
     lineHeight: 1.1
+
     letterSpacing: 0
   display-md:
     fontFamily: "SF Pro Text, system-ui, -apple-system, sans-serif"
@@ -272,6 +273,15 @@ components:
     typography: "{typography.fine-print}"
     padding: 64px
 ---
+
+## Status
+
+This document is historical reference only.
+
+- It is **not** the active authority for the runtime UI.
+- The active repo-owned authority is [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md).
+- The current runtime shell follows the Paper Linear review system, not this Apple analysis.
+- Keep this file only as a superseded visual reference for earlier exploration work.
 
 ## Overview
 

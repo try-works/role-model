@@ -1307,6 +1307,8 @@ export function buildConfiguredProviderRows(input: {
   activeEndpointCount: number;
   healthStatuses: string[];
   pendingDeviceAuthorizationCount: number;
+  envUnresolvedAccountCount: number;
+  expiredAuthAccountCount: number;
   credentialsMissingAccountCount: number;
   connectedWithoutEndpointCount: number;
   readyAccountCount: number;
@@ -1343,12 +1345,16 @@ export function buildConfiguredProviderRows(input: {
         .map((endpoint) => endpoint.providerAccountId as string),
     );
     let pendingDeviceAuthorizationCount = 0;
+    let envUnresolvedAccountCount = 0;
+    let expiredAuthAccountCount = 0;
     let credentialsMissingAccountCount = 0;
     let connectedWithoutEndpointCount = 0;
     let readyAccountCount = 0;
 
     if (providerRollup) {
       pendingDeviceAuthorizationCount = providerRollup.countsByLifecycle.pendingAuthorization;
+      envUnresolvedAccountCount = providerRollup.countsByLifecycle.envUnresolved;
+      expiredAuthAccountCount = providerRollup.countsByLifecycle.expiredAuth;
       credentialsMissingAccountCount = providerRollup.countsByLifecycle.credentialsMissing;
       connectedWithoutEndpointCount = providerRollup.countsByLifecycle.connectedNoEndpoint;
       readyAccountCount = providerRollup.countsByLifecycle.executionReady;
@@ -1360,6 +1366,14 @@ export function buildConfiguredProviderRows(input: {
         }
         if (pendingDeviceAuthorizationAccountIds.has(account.providerAccountId)) {
           pendingDeviceAuthorizationCount += 1;
+          continue;
+        }
+        if (account.healthStatus === "env-unresolved") {
+          envUnresolvedAccountCount += 1;
+          continue;
+        }
+        if (account.healthStatus === "expired-auth") {
+          expiredAuthAccountCount += 1;
           continue;
         }
         if (account.healthStatus === "credentials-missing") {
@@ -1396,6 +1410,8 @@ export function buildConfiguredProviderRows(input: {
         sortLexical,
       ),
       pendingDeviceAuthorizationCount,
+      envUnresolvedAccountCount,
+      expiredAuthAccountCount,
       credentialsMissingAccountCount,
       connectedWithoutEndpointCount,
       readyAccountCount,

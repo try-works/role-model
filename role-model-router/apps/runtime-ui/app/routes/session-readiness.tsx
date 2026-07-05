@@ -10,9 +10,9 @@ import {
 } from "../components/page-primitives";
 import {
   bodyStrongTextClassName,
-  listRowClassName,
+  bodyTextClassName,
   mutedPanelClassName,
-  secondaryButtonClassName,
+  supportingTextClassName,
 } from "../lib/design-system";
 import {
   type RuntimeHealthStatus,
@@ -20,7 +20,6 @@ import {
   fetchHealthStatus,
   fetchRuntimeSummary,
 } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 import {
   buildAliasDriftRows,
   buildArchivedArtifactRows,
@@ -50,18 +49,6 @@ export default function SessionReadinessRoute() {
       );
   }, []);
 
-  usePageActions(
-    <>
-      <a className={secondaryButtonClassName} href="/healthz">
-        Health JSON
-      </a>
-      <a className={secondaryButtonClassName} href="/api/role-model/runtime/summary">
-        Runtime JSON
-      </a>
-    </>,
-    [],
-  );
-
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -80,6 +67,13 @@ export default function SessionReadinessRoute() {
   const inventoryStats = buildInventorySummaryStats(summary);
   const driftRows = buildAliasDriftRows(summary);
   const operatorIntentSummary = buildOperatorIntentSummary(summary);
+  const bootstrapSummary =
+    bootstrapRows.length > 0
+      ? `${bootstrapRows.map((row) => row.label.toLowerCase()).join(", ")} were all persisted in the current session.`
+      : "Bootstrap stages have not been recorded yet.";
+  const primaryLifecycleRow = lifecycleAccountRows[0] ?? null;
+  const primaryArchivedRow = archivedRows[0] ?? null;
+  const primaryDriftRow = driftRows[0] ?? null;
 
   return (
     <div className="space-y-6">
@@ -112,184 +106,140 @@ export default function SessionReadinessRoute() {
         />
       </div>
 
-      <SectionCard title="Session bootstrap">
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          {bootstrapStatus ? (
-            <StatusPill tone={bootstrapStatus.tone}>{bootstrapStatus.label}</StatusPill>
-          ) : (
-            <StatusPill tone="neutral">Bootstrap receipts unavailable</StatusPill>
-          )}
-          {summary.sessionBootstrap?.startedAt ? (
-            <p className="text-sm text-[var(--rm-secondary)]">
-              Started {summary.sessionBootstrap.startedAt}
-              {summary.sessionBootstrap.finishedAt
-                ? ` • Finished ${summary.sessionBootstrap.finishedAt}`
-                : ""}
-            </p>
-          ) : null}
-        </div>
-        {bootstrapRows.length === 0 ? (
-          <EmptyState label="Bootstrap stages have not been recorded yet." />
-        ) : (
-          <div className="space-y-3">
-            {bootstrapRows.map((row) => (
-              <div key={row.stageId} className={listRowClassName}>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-[var(--rm-fg)]">{row.label}</p>
-                    <StatusPill tone={row.tone}>{row.status}</StatusPill>
-                  </div>
-                  {row.message ? (
-                    <p className="mt-2 text-sm text-[var(--rm-secondary)]">{row.message}</p>
-                  ) : null}
-                </div>
-                <p className="text-sm text-[var(--rm-secondary)]">{row.stageId}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
-
-      <SectionCard title="Credential readiness">
-        <div className="flex flex-wrap gap-3">
-          {readinessRows.length === 0 ? (
-            <StatusPill tone="neutral">No credential blockers reported</StatusPill>
-          ) : (
-            readinessRows.map((row) => (
-              <StatusPill key={row.key} tone={row.tone}>
-                {row.label} {row.value}
-              </StatusPill>
-            ))
-          )}
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Canonical lifecycle">
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          {lifecycleBanner ? (
-            <>
-              <StatusPill tone={lifecycleBanner.authorityTone}>
-                {lifecycleBanner.authorityLabel}
-              </StatusPill>
-              {lifecycleBanner.archivedStaleCount > 0 ? (
-                <StatusPill tone="neutral">
-                  Archived stale {lifecycleBanner.archivedStaleCount}
-                </StatusPill>
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.72fr)]">
+        <div className="space-y-4">
+          <SectionCard title="Session bootstrap">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              {bootstrapStatus ? (
+                <StatusPill tone={bootstrapStatus.tone}>{bootstrapStatus.label}</StatusPill>
+              ) : (
+                <StatusPill tone="neutral">Bootstrap receipts unavailable</StatusPill>
+              )}
+              {summary.sessionBootstrap?.finishedAt ? (
+                <StatusPill tone="neutral">finished</StatusPill>
               ) : null}
-            </>
-          ) : (
-            <StatusPill tone="neutral">Lifecycle contract unavailable</StatusPill>
-          )}
-        </div>
-        {lifecycleBanner ? (
-          <p className="mb-4 text-sm text-[var(--rm-secondary)]">{lifecycleBanner.detail}</p>
-        ) : null}
-        {lifecycleAccountRows.length === 0 ? (
-          <EmptyState label="No blocking account lifecycle rows." />
-        ) : (
-          <div className="space-y-3">
-            {lifecycleAccountRows.map((row) => (
-              <div key={row.key} className={listRowClassName}>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-[var(--rm-fg)]">{row.providerAccountId}</p>
-                    <StatusPill tone={row.tone}>{row.lifecycleLabel}</StatusPill>
-                  </div>
-                  <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                    {row.reasonLabel} • Actions: {row.availableActionsLabel}
-                  </p>
-                </div>
-                <div className="text-right text-sm text-[var(--rm-secondary)]">
-                  <p>{row.providerId}</p>
-                  <p>{row.activeEndpointCount} active endpoints</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
-
-      <SectionCard title="Archived stale diagnostics">
-        {archivedRows.length === 0 ? (
-          <EmptyState label="No archived stale lifecycle artifacts." />
-        ) : (
-          <div className="space-y-3">
-            {archivedRows.map((row) => (
-              <div
-                key={row.key}
-                className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-              >
-                <p className="font-semibold text-[var(--rm-fg)]">{row.label}</p>
-                <p className="mt-2">{row.providerAccountId}</p>
-                <p className="mt-1">{row.detail}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
-
-      <SectionCard title="Operator intent manifest">
-        {operatorIntentSummary ? (
-          <div className={`${mutedPanelClassName} p-4`}>
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-semibold text-[var(--rm-fg)]">{operatorIntentSummary.label}</p>
-              <StatusPill tone={operatorIntentSummary.tone}>
-                {summary.operatorIntent?.status ?? "unknown"}
-              </StatusPill>
             </div>
-            <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-              {operatorIntentSummary.detail}
-            </p>
-            {summary.operatorIntent?.path ? (
-              <p className="mt-2 text-xs text-[var(--rm-muted)]">{summary.operatorIntent.path}</p>
+            <p className={supportingTextClassName}>{bootstrapSummary}</p>
+          </SectionCard>
+
+          <SectionCard title="Canonical lifecycle">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              {lifecycleBanner ? (
+                <>
+                  <StatusPill tone={lifecycleBanner.authorityTone}>
+                    {lifecycleBanner.authorityLabel}
+                  </StatusPill>
+                  {lifecycleBanner.archivedStaleCount > 0 ? (
+                    <StatusPill tone="neutral">
+                      archived stale {lifecycleBanner.archivedStaleCount}
+                    </StatusPill>
+                  ) : null}
+                </>
+              ) : (
+                <StatusPill tone="neutral">Lifecycle contract unavailable</StatusPill>
+              )}
+            </div>
+            {lifecycleBanner ? (
+              <p className={supportingTextClassName}>{lifecycleBanner.detail}</p>
             ) : null}
-          </div>
-        ) : (
-          <EmptyState label="Operator-intent diagnostics are not available yet." />
-        )}
-      </SectionCard>
+            <div className="mt-4">
+              {primaryLifecycleRow ? (
+                <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className={bodyStrongTextClassName}>{primaryLifecycleRow.providerAccountId}</p>
+                    <StatusPill tone={primaryLifecycleRow.tone}>
+                      {primaryLifecycleRow.lifecycleLabel}
+                    </StatusPill>
+                  </div>
+                  <div className={`space-y-2 ${supportingTextClassName}`}>
+                    <p>providerAccountId {primaryLifecycleRow.providerAccountId}</p>
+                    <p>reason {primaryLifecycleRow.reasonLabel}</p>
+                    <p>actions {primaryLifecycleRow.availableActionsLabel}</p>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState label="No blocking account lifecycle rows." />
+              )}
+            </div>
+          </SectionCard>
 
-      <SectionCard title="Routable inventory">
-        {inventoryStats.length === 0 ? (
-          <EmptyState label="Inventory summary is not available yet." />
-        ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {inventoryStats.map((stat) => (
-              <div key={stat.label} className={`${mutedPanelClassName} p-4`}>
-                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                  {stat.label}
-                </p>
-                <p className="mt-2 text-sm font-semibold text-[var(--rm-fg)]">{stat.value}</p>
+          <SectionCard title="Operator intent manifest">
+            {operatorIntentSummary ? (
+              <div className="space-y-4">
+                <StatusPill tone={operatorIntentSummary.tone}>
+                  {summary.operatorIntent?.status ?? "unknown"}
+                </StatusPill>
+                <p className={supportingTextClassName}>{operatorIntentSummary.detail}</p>
+                {summary.operatorIntent?.path ? (
+                  <p className={supportingTextClassName}>{summary.operatorIntent.path}</p>
+                ) : null}
               </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
+            ) : (
+              <EmptyState label="Operator-intent diagnostics are not available yet." />
+            )}
+          </SectionCard>
+        </div>
 
-      <SectionCard title="Alias drift warnings">
-        {driftRows.length === 0 ? (
-          <EmptyState label="No alias hint drift warnings." />
-        ) : (
-          <div className="space-y-3">
-            {driftRows.map((row) => (
-              <div
-                key={`${row.aliasId}:${row.hintModelId}`}
-                className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}
-              >
-                <p className="font-semibold text-[var(--rm-fg)]">
-                  {row.aliasId} • hint {row.hintModelId}
+        <div className="space-y-4">
+          <SectionCard title="Credential readiness">
+            <div className="flex flex-wrap gap-3">
+              {readinessRows.length === 0 ? (
+                <StatusPill tone="neutral">No credential blockers reported</StatusPill>
+              ) : (
+                readinessRows.map((row) => (
+                  <StatusPill key={row.key} tone={row.tone}>
+                    {row.label} {row.value}
+                  </StatusPill>
+                ))
+              )}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Archived stale diagnostics">
+            {primaryArchivedRow ? (
+              <div className="space-y-3">
+                <p className={bodyStrongTextClassName}>{primaryArchivedRow.providerAccountId}</p>
+                <p className={supportingTextClassName}>{primaryArchivedRow.detail}</p>
+              </div>
+            ) : (
+              <EmptyState label="No archived stale lifecycle artifacts." />
+            )}
+          </SectionCard>
+
+          <SectionCard title="Routable inventory">
+            {inventoryStats.length === 0 ? (
+              <EmptyState label="Inventory summary is not available yet." />
+            ) : (
+              <div className="space-y-3">
+                {inventoryStats.map((stat) => (
+                  <div key={stat.label} className="flex items-center justify-between gap-3">
+                    <p className={supportingTextClassName}>{stat.label}</p>
+                    <p className={bodyStrongTextClassName}>{stat.value}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+
+          <SectionCard title="Alias drift warnings">
+            {primaryDriftRow ? (
+              <div className="space-y-3">
+                <p className={bodyStrongTextClassName}>
+                  {primaryDriftRow.aliasId} hint drift on {primaryDriftRow.hintModelId}
                 </p>
-                <p className="mt-2">{row.message}</p>
-                {row.suggestedModelIds.length > 0 ? (
-                  <p className="mt-2 break-all">
-                    Suggested live ids: {row.suggestedModelIds.join(", ")}
+                <p className={supportingTextClassName}>{primaryDriftRow.message}</p>
+                {primaryDriftRow.suggestedModelIds.length > 0 ? (
+                  <p className={supportingTextClassName}>
+                    Suggested live ids: {primaryDriftRow.suggestedModelIds.join(", ")}
                   </p>
                 ) : null}
               </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
+            ) : (
+              <EmptyState label="No alias hint drift warnings." />
+            )}
+          </SectionCard>
+        </div>
+      </div>
     </div>
   );
 }
