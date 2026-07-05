@@ -81,8 +81,8 @@ import {
   upsertDifficultyClassificationCache,
   upsertObservedThroughputPenaltyState,
   upsertProviderDeviceAuthSession,
-  upsertRuntimeMaintenanceValue,
   upsertRuntimeControllerAssignment,
+  upsertRuntimeMaintenanceValue,
   upsertProviderAccount as upsertSqliteProviderAccount,
   upsertRuntimeEndpoint as upsertSqliteRuntimeEndpoint,
 } from "@role-model-router/sqlite-memory";
@@ -2848,10 +2848,9 @@ export function classifyUpstreamExecutionFailure(input: {
   readonly message?: string;
   readonly fallbackStatusCode?: number;
 }): UpstreamExecutionError {
-  const message =
-    input.message?.trim().length
-      ? input.message.trim()
-      : summarizeProviderError(input.statusCode ?? input.fallbackStatusCode ?? 502, input.body);
+  const message = input.message?.trim().length
+    ? input.message.trim()
+    : summarizeProviderError(input.statusCode ?? input.fallbackStatusCode ?? 502, input.body);
   const searchText = [
     message,
     readNestedProviderErrorField(input.body, "message"),
@@ -3074,7 +3073,10 @@ export function resolveExecutionFailureCooldownDurationMs(failureCount: number):
       Math.max(1, Math.trunc(failureCount)) - 1,
     ),
   );
-  return EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS[scheduleIndex]!;
+  return (
+    EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS[scheduleIndex] ??
+    EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS[EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS.length - 1]
+  );
 }
 
 function recordExecutionFailureCooldown(input: {
@@ -16154,7 +16156,7 @@ export async function createRuntimeBridgeBackend(
       routeRuntimeRequest({
         request: {
           ...plan.routingRequest,
-          ...((() => {
+          ...(() => {
             const cooldownDeniedEndpoints = readActiveExecutionFailureCooldownEndpointIds({
               databasePath: initialization.databasePath,
               nowMs: Date.now(),
@@ -16163,7 +16165,7 @@ export async function createRuntimeBridgeBackend(
               ...new Set([...denyEndpoints, ...cooldownDeniedEndpoints]),
             ];
             return mergedDenyEndpoints.length > 0 ? { denyEndpoints: mergedDenyEndpoints } : {};
-          })()),
+          })(),
         },
         registry: currentRegistry,
         catalog: currentNormalizedCatalog,
@@ -16374,7 +16376,8 @@ export async function createRuntimeBridgeBackend(
                     runtimeToolRegistry ??= createRequestScopedToolRegistry(codexDynamicTools, {
                       workspaceRoot,
                     });
-                    const originalToolName = originalToolNameByExposedName.get(toolName) ?? toolName;
+                    const originalToolName =
+                      originalToolNameByExposedName.get(toolName) ?? toolName;
                     const executionResult = dynamicToolNames.has(originalToolName)
                       ? await executeToolCalls(runtimeToolRegistry, {
                           requestId,

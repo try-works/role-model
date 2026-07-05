@@ -12675,7 +12675,9 @@ describe("runtime-host-bridge", () => {
           if (authorization === "Bearer moonshot-primary-live-key") {
             primaryAttempts += 1;
             if (primaryAttempts === 1) {
-              throw new Error("Connection Error: Could not reach the AI service. Request timed out.");
+              throw new Error(
+                "Connection Error: Could not reach the AI service. Request timed out.",
+              );
             }
             return new Response(
               JSON.stringify({
@@ -12843,7 +12845,8 @@ describe("runtime-host-bridge", () => {
 
   test("classifies subscription quota exhaustion as fallback-eligible without retrying the same endpoint", () => {
     expect(
-      typeof (bridge as { classifyUpstreamExecutionFailure?: unknown }).classifyUpstreamExecutionFailure,
+      typeof (bridge as { classifyUpstreamExecutionFailure?: unknown })
+        .classifyUpstreamExecutionFailure,
     ).toBe("function");
 
     const error = (
