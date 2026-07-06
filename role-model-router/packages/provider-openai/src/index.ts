@@ -636,6 +636,9 @@ export function buildOpenAIRequest(
         ...(input.executionRequest.tools?.length
           ? { tools: toOpenAIChatTools(input.executionRequest.tools ?? []) }
           : {}),
+        ...(input.executionRequest.toolChoice !== undefined
+          ? { tool_choice: input.executionRequest.toolChoice }
+          : {}),
         ...(usesKimiBuiltinHostedWebSearch
           ? {
               thinking: {

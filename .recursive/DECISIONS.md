@@ -2,6 +2,24 @@
 
 ## Recursive Run Index
 
+### Session `2026-07-06` — Codex Subscription routing hardening and release refresh
+
+- What changed:
+  - preserved OpenAI chat-completions `tool_choice` through adapter-execution and provider-openai so forced function-tool selection reaches compatible OpenAI and Codex Subscription targets instead of being dropped before provider execution
+  - added Codex Subscription first-attempt pinning for tool-bearing and non-text turns, while keeping the broader eligible endpoint pool available for reroute after retry or fallback
+  - hardened upstream failure classification and cooldown handling so timeout, network, rate-limit, quota, provider-auth, and upstream-5xx failures can drive retry or reroute with escalating endpoint cooldown windows; repaired Codex auth now clears stale provider-auth cooldowns
+  - made session bootstrap treat peer auto-reload degradation as advisory so remote-only readiness is not blocked by `peer reload incomplete`
+- Why:
+  - routed Codex Subscription requests could lose forced tool intent, mis-handle tool-heavy or multimodal turns, and stay artificially denied after recoverable execution failures
+  - remote-only operators could see a false degraded readiness summary when local peer reload lagged even though the runtime was otherwise execution-ready
+- How:
+  - verified with targeted host/provider tests, full local `corepack pnpm run ci:check`, rebuilt-runtime probes on `:3456`, and live exact-model plus alias requests that executed GPT 5.4 tool calls through the Codex Subscription path
+- What was not done:
+  - no new provider families or generic hosted-browser/tool runtime were introduced
+  - invalid-request responses still fail fast instead of falling back to a different endpoint
+- Known issues / follow-ups:
+  - docs, runtime routing memory, and release notes need to stay aligned whenever Codex Subscription heuristics or cooldown policy change again
+
 ### Run `60-runtime-ui-paper-linear-review-alignment`
 
 - Run folder: `/.recursive/run/60-runtime-ui-paper-linear-review-alignment/`

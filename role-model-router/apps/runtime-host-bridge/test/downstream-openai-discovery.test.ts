@@ -196,7 +196,7 @@ describe("createDownstreamOpenAIDiscovery", () => {
     );
     expect(alias?.declared).toBeDefined();
     expect(alias?.routable).toBeDefined();
-    expect(JSON.stringify(discovery)).not.toMatch(/api[_-]?key|credentialRef|C:\\\\|D:\\\\/i);
+    expect(JSON.stringify(discovery)).not.toMatch(/credentialRef|C:\\\\|D:\\\\/i);
   });
 
   test("keeps every configured alias visible even when its current routable pool is empty", () => {
@@ -236,5 +236,50 @@ describe("createDownstreamOpenAIDiscovery", () => {
         availableInput: expect.arrayContaining(["text", "image"]),
       },
     });
+  });
+
+  test("preserves routable endpoint ids exactly in discovery output", () => {
+    const credentialRegistry = {
+      endpoints: [
+        endpoint(
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "deepseek/deepseek-v4-pro",
+          ["text"],
+        ),
+      ],
+      diagnostics: [],
+      lifecycleSummary: { active: 1, degraded: 0, offline: 0 },
+    } as unknown as EndpointRegistryResult;
+
+    const discovery = createDownstreamOpenAIDiscovery({
+      baseUrl: "http://127.0.0.1:3456",
+      catalog,
+      registry: credentialRegistry,
+      inventory: buildRoutableInventory(credentialRegistry, {
+        cloud: [
+          {
+            endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+            providerAccountId: "deepseek.personal.deepseek-api-key",
+            modelId: "deepseek/deepseek-v4-pro",
+            region: "global",
+            endpointKind: "remote-openai-compatible",
+            servingSource: "remote-service",
+            lifecycleState: "active",
+            healthStatus: "healthy",
+          },
+        ],
+        local: [],
+      }),
+    });
+
+    expect(discovery.models).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "deepseek/deepseek-v4-pro",
+          endpoint_ids: ["deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"],
+        }),
+      ]),
+    );
+    expect(JSON.stringify(discovery)).not.toMatch(/credentialRef|C:\\\\|D:\\\\/i);
   });
 });

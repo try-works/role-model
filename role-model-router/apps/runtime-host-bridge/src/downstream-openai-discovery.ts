@@ -124,10 +124,7 @@ function uniqueSorted(values: Iterable<string>): readonly string[] {
 }
 
 function toPublicEndpointId(endpointId: string): string {
-  return endpointId
-    .replace(/api[-_]?key/gi, "credential")
-    .replace(/credentialRef/gi, "credential")
-    .replace(/[a-zA-Z]:[\\/][^.\s"]+/g, "[local-path]");
+  return endpointId.replace(/[a-zA-Z]:[\\/][^.\s"]+/g, "[local-path]");
 }
 
 function minNumber(values: readonly (number | null)[]): number | null {

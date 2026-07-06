@@ -1,6 +1,6 @@
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
 import { createServer as createNetServer } from "node:net";
@@ -117,6 +117,7 @@ import {
   type RoutedExecutionResult,
   type RuntimeExecutionMessage,
   type RuntimeExecutionRequest,
+  type RuntimeExecutionToolChoice,
   type RuntimeExecutionToolDefinition,
   type RuntimeResponseCaptureMap,
   executeLiveRoutedRequest,
@@ -158,6 +159,7 @@ import {
 import { resolveOauthCredentialRef } from "./oauth-credential.js";
 import {
   type OperatorIntentDiagnostic,
+  type OperatorIntentV1,
   persistOperatorIntent,
   readOperatorIntent,
   readOperatorIntentResult,
@@ -413,6 +415,7 @@ interface OpenAIChatCompletionsBody {
   readonly model: string;
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly tools?: readonly OpenAIChatCompletionsTool[];
+  readonly tool_choice?: RuntimeExecutionToolChoice;
   readonly stream?: boolean;
   readonly max_tokens?: number;
   readonly temperature?: number;
@@ -526,9 +529,11 @@ export interface BridgeControllerAssignment {
 
 export interface BridgeExecutionPlan {
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
+  readonly fallbackAllowEndpoints?: readonly string[];
   readonly executionRequest: {
     readonly messages: readonly OpenAIChatCompletionsMessage[];
     readonly tools?: readonly RuntimeExecutionToolDefinition[];
+    readonly toolChoice?: RuntimeExecutionToolChoice;
     readonly stream?: boolean;
     readonly maxOutputTokens?: number;
     readonly temperature?: number;
@@ -567,9 +572,7 @@ interface BridgeDifficultyRoutingContext {
 
 interface BridgeControllerRoutingContext {
   readonly active: boolean;
-  readonly resolvedGuidance?: NonNullable<
-    RuntimeRoutingDiagnostics["controllerRouting"]
-  >["acceptedDirectives"];
+  readonly resolvedGuidance?: ControllerAcceptedDirectives;
   readonly fallbackApplied?: boolean;
   readonly fallbackReason?: string;
 }
@@ -577,6 +580,9 @@ interface BridgeControllerRoutingContext {
 type DifficultyRoutingSignals = NonNullable<
   RuntimeRoutingDiagnostics["difficultyRouting"]
 >["rubricSignals"];
+type ControllerAcceptedDirectives = NonNullable<
+  NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"]
+>;
 type BridgeRoutingStrategy = Parameters<typeof routeRuntimeRequest>[0]["request"]["strategy"];
 
 const BRIDGE_ROUTING_STRATEGIES = new Set<BridgeRoutingStrategy>([
@@ -664,6 +670,14 @@ function summarizeDifficultySignals(input: {
     combined.toLowerCase(),
     /\b(analyze|compare|iterate|plan|step|decompose|refactor|workflow|multi-step|across|identify|explain|investigate|debug|patch|regression)\b/g,
   );
+  const codePathSignal =
+    /(?:^|[\s"'`])(?:[\w.-]+[\\/])+[\w.-]+\.(?:ts|tsx|js|jsx|py|rs|go|java|c|cc|cpp|cs|json|yaml|yml|md)\b/i.test(
+      askModeBurdenSource,
+    );
+  const workspaceFileActionSignal =
+    /\b(file|folder|directory|workspace|repo|repository|symbol|exported)\b/i.test(
+      askModeBurdenSource,
+    ) && /\b(read|write|create|patch|edit|inspect|open|grep|search)\b/i.test(askModeBurdenSource);
   const effectiveToolCount = askMode ? 0 : input.toolCount;
   const effectiveHistoryTurnCount = askMode ? userMessages.length : input.messages.length;
   const effectiveContextTokens = askMode
@@ -675,9 +689,10 @@ function summarizeDifficultySignals(input: {
     historyTurnCount: effectiveHistoryTurnCount,
     instructionConstraintCount,
     decompositionKeywordCount,
-    codeOrSchemaBurden: /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i.test(
-      askModeBurdenSource,
-    ),
+    codeOrSchemaBurden:
+      /\b(code|diff|patch|refactor|schema|contract|validation|test)\b/i.test(askModeBurdenSource) ||
+      codePathSignal ||
+      workspaceFileActionSignal,
   };
 }
 
@@ -694,6 +709,13 @@ function classifyDifficultyFromSignals(input: {
       difficulty: input.classifier?.fallbackDifficulty ?? "hard",
       fallbackApplied: true,
       fallbackReason: "missing-request-content",
+    };
+  }
+
+  if (input.signals.toolCount > 0 && input.signals.codeOrSchemaBurden) {
+    return {
+      difficulty: "hard",
+      fallbackApplied: false,
     };
   }
 
@@ -957,16 +979,41 @@ function parseControllerRoutingOutput(
     readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
     readonly candidateEndpointIds: readonly string[];
   },
-): NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] | null {
+): ControllerAcceptedDirectives | null {
   return parseAndSanitizeControllerRoutingGuidance(text, input);
 }
 
-function inferHeuristicControllerGuidance(input: {
+function inferHeuristicControllerCodeRoleTask(input: {
+  readonly hasCodeSignal: boolean;
+  readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
+}): {
+  readonly requestedRoleId?: string;
+  readonly taskType?: string;
+} {
+  if (!input.hasCodeSignal) {
+    return {};
+  }
+
+  const requestedRoleId = resolveControllerRequestedRoleId("coder", input.roleDefinitions);
+  const taskType =
+    resolveControllerTaskType("coder.edit", input.taskDefinitions) ??
+    resolveControllerTaskType("code.edit", input.taskDefinitions) ??
+    resolveControllerTaskType("coder.review", input.taskDefinitions) ??
+    resolveControllerTaskType("code.review", input.taskDefinitions);
+
+  return {
+    ...(requestedRoleId ? { requestedRoleId } : {}),
+    ...(taskType ? { taskType } : {}),
+  };
+}
+
+export function inferHeuristicControllerGuidance(input: {
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly toolCount: number;
   readonly roleDefinitions?: readonly RuntimeRoleDefinitionRecord[];
   readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
-}): NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] | null {
+}): ControllerAcceptedDirectives | null {
   const combinedText = input.messages
     .map((message) => readChatMessageTextContent(message.content).trim())
     .filter((content) => content.length > 0)
@@ -986,12 +1033,20 @@ function inferHeuristicControllerGuidance(input: {
     ) || input.toolCount > 0;
   const hasClassificationSignal =
     /(classif|categor|sentiment|label|language detect|embedding)/.test(combinedText);
+  const codeRoleTask = inferHeuristicControllerCodeRoleTask({
+    hasCodeSignal,
+    roleDefinitions: input.roleDefinitions,
+    taskDefinitions: input.taskDefinitions,
+  });
   const preferredCapabilities: string[] = [];
   if (
     hasCodeSignal &&
     (knownCapabilities.size === 0 || knownCapabilities.has("reasoning.multi_step"))
   ) {
     preferredCapabilities.push("reasoning.multi_step");
+  }
+  if (hasCodeSignal && (knownCapabilities.size === 0 || knownCapabilities.has("code.write"))) {
+    preferredCapabilities.push("code.write");
   }
   if (
     input.toolCount > 0 &&
@@ -1000,12 +1055,52 @@ function inferHeuristicControllerGuidance(input: {
     preferredCapabilities.push("tools.function_calling");
   }
   const guidance = {
+    ...codeRoleTask,
     ...(preferredCapabilities.length > 0
       ? { preferredCapabilities: preferredCapabilities as readonly string[] }
       : {}),
     strategy: hasCodeSignal ? "quality" : hasClassificationSignal ? "cost" : "balanced",
-  } satisfies NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"];
+  } satisfies ControllerAcceptedDirectives;
   return Object.keys(guidance).length > 0 ? guidance : null;
+}
+
+export function mergeControllerGuidanceDefaults(input: {
+  readonly guidance: ControllerAcceptedDirectives;
+  readonly heuristic: ControllerAcceptedDirectives | null;
+}): ControllerAcceptedDirectives {
+  const guidance = input.guidance;
+  const heuristic = input.heuristic;
+  if (!heuristic) {
+    return guidance;
+  }
+
+  return {
+    ...(!guidance.requestedRoleId && heuristic.requestedRoleId
+      ? { requestedRoleId: heuristic.requestedRoleId }
+      : {}),
+    ...(!guidance.taskType && heuristic.taskType ? { taskType: heuristic.taskType } : {}),
+    ...(heuristic.requiredCapabilities?.length || guidance.requiredCapabilities?.length
+      ? {
+          requiredCapabilities:
+            guidance.requiredCapabilities?.length && heuristic.requiredCapabilities?.length
+              ? mergeCapabilityList(guidance.requiredCapabilities, heuristic.requiredCapabilities)
+              : (guidance.requiredCapabilities ?? heuristic.requiredCapabilities),
+        }
+      : {}),
+    ...(heuristic.preferredCapabilities?.length || guidance.preferredCapabilities?.length
+      ? {
+          preferredCapabilities:
+            guidance.preferredCapabilities?.length && heuristic.preferredCapabilities?.length
+              ? mergeCapabilityList(guidance.preferredCapabilities, heuristic.preferredCapabilities)
+              : (guidance.preferredCapabilities ?? heuristic.preferredCapabilities),
+        }
+      : {}),
+    ...(!guidance.strategy && heuristic.strategy ? { strategy: heuristic.strategy } : {}),
+    ...(!guidance.preferredEndpointIds && heuristic.preferredEndpointIds
+      ? { preferredEndpointIds: heuristic.preferredEndpointIds }
+      : {}),
+    ...guidance,
+  };
 }
 
 function resolveControllerRequestedRoleId(
@@ -1079,9 +1174,7 @@ function filterKnownControllerCapabilities(
 }
 
 function constrainControllerGuidanceToCandidatePool(input: {
-  readonly guidance: NonNullable<
-    RuntimeRoutingDiagnostics["controllerRouting"]
-  >["acceptedDirectives"];
+  readonly guidance: ControllerAcceptedDirectives;
   readonly candidateEndpointIds: readonly string[];
   readonly registry: EndpointRegistryResult;
   readonly runtimeEndpoints: readonly {
@@ -1093,7 +1186,7 @@ function constrainControllerGuidanceToCandidatePool(input: {
   readonly roleDefinitions: readonly RuntimeRoleDefinitionRecord[];
   readonly taskDefinitions?: readonly RuntimeTaskDefinitionRecord[];
   readonly llamaSwapRoleIdsByModelId?: Readonly<Record<string, readonly string[]>>;
-}): NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] | null {
+}): ControllerAcceptedDirectives | null {
   const guidance = input.guidance;
   if (!guidance) {
     return null;
@@ -1119,8 +1212,34 @@ function constrainControllerGuidanceToCandidatePool(input: {
     }
   }
 
+  const candidatePoolSupportsRole = (roleId: string): boolean => {
+    const roleDefinition = input.roleDefinitions.find((entry) => entry.role_id === roleId);
+    if (!roleDefinition) {
+      return candidateRoleIds.has(roleId);
+    }
+    const supportedTasks = roleDefinition.task_types_supported
+      .map((taskType) =>
+        input.taskDefinitions?.find((taskDefinition) => taskDefinition.task_type === taskType),
+      )
+      .filter((taskDefinition): taskDefinition is RuntimeTaskDefinitionRecord =>
+        Boolean(taskDefinition),
+      );
+    if (supportedTasks.length === 0) {
+      return candidateRoleIds.has(roleId);
+    }
+    return supportedTasks.some(
+      (taskDefinition) =>
+        taskDefinition.allowed_roles.includes(roleId) &&
+        taskDefinition.required_capabilities.every((capability) =>
+          candidateCapabilities.has(capability),
+        ),
+    );
+  };
+
   const requestedRoleId =
-    guidance.requestedRoleId && candidateRoleIds.has(guidance.requestedRoleId)
+    guidance.requestedRoleId &&
+    candidateRoleIds.has(guidance.requestedRoleId) &&
+    candidatePoolSupportsRole(guidance.requestedRoleId)
       ? guidance.requestedRoleId
       : undefined;
   const taskType = (() => {
@@ -1141,7 +1260,12 @@ function constrainControllerGuidanceToCandidatePool(input: {
       taskDefinition.required_capabilities.every((capability) =>
         candidateCapabilities.has(capability),
       );
-    return allowedRoleMatch || requiredCapabilityMatch ? guidance.taskType : undefined;
+    if (requestedRoleId) {
+      return taskDefinition.allowed_roles.includes(requestedRoleId) && requiredCapabilityMatch
+        ? guidance.taskType
+        : undefined;
+    }
+    return allowedRoleMatch && requiredCapabilityMatch ? guidance.taskType : undefined;
   })();
   const requiredCapabilities = guidance.requiredCapabilities?.filter((capability) =>
     candidateCapabilities.has(capability),
@@ -1160,7 +1284,7 @@ function constrainControllerGuidanceToCandidatePool(input: {
     ...(guidance.preferredEndpointIds?.length
       ? { preferredEndpointIds: guidance.preferredEndpointIds }
       : {}),
-  } satisfies NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"];
+  } satisfies ControllerAcceptedDirectives;
 
   return Object.keys(constrained).length > 0 ? constrained : null;
 }
@@ -1375,6 +1499,119 @@ function collectPreferredEndpointIds(
     return [];
   }
   return filtered;
+}
+
+function isOpenAICodexSubscriptionEndpointId(endpointId: string): boolean {
+  return endpointId.includes(`.${OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID}.`);
+}
+
+function collectOpenAICodexSubscriptionAllowEndpoints(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[] | undefined;
+}): readonly string[] {
+  const allowSet = new Set(input.allowEndpoints ?? []);
+  return input.registry.endpoints
+    .filter(
+      (endpoint) =>
+        allowSet.has(endpoint.identity.endpoint_id) &&
+        isOpenAICodexSubscriptionEndpointId(endpoint.identity.endpoint_id) &&
+        OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS.includes(
+          endpoint.identity.model_id as (typeof OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS)[number],
+        ),
+    )
+    .map((endpoint) => endpoint.identity.endpoint_id)
+    .sort(compareText);
+}
+
+function mergeRoutingModelSelections(
+  primary: RoutingModelSelection | undefined,
+  secondary: RoutingModelSelection | undefined,
+): RoutingModelSelection | undefined {
+  if (!primary) {
+    return secondary;
+  }
+  if (!secondary) {
+    return primary;
+  }
+  return {
+    endpointId: primary.endpointId,
+    preferredEndpointIds: [
+      ...new Set([...primary.preferredEndpointIds, ...secondary.preferredEndpointIds]),
+    ],
+  };
+}
+
+function shouldPreferOpenAICodexSubscriptionForTurn(input: {
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly toolCount: number;
+  readonly requiredInputModalities: readonly string[];
+}): boolean {
+  if (input.requiredInputModalities.some((modality) => modality !== "text")) {
+    return true;
+  }
+  if (input.toolCount === 0) {
+    return false;
+  }
+  return summarizeDifficultySignals({
+    messages: input.messages,
+    contextTokens: 0,
+    toolCount: input.toolCount,
+  }).codeOrSchemaBurden;
+}
+
+function resolveOpenAICodexSubscriptionRoutingModel(input: {
+  readonly registry: EndpointRegistryResult;
+  readonly allowEndpoints: readonly string[] | undefined;
+  readonly messages: readonly OpenAIChatCompletionsMessage[];
+  readonly toolCount: number;
+  readonly requiredInputModalities: readonly string[];
+}): RoutingModelSelection | undefined {
+  if (!shouldPreferOpenAICodexSubscriptionForTurn(input)) {
+    return undefined;
+  }
+  const preferredEndpointIds = collectOpenAICodexSubscriptionAllowEndpoints({
+    registry: input.registry,
+    allowEndpoints: input.allowEndpoints,
+  });
+  const endpointId = preferredEndpointIds[0];
+  return endpointId
+    ? {
+        endpointId,
+        preferredEndpointIds,
+      }
+    : undefined;
+}
+
+function applyOpenAICodexSubscriptionInitialPin(input: {
+  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
+  readonly routingModel: RoutingModelSelection | undefined;
+  readonly preferredCodexRoutingModel: RoutingModelSelection | undefined;
+}): {
+  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
+  readonly routingModel: RoutingModelSelection | undefined;
+  readonly fallbackAllowEndpoints?: readonly string[];
+} {
+  const pinnedEndpointId = input.preferredCodexRoutingModel?.endpointId;
+  const allowEndpoints = input.routingRequest.allowEndpoints;
+  if (
+    !pinnedEndpointId ||
+    !allowEndpoints ||
+    allowEndpoints.length <= 1 ||
+    !allowEndpoints.includes(pinnedEndpointId)
+  ) {
+    return {
+      routingRequest: input.routingRequest,
+      routingModel: input.routingModel,
+    };
+  }
+  return {
+    routingRequest: {
+      ...input.routingRequest,
+      allowEndpoints: [pinnedEndpointId],
+    },
+    routingModel: input.routingModel,
+    fallbackAllowEndpoints: allowEndpoints,
+  };
 }
 
 function strategyToObservedDifficultyBucket(
@@ -3079,6 +3316,10 @@ export function resolveExecutionFailureCooldownDurationMs(failureCount: number):
     EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS[scheduleIndex] ??
     EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS[EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS.length - 1]
   );
+}
+
+function shouldRecordExecutionFailureCooldown(error: UpstreamExecutionError): boolean {
+  return error.fallbackEligible;
 }
 
 function recordExecutionFailureCooldown(input: {
@@ -5955,6 +6196,10 @@ function toPublicDiagnosticEndpointId(endpointId: string): string {
     .replace(/[a-zA-Z]:[\\/][^.\s"]+/g, "[local-path]");
 }
 
+function toLegacyCredentializedEndpointId(endpointId: string): string {
+  return endpointId.replace(/api[-_]?key/gi, "credential").replace(/credentialRef/gi, "credential");
+}
+
 function throwNoEligibleCapabilityTarget(input: {
   readonly requestedModel: string;
   readonly requirements: ReturnType<typeof inferChatCompletionsCapabilityRequirements>;
@@ -6202,12 +6447,17 @@ function applyRequestedEndpointOverride(input: {
   if (!endpointId) {
     return input.allowEndpoints;
   }
-  if (!input.allowEndpoints.includes(endpointId)) {
+  const resolvedEndpointId =
+    input.allowEndpoints.find((allowedEndpointId) => allowedEndpointId === endpointId) ??
+    input.allowEndpoints.find(
+      (allowedEndpointId) => toLegacyCredentializedEndpointId(allowedEndpointId) === endpointId,
+    );
+  if (!resolvedEndpointId) {
     throw new Error(
       `Requested endpoint ${endpointId} is not available for model ${input.requestedModel}.`,
     );
   }
-  return [endpointId];
+  return [resolvedEndpointId];
 }
 
 function resolveRequestedModelAlias(
@@ -6892,16 +7142,42 @@ export function mapChatCompletionsRequest(
     taskDefinitions,
     requestOptions,
   });
+  const preferredCodexRoutingModel = controllerRouting.routingModel
+    ? undefined
+    : resolveOpenAICodexSubscriptionRoutingModel({
+        registry,
+        allowEndpoints: rolePolicyExecution.routingRequest.allowEndpoints,
+        messages: body.messages,
+        toolCount: body.tools?.length ?? 0,
+        requiredInputModalities: capabilityRequirements.requiredInputModalities,
+      });
+  const codexRoutingModel = mergeRoutingModelSelections(
+    controllerRouting.routingModel,
+    preferredCodexRoutingModel,
+  );
+  const pinnedCodexExecution = applyOpenAICodexSubscriptionInitialPin({
+    routingRequest: rolePolicyExecution.routingRequest,
+    routingModel: codexRoutingModel,
+    preferredCodexRoutingModel,
+  });
 
   return {
-    routingRequest: rolePolicyExecution.routingRequest,
+    routingRequest: pinnedCodexExecution.routingRequest,
+    ...(pinnedCodexExecution.fallbackAllowEndpoints
+      ? { fallbackAllowEndpoints: pinnedCodexExecution.fallbackAllowEndpoints }
+      : {}),
     executionRequest: {
       ...rolePolicyExecution.executionRequest,
+      ...(body.tool_choice !== undefined && rolePolicyExecution.executionRequest.tools?.length
+        ? { toolChoice: body.tool_choice }
+        : {}),
       ...(typeof body.stream === "boolean" ? { stream: body.stream } : {}),
       ...(typeof body.max_tokens === "number" ? { maxOutputTokens: body.max_tokens } : {}),
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
-    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
+    ...(pinnedCodexExecution.routingModel
+      ? { routingModel: pinnedCodexExecution.routingModel }
+      : {}),
     ...(rolePolicyExecution.routingDiagnostics
       ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
@@ -7044,9 +7320,30 @@ export function mapResponsesRequest(
     taskDefinitions,
     requestOptions,
   });
+  const preferredCodexRoutingModel = controllerRouting.routingModel
+    ? undefined
+    : resolveOpenAICodexSubscriptionRoutingModel({
+        registry,
+        allowEndpoints: rolePolicyExecution.routingRequest.allowEndpoints,
+        messages,
+        toolCount: body.tools?.length ?? 0,
+        requiredInputModalities: capabilityRequirements.requiredInputModalities,
+      });
+  const codexRoutingModel = mergeRoutingModelSelections(
+    controllerRouting.routingModel,
+    preferredCodexRoutingModel,
+  );
+  const pinnedCodexExecution = applyOpenAICodexSubscriptionInitialPin({
+    routingRequest: rolePolicyExecution.routingRequest,
+    routingModel: codexRoutingModel,
+    preferredCodexRoutingModel,
+  });
 
   return {
-    routingRequest: rolePolicyExecution.routingRequest,
+    routingRequest: pinnedCodexExecution.routingRequest,
+    ...(pinnedCodexExecution.fallbackAllowEndpoints
+      ? { fallbackAllowEndpoints: pinnedCodexExecution.fallbackAllowEndpoints }
+      : {}),
     executionRequest: {
       ...rolePolicyExecution.executionRequest,
       ...(typeof body.stream === "boolean" ? { stream: body.stream } : {}),
@@ -7055,7 +7352,9 @@ export function mapResponsesRequest(
         : {}),
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
-    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
+    ...(pinnedCodexExecution.routingModel
+      ? { routingModel: pinnedCodexExecution.routingModel }
+      : {}),
     ...(rolePolicyExecution.routingDiagnostics
       ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
@@ -8307,6 +8606,23 @@ function readCodexAppServerErrorMessage(error: unknown, fallback: string): strin
   return fallback;
 }
 
+function readCodexAppServerTurnStatus(turn: unknown): string {
+  if (typeof turn !== "object" || turn === null) {
+    return "";
+  }
+  const record = turn as Record<string, unknown>;
+  if (typeof record.status === "string" && record.status.trim().length > 0) {
+    return record.status.trim();
+  }
+  if (typeof record.status === "object" && record.status !== null) {
+    const statusRecord = record.status as Record<string, unknown>;
+    if (typeof statusRecord.type === "string" && statusRecord.type.trim().length > 0) {
+      return statusRecord.type.trim();
+    }
+  }
+  return "";
+}
+
 function resolveCodexWebSocketConstructor(): (new (url: string) => MinimalWebSocket) | null {
   return (
     (
@@ -8604,6 +8920,21 @@ function readCodexExecutionRequestShape(
   return requestCapture.url.endsWith("/chat/completions") ? "chat-completions" : "responses";
 }
 
+function readCodexTurnMessages(
+  requestCapture: ProviderRequestCapture,
+): readonly OpenAIChatCompletionsMessage[] {
+  const requestShape = readCodexExecutionRequestShape(requestCapture);
+  return requestShape === "chat-completions"
+    ? Array.isArray(requestCapture.body.messages)
+      ? requestCapture.body.messages
+      : []
+    : typeof requestCapture.body.input === "string"
+      ? [{ role: "user", content: requestCapture.body.input }]
+      : Array.isArray(requestCapture.body.input)
+        ? requestCapture.body.input
+        : [];
+}
+
 function renderCodexMessageContent(content: unknown): string {
   if (typeof content === "string") {
     return content;
@@ -8703,6 +9034,32 @@ const CODEX_APP_SERVER_REQUEST_TOOL_NAMESPACE = "role_model_request";
 const CODEX_APP_SERVER_REQUEST_TOOL_NAMESPACE_DESCRIPTION =
   "Request-scoped tools bridged from the calling runtime.";
 const CODEX_APP_SERVER_REQUEST_TOOL_NAME_PREFIX = "request_";
+const CODEX_DYNAMIC_TOOL_DESCRIPTION_MAX_CHARS = 320;
+const CODEX_DYNAMIC_TOOL_NAME_LIST_LIMIT = 12;
+const CODEX_TURN_TEXT_ITEM_TOTAL_BUDGET_CHARS = 24_000;
+const CODEX_TURN_TEXT_ITEM_SOFT_LIMITS = {
+  instruction: 2_400,
+  developer: 8_000,
+  user: 8_000,
+  assistant: 6_000,
+  tool: 3_500,
+} as const;
+const CODEX_TURN_TEXT_ITEM_MIN_LIMITS = {
+  instruction: 1_200,
+  developer: 2_400,
+  user: 1_800,
+  assistant: 1_400,
+  tool: 1_000,
+} as const;
+const CODEX_SCHEMA_ANNOTATION_KEYS = new Set([
+  "$comment",
+  "default",
+  "description",
+  "examples",
+  "readOnly",
+  "title",
+  "writeOnly",
+]);
 
 function toCodexAppServerDynamicToolName(toolName: string): string {
   const sanitizedName = toolName
@@ -8717,14 +9074,62 @@ function toCodexAppServerDynamicToolName(toolName: string): string {
   return `${CODEX_APP_SERVER_REQUEST_TOOL_NAME_PREFIX}${nameHash}`;
 }
 
+function compactCodexText(text: string, maxChars: number, label: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= maxChars) {
+    return trimmed;
+  }
+  const headChars = Math.max(200, Math.floor(maxChars * 0.7));
+  const tailChars = Math.max(120, maxChars - headChars);
+  const head = trimmed.slice(0, headChars).trimEnd();
+  const tail = trimmed.slice(-tailChars).trimStart();
+  const omittedChars = Math.max(0, trimmed.length - head.length - tail.length);
+  return `${head}\n...[${label} truncated ${omittedChars} chars]...\n${tail}`;
+}
+
+function compactCodexDynamicToolDescription(description: string | undefined): string | undefined {
+  if (typeof description !== "string") {
+    return undefined;
+  }
+  const trimmed = description.trim();
+  return trimmed.length > 0
+    ? compactCodexText(trimmed, CODEX_DYNAMIC_TOOL_DESCRIPTION_MAX_CHARS, "tool description")
+    : undefined;
+}
+
+function sanitizeCodexDynamicToolSchema(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => sanitizeCodexDynamicToolSchema(entry));
+  }
+  if (typeof value !== "object" || value === null) {
+    return value;
+  }
+  const record = value as Record<string, unknown>;
+  return Object.fromEntries(
+    Object.entries(record).flatMap(([key, entryValue]) =>
+      CODEX_SCHEMA_ANNOTATION_KEYS.has(key)
+        ? []
+        : [[key, sanitizeCodexDynamicToolSchema(entryValue)]],
+    ),
+  );
+}
+
+function summarizeCodexToolNameList(toolNames: readonly string[]): string {
+  if (toolNames.length <= CODEX_DYNAMIC_TOOL_NAME_LIST_LIMIT) {
+    return toolNames.join(", ");
+  }
+  const visibleNames = toolNames.slice(0, CODEX_DYNAMIC_TOOL_NAME_LIST_LIMIT).join(", ");
+  return `${visibleNames}, +${toolNames.length - CODEX_DYNAMIC_TOOL_NAME_LIST_LIMIT} more`;
+}
+
 function buildCodexAppServerDynamicToolBindings(
   requestCapture: Pick<ProviderRequestCapture, "url" | "body">,
 ): readonly CodexAppServerDynamicToolBinding[] {
   return buildCodexDynamicTools(requestCapture).map((tool) => ({
     originalName: tool.name,
     exposedName: toCodexAppServerDynamicToolName(tool.name),
-    description: tool.description,
-    inputSchema: tool.inputSchema,
+    description: compactCodexDynamicToolDescription(tool.description),
+    inputSchema: sanitizeCodexDynamicToolSchema(tool.inputSchema) as Record<string, unknown>,
   }));
 }
 
@@ -8802,18 +9207,7 @@ export function normalizeCodexAppServerModelName(model: string): string {
   return trimmed.includes("/") ? (trimmed.split("/").at(-1) ?? "").trim() : trimmed;
 }
 
-export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): string {
-  const requestShape = readCodexExecutionRequestShape(requestCapture);
-  const rawMessages =
-    requestShape === "chat-completions"
-      ? Array.isArray(requestCapture.body.messages)
-        ? requestCapture.body.messages
-        : []
-      : typeof requestCapture.body.input === "string"
-        ? [{ role: "user", content: requestCapture.body.input }]
-        : Array.isArray(requestCapture.body.input)
-          ? requestCapture.body.input
-          : [];
+function buildCodexTurnInstructions(requestCapture: ProviderRequestCapture): string {
   const dynamicToolBindings = buildCodexAppServerDynamicToolBindings(requestCapture);
   const dynamicToolNames = dynamicToolBindings.map((tool) =>
     tool.originalName === tool.exposedName
@@ -8837,6 +9231,106 @@ export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): st
     ].includes(tool.originalName),
   );
   const hostedToolNames = readCodexHostedToolNames(requestCapture);
+  return [
+    "You are answering an OpenAI-compatible runtime request through Codex Subscription.",
+    "Respond to the conversation directly.",
+    "Built-in web search is allowed when helpful.",
+    ...(hostedToolNames.length > 0
+      ? [`Requested hosted tools for this turn: ${summarizeCodexToolNameList(hostedToolNames)}.`]
+      : []),
+    ...(dynamicToolNames.length > 0
+      ? [
+          `Request-scoped dynamic tools are available for this turn: ${summarizeCodexToolNameList(dynamicToolNames)}.`,
+        ]
+      : []),
+    ...(hasRequestScopedFileTools
+      ? [
+          "Request-scoped file tools only operate inside the managed Codex workspace.",
+          "When the user references an absolute or external filesystem path outside that workspace, use shell tools to inspect and read it instead of assuming the path is inaccessible.",
+          "If a shell command successfully lists or reads an external path, continue with shell-based inspection rather than asking the user to copy files into the workspace.",
+        ]
+      : []),
+    "Use any available hosted or request-scoped tools whenever they help satisfy the request, including file and shell operations when exposed through those tools.",
+    "After completing any needed tool work, answer the conversation directly.",
+  ].join("\n");
+}
+
+type CodexTurnTextItemKind = "instruction" | "developer" | "user" | "assistant" | "tool";
+
+function codexTurnTextItemKindForRoleLabel(
+  roleLabel: string,
+): Exclude<CodexTurnTextItemKind, "instruction"> {
+  switch (roleLabel) {
+    case "DEVELOPER":
+      return "developer";
+    case "ASSISTANT":
+      return "assistant";
+    case "TOOL":
+      return "tool";
+    default:
+      return "user";
+  }
+}
+
+function readCodexHistoricalToolCallArgumentKeys(argumentsValue: unknown): readonly string[] {
+  let parsedArguments: unknown = argumentsValue;
+  if (typeof parsedArguments === "string") {
+    try {
+      parsedArguments = JSON.parse(parsedArguments) as unknown;
+    } catch {
+      return [];
+    }
+  }
+  if (
+    typeof parsedArguments !== "object" ||
+    parsedArguments === null ||
+    Array.isArray(parsedArguments)
+  ) {
+    return [];
+  }
+  return Object.keys(parsedArguments).slice(0, 6);
+}
+
+function summarizeCodexHistoricalToolCalls(toolCalls: readonly unknown[]): string {
+  const summaries = toolCalls.flatMap((toolCall) => {
+    if (typeof toolCall !== "object" || toolCall === null) {
+      return [];
+    }
+    const record = toolCall as {
+      readonly id?: unknown;
+      readonly function?: {
+        readonly name?: unknown;
+        readonly arguments?: unknown;
+      } | null;
+    };
+    const toolName =
+      typeof record.function?.name === "string" && record.function.name.trim().length > 0
+        ? record.function.name.trim()
+        : "function";
+    const toolId =
+      typeof record.id === "string" && record.id.trim().length > 0 ? ` (${record.id.trim()})` : "";
+    const argumentKeys = readCodexHistoricalToolCallArgumentKeys(record.function?.arguments);
+    const keySummary = argumentKeys.length > 0 ? ` args: ${argumentKeys.join(", ")}` : "";
+    return [`${toolName}${toolId}${keySummary}`];
+  });
+  return summaries.length > 0 ? summaries.join(", ") : "function tool calls";
+}
+
+type PreparedCodexTurnInputItem =
+  | {
+      readonly type: "text";
+      readonly text: string;
+      readonly text_elements: readonly [];
+      readonly compactKind: CodexTurnTextItemKind;
+    }
+  | {
+      readonly type: "localImage";
+      readonly path: string;
+      readonly detail?: string;
+    };
+
+export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): string {
+  const rawMessages = readCodexTurnMessages(requestCapture);
   const conversation = rawMessages
     .map((message) => {
       if (typeof message !== "object" || message === null) {
@@ -8862,30 +9356,264 @@ export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): st
     .join("\n\n");
 
   return [
-    "You are answering an OpenAI-compatible runtime request through Codex Subscription.",
-    "Respond to the conversation directly.",
-    "Built-in web search is allowed when helpful.",
-    ...(hostedToolNames.length > 0
-      ? [`Requested hosted tools for this turn: ${hostedToolNames.join(", ")}.`]
-      : []),
-    ...(dynamicToolNames.length > 0
-      ? [
-          `Request-scoped dynamic tools are available for this turn: ${dynamicToolNames.join(", ")}.`,
-        ]
-      : []),
-    ...(hasRequestScopedFileTools
-      ? [
-          "Request-scoped file tools only operate inside the managed Codex workspace.",
-          "When the user references an absolute or external filesystem path outside that workspace, use shell tools to inspect and read it instead of assuming the path is inaccessible.",
-          "If a shell command successfully lists or reads an external path, continue with shell-based inspection rather than asking the user to copy files into the workspace.",
-        ]
-      : []),
-    "Use any available hosted or request-scoped tools whenever they help satisfy the request, including file and shell operations when exposed through those tools.",
-    "After completing any needed tool work, answer the conversation directly.",
+    buildCodexTurnInstructions(requestCapture),
     "",
     "Conversation:",
     conversation.length > 0 ? conversation : "[USER]\n(empty request)",
   ].join("\n");
+}
+
+type CodexAppServerTurnInputItem =
+  | {
+      readonly type: "text";
+      readonly text: string;
+      readonly text_elements: readonly [];
+    }
+  | {
+      readonly type: "localImage";
+      readonly path: string;
+      readonly detail?: string;
+    };
+
+function normalizeCodexAppServerMessageRoleLabel(role: unknown): string {
+  switch (typeof role === "string" ? role.trim().toLowerCase() : "") {
+    case "system":
+    case "developer":
+      return "DEVELOPER";
+    case "assistant":
+      return "ASSISTANT";
+    case "tool":
+      return "TOOL";
+    default:
+      return "USER";
+  }
+}
+
+function appendCodexTextInputItem(
+  items: PreparedCodexTurnInputItem[],
+  text: string,
+  compactKind: CodexTurnTextItemKind,
+): void {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) {
+    return;
+  }
+  items.push({
+    type: "text",
+    text: trimmed,
+    text_elements: [],
+    compactKind,
+  });
+}
+
+function resolveCodexImageFileExtension(mimeType: string | null, sourceUrl: string): string {
+  const normalizedMimeType = mimeType?.trim().toLowerCase() ?? "";
+  if (normalizedMimeType === "image/jpeg" || normalizedMimeType === "image/jpg") {
+    return "jpg";
+  }
+  if (normalizedMimeType === "image/webp") {
+    return "webp";
+  }
+  if (normalizedMimeType === "image/gif") {
+    return "gif";
+  }
+  if (normalizedMimeType === "image/bmp") {
+    return "bmp";
+  }
+  if (normalizedMimeType === "image/svg+xml") {
+    return "svg";
+  }
+  if (normalizedMimeType === "image/png") {
+    return "png";
+  }
+  try {
+    const pathname = new URL(sourceUrl).pathname;
+    const extension = path.extname(pathname).replace(/^\./, "").trim().toLowerCase();
+    return extension.length > 0 ? extension : "png";
+  } catch {
+    return "png";
+  }
+}
+
+async function stageCodexAppServerImageInput(input: {
+  readonly workspaceRoot: string;
+  readonly sourceUrl: string;
+  readonly index: number;
+}): Promise<string> {
+  const imageDirectory = path.join(input.workspaceRoot, ".codex-inline-images");
+  await mkdir(imageDirectory, { recursive: true });
+  let mimeType: string | null = null;
+  let bytes: Uint8Array;
+  if (input.sourceUrl.startsWith("data:")) {
+    const match = /^data:([^;,]+)?;base64,(.+)$/i.exec(input.sourceUrl);
+    if (!match || typeof match[2] !== "string") {
+      throw new Error("Unsupported inline image input: expected a base64 data URL.");
+    }
+    mimeType = typeof match[1] === "string" ? match[1] : null;
+    bytes = Buffer.from(match[2], "base64");
+  } else {
+    const response = await fetch(input.sourceUrl);
+    if (!response.ok) {
+      throw new Error(
+        `Failed to download remote image input: ${response.status} ${response.statusText}`,
+      );
+    }
+    mimeType = response.headers.get("content-type");
+    bytes = new Uint8Array(await response.arrayBuffer());
+  }
+  const extension = resolveCodexImageFileExtension(mimeType, input.sourceUrl);
+  const imagePath = path.join(imageDirectory, `image-${input.index}.${extension}`);
+  await writeFile(imagePath, bytes);
+  return imagePath;
+}
+
+async function buildCodexAppServerTurnItemsForMessage(
+  message: OpenAIChatCompletionsMessage,
+  workspaceRoot: string,
+  imageIndexRef: { current: number },
+): Promise<readonly PreparedCodexTurnInputItem[]> {
+  const items: PreparedCodexTurnInputItem[] = [];
+  const roleLabel = normalizeCodexAppServerMessageRoleLabel(message.role);
+  const compactKind = codexTurnTextItemKindForRoleLabel(roleLabel);
+  let pendingText = `[${roleLabel}]`;
+  if (typeof message.content === "string" && message.content.length > 0) {
+    pendingText = `${pendingText}\n${message.content}`;
+  } else if (Array.isArray(message.content)) {
+    for (const entry of message.content) {
+      if (typeof entry !== "object" || entry === null) {
+        continue;
+      }
+      if (typeof entry.text === "string" && entry.text.length > 0) {
+        pendingText = `${pendingText}\n${entry.text}`;
+      }
+      const imageUrlRecord =
+        typeof entry.image_url === "object" && entry.image_url !== null
+          ? (entry.image_url as { readonly url?: unknown; readonly detail?: unknown })
+          : null;
+      if (entry.type === "image_url" && typeof imageUrlRecord?.url === "string") {
+        appendCodexTextInputItem(items, pendingText, compactKind);
+        pendingText = "";
+        imageIndexRef.current += 1;
+        const imagePath = await stageCodexAppServerImageInput({
+          workspaceRoot,
+          sourceUrl: imageUrlRecord.url,
+          index: imageIndexRef.current,
+        });
+        items.push({
+          type: "localImage",
+          path: imagePath,
+          ...(typeof imageUrlRecord.detail === "string" ? { detail: imageUrlRecord.detail } : {}),
+        });
+      }
+    }
+  }
+  if (Array.isArray(message.tool_calls) && message.tool_calls.length > 0) {
+    pendingText = `${pendingText}${pendingText.length > 0 ? "\n" : ""}Tool calls: ${summarizeCodexHistoricalToolCalls(message.tool_calls)}`;
+  }
+  if (typeof message.tool_call_id === "string" && message.tool_call_id.length > 0) {
+    pendingText = `${pendingText}${pendingText.length > 0 ? "\n" : ""}Tool call id: ${message.tool_call_id}`;
+  }
+  if (pendingText.length === 0 && items.length === 0) {
+    pendingText = `[${roleLabel}]\n(empty)`;
+  } else if (pendingText.length > 0 && pendingText === `[${roleLabel}]`) {
+    pendingText = `${pendingText}\n(empty)`;
+  }
+  appendCodexTextInputItem(items, pendingText, compactKind);
+  return items;
+}
+
+function compactPreparedCodexTurnInputItems(
+  items: readonly PreparedCodexTurnInputItem[],
+): readonly CodexAppServerTurnInputItem[] {
+  const textItems = items.map((item) => {
+    if (item.type !== "text") {
+      return item;
+    }
+    const softLimit = CODEX_TURN_TEXT_ITEM_SOFT_LIMITS[item.compactKind];
+    return {
+      ...item,
+      text: compactCodexText(item.text, softLimit, `${item.compactKind} message`),
+    };
+  });
+
+  const totalChars = textItems.reduce(
+    (sum, item) => sum + (item.type === "text" ? item.text.length : 0),
+    0,
+  );
+  if (totalChars <= CODEX_TURN_TEXT_ITEM_TOTAL_BUDGET_CHARS) {
+    return textItems.map((item) =>
+      item.type === "text"
+        ? {
+            type: "text" as const,
+            text: item.text,
+            text_elements: [],
+          }
+        : item,
+    );
+  }
+
+  let overflowChars = totalChars - CODEX_TURN_TEXT_ITEM_TOTAL_BUDGET_CHARS;
+  const compactedItems = [...textItems];
+  for (let index = 1; index < compactedItems.length && overflowChars > 0; index += 1) {
+    const item = compactedItems[index];
+    if (!item || item.type !== "text") {
+      continue;
+    }
+    const minLimit = CODEX_TURN_TEXT_ITEM_MIN_LIMITS[item.compactKind];
+    if (item.text.length <= minLimit) {
+      continue;
+    }
+    const nextText = compactCodexText(item.text, minLimit, `${item.compactKind} message`);
+    overflowChars -= Math.max(0, item.text.length - nextText.length);
+    compactedItems[index] = {
+      ...item,
+      text: nextText,
+    };
+  }
+
+  return compactedItems.map((item) =>
+    item.type === "text"
+      ? {
+          type: "text" as const,
+          text: item.text,
+          text_elements: [],
+        }
+      : item,
+  );
+}
+
+function buildCodexAppServerTurnInput(
+  requestCapture: ProviderRequestCapture,
+  workspaceRoot: string,
+): Promise<readonly CodexAppServerTurnInputItem[]> {
+  return buildCodexAppServerTurnInputInternal(requestCapture, workspaceRoot);
+}
+
+async function buildCodexAppServerTurnInputInternal(
+  requestCapture: ProviderRequestCapture,
+  workspaceRoot: string,
+): Promise<readonly CodexAppServerTurnInputItem[]> {
+  const inputItems: PreparedCodexTurnInputItem[] = [
+    {
+      type: "text",
+      text: buildCodexTurnInstructions(requestCapture),
+      text_elements: [],
+      compactKind: "instruction",
+    },
+  ];
+  const imageIndexRef = { current: 0 };
+  for (const message of readCodexTurnMessages(requestCapture)) {
+    if (typeof message !== "object" || message === null) {
+      continue;
+    }
+    inputItems.push(
+      ...(await buildCodexAppServerTurnItemsForMessage(message, workspaceRoot, imageIndexRef)),
+    );
+  }
+  if (inputItems.length === 1) {
+    appendCodexTextInputItem(inputItems, "[USER]\n(empty request)", "user");
+  }
+  return compactPreparedCodexTurnInputItems(inputItems);
 }
 
 function serializeCodexToolOutput(output: unknown): string {
@@ -9025,7 +9753,23 @@ export async function cleanupManagedCodexExecutionWorkspace(
 }
 
 function appendCodexAppServerStderr(message: string, stderrText: string): string {
-  const trimmed = stderrText.trim();
+  const trimmed = stderrText
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (line.length === 0) {
+        return false;
+      }
+      if (line.startsWith("WARNING: proceeding, even though we could not create PATH aliases")) {
+        return false;
+      }
+      if (line.includes('"level":"WARN"')) {
+        return false;
+      }
+      return true;
+    })
+    .join("\n")
+    .trim();
   return trimmed.length > 0 ? `${message}\n${trimmed}` : message;
 }
 
@@ -9182,9 +9926,12 @@ export async function executeCodexAppServerTurnOverStdio(input: {
     let settled = false;
     let threadId = "";
     let threadStartAcknowledged = false;
-    let turnStarted = false;
+    let turnInFlight = false;
+    let turnAttemptCount = 0;
+    let nextRequestId = 3;
     let outputText = "";
     let finalAgentText = "";
+    let latestTurnError: string | null = null;
 
     const timeout = setTimeout(() => {
       fail(new Error("Timed out waiting for Codex Subscription execution to complete."));
@@ -9235,6 +9982,19 @@ export async function executeCodexAppServerTurnOverStdio(input: {
       });
     }
 
+    const buildEmptyTurnRetryInput = (): readonly CodexAppServerTurnInputItem[] => [
+      {
+        type: "text",
+        text: [
+          "Your previous turn completed without producing any assistant-visible output.",
+          "Continue from the existing thread context and finish the request now.",
+          "If the request depends on workspace files or another request-scoped tool, call that tool before answering.",
+          "Do not end the turn without either making the needed tool call or producing the final answer.",
+        ].join(" "),
+        text_elements: [],
+      },
+    ];
+
     const send = (message: Record<string, unknown>): void => {
       if (!input.child.stdin.writable || input.child.stdin.destroyed) {
         fail(new Error("Codex app-server stdin closed before the request completed."));
@@ -9262,22 +10022,18 @@ export async function executeCodexAppServerTurnOverStdio(input: {
       });
     };
 
-    const maybeStartTurn = (): void => {
-      if (turnStarted || !threadStartAcknowledged || threadId.length === 0) {
+    const startTurn = (turnInput: readonly CodexAppServerTurnInputItem[]): void => {
+      if (turnInFlight || !threadStartAcknowledged || threadId.length === 0 || settled) {
         return;
       }
-      turnStarted = true;
+      turnInFlight = true;
+      turnAttemptCount += 1;
       send({
-        id: 3,
+        id: nextRequestId,
         method: "turn/start",
         params: {
           threadId,
-          input: [
-            {
-              type: "text",
-              text: buildCodexTurnPrompt(input.requestCapture),
-            },
-          ],
+          input: turnInput,
           cwd: input.workspaceRoot,
           approvalPolicy: "never",
           sandboxPolicy: {
@@ -9286,6 +10042,20 @@ export async function executeCodexAppServerTurnOverStdio(input: {
           ...(structuredOutputSchema ? { outputSchema: structuredOutputSchema } : {}),
         },
       });
+      nextRequestId += 1;
+    };
+
+    const maybeStartTurn = (): void => {
+      if (turnInFlight || !threadStartAcknowledged || threadId.length === 0) {
+        return;
+      }
+      void (async () => {
+        try {
+          startTurn(await buildCodexAppServerTurnInput(input.requestCapture, input.workspaceRoot));
+        } catch (error) {
+          fail(error instanceof Error ? error : new Error(String(error)));
+        }
+      })();
     };
 
     const onMessage = async (message: Record<string, unknown>): Promise<void> => {
@@ -9417,20 +10187,78 @@ export async function executeCodexAppServerTurnOverStdio(input: {
           return;
         }
 
-        if (message.method === "turn/failed") {
+        if (message.method === "error") {
           const params =
             typeof message.params === "object" && message.params !== null
               ? (message.params as Record<string, unknown>)
               : {};
-          fail(
-            new Error(
-              readCodexAppServerErrorMessage(params.error, "Codex Subscription turn failed."),
-            ),
+          const errorMessage = readCodexAppServerErrorMessage(
+            params.error,
+            "Codex Subscription turn failed.",
           );
+          latestTurnError = errorMessage;
+          if (params.willRetry !== true) {
+            turnInFlight = false;
+            fail(new Error(errorMessage));
+          }
+          return;
+        }
+
+        if (message.method === "turn/failed") {
+          turnInFlight = false;
+          const params =
+            typeof message.params === "object" && message.params !== null
+              ? (message.params as Record<string, unknown>)
+              : {};
+          latestTurnError = readCodexAppServerErrorMessage(
+            params.error,
+            "Codex Subscription turn failed.",
+          );
+          fail(new Error(latestTurnError));
           return;
         }
 
         if (message.method === "turn/completed") {
+          turnInFlight = false;
+          const params =
+            typeof message.params === "object" && message.params !== null
+              ? (message.params as Record<string, unknown>)
+              : {};
+          const turn =
+            typeof params.turn === "object" && params.turn !== null
+              ? (params.turn as Record<string, unknown>)
+              : {};
+          const turnStatus = readCodexAppServerTurnStatus(turn);
+          const completedTurnError =
+            latestTurnError ??
+            (turn.error !== undefined
+              ? readCodexAppServerErrorMessage(turn.error, "Codex Subscription turn failed.")
+              : params.error !== undefined
+                ? readCodexAppServerErrorMessage(params.error, "Codex Subscription turn failed.")
+                : null);
+          if (
+            turnStatus === "failed" ||
+            turnStatus === "cancelled" ||
+            turnStatus === "systemError"
+          ) {
+            fail(new Error(completedTurnError ?? "Codex Subscription turn failed."));
+            return;
+          }
+          if (finalAgentText.length === 0 && outputText.length === 0) {
+            if (turnAttemptCount < 2) {
+              outputText = "";
+              finalAgentText = "";
+              latestTurnError = null;
+              startTurn(buildEmptyTurnRetryInput());
+              return;
+            }
+            fail(
+              new Error(
+                "Codex Subscription turn completed without producing an assistant response.",
+              ),
+            );
+            return;
+          }
           succeed();
           return;
         }
@@ -9607,6 +10435,8 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
         }
 
         const requestShape = readCodexExecutionRequestShape(input.requestCapture);
+        const surfacedDynamicToolCalls =
+          completedTurn.dynamicToolExecutions.length > 0 ? [] : completedTurn.dynamicToolCalls;
         const body =
           requestShape === "chat-completions"
             ? {
@@ -9615,12 +10445,15 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
                 choices: [
                   {
                     index: 0,
-                    finish_reason: completedTurn.finishReason,
+                    finish_reason:
+                      surfacedDynamicToolCalls.length > 0
+                        ? "tool_calls"
+                        : completedTurn.finishReason,
                     message: {
                       role: "assistant",
                       content: completedTurn.outputText,
-                      ...(completedTurn.dynamicToolCalls.length > 0
-                        ? { tool_calls: completedTurn.dynamicToolCalls }
+                      ...(surfacedDynamicToolCalls.length > 0
+                        ? { tool_calls: surfacedDynamicToolCalls }
                         : {}),
                     },
                   },
@@ -9633,7 +10466,7 @@ function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
             : {
                 id: `resp_${sanitizeSegment(input.requestId)}`,
                 output: [
-                  ...completedTurn.dynamicToolCalls.map((toolCall) => ({
+                  ...surfacedDynamicToolCalls.map((toolCall) => ({
                     type: "function_call" as const,
                     id: toolCall.id,
                     call_id: toolCall.id,
@@ -9710,6 +10543,190 @@ function readStoredOauthTokenFileSync(
   } catch {
     return null;
   }
+}
+
+function persistStoredOauthTokenFileSync(
+  runtimeStateRoot: string,
+  scopeId: string,
+  credentialRef: string,
+  payload: StoredOauthTokenPayload,
+): void {
+  const filePath = resolveCredentialFilePath(runtimeStateRoot, scopeId, credentialRef);
+  mkdirSync(path.dirname(filePath), { recursive: true });
+  writeFileSync(filePath, JSON.stringify(payload, null, 2), "utf8");
+}
+
+function resolveStandaloneRuntimeRoot(runtimeStateRoot: string): string {
+  return path.join(path.dirname(runtimeStateRoot), "standalone-runtime");
+}
+
+function resolveStandaloneRuntimeCredentialFilePath(
+  runtimeStateRoot: string,
+  credentialRef: string,
+): string {
+  const safeSegments = credentialRef
+    .split(/[\\/]+/)
+    .filter((segment) => segment.length > 0 && segment !== "." && segment !== "..")
+    .map(sanitizeSegment);
+  return `${path.join(resolveStandaloneRuntimeRoot(runtimeStateRoot), "credentials", ...safeSegments)}.json`;
+}
+
+function readStandaloneStoredOauthTokenFileSync(
+  runtimeStateRoot: string,
+  credentialRef: string,
+): StoredOauthTokenPayload | null {
+  try {
+    const filePath = resolveStandaloneRuntimeCredentialFilePath(runtimeStateRoot, credentialRef);
+    return JSON.parse(readFileSync(filePath, "utf8")) as StoredOauthTokenPayload;
+  } catch {
+    return null;
+  }
+}
+
+function readStoredCodexAuthFreshnessMs(payload: StoredOauthTokenPayload | null): number {
+  const authPayload = readStoredCodexAuthSnapshot(payload);
+  if (authPayload) {
+    const refreshedAtMs = Date.parse(String(authPayload.last_refresh ?? ""));
+    if (Number.isFinite(refreshedAtMs)) {
+      return refreshedAtMs;
+    }
+  }
+  return typeof payload?.saved_at_ms === "number" && Number.isFinite(payload.saved_at_ms)
+    ? payload.saved_at_ms
+    : 0;
+}
+
+function hasStoredCodexAuthTokens(payload: StoredOauthTokenPayload | null): boolean {
+  const authPayload = readStoredCodexAuthSnapshot(payload);
+  if (!authPayload) {
+    return false;
+  }
+  const accessToken =
+    typeof authPayload.tokens?.access_token === "string"
+      ? authPayload.tokens.access_token.trim()
+      : "";
+  const refreshToken =
+    typeof authPayload.tokens?.refresh_token === "string"
+      ? authPayload.tokens.refresh_token.trim()
+      : "";
+  return accessToken.length > 0 || refreshToken.length > 0;
+}
+
+function readFreshestStoredCodexOauthTokenFileSync(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly credentialRef: string;
+}): {
+  readonly payload: StoredOauthTokenPayload | null;
+  readonly repairedBridgeCredential: boolean;
+} {
+  const bridgePayload = readStoredOauthTokenFileSync(
+    input.runtimeStateRoot,
+    input.scopeId,
+    input.credentialRef,
+  );
+  const standalonePayload = readStandaloneStoredOauthTokenFileSync(
+    input.runtimeStateRoot,
+    input.credentialRef,
+  );
+  const bridgeHasCodexTokens = hasStoredCodexAuthTokens(bridgePayload);
+  const standaloneHasCodexTokens = hasStoredCodexAuthTokens(standalonePayload);
+  if (!standaloneHasCodexTokens) {
+    return {
+      payload: bridgeHasCodexTokens ? bridgePayload : bridgePayload,
+      repairedBridgeCredential: false,
+    };
+  }
+  const freshestStandalonePayload = standalonePayload;
+  if (!freshestStandalonePayload) {
+    return {
+      payload: bridgeHasCodexTokens ? bridgePayload : bridgePayload,
+      repairedBridgeCredential: false,
+    };
+  }
+  const bridgeFreshnessMs = readStoredCodexAuthFreshnessMs(bridgePayload);
+  const standaloneFreshnessMs = readStoredCodexAuthFreshnessMs(freshestStandalonePayload);
+  const shouldRepairBridge =
+    !bridgeHasCodexTokens ||
+    standaloneFreshnessMs > bridgeFreshnessMs ||
+    (standaloneFreshnessMs === bridgeFreshnessMs &&
+      JSON.stringify(freshestStandalonePayload) !== JSON.stringify(bridgePayload));
+  if (!shouldRepairBridge) {
+    return {
+      payload: bridgeHasCodexTokens ? bridgePayload : freshestStandalonePayload,
+      repairedBridgeCredential: false,
+    };
+  }
+  try {
+    persistStoredOauthTokenFileSync(
+      input.runtimeStateRoot,
+      input.scopeId,
+      input.credentialRef,
+      freshestStandalonePayload,
+    );
+  } catch {
+    // Best effort: still use the fresher standalone payload for the current request.
+  }
+  return {
+    payload: freshestStandalonePayload,
+    repairedBridgeCredential: true,
+  };
+}
+
+function filterRecoveredCodexCooldownDeniedEndpoints(input: {
+  readonly databasePath: string;
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly runtimeEndpoints: readonly {
+    endpointId: string;
+    providerAccountId: string;
+  }[];
+  readonly accounts: readonly ProviderAccountRecord[];
+  readonly deniedEndpointIds: readonly string[];
+}): readonly string[] {
+  if (input.deniedEndpointIds.length === 0) {
+    return input.deniedEndpointIds;
+  }
+  const cooldownState = readExecutionFailureCooldownState(input.databasePath);
+  if (Object.keys(cooldownState).length === 0) {
+    return input.deniedEndpointIds;
+  }
+  const accountsById = new Map(
+    input.accounts.map((account) => [account.providerAccountId, account] as const),
+  );
+  const providerAccountIdByEndpointId = new Map(
+    input.runtimeEndpoints.map(
+      (endpoint) => [endpoint.endpointId, endpoint.providerAccountId] as const,
+    ),
+  );
+  const retainedEndpointIds: string[] = [];
+  for (const endpointId of input.deniedEndpointIds) {
+    const cooldownRecord = cooldownState[endpointId];
+    if (!cooldownRecord || cooldownRecord.lastErrorClass !== "provider_auth_error") {
+      retainedEndpointIds.push(endpointId);
+      continue;
+    }
+    const providerAccountId = providerAccountIdByEndpointId.get(endpointId);
+    const account = providerAccountId ? accountsById.get(providerAccountId) : undefined;
+    if (!account || !isCodexSubscriptionAccount(account)) {
+      retainedEndpointIds.push(endpointId);
+      continue;
+    }
+    const repairedAuth = readFreshestStoredCodexOauthTokenFileSync({
+      runtimeStateRoot: input.runtimeStateRoot,
+      scopeId: input.scopeId,
+      credentialRef: account.credentialRef.ref,
+    });
+    if (!repairedAuth.repairedBridgeCredential) {
+      retainedEndpointIds.push(endpointId);
+      continue;
+    }
+    clearExecutionFailureCooldown({
+      databasePath: input.databasePath,
+      endpointId,
+    });
+  }
+  return retainedEndpointIds;
 }
 
 function listStoredCredentialRefsSync(runtimeStateRoot: string, scopeId: string): string[] {
@@ -10972,10 +11989,11 @@ function buildContinuationExecutionRequest(
   outputText: string,
   keepTools: boolean,
 ): RuntimeExecutionRequest {
+  const { toolChoice: _toolChoice, ...requestWithoutToolChoice } = executionRequest;
   const continuationBase = keepTools
-    ? executionRequest
+    ? requestWithoutToolChoice
     : (() => {
-        const { tools: _tools, ...rest } = executionRequest;
+        const { tools: _tools, ...rest } = requestWithoutToolChoice;
         return rest;
       })();
   const executionsByToolCallId = new Map(
@@ -11005,6 +12023,39 @@ function buildContinuationExecutionRequest(
       followUpInstructionMessage,
     ],
   };
+}
+
+function dedupeToolExecutions(
+  executions: readonly ToolRegistryExecution[],
+): readonly ToolRegistryExecution[] {
+  const seen = new Set<string>();
+  const deduped: ToolRegistryExecution[] = [];
+  for (const execution of executions) {
+    const key = JSON.stringify({
+      toolCallId: execution.toolCallId,
+      toolName: execution.toolName,
+      connectorId: execution.connectorId,
+      connectorKind: execution.connectorKind,
+      status: execution.status,
+      output: execution.output,
+      diagnostics: execution.diagnostics,
+    });
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    deduped.push(execution);
+  }
+  return deduped;
+}
+
+function hasRequestScopedDynamicToolExecution(
+  executions: readonly ToolRegistryExecution[],
+): boolean {
+  return executions.some(
+    (execution) =>
+      execution.connectorId === "request-scoped" && execution.connectorKind === "dynamic-tool",
+  );
 }
 
 function createChatCompletionsStreamChunks(
@@ -13880,6 +14931,51 @@ export async function createRuntimeBridgeBackend(
     }
     return [];
   };
+  const collectPersistedPeerAutoReloads = (
+    intent: OperatorIntentV1 | null,
+  ): readonly {
+    modelId: string;
+    assignment?: RuntimeModelRoleAssignmentInput;
+  }[] => {
+    const peerLoads = (intent?.peerLoads ?? []).filter((entry) => entry.autoReload);
+    const modelIds = [...new Set(peerLoads.map((entry) => entry.modelId))];
+    return modelIds.map((modelId) => {
+      const roleIds = peerLoads.find((entry) => entry.modelId === modelId)?.roleIds;
+      return {
+        modelId,
+        assignment: roleIds
+          ? {
+              roleIds,
+              roleAssignmentMode: roleIds.length === 0 ? "all" : "include",
+              enabledRoleIds: roleIds,
+              disabledRoleIds: [],
+            }
+          : undefined,
+      };
+    });
+  };
+  const replayPersistedPeerAutoReloads = async (
+    intent: OperatorIntentV1 | null,
+  ): Promise<{
+    reloaded: number;
+    failed: number;
+  }> => {
+    const persistedReloads = collectPersistedPeerAutoReloads(intent);
+    let reloaded = 0;
+    let failed = 0;
+    for (const entry of persistedReloads) {
+      try {
+        if (await activateConfiguredLocalPeerModel(entry.modelId, entry.assignment)) {
+          reloaded += 1;
+        } else {
+          failed += 1;
+        }
+      } catch {
+        failed += 1;
+      }
+    }
+    return { reloaded, failed };
+  };
   const createLocalPeerAccount = (peer: LocalPeerConfig): ProviderAccountRecord => {
     const providerAccountId = createLocalPeerProviderAccountId(peer.id);
     return {
@@ -16501,9 +17597,16 @@ export async function createRuntimeBridgeBackend(
     const readMergedDeniedExecutionEndpoints = (
       denyEndpoints: readonly string[],
     ): readonly string[] => {
-      const cooldownDeniedEndpoints = readActiveExecutionFailureCooldownEndpointIds({
+      const cooldownDeniedEndpoints = filterRecoveredCodexCooldownDeniedEndpoints({
         databasePath: initialization.databasePath,
-        nowMs: Date.now(),
+        runtimeStateRoot: options.runtimeStateRoot,
+        scopeId: options.scopeId,
+        runtimeEndpoints: executionSnapshot.runtimeEndpoints,
+        accounts: executionSnapshot.accounts,
+        deniedEndpointIds: readActiveExecutionFailureCooldownEndpointIds({
+          databasePath: initialization.databasePath,
+          nowMs: Date.now(),
+        }),
       });
       return [...new Set([...denyEndpoints, ...cooldownDeniedEndpoints])];
     };
@@ -16514,11 +17617,16 @@ export async function createRuntimeBridgeBackend(
       readonly routed: ReturnType<typeof routeRuntimeRequest>;
     } => {
       const mergedDenyEndpoints = readMergedDeniedExecutionEndpoints(denyEndpoints);
+      const allowEndpoints =
+        mergedDenyEndpoints.length > 0 && plan.fallbackAllowEndpoints?.length
+          ? plan.fallbackAllowEndpoints
+          : plan.routingRequest.allowEndpoints;
       return {
         deniedEndpointIds: mergedDenyEndpoints,
         routed: routeRuntimeRequest({
           request: {
             ...plan.routingRequest,
+            ...(allowEndpoints ? { allowEndpoints } : {}),
             ...(mergedDenyEndpoints.length > 0 ? { denyEndpoints: mergedDenyEndpoints } : {}),
           },
           registry: executionSnapshot.registry,
@@ -16723,14 +17831,21 @@ export async function createRuntimeBridgeBackend(
 
       const codexAccount = target.account;
       if (codexAccount && isCodexSubscriptionAccount(codexAccount)) {
-        const credentialPayload = readStoredOauthTokenFileSync(
-          options.runtimeStateRoot,
-          options.scopeId,
-          codexAccount.credentialRef.ref,
-        );
+        const { payload: credentialPayload, repairedBridgeCredential } =
+          readFreshestStoredCodexOauthTokenFileSync({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            credentialRef: codexAccount.credentialRef.ref,
+          });
         const authPayload = readStoredCodexAuthSnapshot(credentialPayload);
         if (!authPayload) {
           throw new Error(OPENAI_CODEX_SUBSCRIPTION_AUTH_MISSING_ERROR);
+        }
+        if (repairedBridgeCredential) {
+          clearExecutionFailureCooldown({
+            databasePath: initialization.databasePath,
+            endpointId: target.endpointId,
+          });
         }
         const codexDynamicTools = buildCodexDynamicTools(requestCapture);
         const codexDynamicToolBindings = buildCodexAppServerDynamicToolBindings(requestCapture);
@@ -17006,12 +18121,14 @@ export async function createRuntimeBridgeBackend(
             retriedEndpointIds.add(error.endpointId);
             continue;
           }
-          recordExecutionFailureCooldown({
-            databasePath: initialization.databasePath,
-            endpointId: error.endpointId,
-            errorClass: error.errorClass,
-            nowMs: Date.now(),
-          });
+          if (shouldRecordExecutionFailureCooldown(error)) {
+            recordExecutionFailureCooldown({
+              databasePath: initialization.databasePath,
+              endpointId: error.endpointId,
+              errorClass: error.errorClass,
+              nowMs: Date.now(),
+            });
+          }
           if (!error.fallbackEligible || deniedEndpointIds.includes(error.endpointId)) {
             throw error;
           }
@@ -17107,13 +18224,16 @@ export async function createRuntimeBridgeBackend(
       executions: continuedToolExecutions,
       diagnostics: continuedToolExecutions.flatMap((toolExecution) => toolExecution.diagnostics),
     };
-    const codexDynamicToolExecutions = [
+    const codexDynamicToolExecutions = dedupeToolExecutions([
       ...(execution.responseCapture.dynamicToolExecutions ?? []),
       ...(codexDynamicToolExecutionsByRequestId.get(requestId) ?? []),
-    ];
+    ]);
     codexDynamicToolExecutionsByRequestId.delete(requestId);
     const toolExecutionResult = {
-      executions: [...codexDynamicToolExecutions, ...bridgedToolExecutionResult.executions],
+      executions: dedupeToolExecutions([
+        ...codexDynamicToolExecutions,
+        ...bridgedToolExecutionResult.executions,
+      ]),
       diagnostics: [
         ...codexDynamicToolExecutions.flatMap((execution) => execution.diagnostics),
         ...bridgedToolExecutionResult.diagnostics,
@@ -17521,9 +18641,7 @@ export async function createRuntimeBridgeBackend(
     const parseControllerGuidanceFromMessages = async (
       messages: readonly OpenAIChatCompletionsMessage[],
       attemptLabel: string,
-    ): Promise<
-      NonNullable<RuntimeRoutingDiagnostics["controllerRouting"]>["acceptedDirectives"] | null
-    > => {
+    ): Promise<ControllerAcceptedDirectives | null> => {
       const controllerPlan: BridgeExecutionPlan = {
         routingRequest: {
           requestId: `${input.requestId}:${attemptLabel}`,
@@ -17559,6 +18677,12 @@ export async function createRuntimeBridgeBackend(
     };
 
     try {
+      const heuristicGuidance = inferHeuristicControllerGuidance({
+        messages: input.messages,
+        toolCount: input.toolCount,
+        roleDefinitions: currentRolePolicy.roleDefinitions,
+        taskDefinitions: currentRolePolicy.taskDefinitions,
+      });
       const guidance =
         (await parseControllerGuidanceFromMessages(controllerMessages, "controller")) ??
         (await parseControllerGuidanceFromMessages(
@@ -17566,12 +18690,6 @@ export async function createRuntimeBridgeBackend(
           "controller:compact-retry",
         ));
       if (guidance === null) {
-        const heuristicGuidance = inferHeuristicControllerGuidance({
-          messages: input.messages,
-          toolCount: input.toolCount,
-          roleDefinitions: currentRolePolicy.roleDefinitions,
-          taskDefinitions: currentRolePolicy.taskDefinitions,
-        });
         const constrainedHeuristicGuidance = heuristicGuidance
           ? constrainControllerGuidanceToCandidatePool({
               guidance: heuristicGuidance,
@@ -17599,7 +18717,10 @@ export async function createRuntimeBridgeBackend(
         };
       }
       const constrainedGuidance = constrainControllerGuidanceToCandidatePool({
-        guidance,
+        guidance: mergeControllerGuidanceDefaults({
+          guidance,
+          heuristic: heuristicGuidance,
+        }),
         candidateEndpointIds,
         registry: executionRegistry,
         runtimeEndpoints,
@@ -17774,6 +18895,12 @@ export async function createRuntimeBridgeBackend(
         const cacheUsed =
           execution.normalized.vendorMetadata?.cacheUsed ??
           execution.responseCapture.vendorMetadata?.cacheUsed;
+        const shouldSuppressResponseToolCalls = hasRequestScopedDynamicToolExecution(
+          toolExecutionResult.executions,
+        );
+        const responseToolCalls = shouldSuppressResponseToolCalls
+          ? []
+          : execution.normalized.toolCalls;
 
         return {
           model: execution.target.modelId,
@@ -17793,10 +18920,12 @@ export async function createRuntimeBridgeBackend(
           ...(execution.normalized.reasoningText
             ? { reasoningText: execution.normalized.reasoningText }
             : {}),
-          finishReason: execution.normalized.finishReason,
-          ...(execution.normalized.toolCalls.length
+          finishReason: shouldSuppressResponseToolCalls
+            ? "stop"
+            : execution.normalized.finishReason,
+          ...(responseToolCalls.length
             ? {
-                toolCalls: execution.normalized.toolCalls.map((toolCall, index) =>
+                toolCalls: responseToolCalls.map((toolCall, index) =>
                   toBridgeToolCall(toolCall, index),
                 ),
               }
@@ -17911,6 +19040,12 @@ export async function createRuntimeBridgeBackend(
       const cacheUsed =
         execution.normalized.vendorMetadata?.cacheUsed ??
         execution.responseCapture.vendorMetadata?.cacheUsed;
+      const shouldSuppressResponseToolCalls = hasRequestScopedDynamicToolExecution(
+        toolExecutionResult.executions,
+      );
+      const responseToolCalls = shouldSuppressResponseToolCalls
+        ? []
+        : execution.normalized.toolCalls;
 
       return {
         responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
@@ -17927,10 +19062,10 @@ export async function createRuntimeBridgeBackend(
             }
           : {}),
         outputText: execution.normalized.outputText,
-        finishReason: execution.normalized.finishReason,
-        ...(execution.normalized.toolCalls.length
+        finishReason: shouldSuppressResponseToolCalls ? "stop" : execution.normalized.finishReason,
+        ...(responseToolCalls.length
           ? {
-              toolCalls: execution.normalized.toolCalls.map((toolCall, index) =>
+              toolCalls: responseToolCalls.map((toolCall, index) =>
                 toBridgeToolCall(toolCall, index),
               ),
             }
@@ -20297,6 +21432,9 @@ export async function createRuntimeBridgeBackend(
       const peersPath = path.join(options.runtimeStateRoot, "peers.json");
       await writeFile(peersPath, JSON.stringify(body, null, 2));
       await syncLocalPeerState(body);
+      if (body.length > 0) {
+        await replayPersistedPeerAutoReloads(readOperatorIntent(operatorIntentLocation));
+      }
       rebuildCurrentState();
       return body;
     },
@@ -20526,35 +21664,29 @@ export async function createRuntimeBridgeBackend(
         }
 
         const manifest = operatorIntentRead.intent;
-        const peerLoads = (manifest?.peerLoads ?? []).filter((entry) => entry.autoReload);
-        const modelIds = [...new Set(peerLoads.map((entry) => entry.modelId))];
-        let reloaded = 0;
-        let failed = 0;
-        for (const modelId of modelIds) {
-          const roleIds = peerLoads.find((entry) => entry.modelId === modelId)?.roleIds;
-          try {
-            if (
-              await activateConfiguredLocalPeerModel(
-                modelId,
-                roleIds
-                  ? {
-                      roleIds,
-                      roleAssignmentMode: roleIds.length === 0 ? "all" : "include",
-                      enabledRoleIds: roleIds,
-                      disabledRoleIds: [],
-                    }
-                  : undefined,
-              )
-            ) {
-              reloaded += 1;
-            } else {
-              failed += 1;
-            }
-          } catch {
-            failed += 1;
-          }
+        const persistedReloads = collectPersistedPeerAutoReloads(manifest);
+        if (persistedReloads.length === 0) {
+          return {
+            status: "skipped",
+            message: "no peer loads in manifest",
+            details: { reloaded: 0, failed: 0 },
+          };
         }
 
+        const peers = await readStoredPeers();
+        if (peers.length === 0) {
+          return {
+            status: "skipped",
+            message: "no peer endpoints configured",
+            details: {
+              deferred: persistedReloads.length,
+              reloaded: 0,
+              failed: 0,
+            },
+          };
+        }
+
+        const { reloaded, failed } = await replayPersistedPeerAutoReloads(manifest);
         if (failed > 0) {
           return {
             status: "degraded",
@@ -20564,8 +21696,7 @@ export async function createRuntimeBridgeBackend(
         }
 
         return {
-          status: modelIds.length === 0 ? "skipped" : "ready",
-          message: modelIds.length === 0 ? "no peer loads in manifest" : undefined,
+          status: "ready",
           details: { reloaded, failed },
         };
       },

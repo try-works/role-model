@@ -48,6 +48,11 @@ mode plus local/remote execution scope.
 - fallback order looks sane
 - the request trail in Observe supports the Router story
 
+For Codex Subscription-backed GPT 5.4 traffic, also confirm whether the request needed tools or non-text
+input. Those turns can intentionally pin the first attempt to the eligible subscription endpoint and only
+reopen the wider fallback pool after an execution failure, so the decision and request trail should make that
+visible.
+
 ## Strategy-specific checks
 
 After saving:

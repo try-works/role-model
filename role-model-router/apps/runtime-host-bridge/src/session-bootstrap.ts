@@ -8,6 +8,8 @@ export const SESSION_BOOTSTRAP_STAGE_ORDER = [
   "inventory",
 ] as const;
 
+const SESSION_BOOTSTRAP_ADVISORY_DEGRADED_STAGE_IDS = new Set<BootstrapStageId>(["peers"]);
+
 export type BootstrapStageId = (typeof SESSION_BOOTSTRAP_STAGE_ORDER)[number];
 
 export type BootstrapStageStatus =
@@ -84,10 +86,27 @@ export function summarizeSessionBootstrapStatus(
   if (stages.some((stage) => stage.stageId === "credentials" && stage.status === "failed")) {
     return "blocked";
   }
-  if (stages.some((stage) => stage.status === "failed" || stage.status === "degraded")) {
+  if (stages.some((stage) => stage.status === "failed")) {
     return "degraded";
   }
-  if (stages.every((stage) => stage.status === "ready" || stage.status === "skipped")) {
+  if (
+    stages.some(
+      (stage) =>
+        stage.status === "degraded" &&
+        !SESSION_BOOTSTRAP_ADVISORY_DEGRADED_STAGE_IDS.has(stage.stageId),
+    )
+  ) {
+    return "degraded";
+  }
+  if (
+    stages.every(
+      (stage) =>
+        stage.status === "ready" ||
+        stage.status === "skipped" ||
+        (stage.status === "degraded" &&
+          SESSION_BOOTSTRAP_ADVISORY_DEGRADED_STAGE_IDS.has(stage.stageId)),
+    )
+  ) {
     return "ready";
   }
   return "pending";

@@ -64,12 +64,24 @@ export interface PromptCacheRequest {
   readonly key?: string;
 }
 
+export type RuntimeExecutionToolChoice =
+  | "none"
+  | "auto"
+  | "required"
+  | {
+      readonly type: "function";
+      readonly function: {
+        readonly name: string;
+      };
+    };
+
 export interface RuntimeExecutionRequest {
   readonly messages: readonly RuntimeExecutionMessage[];
   readonly maxOutputTokens?: number;
   readonly temperature?: number;
   readonly stream?: boolean;
   readonly tools?: readonly RuntimeExecutionToolDefinition[];
+  readonly toolChoice?: RuntimeExecutionToolChoice;
   readonly structuredOutput?: StructuredOutputRequest | null;
   readonly promptCache?: PromptCacheRequest;
 }
