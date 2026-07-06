@@ -9,16 +9,19 @@
   - added Codex Subscription first-attempt pinning for tool-bearing and non-text turns, while keeping the broader eligible endpoint pool available for reroute after retry or fallback
   - hardened upstream failure classification and cooldown handling so timeout, network, rate-limit, quota, provider-auth, and upstream-5xx failures can drive retry or reroute with escalating endpoint cooldown windows; repaired Codex auth now clears stale provider-auth cooldowns
   - made session bootstrap treat peer auto-reload degradation as advisory so remote-only readiness is not blocked by `peer reload incomplete`
+  - changed `docs-site-deploy.yml` so missing Cloudflare secrets emit a skip notice and keep the workflow green instead of failing the merged `main` commit on an environment-only deploy precondition
 - Why:
   - routed Codex Subscription requests could lose forced tool intent, mis-handle tool-heavy or multimodal turns, and stay artificially denied after recoverable execution failures
   - remote-only operators could see a false degraded readiness summary when local peer reload lagged even though the runtime was otherwise execution-ready
+  - release gating on GitHub should fail for broken builds or broken deploy logic, not for an intentionally absent Pages credential in repositories or forks that still need docs-build validation
 - How:
   - verified with targeted host/provider tests, full local `corepack pnpm run ci:check`, rebuilt-runtime probes on `:3456`, and live exact-model plus alias requests that executed GPT 5.4 tool calls through the Codex Subscription path
+  - added a repo-owned docs workflow contract test in `apps/docs-site/scripts/docs-site-deploy-workflow.test.mjs` and verified it red/green against the workflow YAML before rerunning local CI
 - What was not done:
   - no new provider families or generic hosted-browser/tool runtime were introduced
   - invalid-request responses still fail fast instead of falling back to a different endpoint
 - Known issues / follow-ups:
-  - docs, runtime routing memory, and release notes need to stay aligned whenever Codex Subscription heuristics or cooldown policy change again
+  - docs, runtime routing memory, release notes, and GitHub workflow guidance need to stay aligned whenever Codex Subscription heuristics, cooldown policy, or release automation posture change again
 
 ### Run `60-runtime-ui-paper-linear-review-alignment`
 

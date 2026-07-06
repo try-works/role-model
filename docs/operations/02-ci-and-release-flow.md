@@ -86,7 +86,7 @@ Job model:
 Notes:
 
 - PRs validate the docs build without requiring Cloudflare secrets.
-- non-PR deploys fail early with a clear secret-missing message instead of a later `wrangler` error.
+- non-PR deploys only run when Cloudflare secrets are present; otherwise the workflow emits a clear skip notice and stays green.
 
 ### `cla.yml`
 

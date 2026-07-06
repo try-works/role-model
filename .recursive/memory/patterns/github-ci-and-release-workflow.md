@@ -38,6 +38,7 @@ Trust: current repo-local baseline; validate again after workflow topology or re
 
 - `/.github/workflows/docs-site-deploy.yml` should always prove that the docs site builds on pull requests and pushes, even when deploy credentials are unavailable.
 - Deployment must remain a non-PR concern. Gate the Cloudflare publish path behind explicit secret and account checks so content validation and deployment authorization stay separable.
+- When those secrets are absent, the workflow should emit an explicit skip notice and stay green rather than failing the merged commit. Missing deploy credentials are environment posture, not a product regression.
 - Keep the built static artifact available from the workflow so GitHub-only docs failures can be inspected without rerunning locally.
 
 ## Release publication pattern
