@@ -104,7 +104,9 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
   - device authorization can complete from the local Codex auth cache
   - a connected account can remain `Connected, no endpoint` / `entitlement-missing`
   - direct OpenAI Platform execution stays blocked when the cached ChatGPT/Codex session lacks the required request scopes
+- OpenAI-compatible chat-completions `tool_choice` must survive routed execution into provider requests. Forced function-tool selection is valid on the initial tool-bearing turn, but continuation turns that already contain tool output should drop the forced choice so the model can resume normally.
 - Supported OpenAI subscription models are curated to GPT `5.3+`; capability claims for that path should be tied to the curated matrix rather than inherited blindly from raw upstream catalog rows.
+- When an eligible Codex Subscription GPT 5.4 endpoint is in the candidate pool, tool-bearing or non-text turns should pin the first attempt there and keep the broader allow-endpoint pool available for fallback if execution fails.
 - Hosted-search and tool-capability routing is transport-aware:
   - OpenAI exact hosted search is provider-native for supported GPT `5.3+` subscription models
   - Kimi exact hosted search is provider-native on the active transport and should not be excluded from search-capable routing
@@ -119,6 +121,13 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
   - persisted OAuth-backed accounts rehydrate from stored tokens
   - unresolved env-backed credentials remain `credentials-missing`
   - Studio and related consumers must not imply execution readiness before credentials and endpoint activation are actually satisfied
+- Upstream failure classification is routing-active, not purely diagnostic:
+  - timeout, network, rate-limit, quota-exhausted, provider-auth, and upstream-5xx failures are fallback-eligible
+  - only timeout, network, rate-limit, and generic upstream-5xx failures are same-endpoint retryable
+  - invalid-request failures remain terminal and do not trigger fallback
+  - fallback-eligible failures enter escalating endpoint cooldown windows of `10m`, `30m`, `1h`, `5h`, `10h`, and `20h`
+  - if fresher stored Codex auth repairs a subscription credential, clear stale provider-auth cooldowns before routing
+- Session bootstrap `peers` degradation is advisory. `peer reload incomplete` should stay visible in readiness detail, but overall bootstrap can still summarize as `ready` when every non-advisory stage succeeded.
 - The telemetry query path is backend-owned and powers Overview plus Observe analytics surfaces; setup and control pages should not regress into chart dashboards.
 - Richer taxonomy telemetry dimensions now include original role/task hints, normalized role/task, group, variant, capability, modality, and tool-class data. Observe analytics and request-ledger enrichment should read those dimensions from persisted telemetry-ledger fields first; reparsing large raw `runtime_observations.observation_json` bundles is now a fallback path for request detail, not the normal analytics path.
 - The telemetry analytics contract now returns applied query metadata, slice metadata, metric support, and dimension support. Analytics aggregation is full-slice by default and must not silently inherit request-ledger pagination caps.

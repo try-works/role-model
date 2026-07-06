@@ -520,6 +520,76 @@ describe("OpenAI provider adapter", () => {
     });
   });
 
+  test("forwards forced chat-completions tool_choice to the downstream OpenAI request body", () => {
+    const target = {
+      endpointId: "openai.personal.primary.global.gpt-5.4",
+      modelId: "chatgpt/gpt-5.4",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "tools", "tool_choice"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.global.gpt-5.4",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Use the add_numbers tool." }],
+      tools: [
+        {
+          name: "add_numbers",
+          description: "Add two integers.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              a: { type: "integer" },
+              b: { type: "integer" },
+            },
+            required: ["a", "b"],
+          },
+        },
+      ],
+      toolChoice: {
+        type: "function",
+        function: {
+          name: "add_numbers",
+        },
+      },
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.url).toBe("https://api.openai.test/v1/chat/completions");
+    expect(requestCapture.body.tool_choice).toEqual({
+      type: "function",
+      function: {
+        name: "add_numbers",
+      },
+    });
+  });
+
   test("normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming", () => {
     const target = {
       endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",

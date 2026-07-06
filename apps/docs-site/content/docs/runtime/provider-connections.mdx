@@ -34,6 +34,13 @@ The API-key path preserves ordinary OpenAI-compatible provider behavior.
 The Codex Subscription path is transport-aware. It uses the supported subscription model matrix and the
 runtime's OpenAI transport handling for the current GPT 5.3+ subscription path.
 
+For OpenAI-compatible chat-completions requests, the runtime now preserves explicit `tool_choice` controls
+when the request asks for ordinary function tools.
+
+When the eligible pool includes a Codex Subscription GPT 5.4 endpoint, tool-bearing or non-text turns can
+start by pinning the first attempt there. If that endpoint fails, the runtime can reopen the broader
+eligible pool and reroute instead of silently dropping the tool-capable path.
+
 ## Hosted tools are transport-specific
 
 Hosted-tool support is not one universal flag across every provider.

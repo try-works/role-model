@@ -12,6 +12,12 @@ import {
 } from "@role-model-router/sqlite-memory";
 
 import { createRuntimeBridgeBackend } from "../src/index.js";
+import {
+  createEmptyOperatorIntent,
+  readOperatorIntent,
+  upsertPeerLoad,
+  writeOperatorIntent,
+} from "../src/operator-intent.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(import.meta.dirname, "fixtures-restart-rehydration");
@@ -1144,6 +1150,63 @@ describe("restart rehydration", () => {
         ).toEqual([{ modelId: "lfm2.5-8b-a1b", roleIds: ["writer"] }]);
       } finally {
         await secondBackend.shutdown();
+      }
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("defers persisted peer auto-reload entries during restart bootstrap when peers are not configured", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `restart-prune-stale-peer-loads-${Date.now()}`);
+    const scopeId = "restart-prune-stale-peer-loads";
+
+    const createBackend = () =>
+      createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+      });
+
+    try {
+      writeOperatorIntent(
+        { runtimeStateRoot, scopeId },
+        upsertPeerLoad(createEmptyOperatorIntent(), {
+          peerId: "peer-a",
+          modelId: "lfm2.5-8b-a1b",
+          roleIds: ["general.chat"],
+          autoReload: true,
+        }),
+      );
+      await writeFile(path.join(runtimeStateRoot, "peers.json"), "[]", "utf8");
+
+      const backend = await createBackend();
+      try {
+        let health = await backend.readHealthStatus();
+        for (
+          let attempt = 0;
+          attempt < 20 && health.sessionBootstrap.status === "running";
+          attempt += 1
+        ) {
+          await delay(50);
+          health = await backend.readHealthStatus();
+        }
+
+        expect(health.sessionBootstrap.status).toBe("ready");
+        expect(health.sessionBootstrap.stages.find((stage) => stage.stageId === "peers")).toEqual(
+          expect.objectContaining({
+            status: "skipped",
+          }),
+        );
+        expect(readOperatorIntent({ runtimeStateRoot, scopeId })?.peerLoads).toEqual([
+          expect.objectContaining({
+            peerId: "peer-a",
+            modelId: "lfm2.5-8b-a1b",
+            autoReload: true,
+          }),
+        ]);
+      } finally {
+        await backend.shutdown();
       }
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });

@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
-import { cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -3220,6 +3221,260 @@ describe("runtime-host-bridge", () => {
     expect(normalizeCodexAppServerModelName("gpt-5.4")).toBe("gpt-5.4");
   });
 
+  test("executeCodexAppServerTurnOverStdio preserves image-bearing chat input as structured app-server content", async () => {
+    expect(
+      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
+        .executeCodexAppServerTurnOverStdio,
+    ).toBe("function");
+
+    const fakeAppServer = spawn(
+      process.execPath,
+      [
+        "-e",
+        [
+          "const fs = require('node:fs');",
+          "const readline = require('node:readline');",
+          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
+          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
+          "rl.on('line', (line) => {",
+          "  const message = JSON.parse(line);",
+          "  if (message.id === 1 && message.method === 'initialize') {",
+          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
+          "    return;",
+          "  }",
+          "  if (message.method === 'initialized') {",
+          "    return;",
+          "  }",
+          "  if (message.id === 2 && message.method === 'thread/start') {",
+          "    send({ id: 2, result: { thread: { id: 'thr_test_stdio_image' } } });",
+          "    return;",
+          "  }",
+          "  if (message.id === 3 && message.method === 'turn/start') {",
+          "    const input = Array.isArray(message.params?.input) ? message.params.input : [];",
+          "    const hasInputImage = input.some((entry) => entry && entry.type === 'localImage' && typeof entry.path === 'string' && entry.path.endsWith('.png') && fs.existsSync(entry.path));",
+          "    const hasInputText = input.some((entry) => entry && entry.type === 'text' && Array.isArray(entry.text_elements) && typeof entry.text === 'string' && entry.text.includes('Reply with the dominant color.'));",
+          "    if (!hasInputImage || !hasInputText) {",
+          "      send({ method: 'turn/failed', params: { error: { message: 'missing structured multimodal input', code: 'invalid_request', data: { input } } } });",
+          "      setTimeout(() => process.exit(0), 0);",
+          "      return;",
+          "    }",
+          "    send({ id: 3, result: { accepted: true } });",
+          "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 7, outputTokens: 2 } } } });",
+          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'red' } } });",
+          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_stdio_image_1' } } });",
+          "    setTimeout(() => process.exit(0), 0);",
+          "  }",
+          "});",
+        ].join(" "),
+      ],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+      },
+    );
+
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-image-"));
+
+    try {
+      const result = await (
+        bridge as {
+          executeCodexAppServerTurnOverStdio: (input: {
+            child: ReturnType<typeof spawn>;
+            model: string;
+            requestCapture: {
+              url: string;
+              body: Record<string, unknown>;
+            };
+            workspaceRoot: string;
+          }) => Promise<{
+            finishReason: string;
+            outputText: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+        }
+      ).executeCodexAppServerTurnOverStdio({
+        child: fakeAppServer,
+        model: "gpt-5.4",
+        requestCapture: {
+          url: "https://api.openai.com/v1/chat/completions",
+          body: {
+            model: "chatgpt/gpt-5.4",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: "Reply with the dominant color.",
+                  },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR42mP8z8DAwMDAxMDAwMAAAAf+AQM7vRztAAAAAElFTkSuQmCC",
+                      detail: "high",
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        workspaceRoot,
+      });
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          finishReason: "stop",
+          outputText: "red",
+          usage: {
+            inputTokens: 7,
+            outputTokens: 2,
+          },
+        }),
+      );
+    } finally {
+      fakeAppServer.kill();
+      await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("executeCodexAppServerTurnOverStdio downloads remote image URLs into localImage inputs", async () => {
+    expect(
+      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
+        .executeCodexAppServerTurnOverStdio,
+    ).toBe("function");
+
+    const imageBytes = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY/jPwPAfAAUAAf+mXJtdAAAAAElFTkSuQmCC",
+      "base64",
+    );
+    const imageServer = createServer((request, response) => {
+      if (request.url === "/red.png") {
+        response.writeHead(200, {
+          "content-type": "image/png",
+          "content-length": String(imageBytes.length),
+        });
+        response.end(imageBytes);
+        return;
+      }
+      response.writeHead(404);
+      response.end("not found");
+    });
+    await new Promise<void>((resolve) => imageServer.listen(0, "127.0.0.1", () => resolve()));
+    const imageAddress = imageServer.address();
+    expect(imageAddress && typeof imageAddress === "object").toBeTruthy();
+    const imagePort = imageAddress && typeof imageAddress === "object" ? imageAddress.port : 0;
+
+    const fakeAppServer = spawn(
+      process.execPath,
+      [
+        "-e",
+        [
+          "const fs = require('node:fs');",
+          "const readline = require('node:readline');",
+          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
+          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
+          "rl.on('line', (line) => {",
+          "  const message = JSON.parse(line);",
+          "  if (message.id === 1 && message.method === 'initialize') {",
+          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
+          "    return;",
+          "  }",
+          "  if (message.method === 'initialized') {",
+          "    return;",
+          "  }",
+          "  if (message.id === 2 && message.method === 'thread/start') {",
+          "    send({ id: 2, result: { thread: { id: 'thr_test_stdio_remote_image' } } });",
+          "    return;",
+          "  }",
+          "  if (message.id === 3 && message.method === 'turn/start') {",
+          "    const input = Array.isArray(message.params?.input) ? message.params.input : [];",
+          "    const remoteImage = input.find((entry) => entry && entry.type === 'localImage' && typeof entry.path === 'string');",
+          "    const hasExpectedBytes = remoteImage && fs.existsSync(remoteImage.path) && fs.readFileSync(remoteImage.path).toString('base64') === 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY/jPwPAfAAUAAf+mXJtdAAAAAElFTkSuQmCC';",
+          "    if (!hasExpectedBytes) {",
+          "      send({ method: 'turn/failed', params: { error: { message: 'remote image was not staged locally', code: 'invalid_request', data: { input } } } });",
+          "      setTimeout(() => process.exit(0), 0);",
+          "      return;",
+          "    }",
+          "    send({ id: 3, result: { accepted: true } });",
+          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'red' } } });",
+          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_stdio_remote_image_1' } } });",
+          "    setTimeout(() => process.exit(0), 0);",
+          "  }",
+          "});",
+        ].join(" "),
+      ],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+      },
+    );
+
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-remote-image-"));
+
+    try {
+      const result = await (
+        bridge as {
+          executeCodexAppServerTurnOverStdio: (input: {
+            child: ReturnType<typeof spawn>;
+            model: string;
+            requestCapture: {
+              url: string;
+              body: Record<string, unknown>;
+            };
+            workspaceRoot: string;
+          }) => Promise<{
+            finishReason: string;
+            outputText: string;
+          }>;
+        }
+      ).executeCodexAppServerTurnOverStdio({
+        child: fakeAppServer,
+        model: "gpt-5.4",
+        requestCapture: {
+          url: "https://api.openai.com/v1/chat/completions",
+          body: {
+            model: "chatgpt/gpt-5.4",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: "Reply with the dominant color.",
+                  },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: `http://127.0.0.1:${imagePort}/red.png`,
+                      detail: "high",
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        workspaceRoot,
+      });
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          finishReason: "stop",
+          outputText: "red",
+        }),
+      );
+    } finally {
+      fakeAppServer.kill();
+      imageServer.closeAllConnections?.();
+      await new Promise<void>((resolve) => imageServer.close(() => resolve()));
+      await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
   test("executeCodexAppServerTurnOverStdio completes a turn over stdio JSONL and returns tool executions", async () => {
     expect(
       typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
@@ -3387,6 +3642,496 @@ describe("runtime-host-bridge", () => {
         }),
       );
       expect(result.dynamicToolExecutions).toEqual([{ toolName: "request_read_file" }]);
+    } finally {
+      fakeAppServer.kill();
+      await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("executeCodexAppServerTurnOverStdio strips verbose schema annotations from dynamic tools", async () => {
+    expect(
+      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
+        .executeCodexAppServerTurnOverStdio,
+    ).toBe("function");
+
+    const verboseMarker = "VERBOSE_SCHEMA_DESCRIPTION_BLOCK_1234567890";
+    const fakeAppServer = spawn(
+      process.execPath,
+      [
+        "-e",
+        [
+          "const readline = require('node:readline');",
+          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
+          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
+          "rl.on('line', (line) => {",
+          "  const message = JSON.parse(line);",
+          "  if (message.id === 1 && message.method === 'initialize') {",
+          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
+          "    return;",
+          "  }",
+          "  if (message.method === 'initialized') {",
+          "    return;",
+          "  }",
+          "  if (message.id === 2 && message.method === 'thread/start') {",
+          "    const dynamicToolsJson = JSON.stringify(message.params?.dynamicTools ?? []);",
+          `    if (dynamicToolsJson.includes(${JSON.stringify(verboseMarker)})) {`,
+          "      send({ method: 'turn/failed', params: { error: { message: 'verbose schema annotations leaked into dynamic tools', code: 'invalid_request', data: { dynamicToolsJson } } } });",
+          "      setTimeout(() => process.exit(0), 0);",
+          "      return;",
+          "    }",
+          "    send({ id: 2, result: { thread: { id: 'thr_test_schema_compaction' } } });",
+          "    return;",
+          "  }",
+          "  if (message.id === 3 && message.method === 'turn/start') {",
+          "    send({ id: 3, result: { accepted: true } });",
+          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'ok' } } });",
+          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_schema_compaction_1' } } });",
+          "    setTimeout(() => process.exit(0), 0);",
+          "  }",
+          "});",
+        ].join(" "),
+      ],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+      },
+    );
+
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-schema-compact-"));
+
+    try {
+      const result = await (
+        bridge as {
+          executeCodexAppServerTurnOverStdio: (input: {
+            child: ReturnType<typeof spawn>;
+            model: string;
+            requestCapture: {
+              url: string;
+              body: Record<string, unknown>;
+            };
+            workspaceRoot: string;
+          }) => Promise<{
+            finishReason: string;
+            outputText: string;
+          }>;
+        }
+      ).executeCodexAppServerTurnOverStdio({
+        child: fakeAppServer,
+        model: "gpt-5.4",
+        requestCapture: {
+          url: "https://api.openai.com/v1/chat/completions",
+          body: {
+            model: "chatgpt/gpt-5.4",
+            messages: [{ role: "user", content: "Reply with ok." }],
+            tools: [
+              {
+                type: "function",
+                function: {
+                  name: "read_file",
+                  description: "Read a file",
+                  parameters: {
+                    type: "object",
+                    description: verboseMarker,
+                    properties: {
+                      path: {
+                        type: "string",
+                        description: verboseMarker,
+                      },
+                    },
+                    required: ["path"],
+                  },
+                },
+              },
+            ],
+          },
+        },
+        workspaceRoot,
+      });
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          finishReason: "stop",
+          outputText: "ok",
+        }),
+      );
+    } finally {
+      fakeAppServer.kill();
+      await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("executeCodexAppServerTurnOverStdio compacts oversized historical tool transcripts", async () => {
+    expect(
+      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
+        .executeCodexAppServerTurnOverStdio,
+    ).toBe("function");
+
+    const oversizedToolArguments = `VERBOSE_TOOL_ARGUMENT_BLOB_${"X".repeat(8_000)}`;
+    const oversizedToolOutput = `BEGIN-${"A".repeat(24_000)}-END`;
+    const fakeAppServer = spawn(
+      process.execPath,
+      [
+        "-e",
+        [
+          "const readline = require('node:readline');",
+          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
+          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
+          "rl.on('line', (line) => {",
+          "  const message = JSON.parse(line);",
+          "  if (message.id === 1 && message.method === 'initialize') {",
+          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
+          "    return;",
+          "  }",
+          "  if (message.method === 'initialized') {",
+          "    return;",
+          "  }",
+          "  if (message.id === 2 && message.method === 'thread/start') {",
+          "    send({ id: 2, result: { thread: { id: 'thr_test_history_compaction' } } });",
+          "    return;",
+          "  }",
+          "  if (message.id === 3 && message.method === 'turn/start') {",
+          "    const input = Array.isArray(message.params?.input) ? message.params.input : [];",
+          "    const turnText = input.filter((entry) => entry && entry.type === 'text' && typeof entry.text === 'string').map((entry) => entry.text).join('\\n\\n');",
+          `    if (turnText.includes(${JSON.stringify(oversizedToolArguments)})) {`,
+          "      send({ method: 'turn/failed', params: { error: { message: 'assistant tool-call arguments were replayed verbatim', code: 'invalid_request', data: { length: turnText.length } } } });",
+          "      setTimeout(() => process.exit(0), 0);",
+          "      return;",
+          "    }",
+          "    const repeatedA = (turnText.match(/A/g) ?? []).length;",
+          "    if (repeatedA > 6000) {",
+          "      send({ method: 'turn/failed', params: { error: { message: 'historical tool output was replayed at near-full size', code: 'invalid_request', data: { repeatedA, length: turnText.length } } } });",
+          "      setTimeout(() => process.exit(0), 0);",
+          "      return;",
+          "    }",
+          "    if (!turnText.includes('read_file') || !turnText.includes('BEGIN-') || !turnText.includes('-END')) {",
+          "      send({ method: 'turn/failed', params: { error: { message: 'compaction dropped important tool-history context', code: 'invalid_request', data: { turnText } } } });",
+          "      setTimeout(() => process.exit(0), 0);",
+          "      return;",
+          "    }",
+          "    send({ id: 3, result: { accepted: true } });",
+          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'compacted' } } });",
+          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_history_compaction_1' } } });",
+          "    setTimeout(() => process.exit(0), 0);",
+          "  }",
+          "});",
+        ].join(" "),
+      ],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+      },
+    );
+
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-history-compact-"));
+
+    try {
+      const result = await (
+        bridge as {
+          executeCodexAppServerTurnOverStdio: (input: {
+            child: ReturnType<typeof spawn>;
+            model: string;
+            requestCapture: {
+              url: string;
+              body: Record<string, unknown>;
+            };
+            workspaceRoot: string;
+          }) => Promise<{
+            finishReason: string;
+            outputText: string;
+          }>;
+        }
+      ).executeCodexAppServerTurnOverStdio({
+        child: fakeAppServer,
+        model: "gpt-5.4",
+        requestCapture: {
+          url: "https://api.openai.com/v1/chat/completions",
+          body: {
+            model: "chatgpt/gpt-5.4",
+            messages: [
+              { role: "user", content: "Inspect the previous tool results and continue." },
+              {
+                role: "assistant",
+                content: "",
+                tool_calls: [
+                  {
+                    id: "call_history_1",
+                    type: "function",
+                    function: {
+                      name: "read_file",
+                      arguments: JSON.stringify({
+                        path: "src/router.ts",
+                        verbose: oversizedToolArguments,
+                      }),
+                    },
+                  },
+                ],
+              },
+              {
+                role: "tool",
+                tool_call_id: "call_history_1",
+                content: oversizedToolOutput,
+              },
+              { role: "user", content: "What should we do next?" },
+            ],
+          },
+        },
+        workspaceRoot,
+      });
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          finishReason: "stop",
+          outputText: "compacted",
+        }),
+      );
+    } finally {
+      fakeAppServer.kill();
+      await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("executeCodexAppServerTurnOverStdio retries once when a turn completes without any assistant output", async () => {
+    expect(
+      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
+        .executeCodexAppServerTurnOverStdio,
+    ).toBe("function");
+
+    const fakeAppServer = spawn(
+      process.execPath,
+      [
+        "-e",
+        [
+          "const readline = require('node:readline');",
+          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
+          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
+          "let turnStarts = 0;",
+          "rl.on('line', (line) => {",
+          "  const message = JSON.parse(line);",
+          "  if (message.id === 1 && message.method === 'initialize') {",
+          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
+          "    return;",
+          "  }",
+          "  if (message.method === 'initialized') {",
+          "    return;",
+          "  }",
+          "  if (message.id === 2 && message.method === 'thread/start') {",
+          "    send({ method: 'thread/started', params: { thread: { id: 'thr_retry_stdio' } } });",
+          "    send({ id: 2, result: { thread: { id: 'thr_retry_stdio' } } });",
+          "    return;",
+          "  }",
+          "  if (message.method === 'turn/start') {",
+          "    turnStarts += 1;",
+          "    send({ id: message.id, result: { accepted: true, attempt: turnStarts } });",
+          "    if (turnStarts === 1) {",
+          "      send({ method: 'turn/completed', params: { turn: { id: 'turn_retry_empty' } } });",
+          "      return;",
+          "    }",
+          "    send({ id: 92, method: 'item/tool/call', params: { callId: 'call_retry_1', tool: 'request_read_file', arguments: { path: 'src/router.ts' } } });",
+          "    return;",
+          "  }",
+          "  if (message.id === 92) {",
+          "    send({ method: 'item/agentMessage/delta', params: { delta: 'route' } });",
+          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'route' } } });",
+          "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 9, outputTokens: 5 } } } });",
+          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_retry_recovered' } } });",
+          "    setTimeout(() => process.exit(0), 0);",
+          "  }",
+          "});",
+        ].join(" "),
+      ],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+      },
+    );
+
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-retry-"));
+
+    try {
+      const result = await (
+        bridge as {
+          executeCodexAppServerTurnOverStdio: (input: {
+            child: ReturnType<typeof spawn>;
+            model: string;
+            requestCapture: {
+              url: string;
+              body: Record<string, unknown>;
+            };
+            workspaceRoot: string;
+            executeDynamicToolCall: (input: {
+              toolCallId: string;
+              toolName: string;
+              toolArguments: unknown;
+              workspaceRoot: string;
+            }) => Promise<{
+              success: boolean;
+              contentItems: readonly {
+                type: "inputText";
+                text: string;
+              }[];
+              execution: {
+                toolName: string;
+              };
+            }>;
+          }) => Promise<{
+            finishReason: string;
+            outputText: string;
+            dynamicToolCalls: readonly {
+              id: string;
+              type: "function";
+              function: {
+                name: string;
+                arguments: string;
+              };
+            }[];
+            dynamicToolExecutions: readonly {
+              toolName: string;
+            }[];
+          }>;
+        }
+      ).executeCodexAppServerTurnOverStdio({
+        child: fakeAppServer,
+        model: "gpt-5.4",
+        requestCapture: {
+          url: "https://api.openai.com/v1/chat/completions",
+          body: {
+            model: "chatgpt/gpt-5.4",
+            messages: [
+              {
+                role: "user",
+                content:
+                  "Read src/router.ts and reply with the first word of its exported function name only.",
+              },
+            ],
+            tools: [
+              {
+                type: "function",
+                function: {
+                  name: "read_file",
+                  description: "Read a file",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      path: {
+                        type: "string",
+                      },
+                    },
+                    required: ["path"],
+                  },
+                },
+              },
+            ],
+          },
+        },
+        workspaceRoot,
+        executeDynamicToolCall: async ({ toolName }) => ({
+          success: true,
+          contentItems: [
+            {
+              type: "inputText",
+              text: '{"path":"src/router.ts","contents":"export function route() {}"}',
+            },
+          ],
+          execution: {
+            toolName,
+          },
+        }),
+      });
+
+      expect(result.finishReason).toBe("stop");
+      expect(result.outputText).toBe("route");
+      expect(result.dynamicToolCalls).toEqual([
+        {
+          id: "call_retry_1",
+          type: "function",
+          function: {
+            name: "read_file",
+            arguments: '{"path":"src/router.ts"}',
+          },
+        },
+      ]);
+      expect(result.dynamicToolExecutions).toEqual([{ toolName: "request_read_file" }]);
+    } finally {
+      fakeAppServer.kill();
+      await rm(workspaceRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("executeCodexAppServerTurnOverStdio surfaces failed turn completions with embedded Codex errors", async () => {
+    const fakeAppServer = spawn(
+      process.execPath,
+      [
+        "-e",
+        [
+          "const { createInterface } = require('node:readline');",
+          "const rl = createInterface({ input: process.stdin, crlfDelay: Infinity });",
+          "const send = (payload) => process.stdout.write(JSON.stringify(payload) + '\\n');",
+          "rl.on('line', (line) => {",
+          "  const message = JSON.parse(line);",
+          "  if (message.id === 1 && message.method === 'initialize') {",
+          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
+          "    return;",
+          "  }",
+          "  if (message.method === 'initialized') {",
+          "    return;",
+          "  }",
+          "  if (message.id === 2 && message.method === 'thread/start') {",
+          "    send({ id: 2, result: { thread: { id: 'thr_failed_turn_stdio' } } });",
+          "    return;",
+          "  }",
+          "  if (message.id === 3 && message.method === 'turn/start') {",
+          "    send({ id: 3, result: { turn: { id: 'turn_failed_stdio_1', status: 'inProgress' } } });",
+          "    send({ method: 'account/rateLimits/updated', params: { rateLimits: { credits: { hasCredits: false, unlimited: false, balance: '0' } } } });",
+          "    send({ method: 'error', params: { error: { message: 'You\\'ve hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits.', codexErrorInfo: 'usageLimitExceeded' }, willRetry: false, turnId: 'turn_failed_stdio_1' } });",
+          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_failed_stdio_1', status: 'failed', error: { message: 'You\\'ve hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits.', codexErrorInfo: 'usageLimitExceeded' } } } });",
+          "    setTimeout(() => process.exit(0), 0);",
+          "  }",
+          "});",
+        ].join(" "),
+      ],
+      {
+        stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
+      },
+    );
+
+    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-failed-turn-"));
+
+    try {
+      const executionPromise = (
+        bridge as {
+          executeCodexAppServerTurnOverStdio: (input: {
+            child: ReturnType<typeof spawn>;
+            model: string;
+            requestCapture: {
+              url: string;
+              body: Record<string, unknown>;
+            };
+            workspaceRoot: string;
+            stderrText?: () => string;
+          }) => Promise<unknown>;
+        }
+      ).executeCodexAppServerTurnOverStdio({
+        child: fakeAppServer,
+        model: "gpt-5.4",
+        requestCapture: {
+          url: "https://api.openai.com/v1/chat/completions",
+          body: {
+            model: "chatgpt/gpt-5.4",
+            messages: [{ role: "user", content: "Reply with exactly final-gpt54-ok." }],
+          },
+        },
+        workspaceRoot,
+        stderrText: () =>
+          [
+            "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir",
+            '{"timestamp":"2026-07-06T04:08:42.264610Z","level":"WARN","fields":{"message":"ignoring interface.defaultPrompt[0]: prompt must be at most 128 characters"},"target":"codex_core_plugins::manifest"}',
+          ].join("\n"),
+      });
+      const error = await executionPromise.catch((caught) => caught as Error);
+      expect(error).toBeInstanceOf(Error);
+      expect(error.message).toMatch(/usage limit|usageLimitExceeded/i);
+      expect(error.message).not.toMatch(/defaultPrompt|codex_core_plugins|PATH aliases/i);
     } finally {
       fakeAppServer.kill();
       await rm(workspaceRoot, { recursive: true, force: true });
@@ -4761,6 +5506,227 @@ describe("runtime-host-bridge", () => {
       rubricSignals: expect.objectContaining({
         codeOrSchemaBurden: true,
       }),
+    });
+  });
+
+  test("escalates tool-bearing workspace file requests to hard difficulty instead of the cost lane", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: {
+            endpointMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
+          },
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+            strategy: string;
+          };
+          routingDiagnostics?: {
+            difficultyRouting?: {
+              difficulty: "easy" | "medium" | "hard";
+              strategy: string;
+              fallbackApplied: boolean;
+              rubricSignals: {
+                toolCount: number;
+                codeOrSchemaBurden: boolean;
+              };
+            };
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "gpt-5.4",
+        messages: [
+          {
+            role: "user",
+            content:
+              "Read src/router.ts and answer with the first exported symbol name from that file.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "read_file",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-host-difficulty-chat-file-tool-001",
+      [
+        {
+          aliasId: "gpt-5.4",
+          mode: "difficulty",
+          modelIds: ["moonshot/kimi-k2.5"],
+        },
+      ],
+      {
+        endpointMaxDifficultyByEndpointId: {
+          "moonshot.personal.primary.global.kimi-k2.5": "hard",
+          "moonshot.personal.kimi-code.global.kimi-k2.5": "easy",
+        },
+      },
+    );
+
+    expect(result.routingRequest.strategy).toBe("quality");
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "moonshot.personal.primary.global.kimi-k2.5",
+    ]);
+    expect(result.routingDiagnostics?.difficultyRouting).toEqual({
+      difficulty: "hard",
+      strategy: "quality",
+      fallbackApplied: false,
+      rubricSignals: expect.objectContaining({
+        toolCount: 1,
+        codeOrSchemaBurden: true,
+      }),
+    });
+  });
+
+  test("pins Codex subscription as the initial route for tool-bearing code turns without collapsing the broader alias pool", () => {
+    const mixedRegistry: EndpointRegistryResult = {
+      endpoints: [
+        {
+          identity: {
+            endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
+            endpoint_kind: "remote_api",
+            provider_kind: "remote_openai_compat",
+            serving_source: "remote-service",
+            model_id: "deepseek/deepseek-v4-flash",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
+            capabilities: ["text.chat", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 128000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+        {
+          identity: {
+            endpoint_id: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+            endpoint_kind: "remote_api",
+            provider_kind: "remote_openai_compat",
+            serving_source: "remote-service",
+            model_id: "chatgpt/gpt-5.4",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+            capabilities: ["text.chat", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 200000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      diagnostics: [],
+      lifecycleSummary: {
+        active: 2,
+        degraded: 0,
+        offline: 0,
+      },
+    };
+
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly {
+            aliasId: string;
+            mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+            modelIds: readonly string[];
+          }[],
+          difficultyContext?: {
+            endpointMaxDifficultyByEndpointId?: Record<string, "easy" | "medium" | "hard">;
+          },
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+            strategy: string;
+          };
+          fallbackAllowEndpoints?: readonly string[];
+          routingModel?: {
+            endpointId: string;
+            preferredEndpointIds: readonly string[];
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      mixedRegistry,
+      {
+        model: "difficulty.remote-only",
+        messages: [
+          {
+            role: "user",
+            content:
+              "Read src/router.ts and answer with the first exported symbol name from that file only.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "read_file",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-host-difficulty-codex-pin-001",
+      [
+        {
+          aliasId: "difficulty.remote-only",
+          mode: "difficulty",
+          modelIds: ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-flash"],
+        },
+      ],
+      {
+        endpointMaxDifficultyByEndpointId: {
+          "deepseek.personal.primary.global.deepseek-v4-flash": "hard",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4": "hard",
+        },
+      },
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    ]);
+    expect(result.fallbackAllowEndpoints).toEqual([
+      "deepseek.personal.primary.global.deepseek-v4-flash",
+      "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    ]);
+    expect(result.routingModel).toEqual({
+      endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      preferredEndpointIds: ["openai.personal.openai-codex-subscription.global.gpt-5.4"],
     });
   });
 
@@ -10781,6 +11747,69 @@ describe("runtime-host-bridge", () => {
     }
   }, 10_000);
 
+  test("backfills coding role and capability hints into minimal controller strategy guidance", () => {
+    const heuristic = bridge.inferHeuristicControllerGuidance({
+      messages: [
+        {
+          role: "user",
+          content:
+            "Read the router code, patch the regression carefully, and verify the behavior with tests.",
+        },
+      ],
+      toolCount: 1,
+      roleDefinitions: [
+        {
+          role_id: "coder",
+          display_name: "Coder",
+          description: "Writes and edits code.",
+          default_system_instructions: "",
+          task_types_supported: ["coder.edit"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed", allowed_tools: [] },
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      taskDefinitions: [
+        {
+          task_type: "coder.edit",
+          display_name: "Coder Edit",
+          description: "Edits code with tools.",
+          required_capabilities: ["code.edit"],
+          preferred_capabilities: ["reasoning.multi_step"],
+          allowed_roles: ["coder"],
+          success_criteria: [],
+          quality_metrics: [],
+        },
+      ],
+    });
+
+    expect(heuristic).toMatchObject({
+      requestedRoleId: "coder",
+      taskType: "coder.edit",
+      strategy: "quality",
+      preferredCapabilities: ["reasoning.multi_step"],
+    });
+
+    expect(
+      bridge.mergeControllerGuidanceDefaults({
+        guidance: {
+          strategy: "quality",
+          preferLocal: false,
+        },
+        heuristic,
+      }),
+    ).toMatchObject({
+      requestedRoleId: "coder",
+      taskType: "coder.edit",
+      strategy: "quality",
+      preferLocal: false,
+      preferredCapabilities: ["reasoning.multi_step"],
+    });
+  });
+
   test("retries controller routing once with a compact prompt when the first controller response is empty", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-controller-compact-retry-"),
@@ -13548,6 +14577,637 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("exact Codex execution repairs stale bridge auth from standalone runtime and clears auth cooldowns", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeContainerRoot = await mkdtemp(
+      path.join(os.tmpdir(), "runtime-host-codex-auth-repair-"),
+    );
+    const runtimeStateRoot = path.join(runtimeContainerRoot, "state");
+    const scopeId = "runtime-host-codex-auth-repair-tests";
+    const bridgeCredentialFile = path.join(
+      runtimeStateRoot,
+      scopeId,
+      "credentials",
+      "oauth",
+      "openai",
+      "openai.personal.codex-subscription.json",
+    );
+    const standaloneCredentialFile = path.join(
+      runtimeContainerRoot,
+      "standalone-runtime",
+      "credentials",
+      "oauth",
+      "openai",
+      "openai.personal.codex-subscription.json",
+    );
+    const seenAuthRefreshes: string[] = [];
+    const seenAccessTokens: string[] = [];
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          codexAuthAdapter?: {
+            startDeviceCodeLogin: (input: { codexHome: string }) => Promise<{
+              loginId: string;
+              verificationUrl: string;
+              userCode: string;
+              wsUrl: string;
+              pid: number;
+            }>;
+            readAccount: (input: { codexHome: string }) => Promise<{
+              account: {
+                type: string;
+                email: string;
+                planType: string;
+              } | null;
+              requiresOpenaiAuth: boolean;
+            }>;
+          };
+          codexExecutionAdapter?: {
+            executeRequest: (input: {
+              requestId: string;
+              modelId: string;
+              requestCapture: {
+                url: string;
+                body: Record<string, unknown>;
+              };
+              authPayload: Record<string, unknown>;
+            }) => Promise<{
+              statusCode: number;
+              body: Record<string, unknown>;
+              vendorMetadata?: Record<string, unknown>;
+            }>;
+          };
+        }) => Promise<{
+          startProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<{
+            status: string;
+            authRequestId: string;
+          }>;
+          pollProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (body: Record<string, unknown>) => Promise<{
+            endpointId: string;
+          }>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            requestOptions?: {
+              endpointId?: string;
+            },
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            outputText: string;
+          }>;
+          shutdown: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      codexAuthAdapter: {
+        startDeviceCodeLogin: async () => ({
+          loginId: "login-codex-auth-repair-001",
+          verificationUrl: "https://auth.openai.com/codex/device",
+          userCode: "REPR-0001",
+          wsUrl: "ws://127.0.0.1:4595",
+          pid: 4595,
+        }),
+        readAccount: async ({ codexHome }) => {
+          await mkdir(codexHome, { recursive: true });
+          await writeFile(
+            path.join(codexHome, "auth.json"),
+            JSON.stringify(
+              {
+                auth_mode: "chatgpt",
+                tokens: {
+                  access_token: "codex-access-stale-001",
+                  refresh_token: "codex-refresh-stale-001",
+                  account_id: "codex-account-auth-repair-001",
+                },
+                last_refresh: "2026-06-19T16:56:25.457Z",
+              },
+              null,
+              2,
+            ),
+            "utf8",
+          );
+          return {
+            account: {
+              type: "chatgpt",
+              email: "repair@example.com",
+              planType: "pro",
+            },
+            requiresOpenaiAuth: true,
+          };
+        },
+      },
+      codexExecutionAdapter: {
+        executeRequest: async ({ authPayload, modelId }) => {
+          seenAuthRefreshes.push(String(authPayload.last_refresh ?? ""));
+          const tokens =
+            authPayload && typeof authPayload === "object"
+              ? ((authPayload as { tokens?: { access_token?: string } }).tokens ?? {})
+              : {};
+          seenAccessTokens.push(String(tokens.access_token ?? ""));
+          return {
+            statusCode: 200,
+            body: {
+              id: "chatcmpl-codex-auth-repair",
+              choices: [
+                {
+                  index: 0,
+                  finish_reason: "stop",
+                  message: {
+                    role: "assistant",
+                    content: `Recovered Codex response for ${modelId}`,
+                  },
+                },
+              ],
+              usage: {
+                prompt_tokens: 31,
+                completion_tokens: 8,
+              },
+            },
+            vendorMetadata: {
+              vendorId: "codex-app-server",
+              latencyMs: 11,
+            },
+          };
+        },
+      },
+    });
+
+    try {
+      const pending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.4"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+
+      await expect(
+        backend.pollProviderDeviceAuthorization({
+          authRequestId: pending.authRequestId,
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          status: "connected",
+          providerAccountId: "openai.personal.codex-subscription",
+        }),
+      );
+
+      const endpoint = await backend.activateEndpoint({
+        providerAccountId: "openai.personal.codex-subscription",
+        modelId: "chatgpt/gpt-5.4",
+        region: "global",
+      });
+
+      await mkdir(path.dirname(standaloneCredentialFile), { recursive: true });
+      await writeFile(
+        standaloneCredentialFile,
+        JSON.stringify(
+          {
+            providerId: "openai",
+            providerAccountId: "openai.personal.codex-subscription",
+            access_token: "codex-access-standalone-002",
+            refresh_token: "codex-refresh-standalone-002",
+            token_type: "Bearer",
+            saved_at_ms: Date.parse("2026-07-05T18:15:03.000Z"),
+            codexAuth: {
+              auth_mode: "chatgpt",
+              OPENAI_API_KEY: null,
+              last_refresh: "2026-07-05T18:14:58.145Z",
+              tokens: {
+                access_token: "codex-access-standalone-002",
+                refresh_token: "codex-refresh-standalone-002",
+                account_id: "codex-account-auth-repair-001",
+              },
+            },
+          },
+          null,
+          2,
+        ),
+        "utf8",
+      );
+
+      const databasePath = resolveSqliteMemoryLocation({
+        runtimeStateRoot,
+        scopeId,
+      });
+      const database = new DatabaseSync(databasePath);
+      try {
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO memory_maintenance (maintenance_key, maintenance_value, updated_at_ms) VALUES (?, ?, ?)",
+          )
+          .run(
+            "routing.execution-failure-cooldowns.v1",
+            JSON.stringify({
+              [endpoint.endpointId]: {
+                endpointId: endpoint.endpointId,
+                failureCount: 2,
+                cooldownUntilMs: Date.now() + 60 * 60 * 1000,
+                lastFailureAtMs: Date.now(),
+                lastErrorClass: "provider_auth_error",
+              },
+            }),
+            Date.now(),
+          );
+      } finally {
+        database.close();
+      }
+
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "chatgpt/gpt-5.4",
+            messages: [{ role: "user", content: "Summarize the chosen endpoint." }],
+          },
+          "req-runtime-bridge-codex-auth-repair-001",
+          undefined,
+          {
+            endpointId: endpoint.endpointId,
+          },
+        ),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          model: "chatgpt/gpt-5.4",
+          endpointId: endpoint.endpointId,
+          outputText: "Recovered Codex response for chatgpt/gpt-5.4",
+        }),
+      );
+
+      expect(seenAuthRefreshes).toEqual(["2026-07-05T18:14:58.145Z"]);
+      expect(seenAccessTokens).toEqual(["codex-access-standalone-002"]);
+
+      const repairedBridgePayload = JSON.parse(await readFile(bridgeCredentialFile, "utf8")) as {
+        codexAuth?: {
+          last_refresh?: string;
+          tokens?: {
+            access_token?: string;
+          };
+        };
+      };
+      expect(repairedBridgePayload.codexAuth?.last_refresh).toBe("2026-07-05T18:14:58.145Z");
+      expect(repairedBridgePayload.codexAuth?.tokens?.access_token).toBe(
+        "codex-access-standalone-002",
+      );
+
+      const verifyDatabase = new DatabaseSync(databasePath);
+      try {
+        const cooldownRow = verifyDatabase
+          .prepare(
+            "SELECT maintenance_value FROM memory_maintenance WHERE maintenance_key = ? LIMIT 1",
+          )
+          .get("routing.execution-failure-cooldowns.v1") as
+          | {
+              maintenance_value: string;
+            }
+          | undefined;
+        const cooldowns =
+          cooldownRow && typeof cooldownRow.maintenance_value === "string"
+            ? (JSON.parse(cooldownRow.maintenance_value) as Record<string, unknown>)
+            : {};
+        expect(cooldowns).not.toHaveProperty(endpoint.endpointId);
+      } finally {
+        verifyDatabase.close();
+      }
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeContainerRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("suppresses already-executed Codex dynamic tool calls from the final chat response and de-duplicates executions", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "runtime-host-codex-dynamic-tool-collapse-"),
+    );
+    const scopeId = "runtime-host-codex-dynamic-tool-collapse-tests";
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          codexAuthAdapter?: {
+            startDeviceCodeLogin: (input: { codexHome: string }) => Promise<{
+              loginId: string;
+              verificationUrl: string;
+              userCode: string;
+              wsUrl: string;
+              pid: number;
+            }>;
+            readAccount: (input: { codexHome: string }) => Promise<{
+              account: {
+                type: string;
+                email: string;
+                planType: string;
+              } | null;
+              requiresOpenaiAuth: boolean;
+            }>;
+          };
+          codexExecutionAdapter?: {
+            executeRequest: (input: {
+              runtimeStateRoot: string;
+              scopeId: string;
+              requestId: string;
+              providerAccountId: string;
+              modelId: string;
+              requestCapture: {
+                url: string;
+                body: Record<string, unknown>;
+              };
+              authPayload: Record<string, unknown>;
+              executeDynamicToolCall?: (input: {
+                toolCallId: string;
+                toolName: string;
+                toolArguments: unknown;
+                workspaceRoot: string;
+              }) => Promise<{
+                success: boolean;
+                contentItems: readonly {
+                  type: "inputText";
+                  text: string;
+                }[];
+                execution?: {
+                  toolCallId: string;
+                  toolName: string;
+                  connectorId: string;
+                  connectorKind: string;
+                  status: string;
+                  output: unknown;
+                  diagnostics: readonly unknown[];
+                };
+              }>;
+            }) => Promise<{
+              statusCode: number;
+              body: Record<string, unknown>;
+              dynamicToolExecutions?: readonly {
+                toolCallId: string;
+                toolName: string;
+                connectorId: string;
+                connectorKind: string;
+                status: string;
+                output: unknown;
+                diagnostics: readonly unknown[];
+              }[];
+              vendorMetadata?: Record<string, unknown>;
+            }>;
+          };
+        }) => Promise<{
+          startProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<{
+            status: string;
+            authRequestId: string;
+          }>;
+          pollProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (body: Record<string, unknown>) => Promise<{
+            endpointId: string;
+          }>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            outputText: string;
+            finishReason: string;
+            toolCalls?: readonly unknown[];
+            toolExecutions?: readonly {
+              toolCallId: string;
+              toolName: string;
+              connectorId: string;
+              connectorKind: string;
+              status: string;
+              output: unknown;
+              diagnostics: readonly unknown[];
+            }[];
+          }>;
+          shutdown: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      codexAuthAdapter: {
+        startDeviceCodeLogin: async () => ({
+          loginId: "login-codex-dynamic-collapse-001",
+          verificationUrl: "https://auth.openai.com/codex/device",
+          userCode: "TOOLS-001",
+          wsUrl: "ws://127.0.0.1:4597",
+          pid: 4597,
+        }),
+        readAccount: async ({ codexHome }) => {
+          await mkdir(codexHome, { recursive: true });
+          await writeFile(
+            path.join(codexHome, "auth.json"),
+            JSON.stringify(
+              {
+                auth_mode: "chatgpt",
+                tokens: {
+                  access_token: "codex-access-dynamic-collapse-001",
+                  refresh_token: "codex-refresh-dynamic-collapse-001",
+                  account_id: "codex-account-dynamic-collapse-001",
+                },
+                last_refresh: "2026-07-06T10:30:00.000Z",
+              },
+              null,
+              2,
+            ),
+            "utf8",
+          );
+          return {
+            account: {
+              type: "chatgpt",
+              email: "dynamic-collapse@example.com",
+              planType: "pro",
+            },
+            requiresOpenaiAuth: true,
+          };
+        },
+      },
+      codexExecutionAdapter: {
+        executeRequest: async ({ executeDynamicToolCall, requestCapture, requestId }) => {
+          expect(requestCapture.body.tools).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                type: "function",
+              }),
+            ]),
+          );
+          expect(requestCapture.body.tool_choice).toEqual({
+            type: "function",
+            function: {
+              name: "read_file",
+            },
+          });
+          expect(executeDynamicToolCall).toBeDefined();
+
+          const workspaceRoot = await mkdtemp(
+            path.join(os.tmpdir(), "runtime-host-codex-dynamic-collapse-ws-"),
+          );
+          try {
+            await (
+              bridge as {
+                seedManagedCodexWorkspaceFixture: (workspaceRoot: string) => Promise<void>;
+              }
+            ).seedManagedCodexWorkspaceFixture(workspaceRoot);
+
+            const toolResult = await executeDynamicToolCall?.({
+              toolCallId: "call-read-file-001",
+              toolName: "read_file",
+              toolArguments: { path: "src/router.ts" },
+              workspaceRoot,
+            });
+            expect(toolResult?.execution).toBeDefined();
+
+            return {
+              statusCode: 200,
+              body: {
+                id: `chatcmpl-${requestId}`,
+                choices: [
+                  {
+                    index: 0,
+                    finish_reason: "stop",
+                    message: {
+                      role: "assistant",
+                      content: "route",
+                      tool_calls: [
+                        {
+                          id: "call-read-file-001",
+                          type: "function",
+                          function: {
+                            name: "read_file",
+                            arguments: '{"path":"src/router.ts"}',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+                usage: {
+                  prompt_tokens: 31,
+                  completion_tokens: 7,
+                },
+              },
+              dynamicToolExecutions: toolResult?.execution ? [toolResult.execution] : [],
+              vendorMetadata: {
+                vendorId: "codex-app-server",
+                latencyMs: 12,
+              },
+            };
+          } finally {
+            await rm(workspaceRoot, { recursive: true, force: true });
+          }
+        },
+      },
+    });
+
+    try {
+      const pending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.4"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+
+      await backend.pollProviderDeviceAuthorization({
+        authRequestId: pending.authRequestId,
+      });
+
+      const endpoint = await backend.activateEndpoint({
+        providerAccountId: "openai.personal.codex-subscription",
+        modelId: "chatgpt/gpt-5.4",
+        region: "global",
+      });
+
+      const result = await backend.executeChatCompletions(
+        {
+          model: "chatgpt/gpt-5.4",
+          messages: [
+            {
+              role: "user",
+              content:
+                "Read the benchmark router source file and reply with the first word of its exported function name only.",
+            },
+          ],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "read_file",
+                description: "Read a file from the benchmark workspace.",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    path: { type: "string" },
+                  },
+                  required: ["path"],
+                },
+              },
+            },
+          ],
+          tool_choice: {
+            type: "function",
+            function: {
+              name: "read_file",
+            },
+          },
+        },
+        "req-runtime-bridge-codex-dynamic-collapse-001",
+      );
+
+      expect(result.model).toBe("chatgpt/gpt-5.4");
+      expect(result.endpointId).toBe(endpoint.endpointId);
+      expect(result.outputText).toBe("route");
+      expect(result.finishReason).toBe("stop");
+      expect(result.toolCalls).toBeUndefined();
+      expect(result.toolExecutions).toEqual([
+        expect.objectContaining({
+          toolCallId: "call-read-file-001",
+          toolName: "read_file",
+          connectorId: "request-scoped",
+          connectorKind: "dynamic-tool",
+          status: "succeeded",
+        }),
+      ]);
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
   test("classifies subscription quota exhaustion as fallback-eligible without retrying the same endpoint", () => {
     expect(
       typeof (bridge as { classifyUpstreamExecutionFailure?: unknown })
@@ -13599,6 +15259,205 @@ describe("runtime-host-bridge", () => {
     expect(resolveDuration(5)).toBe(10 * 60 * 60 * 1000);
     expect(resolveDuration(6)).toBe(20 * 60 * 60 * 1000);
     expect(resolveDuration(12)).toBe(20 * 60 * 60 * 1000);
+  });
+
+  test("does not place Codex subscription endpoints on cooldown for invalid_request failures", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "runtime-host-codex-invalid-request-"),
+    );
+    const scopeId = "runtime-host-codex-invalid-request-tests";
+    let executeAttempts = 0;
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          codexAuthAdapter?: {
+            startDeviceCodeLogin: (input: { codexHome: string }) => Promise<{
+              loginId: string;
+              verificationUrl: string;
+              userCode: string;
+              wsUrl: string;
+              pid: number;
+            }>;
+            readAccount: (input: { codexHome: string }) => Promise<{
+              account: {
+                type: string;
+                email: string;
+                planType: string;
+              } | null;
+              requiresOpenaiAuth: boolean;
+            }>;
+          };
+          codexExecutionAdapter?: {
+            executeRequest: (input: {
+              requestId: string;
+              modelId: string;
+              requestCapture: {
+                url: string;
+                body: Record<string, unknown>;
+              };
+            }) => Promise<{
+              statusCode: number;
+              body: Record<string, unknown>;
+            }>;
+          };
+        }) => Promise<{
+          startProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<{
+            status: string;
+            authRequestId: string;
+          }>;
+          pollProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (body: Record<string, unknown>) => Promise<{
+            endpointId: string;
+          }>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          shutdown: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      codexAuthAdapter: {
+        startDeviceCodeLogin: async () => ({
+          loginId: "login-codex-invalid-request-001",
+          verificationUrl: "https://auth.openai.com/codex/device",
+          userCode: "BADREQ-001",
+          wsUrl: "ws://127.0.0.1:4596",
+          pid: 4596,
+        }),
+        readAccount: async ({ codexHome }) => {
+          await mkdir(codexHome, { recursive: true });
+          await writeFile(
+            path.join(codexHome, "auth.json"),
+            JSON.stringify(
+              {
+                auth_mode: "chatgpt",
+                tokens: {
+                  access_token: "codex-access-invalid-request-001",
+                  refresh_token: "codex-refresh-invalid-request-001",
+                  account_id: "codex-account-invalid-request-001",
+                },
+                last_refresh: "2026-07-06T09:30:00.000Z",
+              },
+              null,
+              2,
+            ),
+            "utf8",
+          );
+          return {
+            account: {
+              type: "chatgpt",
+              email: "invalid-request@example.com",
+              planType: "pro",
+            },
+            requiresOpenaiAuth: true,
+          };
+        },
+      },
+      codexExecutionAdapter: {
+        executeRequest: async () => {
+          executeAttempts += 1;
+          return {
+            statusCode: 400,
+            body: {
+              error: {
+                message: "Invalid request: local contract mismatch",
+                type: "invalid_request",
+                code: "invalid_request",
+              },
+            },
+          };
+        },
+      },
+    });
+
+    try {
+      const pending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.4"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+
+      await backend.pollProviderDeviceAuthorization({
+        authRequestId: pending.authRequestId,
+      });
+
+      const endpoint = await backend.activateEndpoint({
+        providerAccountId: "openai.personal.codex-subscription",
+        modelId: "chatgpt/gpt-5.4",
+        region: "global",
+      });
+
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "chatgpt/gpt-5.4",
+            messages: [{ role: "user", content: "First malformed request." }],
+          },
+          "req-runtime-bridge-codex-invalid-request-001",
+        ),
+      ).rejects.toThrow(/invalid request/i);
+
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "chatgpt/gpt-5.4",
+            messages: [{ role: "user", content: "Second malformed request." }],
+          },
+          "req-runtime-bridge-codex-invalid-request-002",
+        ),
+      ).rejects.toThrow(/invalid request/i);
+
+      expect(executeAttempts).toBe(2);
+
+      const databasePath = resolveSqliteMemoryLocation({
+        runtimeStateRoot,
+        scopeId,
+      });
+      const database = new DatabaseSync(databasePath);
+      try {
+        const row = database
+          .prepare(
+            "SELECT maintenance_value FROM memory_maintenance WHERE maintenance_key = ? LIMIT 1",
+          )
+          .get("routing.execution-failure-cooldowns.v1") as
+          | {
+              maintenance_value: string;
+            }
+          | undefined;
+        const cooldowns =
+          row && typeof row.maintenance_value === "string"
+            ? (JSON.parse(row.maintenance_value) as Record<string, Record<string, unknown>>)
+            : {};
+        expect(cooldowns[endpoint.endpointId]).toBeUndefined();
+      } finally {
+        database.close();
+      }
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
   });
 
   test("keeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog", async () => {
@@ -17908,6 +19767,148 @@ describe("runtime-host-bridge", () => {
       expect(capturedAuthHeaders.length).toBeGreaterThan(0);
       // resolveCredentialValue reads access_token from the local-file; applyCredentialToHeaders prefixes Bearer
       expect(capturedAuthHeaders[0]).toBe("Bearer sk-test-moonshot-api-key-001");
+    } finally {
+      await rm(credentialFile, { force: true });
+    }
+  });
+
+  test("accepts legacy credentialized endpoint ids when pinning a requested endpoint", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(os.tmpdir(), "role-model-legacy-endpoint-id-tests");
+    const scopeId = "runtime-legacy-endpoint-id-tests";
+    const credentialDir = path.join(runtimeStateRoot, scopeId, "credentials", "oauth", "moonshot");
+    const credentialFile = path.join(credentialDir, "moonshot.personal.api-key.json");
+    await rm(runtimeStateRoot, { recursive: true, force: true });
+    await mkdir(credentialDir, { recursive: true });
+    await writeFile(
+      credentialFile,
+      JSON.stringify({ access_token: "sk-test-moonshot-api-key-legacy-001" }),
+      "utf8",
+    );
+
+    const capturedEndpointIds: string[] = [];
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher?: typeof fetch;
+          }) => Promise<{
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+              requestOptions?: {
+                endpointId?: string;
+              },
+            ) => Promise<{
+              model: string;
+              endpointId: string;
+              outputText: string;
+              finishReason: string;
+            }>;
+            upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input, init) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url === "https://api.moonshot.ai/v1/chat/completions") {
+            const parsedBody = JSON.parse(String(init?.body ?? "{}")) as {
+              model?: string;
+            };
+            capturedEndpointIds.push(parsedBody.model ?? "unknown");
+            return new Response(
+              JSON.stringify({
+                id: "chatcmpl-legacy-endpoint-id",
+                object: "chat.completion",
+                choices: [
+                  {
+                    index: 0,
+                    message: { role: "assistant", content: "legacy endpoint ok" },
+                    finish_reason: "stop",
+                  },
+                ],
+                usage: {
+                  prompt_tokens: 8,
+                  completion_tokens: 3,
+                  total_tokens: 11,
+                },
+              }),
+              {
+                status: 200,
+                headers: { "content-type": "application/json" },
+              },
+            );
+          }
+          throw new Error(`Unexpected network request: ${url}`);
+        },
+      });
+
+      await backend.upsertProviderAccount?.({
+        providerAccountId: "moonshot.personal.api-key",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "local-file",
+          ref: "oauth/moonshot/moonshot.personal.api-key",
+        },
+        authMode: "api-key-static",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        baseUrlOverride: "https://api.moonshot.ai/v1",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.5",
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+
+      await backend.activateEndpoint?.({
+        providerAccountId: "moonshot.personal.api-key",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      });
+
+      const result = await backend.executeChatCompletions(
+        {
+          model: "moonshot/kimi-k2.5",
+          messages: [{ role: "user", content: "Use the pinned endpoint." }],
+        },
+        "req-legacy-endpoint-id-001",
+        undefined,
+        {
+          endpointId: "moonshot.personal.credential.global.kimi-k2.5",
+        },
+      );
+
+      expect(result.outputText).toBe("legacy endpoint ok");
+      expect(result.endpointId).toBe("moonshot.personal.api-key.global.kimi-k2.5");
+      expect(capturedEndpointIds).toEqual(["kimi-k2.5"]);
     } finally {
       await rm(credentialFile, { force: true });
     }

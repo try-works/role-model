@@ -6,6 +6,12 @@ import type { EndpointRegistryResult } from "@role-model-router/endpoint-registr
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import * as bridge from "../src/index.js";
+import {
+  createEmptyOperatorIntent,
+  readOperatorIntent,
+  upsertPeerLoad,
+  writeOperatorIntent,
+} from "../src/operator-intent.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -405,6 +411,76 @@ describe("peer configuration", () => {
     await backend.updatePeers(body);
     const readBack = await backend.readPeers();
     expect(readBack).toEqual(body);
+  });
+
+  test("updatePeers replays persisted peer auto-reload entries when peers become available", async () => {
+    const scopeId = "test-peers";
+    const modelId = "lfm2.5-8b-a1b";
+    const peerUrl = "http://127.0.0.1:1234";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          registry: EndpointRegistryResult;
+          providerPresetsPath: string;
+          networkFetcher?: typeof fetch;
+        }) => Promise<{
+          updatePeers(body: readonly unknown[]): Promise<readonly unknown[]>;
+          listEndpoints(): Promise<readonly Record<string, unknown>[]>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot: tempDir,
+      scopeId,
+      registry,
+      providerPresetsPath: "testdata/router-runtime/fixtures/provider-presets.json",
+      networkFetcher: async (input) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === `${peerUrl}/v1/models`) {
+          return new Response(
+            JSON.stringify({
+              object: "list",
+              data: [{ id: modelId, object: "model" }],
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    writeOperatorIntent(
+      { runtimeStateRoot: tempDir, scopeId },
+      upsertPeerLoad(createEmptyOperatorIntent(), {
+        peerId: "peer-1",
+        modelId,
+        roleIds: ["general.chat"],
+        autoReload: true,
+      }),
+    );
+
+    await backend.updatePeers([{ id: "peer-1", url: peerUrl }]);
+
+    expect(await backend.listEndpoints()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          endpointId: "local-openai-compatible.personal.peer-1.local.lfm2.5-8b-a1b",
+          modelId,
+          providerAccountId: "local-openai-compatible.personal.peer-1",
+        }),
+      ]),
+    );
+    expect(readOperatorIntent({ runtimeStateRoot: tempDir, scopeId })?.peerLoads).toEqual([
+      expect.objectContaining({
+        peerId: "peer-1",
+        modelId,
+        autoReload: true,
+      }),
+    ]);
   });
 
   test("checkPeerHealth returns false for unreachable url", async () => {
