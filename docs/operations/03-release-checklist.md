@@ -26,7 +26,7 @@ corepack pnpm run runtime:package-sea
 The tag should trigger `build-binaries.yml`, which now:
 
 1. builds all supported runtime archives,
-2. attests the built archives,
+2. attests the built archives, retrying transient Sigstore/Rekor timeouts before the job is allowed to fail,
 3. gathers every archive into one publish job,
 4. adds installer scripts,
 5. writes `SHA256SUMS.txt`,

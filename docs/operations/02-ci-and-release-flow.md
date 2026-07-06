@@ -59,6 +59,7 @@ Outputs:
 Notes:
 
 - the workflow packages one matrix target per OS/architecture.
+- release-archive attestation remains mandatory, but transient Sigstore/Rekor failures now get three attempts with short backoff before the matrix job is allowed to fail.
 - tagged runs now publish through one final release job so notes, checksums, and assets stay coherent.
 - release notes are synthesized from recursive implementation, decisions, and state-update artifacts in the
   tagged commit range, then combined with GitHub's generated notes.
