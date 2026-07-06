@@ -10,18 +10,21 @@
   - hardened upstream failure classification and cooldown handling so timeout, network, rate-limit, quota, provider-auth, and upstream-5xx failures can drive retry or reroute with escalating endpoint cooldown windows; repaired Codex auth now clears stale provider-auth cooldowns
   - made session bootstrap treat peer auto-reload degradation as advisory so remote-only readiness is not blocked by `peer reload incomplete`
   - changed `docs-site-deploy.yml` so missing Cloudflare secrets emit a skip notice and keep the workflow green instead of failing the merged `main` commit on an environment-only deploy precondition
+  - changed `build-binaries.yml` so artifact attestation remains mandatory but now retries transient Rekor/Sigstore timeouts three times with backoff before failing the release matrix job
 - Why:
   - routed Codex Subscription requests could lose forced tool intent, mis-handle tool-heavy or multimodal turns, and stay artificially denied after recoverable execution failures
   - remote-only operators could see a false degraded readiness summary when local peer reload lagged even though the runtime was otherwise execution-ready
   - release gating on GitHub should fail for broken builds or broken deploy logic, not for an intentionally absent Pages credential in repositories or forks that still need docs-build validation
+  - release publication should not fail on the first transient transparency-log timeout when the produced archive is otherwise valid and GitHub's attestation dependency is temporarily slow
 - How:
   - verified with targeted host/provider tests, full local `corepack pnpm run ci:check`, rebuilt-runtime probes on `:3456`, and live exact-model plus alias requests that executed GPT 5.4 tool calls through the Codex Subscription path
-  - added a repo-owned docs workflow contract test in `apps/docs-site/scripts/docs-site-deploy-workflow.test.mjs` and verified it red/green against the workflow YAML before rerunning local CI
+  - added repo-owned workflow contract tests for docs deploy and binary release attestation behavior, verified the new release test red/green against the workflow YAML, and used the failed tag-run Rekor timeout logs to confirm the retry target before rerunning local CI
 - What was not done:
   - no new provider families or generic hosted-browser/tool runtime were introduced
   - invalid-request responses still fail fast instead of falling back to a different endpoint
 - Known issues / follow-ups:
   - docs, runtime routing memory, release notes, and GitHub workflow guidance need to stay aligned whenever Codex Subscription heuristics, cooldown policy, or release automation posture change again
+  - if artifact attestation still fails after all three retries, inspect GitHub job logs for Sigstore/Rekor service health before assuming a packaging regression
 
 ### Run `60-runtime-ui-paper-linear-review-alignment`
 

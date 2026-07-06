@@ -44,6 +44,7 @@ Trust: current repo-local baseline; validate again after workflow topology or re
 ## Release publication pattern
 
 - `/.github/workflows/build-binaries.yml` should keep matrix jobs limited to build, archive, upload, and attest responsibilities.
+- Artifact attestation stays mandatory, but the workflow should retry transient Sigstore/Rekor failures before failing the matrix job. External transparency-log timeouts are infrastructure flakes, not immediate evidence of a bad archive.
 - Publish the actual GitHub release from one final tag-gated job after all archives are available. That job is the right place to assemble `install.sh`, `install.ps1`, `SHA256SUMS.txt`, and the final release asset bundle.
 - Treat attestations and checksums as part of the shipped release, not optional side outputs.
 

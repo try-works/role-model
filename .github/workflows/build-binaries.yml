@@ -140,10 +140,44 @@ jobs:
             "ARCHIVE_PATH=role-model-router/dist/archive/role-model-router-${{ matrix.target }}.tar.gz" | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
-      - name: Attest release archive
+      - name: Attest release archive (attempt 1)
+        id: attest_release_archive_attempt_1
+        continue-on-error: true
         uses: actions/attest@v4
         with:
           subject-path: ${{ env.ARCHIVE_PATH }}
+
+      - name: Back off before attestation retry 2
+        if: steps.attest_release_archive_attempt_1.outcome == 'failure'
+        shell: pwsh
+        run: Start-Sleep -Seconds 15
+
+      - name: Attest release archive (attempt 2)
+        id: attest_release_archive_attempt_2
+        if: steps.attest_release_archive_attempt_1.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ env.ARCHIVE_PATH }}
+
+      - name: Back off before attestation retry 3
+        if: steps.attest_release_archive_attempt_2.outcome == 'failure'
+        shell: pwsh
+        run: Start-Sleep -Seconds 30
+
+      - name: Attest release archive (attempt 3)
+        id: attest_release_archive_attempt_3
+        if: steps.attest_release_archive_attempt_2.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ env.ARCHIVE_PATH }}
+
+      - name: Assert attestation succeeded after retries
+        if: steps.attest_release_archive_attempt_1.outcome == 'failure' && steps.attest_release_archive_attempt_2.outcome == 'failure' && steps.attest_release_archive_attempt_3.outcome == 'failure'
+        shell: pwsh
+        run: |
+          throw "Artifact attestation failed after three attempts. Inspect the earlier attest steps for the root cause."
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
