@@ -1233,4 +1233,34 @@ observed_data:
       },
     ]);
   });
+
+  test("renames a single primary alias when its execution suffix becomes stale", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      {
+        version: "1.0",
+        routing: {
+          strategy: "difficulty",
+        },
+        execution_mode: "hybrid",
+        model_aliases: {
+          "difficulty.hybrid": {
+            mode: "difficulty",
+            model_ids: ["remote/vision-model", "remote/code-model"],
+          },
+        },
+      },
+      {
+        execution_mode: "remote_only",
+      },
+    );
+
+    expect(merged.executionMode).toBe("remote_only");
+    expect(merged.modelAliases).toEqual([
+      {
+        aliasId: "difficulty.remote-only",
+        mode: "difficulty",
+        modelIds: ["remote/vision-model", "remote/code-model"],
+      },
+    ]);
+  });
 });
