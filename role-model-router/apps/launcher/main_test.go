@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -29,6 +30,25 @@ func TestBuildRuntimeArgsUsesStandalonePaths(t *testing.T) {
 		if got[index] != want[index] {
 			t.Fatalf("arg %d mismatch: expected %q, got %q", index, want[index], got[index])
 		}
+	}
+}
+
+func TestBuildRuntimeArgsUsesAncestorWorkspaceRootWhenPackageLivesInsideRepo(t *testing.T) {
+	tempRoot := t.TempDir()
+	workspaceRoot := filepath.Join(tempRoot, "workspace")
+	packageDir := filepath.Join(workspaceRoot, "role-model-router", "dist", "release", "win32-x64")
+	runtimeStateRoot := filepath.Join(tempRoot, "runtime-state")
+
+	if err := os.MkdirAll(packageDir, 0o755); err != nil {
+		t.Fatalf("mkdir package dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(workspaceRoot, "pnpm-workspace.yaml"), []byte("packages:\n"), 0o644); err != nil {
+		t.Fatalf("write workspace marker: %v", err)
+	}
+
+	got := buildRuntimeArgs(packageDir, runtimeStateRoot)
+	if got[1] != workspaceRoot {
+		t.Fatalf("expected repo-root %q, got %q", workspaceRoot, got[1])
 	}
 }
 
