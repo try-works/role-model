@@ -32,9 +32,61 @@ func resolveRuntimeStateRoot(packageDir string) string {
 	return filepath.Join(packageDir, "runtime-state")
 }
 
+func looksLikeWorkspaceRoot(directory string) bool {
+	markers := []string{
+		".git",
+		".agents",
+		"pnpm-workspace.yaml",
+		"package.json",
+		"pyproject.toml",
+	}
+
+	for _, marker := range markers {
+		if _, err := os.Stat(filepath.Join(directory, marker)); err == nil {
+			return true
+		}
+	}
+
+	return false
+}
+
+func resolveWorkspaceRootFromAncestors(packageDir string) string {
+	current := filepath.Clean(packageDir)
+	for {
+		if looksLikeWorkspaceRoot(current) {
+			return current
+		}
+		parent := filepath.Dir(current)
+		if parent == current {
+			return packageDir
+		}
+		current = parent
+	}
+}
+
+func resolveStandaloneWorkspaceRoot(packageDir string) string {
+	if override := strings.TrimSpace(os.Getenv("ROLE_MODEL_WORKSPACE_ROOT")); override != "" {
+		if info, err := os.Stat(override); err == nil && info.IsDir() {
+			return filepath.Clean(override)
+		}
+	}
+
+	discovered := resolveWorkspaceRootFromAncestors(packageDir)
+	if discovered != filepath.Clean(packageDir) {
+		return discovered
+	}
+
+	if cwd, err := os.Getwd(); err == nil && cwd != "" && looksLikeWorkspaceRoot(cwd) {
+		return filepath.Clean(cwd)
+	}
+
+	return filepath.Clean(packageDir)
+}
+
 func buildRuntimeArgs(packageDir string, runtimeStateRoot string) []string {
+	workspaceRoot := resolveStandaloneWorkspaceRoot(packageDir)
 	return []string{
-		"--repo-root", packageDir,
+		"--repo-root", workspaceRoot,
 		"--runtime-state-root", runtimeStateRoot,
 		"--scope-id", "standalone-runtime",
 		"--host", runtimeHost,

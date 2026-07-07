@@ -1491,12 +1491,6 @@ function canonicalizeUnifiedRuntimeRoutingAliases(
   const normalizedAliases = mergeCanonicalAliasEntries(
     config.modelAliases.map((alias) => {
       const canonicalLegacyAlias = canonicalizeLegacyRoutingAliasId(alias, config);
-      if (
-        config.modelAliases?.length === 1 &&
-        isPrimaryRoutingAliasId(canonicalLegacyAlias.aliasId)
-      ) {
-        return canonicalizeSinglePrimaryRoutingAlias(canonicalLegacyAlias, config);
-      }
       return canonicalLegacyAlias;
     }),
   );

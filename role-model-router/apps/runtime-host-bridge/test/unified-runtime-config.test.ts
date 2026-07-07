@@ -1204,4 +1204,33 @@ observed_data:
       },
     ]);
   });
+
+  test("preserves explicitly configured modern primary alias ids even when routing strategy differs", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      {
+        version: "1.0",
+        routing: {
+          strategy: "balanced",
+        },
+        execution_mode: "remote_only",
+        model_aliases: {
+          "difficulty.remote-only": {
+            mode: "difficulty",
+            model_ids: ["remote/vision-model", "remote/code-model"],
+          },
+        },
+      },
+      {},
+    );
+
+    expect(merged.routingStrategy).toBe("balanced");
+    expect(merged.executionMode).toBe("remote_only");
+    expect(merged.modelAliases).toEqual([
+      {
+        aliasId: "difficulty.remote-only",
+        mode: "difficulty",
+        modelIds: ["remote/vision-model", "remote/code-model"],
+      },
+    ]);
+  });
 });
