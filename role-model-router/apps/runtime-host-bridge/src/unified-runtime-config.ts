@@ -1413,9 +1413,7 @@ export function isPrimaryRoutingAliasId(aliasId: string): boolean {
   );
 }
 
-function readPrimaryRoutingAliasExecutionMode(
-  aliasId: string,
-): UnifiedRuntimeExecutionMode | null {
+function readPrimaryRoutingAliasExecutionMode(aliasId: string): UnifiedRuntimeExecutionMode | null {
   for (const suffix of primaryRoutingAliasExecutionSuffixes) {
     if (primaryRoutingAliasPrefixes.some((prefix) => aliasId === `${prefix}.${suffix}`)) {
       return suffix.replaceAll("-", "_") as UnifiedRuntimeExecutionMode;
@@ -1502,9 +1500,7 @@ function canonicalizeUnifiedRuntimeRoutingAliases(
   const normalizedAliases = mergeCanonicalAliasEntries(
     config.modelAliases.map((alias) => {
       const canonicalLegacyAlias = canonicalizeLegacyRoutingAliasId(alias, config);
-      const aliasExecutionMode = readPrimaryRoutingAliasExecutionMode(
-        canonicalLegacyAlias.aliasId,
-      );
+      const aliasExecutionMode = readPrimaryRoutingAliasExecutionMode(canonicalLegacyAlias.aliasId);
       if (
         config.modelAliases?.length === 1 &&
         aliasExecutionMode !== null &&
