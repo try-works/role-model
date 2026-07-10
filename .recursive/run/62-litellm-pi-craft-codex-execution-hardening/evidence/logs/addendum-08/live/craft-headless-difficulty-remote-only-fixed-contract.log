@@ -1,0 +1,17 @@
+file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/scripts/craft-headless-verify.mjs:106
+          reject(new Error(payload.error ?? "Craft session error"));
+                 ^
+
+Error: 404 "not found"
+    at Array.check (file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/scripts/craft-headless-verify.mjs:106:18)
+    at WebSocket.<anonymous> (file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/scripts/craft-headless-verify.mjs:158:38)
+    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:845:20)
+    at WebSocket.dispatchEvent (node:internal/event_target:778:26)
+    at fireEvent (node:internal/deps/undici/undici:12652:14)
+    at #onMessage (node:internal/deps/undici/undici:13883:9)
+    at Object.onMessage (node:internal/deps/undici/undici:13596:76)
+    at websocketMessageReceived (node:internal/deps/undici/undici:12656:15)
+    at ByteParser.run (node:internal/deps/undici/undici:13299:19)
+    at ByteParser._write (node:internal/deps/undici/undici:13193:14)
+
+Node.js v24.11.0

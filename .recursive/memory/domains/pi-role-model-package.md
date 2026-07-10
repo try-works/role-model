@@ -1,8 +1,17 @@
 # Pi Role-Model Package
 
+Type: `domain`
 Status: `CURRENT`
+Scope: `Repo-owned Pi integration package for Role-Model runtime discovery, request-intent injection, compact taxonomy usage, and runtime inspection commands.`
 Owns-Paths: `packages/pi-role-model/**`
 Watch-Paths: `role-model-router/apps/runtime-host-bridge/src/index.ts` (taxonomy APIs consumed by Pi)
+Source-Runs:
+- `57-role-model-taxonomy-v1-phase-1-4`
+- `59-observe-taxonomy-analytics-completion`
+- `62-litellm-pi-craft-codex-execution-hardening`
+Validated-At-Commit: `working-tree`
+Last-Validated: `2026-07-10`
+Tags: `pi`, `runtime-integration`, `taxonomy`, `request-intent`, `inspection`
 Created: `2026-06-24`
 Last Validated: `2026-06-28`
 Validated By: `run-59`
@@ -82,3 +91,6 @@ Two-tier progressive classifier in `classify-with-progressive-disclosure.ts`:
 - `extension.ts` must refresh effective taxonomy on startup, `/role-model setup`, and `/role-model alias refresh`; otherwise runtime and package taxonomy can drift after runtime-side updates.
 - `runtime-inspection.ts` must honor `options.endpoint ?? process.env.ROLE_MODEL_ENDPOINT ?? DEFAULT_ROLE_MODEL_ENDPOINT` so operator diagnostics can target rebuilt runtimes without mutating package state.
 - Pi inspection remains read-only: request lists, request detail, and latest explanation come from Role-Model runtime APIs and Pi must not synthesize routing reasons on its own.
+- Rebuilt-runtime alias proof for Pi must use the actual extension-prepared payload path against canonical runtime aliases such as `difficulty.remote-only`; provider truth should still come from `providerId`, while additive `vendorId`, `executionFamily`, and `adapterFamily` may be consumed as separate execution facts rather than collapsed into provider identity.
+- Multi-turn Pi verification must reuse a real Pi session when testing Codex Subscription history conversion. Single-turn or `--no-session` probes can miss assistant-history replay bugs, such as invalid Responses `input_text` content parts for previous assistant output.
+- If noninteractive Pi CLI verification hangs while Role-Model telemetry shows successful requests, treat the runtime request rows as useful reachability evidence but do not claim a clean Pi CLI pass. Clean Pi verification requires both a real Pi request and a terminating Pi command transcript.

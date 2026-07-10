@@ -547,7 +547,6 @@ export async function runRuntimeUiValidation(
           resolvedModelId: mixedAliasSelectedModelId,
         }
       : {
-          vendorId: validation.execution.responseCapture.providerFamily,
           resolvedModelId: mixedAliasSelectedModelId,
         };
     const mixedAliasRequestCapture = {

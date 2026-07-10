@@ -1,0 +1,48 @@
+{
+  "model": "difficulty.remote-only",
+  "messages": [
+    {
+      "role": "user",
+      "content": "You are Craft Agent, powered by Craft Agents Backend. Help users connect data sources, automate workflows, and validate integrations. Follow the system contract and schema for tool validation."
+    },
+    {
+      "role": "user",
+      "content": "Run62 live craft probe. Reply with the exact text CRAFT_OK."
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "craft_tool_0",
+        "description": "Craft declared tool schema",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "craft_tool_1",
+        "description": "Craft declared tool schema",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "craft_tool_2",
+        "description": "Craft declared tool schema",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    }
+  ]
+}

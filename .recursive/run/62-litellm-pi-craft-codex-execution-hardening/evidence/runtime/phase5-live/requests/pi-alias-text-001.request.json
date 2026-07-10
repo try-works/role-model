@@ -1,0 +1,5 @@
+{
+  "input": "Reply with a short confirmation that the alias executed.",
+  "max_output_tokens": 64,
+  "model": "difficulty.remote-only"
+}

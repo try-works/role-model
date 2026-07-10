@@ -1,0 +1,32 @@
+[
+  {
+    "ProcessId": 35620,
+    "ParentProcessId": 40260,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum11\\user-data\""
+  },
+  {
+    "ProcessId": 61832,
+    "ParentProcessId": 35620,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=gpu-process --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum11\\user-data\" --gpu-preferences=SAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAAQAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --field-trial-handle=1760,i,13103210448713962657,4235369406227934135,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=1752 /prefetch:2"
+  },
+  {
+    "ProcessId": 46572,
+    "ParentProcessId": 35620,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum11\\user-data\" --standard-schemes=thumbnail --secure-schemes=sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=thumbnail,sentry-ipc --fetch-schemes=thumbnail,sentry-ipc --streaming-schemes=thumbnail --field-trial-handle=1760,i,13103210448713962657,4235369406227934135,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=1940 /prefetch:11"
+  },
+  {
+    "ProcessId": 57280,
+    "ParentProcessId": 35620,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=renderer --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum11\\user-data\" --standard-schemes=thumbnail --secure-schemes=sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=thumbnail,sentry-ipc --fetch-schemes=thumbnail,sentry-ipc --streaming-schemes=thumbnail --app-path=\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\" --no-sandbox --no-zygote --video-capture-use-gpu-memory-buffer --lang=en-US --device-scale-factor=1.5 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=4 --time-ticks-at-unix-epoch=-1783145378830424 --launch-time-ticks=416732644764 --field-trial-handle=1760,i,13103210448713962657,4235369406227934135,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=3220 /prefetch:1"
+  },
+  {
+    "ProcessId": 24176,
+    "ParentProcessId": 48772,
+    "Name": "pwsh.exe",
+    "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$ErrorActionPreference = 'Continue'\n$run = '.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening'\n$liveDir = Join-Path $run 'evidence\\logs\\addendum-11\\live\\craft-runtime'\nNew-Item -ItemType Directory -Force $liveDir | Out-Null\n$matches = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '\\.tmp-craft-headless-addendum11' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine)\n$matches | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 (Join-Path $liveDir 'craft-headless-gui-processes-before-stop.json')\nforeach ($proc in $matches) { Stop-Process -Id $proc.ProcessId -Force -ErrorAction SilentlyContinue }\nStart-Sleep -Seconds 2\n$remaining = @(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '\\.tmp-craft-headless-addendum11' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine)\n$remaining | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 (Join-Path $liveDir 'craft-headless-gui-processes-after-stop.json')\n[pscustomobject]@{ stopped = $matches.Count; remaining = $remaining.Count } | ConvertTo-Json -Depth 4\""
+  }
+]

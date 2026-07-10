@@ -1,0 +1,26 @@
+[
+  {
+    "ProcessId": 56008,
+    "ParentProcessId": 24852,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum10\\user-data\""
+  },
+  {
+    "ProcessId": 27068,
+    "ParentProcessId": 56008,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=gpu-process --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum10\\user-data\" --gpu-preferences=SAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAAQAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --field-trial-handle=1736,i,13871502913683453900,14038190800696465709,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=1724 /prefetch:2"
+  },
+  {
+    "ProcessId": 38012,
+    "ParentProcessId": 56008,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum10\\user-data\" --standard-schemes=thumbnail --secure-schemes=sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=thumbnail,sentry-ipc --fetch-schemes=thumbnail,sentry-ipc --streaming-schemes=thumbnail --field-trial-handle=1736,i,13871502913683453900,14038190800696465709,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=1920 /prefetch:11"
+  },
+  {
+    "ProcessId": 32620,
+    "ParentProcessId": 48772,
+    "Name": "pwsh.exe",
+    "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$outDir='.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/logs/addendum-10/live-after-fix'; $matches = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '\\.tmp-craft-headless-addendum10' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine; $matches | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 \\\"$outDir/craft-headless-processes-before-cleanup.json\\\"; $ids = @($matches | ForEach-Object { $_.ProcessId }); foreach($id in $ids){ Stop-Process -Id $id -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 2; $remainingCraft = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '\\.tmp-craft-headless-addendum10' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine; $related = Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'role-model|runtime|llama|litellm|python|node|pi|Craft Agents' -or $_.CommandLine -match 'role-model|runtime|llama|litellm|pi-role-model|Craft Agents|\\.tmp-craft-headless-addendum10' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine; [pscustomobject]@{remainingIsolatedCraft=$remainingCraft; relatedProcesses=$related; port3456=(Get-NetTCPConnection -LocalPort 3456 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State,OwningProcess)} | ConvertTo-Json -Depth 8 | Set-Content -Encoding utf8 \\\"$outDir/processes-after-live-verification.json\\\"; curl.exe -s http://127.0.0.1:3456/healthz | Set-Content -Encoding utf8 \\\"$outDir/healthz.final.json\\\"; Get-Content \\\"$outDir/healthz.final.json\\\"\""
+  }
+]

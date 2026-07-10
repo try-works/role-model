@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-07-10T03:08:11.0608365Z",
+  "connections": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 60939,
+      "State": 5,
+      "OwningProcess": 58780
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 51475,
+      "State": 5,
+      "OwningProcess": 58780
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "0.0.0.0",
+      "RemotePort": 0,
+      "State": 2,
+      "OwningProcess": 58780
+    }
+  ],
+  "runtimeProcesses": [
+    {
+      "ProcessId": 58780,
+      "ParentProcessId": 48348,
+      "ExecutablePath": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+      "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+    },
+    {
+      "ProcessId": 51124,
+      "ParentProcessId": 39612,
+      "ExecutablePath": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+      "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$connections = Get-NetTCPConnection -LocalPort 3456 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State,OwningProcess; $processes = Get-CimInstance Win32_Process | Where-Object { ($_.CommandLine -like '*Role Model Runtime*') -or ($_.CommandLine -like '*role-model-runtime*') -or ($_.ExecutablePath -like '*role-model-runtime.exe') } | Select-Object ProcessId,ParentProcessId,ExecutablePath,CommandLine; [pscustomobject]@{ timestamp = (Get-Date).ToUniversalTime().ToString('o'); connections = $connections; runtimeProcesses = $processes } | ConvertTo-Json -Depth 8 | Set-Content .recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-18\\live\\process-isolation-after-relaunch.json; Get-Content .recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-18\\live\\process-isolation-after-relaunch.json\""
+    }
+  ]
+}

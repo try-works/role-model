@@ -1,0 +1,64 @@
+{
+  "statusCode": 200,
+  "ok": true,
+  "headers": {
+    "Connection": [
+      "keep-alive"
+    ],
+    "Content-Length": [
+      "340"
+    ],
+    "Date": [
+      "Tue, 07 Jul 2026 19:10:39 GMT"
+    ],
+    "Access-Control-Allow-Headers": [
+      "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id"
+    ],
+    "x-role-model-endpoint-id": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "Access-Control-Allow-Methods": [
+      "GET, POST, PUT, DELETE, OPTIONS"
+    ],
+    "Keep-Alive": [
+      "timeout=5"
+    ],
+    "x-role-model-routing-decision-id": [
+      "decision-req-462d0f38-396e-40b3-b8e4-80e6705f7ab8"
+    ],
+    "Access-Control-Allow-Origin": [
+      "*"
+    ],
+    "Content-Type": [
+      "application/json"
+    ],
+    "x-role-model-adapter-family": [
+      "ai-sdk-openai"
+    ]
+  },
+  "body": {
+    "id": "chatcmpl-codex-subscription",
+    "object": "response",
+    "created_at": 1783451439,
+    "status": "completed",
+    "model": "chatgpt/gpt-5.4",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_chatcmpl-codex-subscription",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "IMAGE_OK"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 13019,
+      "output_tokens": 22,
+      "total_tokens": 13041
+    }
+  }
+}

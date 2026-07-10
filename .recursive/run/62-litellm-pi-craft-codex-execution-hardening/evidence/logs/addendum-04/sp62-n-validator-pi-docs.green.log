@@ -1,0 +1,19 @@
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/validate-vendors.test.ts
+Result: PASS
+- Test Files 1 passed
+- Tests 2 passed
+
+Command: corepack pnpm --filter @try-works/pi-role-model exec vitest run test/validate-agent-path.test.ts
+Result: PASS
+- Test Files 1 passed
+- Tests 7 passed
+
+Command: corepack pnpm run runtime:validate-vendors
+Result: PASS
+- deterministic corpus emitted local provider truth: `providerFamily = llama-swap`, `vendorId = llama-swap`, `adapterFamily = ai-sdk-openai-compatible`
+- deterministic corpus emitted LiteLLM-backed remote truth: `providerFamily = openai`, `vendorId = litellm`, `adapterFamily = litellm-proxy`
+- deterministic corpus emitted Codex alias truth: `providerFamily = openai`, `vendorId = codex-app-server`, `adapterFamily = ai-sdk-openai`
+
+Documentation alignment:
+- `docs/architecture/13-litellm-pi-role-model-integration-proposal.md` now documents LiteLLM as vendor or execution infrastructure, not provider identity
+- `docs/architecture/14-routed-execution-semantics-and-receipts.md` now documents provider, vendor, execution, and adapter as separate receipt facts

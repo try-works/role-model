@@ -1,0 +1,142 @@
+
+ROW req-fff376e7-e495-4fd1-89f7-08b46d2da9bb
+{
+  "request_id": "req-fff376e7-e495-4fd1-89f7-08b46d2da9bb",
+  "routing_decision_id": "decision-req-fff376e7-e495-4fd1-89f7-08b46d2da9bb",
+  "endpoint_id": "routing.failed.pre-execution",
+  "model_id": "difficulty.remote-only",
+  "provider_id": null,
+  "provider_family": null,
+  "vendor_id": null,
+  "source_client": null,
+  "execution_family": null,
+  "adapter_family": null,
+  "provider_account_id": null,
+  "status_code": 400,
+  "error_class": "execution_failed",
+  "latency_ms": 300003,
+  "total_tokens": 0,
+  "eligible_endpoint_ids_json": "[]",
+  "eligible_model_ids_json": "[]",
+  "structured_inspection_available": 0,
+  "raw_capture_available": 0,
+  "dimensions_json": null,
+  "retry_count": 0,
+  "reroute_count": 0,
+  "cooldown_decision": null
+}
+OBS missing
+
+ROW req-87d757c4-83f0-4880-8410-abdcd6cbc619
+{
+  "request_id": "req-87d757c4-83f0-4880-8410-abdcd6cbc619",
+  "routing_decision_id": "decision-req-87d757c4-83f0-4880-8410-abdcd6cbc619",
+  "endpoint_id": "routing.failed.pre-execution",
+  "model_id": "difficulty.remote-only",
+  "provider_id": null,
+  "provider_family": null,
+  "vendor_id": null,
+  "source_client": null,
+  "execution_family": null,
+  "adapter_family": null,
+  "provider_account_id": null,
+  "status_code": 400,
+  "error_class": "execution_failed",
+  "latency_ms": 270537,
+  "total_tokens": 0,
+  "eligible_endpoint_ids_json": "[]",
+  "eligible_model_ids_json": "[]",
+  "structured_inspection_available": 0,
+  "raw_capture_available": 0,
+  "dimensions_json": null,
+  "retry_count": 0,
+  "reroute_count": 0,
+  "cooldown_decision": null
+}
+OBS missing
+
+ROW req-a3aab38a-5f60-4cef-bcdb-c190b36cf9df
+{
+  "request_id": "req-a3aab38a-5f60-4cef-bcdb-c190b36cf9df",
+  "routing_decision_id": "decision-req-a3aab38a-5f60-4cef-bcdb-c190b36cf9df",
+  "endpoint_id": "routing.failed.pre-execution",
+  "model_id": "difficulty.remote-only",
+  "provider_id": null,
+  "provider_family": null,
+  "vendor_id": null,
+  "source_client": null,
+  "execution_family": null,
+  "adapter_family": null,
+  "provider_account_id": null,
+  "status_code": 402,
+  "error_class": "execution_failed",
+  "latency_ms": 1626,
+  "total_tokens": 0,
+  "eligible_endpoint_ids_json": "[]",
+  "eligible_model_ids_json": "[]",
+  "structured_inspection_available": 0,
+  "raw_capture_available": 0,
+  "dimensions_json": null,
+  "retry_count": 0,
+  "reroute_count": 0,
+  "cooldown_decision": null
+}
+OBS missing
+
+ROW req-e68a8775-e827-48dd-89c8-8cbd2bf238be
+{
+  "request_id": "req-e68a8775-e827-48dd-89c8-8cbd2bf238be",
+  "routing_decision_id": "decision-req-e68a8775-e827-48dd-89c8-8cbd2bf238be",
+  "endpoint_id": "routing.failed.pre-execution",
+  "model_id": "difficulty.remote-only",
+  "provider_id": null,
+  "provider_family": null,
+  "vendor_id": null,
+  "source_client": null,
+  "execution_family": null,
+  "adapter_family": null,
+  "provider_account_id": null,
+  "status_code": 402,
+  "error_class": "execution_failed",
+  "latency_ms": 1156,
+  "total_tokens": 0,
+  "eligible_endpoint_ids_json": "[]",
+  "eligible_model_ids_json": "[]",
+  "structured_inspection_available": 0,
+  "raw_capture_available": 0,
+  "dimensions_json": null,
+  "retry_count": 0,
+  "reroute_count": 0,
+  "cooldown_decision": null
+}
+OBS missing
+
+ROW req-acccf127-b91e-463c-93c7-6de3a55fe592
+{
+  "request_id": "req-acccf127-b91e-463c-93c7-6de3a55fe592",
+  "routing_decision_id": "decision-req-acccf127-b91e-463c-93c7-6de3a55fe592",
+  "endpoint_id": "routing.failed.pre-execution",
+  "model_id": "difficulty.remote-only",
+  "provider_id": null,
+  "provider_family": null,
+  "vendor_id": null,
+  "source_client": null,
+  "execution_family": null,
+  "adapter_family": null,
+  "provider_account_id": null,
+  "status_code": 402,
+  "error_class": "execution_failed",
+  "latency_ms": 3082,
+  "total_tokens": 0,
+  "eligible_endpoint_ids_json": "[]",
+  "eligible_model_ids_json": "[]",
+  "structured_inspection_available": 0,
+  "raw_capture_available": 0,
+  "dimensions_json": null,
+  "retry_count": 0,
+  "reroute_count": 0,
+  "cooldown_decision": null
+}
+OBS missing
+(node:61576) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)

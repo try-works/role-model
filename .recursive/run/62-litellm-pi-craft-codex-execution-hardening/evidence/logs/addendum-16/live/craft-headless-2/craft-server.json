@@ -1,0 +1,8 @@
+{
+  "pid": 13476,
+  "hasExited": false,
+  "url": "ws://127.0.0.1:58019",
+  "tokenPresent": true,
+  "stdout": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-16\\live\\craft-headless-2\\craft-headless.stdout.log",
+  "stderr": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-16\\live\\craft-headless-2\\craft-headless.stderr.log"
+}

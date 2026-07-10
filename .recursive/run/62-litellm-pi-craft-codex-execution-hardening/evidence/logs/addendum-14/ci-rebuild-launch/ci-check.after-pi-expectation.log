@@ -1,0 +1,1643 @@
+
+> role-model@0.0.0 ci:check D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run runtime:test-critical && corepack pnpm run test:rust && corepack pnpm run smoke
+
+
+> role-model@0.0.0 lint D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> biome check . && corepack pnpm run lint:rust
+
+Checked 729 files in 1184ms. No fixes applied.
+
+> role-model@0.0.0 lint:rust D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> cargo fmt --manifest-path role-model-router/rust/Cargo.toml --all --check && cargo clippy --manifest-path role-model-router/rust/Cargo.toml --workspace --all-targets -- -D warnings
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+
+> role-model@0.0.0 schemas:validate D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate
+
+Validated 37 schema file(s).
+Validated 30 fixture file(s).
+
+> role-model@0.0.0 build D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm run types:generate && corepack pnpm -r --if-present build
+
+
+> role-model@0.0.0 types:generate D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types
+
+Generated types for benchmark-run.schema.json
+Generated types for benchmark-suite.schema.json
+Generated types for capability-taxonomy.schema.json
+Generated types for declared-capability-profile.schema.json
+Generated types for downstream-openai-discovery.schema.json
+Generated types for endpoint-identity.schema.json
+Generated types for judge-score.schema.json
+Generated types for model-pack-manifest.schema.json
+Generated types for observed-performance-profile.schema.json
+Generated types for package-manifest.schema.json
+Generated types for planspec.schema.json
+Generated types for role-binding.schema.json
+Generated types for role-definition.schema.json
+Generated types for router-decision.schema.json
+Generated types for routing-policy.schema.json
+Generated types for task-<redacted>.schema.json
+Generated types for task-<redacted>.schema.json
+Generated types for trace-event.schema.json
+Generated types for trace-span.schema.json
+Generated types for usage-event.schema.json
+Formatted 1 file in 27ms. Fixed 1 file.
+Scope: 43 of 44 workspace projects
+packages/packaging build$ tsc -p tsconfig.json
+apps/docs-site build$ react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs
+packages/protocol-types build$ tsc -p tsconfig.json
+packages/pi-role-model build$ tsc --noEmit -p tsconfig.json
+packages/packaging build: Done
+packages/schema-tools build$ tsc -p tsconfig.json
+packages/protocol-types build: Done
+packages/store-contract build$ tsc -p tsconfig.json
+packages/store-contract build: Done
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+packages/pi-role-model build: Done
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+packages/schema-tools build: Done
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+apps/docs-site build: [MDX] generated files in 5.6766999999999825ms
+apps/docs-site build: [MDX] generated files in 3.443099999999504ms
+apps/docs-site build: [MDX] generated files in 2.5289999999995416ms
+apps/docs-site build: vite v8.0.10 building client environment for production...
+apps/docs-site build: [MDX] generated files in 2.4669000000003507ms
+apps/docs-site build: [2K
+role-model-router/packages/bench-core build: Done
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build: Done
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+role-model-router/apps/runtime-ui build: vite v7.3.2 building client environment for production...
+role-model-router/apps/runtime-ui build: transforming...
+role-model-router/packages/catalog build: Done
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+.../packages/process-supervisor build: Done
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+role-model-router/packages/runtime-web build: Done
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+role-model-router/packages/tool-registry build: Done
+.../packages/vendor-abstraction build: Done
+apps/docs-site build: transforming...✓ 2246 modules transformed.
+apps/docs-site build: rendering chunks...
+apps/docs-site build: computing gzip size...
+apps/docs-site build: build/client/.vite/manifest.json                                       28.78 kB │ gzip:  3.12 kB
+apps/docs-site build: build/client/assets/runtime-overview-WUpVyoOR.png                     218.07 kB
+apps/docs-site build: build/client/assets/root-BjmB36fm.css                                  80.30 kB │ gzip: 13.37 kB
+apps/docs-site build: build/client/assets/full-ZUGm99_m.js                                    0.00 kB │ gzip:  0.02 kB
+apps/docs-site build: build/client/assets/index-BeW4qblQ.js                                   0.00 kB │ gzip:  0.02 kB
+apps/docs-site build: build/client/assets/mdx-BNRw8oVt.js                                     0.00 kB │ gzip:  0.02 kB
+apps/docs-site build: build/client/assets/search-CSZo5aTn.js                                  0.00 kB │ gzip:  0.02 kB
+apps/docs-site build: build/client/assets/remove-undefined-CTqT55E9-CEhwT_UK.js               0.20 kB │ gzip:  0.16 kB
+apps/docs-site build: build/client/assets/jsx-runtime-B37CQREX.js                             0.42 kB │ gzip:  0.29 kB
+apps/docs-site build: build/client/assets/fetch-CZTZgNEB.js                                   0.44 kB │ gzip:  0.29 kB
+apps/docs-site build: build/client/assets/chunk-bqFK08oC.js                                   0.69 kB │ gzip:  0.42 kB
+apps/docs-site build: build/client/assets/algolia-_6BuK-IQ.js                                 0.77 kB │ gzip:  0.49 kB
+apps/docs-site build: build/client/assets/search-DEDyBNxK.js                                  0.99 kB │ gzip:  0.53 kB
+apps/docs-site build: build/client/assets/orama-cloud-legacy-CC2n-yU_.js                      1.11 kB │ gzip:  0.58 kB
+apps/docs-site build: build/client/assets/search-default-hR82aom8.js                          1.15 kB │ gzip:  0.63 kB
+apps/docs-site build: build/client/assets/orama-cloud-Dv5atMv7.js                             1.17 kB │ gzip:  0.60 kB
+apps/docs-site build: build/client/assets/policy-and-observability-BhOZSXix.js                5.63 kB │ gzip:  1.31 kB
+apps/docs-site build: build/client/assets/roles-tasks-and-capabilities-QKjZM8Ms.js            6.33 kB │ gzip:  1.44 kB
+apps/docs-site build: build/client/assets/overview-DL0sFI9Z.js                                6.65 kB │ gzip:  1.42 kB
+apps/docs-site build: build/client/assets/endpoints-and-profiles-DZ-ej84O.js                  6.65 kB │ gzip:  1.44 kB
+apps/docs-site build: build/client/assets/install-hAjN9fao.js                                 6.91 kB │ gzip:  1.81 kB
+apps/docs-site build: build/client/assets/first-request-and-decision-QJ0LImHg.js              8.31 kB │ gzip:  1.69 kB
+apps/docs-site build: build/client/assets/quickstart-CJdBEnmM.js                              8.37 kB │ gzip:  1.93 kB
+apps/docs-site build: build/client/assets/protocol-lifecycle-fSMJKa20.js                      9.15 kB │ gzip:  2.05 kB
+apps/docs-site build: build/client/assets/runtime-ui-tour-DPDck6k5.js                        10.09 kB │ gzip:  2.11 kB
+apps/docs-site build: build/client/assets/run-full-benchmark-AWxdNziL.js                     11.24 kB │ gzip:  2.23 kB
+apps/docs-site build: build/client/assets/models-and-role-activation-2URDe6Zg.js             11.78 kB │ gzip:  2.36 kB
+apps/docs-site build: build/client/assets/mixedbread-uXJPCjNC.js                             11.95 kB │ gzip:  5.37 kB
+apps/docs-site build: build/client/assets/first-launch-and-connect-models-WWce-kQc.js        11.95 kB │ gzip:  2.62 kB
+apps/docs-site build: build/client/assets/provider-connections-gVqNcpv_.js                   12.17 kB │ gzip:  2.27 kB
+apps/docs-site build: build/client/assets/preload-helper-CzZtDwiq.js                         12.18 kB │ gzip:  4.43 kB
+apps/docs-site build: build/client/assets/observe-and-telemetry-analytics-TXIMlRHD.js        12.39 kB │ gzip:  2.37 kB
+apps/docs-site build: build/client/assets/overview-MFGZi6sz.js                               12.39 kB │ gzip:  2.35 kB
+apps/docs-site build: build/client/assets/trace-and-usage-artifacts-BnQTaqCY.js              12.52 kB │ gzip:  2.17 kB
+apps/docs-site build: build/client/assets/capability-taxonomy-M011pOBT.js                    12.65 kB │ gzip:  2.33 kB
+apps/docs-site build: build/client/assets/protocol-r0dmstfX.js                               13.37 kB │ gzip:  2.43 kB
+apps/docs-site build: build/client/assets/router-decision-artifact-BN1oozDE.js               13.37 kB │ gzip:  2.41 kB
+apps/docs-site build: build/client/assets/declared-capability-profiles-CwCrm5Kf.js           13.60 kB │ gzip:  2.43 kB
+apps/docs-site build: build/client/assets/downstream-openai-discovery-BEQKUr3r.js            14.07 kB │ gzip:  2.61 kB
+apps/docs-site build: build/client/assets/benchmarks-and-evaluation-DDBBiM4v.js              14.68 kB │ gzip:  2.70 kB
+apps/docs-site build: build/client/assets/routing-controls-and-decision-review-CGM7WMtY.js   15.33 kB │ gzip:  2.79 kB
+apps/docs-site build: build/client/assets/protocol-to-router-mapping-BBL6e6Zz.js             15.40 kB │ gzip:  2.79 kB
+apps/docs-site build: build/client/assets/routing-policy-202Ihj8J.js                         15.60 kB │ gzip:  2.80 kB
+apps/docs-site build: build/client/assets/how-routing-works-end-to-end-DklWJpyb.js           16.81 kB │ gzip:  3.13 kB
+apps/docs-site build: build/client/assets/install-BD7LNwDd.js                                16.90 kB │ gzip:  3.23 kB
+apps/docs-site build: build/client/assets/protocol-object-model-Db75M9Xb.js                  17.59 kB │ gzip:  3.09 kB
+apps/docs-site build: build/client/assets/reason-codes-and-rejection-taxonomy-BDnVYHLC.js    18.10 kB │ gzip:  2.72 kB
+apps/docs-site build: build/client/assets/canonical-schemas-reference-eTT_qeNw.js            18.29 kB │ gzip:  2.80 kB
+apps/docs-site build: build/client/assets/routing-overview-DWSudOB8.js                       18.41 kB │ gzip:  3.33 kB
+apps/docs-site build: build/client/assets/how-role-model-works-daDm3pug.js                   18.53 kB │ gzip:  3.34 kB
+apps/docs-site build: build/client/assets/core-vocabulary-DwS9D1GS.js                        18.63 kB │ gzip:  3.17 kB
+apps/docs-site build: build/client/assets/protocol-overview-DwqH9oFq.js                      19.05 kB │ gzip:  3.41 kB
+apps/docs-site build: build/client/assets/observed-performance-profiles-oDcCFM5E.js          19.57 kB │ gzip:  3.26 kB
+apps/docs-site build: build/client/assets/docs-DuzB8Py1.js                                   21.02 kB │ gzip:  3.90 kB
+apps/docs-site build: build/client/assets/endpoint-identity-DuG0EMPf.js                      22.26 kB │ gzip:  3.45 kB
+apps/docs-site build: build/client/assets/pi-BEzW_0gT.js                                     22.99 kB │ gzip:  4.22 kB
+apps/docs-site build: build/client/assets/root-BPAATooy.js                                   24.91 kB │ gzip:  8.39 kB
+apps/docs-site build: build/client/assets/choose-routing-strategy-B92PTyf6.js                26.41 kB │ gzip:  4.25 kB
+apps/docs-site build: build/client/assets/fallbacks-failures-and-observability-CJYAhwZe.js   27.78 kB │ gzip:  4.61 kB
+apps/docs-site build: build/client/assets/candidate-selection-and-eligibility-Cf6_LVRC.js    29.06 kB │ gzip:  4.44 kB
+apps/docs-site build: build/client/assets/introduction-B00Fl6xq.js                           29.46 kB │ gzip:  4.86 kB
+apps/docs-site build: build/client/assets/scoring-tie-breaks-and-decisions-BXA7gR-4.js       30.07 kB │ gzip:  4.87 kB
+apps/docs-site build: build/client/assets/routing-modes-locality-and-execution-DamcYx3e.js   39.32 kB │ gzip:  5.65 kB
+apps/docs-site build: build/client/assets/strategy-modes-and-tradeoffs-MolmhfQb.js           48.70 kB │ gzip:  7.07 kB
+apps/docs-site build: build/client/assets/es2015-B692ofsD.js                                 61.65 kB │ gzip: 21.10 kB
+apps/docs-site build: build/client/assets/orama-static-j7_IV24U.js                           62.73 kB │ gzip: 21.59 kB
+apps/docs-site build: build/client/assets/docs-D70CUjt0.js                                   64.22 kB │ gzip: 21.73 kB
+apps/docs-site build: build/client/assets/dist-D-xxxXck.js                                   82.94 kB │ gzip: 27.42 kB
+apps/docs-site build: build/client/assets/remark-CW-4A0sf.js                                 89.89 kB │ gzip: 25.74 kB
+apps/docs-site build: build/client/assets/chunk-EVOBXE3Y-BVHgNXQf.js                        118.01 kB │ gzip: 38.59 kB
+apps/docs-site build: build/client/assets/entry.client-Ci5FUk0_.js                          183.20 kB │ gzip: 58.03 kB
+apps/docs-site build: build/client/assets/search-Ddm80bT9.js                                227.67 kB │ gzip: 70.51 kB
+apps/docs-site build: build/client/assets/roles-and-tasks-CUYDLTti.js                       705.50 kB │ gzip: 88.81 kB
+apps/docs-site build: [plugin builtin:vite-reporter]
+apps/docs-site build: (!) Some chunks are larger than 500 kB after minification. Consider:
+apps/docs-site build: - Using dynamic import() to code-split the application
+apps/docs-site build: - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+apps/docs-site build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+apps/docs-site build: [33m[PLUGIN_TIMINGS] Warning:[0m Your build spent significant time in plugins. Here is a breakdown:
+apps/docs-site build:   - react-router:dot-server (42%)
+apps/docs-site build:   - react-router:virtual-modules (33%)
+apps/docs-site build:   - react-router:inject-hmr-runtime (13%)
+apps/docs-site build:   - react-router:hmr-runtime (4%)
+apps/docs-site build: See https://rolldown.rs/options/checks#plugintimings for more details.
+apps/docs-site build: ✓ built in 8.40s
+apps/docs-site build: [MDX] generated files in 2.1706000000012864ms
+apps/docs-site build: vite v8.0.10 building ssr environment for production...
+apps/docs-site build: [MDX] generated files in 2.2260999999998603ms
+apps/docs-site build: [2K
+apps/docs-site build: transforming...✓ 484 modules transformed.
+apps/docs-site build: rendering chunks...
+apps/docs-site build: ✓ 2 assets cleaned from React Router server build.
+apps/docs-site build: build\client\assets\runtime-overview-WUpVyoOR.png
+apps/docs-site build: build\server\assets\server-build-BjmB36fm.css
+apps/docs-site build: Prerender (data): / -> build\client\_root.data
+apps/docs-site build: Prerender (html): / -> build\client\index.html
+apps/docs-site build: Prerender (data): /api/search -> build\client\api\search.data
+apps/docs-site build: Prerender (resource): /api/search -> build\client\api\search
+apps/docs-site build: Prerender (data): /llms.txt -> build\client\llms.txt.data
+apps/docs-site build: Prerender (resource): /llms.txt -> build\client\llms.txt
+apps/docs-site build: Prerender (data): /llms-full.txt -> build\client\llms-full.txt.data
+apps/docs-site build: Prerender (resource): /llms-full.txt -> build\client\llms-full.txt
+apps/docs-site build: Prerender (data): /core-vocabulary -> build\client\core-vocabulary.data
+apps/docs-site build: Prerender (html): /core-vocabulary -> build\client\core-vocabulary\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\content.md
+apps/docs-site build: Prerender (data): / -> build\client\_root.data
+apps/docs-site build: Prerender (html): / -> build\client\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md
+apps/docs-site build: Prerender (data): /install -> build\client\install.data
+apps/docs-site build: Prerender (html): /install -> build\client\install\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/install/content.md -> build\client\llms.mdx\docs\install\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/install/content.md -> build\client\llms.mdx\docs\install\content.md
+apps/docs-site build: Prerender (data): /introduction -> build\client\introduction.data
+apps/docs-site build: Prerender (html): /introduction -> build\client\introduction\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md
+apps/docs-site build: Prerender (data): /protocol-lifecycle -> build\client\protocol-lifecycle.data
+apps/docs-site build: Prerender (html): /protocol-lifecycle -> build\client\protocol-lifecycle\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle\content.md
+apps/docs-site build: Prerender (data): /protocol-object-model -> build\client\protocol-object-model.data
+apps/docs-site build: Prerender (html): /protocol-object-model -> build\client\protocol-object-model\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object-model\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object-model\content.md
+apps/docs-site build: Prerender (data): /quickstart -> build\client\quickstart.data
+apps/docs-site build: Prerender (html): /quickstart -> build\client\quickstart\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md
+apps/docs-site build: Prerender (data): /runtime/benchmarks-and-evaluation -> build\client\runtime\benchmarks-and-evaluation.data
+apps/docs-site build: Prerender (html): /runtime/benchmarks-and-evaluation -> build\client\runtime\benchmarks-and-evaluation\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md -> build\client\llms.mdx\docs\runtime\benchmarks-and-evaluation\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md -> build\client\llms.mdx\docs\runtime\benchmarks-and-evaluation\content.md
+apps/docs-site build: Prerender (data): /runtime/models-and-role-activation -> build\client\runtime\models-and-role-activation.data
+apps/docs-site build: Prerender (html): /runtime/models-and-role-activation -> build\client\runtime\models-and-role-activation\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/models-and-role-activation/content.md -> build\client\llms.mdx\docs\runtime\models-and-role-activation\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/models-and-role-activation/content.md -> build\client\llms.mdx\docs\runtime\models-and-role-activation\content.md
+apps/docs-site build: Prerender (data): /runtime/observe-and-telemetry-analytics -> build\client\runtime\observe-and-telemetry-analytics.data
+apps/docs-site build: Prerender (html): /runtime/observe-and-telemetry-analytics -> build\client\runtime\observe-and-telemetry-analytics\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/observe-and-telemetry-analytics/content.md -> build\client\llms.mdx\docs\runtime\observe-and-telemetry-analytics\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/observe-and-telemetry-analytics/content.md -> build\client\llms.mdx\docs\runtime\observe-and-telemetry-analytics\content.md
+apps/docs-site build: Prerender (data): /runtime/provider-connections -> build\client\runtime\provider-connections.data
+apps/docs-site build: Prerender (html): /runtime/provider-connections -> build\client\runtime\provider-connections\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/provider-connections/content.md -> build\client\llms.mdx\docs\runtime\provider-connections\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/provider-connections/content.md -> build\client\llms.mdx\docs\runtime\provider-connections\content.md
+apps/docs-site build: Prerender (data): /runtime/routing-controls-and-decision-review -> build\client\runtime\routing-controls-and-decision-review.data
+apps/docs-site build: Prerender (html): /runtime/routing-controls-and-decision-review -> build\client\runtime\routing-controls-and-decision-review\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md -> build\client\llms.mdx\docs\runtime\routing-controls-and-decision-review\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md -> build\client\llms.mdx\docs\runtime\routing-controls-and-decision-review\content.md
+apps/docs-site build: Prerender (data): /runtime/runtime-ui-tour -> build\client\runtime\runtime-ui-tour.data
+apps/docs-site build: Prerender (html): /runtime/runtime-ui-tour -> build\client\runtime\runtime-ui-tour\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/runtime-ui-tour/content.md -> build\client\llms.mdx\docs\runtime\runtime-ui-tour\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/runtime-ui-tour/content.md -> build\client\llms.mdx\docs\runtime\runtime-ui-tour\content.md
+apps/docs-site build: Prerender (data): /router/candidate-selection-and-eligibility -> build\client\router\candidate-selection-and-eligibility.data
+apps/docs-site build: Prerender (html): /router/candidate-selection-and-eligibility -> build\client\router\candidate-selection-and-eligibility\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/candidate-selection-and-eligibility/content.md -> build\client\llms.mdx\docs\router\candidate-selection-and-eligibility\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/candidate-selection-and-eligibility/content.md -> build\client\llms.mdx\docs\router\candidate-selection-and-eligibility\content.md
+apps/docs-site build: Prerender (data): /router/fallbacks-failures-and-observability -> build\client\router\fallbacks-failures-and-observability.data
+apps/docs-site build: Prerender (html): /router/fallbacks-failures-and-observability -> build\client\router\fallbacks-failures-and-observability\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/fallbacks-failures-and-observability/content.md -> build\client\llms.mdx\docs\router\fallbacks-failures-and-observability\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/fallbacks-failures-and-observability/content.md -> build\client\llms.mdx\docs\router\fallbacks-failures-and-observability\content.md
+apps/docs-site build: Prerender (data): /router/how-routing-works-end-to-end -> build\client\router\how-routing-works-end-to-end.data
+apps/docs-site build: Prerender (html): /router/how-routing-works-end-to-end -> build\client\router\how-routing-works-end-to-end\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\router\how-routing-works-end-to-end\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\router\how-routing-works-end-to-end\content.md
+apps/docs-site build: Prerender (data): /router/overview -> build\client\router\overview.data
+apps/docs-site build: Prerender (html): /router/overview -> build\client\router\overview\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/overview/content.md -> build\client\llms.mdx\docs\router\overview\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/overview/content.md -> build\client\llms.mdx\docs\router\overview\content.md
+apps/docs-site build: Prerender (data): /router/protocol-to-router-mapping -> build\client\router\protocol-to-router-mapping.data
+apps/docs-site build: Prerender (html): /router/protocol-to-router-mapping -> build\client\router\protocol-to-router-mapping\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\router\protocol-to-router-mapping\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\router\protocol-to-router-mapping\content.md
+apps/docs-site build: Prerender (data): /router/routing-modes-locality-and-execution -> build\client\router\routing-modes-locality-and-execution.data
+apps/docs-site build: Prerender (html): /router/routing-modes-locality-and-execution -> build\client\router\routing-modes-locality-and-execution\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/routing-modes-locality-and-execution/content.md -> build\client\llms.mdx\docs\router\routing-modes-locality-and-execution\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/routing-modes-locality-and-execution/content.md -> build\client\llms.mdx\docs\router\routing-modes-locality-and-execution\content.md
+apps/docs-site build: Prerender (data): /router/scoring-tie-breaks-and-decisions -> build\client\router\scoring-tie-breaks-and-decisions.data
+apps/docs-site build: Prerender (html): /router/scoring-tie-breaks-and-decisions -> build\client\router\scoring-tie-breaks-and-decisions\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md -> build\client\llms.mdx\docs\router\scoring-tie-breaks-and-decisions\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md -> build\client\llms.mdx\docs\router\scoring-tie-breaks-and-decisions\content.md
+apps/docs-site build: Prerender (data): /router/strategy-modes-and-tradeoffs -> build\client\router\strategy-modes-and-tradeoffs.data
+apps/docs-site build: Prerender (html): /router/strategy-modes-and-tradeoffs -> build\client\router\strategy-modes-and-tradeoffs\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md -> build\client\llms.mdx\docs\router\strategy-modes-and-tradeoffs\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md -> build\client\llms.mdx\docs\router\strategy-modes-and-tradeoffs\content.md
+apps/docs-site build: Prerender (data): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference.data
+apps/docs-site build: Prerender (html): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs\reference\canonical-schemas-reference\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs\reference\canonical-schemas-reference\content.md
+apps/docs-site build: Prerender (data): /reference/overview -> build\client\reference\overview.data
+apps/docs-site build: Prerender (html): /reference/overview -> build\client\reference\overview\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/overview/content.md -> build\client\llms.mdx\docs\reference\overview\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/overview/content.md -> build\client\llms.mdx\docs\reference\overview\content.md
+apps/docs-site build: Prerender (data): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejection-taxonomy.data
+apps/docs-site build: Prerender (html): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejection-taxonomy\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.mdx\docs\reference\reason-codes-and-rejection-taxonomy\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.mdx\docs\reference\reason-codes-and-rejection-taxonomy\content.md
+apps/docs-site build: Prerender (data): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy.data
+apps/docs-site build: Prerender (html): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol\capability-taxonomy\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol\capability-taxonomy\content.md
+apps/docs-site build: Prerender (data): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles.data
+apps/docs-site build: Prerender (html): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs\protocol\declared-capability-profiles\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs\protocol\declared-capability-profiles\content.md
+apps/docs-site build: Prerender (data): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity.data
+apps/docs-site build: Prerender (html): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\endpoint-identity\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\endpoint-identity\content.md
+apps/docs-site build: Prerender (data): /protocol -> build\client\protocol.data
+apps/docs-site build: Prerender (html): /protocol -> build\client\protocol\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/content.md -> build\client\llms.mdx\docs\protocol\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/content.md -> build\client\llms.mdx\docs\protocol\content.md
+apps/docs-site build: Prerender (data): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles.data
+apps/docs-site build: Prerender (html): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\docs\protocol\observed-performance-profiles\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\docs\protocol\observed-performance-profiles\content.md
+apps/docs-site build: Prerender (data): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks.data
+apps/docs-site build: Prerender (html): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\roles-and-tasks\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\roles-and-tasks\content.md
+apps/docs-site build: Prerender (data): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact.data
+apps/docs-site build: Prerender (html): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\protocol\router-decision-artifact\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\protocol\router-decision-artifact\content.md
+apps/docs-site build: Prerender (data): /protocol/routing-policy -> build\client\protocol\routing-policy.data
+apps/docs-site build: Prerender (html): /protocol/routing-policy -> build\client\protocol\routing-policy\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\routing-policy\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\routing-policy\content.md
+apps/docs-site build: Prerender (data): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts.data
+apps/docs-site build: Prerender (html): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> build\client\llms.mdx\docs\protocol\trace-and-usage-artifacts\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> build\client\llms.mdx\docs\protocol\trace-and-usage-artifacts\content.md
+apps/docs-site build: Prerender (data): /integrations/downstream-openai-discovery -> build\client\integrations\downstream-openai-discovery.data
+apps/docs-site build: Prerender (html): /integrations/downstream-openai-discovery -> build\client\integrations\downstream-openai-discovery\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/integrations/downstream-openai-discovery/content.md -> build\client\llms.mdx\docs\integrations\downstream-openai-discovery\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/integrations/downstream-openai-discovery/content.md -> build\client\llms.mdx\docs\integrations\downstream-openai-discovery\content.md
+apps/docs-site build: Prerender (data): /integrations/pi -> build\client\integrations\pi.data
+apps/docs-site build: Prerender (html): /integrations/pi -> build\client\integrations\pi\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/integrations/pi/content.md -> build\client\llms.mdx\docs\integrations\pi\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/integrations/pi/content.md -> build\client\llms.mdx\docs\integrations\pi\content.md
+apps/docs-site build: Prerender (data): /get-started/choose-routing-strategy -> build\client\get-started\choose-routing-strategy.data
+apps/docs-site build: Prerender (html): /get-started/choose-routing-strategy -> build\client\get-started\choose-routing-strategy\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/choose-routing-strategy/content.md -> build\client\llms.mdx\docs\get-started\choose-routing-strategy\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/choose-routing-strategy/content.md -> build\client\llms.mdx\docs\get-started\choose-routing-strategy\content.md
+apps/docs-site build: Prerender (data): /get-started/first-launch-and-connect-models -> build\client\get-started\first-launch-and-connect-models.data
+apps/docs-site build: Prerender (html): /get-started/first-launch-and-connect-models -> build\client\get-started\first-launch-and-connect-models\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/first-launch-and-connect-models/content.md -> build\client\llms.mdx\docs\get-started\first-launch-and-connect-models\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/first-launch-and-connect-models/content.md -> build\client\llms.mdx\docs\get-started\first-launch-and-connect-models\content.md
+apps/docs-site build: Prerender (data): /get-started/first-request-and-decision -> build\client\get-started\first-request-and-decision.data
+apps/docs-site build: Prerender (html): /get-started/first-request-and-decision -> build\client\get-started\first-request-and-decision\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/first-request-and-decision/content.md -> build\client\llms.mdx\docs\get-started\first-request-and-decision\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/first-request-and-decision/content.md -> build\client\llms.mdx\docs\get-started\first-request-and-decision\content.md
+apps/docs-site build: Prerender (data): /get-started/install -> build\client\get-started\install.data
+apps/docs-site build: Prerender (html): /get-started/install -> build\client\get-started\install\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/install/content.md -> build\client\llms.mdx\docs\get-started\install\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/install/content.md -> build\client\llms.mdx\docs\get-started\install\content.md
+apps/docs-site build: Prerender (data): /get-started/run-full-benchmark -> build\client\get-started\run-full-benchmark.data
+apps/docs-site build: Prerender (html): /get-started/run-full-benchmark -> build\client\get-started\run-full-benchmark\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/run-full-benchmark/content.md -> build\client\llms.mdx\docs\get-started\run-full-benchmark\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/run-full-benchmark/content.md -> build\client\llms.mdx\docs\get-started\run-full-benchmark\content.md
+apps/docs-site build: Prerender (data): /concepts/endpoints-and-profiles -> build\client\concepts\endpoints-and-profiles.data
+apps/docs-site build: Prerender (html): /concepts/endpoints-and-profiles -> build\client\concepts\endpoints-and-profiles\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/endpoints-and-profiles/content.md -> build\client\llms.mdx\docs\concepts\endpoints-and-profiles\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/endpoints-and-profiles/content.md -> build\client\llms.mdx\docs\concepts\endpoints-and-profiles\content.md
+apps/docs-site build: Prerender (data): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works.data
+apps/docs-site build: Prerender (html): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/how-role-model-works/content.md -> build\client\llms.mdx\docs\concepts\how-role-model-works\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/how-role-model-works/content.md -> build\client\llms.mdx\docs\concepts\how-role-model-works\content.md
+apps/docs-site build: Prerender (data): /concepts/policy-and-observability -> build\client\concepts\policy-and-observability.data
+apps/docs-site build: Prerender (html): /concepts/policy-and-observability -> build\client\concepts\policy-and-observability\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/policy-and-observability/content.md -> build\client\llms.mdx\docs\concepts\policy-and-observability\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/policy-and-observability/content.md -> build\client\llms.mdx\docs\concepts\policy-and-observability\content.md
+apps/docs-site build: Prerender (data): /concepts/protocol-overview -> build\client\concepts\protocol-overview.data
+apps/docs-site build: Prerender (html): /concepts/protocol-overview -> build\client\concepts\protocol-overview\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/protocol-overview/content.md -> build\client\llms.mdx\docs\concepts\protocol-overview\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/protocol-overview/content.md -> build\client\llms.mdx\docs\concepts\protocol-overview\content.md
+apps/docs-site build: Prerender (data): /concepts/roles-tasks-and-capabilities -> build\client\concepts\roles-tasks-and-capabilities.data
+apps/docs-site build: Prerender (html): /concepts/roles-tasks-and-capabilities -> build\client\concepts\roles-tasks-and-capabilities\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md -> build\client\llms.mdx\docs\concepts\roles-tasks-and-capabilities\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md -> build\client\llms.mdx\docs\concepts\roles-tasks-and-capabilities\content.md
+apps/docs-site build: Prerender (data): /concepts/routing-overview -> build\client\concepts\routing-overview.data
+apps/docs-site build: Prerender (html): /concepts/routing-overview -> build\client\concepts\routing-overview\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/routing-overview/content.md -> build\client\llms.mdx\docs\concepts\routing-overview\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/routing-overview/content.md -> build\client\llms.mdx\docs\concepts\routing-overview\content.md
+apps/docs-site build: Prerender (html): SPA Fallback -> build\client\__spa-fallback.html
+apps/docs-site build: Removing the server build in D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\apps\docs-site\build\server due to ssr:false
+apps/docs-site build: computing gzip size...
+apps/docs-site build: build/server/.vite/manifest.json                                       34.39 kB │ gzip:   3.82 kB
+apps/docs-site build: build/server/assets/runtime-overview-WUpVyoOR.png                     218.07 kB
+apps/docs-site build: build/server/assets/server-build-BjmB36fm.css                          80.30 kB │ gzip:  13.37 kB
+apps/docs-site build: build/server/assets/pi-DAU5Xt7X.js                                      0.19 kB │ gzip:   0.14 kB
+apps/docs-site build: build/server/assets/docs-JWU7MsKk.js                                    0.19 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/install-CDy_k22D.js                                 0.20 kB │ gzip:   0.14 kB
+apps/docs-site build: build/server/assets/install-DryAn5l8.js                                 0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/overview-D_tys8yt.js                                0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/overview-DaPxjq9e.js                                0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/protocol-C15oPyMK.js                                0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/quickstart-CHogQaRj.js                              0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/introduction-DpukyDsx.js                            0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/routing-policy-DyH_sbVS.js                          0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/core-vocabulary-CFVE6Ji_.js                         0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/roles-and-tasks-Co-Y_vVo.js                         0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/runtime-ui-tour-CcwkBNVi.js                         0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/routing-overview-BxwzsZ01.js                        0.21 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/endpoint-identity-ZTtUsca7.js                       0.21 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/protocol-overview-uOuFlIHt.js                       0.21 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/protocol-lifecycle-CWezWAkQ.js                      0.21 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/run-full-benchmark-BPIlcsi_.js                      0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/capability-taxonomy-D6Wqnh0g.js                     0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/how-role-model-works-BpVCN--F.js                    0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/provider-connections-Da72BjUp.js                    0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/protocol-object-model-BlFZUKZr.js                   0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/endpoints-and-profiles-CZ5MZANL.js                  0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/choose-routing-strategy-WrCfbkqs.js                 0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/policy-and-observability-urw6o3YH.js                0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/router-decision-artifact-YlbSwx6y.js                0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/benchmarks-and-evaluation-BGhfnKkg.js               0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/trace-and-usage-artifacts-BXPVJtyV.js               0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/first-request-and-decision-oYgSt0o-.js              0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/models-and-role-activation-CrFyhjrA.js              0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/protocol-to-router-mapping-DUSLV6R7.js              0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/canonical-schemas-reference-BJeTQlq1.js             0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/downstream-openai-discovery-C2Pq-oUR.js             0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/declared-capability-profiles-9kgOF7Xn.js            0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/how-routing-works-end-to-end-BaSOz4gC.js            0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/roles-tasks-and-capabilities-50o4CUJx.js            0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/strategy-modes-and-tradeoffs-2eB5AdKn.js            0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/observed-performance-profiles-vzmV6OIO.js           0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/first-launch-and-connect-models-DiMzi8DE.js         0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/observe-and-telemetry-analytics-iZqR9kMR.js         0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/scoring-tie-breaks-and-decisions-Gmnx5iJW.js        0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/candidate-selection-and-eligibility-DHd9Sn9q.js     0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/reason-codes-and-rejection-taxonomy-gu3x9VNv.js     0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/fallbacks-failures-and-observability-BznAVi6o.js    0.23 kB │ gzip:   0.17 kB
+apps/docs-site build: build/server/assets/routing-controls-and-decision-review-BgB8yXkw.js    0.23 kB │ gzip:   0.17 kB
+apps/docs-site build: build/server/assets/routing-modes-locality-and-execution-D2pMnVE_.js    0.23 kB │ gzip:   0.17 kB
+apps/docs-site build: build/server/assets/remove-undefined-CTqT55E9-Dk60y8Hj.js               0.59 kB │ gzip:   0.35 kB
+apps/docs-site build: build/server/assets/fetch-D9F5G62h.js                                   0.89 kB │ gzip:   0.51 kB
+apps/docs-site build: build/server/assets/chunk-CYJPkc-J-DmpvDrhQ.js                          1.25 kB │ gzip:   0.65 kB
+apps/docs-site build: build/server/assets/chunk-BGC-wIje.js                                   1.40 kB │ gzip:   0.66 kB
+apps/docs-site build: build/server/assets/algolia-Cv0IVvsa.js                                 1.55 kB │ gzip:   0.78 kB
+apps/docs-site build: build/server/assets/search-Di09xnxL.js                                  2.15 kB │ gzip:   0.94 kB
+apps/docs-site build: build/server/assets/search-default-Cx1JlRjA.js                          2.18 kB │ gzip:   0.90 kB
+apps/docs-site build: build/server/assets/orama-cloud-legacy-DDMK4KlT.js                      2.28 kB │ gzip:   0.91 kB
+apps/docs-site build: build/server/assets/orama-cloud-CbHMXpKB.js                             2.33 kB │ gzip:   0.92 kB
+apps/docs-site build: build/server/assets/orama-static-kT1ynPrk.js                            3.90 kB │ gzip:   1.56 kB
+apps/docs-site build: build/server/assets/policy-and-observability-DqsFsLRD.js                7.25 kB │ gzip:   1.57 kB
+apps/docs-site build: build/server/assets/roles-tasks-and-capabilities-D6Fc5b80.js            8.14 kB │ gzip:   1.73 kB
+apps/docs-site build: build/server/assets/overview-CUBLQIig.js                                8.29 kB │ gzip:   1.70 kB
+apps/docs-site build: build/server/assets/endpoints-and-profiles-D1vz45RN.js                  8.37 kB │ gzip:   1.72 kB
+apps/docs-site build: build/server/assets/install-BujL4KeW.js                                 8.77 kB │ gzip:   2.13 kB
+apps/docs-site build: build/server/assets/first-request-and-decision-BdQ-plYY.js             10.29 kB │ gzip:   1.98 kB
+apps/docs-site build: build/server/assets/quickstart-CHXYD-8J.js                             10.89 kB │ gzip:   2.30 kB
+apps/docs-site build: build/server/assets/protocol-lifecycle-DldRu7r5.js                     11.26 kB │ gzip:   2.33 kB
+apps/docs-site build: build/server/assets/runtime-ui-tour-D_BPGOyH.js                        12.79 kB │ gzip:   2.45 kB
+apps/docs-site build: build/server/assets/run-full-benchmark-02I44X6R.js                     13.70 kB │ gzip:   2.57 kB
+apps/docs-site build: build/server/assets/models-and-role-activation-JoCkoIe9.js             14.22 kB │ gzip:   2.59 kB
+apps/docs-site build: build/server/assets/provider-connections-Ct_FqRTl.js                   14.29 kB │ gzip:   2.53 kB
+apps/docs-site build: build/server/assets/first-launch-and-connect-models-CGvtkrCT.js        14.80 kB │ gzip:   2.99 kB
+apps/docs-site build: build/server/assets/overview-wL6vWRdJ.js                               15.16 kB │ gzip:   2.62 kB
+apps/docs-site build: build/server/assets/mixedbread-C2dhHj_X.js                             15.17 kB │ gzip:   6.25 kB
+apps/docs-site build: build/server/assets/observe-and-telemetry-analytics-CMRSVjuj.js        15.32 kB │ gzip:   2.67 kB
+apps/docs-site build: build/server/assets/capability-taxonomy-Chg7Ex-J.js                    15.49 kB │ gzip:   2.58 kB
+apps/docs-site build: build/server/assets/trace-and-usage-artifacts-DGLg392X.js              15.70 kB │ gzip:   2.48 kB
+apps/docs-site build: build/server/assets/protocol-DA2L6n54.js                               16.28 kB │ gzip:   2.72 kB
+apps/docs-site build: build/server/assets/router-decision-artifact-MSzdN1xX.js               16.49 kB │ gzip:   2.67 kB
+apps/docs-site build: build/server/assets/declared-capability-profiles-a79_Tc7l.js           16.52 kB │ gzip:   2.72 kB
+apps/docs-site build: build/server/assets/downstream-openai-discovery-EFN1zktI.js            16.73 kB │ gzip:   2.89 kB
+apps/docs-site build: build/server/assets/benchmarks-and-evaluation-Rp2704Ry.js              17.63 kB │ gzip:   3.03 kB
+apps/docs-site build: build/server/assets/protocol-to-router-mapping-SEpY5EK3.js             18.15 kB │ gzip:   2.99 kB
+apps/docs-site build: build/server/assets/routing-controls-and-decision-review-B5vNAqf7.js   18.23 kB │ gzip:   3.05 kB
+apps/docs-site build: build/server/assets/routing-policy-CY6YSPC2.js                         19.24 kB │ gzip:   2.99 kB
+apps/docs-site build: build/server/assets/how-routing-works-end-to-end-Ci_c6BWj.js           20.50 kB │ gzip:   3.43 kB
+apps/docs-site build: build/server/assets/install-nw3n_rwz.js                                21.34 kB │ gzip:   3.54 kB
+apps/docs-site build: build/server/assets/protocol-object-model-DPRCtdD2.js                  21.39 kB │ gzip:   3.46 kB
+apps/docs-site build: build/server/assets/core-vocabulary-X3LKIrqc.js                        21.63 kB │ gzip:   3.46 kB
+apps/docs-site build: build/server/assets/canonical-schemas-reference-BOdYeagG.js            22.25 kB │ gzip:   3.13 kB
+apps/docs-site build: build/server/assets/reason-codes-and-rejection-taxonomy-CTyrrY1W.js    22.27 kB │ gzip:   3.06 kB
+apps/docs-site build: build/server/assets/how-role-model-works-CoLaIg9E.js                   22.44 kB │ gzip:   3.63 kB
+apps/docs-site build: build/server/assets/routing-overview-BlTpKuFM.js                       22.55 kB │ gzip:   3.61 kB
+apps/docs-site build: build/server/assets/protocol-overview-DfdvPjG3.js                      22.96 kB │ gzip:   3.71 kB
+apps/docs-site build: build/server/assets/observed-performance-profiles-CJ3GMn24.js          23.74 kB │ gzip:   3.48 kB
+apps/docs-site build: build/server/assets/docs-C_2pQIyH.js                                   25.30 kB │ gzip:   4.26 kB
+apps/docs-site build: build/server/assets/endpoint-identity-CuzPqz9u.js                      27.36 kB │ gzip:   3.79 kB
+apps/docs-site build: build/server/assets/pi-BWdS95S-.js                                     27.40 kB │ gzip:   4.42 kB
+apps/docs-site build: build/server/assets/choose-routing-strategy-DX5Y4L0I.js                31.35 kB │ gzip:   4.52 kB
+apps/docs-site build: build/server/assets/fallbacks-failures-and-observability-Dx6keuE1.js   32.98 kB │ gzip:   4.93 kB
+apps/docs-site build: build/server/assets/candidate-selection-and-eligibility-CYmbEemg.js    34.32 kB │ gzip:   4.74 kB
+apps/docs-site build: build/server/assets/introduction-zxuyuKzu.js                           34.76 kB │ gzip:   5.26 kB
+apps/docs-site build: build/server/assets/scoring-tie-breaks-and-decisions-BB5tv2nn.js       36.71 kB │ gzip:   5.23 kB
+apps/docs-site build: build/server/assets/routing-modes-locality-and-execution-C9vPaV-U.js   46.46 kB │ gzip:   5.96 kB
+apps/docs-site build: build/server/assets/strategy-modes-and-tradeoffs-Bas5mgpp.js           57.94 kB │ gzip:   7.42 kB
+apps/docs-site build: build/server/index.js                                                 372.71 kB │ gzip:  89.51 kB
+apps/docs-site build: build/server/assets/remark-DmD561_2.js                                383.60 kB │ gzip:  81.28 kB
+apps/docs-site build: build/server/assets/search-D9MiD8UZ.js                                509.64 kB │ gzip: 122.51 kB
+apps/docs-site build: build/server/assets/roles-and-tasks-BLCQuLpm.js                       861.20 kB │ gzip:  92.03 kB
+apps/docs-site build: [33m[PLUGIN_TIMINGS] Warning:[0m Your build spent significant time in plugins. Here is a breakdown:
+apps/docs-site build:   - react-router:virtual-modules (28%)
+apps/docs-site build:   - fumadocs-mdx (26%)
+apps/docs-site build:   - react-router:inject-hmr-runtime (15%)
+apps/docs-site build:   - react-router:dot-server (10%)
+apps/docs-site build:   - react-router:react-refresh-babel (6%)
+apps/docs-site build: See https://rolldown.rs/options/checks#plugintimings for more details.
+apps/docs-site build: ✓ built in 5.91s
+apps/docs-site build: npm warn Unknown env config "recursive". This will stop working in the next major version of npm.
+apps/docs-site build: npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+apps/docs-site build: > types:check
+apps/docs-site build: > react-router typegen && fumadocs-mdx && tsc --noEmit
+role-model-router/apps/runtime-ui build: ✓ 2370 modules transformed.
+role-model-router/apps/runtime-ui build: rendering chunks...
+role-model-router/apps/runtime-ui build: computing gzip size...
+role-model-router/apps/runtime-ui build: build/client/.vite/manifest.json                           23.24 kB │ gzip:   2.11 kB
+role-model-router/apps/runtime-ui build: build/client/assets/root-DwoG62Li.css                      52.77 kB │ gzip:  10.10 kB
+role-model-router/apps/runtime-ui build: build/client/assets/index-BL7--W1Q.js                       0.15 kB │ gzip:   0.15 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-models-U0mBF85H.js                0.16 kB │ gzip:   0.16 kB
+role-model-router/apps/runtime-ui build: build/client/assets/shell-header-context-BrVEDM38.js        0.78 kB │ gzip:   0.40 kB
+role-model-router/apps/runtime-ui build: build/client/assets/not-found-BMqyQsmM.js                   1.03 kB │ gzip:   0.55 kB
+role-model-router/apps/runtime-ui build: build/client/assets/routing-mode-0L6xYTH_.js                1.04 kB │ gzip:   0.48 kB
+role-model-router/apps/runtime-ui build: build/client/assets/legacy-redirect-CdSEVfCu.js             1.19 kB │ gzip:   0.43 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-matrix-Dcmg6aAR.js                1.29 kB │ gzip:   0.52 kB
+role-model-router/apps/runtime-ui build: build/client/assets/llama-swap-setup-DjrOlpYQ.js            1.50 kB │ gzip:   0.74 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-choose-CycHVFmA.js                1.98 kB │ gzip:   0.85 kB
+role-model-router/apps/runtime-ui build: build/client/assets/root-CeYqdJvd.js                        2.28 kB │ gzip:   1.13 kB
+role-model-router/apps/runtime-ui build: build/client/assets/integrations-downstream-C27aVDP4.js     2.52 kB │ gzip:   1.02 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-swap-ySpYj_3O.js                  3.39 kB │ gzip:   1.38 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-runtime-config-CnnfwQLl.js      3.45 kB │ gzip:   1.54 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-decisions-C6-zDv7r.js            3.54 kB │ gzip:   1.39 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-policy-CgIPYdWD.js                3.74 kB │ gzip:   1.61 kB
+role-model-router/apps/runtime-ui build: build/client/assets/integrations-upstream-cPS7H8Tj.js       4.01 kB │ gzip:   1.54 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-peers-DBciUzsX.js                 4.03 kB │ gzip:   1.65 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-logs-D8JPQKnX.js                  4.27 kB │ gzip:   1.68 kB
+role-model-router/apps/runtime-ui build: build/client/assets/system-peers-2B_NVK_4.js                4.31 kB │ gzip:   1.70 kB
+role-model-router/apps/runtime-ui build: build/client/assets/studio-rerank-Dp1FB4qa.js               4.34 kB │ gzip:   1.88 kB
+role-model-router/apps/runtime-ui build: build/client/assets/observe-activity-CSaSTI35.js            4.45 kB │ gzip:   1.72 kB
+role-model-router/apps/runtime-ui build: build/client/assets/app-layout-2iqBg0yx.js                  4.46 kB │ gzip:   1.86 kB
+role-model-router/apps/runtime-ui build: build/client/assets/runtime-Cijramwg.js                     4.67 kB │ gzip:   1.70 kB
+role-model-router/apps/runtime-ui build: build/client/assets/studio-images-DPUle953.js               4.80 kB │ gzip:   1.94 kB
+role-model-router/apps/runtime-ui build: build/client/assets/observe-logs-DJdEnHal.js                4.84 kB │ gzip:   1.86 kB
+role-model-router/apps/runtime-ui build: build/client/assets/session-readiness-D7qU1GpV.js           4.85 kB │ gzip:   1.71 kB
+role-model-router/apps/runtime-ui build: build/client/assets/llama-swap-setup-hint-CjqNZ84b.js       5.42 kB │ gzip:   1.96 kB
+role-model-router/apps/runtime-ui build: build/client/assets/endpoints-DNJaQheq.js                   5.46 kB │ gzip:   1.91 kB
+role-model-router/apps/runtime-ui build: build/client/assets/studio-advanced-CP23HlK2.js             5.54 kB │ gzip:   2.19 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-controller-CE_h9ksB.js          5.67 kB │ gzip:   1.94 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-peer-models-CfDn-1Ik.js           5.80 kB │ gzip:   2.06 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-model-role-picker-BY61Y_RP.js     5.84 kB │ gzip:   2.20 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-decision-detail-seT2UY63.js      5.93 kB │ gzip:   1.97 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-candidates-DrFJ35S_.js           5.96 kB │ gzip:   2.09 kB
+role-model-router/apps/runtime-ui build: build/client/assets/studio-audio-COCjl9k6.js                6.25 kB │ gzip:   2.45 kB
+role-model-router/apps/runtime-ui build: build/client/assets/workbench-wzlqoIsb.js                   6.92 kB │ gzip:   2.56 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-llama-swap-models-CXI1qM7u.js     7.17 kB │ gzip:   2.44 kB
+role-model-router/apps/runtime-ui build: build/client/assets/dashboard-p2H5XOEO.js                   7.42 kB │ gzip:   2.74 kB
+role-model-router/apps/runtime-ui build: build/client/assets/page-primitives-DL0ELYyj.js             7.59 kB │ gzip:   2.80 kB
+role-model-router/apps/runtime-ui build: build/client/assets/observe-routing-1dLMaARs.js             7.69 kB │ gzip:   2.82 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-routing-strategy-C0Crk4ko.js    8.67 kB │ gzip:   3.03 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-config-B_18bF-N.js               8.94 kB │ gzip:   2.34 kB
+role-model-router/apps/runtime-ui build: build/client/assets/requests-r0bWZDY1.js                    9.03 kB │ gzip:   3.16 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-YOEf5QdR.js                      9.44 kB │ gzip:   2.76 kB
+role-model-router/apps/runtime-ui build: build/client/assets/runtime-api-CHPC9x1H.js                13.79 kB │ gzip:   3.52 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-roles-Dutb65GB.js              16.17 kB │ gzip:   4.39 kB
+role-model-router/apps/runtime-ui build: build/client/assets/request-detail-96jl1hOe.js             19.84 kB │ gzip:   5.86 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-models-DCIOc7ZQ.js             20.48 kB │ gzip:   5.68 kB
+role-model-router/apps/runtime-ui build: build/client/assets/view-models-Bfk9shME.js                21.85 kB │ gzip:   6.90 kB
+role-model-router/apps/runtime-ui build: build/client/assets/design-system-BhdNy59i.js              25.73 kB │ gzip:   8.08 kB
+role-model-router/apps/runtime-ui build: build/client/assets/cn-B5V-leUE.js                         26.34 kB │ gzip:   8.26 kB
+role-model-router/apps/runtime-ui build: build/client/assets/providers-z8ovBwBC.js                  26.94 kB │ gzip:   7.76 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-benchmark-BFRNQQz8.js          29.00 kB │ gzip:   8.61 kB
+role-model-router/apps/runtime-ui build: build/client/assets/chunk-EVOBXE3Y-DSjPf5-N.js            127.92 kB │ gzip:  43.10 kB
+role-model-router/apps/runtime-ui build: build/client/assets/entry.client-C6wWO1jW.js              190.57 kB │ gzip:  60.05 kB
+role-model-router/apps/runtime-ui build: build/client/assets/telemetry-route-models-CyHyzHjF.js    431.33 kB │ gzip: 115.85 kB
+role-model-router/apps/runtime-ui build: ✓ built in 15.35s
+role-model-router/apps/runtime-ui build: vite v7.3.2 building ssr environment for production...
+role-model-router/apps/runtime-ui build: transforming...
+role-model-router/apps/runtime-ui build: ✓ 9 modules transformed.
+role-model-router/apps/runtime-ui build: rendering chunks...
+role-model-router/apps/runtime-ui build: build/server/.vite/manifest.json                0.23 kB
+role-model-router/apps/runtime-ui build: build/server/assets/server-build-DwoG62Li.css  52.77 kB
+role-model-router/apps/runtime-ui build: build/server/index.js                          66.29 kB
+role-model-router/apps/runtime-ui build: ✓ 1 asset cleaned from React Router server build.
+role-model-router/apps/runtime-ui build: build\server\assets\server-build-DwoG62Li.css
+role-model-router/apps/runtime-ui build: SPA Mode: Generated build\client\index.html
+role-model-router/apps/runtime-ui build: Removing the server build in D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-ui\build\server due to ssr:false
+role-model-router/apps/runtime-ui build: ✓ built in 641ms
+apps/docs-site build: [MDX] generated files in 5.048799999999574ms
+apps/docs-site build: [MDX] generated files in 5.3297999999999774ms
+apps/docs-site build: Materialized search index at D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\apps\docs-site\build\client\api\search.json
+apps/docs-site build: Done
+role-model-router/apps/runtime-ui build: Done
+role-model-router/apps/bench-cli build$ tsc -p tsconfig.json
+role-model-router/packages/core build$ tsc -p tsconfig.json
+role-model-router/packages/bench-routing build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+role-model-router/apps/bench-cli build: Done
+.../packages/provider-account build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build: Done
+role-model-router/packages/trace build$ tsc -p tsconfig.json
+role-model-router/packages/core build: Done
+role-model-router/packages/usage build$ tsc -p tsconfig.json
+role-model-router/packages/bench-routing build: Done
+.../packages/vendor-litellm build$ tsc -p tsconfig.json
+.../packages/provider-account build: Done
+role-model-router/packages/trace build: Done
+.../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+role-model-router/packages/usage build: Done
+.../packages/vendor-litellm build: Done
+.../packages/vendor-llama-swap build: Done
+role-model-router/packages/openai-compat build$ tsc -p tsconfig.json
+role-model-router/packages/provider-acp build$ tsc -p tsconfig.json
+role-model-router/packages/provider-cli build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+role-model-router/packages/openai-compat build: Done
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+role-model-router/packages/provider-cli build: Done
+role-model-router/packages/provider-mcp build: Done
+role-model-router/packages/provider-acp build: Done
+role-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+role-model-router/packages/roles build: Done
+role-model-router/packages/tasks build: Done
+role-model-router/packages/sqlite-memory build: Done
+role-model-router/apps/router-devtools build$ tsc -p tsconfig.json
+.../packages/context-envelope build$ tsc -p tsconfig.json
+role-model-router/apps/router-devtools build: Done
+.../packages/context-envelope build: Done
+.../packages/retrieval-receipt build$ tsc -p tsconfig.json
+.../packages/retrieval-receipt build: Done
+.../packages/endpoint-registry build$ tsc -p tsconfig.json
+.../packages/endpoint-registry build: Done
+.../packages/protocol-routing build$ tsc -p tsconfig.json
+.../packages/protocol-routing build: Done
+packages/conformance build$ tsc -p tsconfig.json
+packages/conformance build: Done
+.../packages/adapter-execution build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build: Done
+.../packages/adapter-execution build: Done
+.../packages/provider-openai build$ tsc -p tsconfig.json
+.../packages/runtime-observability build$ tsc -p tsconfig.json
+.../packages/provider-openai build: Done
+.../packages/runtime-observability build: Done
+role-model-router/apps/gateway-smoke build$ tsc -p tsconfig.json
+.../packages/provider-litellm build$ tsc -p tsconfig.json
+.../packages/provider-litellm build: Done
+role-model-router/apps/gateway-smoke build: Done
+.../apps/runtime-host-bridge build$ tsc -p tsconfig.json
+.../apps/runtime-host-bridge build: Done
+
+> role-model@0.0.0 test D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm run test:release-workflows && corepack pnpm -r --if-present test
+
+
+> role-model@0.0.0 test:release-workflows D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> node --test scripts/build-binaries-workflow.test.mjs
+
+✔ build-binaries retries release attestation before failing (1.3851ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 128.613
+Scope: 43 of 44 workspace projects
+apps/docs-site test$ node --test
+packages/pi-role-model test$ vitest run
+packages/schema-tools test$ vitest run
+role-model-router/apps/runtime-ui test$ vitest run
+apps/docs-site test: ✔ docs deploy workflow skips gracefully when Cloudflare secrets are absent (7.3253ms)
+apps/docs-site test: ℹ tests 1
+apps/docs-site test: ℹ suites 0
+apps/docs-site test: ℹ pass 1
+apps/docs-site test: ℹ fail 0
+apps/docs-site test: ℹ cancelled 0
+apps/docs-site test: ℹ skipped 0
+apps/docs-site test: ℹ todo 0
+apps/docs-site test: ℹ duration_ms 388.6581
+apps/docs-site test: Done
+role-model-router/packages/bench-judge test$ vitest run
+packages/pi-role-model test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/packages/pi-role-model
+packages/schema-tools test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/packages/schema-tools
+role-model-router/packages/bench-judge test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/bench-judge
+packages/pi-role-model test:  ✓ test/docs-and-safety.test.ts (2 tests) 41ms
+packages/pi-role-model test:  ✓ test/package-manifest.test.ts (1 test) 27ms
+packages/pi-role-model test:  ✓ test/alias-store.test.ts (1 test) 72ms
+role-model-router/packages/bench-judge test:  ✓ src/index.test.ts (6 tests) 15ms
+role-model-router/packages/bench-judge test:  Test Files  1 passed (1)
+role-model-router/packages/bench-judge test:       Tests  6 passed (6)
+role-model-router/packages/bench-judge test:    Start at  16:10:39
+role-model-router/packages/bench-judge test:    Duration  2.36s (transform 281ms, setup 0ms, collect 224ms, tests 15ms, environment 0ms, prepare 1.16s)
+packages/pi-role-model test:  ✓ test/config.test.ts (4 tests) 13ms
+packages/pi-role-model test:  ✓ test/runtime-inspection.test.ts (3 tests) 22ms
+packages/pi-role-model test:  ✓ test/taxonomy-staged-loader.test.ts (2 tests) 13ms
+packages/pi-role-model test:  ✓ test/downstream-openai.test.ts (7 tests) 21ms
+packages/pi-role-model test:  ✓ test/commands.test.ts (13 tests) 33ms
+packages/pi-role-model test:  ✓ test/runtime-discovery.test.ts (4 tests) 39ms
+packages/pi-role-model test:  ✓ test/request-intent.test.ts (12 tests) 149ms
+packages/pi-role-model test:  ✓ test/taxonomy-data-files.test.ts (5 tests) 213ms
+packages/pi-role-model test:  ✓ test/taxonomy-classification.test.ts (14 tests) 255ms
+packages/schema-tools test:  ✓ test/recursive-biome-local-provider-config-format.test.ts (1 test) 3731ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for local provider config format batch > requires the local provider config format blocker set to pass under repository config  3728ms
+role-model-router/packages/bench-judge test: Done
+role-model-router/packages/catalog test$ vitest run test
+packages/schema-tools test:  ✓ test/recursive-biome-run78.test.ts (1 test) 3882ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for run78 > requires the run78 Biome blocker set to pass under repository config  3879ms
+packages/schema-tools test:  ✓ test/recursive-biome-run75.test.ts (1 test) 3949ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for run75 > requires the run75 Biome blocker set to pass under repository config  3946ms
+packages/schema-tools test:  ✓ test/recursive-biome-run76.test.ts (1 test) 4271ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for run76 > requires the run76 Biome blocker set to pass under repository config  4268ms
+packages/pi-role-model test:  ✓ test/effective-taxonomy.test.ts (5 tests) 118ms
+packages/pi-role-model test:  ✓ test/extension.test.ts (8 tests) 369ms
+packages/schema-tools test:  ✓ test/recursive-biome-local-runtime-package-format.test.ts (1 test) 3425ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for local runtime package format batch > requires the local runtime package format blocker set to pass under repository config  3422ms
+packages/schema-tools test:  ✓ test/recursive-biome-semantic-remainder.test.ts (1 test) 3628ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for semantic remainder > requires the remaining 7-file semantic lint batch to pass under repository config  3624ms
+packages/schema-tools test:  ✓ test/recursive-biome-repo-wide.test.ts (1 test) 4833ms
+packages/schema-tools test:    ✓ run31 repo-wide Biome parity > requires repo-wide biome check to pass under repository config  4829ms
+packages/schema-tools test:  ✓ test/recursive-biome-local-router-config-format.test.ts (1 test) 3336ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for local router config format batch > requires the local router config format blocker set to pass under repository config  3332ms
+packages/schema-tools test:  ✓ test/recursive-biome-local-config-format.test.ts (1 test) 3335ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for local config format batch > requires the local config format blocker set to pass under repository config  3331ms
+packages/schema-tools test:  ✓ test/recursive-biome-run74.test.ts (1 test) 3779ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression > requires the run74 Biome blocker set to pass under repository config  3775ms
+packages/schema-tools test:  ✓ test/validate-schemas.test.ts (7 tests) 4464ms
+packages/schema-tools test:    ✓ loadSchemas > treats manifest expectations as authoritative for valid and invalid fixtures  3817ms
+packages/schema-tools test:    ✓ loadSchemas > validates the full fixture manifest through the schema-tool entrypoint  452ms
+packages/pi-role-model test: > @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge
+packages/pi-role-model test: > tsc -p tsconfig.json
+packages/schema-tools test:  ✓ test/recursive-biome-run77.test.ts (1 test) 5070ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for run77 > requires the run77 Biome blocker set to pass under repository config  5067ms
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for benchmark-run.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for benchmark-suite.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for capability-taxonomy.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for declared-capability-profile.schema.json
+role-model-router/packages/catalog test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/catalog
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for downstream-openai-discovery.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for endpoint-identity.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for judge-score.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for model-pack-manifest.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for observed-performance-profile.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for package-manifest.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for planspec.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for role-binding.schema.json
+role-model-router/apps/runtime-ui test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-ui
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for role-definition.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for router-decision.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for routing-policy.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for task-<redacted>.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for task-<redacted>.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for trace-event.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for trace-span.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas
+packages/schema-tools test: Generated types for usage-event.schema.json
+packages/schema-tools test: Formatted 1 file in 70ms. Fixed 1 file.
+packages/schema-tools test:  ✓ test/recursive-core-run81-typecheck.test.ts (1 test) 7654ms
+packages/schema-tools test:    ✓ run31 core build regression for run81 > requires @role-model-router/core to build cleanly under repository config  7651ms
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for benchmark-run.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for benchmark-suite.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for capability-taxonomy.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for declared-capability-profile.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for downstream-openai-discovery.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for endpoint-identity.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for judge-score.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for model-pack-manifest.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for observed-performance-profile.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for package-manifest.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for planspec.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for role-binding.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for role-definition.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for router-decision.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for routing-policy.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for task-<redacted>.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for task-<redacted>.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for trace-event.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for trace-span.schema.json
+packages/schema-tools test: stdout | test/generate-protocol-types.test.ts > generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol
+packages/schema-tools test: Generated types for usage-event.schema.json
+packages/schema-tools test:  ✓ test/recursive-biome-run80.test.ts (1 test) 2603ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for run80 > requires the run80 Biome blocker set to pass under repository config  2600ms
+packages/schema-tools test:  ✓ test/recursive-biome-run79.test.ts (1 test) 2621ms
+packages/schema-tools test:    ✓ run31 bounded Biome regression for run79 > requires the run79 Biome blocker set to pass under repository config  2618ms
+packages/schema-tools test: Formatted 1 file in 69ms. Fixed 1 file.
+packages/schema-tools test:  ✓ test/generate-protocol-types.test.ts (2 tests) 2784ms
+packages/schema-tools test:    ✓ generateProtocolTypes > does not emit duplicate exported interfaces for externally referenced schemas  1546ms
+packages/schema-tools test:    ✓ generateProtocolTypes > emits the router metricEntry helper instead of referencing an undefined MetricEntry symbol  1234ms
+role-model-router/packages/catalog test:  ✓ test/token-economics.test.ts (5 tests) 371ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/build-sync.test.ts (3 tests) 39ms
+packages/schema-tools test:  ✓ test/recursive-evidence-json.test.ts (1 test) 9021ms
+packages/schema-tools test:    ✓ tracked recursive JSON evidence > requires tracked recursive JSON files to contain parseable JSON payloads  9018ms
+role-model-router/packages/catalog test:  ✓ test/index.test.ts (11 tests) 1337ms
+role-model-router/packages/catalog test:    ✓ exportCatalogArtifacts > writes stable normalized catalog and vendor ledger artifacts for local validation  354ms
+role-model-router/packages/catalog test:    ✓ runCatalogExportCli > derives the repo-local catalog export paths for the validation command  371ms
+role-model-router/packages/catalog test:    ✓ runCatalogExportCli > rewrites tracked package-data catalog artifacts alongside the runtime-output export  516ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/device-authorization.test.ts (19 tests) 23ms
+role-model-router/packages/catalog test:  Test Files  2 passed (2)
+role-model-router/packages/catalog test:       Tests  16 passed (16)
+role-model-router/packages/catalog test:    Start at  16:10:46
+role-model-router/packages/catalog test:    Duration  4.12s (transform 649ms, setup 0ms, collect 755ms, tests 1.71s, environment 1ms, prepare 1.40s)
+role-model-router/apps/runtime-ui test:  ✓ app/lib/telemetry-analytics.test.ts (10 tests) 19ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/telemetry-route-models.test.ts (3 tests) 14ms
+role-model-router/apps/runtime-ui test:  ✓ app/components/device-authorization-card.test.tsx (2 tests) 51ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/runtime-api.test.ts (49 tests) 134ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/view-models.test.ts (34 tests) 159ms
+role-model-router/apps/runtime-ui test:  ✓ app/components/page-primitives.test.tsx (6 tests) 57ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/role-task-<redacted>.test.tsx (3 tests) 144ms
+role-model-router/apps/runtime-ui test:  ✓ app/components/device-authorization-modal.test.tsx (1 test) 47ms
+role-model-router/packages/catalog test: Done
+.../packages/process-supervisor test$ vitest run
+role-model-router/apps/runtime-ui test:  ✓ app/components/local-model-role-picker.test.tsx (7 tests) 123ms
+role-model-router/apps/runtime-ui test:  ✓ app/routes/control-models.test.ts (12 tests) 49ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/llama-swap-setup.test.ts (6 tests) 15ms
+role-model-router/apps/runtime-ui test:  ✓ app/routes/providers.test.ts (5 tests) 44ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/benchmark-model-cards.test.ts (5 tests) 11ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/telemetry-chart-config.test.ts (2 tests) 12ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/theme.test.ts (4 tests) 9ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/benchmark-latency.test.ts (2 tests) 9ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/provider-account-state.test.ts (2 tests) 9ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/format-score.test.ts (3 tests) 10ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/router-candidate-labels.test.ts (3 tests) 8ms
+role-model-router/apps/runtime-ui test:  ✓ app/routes/studio-audio.test.ts (2 tests) 7ms
+role-model-router/apps/runtime-ui test:  ✓ app/lib/design-system.test.ts (97 tests) 302ms
+.../packages/process-supervisor test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/process-supervisor
+role-model-router/apps/runtime-ui test:  ✓ app/components/telemetry-charts.test.tsx (8 tests) 68ms
+role-model-router/apps/runtime-ui test:  Test Files  24 passed (24)
+role-model-router/apps/runtime-ui test:       Tests  288 passed (288)
+role-model-router/apps/runtime-ui test:    Start at  16:10:46
+role-model-router/apps/runtime-ui test:    Duration  7.66s (transform 14.79s, setup 0ms, collect 33.52s, tests 1.36s, environment 29ms, prepare 17.65s)
+role-model-router/apps/runtime-ui test: Done
+role-model-router/packages/tool-registry test$ vitest run
+role-model-router/packages/tool-registry test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/tool-registry
+role-model-router/packages/tool-registry test:  ✓ test/index.test.ts (4 tests) 8ms
+role-model-router/packages/tool-registry test:  Test Files  1 passed (1)
+role-model-router/packages/tool-registry test:       Tests  4 passed (4)
+role-model-router/packages/tool-registry test:    Start at  16:10:56
+role-model-router/packages/tool-registry test:    Duration  1.19s (transform 155ms, setup 0ms, collect 123ms, tests 8ms, environment 0ms, prepare 417ms)
+role-model-router/packages/tool-registry test: Done
+.../packages/vendor-abstraction test$ vitest run
+packages/schema-tools test:  ✓ test/recursive-runtime-host-bridge-build.test.ts (1 test) 17488ms
+packages/schema-tools test:    ✓ run31 runtime-host-bridge build regression > requires @role-model-router/runtime-host-bridge to build cleanly under repository config  17485ms
+packages/schema-tools test:  Test Files  18 passed (18)
+packages/schema-tools test:       Tests  25 passed (25)
+packages/schema-tools test:    Start at  16:10:37
+packages/schema-tools test:    Duration  20.78s (transform 6.57s, setup 0ms, collect 8.95s, tests 89.88s, environment 9ms, prepare 18.76s)
+.../packages/process-supervisor test:  ✓ test/index.test.ts (5 tests) 3625ms
+.../packages/process-supervisor test:    ✓ process-supervisor > starts a vendor process, waits for health, and reports it as healthy  581ms
+.../packages/process-supervisor test:    ✓ process-supervisor > captures child logs and restarts an unexpectedly crashed vendor with backoff  1276ms
+.../packages/process-supervisor test:    ✓ process-supervisor > forces bounded shutdown when a vendor ignores the initial termination signal  539ms
+.../packages/process-supervisor test:    ✓ process-supervisor > stops spawned child processes when a managed vendor shuts down on Windows  961ms
+.../packages/process-supervisor test:  Test Files  1 passed (1)
+.../packages/process-supervisor test:       Tests  5 passed (5)
+.../packages/process-supervisor test:    Start at  16:10:53
+.../packages/process-supervisor test:    Duration  5.05s (transform 159ms, setup 0ms, collect 175ms, tests 3.62s, environment 0ms, prepare 383ms)
+.../packages/vendor-abstraction test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/vendor-abstraction
+packages/schema-tools test: Done
+.../packages/process-supervisor test: Done
+.../packages/vendor-abstraction test:  ✓ test/index.test.ts (3 tests) 12ms
+.../packages/vendor-abstraction test:  Test Files  1 passed (1)
+.../packages/vendor-abstraction test:       Tests  3 passed (3)
+.../packages/vendor-abstraction test:    Start at  16:10:59
+.../packages/vendor-abstraction test:    Duration  1.17s (transform 108ms, setup 0ms, collect 108ms, tests 12ms, environment 0ms, prepare 291ms)
+.../packages/vendor-abstraction test: Done
+packages/pi-role-model test: (node:52508) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+packages/pi-role-model test: (Use `node --trace-warnings ...` to show where the warning was created)
+packages/pi-role-model test:  ✓ test/validate-agent-path.test.ts (7 tests) 23289ms
+packages/pi-role-model test:    ✓ validate-agent-path helper > runs the rebuilt-runtime alias proof through canonical runtime aliases  22897ms
+packages/pi-role-model test:  Test Files  15 passed (15)
+packages/pi-role-model test:       Tests  88 passed (88)
+packages/pi-role-model test:    Start at  16:10:37
+packages/pi-role-model test:    Duration  29.65s (transform 15.89s, setup 0ms, collect 23.99s, tests 24.67s, environment 7ms, prepare 23.26s)
+packages/pi-role-model test: Done
+role-model-router/packages/bench-routing test$ vitest run
+role-model-router/packages/core test$ vitest run
+.../packages/profile-aggregator test$ vitest run test/benchmark-routing-quality.test.ts
+.../packages/provider-account test$ vitest run test/index.test.ts
+.../packages/provider-account test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/provider-account
+role-model-router/packages/bench-routing test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/bench-routing
+.../packages/profile-aggregator test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/profile-aggregator
+role-model-router/packages/core test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/core
+role-model-router/packages/core test:  ✓ test/taxonomy-docs.test.ts (2 tests) 16ms
+role-model-router/packages/bench-routing test:  ✓ test/answer-format.test.ts (4 tests) 13ms
+role-model-router/packages/bench-routing test:  ✓ src/judge-brief.test.ts (5 tests) 13ms
+role-model-router/packages/bench-routing test:  ✓ src/diff-validator.test.ts (4 tests) 11ms
+.../packages/provider-account test:  ✓ test/index.test.ts (8 tests) 231ms
+role-model-router/packages/bench-routing test:  ✓ src/reasoning-extraction.test.ts (2 tests) 18ms
+.../packages/provider-account test:  Test Files  1 passed (1)
+.../packages/provider-account test:       Tests  8 passed (8)
+.../packages/provider-account test:    Start at  16:11:09
+.../packages/provider-account test:    Duration  3.02s (transform 567ms, setup 0ms, collect 583ms, tests 231ms, environment 0ms, prepare 763ms)
+role-model-router/packages/bench-routing test:  ✓ test/judge-brief.test.ts (5 tests) 24ms
+role-model-router/packages/core test:  ✓ test/routing-intent.test.ts (29 tests) 77ms
+role-model-router/packages/bench-routing test:  ✓ src/answer-format.test.ts (6 tests) 22ms
+.../packages/profile-aggregator test:  ✓ test/benchmark-routing-quality.test.ts (3 tests) 15ms
+role-model-router/packages/bench-routing test:  ✓ src/index.test.ts (27 tests) 36ms
+.../packages/profile-aggregator test:  Test Files  1 passed (1)
+.../packages/profile-aggregator test:       Tests  3 passed (3)
+.../packages/profile-aggregator test:    Start at  16:11:09
+.../packages/profile-aggregator test:    Duration  3.28s (transform 262ms, setup 0ms, collect 279ms, tests 15ms, environment 0ms, prepare 842ms)
+role-model-router/packages/bench-routing test:  ✓ test/subject-prompt.test.ts (1 test) 7ms
+role-model-router/packages/bench-routing test:  Test Files  8 passed (8)
+role-model-router/packages/bench-routing test:       Tests  54 passed (54)
+role-model-router/packages/bench-routing test:    Start at  16:11:09
+role-model-router/packages/bench-routing test:    Duration  3.38s (transform 1.15s, setup 0ms, collect 1.74s, tests 144ms, environment 4ms, prepare 6.52s)
+role-model-router/packages/core test:  ✓ test/taxonomy-catalog.test.ts (9 tests) 306ms
+.../packages/provider-account test: Done
+.../packages/vendor-litellm test$ vitest run
+.../packages/profile-aggregator test: Done
+role-model-router/packages/bench-routing test: Done
+.../packages/vendor-llama-swap test$ vitest run
+role-model-router/packages/core test:  ✓ test/taxonomy-data-files.test.ts (5 tests) 958ms
+role-model-router/packages/core test:    ✓ taxonomy data and schema files > run 58 benchmark and telemetry schemas validate sample data  776ms
+role-model-router/packages/core test:  Test Files  4 passed (4)
+role-model-router/packages/core test:       Tests  45 passed (45)
+role-model-router/packages/core test:    Start at  16:11:09
+role-model-router/packages/core test:    Duration  4.10s (transform 759ms, setup 0ms, collect 1.33s, tests 1.36s, environment 2ms, prepare 3.34s)
+role-model-router/packages/core test: Done
+.../packages/vendor-litellm test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/vendor-litellm
+.../packages/vendor-llama-swap test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/vendor-llama-swap
+.../packages/vendor-llama-swap test:  ✓ test/index.test.ts (7 tests) 1177ms
+.../packages/vendor-llama-swap test:    ✓ vendor-llama-swap > starts a managed llama-swap vendor and executes local openai-compatible requests through it  551ms
+.../packages/vendor-llama-swap test:    ✓ vendor-llama-swap > streams chat-completions deltas through the managed llama-swap vendor  536ms
+.../packages/vendor-llama-swap test:  Test Files  1 passed (1)
+.../packages/vendor-llama-swap test:       Tests  7 passed (7)
+.../packages/vendor-llama-swap test:    Start at  16:11:14
+.../packages/vendor-llama-swap test:    Duration  3.10s (transform 203ms, setup 0ms, collect 373ms, tests 1.18s, environment 0ms, prepare 339ms)
+.../packages/vendor-llama-swap test: Done
+.../packages/vendor-litellm test:  ✓ test/index.test.ts (13 tests) 2378ms
+.../packages/vendor-litellm test:    ✓ vendor-litellm > starts a managed LiteLLM vendor and captures cost plus cache metadata from responses  473ms
+.../packages/vendor-litellm test:    ✓ vendor-litellm > captures response cost from LiteLLM headers when the proxy strips hidden params  451ms
+.../packages/vendor-litellm test:    ✓ vendor-litellm > captures cache status from LiteLLM headers when the proxy omits hidden cache markers  502ms
+.../packages/vendor-litellm test:    ✓ vendor-litellm > forwards fallback model ids into the LiteLLM request body  402ms
+.../packages/vendor-litellm test:    ✓ vendor-litellm > streams chat-completions deltas through the managed LiteLLM vendor  416ms
+.../packages/vendor-litellm test:  Test Files  1 passed (1)
+.../packages/vendor-litellm test:       Tests  13 passed (13)
+.../packages/vendor-litellm test:    Start at  16:11:14
+.../packages/vendor-litellm test:    Duration  4.29s (transform 245ms, setup 0ms, collect 426ms, tests 2.38s, environment 0ms, prepare 628ms)
+.../packages/vendor-litellm test: Done
+role-model-router/packages/provider-mcp test$ vitest run
+role-model-router/packages/roles test$ vitest run
+role-model-router/packages/sqlite-memory test$ vitest run test/index.test.ts
+role-model-router/packages/tasks test$ vitest run
+role-model-router/packages/roles test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/roles
+role-model-router/packages/sqlite-memory test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/sqlite-memory
+role-model-router/packages/tasks test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/tasks
+role-model-router/packages/provider-mcp test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/provider-mcp
+role-model-router/packages/sqlite-memory test: (node:44708) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+role-model-router/packages/sqlite-memory test: (Use `node --trace-warnings ...` to show where the warning was created)
+role-model-router/packages/roles test:  ✓ test/default-roles-taxonomy.test.ts (1 test) 10ms
+role-model-router/packages/roles test:  Test Files  1 passed (1)
+role-model-router/packages/roles test:       Tests  1 passed (1)
+role-model-router/packages/roles test:    Start at  16:11:19
+role-model-router/packages/roles test:    Duration  2.62s (transform 422ms, setup 0ms, collect 506ms, tests 10ms, environment 0ms, prepare 823ms)
+role-model-router/packages/provider-mcp test:  ✓ test/index.test.ts (1 test) 7ms
+role-model-router/packages/provider-mcp test:  Test Files  1 passed (1)
+role-model-router/packages/provider-mcp test:       Tests  1 passed (1)
+role-model-router/packages/provider-mcp test:    Start at  16:11:19
+role-model-router/packages/provider-mcp test:    Duration  2.77s (transform 121ms, setup 0ms, collect 123ms, tests 7ms, environment 0ms, prepare 298ms)
+role-model-router/packages/tasks test:  ✓ test/default-tasks-taxonomy.test.ts (1 test) 7ms
+role-model-router/packages/tasks test:  Test Files  1 passed (1)
+role-model-router/packages/tasks test:       Tests  1 passed (1)
+role-model-router/packages/tasks test:    Start at  16:11:19
+role-model-router/packages/tasks test:    Duration  2.97s (transform 307ms, setup 0ms, collect 384ms, tests 7ms, environment 0ms, prepare 406ms)
+role-model-router/packages/roles test: Done
+role-model-router/packages/provider-mcp test: Done
+role-model-router/packages/tasks test: Done
+role-model-router/packages/sqlite-memory test:  ✓ test/index.test.ts (34 tests) 7968ms
+role-model-router/packages/sqlite-memory test:    ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting benchmark samples  495ms
+role-model-router/packages/sqlite-memory test:    ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles  599ms
+role-model-router/packages/sqlite-memory test:    ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading difficulty classification cache  450ms
+role-model-router/packages/sqlite-memory test:    ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting difficulty classification cache  445ms
+role-model-router/packages/sqlite-memory test:    ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading advisory max difficulty recommendations  453ms
+role-model-router/packages/sqlite-memory test:    ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records  582ms
+role-model-router/packages/sqlite-memory test:    ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns  563ms
+role-model-router/packages/sqlite-memory test:  Test Files  1 passed (1)
+role-model-router/packages/sqlite-memory test:       Tests  34 passed (34)
+role-model-router/packages/sqlite-memory test:    Start at  16:11:19
+role-model-router/packages/sqlite-memory test:    Duration  11.22s (transform 898ms, setup 0ms, collect 1.12s, tests 7.97s, environment 0ms, prepare 552ms)
+role-model-router/packages/sqlite-memory test: Done
+role-model-router/apps/router-devtools test$ vitest run test/index.test.ts
+.../packages/context-envelope test$ vitest run test/index.test.ts
+.../packages/context-envelope test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/context-envelope
+role-model-router/apps/router-devtools test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/router-devtools
+role-model-router/apps/router-devtools test:  ✓ test/index.test.ts (1 test) 12ms
+role-model-router/apps/router-devtools test:  Test Files  1 passed (1)
+role-model-router/apps/router-devtools test:       Tests  1 passed (1)
+role-model-router/apps/router-devtools test:    Start at  16:11:32
+role-model-router/apps/router-devtools test:    Duration  1.47s (transform 148ms, setup 0ms, collect 159ms, tests 12ms, environment 0ms, prepare 424ms)
+.../packages/context-envelope test: (node:33616) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../packages/context-envelope test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../packages/context-envelope test:  ✓ test/index.test.ts (1 test) 126ms
+.../packages/context-envelope test:  Test Files  1 passed (1)
+.../packages/context-envelope test:       Tests  1 passed (1)
+.../packages/context-envelope test:    Start at  16:11:32
+.../packages/context-envelope test:    Duration  1.74s (transform 222ms, setup 0ms, collect 266ms, tests 126ms, environment 0ms, prepare 307ms)
+role-model-router/apps/router-devtools test: Done
+.../packages/context-envelope test: Done
+.../packages/retrieval-receipt test$ vitest run test/index.test.ts
+.../packages/retrieval-receipt test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/retrieval-receipt
+.../packages/retrieval-receipt test:  ✓ test/index.test.ts (1 test) 6ms
+.../packages/retrieval-receipt test:  Test Files  1 passed (1)
+.../packages/retrieval-receipt test:       Tests  1 passed (1)
+.../packages/retrieval-receipt test:    Start at  16:11:35
+.../packages/retrieval-receipt test:    Duration  898ms (transform 92ms, setup 0ms, collect 92ms, tests 6ms, environment 0ms, prepare 289ms)
+.../packages/retrieval-receipt test: Done
+.../packages/endpoint-registry test$ vitest run test/index.test.ts
+.../packages/endpoint-registry test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/endpoint-registry
+.../packages/endpoint-registry test:  ✓ test/index.test.ts (1 test) 9ms
+.../packages/endpoint-registry test:  Test Files  1 passed (1)
+.../packages/endpoint-registry test:       Tests  1 passed (1)
+.../packages/endpoint-registry test:    Start at  16:11:37
+.../packages/endpoint-registry test:    Duration  943ms (transform 115ms, setup 0ms, collect 114ms, tests 9ms, environment 0ms, prepare 280ms)
+.../packages/endpoint-registry test: Done
+.../packages/protocol-routing test$ vitest run test
+.../packages/protocol-routing test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/protocol-routing
+.../packages/protocol-routing test: (node:21368) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../packages/protocol-routing test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../packages/protocol-routing test:  ✓ test/catalog-economics-routing.test.ts (3 tests) 109ms
+.../packages/protocol-routing test:  ✓ test/index.test.ts (10 tests) 161ms
+.../packages/protocol-routing test:  Test Files  2 passed (2)
+.../packages/protocol-routing test:       Tests  13 passed (13)
+.../packages/protocol-routing test:    Start at  16:11:39
+.../packages/protocol-routing test:    Duration  1.47s (transform 618ms, setup 0ms, collect 984ms, tests 270ms, environment 1ms, prepare 507ms)
+.../packages/protocol-routing test: Done
+packages/conformance test$ vitest run
+packages/conformance test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/packages/conformance
+packages/conformance test:  ✓ src/observability-linkage.test.ts (2 tests) 11ms
+packages/conformance test:  ✓ src/profile-aggregation-deterministic.test.ts (6 tests) 14ms
+packages/conformance test:  ✓ src/router-role-task-<redacted>.test.ts (10 tests) 25ms
+packages/conformance test:  ✓ src/router-conformance.test.ts (17 tests) 55ms
+packages/conformance test: (node:44376) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+packages/conformance test: (Use `node --trace-warnings ...` to show where the warning was created)
+packages/conformance test:  ✓ src/router-fixture-conformance.test.ts (1 test) 508ms
+packages/conformance test:    ✓ router fixture conformance > validates golden routing cases from fixture inputs against the hardened router decision contract  505ms
+packages/conformance test:  ✓ src/protocol-schema-conformance.test.ts (9 tests) 787ms
+packages/conformance test:    ✓ run01 protocol schema conformance > endpoint identity permits run01 optional metadata fields to be absent  359ms
+packages/conformance test:  ✓ src/runtime-routing-conformance.test.ts (2 tests) 550ms
+packages/conformance test:    ✓ runtime routing conformance > emits a schema-valid decision for fixture-backed runtime routing validation  535ms
+packages/conformance test:  ✓ src/protocol-fixture-conformance.test.ts (2 tests) 3852ms
+packages/conformance test:    ✓ run01 protocol fixture conformance > schema-tools validate the expanded valid and invalid fixture manifest  520ms
+packages/conformance test:    ✓ run01 protocol fixture conformance > schemas:validate reports fixture validation as part of the canonical schema-tool path  3329ms
+packages/conformance test:  ✓ src/gateway-smoke-observability.test.ts (2 tests) 6336ms
+packages/conformance test:    ✓ gateway smoke observability conformance > emits trace and usage artifacts with run01 linkage ids and canonical trace shapes  3483ms
+packages/conformance test:    ✓ gateway smoke observability conformance > emits observed performance with the run01 sample window and sources shape  2850ms
+packages/conformance test:  Test Files  9 passed (9)
+packages/conformance test:       Tests  51 passed (51)
+packages/conformance test:    Start at  16:11:42
+packages/conformance test:    Duration  7.50s (transform 1.37s, setup 0ms, collect 3.94s, tests 12.14s, environment 4ms, prepare 3.22s)
+packages/conformance test: Done
+.../packages/provider-anthropic test$ vitest run test/index.test.ts
+.../packages/adapter-execution test$ vitest run
+.../packages/provider-anthropic test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/provider-anthropic
+.../packages/adapter-execution test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/adapter-execution
+.../packages/provider-anthropic test:  ✓ test/index.test.ts (1 test) 9ms
+.../packages/adapter-execution test:  ✓ test/index.test.ts (5 tests) 16ms
+.../packages/provider-anthropic test:  Test Files  1 passed (1)
+.../packages/provider-anthropic test:       Tests  1 passed (1)
+.../packages/provider-anthropic test:    Start at  16:11:51
+.../packages/provider-anthropic test:    Duration  1.50s (transform 117ms, setup 0ms, collect 112ms, tests 9ms, environment 0ms, prepare 427ms)
+.../packages/provider-anthropic test: Done
+.../packages/adapter-execution test: (node:25360) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../packages/adapter-execution test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../packages/adapter-execution test:  ✓ test/cli.test.ts (1 test) 176ms
+.../packages/adapter-execution test:  Test Files  2 passed (2)
+.../packages/adapter-execution test:       Tests  6 passed (6)
+.../packages/adapter-execution test:    Start at  16:11:51
+.../packages/adapter-execution test:    Duration  2.11s (transform 610ms, setup 0ms, collect 855ms, tests 193ms, environment 1ms, prepare 1.11s)
+.../packages/adapter-execution test: Done
+.../packages/provider-openai test$ vitest run test/index.test.ts
+.../packages/runtime-observability test$ vitest run
+.../packages/provider-openai test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/provider-openai
+.../packages/runtime-observability test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/runtime-observability
+.../packages/provider-openai test:  ✓ test/index.test.ts (13 tests) 22ms
+.../packages/provider-openai test:  Test Files  1 passed (1)
+.../packages/provider-openai test:       Tests  13 passed (13)
+.../packages/provider-openai test:    Start at  16:11:54
+.../packages/provider-openai test:    Duration  1.59s (transform 195ms, setup 0ms, collect 210ms, tests 22ms, environment 0ms, prepare 548ms)
+.../packages/provider-openai test: Done
+.../packages/runtime-observability test: (node:52752) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../packages/runtime-observability test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../packages/runtime-observability test: (node:11156) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../packages/runtime-observability test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../packages/runtime-observability test:  ✓ test/otel.test.ts (1 test) 374ms
+.../packages/runtime-observability test:    ✓ runtime-observability otel mapping > derives a deterministic OpenTelemetry export from canonical role-model artifacts  372ms
+.../packages/runtime-observability test:  ✓ test/index.test.ts (5 tests) 834ms
+.../packages/runtime-observability test:    ✓ runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates  396ms
+.../packages/runtime-observability test:  Test Files  2 passed (2)
+.../packages/runtime-observability test:       Tests  6 passed (6)
+.../packages/runtime-observability test:    Start at  16:11:54
+.../packages/runtime-observability test:    Duration  2.84s (transform 603ms, setup 0ms, collect 1.31s, tests 1.21s, environment 1ms, prepare 671ms)
+.../packages/runtime-observability test: Done
+.../packages/provider-litellm test$ vitest run test/index.test.ts
+.../packages/provider-litellm test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/provider-litellm
+.../packages/provider-litellm test:  ✓ test/index.test.ts (3 tests) 9ms
+.../packages/provider-litellm test:  Test Files  1 passed (1)
+.../packages/provider-litellm test:       Tests  3 passed (3)
+.../packages/provider-litellm test:    Start at  16:11:58
+.../packages/provider-litellm test:    Duration  1.10s (transform 177ms, setup 0ms, collect 200ms, tests 9ms, environment 0ms, prepare 251ms)
+.../packages/provider-litellm test: Done
+.../apps/runtime-host-bridge test$ vitest run
+.../apps/runtime-host-bridge test:  RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+.../apps/runtime-host-bridge test: (node:13256) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:46740) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:39504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:29904) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:31688) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:49296) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:52220) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:62044) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:59152) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:30408) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:47856) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:36936) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:65852) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:33796) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:46236) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test:  ✓ test/endpoint-rehydration.test.ts (1 test) 3118ms
+.../apps/runtime-host-bridge test:    ✓ endpoint rehydration > rehydrates sqlite runtime endpoints across backend restart without re-activation  3114ms
+.../apps/runtime-host-bridge test:  ✓ test/validate-catalog-economics.test.ts (1 test) 3139ms
+.../apps/runtime-host-bridge test:    ✓ runCatalogEconomicsValidation > hides moonshotai, routes easy cost work to local peer, and emits catalogEconomics  3136ms
+.../apps/runtime-host-bridge test:  ✓ test/remove-account-model.test.ts (2 tests) 3830ms
+.../apps/runtime-host-bridge test:    ✓ removeProviderAccountModel > removes the selected model and stale endpoint rows while preserving sibling models  1729ms
+.../apps/runtime-host-bridge test:    ✓ removeProviderAccountModel > deletes the backing account when its last configured model is removed  2098ms
+.../apps/runtime-host-bridge test: (node:55468) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:55392) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test:  ✓ test/catalog-economics-providers.test.ts (2 tests) 4205ms
+.../apps/runtime-host-bridge test:    ✓ catalog economics provider surfaces > hides moonshotai from listProviders while keeping operator moonshot  1898ms
+.../apps/runtime-host-bridge test:    ✓ catalog economics provider surfaces > lists moonshot/kimi-k2.7-code on moonshot and kimi-code variants  2294ms
+.../apps/runtime-host-bridge test: (node:58792) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:40644) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test:  ✓ test/routable-inventory-bootstrap.test.ts (3 tests) 1303ms
+.../apps/runtime-host-bridge test:    ✓ routable inventory bootstrap > exposes inventory summary and inventory bootstrap stage after startup  1250ms
+.../apps/runtime-host-bridge test:  ✓ test/session-readiness-api.test.ts (1 test) 1508ms
+.../apps/runtime-host-bridge test:    ✓ session readiness API > exposes bootstrap, inventory, and readiness fields over HTTP  1505ms
+.../apps/runtime-host-bridge test:  ✓ test/validate-restart-rehydration.test.ts (1 test) 7273ms
+.../apps/runtime-host-bridge test:    ✓ runRestartRehydrationValidation > rehydrates activated endpoints and mixed alias model list after backend restart  7270ms
+.../apps/runtime-host-bridge test: (node:62580) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:35796) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test:  ✓ test/operator-intent-corrupt-bootstrap.test.ts (1 test) 1501ms
+.../apps/runtime-host-bridge test:    ✓ operator intent corrupt manifest > surfaces corrupt operator-intent diagnostics and blocks bootstrap  1498ms
+.../apps/runtime-host-bridge test:  ✓ test/benchmark-data-clear.test.ts (3 tests) 2159ms
+.../apps/runtime-host-bridge test:    ✓ benchmark global data clear > clearAllObservedBenchmarkData removes all benchmark samples and rebuilds profiles  323ms
+.../apps/runtime-host-bridge test:    ✓ benchmark global data clear > DELETE /api/role-model/benchmark/data clears sqlite samples and artifact runs  1821ms
+.../apps/runtime-host-bridge test:  ✓ test/validate-ui.test.ts (1 test) 8499ms
+.../apps/runtime-host-bridge test:    ✓ runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations  8496ms
+.../apps/runtime-host-bridge test:  ✓ test/validate-observability.test.ts (1 test) 8604ms
+.../apps/runtime-host-bridge test:    ✓ runRuntimeObservabilityValidation > proves structured request, capture, metrics, and otel observability over the real host path  8601ms
+.../apps/runtime-host-bridge test: (node:43648) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:26976) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test:  ✓ test/validate-operations.test.ts (1 test) 1478ms
+.../apps/runtime-host-bridge test:    ✓ runRuntimeOperationsValidation > validates isolated scopes and runtime-state maintenance drills  1475ms
+.../apps/runtime-host-bridge test:  ✓ test/validate-tools.test.ts (1 test) 1662ms
+.../apps/runtime-host-bridge test:    ✓ runRuntimeToolsValidation > executes runtime-owned MCP tool calls and persists their observation receipts  1659ms
+.../apps/runtime-host-bridge test: (node:32516) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:52792) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test:  ✓ test/account-repair.test.ts (6 tests) 10182ms
+.../apps/runtime-host-bridge test:    ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  1661ms
+.../apps/runtime-host-bridge test:    ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  1975ms
+.../apps/runtime-host-bridge test:    ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  1789ms
+.../apps/runtime-host-bridge test:    ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  1362ms
+.../apps/runtime-host-bridge test:    ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  1475ms
+.../apps/runtime-host-bridge test:    ✓ account repair mutations > codex subscription start returns a real device-code session and poll connects through managed Codex auth  1916ms
+.../apps/runtime-host-bridge test:  ✓ test/benchmark-runner-compare.test.ts (1 test) 257ms
+.../apps/runtime-host-bridge test:  ✓ test/executable.test.ts (15 tests) 508ms
+.../apps/runtime-host-bridge test:  ✓ test/session-bootstrap-health.test.ts (1 test) 1296ms
+.../apps/runtime-host-bridge test:    ✓ session bootstrap health > exposes bootstrap receipts on /healthz summary after async startup  1292ms
+.../apps/runtime-host-bridge test: (node:55636) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test: (node:57336) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test:  ✓ src/oauth-credential.test.ts (2 tests) 76ms
+.../apps/runtime-host-bridge test:  ✓ test/benchmark-artifacts.test.ts (4 tests) 43ms
+.../apps/runtime-host-bridge test:  ✓ test/unified-runtime-config.test.ts (27 tests) 110ms
+.../apps/runtime-host-bridge test:  ✓ test/system-open-url.test.ts (1 test) 93ms
+.../apps/runtime-host-bridge test:  ✓ test/taxonomy-discovery.test.ts (3 tests) 236ms
+.../apps/runtime-host-bridge test:  ✓ src/operator-intent.test.ts (8 tests) 393ms
+.../apps/runtime-host-bridge test:    ✓ operator-intent > writes and reads operator intent atomically  350ms
+.../apps/runtime-host-bridge test:  ✓ test/remote-health-bootstrap.test.ts (1 test) 2557ms
+.../apps/runtime-host-bridge test:    ✓ remote health bootstrap > skips remote-health probes in decision_only mode  2553ms
+.../apps/runtime-host-bridge test:  ✓ test/benchmark-runner-judge.test.ts (13 tests) 2506ms
+.../apps/runtime-host-bridge test:    ✓ benchmark-runner judge remediation > sends structured response_format for subject json deliverables  690ms
+.../apps/runtime-host-bridge test:    ✓ benchmark-runner judge remediation > preserves repeated same-name tool calls in benchmark artifacts  787ms
+.../apps/runtime-host-bridge test:  ✓ test/benchmark-summary.test.ts (8 tests) 341ms
+.../apps/runtime-host-bridge test:  ✓ test/downstream-openai-discovery.test.ts (3 tests) 57ms
+.../apps/runtime-host-bridge test:  ✓ test/runtime-assets.test.ts (4 tests) 75ms
+.../apps/runtime-host-bridge test: (node:54248) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test:  ✓ src/routable-inventory.test.ts (6 tests) 59ms
+.../apps/runtime-host-bridge test:  ✓ test/litellm-catalog.test.ts (6 tests) 64ms
+.../apps/runtime-host-bridge test: (node:57004) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test:  ✓ src/local-model-role-bindings.test.ts (11 tests) 52ms
+.../apps/runtime-host-bridge test:  ✓ test/craft-ask-<redacted>.test.ts (4 tests) 59ms
+.../apps/runtime-host-bridge test:  ✓ test/controller-routing-contract.test.ts (8 tests) 56ms
+.../apps/runtime-host-bridge test:  ✓ test/request-capability-inference.test.ts (2 tests) 49ms
+.../apps/runtime-host-bridge test:  ✓ test/model-capability-resolver.test.ts (3 tests) 55ms
+.../apps/runtime-host-bridge test:  ✓ test/runtime-version.test.ts (3 tests) 39ms
+.../apps/runtime-host-bridge test:  ✓ test/alias-capability-routing.test.ts (3 tests) 56ms
+.../apps/runtime-host-bridge test:  ✓ src/remote-health-probe.test.ts (11 tests) 35ms
+.../apps/runtime-host-bridge test:  ✓ test/benchmark-start-guards.test.ts (8 tests) 15ms
+.../apps/runtime-host-bridge test: (node:20092) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+.../apps/runtime-host-bridge test: (Use `node --trace-warnings ...` to show where the warning was created)
+.../apps/runtime-host-bridge test:  ✓ src/session-bootstrap.test.ts (4 tests) 15ms
+.../apps/runtime-host-bridge test:  ✓ test/credential-ref-env.test.ts (6 tests) 12ms
+.../apps/runtime-host-bridge test:  ✓ test/runtime-routing-model.test.ts (4 tests) 11ms
+.../apps/runtime-host-bridge test:  ✓ test/validate-ui-cleanup.test.ts (2 tests) 12ms
+.../apps/runtime-host-bridge test:  ✓ test/benchmark-progress.test.ts (2 tests) 8ms
+.../apps/runtime-host-bridge test:  ✓ src/benchmark-reasoning.test.ts (6 tests) 8ms
+.../apps/runtime-host-bridge test:  ✓ test/benchmark-judge-runtime.test.ts (3 tests) 8ms
+.../apps/runtime-host-bridge test:  ✓ test/benchmark-validation-metrics.test.ts (2 tests) 7ms
+.../apps/runtime-host-bridge test:  ✓ test/benchmark-candidates-routing-quality.test.ts (1 test) 10ms
+.../apps/runtime-host-bridge test:  ✓ test/local-policy.test.ts (14 tests) 18148ms
+.../apps/runtime-host-bridge test:    ✓ local policy persistence > readLocalPolicy returns defaults when file does not exist  1228ms
+.../apps/runtime-host-bridge test:    ✓ local policy persistence > updateLocalPolicy writes merged policy to file  1185ms
+.../apps/runtime-host-bridge test:    ✓ local policy persistence > readLocalPolicy reads persisted file  1468ms
+.../apps/runtime-host-bridge test:    ✓ local policy persistence > updateLocalPolicy merges with existing policy  1379ms
+.../apps/runtime-host-bridge test:    ✓ local swap history > listSwapHistory returns empty array when no events  1129ms
+.../apps/runtime-host-bridge test:    ✓ local swap history > listSwapHistory returns events in descending order  1115ms
+.../apps/runtime-host-bridge test:    ✓ model overrides > readModelOverrides returns empty object when file does not exist  936ms
+.../apps/runtime-host-bridge test:    ✓ model overrides > updateModelOverrides writes to file  1180ms
+.../apps/runtime-host-bridge test:    ✓ model overrides > readModelOverrides reads persisted file  2198ms
+.../apps/runtime-host-bridge test:    ✓ peer configuration > readPeers returns empty array when file does not exist  1259ms
+.../apps/runtime-host-bridge test:    ✓ peer configuration > updatePeers writes to file  1213ms
+.../apps/runtime-host-bridge test:    ✓ peer configuration > readPeers reads persisted file  1128ms
+.../apps/runtime-host-bridge test:    ✓ peer configuration > updatePeers replays persisted peer auto-reload entries when peers become available  1923ms
+.../apps/runtime-host-bridge test:    ✓ peer configuration > checkPeerHealth returns false for unreachable url  802ms
+.../apps/runtime-host-bridge test:  ✓ test/openai-codex-subscription-matrix.test.ts (6 tests) 25218ms
+.../apps/runtime-host-bridge test:    ✓ OpenAI Codex Subscription model matrix > listProviders exposes the full Codex Subscription 5.3+ matrix for OpenAI  2160ms
+.../apps/runtime-host-bridge test:    ✓ OpenAI Codex Subscription model matrix > rejects pre-5.3 Codex Subscription model ids during device authorization setup  1640ms
+.../apps/runtime-host-bridge test:    ✓ OpenAI Codex Subscription model matrix > accepts hosted web search and function-tool request surfaces for every supported OpenAI model id  13660ms
+.../apps/runtime-host-bridge test:    ✓ OpenAI Codex Subscription model matrix > keeps every supported OpenAI GPT-5.3+ subscription model coder.patch routable  7745ms
+.../apps/runtime-host-bridge test:  ✓ test/restart-rehydration.test.ts (11 tests) 26449ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > restores activated endpoints and session readiness summary after backend restart  3186ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > keeps restarted remote endpoints healthy when provider /models returns unprefixed ids  2223ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > does not count expired pending device authorization as an active readiness blocker after restart  2391ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > archives orphan pending authorizations and orphan credential files instead of counting them as active readiness  3228ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > archives invalid persisted provider accounts instead of surfacing them as active lifecycle records  2403ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > surfaces failed pending authorization polling in bootstrap stage details after restart  3210ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > classifies failed startup OAuth refresh as expired auth after restart  1848ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > polls the earliest-expiring pending authorizations first and surfaces deferred count  2784ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > cleans up a pending Codex Subscription device-code session after restart  2369ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > normalizes legacy local peer role bindings during restart rehydration  1750ms
+.../apps/runtime-host-bridge test:    ✓ restart rehydration > defers persisted peer auto-reload entries during restart bootstrap when peers are not configured  1050ms
+.../apps/runtime-host-bridge test:  ✓ test/provider-overlap-metadata.test.ts (45 tests) 34971ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for baseten  1955ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cerebras  1772ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cohere  1702ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for databricks  2069ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepinfra  1906ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepseek  1870ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for groq  2647ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for minimax  1238ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for mistral  1742ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for morph  1278ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for nebius  1384ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for openrouter  1424ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for ovhcloud  1279ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for perplexity  1345ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for sarvam  2077ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for v0  1071ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for wandb  1045ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for xai  1168ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for zai  1629ms
+.../apps/runtime-host-bridge test:    ✓ listProviders overlap metadata (R1 integration) > listProviders exposes one OpenAI provider with API Key and Codex Subscription variants  1001ms
+.../apps/runtime-host-bridge test:  ✓ test/backend-unified-runtime-config.test.ts (23 tests) 70141ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > router candidates expose every configured endpoint and mark current execution-mode eligibility  3768ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > rejects benchmark runs that target endpoints excluded by execution mode  3284ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > surfaces the derived execution mode in the runtime summary when a unified config file is provided  1293ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > reads and updates unified runtime config through the backend  1454ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > merges partial runtime config updates without dropping existing routing strategy  2466ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > canonicalizes the primary routing alias to the live routing matrix on startup  2358ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > creates and updates unified runtime config when the configured path does not exist yet  2351ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > persists explicit hybrid execution mode from routing strategy updates  977ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > bootstraps the primary routing alias when routing posture is saved without preconfigured aliases  3058ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > bootstraps a settings-specific primary routing alias for remote-only posture without preconfigured aliases  3591ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > maintains the routing alias matrix across strategy families and execution modes  28987ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > persists the full canonical routing alias matrix instead of a single primary alias  3251ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > normalizes legacy craft-ask routing strategy updates to the default alias family  1394ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > rewrites persisted craft-ask alias ids out of startup config materialization  1224ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when the canonical matrix already exists  1244ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases  1380ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > renames the primary routing alias when routing strategy and execution mode change  775ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > does not mark all candidates ignored when routing guidance has no preferred endpoints  865ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > preserves synthesized activated endpoint models across runtime config updates  775ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > returns no controller assignment when the unified config has no endpoints yet  744ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > surfaces normalized provider docs and npm metadata through listProviders  947ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > preserves manual account authority and provenance on exact runtime-config account-id collision  2548ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge unified runtime backend > surfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config  1403ms
+.../apps/runtime-host-bridge test:  ✓ test/validate-vendors.test.ts (2 tests) 82559ms
+.../apps/runtime-host-bridge test:    ✓ runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end  82546ms
+.../apps/runtime-host-bridge test:  ✓ test/index.test.ts (181 tests) 103351ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > suppresses placeholder provider accounts when using the packaged CLI defaults  1278ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > purges stale runtime-config LiteLLM endpoints when startup has no runtime config  1262ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > loads placeholder accounts only when fixture-root is explicitly provided  1292ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > creates a runtime backend that executes chat-completions through the real routing and adapter path  1497ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state  1754ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests  1865ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > persists applied role policy diagnostics and injected system instructions for runtime-backed chat requests  2247ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > does not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap  1437ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > upsertProviderAccount replaces existing model role assignments for the same model  1287ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests  2224ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path  8885ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests  2317ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request  1185ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > routes hard requests using bucketed observed profiles and records the selected difficulty bucket  1291ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > keeps fresh endpoint-wide metrics when stale hard-bucket quality is present under benchmark-driven routing  1291ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests  1784ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests  1049ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > uses the default controller timeout budget for realistic remote controller latency  5001ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > records sanitized controller guidance through the live HTTP bridge for intelligent aliases  1399ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > preserves accepted controller directives for known compatibility strategy aliases  1519ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > gives controller routing enough output budget to avoid empty truncated guidance  2007ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > retries controller routing once with a compact prompt when the first controller response is empty  1424ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > falls back to heuristic controller guidance when the live controller returns prose instead of JSON  1524ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > serves coherent live role and task policy over the HTTP control plane  859ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config  3106ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests  1170ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > falls back deterministically when the configured classifier times out  1275ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded  2187ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request  1199ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts  1176ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > persists runtime-managed role policy and task allowlists across backend restart  1452ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > executes env-backed api-key accounts through the live provider path when the env credential resolves  1702ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion  1235ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints  1256ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > executes direct exact-model chat requests through the Codex subscription endpoint  1024ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > exact Codex execution repairs stale bridge auth from standalone runtime and clears auth cooldowns  1845ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > suppresses already-executed Codex dynamic tool calls from the final chat response and de-duplicates executions  985ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > does not place Codex subscription endpoints on cooldown for invalid_request failures  1136ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > keeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog  1838ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > registers configured local OpenAI-compatible peers as execution-ready model endpoints  1740ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > executes non-controller requested coder review task requests without empty chosen-endpoint failures  780ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > exposes llama-swap ownership and config metadata on local model and endpoint readback  984ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > rejects local model activation when no configured local endpoint exposes the requested model  689ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > rehydrates connected OAuth accounts from stored token files on backend restart  1472ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > restores pending OAuth device-authorizations from SQLite after backend restart  1615ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint  1140ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > executes exact Kimi hosted web-search requests through to a final assistant answer  853ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-flash web-search requests as consumer-managed tool calls  775ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-pro web-search requests as consumer-managed tool calls  988ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > normalizes DeepSeek DSML web_search markup into consumer-visible tool calls  1347ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > normalizes DeepSeek DSML web_open markup into consumer-visible tool calls  913ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > normalizes DeepSeek DSML web_browse markup into consumer-visible tool calls  1041ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > creates a runtime backend that executes responses through the real routing and adapter path  570ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests  835ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > serves structured request and endpoint inspection routes through the bridge server  863ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > aggregates generic telemetry analytics from persisted request-time routing and cost facts  1094ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > aggregates telemetry analytics over the full requested slice with contract metadata and aligned ledger filters  1236ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > startup retention cleanup removes expired raw observations while preserving telemetry ledger evidence  801ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > keeps duplicate caller request ids as separate canonical telemetry rows  862ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > records caller correlation and live request classification for failed chat completions  590ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > reads bucketed endpoint profiles with an advisory max-difficulty recommendation  589ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted  4749ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers  1060ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > executes chat-completions through an api-key-static provider via environment credential  854ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > propagates downstream stream-writer failures during direct provider streaming  776ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > forwards reasoning-only upstream SSE chunks when chat-completions opted into reasoning  907ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > suppresses reasoning-only upstream SSE chunks until downstream-safe content is available when reasoning is not requested  808ms
+.../apps/runtime-host-bridge test:    ✓ runtime-host-bridge > accepts legacy credentialized endpoint ids when pinning a requested endpoint  781ms
+.../apps/runtime-host-bridge test:  Test Files  55 passed (55)
+.../apps/runtime-host-bridge test:       Tests  493 passed (493)
+.../apps/runtime-host-bridge test:    Start at  16:12:01
+.../apps/runtime-host-bridge test:    Duration  107.08s (transform 7.54s, setup 0ms, collect 50.58s, tests 428.47s, environment 25ms, prepare 26.36s)
+.../apps/runtime-host-bridge test: Done
+
+> role-model@0.0.0 runtime:test-critical D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm --filter @role-model-router/runtime-host-bridge run test:critical && corepack pnpm --filter @role-model-router/runtime-ui run test:critical && corepack pnpm run runtime:validate-ui && corepack pnpm run runtime:validate-observability
+
+
+> @role-model-router/runtime-host-bridge@0.0.0 test:critical D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge
+> vitest run test/account-repair.test.ts test/unified-runtime-config.test.ts test/provider-overlap-metadata.test.ts test/benchmark-summary.test.ts test/validate-observability.test.ts test/validate-ui.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:12220) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:50688) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/unified-runtime-config.test.ts (27 tests) 99ms
+ ✓ test/benchmark-summary.test.ts (8 tests) 89ms
+(node:26380) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:32420) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/account-repair.test.ts (6 tests) 4833ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  932ms
+   ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  798ms
+   ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  742ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  670ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  714ms
+   ✓ account repair mutations > codex subscription start returns a real device-code session and poll connects through managed Codex auth  974ms
+ ✓ test/validate-ui.test.ts (1 test) 6919ms
+   ✓ runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations  6917ms
+ ✓ test/validate-observability.test.ts (1 test) 6919ms
+   ✓ runRuntimeObservabilityValidation > proves structured request, capture, metrics, and otel observability over the real host path  6916ms
+ ✓ test/provider-overlap-metadata.test.ts (45 tests) 18642ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for baseten  963ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cerebras  941ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cohere  882ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for databricks  845ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepinfra  1016ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepseek  975ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for groq  843ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for minimax  818ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for mistral  773ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for morph  766ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for nebius  759ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for openrouter  812ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for ovhcloud  770ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for perplexity  787ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for sarvam  854ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for v0  788ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for wandb  803ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for xai  881ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for zai  816ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes one OpenAI provider with API Key and Codex Subscription variants  688ms
+
+ Test Files  6 passed (6)
+      Tests  88 passed (88)
+   Start at  16:13:50
+   Duration  21.20s (transform 2.21s, setup 0ms, collect 8.32s, tests 37.50s, environment 2ms, prepare 1.81s)
+
+
+> @role-model-router/runtime-ui@ test:critical D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-chart-config.test.ts app/lib/theme.test.ts app/components/page-primitives.test.tsx
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/theme.test.ts (4 tests) 8ms
+ ✓ app/lib/telemetry-chart-config.test.ts (2 tests) 10ms
+ ✓ app/lib/telemetry-analytics.test.ts (10 tests) 22ms
+ ✓ app/lib/view-models.test.ts (34 tests) 105ms
+ ✓ app/lib/runtime-api.test.ts (49 tests) 113ms
+ ✓ app/components/page-primitives.test.tsx (6 tests) 44ms
+
+ Test Files  6 passed (6)
+      Tests  105 passed (105)
+   Start at  16:14:15
+   Duration  1.65s (transform 617ms, setup 0ms, collect 1.77s, tests 303ms, environment 2ms, prepare 1.99s)
+
+
+> role-model@0.0.0 runtime:validate-ui D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-ui.ts
+
+(node:58600) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "providerCount": 232,
+  "accountCount": 1,
+  "endpointCount": 2,
+  "runtimeConfigPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-ui-validation\\runtime-config.yaml",
+  "runtimeConfigInitialApplied": true,
+  "runtimeConfigUpdatedVersion": "1.1",
+  "runtimeConfigUpdatedRoutingStrategy": "baseline",
+  "moonshotVariantIds": [
+    "moonshot-open-platform",
+    "kimi-code"
+  ],
+  "availableRoleIds": [
+    "analyst",
+    "architect",
+    "coder",
+    "coordinator",
+    "creative",
+    "data",
+    "designer",
+    "educator",
+    "finance",
+    "health",
+    "knowledge",
+    "legal",
+    "marketer",
+    "mathematician",
+    "operator",
+    "planner",
+    "procurement",
+    "product",
+    "recruiter",
+    "researcher",
+    "scientist",
+    "security",
+    "seller",
+    "strategist",
+    "support",
+    "tester",
+    "translator",
+    "writer"
+  ],
+  "upsertedAccountId": "moonshot.personal.primary",
+  "accountListIncludesUpsert": true,
+  "accountRoleBindingIncludesUpsert": true,
+  "activatedEndpointId": "moonshot.personal.primary.global.kimi-k2.5",
+  "endpointListIncludesActivation": true,
+  "routedRequestId": "req-runtime-ui-routing-001",
+  "telemetryListIncludesRoutedRequest": true,
+  "routedRequestRoutingDecisionId": "route-runtime-ui-routing-001",
+  "routedRequestEffectiveMode": "baseline",
+  "routedRequestRewriteReason": "requested-model-matches-downstream",
+  "mixedAliasId": "mixed.local-remote",
+  "mixedAliasModelListIncludesAlias": false,
+  "mixedAliasRequestId": "req-runtime-ui-mixed-alias-001",
+  "mixedAliasAllowEndpoints": [
+    "llama-swap.local.lfm2-5-1-2b-instruct",
+    "moonshot.personal.primary.global.kimi-k2.5"
+  ],
+  "mixedAliasResolvedModelIds": [
+    "lfm2.5-1.2b-instruct",
+    "moonshot/kimi-k2.5"
+  ],
+  "mixedAliasTelemetryListIncludesRequest": true,
+  "mixedAliasRequestDetailAliasResolvedModelIds": [
+    "lfm2.5-1.2b-instruct",
+    "moonshot/kimi-k2.5"
+  ],
+  "mixedAliasRouterDecisionMatchesRequest": true,
+  "mixedAliasOverviewIncludesSelectedEndpoint": true,
+  "mixedAliasEndpointsIncludeSelectedEndpoint": true
+}
+
+> role-model@0.0.0 runtime:validate-observability D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-observability.ts
+
+(node:35360) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "routedRequestId": "req-runtime-ui-routing-001",
+  "telemetryListIncludesRoutedRequest": true,
+  "routedRequestRoutingDecisionId": "route-runtime-ui-routing-001",
+  "mixedAliasTelemetryListIncludesRequest": true,
+  "mixedAliasRouterDecisionMatchesRequest": true,
+  "mixedAliasOverviewIncludesSelectedEndpoint": true
+}
+
+> role-model@0.0.0 test:rust D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> cargo test --manifest-path role-model-router/rust/Cargo.toml --workspace
+
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.57s
+     Running unittests src\lib.rs (role-model-router\rust\target\debug\deps\rm_provider_litertlm-da8ba5bd6633c0ec.exe)
+
+running 1 test
+test tests::exposes_placeholder_provider ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src\lib.rs (role-model-router\rust\target\debug\deps\rm_provider_mediapipe_bridge-06bcb46a64946705.exe)
+
+running 1 test
+test tests::exposes_placeholder_provider ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests rm_provider_litertlm
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests rm_provider_mediapipe_bridge
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+> role-model@0.0.0 smoke D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts
+
+(node:52956) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "chosen_endpoint_id": "openai.personal.primary.us-east-1.fast",
+  "adapter_family": "ai-sdk-openai",
+  "router_decision_path": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\runtime-output\\gateway-smoke\\router-decision.json",
+  "request_capture_path": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\runtime-output\\gateway-smoke\\request-capture.json",
+  "response_capture_path": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\runtime-output\\gateway-smoke\\response-capture.json",
+  "request_observation_path": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\runtime-output\\gateway-smoke\\request-observation.json",
+  "otel_export_path": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\runtime-output\\gateway-smoke\\otel-export.json",
+  "usage_summary": {
+    "by_app_id": {
+      "app-runtime": 1
+    },
+    "by_endpoint_id": {
+      "openai.personal.primary.us-east-1.fast": 1
+    },
+    "by_model_id": {
+      "openai/gpt-4.1-mini-fast": 1
+    },
+    "by_provider_kind": {
+      "remote_openai_compat": 1
+    }
+  }
+}

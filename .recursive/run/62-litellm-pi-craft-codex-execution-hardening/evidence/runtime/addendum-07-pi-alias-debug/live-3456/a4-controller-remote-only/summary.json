@@ -1,0 +1,54 @@
+{
+  "caseId": "a4-controller-remote-only",
+  "model": "controller.remote-only",
+  "prompt": "hey",
+  "elapsedMs": 23643,
+  "timedOut": false,
+  "exitCode": 0,
+  "stdout": "Hey there! 👋 How can I help you today?",
+  "stderr": "",
+  "requestId": "req-65dc7f96-5826-4206-aa37-e8dfdd221eda",
+  "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "selectedModelId": "deepseek/deepseek-v4-pro",
+  "providerFamily": "deepseek",
+  "adapterFamily": "ai-sdk-openai-compatible",
+  "sourceClient": "openai.chat.completions",
+  "difficultyBucket": null,
+  "selectedStrategy": "balanced",
+  "requestPayloadBytes": 6349,
+  "ingressPayloadBytes": 7609,
+  "translatedPayloadBytes": 6203,
+  "inputTokens": 1677,
+  "latencyMs": 1734,
+  "taxonomyRoleId": "coder",
+  "taxonomyTaskType": "coder.edit",
+  "taxonomyToolClassIds": [
+    "filesystem.read",
+    "filesystem.write",
+    "shell.execute"
+  ],
+  "requireTools": true,
+  "requiredCapabilities": [
+    "reasoning.effort_control",
+    "text.chat",
+    "tools.function_calling"
+  ],
+  "allowEndpoints": [
+    "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "preferredEndpointIds": [],
+  "difficultySignals": null,
+  "aliasResolution": {
+    "requestedModel": "controller.remote-only",
+    "aliasId": "controller.remote-only",
+    "resolvedModelIds": [
+      "chatgpt/gpt-5.4",
+      "deepseek/deepseek-v4-pro"
+    ],
+    "allowEndpoints": [
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ]
+  }
+}

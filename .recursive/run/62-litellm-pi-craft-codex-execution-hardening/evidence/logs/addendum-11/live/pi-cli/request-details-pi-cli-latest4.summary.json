@@ -1,0 +1,150 @@
+[
+  {
+    "requestId": "req-ad7a23b1-dfeb-4b9d-98c2-94e5127c83a2",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "requestedModel": "chatgpt/gpt-5.4",
+    "downstreamModel": "chatgpt/gpt-5.4",
+    "providerId": "openai",
+    "vendorId": null,
+    "adapterFamily": "ai-sdk-openai",
+    "executionFamily": "remote-service",
+    "textDeltas": 1,
+    "reasoning": {
+      "requested": true,
+      "controlForwarded": true,
+      "deltaCount": 0,
+      "streamSuppressed": false,
+      "unavailableReason": "provider_returned_no_reasoning"
+    },
+    "usage": {
+      "modelId": "chatgpt/gpt-5.4",
+      "tokensIn": 11031,
+      "tokensOut": 29,
+      "latencyMs": 6038
+    },
+    "requiredCapabilities": [
+      "reasoning.effort_control",
+      "text.chat"
+    ],
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "BENCHMARK_FALLBACK_OVERALL_SCORE",
+      "CACHE_AFFINITY_APPLIED",
+      "BUDGET_OPTIMIZATION",
+      "TASK_POLICY_APPLIED"
+    ]
+  },
+  {
+    "requestId": "req-158f2c0c-0271-4f37-b9b7-b5bcf0f32b5d",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "requestedModel": "deepseek/deepseek-v4-pro",
+    "downstreamModel": "deepseek/deepseek-v4-pro",
+    "providerId": "deepseek",
+    "vendorId": null,
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "executionFamily": "remote-service",
+    "textDeltas": 31,
+    "reasoning": {
+      "requested": true,
+      "controlForwarded": true,
+      "deltaCount": 20,
+      "streamSuppressed": false
+    },
+    "usage": {
+      "modelId": "deepseek/deepseek-v4-pro",
+      "tokensIn": 413,
+      "tokensOut": 32,
+      "latencyMs": 531
+    },
+    "requiredCapabilities": [
+      "reasoning.effort_control",
+      "text.chat"
+    ],
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "BENCHMARK_FALLBACK_OVERALL_SCORE",
+      "CACHE_AFFINITY_APPLIED",
+      "BUDGET_OPTIMIZATION",
+      "HIGH_QUALITY_TARGET_MET",
+      "TASK_POLICY_APPLIED"
+    ]
+  },
+  {
+    "requestId": "req-d6561e9a-0bc7-492f-9e44-5c5f039ebc27",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "requestedModel": "baseline.remote-only",
+    "downstreamModel": "deepseek/deepseek-v4-pro",
+    "providerId": "deepseek",
+    "vendorId": null,
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "executionFamily": "remote-service",
+    "textDeltas": 36,
+    "reasoning": {
+      "requested": true,
+      "controlForwarded": true,
+      "deltaCount": 26,
+      "streamSuppressed": false
+    },
+    "usage": {
+      "modelId": "deepseek/deepseek-v4-pro",
+      "tokensIn": 412,
+      "tokensOut": 37,
+      "latencyMs": 576
+    },
+    "requiredCapabilities": [
+      "reasoning.effort_control",
+      "text.chat"
+    ],
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "BENCHMARK_FALLBACK_OVERALL_SCORE",
+      "CACHE_AFFINITY_APPLIED",
+      "HIGH_QUALITY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  },
+  {
+    "requestId": "req-54e60434-10c0-4917-9019-8e6ea7a3431b",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "requestedModel": "difficulty.remote-only",
+    "downstreamModel": "deepseek/deepseek-v4-pro",
+    "providerId": "deepseek",
+    "vendorId": null,
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "executionFamily": "remote-service",
+    "textDeltas": 46,
+    "reasoning": {
+      "requested": true,
+      "controlForwarded": true,
+      "deltaCount": 34,
+      "streamSuppressed": false
+    },
+    "usage": {
+      "modelId": "deepseek/deepseek-v4-pro",
+      "tokensIn": 414,
+      "tokensOut": 47,
+      "latencyMs": 401
+    },
+    "requiredCapabilities": [
+      "reasoning.effort_control",
+      "text.chat"
+    ],
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "BENCHMARK_ROLE_SCORE",
+      "CACHE_AFFINITY_APPLIED",
+      "BUDGET_OPTIMIZATION",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ]
+  }
+]

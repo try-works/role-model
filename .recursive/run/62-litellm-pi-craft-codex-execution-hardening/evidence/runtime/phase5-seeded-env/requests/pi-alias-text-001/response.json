@@ -1,0 +1,21 @@
+{
+  "statusCode": 503,
+  "ok": false,
+  "headers": {
+    "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-origin": "*",
+    "connection": "keep-alive",
+    "content-length": "148",
+    "content-type": "application/json",
+    "date": "Tue, 07 Jul 2026 18:26:42 GMT",
+    "keep-alive": "timeout=5"
+  },
+  "body": {
+    "error": {
+      "message": "Configure litellm_proxy.providers to enable remote execution.",
+      "type": "VENDOR_NOT_CONFIGURED",
+      "code": "VENDOR_NOT_CONFIGURED"
+    }
+  }
+}

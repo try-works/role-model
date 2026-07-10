@@ -6,7 +6,7 @@
 
 - What changed:
   - preserved OpenAI chat-completions `tool_choice` through adapter-execution and provider-openai so forced function-tool selection reaches compatible OpenAI and Codex Subscription targets instead of being dropped before provider execution
-  - added Codex Subscription first-attempt pinning for tool-bearing and non-text turns, while keeping the broader eligible endpoint pool available for reroute after retry or fallback
+  - temporarily added Codex Subscription first-attempt pinning for tool-bearing and non-text turns, while keeping the broader eligible endpoint pool available for reroute after retry or fallback; this policy is superseded by Run 62 addendum 16, which keeps ordinary alias routing provider-agnostic and uses endpoint/model metadata plus benchmark/measured performance instead of provider-family preference
   - hardened upstream failure classification and cooldown handling so timeout, network, rate-limit, quota, provider-auth, and upstream-5xx failures can drive retry or reroute with escalating endpoint cooldown windows; repaired Codex auth now clears stale provider-auth cooldowns
   - made session bootstrap treat peer auto-reload degradation as advisory so remote-only readiness is not blocked by `peer reload incomplete`
   - changed `docs-site-deploy.yml` so missing Cloudflare secrets emit a skip notice and keep the workflow green instead of failing the merged `main` commit on an environment-only deploy precondition
@@ -23,8 +23,62 @@
   - no new provider families or generic hosted-browser/tool runtime were introduced
   - invalid-request responses still fail fast instead of falling back to a different endpoint
 - Known issues / follow-ups:
-  - docs, runtime routing memory, release notes, and GitHub workflow guidance need to stay aligned whenever Codex Subscription heuristics, cooldown policy, or release automation posture change again
+  - docs, runtime routing memory, release notes, and GitHub workflow guidance need to stay aligned whenever Codex Subscription execution metadata, cooldown policy, or release automation posture change again
   - if artifact attestation still fails after all three retries, inspect GitHub job logs for Sigstore/Rekor service health before assuming a packaging regression
+
+### Run `62-litellm-pi-craft-codex-execution-hardening`
+
+- Run folder: `/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/`
+- Worktree: `.worktrees/62-litellm-pi-craft-codex-execution-hardening`
+- Branch: `recursive/62-litellm-pi-craft-codex-execution-hardening`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - locked addenda through addendum 18, including Pi cooldown retry, reasoning stream routing/runtime, native Codex Responses transport, provider-agnostic routing preferences, Codex parameter sanitization, assistant-history content-part conversion, and failure-capture parity
+- What changed:
+  - expanded the shared routed execution contract so Responses ingress preserves `tool_choice`, reasoning/thinking controls, `previous_response_id`, prompt-cache hints, and session-affinity hints through `runtime-host-bridge`, `adapter-execution`, and `provider-openai`
+  - replaced the Codex app-server execution path for OpenAI Codex Subscription with the native ChatGPT Codex Responses transport, reporting `providerId = openai`, `vendorId = chatgpt-codex-responses`, and `adapterFamily = codex-subscription-responses`
+  - normalized downstream streaming so provider reasoning deltas are forwarded as OpenAI-compatible `reasoning_content` when the upstream emits them, while missing GPT/Codex reasoning deltas are recorded as provider unavailability rather than fabricated progress
+  - removed Codex Subscription first-attempt routing preference from ordinary alias routing; Codex Subscription remains represented by provider, vendor, execution-family, adapter, and endpoint-capability metadata while alias selection stays provider-agnostic and score-driven
+  - added selected-backend parameter policy receipts for Codex Subscription so unsupported optional OpenAI-compatible fields such as `temperature` and max-token variants are sanitized after endpoint selection instead of leaking into the ChatGPT Codex Responses backend
+  - fixed role-aware Chat Completions to Responses history conversion so replayed assistant history becomes `output_text` or `refusal`, while user input remains `input_text` or `input_image`
+  - taught unified runtime config and the managed LiteLLM vendor layer to preserve additive upstream `router_settings` and `litellm_settings` blocks instead of collapsing managed config to `model_list` alone
+  - extended canonical observability and SQLite telemetry with execution-semantics receipts for source client, execution family, adapter family, payload bytes, retry/reroute counts, cooldown/idempotency decisions, parameter sanitization, routed failure observations, and tool side-effect state, and kept request-detail reconstruction on the same canonical surfaces
+  - extended `runtime:validate-vendors` into a deterministic 200-case Pi/Craft corpus with stable machine-readable per-case routing, payload, and idempotency fields
+  - corrected provider identity semantics across telemetry, request detail, validator corpus, runtime UI, and rebuilt-runtime proof so LiteLLM and `ai-sdk-*` labels remain vendor or adapter facts instead of being recorded as providers
+- Why:
+  - Pi, Craft, and routed provider execution were still dropping important Responses semantics before provider execution, leaving Codex and LiteLLM-backed paths behaviorally inconsistent
+  - the Codex app-server path buffered or obscured the native streaming/error surface, while Pi's implementation showed the correct ChatGPT Codex Responses transport contract
+  - Codex Subscription selection still depended on static compatibility checks in places where runtime endpoint metadata should have been authoritative
+  - Pi multi-turn sessions exposed that assistant history cannot be translated with the same `input_text` content parts used for user input
+  - Codex Subscription and direct OpenAI-compatible backends accept different optional parameters, so selected adapter policy had to be explicit and inspectable
+  - routed provider failures were being persisted as anonymous `routing.failed.pre-execution` rows even after endpoint selection, making failures materially less inspectable than successes
+  - the runtime lacked one canonical receipt layer for diagnosing payload growth, execution-family selection, retry/fallback state, and downstream request semantics across this integration surface
+  - the earlier run-62 remediation receipts were semantically invalid because they allowed adapter labels such as `litellm-proxy` and `ai-sdk-openai` to stand in for provider identity
+- How:
+  - implemented with strict TDD and focused RED/GREEN coverage across provider-openai, runtime-host ingress mapping, native Codex Responses execution, Codex compatibility routing, parameter sanitization, assistant-history conversion, failure persistence, LiteLLM config pass-through, execution-semantics persistence, and the deterministic Pi/Craft corpus harness
+  - verified locally with impacted package suites, impacted runtime-host suites, `runtime:test-critical`, `runtime:validate-ui`, `runtime:validate-observability`, `runtime:validate-vendors`, package rebuilds, and rebuilt-runtime isolated-state QA using live Pi/Craft alias requests on `difficulty.remote-only`
+  - kept the earlier packaged-runtime live proof as supplemental confidence while making rebuilt-runtime verification the authoritative Phase-5 sign-off because the user explicitly required rebuilt-runtime QA
+- What was not done:
+  - no Pi upstream or Craft upstream patches were introduced; the fixes stayed inside the shared runtime contract and owning provider/runtime layers
+  - no second trace store or UI-only inspection silo was created; the work extended the existing request-detail and telemetry-ledger surfaces
+  - no generic hosted browser/tool runtime was introduced for DeepSeek or other providers
+  - no historical telemetry backfill was attempted for old sparse failure rows that did not persist selected-endpoint context
+- Known issues / follow-ups:
+  - rebuilt-runtime post-activation inventory truth currently comes from `/api/role-model/endpoints` and `/v1/models`; `/healthz` bootstrap inventory remains startup-scoped and should not be treated as the authoritative post-activation inventory surface for this QA pattern
+  - the degraded-primary rebuilt-runtime proof showed successful pre-dispatch failover selection to a surviving family, but it did not produce a live non-zero `rerouteCount`; if a future run needs an in-flight reroute proof specifically, induce it explicitly rather than inferring it from pre-dispatch pool pruning
+  - GitHub-hosted CI was not executed from this local worktree; merge-time CI still needs to confirm the final change set
+  - the addendum 18 controlled live failure harness failed pre-execution with `VENDOR_NOT_CONFIGURED`; selected-endpoint failure-capture parity is proven by automated TDD and should get a clean live induced-provider-failure proof in a future dedicated harness if needed
+  - whenever execution semantics change again, keep provider identity, vendor identity, execution family, and adapter family as separate receipts; do not let validator or UI surfaces regress back to adapter-as-provider classification
 
 ### Run `60-runtime-ui-paper-linear-review-alignment`
 

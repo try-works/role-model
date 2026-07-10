@@ -1,0 +1,41 @@
+{
+  "name": "direct-chatgpt-chat-max-tokens",
+  "path": "/v1/chat/completions",
+  "requestBody": {
+    "model": "chatgpt/gpt-5.4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply exactly ADD17_CHAT_MAX_TOKENS_OK."
+      }
+    ],
+    "max_tokens": 32,
+    "stream": false
+  },
+  "status": 200,
+  "ok": true,
+  "elapsedMs": 3145,
+  "responsePreview": "ADD17_CHAT_MAX_TOKENS_OK",
+  "error": null,
+  "response": {
+    "id": "chatcmpl-role-model",
+    "object": "chat.completion",
+    "created": 1783642934,
+    "model": "chatgpt/gpt-5.4",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "ADD17_CHAT_MAX_TOKENS_OK"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 17,
+      "completion_tokens": 12,
+      "total_tokens": 29
+    }
+  }
+}

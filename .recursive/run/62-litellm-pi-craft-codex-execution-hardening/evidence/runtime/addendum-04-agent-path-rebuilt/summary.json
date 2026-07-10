@@ -1,0 +1,277 @@
+{
+  "baseUrl": "http://127.0.0.1:61461",
+  "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-agent-path-gkvX4o",
+  "aliases": {
+    "difficultyHybrid": "difficulty.hybrid",
+    "difficultyRemoteOnly": "difficulty.remote-only"
+  },
+  "capturedAt": "2026-07-08T08:00:10.073Z",
+  "cases": [
+    {
+      "caseId": "pi-chat-alias-text-001",
+      "requestId": "req-84858e5d-f19f-4742-af8b-04ff8196cc86",
+      "requestedAlias": "difficulty.remote-only",
+      "statusCode": 200,
+      "selectedEndpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "selectedModelId": "openai/gpt-4.1-mini-fast",
+      "executionFamily": "vendor-litellm",
+      "adapterFamily": "litellm-proxy",
+      "providerFamily": "openai",
+      "vendorId": "litellm",
+      "clientRequestIdObserved": "run62-pi-chat-alias-text-001",
+      "aliasResolution": {
+        "requestedModel": "difficulty.remote-only",
+        "aliasId": "difficulty.remote-only",
+        "resolvedModelIds": [
+          "chatgpt/gpt-5.4",
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "allowEndpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ]
+      },
+      "capabilityEligibility": {
+        "requiredInputModalities": [
+          "text"
+        ],
+        "requiredOutputModalities": [
+          "text"
+        ],
+        "requiredCapabilities": [
+          "text.chat"
+        ],
+        "advisoryCapabilities": [],
+        "includedEndpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "excludedTargets": []
+      }
+    },
+    {
+      "caseId": "pi-chat-alias-tools-001",
+      "requestId": "req-d882f2d4-c5c4-43f5-ba12-1dd8031f0bfb",
+      "requestedAlias": "difficulty.remote-only",
+      "statusCode": 200,
+      "selectedEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "selectedModelId": "chatgpt/gpt-5.4",
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai",
+      "providerFamily": "openai",
+      "vendorId": "codex-app-server",
+      "clientRequestIdObserved": "run62-pi-chat-alias-tools-001",
+      "aliasResolution": {
+        "requestedModel": "difficulty.remote-only",
+        "aliasId": "difficulty.remote-only",
+        "resolvedModelIds": [
+          "chatgpt/gpt-5.4",
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "allowEndpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ]
+      },
+      "capabilityEligibility": {
+        "requiredInputModalities": [
+          "text"
+        ],
+        "requiredOutputModalities": [
+          "text"
+        ],
+        "requiredCapabilities": [
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "advisoryCapabilities": [],
+        "includedEndpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "excludedTargets": []
+      }
+    },
+    {
+      "caseId": "pi-chat-alias-image-001",
+      "requestId": "req-5e8295f8-59ac-45db-9d77-7224f33dbf1b",
+      "requestedAlias": "difficulty.remote-only",
+      "statusCode": 200,
+      "selectedEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "selectedModelId": "chatgpt/gpt-5.4",
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai",
+      "providerFamily": "openai",
+      "vendorId": "codex-app-server",
+      "clientRequestIdObserved": "run62-pi-chat-alias-image-001",
+      "aliasResolution": {
+        "requestedModel": "difficulty.remote-only",
+        "aliasId": "difficulty.remote-only",
+        "resolvedModelIds": [
+          "chatgpt/gpt-5.4"
+        ],
+        "allowEndpoints": [
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ]
+      },
+      "capabilityEligibility": {
+        "requiredInputModalities": [
+          "image",
+          "text"
+        ],
+        "requiredOutputModalities": [
+          "text"
+        ],
+        "requiredCapabilities": [
+          "text.chat"
+        ],
+        "advisoryCapabilities": [],
+        "includedEndpoints": [
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "excludedTargets": [
+          {
+            "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "modelId": "openai/gpt-4.1-mini-fast",
+            "reasons": [
+              "missing_input.image"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "caseId": "craft-chat-alias-text-001",
+      "requestId": "req-6179bad7-c0c5-494b-9ad4-d10991be4a2f",
+      "requestedAlias": "difficulty.remote-only",
+      "statusCode": 200,
+      "selectedEndpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "selectedModelId": "openai/gpt-4.1-mini-fast",
+      "executionFamily": "vendor-litellm",
+      "adapterFamily": "litellm-proxy",
+      "providerFamily": "openai",
+      "vendorId": "litellm",
+      "clientRequestIdObserved": "run62-craft-chat-alias-text-001",
+      "aliasResolution": {
+        "requestedModel": "difficulty.remote-only",
+        "aliasId": "difficulty.remote-only",
+        "resolvedModelIds": [
+          "chatgpt/gpt-5.4",
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "allowEndpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ]
+      },
+      "capabilityEligibility": {
+        "requiredInputModalities": [
+          "text"
+        ],
+        "requiredOutputModalities": [
+          "text"
+        ],
+        "requiredCapabilities": [
+          "text.chat"
+        ],
+        "advisoryCapabilities": [],
+        "includedEndpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "excludedTargets": []
+      }
+    },
+    {
+      "caseId": "craft-chat-alias-declared-tools-001",
+      "requestId": "req-5491ff0b-6460-4fc9-9d01-94f87dc5396f",
+      "requestedAlias": "difficulty.remote-only",
+      "statusCode": 200,
+      "selectedEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "selectedModelId": "chatgpt/gpt-5.4",
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai",
+      "providerFamily": "openai",
+      "vendorId": "codex-app-server",
+      "clientRequestIdObserved": "run62-craft-chat-alias-tools-001",
+      "aliasResolution": {
+        "requestedModel": "difficulty.remote-only",
+        "aliasId": "difficulty.remote-only",
+        "resolvedModelIds": [
+          "chatgpt/gpt-5.4",
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "allowEndpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ]
+      },
+      "capabilityEligibility": {
+        "requiredInputModalities": [
+          "text"
+        ],
+        "requiredOutputModalities": [
+          "text"
+        ],
+        "requiredCapabilities": [
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "advisoryCapabilities": [],
+        "includedEndpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "excludedTargets": []
+      }
+    },
+    {
+      "caseId": "craft-chat-alias-inline-image-001",
+      "requestId": "req-79cbe578-adca-4fba-acc4-09b6a8c95288",
+      "requestedAlias": "difficulty.remote-only",
+      "statusCode": 200,
+      "selectedEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "selectedModelId": "chatgpt/gpt-5.4",
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai",
+      "providerFamily": "openai",
+      "vendorId": "codex-app-server",
+      "clientRequestIdObserved": "run62-craft-chat-alias-image-001",
+      "aliasResolution": {
+        "requestedModel": "difficulty.remote-only",
+        "aliasId": "difficulty.remote-only",
+        "resolvedModelIds": [
+          "chatgpt/gpt-5.4"
+        ],
+        "allowEndpoints": [
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ]
+      },
+      "capabilityEligibility": {
+        "requiredInputModalities": [
+          "image",
+          "text"
+        ],
+        "requiredOutputModalities": [
+          "text"
+        ],
+        "requiredCapabilities": [
+          "text.chat"
+        ],
+        "advisoryCapabilities": [],
+        "includedEndpoints": [
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "excludedTargets": [
+          {
+            "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "modelId": "openai/gpt-4.1-mini-fast",
+            "reasons": [
+              "missing_input.image"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

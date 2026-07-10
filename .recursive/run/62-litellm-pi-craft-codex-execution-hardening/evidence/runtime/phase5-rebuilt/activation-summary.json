@@ -1,0 +1,130 @@
+[
+  {
+    "providerAccountId": "moonshot.personal.kimi-code",
+    "modelId": "moonshot/kimi-k2.7-code",
+    "region": "global",
+    "statusCode": 200,
+    "ok": true,
+    "headers": {
+      "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+      "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": "*",
+      "connection": "keep-alive",
+      "content-length": "265",
+      "content-type": "application/json",
+      "date": "Tue, 07 Jul 2026 18:47:58 GMT",
+      "keep-alive": "timeout=5"
+    },
+    "body": {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "providerAccountId": "moonshot.personal.kimi-code",
+      "providerId": "moonshot",
+      "modelId": "moonshot/kimi-k2.7-code",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "data",
+        "operator",
+        "translator",
+        "writer"
+      ],
+      "status": "active"
+    }
+  },
+  {
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "modelId": "deepseek/deepseek-v4-flash",
+    "region": "global",
+    "statusCode": 200,
+    "ok": true,
+    "headers": {
+      "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+      "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": "*",
+      "connection": "keep-alive",
+      "content-length": "285",
+      "content-type": "application/json",
+      "date": "Tue, 07 Jul 2026 18:47:58 GMT",
+      "keep-alive": "timeout=5"
+    },
+    "body": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "providerId": "deepseek",
+      "modelId": "deepseek/deepseek-v4-flash",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "data",
+        "operator",
+        "translator",
+        "writer"
+      ],
+      "status": "active"
+    }
+  },
+  {
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "modelId": "deepseek/deepseek-v4-pro",
+    "region": "global",
+    "statusCode": 200,
+    "ok": true,
+    "headers": {
+      "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+      "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": "*",
+      "connection": "keep-alive",
+      "content-length": "281",
+      "content-type": "application/json",
+      "date": "Tue, 07 Jul 2026 18:47:58 GMT",
+      "keep-alive": "timeout=5"
+    },
+    "body": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "providerId": "deepseek",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "data",
+        "operator",
+        "translator",
+        "writer"
+      ],
+      "status": "active"
+    }
+  },
+  {
+    "providerAccountId": "openai.personal.openai-codex-subscription",
+    "modelId": "chatgpt/gpt-5.4",
+    "region": "global",
+    "statusCode": 200,
+    "ok": true,
+    "headers": {
+      "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+      "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": "*",
+      "connection": "keep-alive",
+      "content-length": "276",
+      "content-type": "application/json",
+      "date": "Tue, 07 Jul 2026 18:47:58 GMT",
+      "keep-alive": "timeout=5"
+    },
+    "body": {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "providerAccountId": "openai.personal.openai-codex-subscription",
+      "providerId": "openai",
+      "modelId": "chatgpt/gpt-5.4",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "data",
+        "operator",
+        "translator",
+        "writer"
+      ],
+      "status": "active"
+    }
+  }
+]

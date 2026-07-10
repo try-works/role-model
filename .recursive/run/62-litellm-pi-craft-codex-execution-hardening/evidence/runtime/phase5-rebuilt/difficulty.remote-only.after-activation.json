@@ -1,0 +1,11 @@
+{
+  "id": "difficulty.remote-only",
+  "object": "model",
+  "owned_by": "role-model",
+  "endpoint_ids": [
+    "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ]
+}

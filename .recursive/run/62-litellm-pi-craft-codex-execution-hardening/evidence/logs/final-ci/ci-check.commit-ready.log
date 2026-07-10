@@ -1,0 +1,79 @@
+
+> role-model@0.0.0 ci:check D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run runtime:test-critical && corepack pnpm run test:rust && corepack pnpm run smoke
+
+
+> role-model@0.0.0 lint D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> biome check . && corepack pnpm run lint:rust
+
+.\role-model-router\packages\runtime-observability\src\index.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     847  847 │       ...(failedAttempts && failedAttempts.length > 0 ? { failedAttempts } : {}),
+     848  848 │       ...(executionCooldowns && executionCooldowns.length > 0 ? { executionCooldowns } : {}),
+     849      │ - ····...(parameterSanitization·&&·parameterSanitization.length·>·0
+     850      │ - ······?·{·parameterSanitization·}
+     851      │ - ······:·{}),
+          849 │ + ····...(parameterSanitization·&&·parameterSanitization.length·>·0·?·{·parameterSanitization·}·:·{}),
+     852  850 │     };
+     853  851 │   }
+
+
+.\role-model-router\packages\sqlite-memory\test\index.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    2185 2185 │         toolSideEffectState: "none",
+    2186 2186 │         roleIds: ["coder"],
+    2187      │ - ······eligibleEndpointIds:·[
+    2188      │ - ········"openai.personal.openai-codex-subscription.global.gpt-5.4",
+    2189      │ - ········endpointId,
+    2190      │ - ······],
+         2187 │ + ······eligibleEndpointIds:·["openai.personal.openai-codex-subscription.global.gpt-5.4",·endpointId],
+    2191 2188 │         eligibleModelIds: ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-pro"],
+    2192 2189 │         dimensions: {
+    ········· │
+    2256 2253 │         ]),
+    2257 2254 │       );
+    2258      │ - ····expect(readRuntimeObservationBundle({·databasePath:·validation.databasePath,·requestId·})).toEqual(
+         2255 │ + ····expect(
+         2256 │ + ······readRuntimeObservationBundle({·databasePath:·validation.databasePath,·requestId·}),
+         2257 │ + ····).toEqual(
+    2259 2258 │         expect.objectContaining({
+    2260 2259 │           requestId,
+
+
+.\role-model-router\apps\runtime-host-bridge\src\index.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     3068  3068 │
+     3069  3069 │   function hasRuntimeTelemetryPersisted(error: unknown): boolean {
+     3070       │ - ··return·(
+     3071       │ - ····typeof·error·===·"object"·&&
+     3072       │ - ····error·!==·null·&&
+     3073       │ - ····runtimeTelemetryPersistedErrors.has(error)
+     3074       │ - ··);
+           3070 │ + ··return·typeof·error·===·"object"·&&·error·!==·null·&&·runtimeTelemetryPersistedErrors.has(error);
+     3075  3071 │   }
+     3076  3072 │
+    ··········· │
+    18394 18390 │           providerResponse: measureStructuredPayloadBytes(error.body),
+    18395 18391 │         };
+    18396       │ - ······const·selectedEconomics·=
+    18397       │ - ········routed.catalogEconomicsByEndpointId[selectedEndpointId]·??·null;
+          18392 │ + ······const·selectedEconomics·=·routed.catalogEconomicsByEndpointId[selectedEndpointId]·??·null;
+    18398 18393 │         const selectedModelId =
+    18399 18394 │           selectedCandidate?.identity.model_id ?? executionOptions?.requestedModel ?? null;
+
+
+Checked 729 files in 1753ms. No fixes applied.
+Found 3 errors.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+
+ ELIFECYCLE  Command failed with exit code 1.
+ ELIFECYCLE  Command failed with exit code 1.

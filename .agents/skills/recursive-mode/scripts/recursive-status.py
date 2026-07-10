@@ -419,27 +419,27 @@ def get_phase_owned_actual_changed_files(file_name: str, actual_changed_files: l
     if file_name == "02-to-be-plan.md":
         return None
 
+    if file_name in DECISIONS_DIFF_PHASE_FILES:
+        return [path for path in actual_changed_files if path == ".recursive/DECISIONS.md"]
+    if file_name in STATE_DIFF_PHASE_FILES:
+        return [path for path in actual_changed_files if path == ".recursive/STATE.md"]
+    if file_name in MEMORY_DIFF_PHASE_FILES:
+        return [path for path in actual_changed_files if path.startswith(".recursive/memory/")]
+
+    if file_name not in PRODUCT_DIFF_PHASE_FILES:
+        return None
+
     owned_paths: list[str] = []
     for path in actual_changed_files:
         if path == ".recursive/DECISIONS.md":
-            if file_name in DECISIONS_DIFF_PHASE_FILES:
-                owned_paths.append(path)
             continue
         if path == ".recursive/STATE.md":
-            if file_name in STATE_DIFF_PHASE_FILES:
-                owned_paths.append(path)
             continue
         if path.startswith(".recursive/memory/"):
-            if file_name in MEMORY_DIFF_PHASE_FILES:
-                owned_paths.append(path)
             continue
         owned_paths.append(path)
 
-    if file_name in PRODUCT_DIFF_PHASE_FILES:
-        return owned_paths
-    if file_name in DECISIONS_DIFF_PHASE_FILES | STATE_DIFF_PHASE_FILES | MEMORY_DIFF_PHASE_FILES:
-        return owned_paths
-    return None
+    return owned_paths
 
 
 def get_related_addenda_paths(run_dir: Path, artifact_name: str) -> list[Path]:
@@ -452,6 +452,22 @@ def get_related_addenda_paths(run_dir: Path, artifact_name: str) -> list[Path]:
     for pattern in (f"{base_name}.addendum-*.md", f"{base_name}.upstream-gap.*.addendum-*.md"):
         matches.extend(sorted(addenda_dir.glob(pattern)))
     return matches
+
+
+def get_diff_accounting_addenda_paths(run_dir: Path, artifact_name: str) -> list[Path]:
+    addenda_dir = run_dir / "addenda"
+    if not addenda_dir.exists():
+        return []
+
+    base_name = artifact_name[:-3] if artifact_name.endswith(".md") else artifact_name
+    matches: list[Path] = []
+    for pattern in (
+        f"{base_name}.addendum-*.md",
+        f"{base_name}.*.addendum-*.md",
+        f"{base_name}.upstream-gap.*.addendum-*.md",
+    ):
+        matches.extend(sorted(addenda_dir.glob(pattern)))
+    return sorted(set(matches))
 
 
 def get_stage_local_addenda_paths(run_dir: Path, artifact_name: str) -> list[Path]:
@@ -852,6 +868,14 @@ def collect_requirement_completion_blockers(
                 status = trim_md_value(fields.get("Status", "")).lower()
                 if status in {"implemented", "verified"}:
                     claimed_changed_files.update(collect_requirement_field_paths(fields, ["Changed Files"]))
+            for addendum_path in get_diff_accounting_addenda_paths(run_dir, file_name):
+                addendum_content = addendum_path.read_text(encoding="utf-8")
+                addendum_body = get_heading_body(addendum_content, "Requirement Completion Status")
+                addendum_entries, _addendum_issues = parse_requirement_completion_entries(addendum_body)
+                for fields in addendum_entries.values():
+                    status = trim_md_value(fields.get("Status", "")).lower()
+                    if status in {"implemented", "verified"}:
+                        claimed_changed_files.update(collect_requirement_field_paths(fields, ["Changed Files"]))
             missing_claims = sorted(path for path in expected_scope if path not in claimed_changed_files)
             if missing_claims:
                 blockers.append(
@@ -1211,7 +1235,7 @@ def collect_subagent_contribution_blockers(
 
 def collect_reviewed_paths(run_dir: Path, artifact_name: str, content: str) -> set[str]:
     reviewed_paths = extract_paths_from_text(get_heading_body(content, "Worktree Diff Audit"))
-    for addendum_path in get_related_addenda_paths(run_dir, artifact_name):
+    for addendum_path in get_diff_accounting_addenda_paths(run_dir, artifact_name):
         reviewed_paths.update(extract_paths_from_text(addendum_path.read_text(encoding="utf-8")))
     return reviewed_paths
 

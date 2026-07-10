@@ -1,0 +1,17 @@
+[
+  {
+    "ProcessId": 57988,
+    "ExecutablePath": "C:\\Program Files\\nodejs\\node.exe",
+    "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" \"C:\\Program Files\\nodejs/node_modules/npm/bin/npx-cli.js\" tsx lib/run-phase1-subjects.ts"
+  },
+  {
+    "ProcessId": 22684,
+    "ExecutablePath": "C:\\Program Files\\nodejs\\node.exe",
+    "CommandLine": "\"node\"   \"C:\\Users\\erikb\\AppData\\Local\\npm-cache\\_npx\\fd45a72a545557e9\\node_modules\\.bin\\\\..\\tsx\\dist\\cli.mjs\" lib/run-phase1-subjects.ts"
+  },
+  {
+    "ProcessId": 23724,
+    "ExecutablePath": "C:\\Program Files\\nodejs\\node.exe",
+    "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" --require C:\\Users\\erikb\\AppData\\Local\\npm-cache\\_npx\\fd45a72a545557e9\\node_modules\\tsx\\dist\\preflight.cjs --import file:///C:/Users/erikb/AppData/Local/npm-cache/_npx/fd45a72a545557e9/node_modules/tsx/dist/loader.mjs lib/run-phase1-subjects.ts"
+  }
+]

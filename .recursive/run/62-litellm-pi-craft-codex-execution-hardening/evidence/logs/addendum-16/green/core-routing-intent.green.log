@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/core
+
+ ✓ test/routing-intent.test.ts (29 tests) 51ms
+
+ Test Files  1 passed (1)
+      Tests  29 passed (29)
+   Start at  20:41:02
+   Duration  2.51s (transform 333ms, setup 0ms, collect 406ms, tests 51ms, environment 0ms, prepare 732ms)
+

@@ -64,6 +64,23 @@ export interface PromptCacheRequest {
   readonly key?: string;
 }
 
+export interface RuntimeExecutionReasoningRequest {
+  readonly channel?: "reasoning" | "thinking";
+  readonly effort?: string;
+  readonly raw?: Record<string, unknown>;
+}
+
+export interface RuntimeExecutionSessionAffinity {
+  readonly sessionId?: string;
+  readonly clientRequestId?: string;
+}
+
+export type RuntimeExecutionTransportPreference = "auto" | "sse" | "websocket";
+
+export interface RuntimeExecutionContinuationRequest {
+  readonly previousResponseId?: string;
+}
+
 export type RuntimeExecutionToolChoice =
   | "none"
   | "auto"
@@ -82,8 +99,12 @@ export interface RuntimeExecutionRequest {
   readonly stream?: boolean;
   readonly tools?: readonly RuntimeExecutionToolDefinition[];
   readonly toolChoice?: RuntimeExecutionToolChoice;
+  readonly reasoning?: RuntimeExecutionReasoningRequest;
   readonly structuredOutput?: StructuredOutputRequest | null;
   readonly promptCache?: PromptCacheRequest;
+  readonly sessionAffinity?: RuntimeExecutionSessionAffinity;
+  readonly transportPreference?: RuntimeExecutionTransportPreference;
+  readonly continuation?: RuntimeExecutionContinuationRequest;
 }
 
 export interface ProviderCapabilityMatrix {
@@ -135,7 +156,7 @@ export interface ProviderResponseCapture {
     }[];
   }[];
   readonly vendorMetadata?: {
-    readonly vendorId: string;
+    readonly vendorId?: string;
     readonly resolvedModelId?: string;
     readonly latencyMs?: number;
     readonly costUsd?: number;
@@ -361,6 +382,10 @@ function findLocalSource(
   return registrySources.local.find((source) => source.endpointId === endpointId);
 }
 
+function isLiteLLMProviderAccountId(providerAccountId: string): boolean {
+  return providerAccountId.endsWith(".litellm");
+}
+
 export function resolveExecutionTarget(
   input: Omit<ExecuteRoutedRequestInput, "executionRequest" | "adapters" | "captures">,
 ): ResolvedExecutionTarget {
@@ -372,11 +397,6 @@ export function resolveExecutionTarget(
     throw new Error(`Chosen endpoint ${endpointId} is not present in the registry result.`);
   }
 
-  const allProviders = new Map([
-    ...input.catalog.providers.map((p) => [p.providerId, p] as const),
-    ...(input.additionalProviders ?? []).map((p) => [p.providerId, p] as const),
-  ]);
-
   const cloudSource = findCloudSource(input.registrySources, endpointId);
   if (cloudSource) {
     const account = input.accounts.find(
@@ -387,7 +407,15 @@ export function resolveExecutionTarget(
         `Provider account ${cloudSource.providerAccountId} is not present for chosen endpoint ${endpointId}.`,
       );
     }
-    const provider = allProviders.get(account.providerId);
+    const catalogProvider = input.catalog.providers.find(
+      (entry) => entry.providerId === account.providerId,
+    );
+    const additionalProvider = (input.additionalProviders ?? []).find(
+      (entry) => entry.providerId === account.providerId,
+    );
+    const provider = isLiteLLMProviderAccountId(account.providerAccountId)
+      ? (additionalProvider ?? catalogProvider)
+      : (catalogProvider ?? additionalProvider);
     if (!provider) {
       throw new Error(
         `Provider ${account.providerId} is not present in the catalog or additional providers for chosen endpoint ${endpointId}.`,
@@ -406,7 +434,9 @@ export function resolveExecutionTarget(
       providerId: provider.providerId,
       providerKind: provider.providerKind,
       providerAccountId: account.providerAccountId,
-      adapterFamily: provider.adapterFamily,
+      adapterFamily: isLiteLLMProviderAccountId(account.providerAccountId)
+        ? "litellm-proxy"
+        : provider.adapterFamily,
       authFamily: provider.authFamily,
       apiBase: account.baseUrlOverride ?? provider.apiBase,
       requestShapeHints: cloudSource.requestShapeHints ?? model.requestShapeHints,
@@ -459,7 +489,7 @@ function resolveResponseCapture(
     throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
   }
   return {
-    providerFamily: target.adapterFamily,
+    providerFamily: target.providerId,
     endpointId: target.endpointId,
     statusCode: 200,
     body: capture.body,

@@ -1,0 +1,28 @@
+{
+  "status": "healthy",
+  "executionMode": "remote_only",
+  "vendors": {
+    "llama-swap": {
+      "vendorId": "llama-swap",
+      "healthStatus": "inactive"
+    },
+    "litellm": {
+      "vendorId": "litellm",
+      "healthStatus": "inactive"
+    }
+  },
+  "inactiveVendors": [
+    "llama-swap",
+    "litellm"
+  ],
+  "credentialLifecycleAuthority": {
+    "state": "provisional",
+    "bootstrapStatus": "running"
+  },
+  "sessionBootstrap": {
+    "status": "running",
+    "startedAt": "2026-07-09T04:41:46.457Z",
+    "finishedAt": null,
+    "stages": []
+  }
+}

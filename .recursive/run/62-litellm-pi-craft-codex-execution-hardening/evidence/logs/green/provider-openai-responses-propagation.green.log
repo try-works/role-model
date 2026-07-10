@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/61-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/provider-openai
+
+ ✓ test/index.test.ts (12 tests | 11 skipped) 11ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 11 skipped (12)
+   Start at  00:23:20
+   Duration  1.81s (transform 211ms, setup 0ms, collect 226ms, tests 11ms, environment 0ms, prepare 323ms)
+

@@ -1,0 +1,37 @@
+{
+  "status": 200,
+  "headers": {
+    "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-origin": "*",
+    "connection": "keep-alive",
+    "content-length": "300",
+    "content-type": "application/json",
+    "date": "Wed, 08 Jul 2026 00:06:13 GMT",
+    "keep-alive": "timeout=5",
+    "x-role-model-adapter-family": "ai-sdk-openai-compatible",
+    "x-role-model-endpoint-id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "x-role-model-routing-decision-id": "decision-req-5e767978-9415-4fec-bdad-92f118a807e7"
+  },
+  "body": {
+    "id": "chatcmpl-role-model",
+    "object": "chat.completion",
+    "created": 1783469173,
+    "model": "deepseek/deepseek-v4-pro",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "Raspberry Pi Foundation"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 21,
+      "completion_tokens": 2593,
+      "total_tokens": 2614
+    }
+  }
+}

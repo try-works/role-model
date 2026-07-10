@@ -1,0 +1,25 @@
+
+> @role-model-router/sqlite-memory@0.0.0 test D:\wt\rm61\role-model-router\packages\sqlite-memory
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/wt/rm61/role-model-router/packages/sqlite-memory
+
+(node:30360) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (33 tests) 8583ms
+   ✓ initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads  319ms
+   ✓ initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows  317ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting benchmark samples  511ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles  672ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading difficulty classification cache  451ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting difficulty classification cache  444ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading advisory max difficulty recommendations  434ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records  587ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns  649ms
+
+ Test Files  1 passed (1)
+      Tests  33 passed (33)
+   Start at  21:13:52
+   Duration  13.74s (transform 1.50s, setup 0ms, collect 1.79s, tests 8.58s, environment 1ms, prepare 548ms)
+

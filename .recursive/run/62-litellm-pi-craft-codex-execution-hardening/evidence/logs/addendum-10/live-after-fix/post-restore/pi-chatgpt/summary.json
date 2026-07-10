@@ -1,0 +1,8 @@
+{
+  "model": "chatgpt/gpt-5.4",
+  "timedOut": false,
+  "exitCode": 0,
+  "durationMs": 7866,
+  "stdout": "OK\n",
+  "stderr": null
+}

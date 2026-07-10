@@ -45,6 +45,7 @@ export type VendorStreamWriter = (chunk: Record<string, unknown>) => void | Prom
 export interface VendorExecutionOptions {
   readonly streamWriter?: VendorStreamWriter;
   readonly fallbackModelIds?: readonly string[];
+  readonly abortSignal?: AbortSignal;
 }
 
 export interface VendorExecutionResult {

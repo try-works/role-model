@@ -1,0 +1,7 @@
+{
+  "exitCode": 0,
+  "durationMs": 6649,
+  "command": "pi -e packages/pi-role-model/extensions/role-model.ts --provider role-model --model difficulty.remote-only --thinking high --tools ls --no-session -p <prompt>",
+  "containsExpected": true,
+  "outputPreview": "PI_ADD16_ALIAS_TOOL_OK"
+}

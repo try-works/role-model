@@ -110,6 +110,69 @@ function hasOnlyKimiBuiltinHostedTools(
   return Boolean(tools?.length) && (tools ?? []).every((tool) => isKimiBuiltinHostedTool(tool));
 }
 
+function buildOpenAIHeaders(input: ProviderAdapterExecutionContext): Record<string, string> {
+  return {
+    authorization: `Bearer ${input.target.account?.credentialRef.ref ?? "OPENAI_API_KEY"}`,
+    ...(typeof input.executionRequest.sessionAffinity?.sessionId === "string"
+      ? { "session-id": input.executionRequest.sessionAffinity.sessionId }
+      : {}),
+    ...(typeof input.executionRequest.sessionAffinity?.clientRequestId === "string"
+      ? { "x-client-request-id": input.executionRequest.sessionAffinity.clientRequestId }
+      : {}),
+  };
+}
+
+function toOpenAIReasoning(
+  reasoning: ProviderAdapterExecutionContext["executionRequest"]["reasoning"],
+): { key: "reasoning" | "thinking"; value: Record<string, unknown> } | undefined {
+  if (!reasoning) {
+    return undefined;
+  }
+
+  const value = {
+    ...(reasoning.raw ?? {}),
+    ...(typeof reasoning.effort === "string" ? { effort: reasoning.effort } : {}),
+  };
+  if (Object.keys(value).length === 0) {
+    return undefined;
+  }
+  return {
+    key: reasoning.channel === "thinking" ? "thinking" : "reasoning",
+    value,
+  };
+}
+
+function toOpenAIChatCompletionsReasoning(
+  reasoning: ProviderAdapterExecutionContext["executionRequest"]["reasoning"],
+): Record<string, unknown> | undefined {
+  if (!reasoning) {
+    return undefined;
+  }
+
+  if (reasoning.channel === "thinking") {
+    return {
+      thinking: {
+        ...(reasoning.raw ?? {}),
+        ...(typeof reasoning.effort === "string" ? { effort: reasoning.effort } : {}),
+      },
+    };
+  }
+
+  if (typeof reasoning.effort === "string") {
+    return {
+      reasoning_effort: reasoning.effort,
+    };
+  }
+
+  if (reasoning.raw) {
+    return {
+      reasoning: reasoning.raw,
+    };
+  }
+
+  return undefined;
+}
+
 function toOpenAIChatTools(
   tools: NonNullable<ProviderAdapterExecutionContext["executionRequest"]["tools"]>,
 ): Array<Record<string, unknown>> {
@@ -610,17 +673,17 @@ export function buildOpenAIRequest(
   },
 ): ProviderRequestCapture {
   const providerShape = resolveProviderShape(input);
+  const headers = buildOpenAIHeaders(input);
   if (providerShape === "openai.chat.completions") {
     const usesKimiBuiltinHostedWebSearch = hasOnlyKimiBuiltinHostedTools(
       input.executionRequest.tools,
     );
+    const reasoning = toOpenAIChatCompletionsReasoning(input.executionRequest.reasoning);
     return {
-      providerFamily: input.target.adapterFamily,
+      providerFamily: input.target.providerId,
       endpointId: input.target.endpointId,
       url: `${input.target.apiBase}/chat/completions`,
-      headers: {
-        authorization: `Bearer ${input.target.account?.credentialRef.ref ?? "OPENAI_API_KEY"}`,
-      },
+      headers,
       body: {
         model: input.target.modelId.includes("/")
           ? input.target.modelId.split("/").slice(1).join("/")
@@ -639,6 +702,7 @@ export function buildOpenAIRequest(
         ...(input.executionRequest.toolChoice !== undefined
           ? { tool_choice: input.executionRequest.toolChoice }
           : {}),
+        ...(reasoning ?? {}),
         ...(usesKimiBuiltinHostedWebSearch
           ? {
               thinking: {
@@ -663,12 +727,13 @@ export function buildOpenAIRequest(
     };
   }
 
+  const reasoning = toOpenAIReasoning(input.executionRequest.reasoning);
   return {
-    providerFamily: input.target.adapterFamily,
+    providerFamily: input.target.providerId,
     endpointId: input.target.endpointId,
     url: `${input.target.apiBase}/responses`,
     headers: {
-      authorization: `Bearer ${input.target.account?.credentialRef.ref ?? "OPENAI_API_KEY"}`,
+      ...headers,
       "OpenAI-Beta": "responses=v1",
     },
     body: {
@@ -685,6 +750,18 @@ export function buildOpenAIRequest(
       ...(input.executionRequest.stream ? { stream: true } : {}),
       ...(input.executionRequest.tools?.length
         ? { tools: toOpenAITools(input.executionRequest.tools ?? []) }
+        : {}),
+      ...(input.executionRequest.toolChoice !== undefined
+        ? { tool_choice: input.executionRequest.toolChoice }
+        : {}),
+      ...(reasoning ? { [reasoning.key]: reasoning.value } : {}),
+      ...(typeof input.executionRequest.continuation?.previousResponseId === "string"
+        ? { previous_response_id: input.executionRequest.continuation.previousResponseId }
+        : {}),
+      ...(input.executionRequest.promptCache &&
+      input.executionRequest.promptCache.mode !== "disabled" &&
+      typeof input.executionRequest.promptCache.key === "string"
+        ? { prompt_cache_key: input.executionRequest.promptCache.key }
         : {}),
       ...(input.executionRequest.structuredOutput &&
       input.capabilities.structuredOutputs === "native"

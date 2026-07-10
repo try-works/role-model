@@ -9,9 +9,11 @@ Owns-Paths:
 - `/role-model-router/packages/core/data/taxonomy/**`
 - `/role-model-router/packages/core/src/taxonomy/**`
 - `/role-model-router/packages/provider-openai/**`
+- `/role-model-router/packages/sqlite-memory/**`
 - `/role-model-router/packages/runtime-observability/**`
 - `/role-model-router/packages/protocol-routing/**`
 - `/role-model-router/packages/adapter-execution/**`
+- `/role-model-router/packages/vendor-litellm/**`
 - `/packages/conformance/**`
 - `/packages/protocol-types/**`
 - `/protocol/fixtures/downstream-openai/**`
@@ -20,6 +22,8 @@ Owns-Paths:
 - `/protocol/schemas/router-decision.schema.json`
 - `/schemas/role-model/taxonomy/**`
 - `/docs/architecture/09-runtime-routing-strategy-interactions.md`
+- `/docs/architecture/13-litellm-pi-role-model-integration-proposal.md`
+- `/docs/architecture/14-routed-execution-semantics-and-receipts.md`
 - `/docs/architecture/12-downstream-alias-capability-discovery.md`
 - `/docs/taxonomy/**`
 - `/testdata/catalog/**`
@@ -52,8 +56,9 @@ Source-Runs:
 - `57-role-model-taxonomy-v1-phase-1-4`
 - `58-role-model-taxonomy-v1-benchmark-telemetry`
 - `59-observe-taxonomy-analytics-completion`
+- `62-litellm-pi-craft-codex-execution-hardening`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-28T20:50:00Z`
+Last-Validated: `2026-07-10`
 Tags:
 - `runtime`
 - `routing`
@@ -80,6 +85,9 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - The runtime owns a canonical strategy × execution-mode routing matrix, and alias materialization must reflect that matrix instead of ad hoc inventory fallback.
 - Legacy `craft-ask` strategy and alias ids are removed and should not reappear in config materialization, `/v1/models`, or operator documentation.
 - Exact-model requests stay additive; alias requests resolve through the runtime-owned candidate pool before final routing.
+- The shared routed execution contract now carries additive `reasoning`, `sessionAffinity`, `transportPreference`, and `continuation` fields. Responses ingress must preserve `tool_choice`, reasoning/thinking controls, `previous_response_id`, and prompt-cache/request-affinity hints into that contract so provider adapters do not have to reconstruct dropped semantics later.
+- LiteLLM-backed remote execution currently inherits those richer Responses semantics through the shared OpenAI request builder. Verify the inherited path directly before introducing a second divergent LiteLLM request contract.
+- `providerId` and `providerFamily` must identify the actual routed provider, never the adapter family. Intermediaries such as LiteLLM, llama-swap, or ChatGPT Codex Responses belong in `vendorId`; high-level routing belongs in `executionFamily`; concrete request-shaping implementation belongs in `adapterFamily`. `codex-app-server` is historical and must not reappear as the current Codex Subscription execution path.
 - `/api/role-model/downstream/openai` is the rich downstream OpenAI-compatible discovery contract for exact models and aliases. `/v1/models` remains the compact compatibility list, but now carries additive conservative capability metadata (`context_window`, `max_tokens`, Pi-compatible `input`, full modality lists, capability names, `role_model.discovery_url`, and `role_model.capability_revision`) so consumers can auto-discover from the standard model-list URL. Consumers that need declared versus routable layers, conditional target membership, provenance, cache posture detail, or alias composition should follow the rich route.
 - Pi can configure the role-model provider aliases from the compact `/v1/models` route. The current Run 54 QA baseline proved all `15` aliases list through `pi --provider role-model --list-models role-model` with `262.1K` context, `128K` max output, thinking enabled, and image support, while concrete DeepSeek models still correctly show no image input support.
 - The repo-owned Pi package is `/packages/pi-role-model` and is published publicly as `@try-works/pi-role-model` for `pi install @try-works/pi-role-model`. It uses the rich `/api/role-model/downstream/openai` contract to register a Pi provider named `role-model`, ships a `role-model` skill, and implements one `/role-model` command family. The verified scope is external-runtime only: no managed runtime process, no Role-Model launcher call, no Pi credential copy/sync, no benchmark command, no Pi auth-file reads, and no Pi-side routing logic.
@@ -105,8 +113,13 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
   - a connected account can remain `Connected, no endpoint` / `entitlement-missing`
   - direct OpenAI Platform execution stays blocked when the cached ChatGPT/Codex session lacks the required request scopes
 - OpenAI-compatible chat-completions `tool_choice` must survive routed execution into provider requests. Forced function-tool selection is valid on the initial tool-bearing turn, but continuation turns that already contain tool output should drop the forced choice so the model can resume normally.
+- Codex Subscription execution compatibility should be represented through runtime-owned endpoint capability markers, provider identity, vendor identity, execution family, adapter family, and equivalent production metadata surfaces, not through scattered exact-model constants. Curated GPT-family matrices remain acceptable for auth/discovery and compatibility display, but not as a primary route-selection preference when endpoint metadata already declares transport support.
+- Codex Subscription execution now uses the native ChatGPT Codex Responses surface, not `codex app-server`: route first, select the OpenAI Codex Subscription endpoint, then execute against the ChatGPT backend `/codex/responses` transport with `providerId = openai`, `vendorId = chatgpt-codex-responses`, and `adapterFamily = codex-subscription-responses`.
+- Codex Subscription request conversion is role-aware. User input maps to Responses `input_text` / `input_image`; replayed assistant history maps to `output_text` or `refusal`. Do not reuse a role-blind content-part converter across user and assistant messages.
+- Selected-backend parameter policy is execution-surface specific and must be observable. For Codex Subscription, unsupported optional fields such as `temperature` and max-token variants are sanitized after endpoint selection with `parameterSanitization` receipts instead of being used as routing eligibility filters.
 - Supported OpenAI subscription models are curated to GPT `5.3+`; capability claims for that path should be tied to the curated matrix rather than inherited blindly from raw upstream catalog rows.
-- When an eligible Codex Subscription GPT 5.4 endpoint is in the candidate pool, tool-bearing or non-text turns should pin the first attempt there and keep the broader allow-endpoint pool available for fallback if execution fails.
+- Ordinary text, function-tool, and non-hosted-tool alias requests must remain broadly routable. Endpoint/model metadata, request-surface capability requirements, role/task policy, routing-model advisory boosts, benchmark-backed quality, observed performance, and explicit request constraints may affect eligibility or scoring; hardcoded provider-family preferences such as Codex-first must not.
+- Unified runtime config and `vendor-litellm` should preserve additive upstream LiteLLM `router_settings` and `litellm_settings` pass-through without hardcoding a second repo-owned enum of LiteLLM keys.
 - Hosted-search and tool-capability routing is transport-aware:
   - OpenAI exact hosted search is provider-native for supported GPT `5.3+` subscription models
   - Kimi exact hosted search is provider-native on the active transport and should not be excluded from search-capable routing
@@ -127,7 +140,12 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
   - invalid-request failures remain terminal and do not trigger fallback
   - fallback-eligible failures enter escalating endpoint cooldown windows of `10m`, `30m`, `1h`, `5h`, `10h`, and `20h`
   - if fresher stored Codex auth repairs a subscription credential, clear stale provider-auth cooldowns before routing
+- Selected-endpoint provider failures must be captured with the same endpoint/provider/vendor/adapter context as successes. Use `routing.failed.pre-execution` only when no endpoint was selected. Once routing selects an endpoint, failure telemetry and request detail should preserve the selected endpoint, provider account, routing decision, execution semantics, sanitized upstream error preview, and structured failure observation. Historical sparse rows cannot be truthfully backfilled if those fields were not stored.
 - Session bootstrap `peers` degradation is advisory. `peer reload incomplete` should stay visible in readiness detail, but overall bootstrap can still summarize as `ready` when every non-advisory stage succeeded.
+- Canonical request-detail and telemetry surfaces now own execution-semantics receipts: `sourceClient`, `executionFamily`, `adapterFamily`, provider request/response payload bytes, `retryCount`, `rerouteCount`, `cooldownDecision`, `idempotencyDecision`, `parameterSanitization`, routed failure observations, and request/tool `toolSideEffectState`. Extend these through `runtime-observability`, `sqlite-memory`, request-detail APIs, and telemetry-ledger rows instead of creating a parallel trace store.
+- Streaming and reasoning are execution behavior, not routing eligibility. Forward provider reasoning deltas as OpenAI-compatible `reasoning_content` when upstream emits them, never copy reasoning into visible `content`, and record upstream absence such as `provider_returned_no_reasoning` instead of fabricating thinking/progress text.
+- `runtime:validate-vendors` is the canonical deterministic Pi/Craft execution corpus anchor for this integration family. It emits a `200`-case machine-readable artifact with per-case execution family, routing result, payload-byte, and idempotency facts and should be kept green whenever routed execution semantics change.
+- For rebuilt-runtime direct-remote QA, provider accounts are SQLite-backed, local-file credential refs resolve from `<runtimeStateRoot>/<scopeId>/credentials/**`, env-backed remote accounts still traverse the LiteLLM vendor path, and post-activation inventory truth should come from `/api/role-model/endpoints` and `/v1/models` rather than `/healthz` bootstrap inventory.
 - The telemetry query path is backend-owned and powers Overview plus Observe analytics surfaces; setup and control pages should not regress into chart dashboards.
 - Richer taxonomy telemetry dimensions now include original role/task hints, normalized role/task, group, variant, capability, modality, and tool-class data. Observe analytics and request-ledger enrichment should read those dimensions from persisted telemetry-ledger fields first; reparsing large raw `runtime_observations.observation_json` bundles is now a fallback path for request detail, not the normal analytics path.
 - The telemetry analytics contract now returns applied query metadata, slice metadata, metric support, and dimension support. Analytics aggregation is full-slice by default and must not silently inherit request-ledger pagination caps.
@@ -146,6 +164,10 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - For alias-matrix or controller behavior changes, confirm persisted config truth, live `/v1/models` exposure, and Pi-originated requests for every configured alias when Pi compatibility is in scope.
 - For downstream discovery changes, confirm both `/v1/models` compact metadata and the rich route against the current runtime config alias set, including empty-pool aliases where feasible, and validate the downstream OpenAI schema/fixtures.
 - For provider capability changes, verify exact-model and alias-path behavior separately where the transport boundary can differ.
+- For routed execution hardening that claims Pi/Craft compatibility, include rebuilt-runtime proof for at least one tool-bearing case, one non-text modality case, and one degraded-family recovery case in addition to deterministic validator coverage.
+- When Phase 5 proof depends on alias routing, use canonical runtime aliases such as `difficulty.remote-only` and verify provider, vendor, execution, and adapter facts separately in raw receipts.
+- For Codex Subscription changes, verify the native `chatgpt-codex-responses` / `codex-subscription-responses` path with exact `chatgpt/gpt-5.4` and canonical aliases. Do not treat app-server-era telemetry or adapter-family labels as current proof.
+- For selected-endpoint failure capture, prefer automated selected-endpoint failure tests plus a clean live induced-provider-failure harness. Do not count a `VENDOR_NOT_CONFIGURED` setup failure as proof of selected provider execution failure telemetry.
 - For taxonomy changes, compare canonical data against proposal or generated golden fixtures, validate schemas and generated docs, probe `/api/role-model/taxonomy*`, verify runtime routing intent normalization, verify UI role assignment/drill-down, and run `@try-works/pi-role-model` compact-classification tests.
 - For Pi taxonomy changes, use real Pi RPC for `/role-model` commands and capture real provider transport to prove `role_model.intent` is sent for known Role-Model aliases; one-line stdin pipelines can close before slower async extension commands finish.
 

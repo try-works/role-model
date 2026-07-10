@@ -1,0 +1,41 @@
+{
+  "name": "alias-difficulty-chat-max-tokens",
+  "path": "/v1/chat/completions",
+  "requestBody": {
+    "model": "difficulty.remote-only",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply exactly ADD17_ALIAS_MAX_TOKENS_OK."
+      }
+    ],
+    "max_tokens": 32,
+    "stream": false
+  },
+  "status": 200,
+  "ok": true,
+  "elapsedMs": 3190,
+  "responsePreview": "",
+  "error": null,
+  "response": {
+    "id": "chatcmpl-role-model",
+    "object": "chat.completion",
+    "created": 1783642951,
+    "model": "deepseek/deepseek-v4-pro",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": ""
+        },
+        "finish_reason": "length"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 17,
+      "completion_tokens": 32,
+      "total_tokens": 49
+    }
+  }
+}

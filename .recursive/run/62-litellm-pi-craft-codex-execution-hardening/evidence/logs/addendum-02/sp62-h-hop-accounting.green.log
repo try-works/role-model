@@ -1,0 +1,42 @@
+=== runtime-observability ===
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/runtime-observability
+
+(node:41832) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (5 tests | 4 skipped) 340ms
+   ✓ runtime-observability > captures execution semantics receipts and per-tool side-effect state  337ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 4 skipped (5)
+   Start at  09:13:02
+   Duration  2.02s (transform 594ms, setup 0ms, collect 750ms, tests 340ms, environment 0ms, prepare 427ms)
+
+=== sqlite-memory ===
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/sqlite-memory
+
+(node:15920) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (34 tests | 33 skipped) 309ms
+   ✓ initializeSqliteMemory > persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger  307ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 33 skipped (34)
+   Start at  09:13:07
+   Duration  2.03s (transform 613ms, setup 0ms, collect 818ms, tests 309ms, environment 0ms, prepare 305ms)
+
+=== validate-vendors ===
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:33452) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/validate-vendors.test.ts (2 tests | 1 skipped) 54031ms
+   ✓ runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end  54029ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 1 skipped (2)
+   Start at  09:13:11
+   Duration  57.30s (transform 1.55s, setup 0ms, collect 2.27s, tests 54.03s, environment 0ms, prepare 257ms)
+

@@ -1,0 +1,39 @@
+{
+  "craftSummary": {
+    "clientRequestId": "run62-craft-live-001",
+    "status": 200,
+    "elapsedMs": 3299,
+    "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "selectedModelId": "deepseek/deepseek-v4-pro",
+    "providerFamily": "deepseek",
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "sourceClient": "openai.chat.completions",
+    "firstObjects": [
+      "chat.completion.chunk",
+      "chat.completion.chunk",
+      "chat.completion.chunk",
+      "chat.completion.chunk",
+      "chat.completion.chunk"
+    ]
+  },
+  "responsesSummary": {
+    "clientRequestId": "run62-responses-live-001",
+    "status": 200,
+    "elapsedMs": 1693,
+    "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "selectedModelId": "deepseek/deepseek-v4-pro",
+    "providerFamily": "deepseek",
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "sourceClient": "openai.responses",
+    "eventTypes": [
+      "response.created",
+      "response.output_item.added",
+      "response.output_text.delta",
+      "response.output_text.delta",
+      "response.output_text.delta",
+      "response.completed"
+    ],
+    "leakedChatCompletionChunk": false,
+    "leakedReasoningContent": false
+  }
+}

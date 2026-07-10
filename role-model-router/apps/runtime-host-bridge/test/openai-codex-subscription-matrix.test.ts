@@ -217,7 +217,7 @@ describe("OpenAI Codex Subscription model matrix", () => {
               },
             },
             vendorMetadata: {
-              vendorId: "codex-app-server",
+              vendorId: "chatgpt-codex-responses",
               latencyMs: 10,
             },
           };
@@ -592,7 +592,7 @@ describe("OpenAI Codex Subscription model matrix", () => {
                   },
                 },
             vendorMetadata: {
-              vendorId: "codex-app-server",
+              vendorId: "chatgpt-codex-responses",
               latencyMs: 12,
             },
           };

@@ -1,0 +1,70 @@
+[
+  {
+    "clientRequestId": "add17-after-fix-receipt-responses",
+    "requestId": "req-b434df49-0d2b-432f-b766-8c9e96bfee82",
+    "statusCode": 200,
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.responses",
+    "parameterSanitization": [
+      {
+        "field": "temperature",
+        "sourceSurface": "openai.responses",
+        "targetSurface": "chatgpt.codex.responses",
+        "action": "drop_with_receipt",
+        "reason": "unsupported_by_selected_backend",
+        "sourceValueKind": "present",
+        "adapterFamily": "codex-subscription-responses",
+        "providerId": "openai",
+        "vendorId": "chatgpt-codex-responses"
+      },
+      {
+        "field": "max_output_tokens",
+        "sourceSurface": "openai.responses",
+        "targetSurface": "chatgpt.codex.responses",
+        "action": "drop_with_receipt",
+        "reason": "unsupported_by_selected_backend",
+        "sourceValueKind": "present",
+        "adapterFamily": "codex-subscription-responses",
+        "providerId": "openai",
+        "vendorId": "chatgpt-codex-responses"
+      }
+    ]
+  },
+  {
+    "clientRequestId": "add17-after-fix-receipt-chat-completions",
+    "requestId": "req-7137f92b-aa19-41a3-9156-13a802d388f9",
+    "statusCode": 200,
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "parameterSanitization": [
+      {
+        "field": "temperature",
+        "sourceSurface": "openai.chat.completions",
+        "targetSurface": "chatgpt.codex.responses",
+        "action": "drop_with_receipt",
+        "reason": "unsupported_by_selected_backend",
+        "sourceValueKind": "present",
+        "adapterFamily": "codex-subscription-responses",
+        "providerId": "openai",
+        "vendorId": "chatgpt-codex-responses"
+      },
+      {
+        "field": "max_tokens",
+        "sourceSurface": "openai.chat.completions",
+        "targetSurface": "chatgpt.codex.responses",
+        "action": "drop_with_receipt",
+        "reason": "unsupported_by_selected_backend",
+        "sourceValueKind": "present",
+        "adapterFamily": "codex-subscription-responses",
+        "providerId": "openai",
+        "vendorId": "chatgpt-codex-responses"
+      }
+    ]
+  }
+]

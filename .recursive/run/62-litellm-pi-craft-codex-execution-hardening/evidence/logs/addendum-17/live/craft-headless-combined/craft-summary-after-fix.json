@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-07-10T00:54:46.8027345Z",
+  "serverPid": 55848,
+  "serverUrl": "ws://127.0.0.1:60578",
+  "tokenPresent": true,
+  "roleModelEndpoint": "http://127.0.0.1:3456",
+  "results": [
+    {
+      "name": "craft-alias-difficulty-after-fix",
+      "model": "difficulty.remote-only",
+      "expected": "CRAFT_ADD17_ALIAS_OK",
+      "exitCode": 1,
+      "durationMs": 258,
+      "ok": false,
+      "elapsedMs": null,
+      "sessionId": null,
+      "output": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\craft-headless-combined\\craft-alias-difficulty-after-fix-result.json",
+      "stdout": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\craft-headless-combined\\craft-alias-difficulty-after-fix.stdout.log",
+      "stderr": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\craft-headless-combined\\craft-alias-difficulty-after-fix.stderr.log"
+    },
+    {
+      "name": "craft-exact-chatgpt-after-fix",
+      "model": "chatgpt/gpt-5.4",
+      "expected": "CRAFT_ADD17_GPT_OK",
+      "exitCode": 1,
+      "durationMs": 263,
+      "ok": false,
+      "elapsedMs": null,
+      "sessionId": null,
+      "output": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\craft-headless-combined\\craft-exact-chatgpt-after-fix-result.json",
+      "stdout": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\craft-headless-combined\\craft-exact-chatgpt-after-fix.stdout.log",
+      "stderr": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\craft-headless-combined\\craft-exact-chatgpt-after-fix.stderr.log"
+    }
+  ]
+}

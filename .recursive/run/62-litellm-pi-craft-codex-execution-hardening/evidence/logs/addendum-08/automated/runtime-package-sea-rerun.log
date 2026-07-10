@@ -1,0 +1,10 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 package-sea D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge
+> tsx src/package-sea.ts
+
+Wrote single executable preparation blob to ./dist/sea-prep.blob
+{
+  "outputPath": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+  "target": "win32-x64",
+  "sha256": "80149f20a67626755e8e93e6d07b9e087589d95697ae97e16a839a36d4f9119d"
+}

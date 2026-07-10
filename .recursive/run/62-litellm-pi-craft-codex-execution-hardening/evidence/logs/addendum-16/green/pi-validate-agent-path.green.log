@@ -1,0 +1,17 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/packages/pi-role-model
+
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+(node:44532) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/validate-agent-path.test.ts (7 tests) 20134ms
+   ✓ validate-agent-path helper > runs the rebuilt-runtime alias proof through canonical runtime aliases  19809ms
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  21:14:56
+   Duration  22.05s (transform 1.94s, setup 0ms, collect 503ms, tests 20.13s, environment 0ms, prepare 400ms)
+

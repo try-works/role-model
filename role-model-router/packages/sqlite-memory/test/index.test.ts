@@ -29,6 +29,7 @@ import {
   readLatestObservedProfile,
   readObservedPerformanceSamples,
   readRetrievalReceipts,
+  readRuntimeObservationBundle,
   readRuntimeTelemetrySummary,
   resolveSqliteMemoryLocation,
 } from "../src/index.ts";
@@ -2077,6 +2078,202 @@ describe("initializeSqliteMemory", () => {
     );
   });
 
+  test("persistRuntimeTelemetryFailure preserves routed provider failure context and structured observation", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    const requestId = "req-failure-routed-provider-001";
+    const routingDecisionId = "decision-req-failure-routed-provider-001";
+    const endpointId = "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro";
+    const failureObservation = {
+      requestId,
+      routingDecisionId,
+      endpointId,
+      conversationId: "conversation-main",
+      statusFamily: "failure",
+      usageEvent: {
+        request_id: requestId,
+        routing_decision_id: routingDecisionId,
+        endpoint_id: endpointId,
+        model_id: "deepseek/deepseek-v4-pro",
+        provider_kind: null,
+        tokens_in: 0,
+        tokens_out: 0,
+        latency_ms: 1626,
+        cost_actual: null,
+        cost_estimate: null,
+        currency: "USD",
+        error_class: "quota_exhausted",
+        timestamp_ms: Date.now(),
+      },
+      capturePolicy: {
+        environment: "runtime-failure",
+        redactionLevel: "strict",
+        retentionClass: "standard",
+        structuredInspectionMode: "summary",
+        rawCaptureAvailable: false,
+        structuredInspectionAvailable: true,
+        redactedFields: ["request.headers.authorization"],
+        suppressedFields: [],
+      },
+      executionSemantics: {
+        sourceClient: "openai.chat.completions",
+        executionFamily: "remote-service",
+        adapterFamily: "ai-sdk-openai-compatible",
+        retryCount: 0,
+        rerouteCount: 0,
+        cooldownDecision: "not_applied",
+        failedAttempts: [
+          {
+            failedEndpointId: endpointId,
+            failureClass: "quota_exhausted",
+            failurePhase: "provider_execution",
+            retryable: false,
+            fallbackEligible: true,
+            errorPreview: {
+              message: "Insufficient Balance",
+              statusCode: 402,
+            },
+          },
+        ],
+      },
+    };
+
+    persistRuntimeTelemetryFailure({
+      databasePath: validation.databasePath,
+      requestId,
+      routingDecisionId,
+      endpointId,
+      modelId: "deepseek/deepseek-v4-pro",
+      requestedModelId: "difficulty.remote-only",
+      selectedModelId: "deepseek/deepseek-v4-pro",
+      statusCode: 402,
+      errorClass: "quota_exhausted",
+      latencyMs: 1626,
+      clientRequestId: "client-routed-failure-001",
+      requestClass: "live_request",
+      sourceType: "remote",
+      providerId: "deepseek",
+      providerFamily: "deepseek",
+      vendorId: "direct-openai-compatible",
+      providerAccountId: "deepseek.personal.deepseek-api-key",
+      endpointKind: "remote_api",
+      servingSource: "remote-service",
+      region: "global",
+      lifecycleStateAtRequest: "active",
+      healthStatusAtRequest: "healthy",
+      routingMode: "difficulty",
+      selectedStrategy: "quality",
+      sourceClient: "openai.chat.completions",
+      executionFamily: "remote-service",
+      adapterFamily: "ai-sdk-openai-compatible",
+      requestPayloadBytes: 128,
+      ingressPayloadBytes: 120,
+      translatedPayloadBytes: 121,
+      providerCanonicalPayloadBytes: 122,
+      providerWirePayloadBytes: 123,
+      responsePayloadBytes: 96,
+      retryCount: 0,
+      rerouteCount: 0,
+      cooldownDecision: "not_applied",
+      idempotencyDecision: "not_needed",
+      toolSideEffectState: "none",
+      roleIds: ["coder"],
+      eligibleEndpointIds: ["openai.personal.openai-codex-subscription.global.gpt-5.4", endpointId],
+      eligibleModelIds: ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-pro"],
+      dimensions: {
+        selectedEndpointId: endpointId,
+        candidateCount: 2,
+        failurePhase: "provider_execution",
+        fallbackEligible: true,
+        retryable: false,
+        errorPreview: {
+          message: "Insufficient Balance",
+          statusCode: 402,
+        },
+      },
+      observation: failureObservation,
+    });
+
+    expect(
+      listRuntimeTelemetryRecords({
+        databasePath: validation.databasePath,
+        windowMs: 60_000,
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          requestId,
+          routingDecisionId,
+          endpointId,
+          modelId: "deepseek/deepseek-v4-pro",
+          requestedModelId: "difficulty.remote-only",
+          selectedModelId: "deepseek/deepseek-v4-pro",
+          providerId: "deepseek",
+          providerFamily: "deepseek",
+          vendorId: "direct-openai-compatible",
+          providerAccountId: "deepseek.personal.deepseek-api-key",
+          endpointKind: "remote_api",
+          servingSource: "remote-service",
+          region: "global",
+          lifecycleStateAtRequest: "active",
+          healthStatusAtRequest: "healthy",
+          routingMode: "difficulty",
+          selectedStrategy: "quality",
+          sourceClient: "openai.chat.completions",
+          executionFamily: "remote-service",
+          adapterFamily: "ai-sdk-openai-compatible",
+          requestPayloadBytes: 128,
+          ingressPayloadBytes: 120,
+          translatedPayloadBytes: 121,
+          providerCanonicalPayloadBytes: 122,
+          providerWirePayloadBytes: 123,
+          responsePayloadBytes: 96,
+          retryCount: 0,
+          rerouteCount: 0,
+          cooldownDecision: "not_applied",
+          idempotencyDecision: "not_needed",
+          toolSideEffectState: "none",
+          roleIds: ["coder"],
+          eligibleEndpointIds: [
+            "openai.personal.openai-codex-subscription.global.gpt-5.4",
+            endpointId,
+          ],
+          eligibleModelIds: ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-pro"],
+          rawCaptureAvailable: false,
+          structuredInspectionAvailable: true,
+          statusCode: 402,
+          errorClass: "quota_exhausted",
+        }),
+      ]),
+    );
+    expect(
+      readRuntimeObservationBundle({ databasePath: validation.databasePath, requestId }),
+    ).toEqual(
+      expect.objectContaining({
+        requestId,
+        routingDecisionId,
+        endpointId,
+        statusFamily: "failure",
+        executionSemantics: expect.objectContaining({
+          adapterFamily: "ai-sdk-openai-compatible",
+          failedAttempts: [
+            expect.objectContaining({
+              failedEndpointId: endpointId,
+              failureClass: "quota_exhausted",
+              fallbackEligible: true,
+            }),
+          ],
+        }),
+      }),
+    );
+  });
+
   test("persistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const validation = await runRuntimeAdapterValidation({
@@ -2232,6 +2429,172 @@ describe("initializeSqliteMemory", () => {
       raw_capture_available: bundle.capturePolicy.rawCaptureAvailable ? 1 : 0,
       structured_inspection_available: 1,
     });
+  });
+
+  test("persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      clientRequestId: "client-semantic-001",
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      capturePolicy: policy,
+      executionSemantics: {
+        sourceClient: "openai.responses",
+        payloadBytes: {
+          ingress: 111,
+          translated: 222,
+          providerCanonical: 333,
+          providerWire: 280,
+          providerResponse: 444,
+        },
+        retryCount: 1,
+        rerouteCount: 2,
+        cooldownDecision: "skipped-no-failure",
+        idempotencyDecision: "tool_replay_guard_required",
+        failedAttempts: [
+          {
+            attemptId: "attempt-1",
+            requestId: validation.decision.request_id,
+            routingDecisionId: validation.decision.routing_decision_id,
+            failedEndpointId: validation.execution.target.endpointId,
+            providerId: validation.execution.target.providerId,
+            providerFamily: validation.execution.target.providerId,
+            executionFamily: validation.execution.target.candidate.identity.serving_source,
+            adapterFamily: validation.execution.target.adapterFamily,
+            statusCode: 503,
+            failureClass: "upstream_timeout",
+            retryable: true,
+            fallbackEligible: true,
+            failurePhase: "provider_execution",
+            cooldownRecorded: true,
+            cooldownFailureCount: 1,
+            cooldownUntilMs: 1_750_000_000_000,
+            errorPreview: {
+              message: "Provider request timed out.",
+            },
+          },
+        ],
+      },
+      tooling: {
+        toolCalls: [
+          {
+            name: "apply_patch",
+            arguments: {
+              file: "src/router.ts",
+            },
+            providerToolId: "provider-tool-1",
+          },
+        ],
+        executions: [
+          {
+            toolCallId: "provider-tool-1",
+            toolName: "apply_patch",
+            connectorId: "filesystem",
+            connectorKind: "local",
+            status: "succeeded",
+            output: {
+              patched: true,
+            },
+            diagnostics: [],
+          },
+        ],
+      },
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    const database = new DatabaseSync(validation.databasePath);
+    const persistedRow = database
+      .prepare(
+        "SELECT provider_family, vendor_id, source_client, execution_family, adapter_family, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state FROM runtime_telemetry_records WHERE request_id = ?",
+      )
+      .get(validation.decision.request_id) as
+      | {
+          provider_family: string;
+          vendor_id: string | null;
+          source_client: string;
+          execution_family: string;
+          adapter_family: string;
+          ingress_payload_bytes: number;
+          translated_payload_bytes: number;
+          provider_canonical_payload_bytes: number;
+          provider_wire_payload_bytes: number;
+          response_payload_bytes: number;
+          retry_count: number;
+          reroute_count: number;
+          cooldown_decision: string;
+          idempotency_decision: string;
+          tool_side_effect_state: string;
+        }
+      | undefined;
+    database.close();
+
+    expect(persistedRow).toEqual({
+      provider_family: validation.execution.target.providerId,
+      vendor_id: validation.execution.normalized.vendorMetadata?.vendorId ?? null,
+      source_client: "openai.responses",
+      execution_family: validation.execution.target.candidate.identity.serving_source,
+      adapter_family: validation.execution.target.adapterFamily,
+      ingress_payload_bytes: 111,
+      translated_payload_bytes: 222,
+      provider_canonical_payload_bytes: 333,
+      provider_wire_payload_bytes: 280,
+      response_payload_bytes: 444,
+      retry_count: 1,
+      reroute_count: 2,
+      cooldown_decision: "skipped-no-failure",
+      idempotency_decision: "tool_replay_guard_required",
+      tool_side_effect_state: "executed",
+    });
+
+    const persistedObservation = readRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      requestId: validation.decision.request_id,
+    });
+    expect(persistedObservation).toEqual(
+      expect.objectContaining({
+        executionSemantics: expect.objectContaining({
+          failedAttempts: [
+            expect.objectContaining({
+              attemptId: "attempt-1",
+              failedEndpointId: validation.execution.target.endpointId,
+              failureClass: "upstream_timeout",
+              cooldownRecorded: true,
+              cooldownFailureCount: 1,
+            }),
+          ],
+        }),
+      }),
+    );
   });
 
   test("exports persisted runtime state for operator drills", async () => {

@@ -1,0 +1,63 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/runtime-observability
+
+(node:46856) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (5 tests | 1 failed) 1216ms
+   ✓ runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates  499ms
+   ✓ runtime-observability > tags live-request samples with the classified difficulty bucket when difficulty routing is present  342ms
+   × runtime-observability > captures execution semantics receipts and per-tool side-effect state 368ms
+     → expected { …(20) } to match object { executionSemantics: { …(10) }, …(1) }
+(89 matching properties omitted from actual)
+   ✓ extractTaxonomyFields > extracts all fields from a fully populated normalizedIntent 2ms
+   ✓ extractTaxonomyFields > returns null for missing fields 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > runtime-observability > captures execution semantics receipts and per-tool side-effect state
+AssertionError: expected { …(20) } to match object { executionSemantics: { …(10) }, …(1) }
+(89 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,19 +1,10 @@
+  {
+    "executionSemantics": {
+      "adapterFamily": "ai-sdk-openai",
+      "cooldownDecision": "skipped-no-failure",
+      "executionFamily": "remote-service",
+-     "failedAttempts": [
+-       ObjectContaining {
+-         "attemptId": "attempt-1",
+-         "cooldownFailureCount": 1,
+-         "cooldownRecorded": true,
+-         "failedEndpointId": "openai.personal.primary.us-east-1.fast",
+-         "failureClass": "upstream_timeout",
+-       },
+-     ],
+      "idempotencyDecision": "tool_replay_guard_required",
+      "payloadBytes": {
+        "ingress": 111,
+        "providerCanonical": 333,
+        "providerResponse": 444,
+
+ ❯ test/index.test.ts:421:22
+    419|       });
+    420|
+    421|       expect(bundle).toMatchObject({
+       |                      ^
+    422|         executionSemantics: {
+    423|           sourceClient: "openai.responses",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  20:11:09
+   Duration  4.86s (transform 862ms, setup 0ms, collect 1.08s, tests 1.22s, environment 0ms, prepare 550ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\packages\runtime-observability:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts

@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://127.0.0.1:63560",
+  "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-agent-path-AT9cXD",
+  "aliases": {
+    "difficulty": "gpt-5.4-difficulty",
+    "codex": "codex-capable.hybrid"
+  }
+}

@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:23128) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (188 tests | 187 skipped) 1386ms
+   ✓ runtime-host-bridge > persists routed provider execution failures with selected endpoint inspection context  1382ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 187 skipped (188)
+   Start at  10:51:57
+   Duration  8.93s (transform 3.01s, setup 0ms, collect 4.07s, tests 1.39s, environment 1ms, prepare 424ms)
+

@@ -1,0 +1,18 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:61812) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/account-repair.test.ts (6 tests) 5597ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  813ms
+   ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  964ms
+   ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  964ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  750ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  901ms
+   ✓ account repair mutations > codex subscription start returns a real device-code session and poll connects through managed Codex auth  1201ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  12:31:12
+   Duration  10.66s (transform 1.77s, setup 0ms, collect 2.45s, tests 5.60s, environment 0ms, prepare 627ms)
+

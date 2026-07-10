@@ -1,0 +1,46 @@
+[
+  {
+    "id": "alias-difficulty-remote-only",
+    "model": "difficulty.remote-only",
+    "prompt": "Reply with exactly: PI ADDENDUM 11 DIFFICULTY OK",
+    "exitCode": "timeout",
+    "durationMs": 292,
+    "stdout": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\pi-cli\\alias-difficulty-remote-only.stdout.log",
+    "stderr": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\pi-cli\\alias-difficulty-remote-only.stderr.log",
+    "stdoutPreview": null,
+    "stderrPreview": null
+  },
+  {
+    "id": "alias-baseline-remote-only",
+    "model": "baseline.remote-only",
+    "prompt": "Reply with exactly: PI ADDENDUM 11 BASELINE OK",
+    "exitCode": "timeout",
+    "durationMs": 12,
+    "stdout": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\pi-cli\\alias-baseline-remote-only.stdout.log",
+    "stderr": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\pi-cli\\alias-baseline-remote-only.stderr.log",
+    "stdoutPreview": null,
+    "stderrPreview": null
+  },
+  {
+    "id": "exact-deepseek",
+    "model": "deepseek/deepseek-v4-pro",
+    "prompt": "Reply with exactly: PI ADDENDUM 11 DEEPSEEK OK",
+    "exitCode": "timeout",
+    "durationMs": 35,
+    "stdout": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\pi-cli\\exact-deepseek.stdout.log",
+    "stderr": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\pi-cli\\exact-deepseek.stderr.log",
+    "stdoutPreview": null,
+    "stderrPreview": null
+  },
+  {
+    "id": "exact-chatgpt",
+    "model": "role-model/chatgpt/gpt-5.4",
+    "prompt": "Reply with exactly: PI ADDENDUM 11 CHATGPT OK",
+    "exitCode": "timeout",
+    "durationMs": 12,
+    "stdout": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\pi-cli\\exact-chatgpt.stdout.log",
+    "stderr": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\pi-cli\\exact-chatgpt.stderr.log",
+    "stdoutPreview": null,
+    "stderrPreview": null
+  }
+]

@@ -1,0 +1,300 @@
+{
+  "excludedDiagnosticPid": 62620,
+  "port3456": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 51975,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 61330,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50367,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 60402,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50368,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50331,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50145,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 62475,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50146,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50352,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 62807,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50333,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50355,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 51588,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "0.0.0.0",
+      "RemotePort": 0,
+      "State": 2,
+      "OwningProcess": 19056
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 62416,
+      "State": 5,
+      "OwningProcess": 19056
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50364,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 52069,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50330,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50136,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50334,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50135,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50329,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 57040,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50351,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50366,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 63095,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50147,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50354,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50353,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50369,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 55596,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50142,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50365,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50356,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50332,
+      "State": 11,
+      "OwningProcess": 0
+    }
+  ],
+  "matchingProcesses": {
+    "ProcessId": 19056,
+    "ParentProcessId": 43644,
+    "Name": "role-model-runtime.exe",
+    "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+  },
+  "remainingTmpCraftProcesses": null
+}

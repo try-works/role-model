@@ -1,0 +1,26 @@
+[
+  {
+    "ProcessId": 22268,
+    "ParentProcessId": 10092,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" "
+  },
+  {
+    "ProcessId": 25460,
+    "ParentProcessId": 22268,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=gpu-process --user-data-dir=\"C:\\Users\\erikb\\AppData\\Roaming\\Craft Agents\" --gpu-preferences=SAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAAQAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --field-trial-handle=1760,i,5653684168707859410,1982671062641355655,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=1756 /prefetch:2"
+  },
+  {
+    "ProcessId": 12604,
+    "ParentProcessId": 22268,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --user-data-dir=\"C:\\Users\\erikb\\AppData\\Roaming\\Craft Agents\" --standard-schemes=thumbnail --secure-schemes=sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=thumbnail,sentry-ipc --fetch-schemes=thumbnail,sentry-ipc --streaming-schemes=thumbnail --field-trial-handle=1760,i,5653684168707859410,1982671062641355655,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2016 /prefetch:11"
+  },
+  {
+    "ProcessId": 23044,
+    "ParentProcessId": 22268,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=renderer --user-data-dir=\"C:\\Users\\erikb\\AppData\\Roaming\\Craft Agents\" --standard-schemes=thumbnail --secure-schemes=sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=thumbnail,sentry-ipc --fetch-schemes=thumbnail,sentry-ipc --streaming-schemes=thumbnail --app-path=\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\" --no-sandbox --no-zygote --video-capture-use-gpu-memory-buffer --lang=en-US --device-scale-factor=1.5 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=4 --time-ticks-at-unix-epoch=-1783145382433654 --launch-time-ticks=75757204838 --field-trial-handle=1760,i,5653684168707859410,1982671062641355655,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=3264 /prefetch:1"
+  }
+]

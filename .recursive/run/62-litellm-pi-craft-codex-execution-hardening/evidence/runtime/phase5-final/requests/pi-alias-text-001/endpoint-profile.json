@@ -1,0 +1,133 @@
+{
+  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+  "latestProfile": {
+    "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "endpoint_version": "run07-registry-v1:default",
+    "measured_at_ms": 1783449119748,
+    "measurement_window": {
+      "started_at_ms": 1783449114033,
+      "ended_at_ms": 1783449119748
+    },
+    "sample_size": 2,
+    "sources": {
+      "live_request_samples": 2,
+      "benchmark_samples": 0
+    },
+    "latency_ms_p50": 890.5,
+    "latency_ms_p95": 1243.75,
+    "failure_rate": 0,
+    "freshness_score": 1,
+    "confidence_score": 0.27941531270472214,
+    "tokens_per_sec": 382,
+    "cost_per_1k_tokens_est": 0.00027938745746232375,
+    "currency": "USD"
+  },
+  "recentSamples": [
+    {
+      "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "endpoint_version": "run07-registry-v1:default",
+      "source_type": "live_request",
+      "difficulty_bucket": "easy",
+      "timestamp_ms": 1783449114033,
+      "latency_ms": 1283,
+      "latency_ms_p95": 1283,
+      "tokens_per_sec": 85,
+      "failure": false,
+      "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+      "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b"
+    },
+    {
+      "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "endpoint_version": "run07-registry-v1:default",
+      "source_type": "live_request",
+      "difficulty_bucket": "easy",
+      "timestamp_ms": 1783449119748,
+      "latency_ms": 498,
+      "latency_ms_p95": 498,
+      "tokens_per_sec": 679,
+      "cost_per_1k_tokens_est": 0.00027938745746232375,
+      "failure": false,
+      "request_id": "req-b9e32481-aeb7-44a2-aad6-f0adc4787ed1",
+      "routing_decision_id": "decision-req-b9e32481-aeb7-44a2-aad6-f0adc4787ed1"
+    }
+  ],
+  "difficultyProfiles": {
+    "easy": {
+      "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "endpoint_version": "run07-registry-v1:default",
+      "measured_at_ms": 1783449119748,
+      "measurement_window": {
+        "started_at_ms": 1783449114033,
+        "ended_at_ms": 1783449119748
+      },
+      "sample_size": 2,
+      "sources": {
+        "live_request_samples": 2,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 890.5,
+      "latency_ms_p95": 1243.75,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.27941531270472214,
+      "tokens_per_sec": 382,
+      "cost_per_1k_tokens_est": 0.00027938745746232375,
+      "currency": "USD"
+    },
+    "medium": null,
+    "hard": null
+  },
+  "advisoryMaxDifficultyRecommendation": {
+    "recommendedMaxDifficulty": null,
+    "thresholds": {
+      "minSamples": 4,
+      "maxFailureRate": 0.2,
+      "minQualityScore": 0.8,
+      "minTokensPerSec": 22
+    },
+    "evaluations": {
+      "easy": {
+        "eligible": false,
+        "rejectionReasons": [
+          "min-samples"
+        ],
+        "profile": {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "endpoint_version": "run07-registry-v1:default",
+          "measured_at_ms": 1783449119748,
+          "measurement_window": {
+            "started_at_ms": 1783449114033,
+            "ended_at_ms": 1783449119748
+          },
+          "sample_size": 2,
+          "sources": {
+            "live_request_samples": 2,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 890.5,
+          "latency_ms_p95": 1243.75,
+          "failure_rate": 0,
+          "freshness_score": 1,
+          "confidence_score": 0.27941531270472214,
+          "tokens_per_sec": 382,
+          "cost_per_1k_tokens_est": 0.00027938745746232375,
+          "currency": "USD"
+        }
+      },
+      "medium": {
+        "eligible": false,
+        "rejectionReasons": [
+          "no-profile"
+        ],
+        "profile": null
+      },
+      "hard": {
+        "eligible": false,
+        "rejectionReasons": [
+          "no-profile"
+        ],
+        "profile": null
+      }
+    }
+  }
+}

@@ -46,6 +46,8 @@ export interface StartLiteLLMVendorOptions {
   readonly supervisor: ProcessSupervisor;
   readonly config: {
     readonly providers: readonly LiteLLMProviderConfig[];
+    readonly routerSettings?: Readonly<Record<string, LiteLLMConfigValue>>;
+    readonly litellmSettings?: Readonly<Record<string, LiteLLMConfigValue>>;
     readonly command?: string;
     readonly args?: readonly string[];
     readonly env?: Readonly<Record<string, string>>;
@@ -154,7 +156,11 @@ async function allocatePort(): Promise<number> {
 
 export function renderLiteLLMConfig(input: {
   readonly providers: readonly LiteLLMProviderConfig[];
+  readonly routerSettings?: Readonly<Record<string, LiteLLMConfigValue>>;
+  readonly litellmSettings?: Readonly<Record<string, LiteLLMConfigValue>>;
 }): string {
+  const hasRouterSettings = input.routerSettings && Object.keys(input.routerSettings).length > 0;
+  const hasLiteLLMSettings = input.litellmSettings && Object.keys(input.litellmSettings).length > 0;
   return stringify({
     model_list: input.providers.flatMap((provider) =>
       provider.modelMappings.map((mapping) => ({
@@ -168,6 +174,8 @@ export function renderLiteLLMConfig(input: {
         },
       })),
     ),
+    ...(hasRouterSettings ? { router_settings: input.routerSettings } : {}),
+    ...(hasLiteLLMSettings ? { litellm_settings: input.litellmSettings } : {}),
   });
 }
 
@@ -482,6 +490,8 @@ export async function startLiteLLMVendor(
     configPath,
     renderLiteLLMConfig({
       providers: options.config.providers,
+      routerSettings: options.config.routerSettings,
+      litellmSettings: options.config.litellmSettings,
     }),
     "utf8",
   );
@@ -537,6 +547,7 @@ export async function startLiteLLMVendor(
     const response = await fetch(`${baseUrl}${requestPath}`, {
       method: "POST",
       headers: request.headers,
+      signal: executionOptions?.abortSignal,
       body: JSON.stringify({
         ...request.body,
         ...(executionOptions?.fallbackModelIds?.length

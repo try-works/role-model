@@ -1,0 +1,53 @@
+[
+  {
+    "requestId": "req-ecd4c9fb-99d4-412f-95c8-034847859a27",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "providerId": "deepseek",
+    "requestedModel": "deepseek/deepseek-v4-pro",
+    "downstreamModel": "deepseek/deepseek-v4-pro",
+    "toolCount": 4,
+    "latencyMs": 542,
+    "tokensIn": 1515,
+    "tokensOut": 23,
+    "userPreview": [
+      {
+        "type": "text",
+        "text": "Reply with exactly PI_DEEPSEEK_OK."
+      }
+    ]
+  },
+  {
+    "requestId": "req-294e1058-b5fc-4ce1-911a-efd4abe71376",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "requestedModel": "chatgpt/gpt-5.4",
+    "downstreamModel": "chatgpt/gpt-5.4",
+    "toolCount": 4,
+    "latencyMs": 6606,
+    "tokensIn": 11585,
+    "tokensOut": 28,
+    "userPreview": [
+      {
+        "type": "text",
+        "text": "Reply with exactly PI_GPT_OK."
+      }
+    ]
+  },
+  {
+    "requestId": "req-25811c73-b64c-48e7-a0fa-59510cf79ad7",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "requestedModel": "difficulty.remote-only",
+    "downstreamModel": "chatgpt/gpt-5.4",
+    "toolCount": 4,
+    "latencyMs": 5029,
+    "tokensIn": 11585,
+    "tokensOut": 24,
+    "userPreview": [
+      {
+        "type": "text",
+        "text": "Reply with exactly PI_ALIAS2_OK."
+      }
+    ]
+  }
+]

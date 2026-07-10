@@ -1,0 +1,23 @@
+[
+  {
+    "ProcessId": 13476,
+    "ParentProcessId": 60152,
+    "Name": "Craft Agents.exe",
+    "ExecutablePath": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --user-data-dir=D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum16b\\user-data"
+  },
+  {
+    "ProcessId": 56456,
+    "ParentProcessId": 13476,
+    "Name": "Craft Agents.exe",
+    "ExecutablePath": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=gpu-process --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum16b\\user-data\" --gpu-preferences=SAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAAQAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --field-trial-handle=1732,i,5026909973625250285,13450860053790038417,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=1724 /prefetch:2"
+  },
+  {
+    "ProcessId": 27080,
+    "ParentProcessId": 13476,
+    "Name": "Craft Agents.exe",
+    "ExecutablePath": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum16b\\user-data\" --standard-schemes=thumbnail --secure-schemes=sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=thumbnail,sentry-ipc --fetch-schemes=thumbnail,sentry-ipc --streaming-schemes=thumbnail --field-trial-handle=1732,i,5026909973625250285,13450860053790038417,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2040 /prefetch:11"
+  }
+]

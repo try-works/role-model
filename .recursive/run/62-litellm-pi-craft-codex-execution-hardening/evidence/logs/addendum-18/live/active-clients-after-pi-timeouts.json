@@ -1,0 +1,72 @@
+[
+  {
+    "LocalPort": 58372,
+    "State": 5,
+    "ProcessId": 37208,
+    "ExecutablePath": "D:\\cursor\\Cursor.exe",
+    "CommandLine": "\"D:\\cursor\\Cursor.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --user-data-dir=\"C:\\Users\\erikb\\AppData\\Roaming\\Cursor\" --standard-schemes=vscode-webview,vscode-file,cursor-rpc-devtools --enable-sandbox --secure-schemes=vscode-webview,vscode-file,cursor-rpc-devtools,sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=vscode-webview,vscode-file,cursor-rpc-devtools,sentry-ipc --fetch-schemes=vscode-webview,vscode-file,cursor-rpc-devtools,sentry-ipc --service-worker-schemes=vscode-webview --code-cache-schemes=vscode-webview,vscode-file --field-trial-handle=1852,i,7785481981203602711,13344295148210100656,262144 --enable-features=DocumentPolicyIncludeJSCallStacksInCrashReports,EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=CalculateNativeWinOcclusion,LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2124 /prefetch:11"
+  },
+  {
+    "LocalPort": 63701,
+    "State": 5,
+    "ProcessId": 7016,
+    "ExecutablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "CommandLine": "\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-pre-read-main-dll --metrics-shmem-handle=2120,i,65691780541939837,13671999960312605478,524288 --field-trial-handle=1820,i,7620933072432548973,1461232407100839195,262144 --variations-seed-version=20260630-171645.651000-production --pseudonymization-salt-handle=1840,i,7775427661786290919,12896125093235042439,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2128 /prefetch:11"
+  },
+  {
+    "LocalPort": 59040,
+    "State": 5,
+    "ProcessId": 7016,
+    "ExecutablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "CommandLine": "\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-pre-read-main-dll --metrics-shmem-handle=2120,i,65691780541939837,13671999960312605478,524288 --field-trial-handle=1820,i,7620933072432548973,1461232407100839195,262144 --variations-seed-version=20260630-171645.651000-production --pseudonymization-salt-handle=1840,i,7775427661786290919,12896125093235042439,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2128 /prefetch:11"
+  },
+  {
+    "LocalPort": 58966,
+    "State": 5,
+    "ProcessId": 7016,
+    "ExecutablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "CommandLine": "\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-pre-read-main-dll --metrics-shmem-handle=2120,i,65691780541939837,13671999960312605478,524288 --field-trial-handle=1820,i,7620933072432548973,1461232407100839195,262144 --variations-seed-version=20260630-171645.651000-production --pseudonymization-salt-handle=1840,i,7775427661786290919,12896125093235042439,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2128 /prefetch:11"
+  },
+  {
+    "LocalPort": 55834,
+    "State": 5,
+    "ProcessId": 7016,
+    "ExecutablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "CommandLine": "\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-pre-read-main-dll --metrics-shmem-handle=2120,i,65691780541939837,13671999960312605478,524288 --field-trial-handle=1820,i,7620933072432548973,1461232407100839195,262144 --variations-seed-version=20260630-171645.651000-production --pseudonymization-salt-handle=1840,i,7775427661786290919,12896125093235042439,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2128 /prefetch:11"
+  },
+  {
+    "LocalPort": 62784,
+    "State": 5,
+    "ProcessId": 7016,
+    "ExecutablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "CommandLine": "\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-pre-read-main-dll --metrics-shmem-handle=2120,i,65691780541939837,13671999960312605478,524288 --field-trial-handle=1820,i,7620933072432548973,1461232407100839195,262144 --variations-seed-version=20260630-171645.651000-production --pseudonymization-salt-handle=1840,i,7775427661786290919,12896125093235042439,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2128 /prefetch:11"
+  },
+  {
+    "LocalPort": 54187,
+    "State": 7,
+    "ProcessId": 21496,
+    "ExecutablePath": "C:\\Program Files\\nodejs\\node.exe",
+    "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" --require C:\\Users\\erikb\\AppData\\Local\\npm-cache\\_npx\\fd45a72a545557e9\\node_modules\\tsx\\dist\\preflight.cjs --import file:///C:/Users/erikb/AppData/Local/npm-cache/_npx/fd45a72a545557e9/node_modules/tsx/dist/loader.mjs lib/run-phase1-subjects.ts"
+  },
+  {
+    "LocalPort": 57764,
+    "State": 5,
+    "ProcessId": 37208,
+    "ExecutablePath": "D:\\cursor\\Cursor.exe",
+    "CommandLine": "\"D:\\cursor\\Cursor.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --user-data-dir=\"C:\\Users\\erikb\\AppData\\Roaming\\Cursor\" --standard-schemes=vscode-webview,vscode-file,cursor-rpc-devtools --enable-sandbox --secure-schemes=vscode-webview,vscode-file,cursor-rpc-devtools,sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=vscode-webview,vscode-file,cursor-rpc-devtools,sentry-ipc --fetch-schemes=vscode-webview,vscode-file,cursor-rpc-devtools,sentry-ipc --service-worker-schemes=vscode-webview --code-cache-schemes=vscode-webview,vscode-file --field-trial-handle=1852,i,7785481981203602711,13344295148210100656,262144 --enable-features=DocumentPolicyIncludeJSCallStacksInCrashReports,EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=CalculateNativeWinOcclusion,LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2124 /prefetch:11"
+  },
+  {
+    "LocalPort": 65129,
+    "State": 5,
+    "ProcessId": 44316,
+    "ExecutablePath": "C:\\Program Files\\nodejs\\node.exe",
+    "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" D:\\pi\\node_modules\\.bin/../@earendil-works/pi-coding-agent/dist/cli.js "
+  },
+  {
+    "LocalPort": 53545,
+    "State": 5,
+    "ProcessId": 7016,
+    "ExecutablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+    "CommandLine": "\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-pre-read-main-dll --metrics-shmem-handle=2120,i,65691780541939837,13671999960312605478,524288 --field-trial-handle=1820,i,7620933072432548973,1461232407100839195,262144 --variations-seed-version=20260630-171645.651000-production --pseudonymization-salt-handle=1840,i,7775427661786290919,12896125093235042439,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2128 /prefetch:11"
+  }
+]

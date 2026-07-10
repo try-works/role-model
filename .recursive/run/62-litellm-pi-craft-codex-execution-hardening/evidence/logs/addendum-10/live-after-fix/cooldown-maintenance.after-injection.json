@@ -1,0 +1,5 @@
+{
+  "maintenance_key": "routing.execution-failure-cooldowns.v1",
+  "maintenance_value": "{\"openai.personal.openai-codex-subscription.global.gpt-5.4\":{\"endpointId\":\"openai.personal.openai-codex-subscription.global.gpt-5.4\",\"failureCount\":1,\"cooldownUntilMs\":1783554135282,\"lastFailureAtMs\":1783553835282,\"lastErrorClass\":\"upstream_timeout\",\"sourceAttemptId\":\"addendum-10-live-cooldown:attempt:1\",\"sourceRequestId\":\"addendum-10-live-cooldown\",\"sourceRoutingDecisionId\":\"decision-addendum-10-live-cooldown\",\"providerId\":\"openai\",\"providerFamily\":\"openai\",\"executionFamily\":\"remote-service\",\"adapterFamily\":\"ai-sdk-openai\",\"failurePhase\":\"verification_injected\",\"statusCode\":503,\"errorPreview\":{\"message\":\"addendum 10 live verification cooldown\",\"statusCode\":503}}}",
+  "updated_at_ms": 1783553835282
+}

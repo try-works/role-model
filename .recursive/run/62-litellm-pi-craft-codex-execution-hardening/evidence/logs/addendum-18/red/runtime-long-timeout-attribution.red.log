@@ -1,0 +1,391 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:47140) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (188 tests | 1 failed | 187 skipped) 1203ms
+   ↓ runtime-host-bridge > summarizes selection diagnostics when a tie-break chooses the winner inside the score epsilon
+   ↓ runtime-host-bridge > creates a stable model-list response grouped by model id
+   ↓ runtime-host-bridge > creates alias entries in the model-list response alongside real models
+   ↓ runtime-host-bridge > adds compact Pi-compatible capability metadata to v1 model-list records
+   ↓ runtime-host-bridge > builds request-time routing telemetry snapshots from live routing candidates
+   ↓ runtime-host-bridge > builds QA bootstrap options with router surfaces and complete fixtures
+   ↓ runtime-host-bridge > builds QA backend options that start managed mock vendors for end-to-end Pi QA
+   ↓ runtime-host-bridge > seeds QA runtime config with executable local and remote mock backend commands
+   ↓ runtime-host-bridge > seeds QA runtime config with canonical task capabilities for role-routed backend QA
+   ↓ runtime-host-bridge > binds managed QA backends to canonical taxonomy roles for classified request QA
+   ↓ runtime-host-bridge > does not bootstrap placeholder remote control-plane endpoints by default
+   ↓ runtime-host-bridge > bootstraps QA control-plane state for mixed local+remote routing proof
+   ↓ runtime-host-bridge > builds packaged CLI options with static UI, router surfaces, and fixture-root defaults
+   ↓ runtime-host-bridge > passes the optional shutdown hook into CLI server options
+   ↓ runtime-host-bridge > suppresses placeholder provider accounts when using the packaged CLI defaults
+   ↓ runtime-host-bridge > purges stale runtime-config LiteLLM endpoints when startup has no runtime config
+   ↓ runtime-host-bridge > loads placeholder accounts only when fixture-root is explicitly provided
+   ↓ runtime-host-bridge > maps a chat-completions request into role-model routing and execution inputs
+   ↓ runtime-host-bridge > maps request role_model intent metadata into the routing request
+   ↓ runtime-host-bridge > maps stable proposal-shaped chat role_model intent metadata into the routing request
+   ↓ runtime-host-bridge > normalizes stable advisory role_model intent with ignored-field diagnostics
+   ↓ runtime-host-bridge > applies valid role_model intent as runtime role and task policy
+   ↓ runtime-host-bridge > keeps stable Pi role_model metadata advisory for exact-model routing
+   ↓ runtime-host-bridge > maps chat-completions tool-turn history with null assistant content without crashing
+   ↓ runtime-host-bridge > maps hosted OpenAI responses tools without rejecting them as function-only tools
+   ↓ runtime-host-bridge > maps mixed-provider responses web_search alias pools to runtime tool calling without excluding function-calling providers
+   ↓ runtime-host-bridge > maps exact non-OpenAI responses web-search requests to consumer-managed web_search tools
+   ↓ runtime-host-bridge > maps exact Kimi responses web-search requests to the hosted builtin_function contract
+   ↓ runtime-host-bridge > maps chat-completions continuation requests with Kimi hosted builtin_function tools
+   ↓ runtime-host-bridge > describes endpoint web-search support by active runtime transport
+   ↓ runtime-host-bridge > exports Codex dynamic-tool extraction for request-scoped function tools
+   ↓ runtime-host-bridge > exports createRequestScopedToolRegistry for request-scoped function tool registry
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry produces explicit failures for unimplemented bridged tool names
+   ↓ runtime-host-bridge > seedManagedCodexWorkspaceFixture stages benchmark files for Codex tool-heavy cases
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry executes read/list/write tools and apply_patch against a staged workspace
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry fails explicitly for unsupported bridged tools
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry tells Codex to use shell tools for external file paths
+   ↓ runtime-host-bridge > buildCodexDynamicTools output is compatible with createRequestScopedToolRegistry
+   ↓ runtime-host-bridge > Codex Subscription sanitizes unsupported Chat Completions optional parameters
+   ↓ runtime-host-bridge > Codex Subscription sanitizes unsupported Responses optional parameters
+   ↓ runtime-host-bridge > Codex Subscription applies the same parameter policy after alias routing
+   ↓ runtime-host-bridge > Codex Subscription execution uses ChatGPT Codex Responses SSE and preserves downstream chat deltas
+   ↓ runtime-host-bridge > Codex Subscription execution writes chat-completions deltas before upstream completion
+   ↓ runtime-host-bridge > Codex Subscription request conversion preserves assistant history as output_text
+   ↓ runtime-host-bridge > Codex Subscription runtime source no longer contains app-server execution code
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry does not require repoRoot or file system access
+   ↓ runtime-host-bridge > non-tool Codex behavior: buildCodexDynamicTools returns empty array when no function tools present
+   ↓ runtime-host-bridge > loadMcpConnectorConfigs throws ENOENT when testdata file is absent (reproduces original packaged-runtime crash)
+   ↓ runtime-host-bridge > Codex tool path surfaces explicit failures for unimplemented request-scoped tool names in packaged-runtime-like environments
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry signature has no repoRoot parameter (architecture-level guard against testdata reads)
+   ↓ runtime-host-bridge > maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics
+   ↓ runtime-host-bridge > keeps exact-model routing unchanged when aliases are configured
+   ↓ runtime-host-bridge > narrows exact-model chat routing to an explicitly requested endpoint
+   ↓ runtime-host-bridge > maps validated controller guidance into an intelligent alias routing plan
+   ↓ runtime-host-bridge > uses a baseline override to bypass intelligent alias controller routing
+   ↓ runtime-host-bridge > applies a directly requested role to chat routing and execution policy
+   ↓ runtime-host-bridge > records explicit hybrid arbitration when controller guidance alters the difficulty plan
+   ↓ runtime-host-bridge > maps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics
+   ↓ runtime-host-bridge > escalates a high-risk single-turn code-change ask to hard difficulty and quality routing
+   ↓ runtime-host-bridge > escalates tool-bearing workspace file requests to hard difficulty instead of the cost lane
+   ↓ runtime-host-bridge > keeps ordinary tool code aliases provider agnostic
+   ↓ runtime-host-bridge > does not contain provider-specific routing pin helpers
+   ↓ runtime-host-bridge > keeps operator-configured Codex subscription exact endpoints eligible even when the model id is newer than the static matrix
+   ↓ runtime-host-bridge > uses a baseline override to bypass difficulty alias gating
+   ↓ runtime-host-bridge > uses the persisted Strategy B mode as the default routing mode when no alias mode or request override is set
+   ↓ runtime-host-bridge > maps an alias responses request into a pooled endpoint allow-list and alias diagnostics
+   ↓ runtime-host-bridge > maps responses role_model intent metadata into the routing request
+   ↓ runtime-host-bridge > maps stable proposal-shaped responses role_model intent metadata into the routing request
+   ↓ runtime-host-bridge > maps responses tool choice, reasoning, prompt cache, affinity, and previous response id into the execution request
+   ↓ runtime-host-bridge > maps chat-completions session affinity and transport preference into the execution request
+   ↓ runtime-host-bridge > maps chat-completions reasoning effort into the execution request
+   ↓ runtime-host-bridge > maps chat-completions thinking controls into the execution request
+   ↓ runtime-host-bridge > treats unknown stable role_model task metadata as advisory before routing
+   ↓ runtime-host-bridge > treats unknown stable role_model requested role metadata as advisory before routing
+   ↓ runtime-host-bridge > rejects explicit hard role_model task metadata before routing
+   ↓ runtime-host-bridge > maps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints
+   ↓ runtime-host-bridge > applies requested role execution policy to responses requests
+   ↓ runtime-host-bridge > prefers a configured alias in downstream OpenAI provider config
+   ↓ runtime-host-bridge > prefers the alias derived from the live runtime routing config in downstream OpenAI provider config
+   ↓ runtime-host-bridge > fallback downstream OpenAI provider config remains compatible with pi-role-model
+   ↓ runtime-host-bridge > serves health and model-list endpoints
+   ↓ runtime-host-bridge > accepts a local shutdown request when a shutdown hook is configured
+   ↓ runtime-host-bridge > serves alias entries in model-list and downstream provider config from runtime config
+   ↓ runtime-host-bridge > serves preserved host observability and vendor-facing utility endpoints
+   ↓ runtime-host-bridge > returns JSON for /logs/stream before static root catch-all
+   ↓ runtime-host-bridge > serves the runtime UI shell from root and app routes when static root exists
+   ↓ runtime-host-bridge > preserves x-role-model-request-id as client correlation metadata while generating a canonical request id
+   ↓ runtime-host-bridge > does not attempt to write a fallback error after the response is already committed
+   ↓ runtime-host-bridge > generates a unique canonical request id for each request when headers omit request ids
+   ↓ runtime-host-bridge > serves runtime control-plane summary, provider, account, and endpoint routes
+   ↓ runtime-host-bridge > serves canonical telemetry summary, comparison, and recent request routes
+   ↓ runtime-host-bridge > serves the generic telemetry analytics query route
+   ↓ runtime-host-bridge > serves downstream OpenAI-compatible provider metadata for consumer apps
+   ↓ runtime-host-bridge > serves chat-completions responses with role-model execution metadata
+   ↓ runtime-host-bridge > serves OpenAI-compatible SSE events for streaming responses requests
+   ↓ runtime-host-bridge > surfaces tool calls on chat-completions responses when the backend returns them
+   ↓ runtime-host-bridge > normalizes chat-completions provider SSE into Responses events on streamed /v1/responses
+   ↓ runtime-host-bridge > streams provider deltas through the bridge as they arrive
+   ↓ runtime-host-bridge > emits reasoning_content before visible content for synthetic chat-completions streams
+   ↓ runtime-host-bridge > forwards x-role-model-routing-mode to chat-completions execution
+   ↓ runtime-host-bridge > forwards ingress session, client correlation, and transport headers to chat-completions execution
+   ↓ runtime-host-bridge > rejects an invalid x-role-model-routing-mode header
+   ↓ runtime-host-bridge > creates a runtime backend that executes chat-completions through the real routing and adapter path
+   ↓ runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state
+   ↓ runtime-host-bridge > persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests
+   ↓ runtime-host-bridge > persists applied role policy diagnostics and injected system instructions for runtime-backed chat requests
+   ↓ runtime-host-bridge > does not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap
+   ↓ runtime-host-bridge > upsertProviderAccount replaces existing model role assignments for the same model
+   ↓ runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests
+   ↓ runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+   ↓ runtime-host-bridge > filters router summary aliases and candidates by explicit remote-only execution mode
+   ↓ runtime-host-bridge > maps the full canonical alias matrix to non-empty candidate pools when matching inventory exists
+   ↓ runtime-host-bridge > routes execution-facing planning through the effective execution-mode registry
+   ↓ runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests
+   ↓ runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request
+   ↓ runtime-host-bridge > routes hard requests using bucketed observed profiles and records the selected difficulty bucket
+   ↓ runtime-host-bridge > infers a hard observed-profile bucket from controller quality strategy when difficulty routing is absent
+   ↓ runtime-host-bridge > keeps fresh endpoint-wide metrics when stale hard-bucket quality is present under benchmark-driven routing
+   ↓ runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests
+   ↓ runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests
+   ↓ runtime-host-bridge > uses the default controller timeout budget for realistic remote controller latency
+   ↓ runtime-host-bridge > records sanitized controller guidance through the live HTTP bridge for intelligent aliases
+   ↓ runtime-host-bridge > preserves accepted controller directives for known compatibility strategy aliases
+   ↓ runtime-host-bridge > gives controller routing enough output budget to avoid empty truncated guidance
+   ↓ runtime-host-bridge > backfills coding role and capability hints into minimal controller strategy guidance
+   ↓ runtime-host-bridge > does not infer coding guidance solely from consumer-declared default tools
+   ↓ runtime-host-bridge > retries controller routing once with a compact prompt when the first controller response is empty
+   ↓ runtime-host-bridge > falls back to heuristic controller guidance when the live controller returns prose instead of JSON
+   ↓ runtime-host-bridge > keeps controller.remote-only routing inside the remote-only alias slice even when the available inventory is hybrid
+   ↓ runtime-host-bridge > serves coherent live role and task policy over the HTTP control plane
+   ↓ runtime-host-bridge > ignores unsupported controller task and capability directives while keeping valid preferred endpoint subsets for coding-role requests
+   ↓ runtime-host-bridge > resolves explicit non-controller coder.review requests onto a role-compatible task
+   ↓ runtime-host-bridge > drops controller preferred endpoints when they merely restate the full allowed pool
+   ↓ runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config
+   ↓ runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests
+   ↓ runtime-host-bridge > falls back deterministically when the configured classifier times out
+   ↓ runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded
+   ↓ runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request
+   ↓ runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts
+   ↓ runtime-host-bridge > persists runtime-managed role policy and task allowlists across backend restart
+   ↓ runtime-host-bridge > executes env-backed api-key accounts through the live provider path when the env credential resolves
+   ↓ runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+   ↓ runtime-host-bridge > persists routed provider execution failures with selected endpoint inspection context
+   × runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints 1199ms
+     → expected { …(102) } to deeply equal ObjectContaining{…}
+   ↓ runtime-host-bridge > executes direct exact-model chat requests through the Codex subscription endpoint
+   ↓ runtime-host-bridge > Codex Subscription request detail preserves Responses-ingress parameter policy
+   ↓ runtime-host-bridge > exact Codex execution repairs stale bridge auth from standalone runtime and clears auth cooldowns
+   ↓ runtime-host-bridge > suppresses already-executed Codex dynamic tool calls from the final chat response and de-duplicates executions
+   ↓ runtime-host-bridge > classifies subscription quota exhaustion as fallback-eligible without retrying the same endpoint
+   ↓ runtime-host-bridge > classifies provider insufficient balance failures as quota exhaustion
+   ↓ runtime-host-bridge > uses an escalating execution-failure cooldown schedule
+   ↓ runtime-host-bridge > does not place Codex subscription endpoints on cooldown for invalid_request failures
+   ↓ runtime-host-bridge > keeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog
+   ↓ runtime-host-bridge > registers configured local OpenAI-compatible peers as execution-ready model endpoints
+   ↓ runtime-host-bridge > executes non-controller requested coder review task requests without empty chosen-endpoint failures
+   ↓ runtime-host-bridge > exposes llama-swap ownership and config metadata on local model and endpoint readback
+   ↓ runtime-host-bridge > rejects local model activation when no configured local endpoint exposes the requested model
+   ↓ runtime-host-bridge > rehydrates connected OAuth accounts from stored token files on backend restart
+   ↓ runtime-host-bridge > restores pending OAuth device-authorizations from SQLite after backend restart
+   ↓ runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint
+   ↓ runtime-host-bridge > executes exact Kimi hosted web-search requests through to a final assistant answer
+   ↓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-flash web-search requests as consumer-managed tool calls
+   ↓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-pro web-search requests as consumer-managed tool calls
+   ↓ runtime-host-bridge > normalizes DeepSeek DSML web_search markup into consumer-visible tool calls
+   ↓ runtime-host-bridge > normalizes DeepSeek DSML web_open markup into consumer-visible tool calls
+   ↓ runtime-host-bridge > normalizes DeepSeek DSML web_browse markup into consumer-visible tool calls
+   ↓ runtime-host-bridge > creates a runtime backend that executes responses through the real routing and adapter path
+   ↓ runtime-host-bridge > persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests
+   ↓ runtime-host-bridge > serves structured request and endpoint inspection routes through the bridge server
+   ↓ runtime-host-bridge > aggregates generic telemetry analytics from persisted request-time routing and cost facts
+   ↓ runtime-host-bridge > aggregates telemetry analytics over the full requested slice with contract metadata and aligned ledger filters
+   ↓ runtime-host-bridge > startup retention cleanup removes expired raw observations while preserving telemetry ledger evidence
+   ↓ runtime-host-bridge > keeps duplicate caller request ids as separate canonical telemetry rows
+   ↓ runtime-host-bridge > records caller correlation and live request classification for failed chat completions
+   ↓ runtime-host-bridge > reads bucketed endpoint profiles with an advisory max-difficulty recommendation
+   ↓ runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted
+   ↓ runtime-host-bridge > aborts streamed chat execution when the downstream client disconnects
+   ↓ runtime-host-bridge > executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers
+   ↓ runtime-host-bridge > executes chat-completions through an api-key-static provider via environment credential
+   ↓ runtime-host-bridge > propagates downstream stream-writer failures during direct provider streaming
+   ↓ runtime-host-bridge > forwards reasoning-only upstream SSE chunks when chat-completions opted into reasoning
+   ↓ runtime-host-bridge > suppresses reasoning-only upstream SSE chunks until downstream-safe content is available when reasoning is not requested
+   ↓ runtime-host-bridge > accepts legacy credentialized endpoint ids when pinning a requested endpoint
+   ↓ runtime-host-bridge > resolves bridge server options from explicit values and defaults
+   ↓ runtime-host-bridge > keeps repoRoot-derived static paths stable when runtimeStateRoot uses a different path dialect
+   ↓ runtime-host-bridge > resolves packaged bridge server options from executable path defaults
+   ↓ runtime-host-bridge > prefers repoRoot frontend assets over packaged assets when repoRoot is explicit
+   ↓ runtime-host-bridge > resolves packaged bridge server options from POSIX executable path defaults
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints
+AssertionError: expected { …(102) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "adapterFamily": "codex-subscription-responses",
++ {
++   "actualCostUsd": null,
++   "adapterFamily": "ai-sdk-openai",
++   "baselineMaxEligibleCostUsd": 0,
++   "cacheCostSavingsUsd": 0,
++   "cacheReadTokens": 0,
++   "cacheReadTokensSupported": true,
++   "cacheState": "unknown",
++   "cacheWriteTokens": 0,
++   "cacheWriteTokensSupported": true,
++   "candidateCostSnapshot": {
++     "openai.personal.codex-subscription.global.gpt-5.4": {
++       "endpointKind": "remote_api",
++       "estimatedRequestUsd": 0.06146499999999999,
++       "modelId": "chatgpt/gpt-5.4",
++       "providerId": "openai",
++       "providerKind": "remote_openai_compat",
++       "region": "global",
++       "servingSource": "remote-service",
++       "sourceType": "remote",
++       "tokenEconomicsSource": "catalog",
++     },
++   },
++   "clientRequestId": null,
++   "conversationId": "conversation-main",
++   "cooldownDecision": "recorded",
++   "costBaselineSource": null,
++   "costCalculationBasis": "no_execution_zero",
++   "costCalculationVersion": "run49.v1",
++   "costProvenance": "unavailable",
++   "costSavingsSupport": "partial",
++   "createdAtMs": 1783652445564,
++   "currency": null,
++   "difficultyBucket": null,
++   "dimensions": {
++     "candidateCount": 1,
++     "errorPreview": {
++       "message": "Connection Error: Could not reach the AI service. Request timed out.",
++       "statusCode": 503,
++     },
++     "failurePhase": "provider_execution",
++     "fallbackEligible": true,
++     "retryable": true,
++     "selectedEndpointId": "openai.personal.codex-subscription.global.gpt-5.4",
++   },
++   "effectiveCostUsd": 0,
++   "eligibleEndpointIds": [
++     "openai.personal.codex-subscription.global.gpt-5.4",
++   ],
++   "eligibleModelIds": [
++     "chatgpt/gpt-5.4",
++   ],
+    "endpointId": "openai.personal.codex-subscription.global.gpt-5.4",
++   "endpointKind": "remote_api",
+    "errorClass": "upstream_timeout",
++   "estimatedCostUsd": null,
++   "executionFamily": "remote-service",
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 187 skipped (188)
+   Start at  11:00:40
+   Duration  4.89s (transform 1.93s, setup 0ms, collect 2.63s, tests 1.20s, environment 0ms, prepare 386ms)
+
++   "finishReason": null,
++   "healthStatus": "healthy",
++   "healthStatusAtRequest": "healthy",
++   "idempotencyDecision": "not_needed",
++   "ingressPayloadBytes": 99,
++   "inputTokens": 0,
++   "latencyMs": 182,
++   "lifecycleStateAtRequest": "active",
++   "modelId": "chatgpt/gpt-5.4",
++   "outputTokens": 0,
++   "promptCacheRequested": false,
++   "promptCacheSupported": true,
++   "promptCacheUsed": false,
+    "providerAccountId": "openai.personal.codex-subscription",
++   "providerCanonicalPayloadBytes": 73,
+    "providerFamily": "openai",
+    "providerId": "openai",
++   "providerKind": "remote_openai_compat",
++   "providerWirePayloadBytes": 73,
++   "rawCaptureAvailable": false,
++   "redactionLevel": "strict",
++   "region": "global",
++   "requestClass": "live_request",
++   "requestId": "req-runtime-bridge-codex-timeout-001",
++   "requestOperation": "chat",
++   "requestPayloadBytes": 99,
+    "requestedModelId": "chatgpt/gpt-5.4",
++   "requestedRoleId": null,
++   "rerouteCount": 0,
++   "responsePayloadBytes": 553,
++   "retainUntil": 1786244445563,
++   "retentionClass": "standard",
++   "retentionTtlHours": 720,
++   "retryCount": 1,
++   "roleIds": [
++     "analyst",
++     "architect",
++     "coder",
++     "coordinator",
++     "creative",
++     "data",
++     "designer",
++     "educator",
++     "finance",
++     "health",
++     "knowledge",
++     "legal",
++     "marketer",
++     "mathematician",
++     "operator",
++     "planner",
++     "procurement",
++     "product",
++     "recruiter",
++     "researcher",
++     "scientist",
++     "security",
++     "seller",
++     "strategist",
++     "support",
++     "tester",
++     "translator",
++     "writer",
++   ],
++   "routingCostSavingsUsd": 0,
++   "routingDecisionId": "decision-req-runtime-bridge-codex-timeout-001",
++   "routingMode": null,
++   "samplingRate": 1,
++   "selectedModelId": "chatgpt/gpt-5.4",
++   "selectedPricingSnapshot": {
++     "canonicalModelId": "chatgpt/gpt-5.4",
++     "estimatedRequestUsd": 0.06146499999999999,
++     "inputPer1M": 2.5,
++     "outputPer1M": 15,
++     "tokenEconomicsSource": "catalog",
++   },
++   "selectedStrategy": "balanced",
++   "selectedUncachedCostUsd": 0.06146499999999999,
++   "servingSource": "remote-service",
++   "sourceClient": "openai.chat.completions",
++   "sourceType": "remote",
++   "status": "active",
++   "statusCode": 503,
++   "statusFamily": "failure",
++   "streamTextDeltaCount": 0,
++   "streamTextSupported": true,
++   "streamToolArgumentDeltaCount": 0,
++   "streamToolArgumentSupported": true,
++   "streamToolCallDeltaCount": 0,
++   "streamToolCallSupported": true,
++   "structuredInspectionAvailable": true,
++   "structuredInspectionMode": "summary",
++   "taxonomyCapabilityIds": [],
++   "taxonomyGroupId": null,
++   "taxonomyModalityIds": [],
++   "taxonomyRoleId": null,
++   "taxonomyTaskType": null,
++   "taxonomyTaskVariant": null,
++   "taxonomyToolClassIds": [],
++   "toolCallCount": 0,
++   "toolExecutionCount": 0,
++   "toolSideEffectState": "none",
++   "toolingUsed": false,
++   "totalAvoidedCostUsd": 0,
++   "totalTokens": 0,
++   "translatedPayloadBytes": 73,
++   "vendorId": "chatgpt-codex-responses",
+  }
+
+ ❯ test/index.test.ts:14655:33
+    14653|         (row) => row.requestId === "req-runtime-bridge-codex-timeout-0…
+    14654|       );
+    14655|       expect(timeoutFailureRow).toEqual(
+       |                                 ^
+    14656|         expect.objectContaining({
+    14657|           endpointId: endpoint.endpointId,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts -t preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints

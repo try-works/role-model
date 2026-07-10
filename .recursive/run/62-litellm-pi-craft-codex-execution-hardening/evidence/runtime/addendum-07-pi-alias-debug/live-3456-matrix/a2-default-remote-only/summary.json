@@ -1,0 +1,23 @@
+{
+  "caseId": "a2-default-remote-only",
+  "model": "default.remote-only",
+  "noTools": false,
+  "prompt": "hey",
+  "elapsedMs": 5383,
+  "exitCode": 0,
+  "stdout": "Hey! How can I help you today?",
+  "requestId": null,
+  "selectedEndpointId": null,
+  "selectedModelId": null,
+  "providerFamily": null,
+  "sourceClient": null,
+  "requestPayloadBytes": null,
+  "inputTokens": null,
+  "latencyMs": null,
+  "taxonomyRoleId": null,
+  "taxonomyTaskType": null,
+  "taxonomyToolClassIds": null,
+  "requireTools": null,
+  "requiredCapabilities": null,
+  "allowEndpoints": null
+}

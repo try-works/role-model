@@ -398,6 +398,7 @@ export async function startLlamaSwapVendor(
     const response = await fetch(requestUrl, {
       method: "POST",
       headers: request.headers,
+      signal: executionOptions?.abortSignal,
       body: JSON.stringify(request.body),
     });
     const latencyMs = Math.max(Date.now() - startedAt, 0);

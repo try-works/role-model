@@ -1,0 +1,10 @@
+{
+  "name": "chatgpt-exact-history-no-temperature",
+  "model": "chatgpt/gpt-5.4",
+  "status": 200,
+  "ok": true,
+  "durationMs": 2559,
+  "selectedModel": "chatgpt/gpt-5.4",
+  "error": null,
+  "contentPreview": "DIRECT_HISTORY_OK"
+}

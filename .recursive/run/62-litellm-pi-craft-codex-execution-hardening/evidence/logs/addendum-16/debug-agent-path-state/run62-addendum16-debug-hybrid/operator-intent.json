@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-09T13:14:10.254Z",
+  "remoteActivations": [
+    {
+      "providerAccountId": "openai.personal.openai-codex-subscription",
+      "modelId": "chatgpt/gpt-5.4",
+      "region": "global",
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    }
+  ],
+  "peerLoads": [],
+  "llamaSwapLoads": []
+}

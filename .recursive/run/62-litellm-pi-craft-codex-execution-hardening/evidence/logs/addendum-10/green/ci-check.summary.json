@@ -1,0 +1,6 @@
+{
+  "command": "corepack pnpm run ci:check",
+  "exitCode": 0,
+  "completedAt": "2026-07-09T07:59:43.2621379+08:00",
+  "log": ".recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/logs/addendum-10/green/ci-check.log"
+}

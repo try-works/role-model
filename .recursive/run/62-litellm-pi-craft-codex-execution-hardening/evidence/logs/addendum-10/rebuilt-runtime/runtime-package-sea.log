@@ -1,0 +1,160 @@
+
+> role-model@0.0.0 runtime:package-sea D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm --filter @role-model-router/runtime-ui build && corepack pnpm --filter @role-model-router/runtime-host-bridge... build && corepack pnpm --filter @role-model-router/runtime-host-bridge run package-sea
+
+
+> @role-model-router/runtime-ui@ build D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+vite v7.3.2 building client environment for production...
+transforming...
+✓ 2370 modules transformed.
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                           23.24 kB │ gzip:   2.11 kB
+build/client/assets/root-DwoG62Li.css                      52.77 kB │ gzip:  10.10 kB
+build/client/assets/index-BL7--W1Q.js                       0.15 kB │ gzip:   0.15 kB
+build/client/assets/local-models-U0mBF85H.js                0.16 kB │ gzip:   0.16 kB
+build/client/assets/shell-header-context-BrVEDM38.js        0.78 kB │ gzip:   0.40 kB
+build/client/assets/not-found-BMqyQsmM.js                   1.03 kB │ gzip:   0.55 kB
+build/client/assets/routing-mode-0L6xYTH_.js                1.04 kB │ gzip:   0.48 kB
+build/client/assets/legacy-redirect-CdSEVfCu.js             1.19 kB │ gzip:   0.43 kB
+build/client/assets/local-matrix-Dcmg6aAR.js                1.29 kB │ gzip:   0.52 kB
+build/client/assets/llama-swap-setup-DjrOlpYQ.js            1.50 kB │ gzip:   0.74 kB
+build/client/assets/local-choose-CycHVFmA.js                1.98 kB │ gzip:   0.85 kB
+build/client/assets/root-CeYqdJvd.js                        2.28 kB │ gzip:   1.13 kB
+build/client/assets/integrations-downstream-C27aVDP4.js     2.52 kB │ gzip:   1.02 kB
+build/client/assets/local-swap-ySpYj_3O.js                  3.39 kB │ gzip:   1.38 kB
+build/client/assets/control-runtime-config-CnnfwQLl.js      3.45 kB │ gzip:   1.54 kB
+build/client/assets/router-decisions-C6-zDv7r.js            3.54 kB │ gzip:   1.39 kB
+build/client/assets/local-policy-CgIPYdWD.js                3.74 kB │ gzip:   1.61 kB
+build/client/assets/integrations-upstream-cPS7H8Tj.js       4.01 kB │ gzip:   1.54 kB
+build/client/assets/local-peers-DBciUzsX.js                 4.03 kB │ gzip:   1.65 kB
+build/client/assets/local-logs-D8JPQKnX.js                  4.27 kB │ gzip:   1.68 kB
+build/client/assets/system-peers-2B_NVK_4.js                4.31 kB │ gzip:   1.70 kB
+build/client/assets/studio-rerank-Dp1FB4qa.js               4.34 kB │ gzip:   1.88 kB
+build/client/assets/observe-activity-CSaSTI35.js            4.45 kB │ gzip:   1.72 kB
+build/client/assets/app-layout-2iqBg0yx.js                  4.46 kB │ gzip:   1.86 kB
+build/client/assets/runtime-Cijramwg.js                     4.67 kB │ gzip:   1.70 kB
+build/client/assets/studio-images-DPUle953.js               4.80 kB │ gzip:   1.94 kB
+build/client/assets/observe-logs-DJdEnHal.js                4.84 kB │ gzip:   1.86 kB
+build/client/assets/session-readiness-D7qU1GpV.js           4.85 kB │ gzip:   1.71 kB
+build/client/assets/llama-swap-setup-hint-CjqNZ84b.js       5.42 kB │ gzip:   1.96 kB
+build/client/assets/endpoints-DNJaQheq.js                   5.46 kB │ gzip:   1.91 kB
+build/client/assets/studio-advanced-CP23HlK2.js             5.54 kB │ gzip:   2.19 kB
+build/client/assets/control-controller-CE_h9ksB.js          5.67 kB │ gzip:   1.94 kB
+build/client/assets/local-peer-models-CfDn-1Ik.js           5.80 kB │ gzip:   2.06 kB
+build/client/assets/local-model-role-picker-BY61Y_RP.js     5.84 kB │ gzip:   2.20 kB
+build/client/assets/router-decision-detail-seT2UY63.js      5.93 kB │ gzip:   1.97 kB
+build/client/assets/router-candidates-DrFJ35S_.js           5.96 kB │ gzip:   2.09 kB
+build/client/assets/studio-audio-COCjl9k6.js                6.25 kB │ gzip:   2.45 kB
+build/client/assets/workbench-wzlqoIsb.js                   6.92 kB │ gzip:   2.56 kB
+build/client/assets/local-llama-swap-models-CXI1qM7u.js     7.17 kB │ gzip:   2.44 kB
+build/client/assets/dashboard-p2H5XOEO.js                   7.42 kB │ gzip:   2.74 kB
+build/client/assets/page-primitives-DL0ELYyj.js             7.59 kB │ gzip:   2.80 kB
+build/client/assets/observe-routing-1dLMaARs.js             7.69 kB │ gzip:   2.82 kB
+build/client/assets/control-routing-strategy-C0Crk4ko.js    8.67 kB │ gzip:   3.03 kB
+build/client/assets/router-config-B_18bF-N.js               8.94 kB │ gzip:   2.34 kB
+build/client/assets/requests-r0bWZDY1.js                    9.03 kB │ gzip:   3.16 kB
+build/client/assets/router-YOEf5QdR.js                      9.44 kB │ gzip:   2.76 kB
+build/client/assets/runtime-api-CHPC9x1H.js                13.79 kB │ gzip:   3.52 kB
+build/client/assets/control-roles-Dutb65GB.js              16.17 kB │ gzip:   4.39 kB
+build/client/assets/request-detail-96jl1hOe.js             19.84 kB │ gzip:   5.86 kB
+build/client/assets/control-models-DCIOc7ZQ.js             20.48 kB │ gzip:   5.68 kB
+build/client/assets/view-models-Bfk9shME.js                21.85 kB │ gzip:   6.90 kB
+build/client/assets/design-system-BhdNy59i.js              25.73 kB │ gzip:   8.08 kB
+build/client/assets/cn-B5V-leUE.js                         26.34 kB │ gzip:   8.26 kB
+build/client/assets/providers-z8ovBwBC.js                  26.94 kB │ gzip:   7.76 kB
+build/client/assets/control-benchmark-BFRNQQz8.js          29.00 kB │ gzip:   8.61 kB
+build/client/assets/chunk-EVOBXE3Y-DSjPf5-N.js            127.92 kB │ gzip:  43.10 kB
+build/client/assets/entry.client-C6wWO1jW.js              190.57 kB │ gzip:  60.05 kB
+build/client/assets/telemetry-route-models-CyHyzHjF.js    431.33 kB │ gzip: 115.85 kB
+✓ built in 15.43s
+vite v7.3.2 building ssr environment for production...
+transforming...
+✓ 9 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                0.23 kB
+build/server/assets/server-build-DwoG62Li.css  52.77 kB
+build/server/index.js                          66.29 kB
+
+✓ 1 asset cleaned from React Router server build.
+build\server\assets\server-build-DwoG62Li.css
+
+SPA Mode: Generated build\client\index.html
+Removing the server build in D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-ui\build\server due to ssr:false
+✓ built in 670ms
+Scope: 26 of 44 workspace projects
+packages/protocol-types build$ tsc -p tsconfig.json
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build: Done
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+packages/protocol-types build: Done
+.../packages/process-supervisor build: Done
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+role-model-router/packages/catalog build: Done
+role-model-router/packages/tool-registry build: Done
+.../packages/vendor-abstraction build: Done
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+.../packages/provider-account build$ tsc -p tsconfig.json
+role-model-router/packages/core build$ tsc -p tsconfig.json
+role-model-router/packages/trace build$ tsc -p tsconfig.json
+role-model-router/packages/trace build: Done
+role-model-router/packages/usage build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build: Done
+role-model-router/packages/bench-routing build$ tsc -p tsconfig.json
+.../packages/provider-account build: Done
+.../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+role-model-router/packages/core build: Done
+.../packages/vendor-litellm build$ tsc -p tsconfig.json
+role-model-router/packages/usage build: Done
+.../packages/vendor-llama-swap build: Done
+.../packages/vendor-litellm build: Done
+role-model-router/packages/bench-routing build: Done
+role-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build: Done
+role-model-router/packages/sqlite-memory build: Done
+.../packages/context-envelope build$ tsc -p tsconfig.json
+.../packages/context-envelope build: Done
+.../packages/retrieval-receipt build$ tsc -p tsconfig.json
+.../packages/retrieval-receipt build: Done
+.../packages/endpoint-registry build$ tsc -p tsconfig.json
+.../packages/endpoint-registry build: Done
+.../packages/protocol-routing build$ tsc -p tsconfig.json
+.../packages/protocol-routing build: Done
+.../packages/provider-anthropic build$ tsc -p tsconfig.json
+.../packages/adapter-execution build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build: Done
+.../packages/adapter-execution build: Done
+.../packages/provider-openai build$ tsc -p tsconfig.json
+.../packages/runtime-observability build$ tsc -p tsconfig.json
+.../packages/runtime-observability build: Done
+.../packages/provider-openai build: Done
+.../packages/provider-litellm build$ tsc -p tsconfig.json
+.../packages/provider-litellm build: Done
+.../apps/runtime-host-bridge build$ tsc -p tsconfig.json
+.../apps/runtime-host-bridge build: Done
+
+> @role-model-router/runtime-host-bridge@0.0.0 package-sea D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge
+> tsx src/package-sea.ts
+
+Wrote single executable preparation blob to ./dist/sea-prep.blob
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+[Error: EPERM: operation not permitted, unlink 'D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\dist\release\win32-x64\role-model-runtime.exe'] {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'unlink',
+  path: 'D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe'
+}
+
+Node.js v24.11.0
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 package-sea: `tsx src/package-sea.ts`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.

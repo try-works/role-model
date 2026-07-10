@@ -1,0 +1,4 @@
+{
+  "error": "Timed out waiting for difficulty.remote-only activation",
+  "stack": "Error: Timed out waiting for difficulty.remote-only activation\n    at waitFor (file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/[eval1]:99:9)\n    at async file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/[eval1]:278:35"
+}

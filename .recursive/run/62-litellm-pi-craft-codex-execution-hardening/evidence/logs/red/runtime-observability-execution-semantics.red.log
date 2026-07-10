@@ -1,0 +1,66 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/61-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/runtime-observability
+
+(node:59236) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (5 tests | 1 failed | 4 skipped) 380ms
+   ↓ runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates
+   ↓ runtime-observability > tags live-request samples with the classified difficulty bucket when difficulty routing is present
+   × runtime-observability > captures execution semantics receipts and per-tool side-effect state 377ms
+     → expected { …(19) } to match object { executionSemantics: { …(9) }, …(1) }
+(93 matching properties omitted from actual)
+   ↓ extractTaxonomyFields > extracts all fields from a fully populated normalizedIntent
+   ↓ extractTaxonomyFields > returns null for missing fields
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > runtime-observability > captures execution semantics receipts and per-tool side-effect state
+AssertionError: expected { …(19) } to match object { executionSemantics: { …(9) }, …(1) }
+(93 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,25 +1,10 @@
+  {
+-   "executionSemantics": {
+-     "adapterFamily": "ai-sdk-openai",
+-     "cooldownDecision": "skipped-no-failure",
+-     "executionFamily": "remote-service",
+-     "idempotencyDecision": "tool_replay_guard_required",
+-     "payloadBytes": {
+-       "providerRequest": Any<Number>,
+-       "providerResponse": Any<Number>,
+-     },
+-     "rerouteCount": 2,
+-     "retryCount": 1,
+-     "sourceClient": "openai.responses",
+-     "toolSideEffectState": "executed",
+-   },
+    "tooling": {
+      "toolCalls": [
+        {
+          "providerToolId": "provider-tool-1",
+-         "sideEffectState": "executed",
+          "toolCallId": "provider-tool-1",
+          "toolName": "apply_patch",
+        },
+      ],
+    },
+
+ ❯ test/index.test.ts:382:22
+    380|       });
+    381|
+    382|       expect(bundle).toMatchObject({
+       |                      ^
+    383|         executionSemantics: {
+    384|           sourceClient: "openai.responses",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 skipped (5)
+   Start at  00:54:17
+   Duration  2.82s (transform 617ms, setup 0ms, collect 781ms, tests 380ms, environment 0ms, prepare 435ms)
+

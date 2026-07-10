@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-06-27T11:56:28.728Z",
+  "remoteActivations": [
+    {
+      "providerAccountId": "moonshot.personal.kimi-code",
+      "modelId": "moonshot/kimi-k2.7-code",
+      "region": "global",
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "modelRoleBindings": [
+        {
+          "modelId": "moonshot/kimi-k2.7-code",
+          "roleIds": [
+            "classifier",
+            "coder.patch",
+            "coder.review",
+            "embedder",
+            "general.chat",
+            "language.detector",
+            "tool.agent"
+          ]
+        }
+      ]
+    },
+    {
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "modelId": "deepseek/deepseek-v4-flash",
+      "region": "global",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "modelRoleBindings": [
+        {
+          "modelId": "deepseek/deepseek-v4-flash",
+          "roleIds": [
+            "classifier",
+            "coder.patch",
+            "coder.review",
+            "embedder",
+            "general.chat",
+            "language.detector",
+            "tool.agent"
+          ]
+        }
+      ]
+    },
+    {
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "region": "global",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "modelRoleBindings": [
+        {
+          "modelId": "deepseek/deepseek-v4-pro",
+          "roleIds": [
+            "classifier",
+            "coder.patch",
+            "coder.review",
+            "embedder",
+            "general.chat",
+            "language.detector",
+            "tool.agent"
+          ]
+        }
+      ]
+    },
+    {
+      "providerAccountId": "openai.personal.openai-codex-subscription",
+      "modelId": "chatgpt/gpt-5.4",
+      "region": "global",
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "modelRoleBindings": [
+        {
+          "modelId": "chatgpt/gpt-5.4",
+          "roleIds": [
+            "classifier",
+            "coder.patch",
+            "coder.review",
+            "embedder",
+            "general.chat",
+            "language.detector",
+            "tool.agent"
+          ]
+        }
+      ]
+    }
+  ],
+  "peerLoads": [
+    {
+      "peerId": "ca2ba73f-38f6-4feb-97b1-12b903bd81a4",
+      "modelId": "lfm2.5-8b-a1b",
+      "roleIds": [
+        "classifier",
+        "coder.patch",
+        "coder.review",
+        "embedder",
+        "general.chat",
+        "language.detector",
+        "tool.agent"
+      ],
+      "autoReload": true
+    },
+    {
+      "peerId": "f528710a-bad7-4b27-a74a-01ebcde2f98e",
+      "modelId": "lfm2.5-8b-a1b",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "data",
+        "operator",
+        "translator",
+        "writer"
+      ],
+      "autoReload": true
+    }
+  ],
+  "llamaSwapLoads": []
+}

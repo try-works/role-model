@@ -1,0 +1,30 @@
+
+> @try-works/pi-role-model@0.1.3 test D:\wt\rm61\packages\pi-role-model
+> vitest run
+
+
+ RUN  v3.2.4 D:/wt/rm61/packages/pi-role-model
+
+ ✓ test/package-manifest.test.ts (1 test) 28ms
+ ✓ test/config.test.ts (4 tests) 13ms
+ ✓ test/downstream-openai.test.ts (7 tests) 19ms
+ ✓ test/commands.test.ts (13 tests) 34ms
+ ✓ test/alias-store.test.ts (1 test) 34ms
+ ✓ test/taxonomy-staged-loader.test.ts (2 tests) 16ms
+ ✓ test/runtime-discovery.test.ts (4 tests) 40ms
+ ✓ test/runtime-inspection.test.ts (3 tests) 26ms
+ ✓ test/docs-and-safety.test.ts (2 tests) 52ms
+ ✓ test/request-intent.test.ts (12 tests) 304ms
+ ✓ test/effective-taxonomy.test.ts (5 tests) 659ms
+ ✓ test/taxonomy-data-files.test.ts (5 tests) 808ms
+   ✓ packaged compact taxonomy data files > ships compact taxonomy files for offline progressive disclosure  351ms
+ ✓ test/taxonomy-classification.test.ts (14 tests) 977ms
+   ✓ compact taxonomy and progressive classification > classifies prompts across all 28 role families without hardcoded rules (F6)  394ms
+ ✓ test/extension.test.ts (8 tests) 1045ms
+   ✓ Pi extension registration > refreshes effective taxonomy during command setup and alias refresh  374ms
+
+ Test Files  14 passed (14)
+      Tests  81 passed (81)
+   Start at  21:13:52
+   Duration  4.97s (transform 4.35s, setup 0ms, collect 6.88s, tests 4.05s, environment 9ms, prepare 11.25s)
+

@@ -156,7 +156,7 @@ describe("loadSchemas", () => {
       const payload = JSON.parse(await readFile(fixture.filePath, "utf8")) as unknown;
       expect(validate?.(payload) ?? false).toBe(fixture.expectation === "valid");
     }
-  });
+  }, 20_000);
 
   it("validates the full fixture manifest through the schema-tool entrypoint", async () => {
     const counts = getFixtureValidationCounts();

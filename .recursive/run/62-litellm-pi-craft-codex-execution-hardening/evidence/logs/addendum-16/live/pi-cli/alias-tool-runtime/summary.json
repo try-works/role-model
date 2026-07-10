@@ -1,0 +1,39 @@
+{
+  "requestId": "req-89bb99d2-7cf4-4b28-a98d-a9a6e997ed12",
+  "requestedModelId": "difficulty.remote-only",
+  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "providerId": "deepseek",
+  "providerFamily": "deepseek",
+  "vendorId": null,
+  "adapterFamily": "ai-sdk-openai-compatible",
+  "executionFamily": "remote-service",
+  "toolingUsed": false,
+  "toolCallCount": 0,
+  "eligibleEndpointIds": [
+    "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "allowEndpoints": [
+    "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "eligibility": [
+    {
+      "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "eligible": true,
+      "exclusions": []
+    },
+    {
+      "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "eligible": true,
+      "exclusions": []
+    }
+  ],
+  "requiredCapabilities": [
+    "reasoning.effort_control",
+    "text.chat",
+    "tools.function_calling"
+  ],
+  "files": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-16\\live\\pi-cli\\alias-tool-runtime"
+}

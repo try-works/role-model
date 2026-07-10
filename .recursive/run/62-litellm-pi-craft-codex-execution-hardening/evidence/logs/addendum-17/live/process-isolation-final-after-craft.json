@@ -1,0 +1,115 @@
+{
+  "checkedAt": "2026-07-10T01:00:48.5748576Z",
+  "processes": [
+    {
+      "ProcessId": 48524,
+      "ParentProcessId": 33544,
+      "Name": "role-model-runtime.exe",
+      "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+    },
+    {
+      "ProcessId": 20216,
+      "ParentProcessId": 48772,
+      "Name": "pwsh.exe",
+      "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$repo='D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening'\n$live=Join-Path $repo '.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live'\n$processes = Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'Craft Agents|role-model-runtime' -or $_.CommandLine -match 'craft-headless-addendum17|role-model-runtime\\.exe' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine\n$ports = Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort 3456 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,State,OwningProcess\n[pscustomobject]@{ checkedAt=(Get-Date).ToUniversalTime().ToString('o'); processes=$processes; port3456=$ports } | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $live 'process-isolation-final-after-craft.json') -Encoding utf8\nGet-Content -LiteralPath (Join-Path $live 'process-isolation-final-after-craft.json')\""
+    }
+  ],
+  "port3456": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 8,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 2,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 8,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 8,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 48524
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 11,
+      "OwningProcess": 0
+    }
+  ]
+}

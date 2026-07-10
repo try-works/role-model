@@ -1,0 +1,67 @@
+{
+  "model": "codex-capable.hybrid",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Describe the attached inline image and reply with exactly IMAGE_OK."
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z4x8AAAAASUVORK5CYII="
+          }
+        }
+      ]
+    }
+  ],
+  "role_model": {
+    "contract_version": 1,
+    "intent": {
+      "taxonomy_version": "1.0.0-alpha.1",
+      "content_revision": "taxonomy-v1-alpha.1",
+      "classification_contract_version": "role-model.classification.v1",
+      "classification_version": "role-model.pi-classifier.v1",
+      "source": "heuristic",
+      "confidence": 0.38,
+      "role_hint_id": "product",
+      "role_source": "heuristic",
+      "task_type": "product.general",
+      "task_action": "general",
+      "task_variant": null,
+      "task_source": "heuristic",
+      "task_confidence": 0.38,
+      "preferred_capabilities": [],
+      "required_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "tool_classes": [],
+      "context_tokens_estimate": 17,
+      "evidence": [
+        "Group-first classification: matched groups [communication, product_design], scored 9 candidate roles.",
+        "Selected product (score 2, margin 0) from candidate groups.",
+        "No task matched prompt signals; using default task.",
+        "Confirmed taxonomy task product.general."
+      ],
+      "alternatives": [
+        {
+          "role_hint_id": "designer",
+          "task_type": "designer.general"
+        },
+        {
+          "role_hint_id": "writer",
+          "task_type": "writer.general"
+        },
+        {
+          "role_hint_id": "analyst",
+          "task_type": "analyst.general"
+        }
+      ]
+    }
+  }
+}

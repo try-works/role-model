@@ -406,7 +406,7 @@ describe("executeRoutedRequest", () => {
   test("prefers cloud-source request shape hints over catalog defaults", () => {
     const adapters: ProviderAdapter[] = [
       {
-        adapterFamily: "ai-sdk-openai",
+        adapterFamily: "litellm-proxy",
         negotiateCapabilities: () => ({
           structuredOutputs: "unsupported",
           toolCalling: {
@@ -430,7 +430,7 @@ describe("executeRoutedRequest", () => {
           },
         }),
         buildRequest: ({ target }) => ({
-          providerFamily: "ai-sdk-openai",
+          providerFamily: "litellm-proxy",
           endpointId: target.endpointId,
           url:
             target.requestShapeHints?.providerShape === "openai.chat.completions"
@@ -440,7 +440,7 @@ describe("executeRoutedRequest", () => {
           body: {},
         }),
         normalizeResponse: ({ requestCapture, responseCapture }) => ({
-          providerFamily: "ai-sdk-openai",
+          providerFamily: "litellm-proxy",
           requestCapture,
           responseCapture,
           outputText: "ok",
@@ -1191,7 +1191,7 @@ describe("executeRoutedRequest", () => {
   test("filters mixed-vendor fallback endpoint ids to vendor-compatible fallback model ids for live provider execution", async () => {
     const adapters: ProviderAdapter[] = [
       {
-        adapterFamily: "ai-sdk-openai",
+        adapterFamily: "litellm-proxy",
         negotiateCapabilities: () => ({
           structuredOutputs: "unsupported",
           toolCalling: {
@@ -1619,7 +1619,7 @@ describe("executeRoutedRequest", () => {
       },
       adapters,
       executeProviderRequest: async ({ target, requestCapture, fallbackModelIds }) => {
-        expect(target.adapterFamily).toBe("ai-sdk-openai");
+        expect(target.adapterFamily).toBe("litellm-proxy");
         expect(requestCapture.url).toBe("http://127.0.0.1:4000/v1/chat/completions");
         expect(fallbackModelIds).toEqual(["openai/gpt-4.1-mini-slow"]);
         return {

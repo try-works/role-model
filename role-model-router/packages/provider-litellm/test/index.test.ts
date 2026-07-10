@@ -9,6 +9,214 @@ describe("provider-litellm", () => {
     expect(adapter.adapterFamily).toBe("litellm-proxy");
   });
 
+  test("reuses the shared responses propagation for reasoning, continuation, and affinity hints", () => {
+    const adapter = createLiteLLMProviderAdapter("litellm-proxy");
+    const capabilities = adapter.negotiateCapabilities({
+      target: {
+        endpointId: "moonshot.vendor.responses",
+        modelId: "moonshot/kimi-k2.5",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        providerAccountId: "moonshot.vendor.responses",
+        adapterFamily: "litellm-proxy",
+        authFamily: "api-key",
+        apiBase: "http://127.0.0.1:4000/v1",
+        requestShapeHints: {
+          providerShape: "openai.responses",
+          bodyKeys: ["model", "input"],
+          headerKeys: ["authorization", "session-id", "x-client-request-id"],
+        },
+        candidate: {
+          identity: {
+            endpoint_id: "moonshot.vendor.responses",
+            endpoint_kind: "remote_api",
+            provider_kind: "remote_openai_compat",
+            serving_source: "vendor-litellm",
+            model_id: "moonshot/kimi-k2.5",
+            runtime_version: "test",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "moonshot.vendor.responses",
+            capabilities: ["text.chat", "tools.function_calling", "reasoning"],
+            modalities: ["text"],
+            max_context_tokens: 128000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+          },
+          status: "active",
+        },
+        account: {
+          providerAccountId: "moonshot.vendor.responses",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "MOONSHOT_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "http://127.0.0.1:4000/v1",
+          allowedModels: ["moonshot/kimi-k2.5"],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+        provider: null,
+        model: null,
+      },
+      executionRequest: {
+        messages: [{ role: "user", content: "Resume the previous reasoning-heavy turn." }],
+        stream: false,
+        toolChoice: {
+          type: "function",
+          function: {
+            name: "apply_patch",
+          },
+        },
+        reasoning: {
+          effort: "medium",
+        },
+        promptCache: {
+          mode: "prefer",
+          key: "cache-key-123",
+        },
+        sessionAffinity: {
+          sessionId: "session-123",
+          clientRequestId: "client-123",
+        },
+        continuation: {
+          previousResponseId: "resp_123",
+        },
+      },
+    });
+
+    const requestCapture = adapter.buildRequest({
+      target: {
+        endpointId: "moonshot.vendor.responses",
+        modelId: "moonshot/kimi-k2.5",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        providerAccountId: "moonshot.vendor.responses",
+        adapterFamily: "litellm-proxy",
+        authFamily: "api-key",
+        apiBase: "http://127.0.0.1:4000/v1",
+        requestShapeHints: {
+          providerShape: "openai.responses",
+          bodyKeys: ["model", "input"],
+          headerKeys: ["authorization", "session-id", "x-client-request-id"],
+        },
+        candidate: {
+          identity: {
+            endpoint_id: "moonshot.vendor.responses",
+            endpoint_kind: "remote_api",
+            provider_kind: "remote_openai_compat",
+            serving_source: "vendor-litellm",
+            model_id: "moonshot/kimi-k2.5",
+            runtime_version: "test",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "moonshot.vendor.responses",
+            capabilities: ["text.chat", "tools.function_calling", "reasoning"],
+            modalities: ["text"],
+            max_context_tokens: 128000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+          },
+          status: "active",
+        },
+        account: {
+          providerAccountId: "moonshot.vendor.responses",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "MOONSHOT_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "http://127.0.0.1:4000/v1",
+          allowedModels: ["moonshot/kimi-k2.5"],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+        provider: null,
+        model: null,
+      },
+      executionRequest: {
+        messages: [{ role: "user", content: "Resume the previous reasoning-heavy turn." }],
+        stream: false,
+        toolChoice: {
+          type: "function",
+          function: {
+            name: "apply_patch",
+          },
+        },
+        reasoning: {
+          effort: "medium",
+        },
+        promptCache: {
+          mode: "prefer",
+          key: "cache-key-123",
+        },
+        sessionAffinity: {
+          sessionId: "session-123",
+          clientRequestId: "client-123",
+        },
+        continuation: {
+          previousResponseId: "resp_123",
+        },
+      },
+      capabilities,
+    });
+
+    expect(requestCapture.url).toBe("http://127.0.0.1:4000/v1/responses");
+    expect(requestCapture.headers).toMatchObject({
+      "session-id": "session-123",
+      "x-client-request-id": "client-123",
+      "OpenAI-Beta": "responses=v1",
+    });
+    expect(requestCapture.body).toMatchObject({
+      tool_choice: {
+        type: "function",
+        function: {
+          name: "apply_patch",
+        },
+      },
+      reasoning: {
+        effort: "medium",
+      },
+      previous_response_id: "resp_123",
+      prompt_cache_key: "cache-key-123",
+    });
+  });
+
   test("advertises implicit prompt caching and normalizes LiteLLM cache plus cost metadata", () => {
     const adapter = createLiteLLMProviderAdapter("ai-sdk-openai-compatible");
     const capabilities = adapter.negotiateCapabilities({

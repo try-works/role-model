@@ -1,0 +1,667 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/sqlite-memory
+
+(node:31180) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (34 tests | 1 failed) 9295ms
+   ✓ initializeSqliteMemory > creates the planned schema, WAL mode, and initial migration receipt under the runtime state root 128ms
+   ✓ initializeSqliteMemory > persists validated provider accounts by credential reference without storing raw secrets 237ms
+   ✓ initializeSqliteMemory > upserts and lists provider accounts for runtime control-plane reads 122ms
+   ✓ initializeSqliteMemory > persists runtime-managed endpoint activations for dynamic registry materialization 137ms
+   ✓ initializeSqliteMemory > persists and reads the global controller assignment for the runtime control plane 137ms
+   ✓ initializeSqliteMemory > persists device-auth session state for runtime OAuth polling 119ms
+   ✓ initializeSqliteMemory > records explicit maintenance defaults and idempotent migration behavior 153ms
+   ✓ initializeSqliteMemory > persists and reloads the continuity rows needed for bounded context assembly 139ms
+   ✓ initializeSqliteMemory > persists retrieval receipts for later routing diagnostics 117ms
+   ✓ initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads  329ms
+   ✓ initializeSqliteMemory > stores and reads conversation-level difficulty classification cache entries 98ms
+   ✓ initializeSqliteMemory > persists and reads segmented observed samples and profiles by difficulty bucket  323ms
+   ✓ initializeSqliteMemory > derives an advisory max-difficulty recommendation from bucketed observed profiles 126ms
+   ✓ initializeSqliteMemory > reads the latest observed profiles for a set of endpoint ids 285ms
+   ✓ initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows  307ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure records latencyMs in telemetry summary average 250ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure preserves caller correlation and request classification for failed rows 248ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures 239ms
+   ✓ initializeSqliteMemory > persistRuntimeObservationBundle projects telemetry handling receipts into the telemetry ledger 275ms
+   × initializeSqliteMemory > persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger 296ms
+     → expected { …(20) } to deeply equal ObjectContaining{…}
+   ✓ initializeSqliteMemory > exports persisted runtime state for operator drills 253ms
+   ✓ initializeSqliteMemory > restores runtime state from a backup after scoped deletion 288ms
+   ✓ initializeSqliteMemory > persists throughput penalty state and expires it after the penalty window 126ms
+   ✓ clearAllObservedBenchmarkData > removes all benchmark samples across endpoints and clears profiles 148ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retains benchmark_mode on readback for quick benchmark samples  311ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting benchmark samples  495ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles  610ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading difficulty classification cache  433ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting difficulty classification cache  492ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading advisory max difficulty recommendations  532ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records  613ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns  605ms
+   ✓ clearObservedBenchmarkDataForEndpoint > removes benchmark samples and clears the endpoint profile when no live samples remain 158ms
+   ✓ runRuntimeStateValidation > validates provider accounts and initializes SQLite through the local validation path 157ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger
+AssertionError: expected { …(20) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "executionSemantics": ObjectContaining {
+-     "failedAttempts": [
+-       ObjectContaining {
+-         "attemptId": "attempt-1",
+-         "cooldownFailureCount": 1,
+-         "cooldownRecorded": true,
+-         "failedEndpointId": "openai.personal.primary.us-east-1.fast",
+-         "failureClass": "upstream_timeout",
++ {
++   "cacheObservability": {
++     "cacheReadTokens": 0,
++     "cacheWriteTokens": 0,
++     "promptCacheRequested": true,
++     "promptCacheUsed": false,
++     "routingCacheAffinity": true,
++   },
++   "capturePolicy": {
++     "environment": "local-dev",
++     "rawCaptureAvailable": true,
++     "redactedFields": [
++       "request.headers.authorization",
++     ],
++     "redactionLevel": "strict",
++     "retentionClass": "standard",
++     "structuredInspectionAvailable": true,
++     "structuredInspectionMode": "redacted",
++     "suppressedFields": [
++       "request.body",
++       "response.body",
++     ],
++   },
++   "clientRequestId": "client-semantic-001",
++   "contextEnvelope": {
++     "conversationId": "conversation-main",
++     "estimatedTokenCount": 240,
++     "latestHandoffId": "handoff-1",
++   },
++   "conversationId": "conversation-main",
++   "decision": {
++     "app_id": "app-runtime",
++     "chosen_endpoint_id": "openai.personal.primary.us-east-1.fast",
++     "eligibility": [
++       {
++         "eligible": true,
++         "endpoint_id": "openai.personal.primary.us-east-1.fast",
++         "exclusions": [],
++       },
++       {
++         "eligible": false,
++         "endpoint_id": "anthropic.team.shared.us-east-1.default",
++         "exclusions": [
++           {
++             "code": "BUDGET_EXCEEDED",
++             "detail": "Endpoint cost exceeds the request budget.",
++           },
++         ],
++       },
++       {
++         "eligible": false,
++         "endpoint_id": "cli.local.coder",
++         "exclusions": [
++           {
++             "code": "CAPABILITY_MISSING",
++             "detail": "Endpoint is missing a required capability.",
++           },
++         ],
++       },
++     ],
++     "fallback_endpoint_ids": [],
++     "org_id": "org-runtime",
++     "policy_snapshot": {
++       "allow_endpoints": [],
++       "allow_provider_kinds": [],
++       "budget": {
++         "currency": "USD",
++         "enabled": true,
++         "max_cost_per_request": 0.01,
++         "target_cost_per_request": 0.01,
++       },
++       "budget_mode": "strict",
++       "compute_preference": "auto",
++       "deny_endpoints": [],
++       "deny_provider_kinds": [],
++       "policy_id": "balanced-policy",
++       "prefer_local": false,
++       "privacy": {
++         "allow_remote": true,
++       },
++       "require_tools": true,
++       "required_capabilities": [
++         "text.chat",
++       ],
++       "required_modalities": [
++         "text",
++       ],
++       "strategy": "balanced",
++       "targets": {
++         "latency_max_ms": 300,
++         "latency_target_ms": 150,
++         "throughput_target_tps": 40,
++       },
++       "tie_break_order": [
++         "quality",
++         "latency_ms",
++         "reliability",
++         "endpoint_id",
++       ],
++     },
++     "request_id": "req-adapter-validation",
++     "routing_decision_id": "decision-req-adapter-validation",
++     "scored_candidates": [
++       {
++         "endpoint_id": "openai.personal.primary.us-east-1.fast",
++         "metric_breakdown": {
++           "cost": {
++             "raw": {
++               "canonical_model_id": "openai/gpt-4.1-mini-fast",
++               "cost_per_1k_tokens_est": 0.0015494855004677267,
++               "effective_value": 0.8450514499532273,
++               "estimated_request_usd": 0.0066256,
++               "freshness_weight": 1,
++               "input_per_1m": 0.4,
++               "measured_at_ms": null,
++               "neutral_value": 0.5,
++               "observed_value": 0.8450514499532273,
++               "output_per_1m": 1.6,
++               "target_cost_per_request": 0.01,
++               "token_economics_source": "catalog",
++             },
++             "source": "catalog",
++             "value": 0.8450514499532273,
++           },
++           "latency": {
++             "source": "default",
++             "value": 0.5,
++           },
++           "preference": {
++             "raw": {
++               "cache_affinity": true,
++               "cache_affinity_delta": 0.1,
++               "routing_model_rank": 0,
++               "routing_model_rank_delta": 0.15,
++             },
++             "source": "declared",
++             "value": 0.75,
++           },
++           "quality": {
++             "source": "default",
++             "value": 0.5,
++           },
++           "reliability": {
++             "source": "default",
++             "value": 0.7,
++           },
++           "throughput": {
++             "source": "default",
++             "value": 0.5,
++           },
++         },
++         "tie_break": {
++           "endpoint_id": "openai.personal.primary.us-east-1.fast",
++           "latency_ms": 250,
++           "quality": 0.5,
++           "reliability": 0.7,
++         },
++         "total_score": 0.826041159962582,
++       },
++     ],
++     "scoring_version": "baseline-v2",
++     "selection_reasons": [
++       "BEST_TOTAL_SCORE",
++       "DECLARED_PROFILE_USED",
++       "DEFAULT_PROFILE_USED",
++       "CACHE_AFFINITY_APPLIED",
++       "ROUTING_MODEL_PREFERENCE_APPLIED",
++     ],
++     "used_declared": true,
++     "used_measured": false,
++   },
++   "diagnostics": {
++     "authAccount": [],
++     "execution": [
++       {
++         "code": "PROMPT_CACHE_UNAVAILABLE",
++         "message": "The selected provider family does not expose prompt-caching support for this adapter execution.",
++         "severity": "warning",
++       },
++     ],
++     "memoryQuality": [
++       {
++         "code": "MEMORY_CONTEXT_OMITTED",
++         "message": "Context assembly omitted 2 turns and 2 artifacts.",
++         "severity": "warning",
++       },
++       {
++         "code": "MEMORY_LATEST_HANDOFF_LINKED",
++         "message": "Context inspection preserves latest handoff handoff-1.",
++         "severity": "info",
++       },
++     ],
++     "operator": [
++       {
++         "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
++         "message": "Raw operator captures remain available through the preserved host capture surface.",
++         "severity": "info",
++       },
++     ],
++     "routing": [
++       {
++         "code": "ROUTING_MODEL_ENABLED",
++         "message": "Routing-model guidance remained enabled for request req-adapter-validation.",
++         "severity": "info",
++       },
++       {
++         "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
++         "message": "Routing diagnostics link request req-adapter-validation to retrieval receipt conversation-main-retrieval-receipt.",
++         "severity": "info",
++       },
++     ],
++     "tooling": [],
++   },
++   "endpointId": "openai.personal.primary.us-east-1.fast",
++   "executionSemantics": {
++     "adapterFamily": "ai-sdk-openai",
++     "cooldownDecision": "skipped-no-failure",
++     "executionFamily": "remote-service",
++     "idempotencyDecision": "tool_replay_guard_required",
++     "payloadBytes": {
++       "ingress": 111,
++       "providerCanonical": 333,
++       "providerResponse": 444,
++       "providerWire": 280,
++       "translated": 222,
++     },
++     "rerouteCount": 2,
++     "retryCount": 1,
++     "sourceClient": "openai.responses",
++     "toolSideEffectState": "executed",
++   },
++   "executionTelemetry": {
++     "costProvenance": "unavailable",
++     "finishReason": "stop",
++     "promptCaching": {
++       "mode": "unsupported",
++       "supported": false,
++     },
++     "providerFamily": "openai",
++     "stream": {
++       "requested": true,
++       "textDeltas": 1,
++       "toolArgumentDeltas": 1,
++       "toolCallDeltas": 1,
++     },
++     "streamSupport": {
++       "text": "delta",
++       "toolArguments": "delta",
++       "toolCalls": "delta",
++     },
++     "usageSupport": {
++       "cacheReadTokens": false,
++       "cacheWriteTokens": false,
++       "inputTokens": true,
++       "outputTokens": true,
++     },
++   },
++   "inspection": {
++     "endpoint": {
++       "endpointId": "openai.personal.primary.us-east-1.fast",
++       "endpointVersion": "run07-registry-v1:default",
++       "latestProfile": {
++         "confidence_score": 0.27941531270472214,
++         "cost_per_1k_tokens_est": 0.004,
++         "currency": "USD",
++         "endpoint_id": "openai.personal.primary.us-east-1.fast",
++         "endpoint_version": "run07-registry-v1:default",
++         "failure_rate": 0,
++         "freshness_score": 1,
++         "judge_score": 0.91,
++         "latency_ms_p50": 112.5,
++         "latency_ms_p95": 139,
++         "measured_at_ms": 1783512677446,
++         "measurement_window": {
++           "ended_at_ms": 1783512677446,
++           "started_at_ms": 1700000000100,
++         },
++         "quality_score": 0.91,
++         "sample_size": 2,
++         "sources": {
++           "benchmark_samples": 1,
++           "live_request_samples": 1,
++         },
++         "tokens_per_sec": 141,
++       },
++       "recentSamples": [
++         {
++           "cost_per_1k_tokens_est": 0.004,
++           "endpoint_id": "openai.personal.primary.us-east-1.fast",
++           "endpoint_version": "run07-registry-v1:default",
++           "judge_score": 0.91,
++           "latency_ms": 105,
++           "latency_ms_p95": 140,
++           "source_type": "benchmark",
++           "timestamp_ms": 1700000000100,
++           "tokens_per_sec": 82,
++         },
++         {
++           "endpoint_id": "openai.personal.primary.us-east-1.fast",
++           "endpoint_version": "run07-registry-v1:default",
++           "failure": false,
++           "latency_ms": 120,
++           "latency_ms_p95": 120,
++           "request_id": "req-adapter-validation",
++           "routing_decision_id": "decision-req-adapter-validation",
++           "source_type": "live_request",
++           "timestamp_ms": 1783512677446,
++           "tokens_per_sec": 200,
++         },
++       ],
++     },
++     "request": {
++       "capturePolicy": {
++         "environment": "local-dev",
++         "rawCaptureAvailable": true,
++         "redactedFields": [
++           "request.headers.authorization",
++         ],
++         "redactionLevel": "strict",
++         "retentionClass": "standard",
++         "structuredInspectionAvailable": true,
++         "structuredInspectionMode": "redacted",
++         "suppressedFields": [
++           "request.body",
++           "response.body",
++         ],
++       },
++       "clientRequestId": "client-semantic-001",
++       "diagnostics": {
++         "authAccount": [],
++         "execution": [
++           {
++             "code": "PROMPT_CACHE_UNAVAILABLE",
++             "message": "The selected provider family does not expose prompt-caching support for this adapter execution.",
++             "severity": "warning",
++           },
++         ],
++         "memoryQuality": [
++           {
++             "code": "MEMORY_CONTEXT_OMITTED",
++             "message": "Context assembly omitted 2 turns and 2 artifacts.",
++             "severity": "warning",
++           },
++           {
++             "code": "MEMORY_LATEST_HANDOFF_LINKED",
++             "message": "Context inspection preserves latest handoff handoff-1.",
++             "severity": "info",
++           },
++         ],
++         "operator": [
++           {
++             "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
++             "message": "Raw operator captures remain available through the preserved host capture surface.",
++             "severity": "info",
++           },
++         ],
++         "routing": [
++           {
++             "code": "ROUTING_MODEL_ENABLED",
++             "message": "Routing-model guidance remained enabled for request req-adapter-validation.",
++             "severity": "info",
++           },
++           {
++             "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
++             "message": "Routing diagnostics link request req-adapter-validation to retrieval receipt conversation-main-retrieval-receipt.",
++             "severity": "info",
++           },
++         ],
++         "tooling": [],
++       },
++       "requestCapture": {
++         "body": {
++           "reason": "policy.rawCapture.requestBody.disabled",
++           "suppressed": true,
++         },
++         "headers": {
++           "OpenAI-Beta": "responses=v1",
++           "authorization": "[redacted]",
++         },
++       },
++       "requestId": "req-adapter-validation",
++       "responseCapture": {
++         "body": {
++           "reason": "policy.rawCapture.responseBody.disabled",
++           "suppressed": true,
++         },
++         "statusCode": 200,
++       },
++       "routingDecisionId": "decision-req-adapter-validation",
++     },
++   },
++   "observedPerformance": {
++     "endpointVersion": "run07-registry-v1:default",
++     "history": [
++       {
++         "cost_per_1k_tokens_est": 0.004,
++         "endpoint_id": "openai.personal.primary.us-east-1.fast",
++         "endpoint_version": "run07-registry-v1:default",
++         "judge_score": 0.91,
++         "latency_ms": 105,
++         "latency_ms_p95": 140,
++         "source_type": "benchmark",
++         "timestamp_ms": 1700000000100,
++         "tokens_per_sec": 82,
++       },
++       {
++         "endpoint_id": "openai.personal.primary.us-east-1.fast",
++         "endpoint_version": "run07-registry-v1:default",
++         "failure": false,
++         "latency_ms": 120,
++         "latency_ms_p95": 120,
++         "request_id": "req-adapter-validation",
++         "routing_decision_id": "decision-req-adapter-validation",
++         "source_type": "live_request",
++         "timestamp_ms": 1783512677446,
++         "tokens_per_sec": 200,
++       },
++     ],
++     "profile": {
++       "confidence_score": 0.27941531270472214,
++       "cost_per_1k_tokens_est": 0.004,
++       "currency": "USD",
++       "endpoint_id": "openai.personal.primary.us-east-1.fast",
++       "endpoint_version": "run07-registry-v1:default",
++       "failure_rate": 0,
++       "freshness_score": 1,
++       "judge_score": 0.91,
++       "latency_ms_p50": 112.5,
++       "latency_ms_p95": 139,
++       "measured_at_ms": 1783512677446,
++       "measurement_window": {
++         "ended_at_ms": 1783512677446,
++         "started_at_ms": 1700000000100,
++       },
++       "quality_score": 0.91,
++       "sample_size": 2,
++       "sources": {
++         "benchmark_samples": 1,
++         "live_request_samples": 1,
++       },
++       "tokens_per_sec": 141,
++     },
++     "sample": {
++       "endpoint_id": "openai.personal.primary.us-east-1.fast",
++       "endpoint_version": "run07-registry-v1:default",
++       "failure": false,
++       "latency_ms": 120,
++       "latency_ms_p95": 120,
++       "request_id": "req-adapter-validation",
++       "routing_decision_id": "decision-req-adapter-validation",
++       "source_type": "live_request",
++       "timestamp_ms": 1783512677446,
++       "tokens_per_sec": 200,
++     },
++   },
++   "privacyReceipt": {
++     "retainUntil": 1786104677448,
++     "retentionTtlHours": 720,
++     "samplingRate": 1,
+    },
++   "requestId": "req-adapter-validation",
++   "retrievalReceipt": {
++     "receiptId": "conversation-main-retrieval-receipt",
++     "summary": {
++       "estimatedTokens": 240,
++       "omittedArtifacts": 2,
++       "omittedTurns": 2,
++       "selectedArtifacts": 1,
++       "selectedTurns": 2,
++     },
++   },
++   "routingDecisionId": "decision-req-adapter-validation",
++   "routingDiagnostics": {
++     "retrievalReceiptId": "conversation-main-retrieval-receipt",
++     "routingModel": {
++       "enabled": true,
++       "endpointId": "openai.personal.primary.us-east-1.fast",
++       "ignoredEndpointIds": [],
++       "preferredEndpointIds": [
++         "openai.personal.primary.us-east-1.fast",
++       ],
++     },
++   },
++   "tooling": {
++     "diagnostics": [],
++     "executions": [
++       {
++         "connectorId": "filesystem",
++         "connectorKind": "local",
++         "diagnostics": [],
++         "output": {
++           "patched": true,
++         },
++         "status": "succeeded",
++         "toolCallId": "provider-tool-1",
++         "toolName": "apply_patch",
++       },
+      ],
++     "toolCalls": [
++       {
++         "arguments": {
++           "file": "src/router.ts",
++         },
++         "providerToolId": "provider-tool-1",
++         "sideEffectState": "executed",
++         "toolCallId": "provider-tool-1",
++         "toolName": "apply_patch",
++       },
++     ],
++   },
++   "trace": {
++     "events": [
++       {
++         "event_id": "event-provider-load-req-adapter-validation",
++         "event_type": "trace.span.opened",
++         "payload": {
++           "adapter_family": "ai-sdk-openai",
++           "endpoint_id": "openai.personal.primary.us-east-1.fast",
++         },
++         "request_id": "req-adapter-validation",
++         "routing_decision_id": "decision-req-adapter-validation",
++         "span_id": "span-provider-load-req-adapter-validation",
++         "timestamp_ms": 1783512677447,
++         "trace_id": "trace-req-adapter-validation",
++       },
++       {
++         "event_id": "event-usage-req-adapter-validation",
++         "event_type": "usage.event.created",
++         "payload": {
++           "input_tokens": 32,
++           "output_tokens": 24,
++         },
++         "request_id": "req-adapter-validation",
++         "routing_decision_id": "decision-req-adapter-validation",
++         "span_id": "span-provider-decode-req-adapter-validation",
++         "timestamp_ms": 1783512677566,
++         "trace_id": "trace-req-adapter-validation",
++       },
++     ],
++     "spans": [
++       {
++         "attributes": {
++           "adapter_family": "ai-sdk-openai",
++           "endpoint_id": "openai.personal.primary.us-east-1.fast",
++         },
++         "ended_at_ms": 1783512677451,
++         "request_id": "req-adapter-validation",
++         "routing_decision_id": "decision-req-adapter-validation",
++         "span_id": "span-provider-load-req-adapter-validation",
++         "span_type": "provider.load",
++         "started_at_ms": 1783512677446,
++         "status": "ok",
++         "trace_id": "trace-req-adapter-validation",
++       },
++       {
++         "attributes": {
++           "endpoint_id": "openai.personal.primary.us-east-1.fast",
++           "text_delta_count": 1,
++         },
++         "ended_at_ms": 1783512677566,
++         "parent_span_id": "span-provider-load-req-adapter-validation",
++         "request_id": "req-adapter-validation",
++         "routing_decision_id": "decision-req-adapter-validation",
++         "span_id": "span-provider-decode-req-adapter-validation",
++         "span_type": "provider.decode",
++         "started_at_ms": 1783512677451,
++         "status": "ok",
++         "trace_id": "trace-req-adapter-validation",
++       },
++     ],
++   },
++   "usageEvent": {
++     "app_id": "app-runtime",
++     "endpoint_id": "openai.personal.primary.us-east-1.fast",
++     "event_id": "usage-req-adapter-validation",
++     "latency_ms": 120,
++     "model_id": "openai/gpt-4.1-mini-fast",
++     "org_id": "org-runtime",
++     "package_id": "provider-openai",
++     "provider_kind": "remote_openai_compat",
++     "request_id": "req-adapter-validation",
++     "routing_decision_id": "decision-req-adapter-validation",
++     "sample_source": "live_request",
++     "timestamp_ms": 1783512677446,
++     "tokens_in": 32,
++     "tokens_out": 24,
+    },
+  }
+
+ ❯ test/index.test.ts:2387:34
+    2385|       requestId: validation.decision.request_id,
+    2386|     });
+    2387|     expect(persistedObservation).toEqual(
+       |                                  ^
+    2388|       expect.objectContaining({
+    2389|         executionSemantics: expect.objectContaining({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 33 passed (34)
+   Start at  20:11:09
+   Duration  13.05s (transform 908ms, setup 0ms, collect 1.19s, tests 9.30s, environment 0ms, prepare 1.02s)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\packages\sqlite-memory:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts

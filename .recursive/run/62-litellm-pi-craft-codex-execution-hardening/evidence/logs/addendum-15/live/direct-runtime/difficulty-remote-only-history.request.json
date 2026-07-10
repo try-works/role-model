@@ -1,0 +1,20 @@
+{
+  "model": "difficulty.remote-only",
+  "stream": false,
+  "temperature": 0,
+  "reasoning_effort": "high",
+  "messages": [
+    {
+      "role": "user",
+      "content": "We are debugging a complex TypeScript router adapter regression."
+    },
+    {
+      "role": "assistant",
+      "content": "I will inspect the conversion path and isolate the root cause."
+    },
+    {
+      "role": "user",
+      "content": "Continue the hard routing analysis and reply exactly ALIAS_HISTORY_OK."
+    }
+  ]
+}

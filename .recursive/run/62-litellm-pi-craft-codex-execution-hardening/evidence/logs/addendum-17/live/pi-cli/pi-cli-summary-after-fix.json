@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-07-10T00:48:00.2039745Z",
+  "roleModelEndpoint": "http://127.0.0.1:3456",
+  "pi": "D:\\pi\\node_modules\\.bin\\pi.cmd",
+  "extension": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\packages\\pi-role-model\\extensions\\role-model.ts",
+  "results": [
+    {
+      "name": "pi-exact-chatgpt-after-fix",
+      "model": "chatgpt/gpt-5.4",
+      "expected": "PI_ADD17_EXACT_GPT_OK",
+      "stdoutContainsExpected": true,
+      "stderrEmpty": true,
+      "stdoutPreview": "PI_ADD17_EXACT_GPT_OK",
+      "stderrPreview": "",
+      "stdout": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\pi-cli\\pi-exact-chatgpt-after-fix.stdout.log",
+      "stderr": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\pi-cli\\pi-exact-chatgpt-after-fix.stderr.log"
+    },
+    {
+      "name": "pi-alias-difficulty-after-fix",
+      "model": "difficulty.remote-only",
+      "expected": "PI_ADD17_ALIAS_OK",
+      "stdoutContainsExpected": true,
+      "stderrEmpty": true,
+      "stdoutPreview": "PI_ADD17_ALIAS_OK",
+      "stderrPreview": "",
+      "stdout": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\pi-cli\\pi-alias-difficulty-after-fix.stdout.log",
+      "stderr": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\pi-cli\\pi-alias-difficulty-after-fix.stderr.log"
+    },
+    {
+      "name": "pi-alias-multiturn-turn1-after-fix",
+      "model": "difficulty.remote-only",
+      "expected": "PI_ADD17_TURN1_OK",
+      "stdoutContainsExpected": true,
+      "stderrEmpty": true,
+      "stdoutPreview": "PI_ADD17_TURN1_OK",
+      "stderrPreview": "",
+      "stdout": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\pi-cli\\pi-alias-multiturn-turn1-after-fix.stdout.log",
+      "stderr": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\pi-cli\\pi-alias-multiturn-turn1-after-fix.stderr.log"
+    },
+    {
+      "name": "pi-alias-multiturn-turn2-after-fix",
+      "model": "difficulty.remote-only",
+      "expected": "PI_ADD17_TURN2_OK",
+      "stdoutContainsExpected": true,
+      "stderrEmpty": true,
+      "stdoutPreview": "PI_ADD17_TURN2_OK",
+      "stderrPreview": "",
+      "stdout": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\pi-cli\\pi-alias-multiturn-turn2-after-fix.stdout.log",
+      "stderr": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-17\\live\\pi-cli\\pi-alias-multiturn-turn2-after-fix.stderr.log"
+    }
+  ]
+}

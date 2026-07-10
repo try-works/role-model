@@ -1,0 +1,7 @@
+{
+  "command": "corepack pnpm run ci:check",
+  "exitCode": 1,
+  "durationMs": 3996,
+  "log": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\ci-rebuild-launch\\ci-check.rerun.log",
+  "timestamp": "2026-07-09T16:04:33.5474079+08:00"
+}

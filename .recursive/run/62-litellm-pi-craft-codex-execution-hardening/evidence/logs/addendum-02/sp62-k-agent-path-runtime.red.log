@@ -1,0 +1,30 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:48804) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/validate-vendors.test.ts (2 tests | 1 failed | 1 skipped) 13302ms
+   × runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end 13300ms
+     → Corpus case pi.responses.image-sensitive.001 produced outcome failure instead of success (status=400, failure=no_eligible_target).
+   ↓ runRuntimeVendorValidation > plans a real-vendor harness with repo-owned mock upstreams
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-vendors.test.ts > runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end
+Error: Corpus case pi.responses.image-sensitive.001 produced outcome failure instead of success (status=400, failure=no_eligible_target).
+ ❯ runDeterministicRuntimeVendorCorpus src/validate-vendors.ts:1613:13
+
+ ❯ runRuntimeVendorValidation src/validate-vendors.ts:2092:28
+ ❯ test/validate-vendors.test.ts:32:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 skipped (2)
+   Start at  09:54:58
+   Duration  16.50s (transform 1.51s, setup 0ms, collect 2.20s, tests 13.30s, environment 0ms, prepare 280ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/validate-vendors.test.ts --testNamePattern executes decision-only, local-only, remote-only, and hybrid vendor modes end to end

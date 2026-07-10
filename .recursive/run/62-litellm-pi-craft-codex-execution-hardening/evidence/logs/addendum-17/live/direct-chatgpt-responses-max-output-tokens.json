@@ -1,0 +1,40 @@
+{
+  "name": "direct-chatgpt-responses-max-output-tokens",
+  "path": "/v1/responses",
+  "requestBody": {
+    "model": "chatgpt/gpt-5.4",
+    "input": "Reply exactly ADD17_RESPONSES_MAX_OUTPUT_TOKENS_OK.",
+    "max_output_tokens": 32,
+    "stream": false
+  },
+  "status": 200,
+  "ok": true,
+  "elapsedMs": 3226,
+  "responsePreview": "{\"id\":\"chatcmpl_req-a020c134-0836-49b7-8662-6dd666b3e983\",\"object\":\"response\",\"created_at\":1783642944,\"status\":\"completed\",\"model\":\"chatgpt/gpt-5.4\",\"output\":[{\"type\":\"message\",\"id\":\"msg_chatcmpl_req-a020c134-0836-49b7-8662-6dd666b3e983\",\"r",
+  "error": null,
+  "response": {
+    "id": "chatcmpl_req-a020c134-0836-49b7-8662-6dd666b3e983",
+    "object": "response",
+    "created_at": 1783642944,
+    "status": "completed",
+    "model": "chatgpt/gpt-5.4",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_chatcmpl_req-a020c134-0836-49b7-8662-6dd666b3e983",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "ADD17_RESPONSES_MAX_OUTPUT_TOKENS_OK"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 20,
+      "output_tokens": 15,
+      "total_tokens": 35
+    }
+  }
+}

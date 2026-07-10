@@ -1,0 +1,146 @@
+[
+  {
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "providerId": "deepseek",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "workspace-default",
+    "credentialRef": {
+      "backend": "env",
+      "ref": "RUN62_PHASE5_DEEPSEEK_API_KEY"
+    },
+    "authMode": "api-key-static",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "global"
+      ]
+    },
+    "baseUrlOverride": null,
+    "allowedModels": [
+      "deepseek/deepseek-v4-flash",
+      "deepseek/deepseek-v4-pro"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "deepseek/deepseek-v4-flash",
+        "roleIds": [
+          "analyst",
+          "coder",
+          "data",
+          "writer",
+          "translator",
+          "operator"
+        ]
+      },
+      {
+        "modelId": "deepseek/deepseek-v4-pro",
+        "roleIds": [
+          "analyst",
+          "coder",
+          "data",
+          "writer",
+          "translator",
+          "operator"
+        ]
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  },
+  {
+    "providerAccountId": "moonshot.personal.kimi-code",
+    "providerId": "moonshot",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "workspace-default",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "oauth/moonshot/moonshot.personal.kimi-code"
+    },
+    "authMode": "oauth2-device-code",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "global"
+      ]
+    },
+    "baseUrlOverride": null,
+    "allowedModels": [
+      "moonshot/kimi-k2.7-code"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "moonshot/kimi-k2.7-code",
+        "roleIds": [
+          "analyst",
+          "coder",
+          "data",
+          "writer",
+          "translator",
+          "operator"
+        ]
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  },
+  {
+    "providerAccountId": "openai.personal.openai-codex-subscription",
+    "providerId": "openai",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "workspace-default",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "oauth/openai/openai.personal.openai-codex-subscription"
+    },
+    "authMode": "oauth2-device-code",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "global"
+      ]
+    },
+    "baseUrlOverride": null,
+    "allowedModels": [
+      "chatgpt/gpt-5.4"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "chatgpt/gpt-5.4",
+        "roleIds": [
+          "analyst",
+          "coder",
+          "data",
+          "writer",
+          "translator",
+          "operator"
+        ]
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "stable"
+  }
+]

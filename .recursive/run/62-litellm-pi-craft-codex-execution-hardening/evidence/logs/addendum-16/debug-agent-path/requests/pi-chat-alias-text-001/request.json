@@ -1,0 +1,56 @@
+{
+  "model": "difficulty.remote-only",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Reply with exactly PI_TEXT_OK."
+    }
+  ],
+  "role_model": {
+    "contract_version": 1,
+    "intent": {
+      "taxonomy_version": "1.0.0-alpha.1",
+      "content_revision": "taxonomy-v1-alpha.1",
+      "classification_contract_version": "role-model.classification.v1",
+      "classification_version": "role-model.pi-classifier.v1",
+      "source": "heuristic",
+      "confidence": 0.38,
+      "role_hint_id": "writer",
+      "role_source": "heuristic",
+      "task_type": "writer.general",
+      "task_action": "general",
+      "task_variant": null,
+      "task_source": "heuristic",
+      "task_confidence": 0.38,
+      "preferred_capabilities": [],
+      "required_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "tool_classes": [],
+      "context_tokens_estimate": 8,
+      "evidence": [
+        "Group-first classification: matched groups [communication], scored 5 candidate roles.",
+        "Selected writer (score 0, margin 0) from candidate groups.",
+        "No task matched prompt signals; using default task.",
+        "Confirmed taxonomy task writer.general."
+      ],
+      "alternatives": [
+        {
+          "role_hint_id": "support",
+          "task_type": "support.general"
+        },
+        {
+          "role_hint_id": "creative",
+          "task_type": "creative.general"
+        },
+        {
+          "role_hint_id": "translator",
+          "task_type": "translator.general"
+        }
+      ]
+    }
+  }
+}

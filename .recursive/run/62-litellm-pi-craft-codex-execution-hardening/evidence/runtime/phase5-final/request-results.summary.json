@@ -1,0 +1,26 @@
+[
+  {
+    "id": "pi-codex-tools-001",
+    "requestId": "req-7abfe920-dbd8-4241-84a7-f9726b92b1e8",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "modelId": "chatgpt/gpt-5.4",
+    "providerId": "openai",
+    "statusCode": 200
+  },
+  {
+    "id": "craft-deepseek-chat-001",
+    "requestId": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "modelId": "deepseek/deepseek-v4-flash",
+    "providerId": "deepseek",
+    "statusCode": 200
+  },
+  {
+    "id": "pi-alias-text-001",
+    "requestId": "req-b9e32481-aeb7-44a2-aad6-f0adc4787ed1",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "modelId": "deepseek/deepseek-v4-flash",
+    "providerId": "deepseek",
+    "statusCode": 200
+  }
+]
