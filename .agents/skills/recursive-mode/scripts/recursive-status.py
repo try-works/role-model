@@ -15,8 +15,10 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+CURRENT_WORKFLOW_PROFILE = "recursive-mode-audit-v2"
 STRICT_WORKFLOW_PROFILE = "recursive-mode-audit-v1"
 COMPAT_WORKFLOW_PROFILE = "memory-phase8"
+STRICT_WORKFLOW_PROFILES = {CURRENT_WORKFLOW_PROFILE, STRICT_WORKFLOW_PROFILE}
 LATE_PHASE_KEYS = {"06", "07", "08"}
 LATE_PHASE_FILES = {"06-decisions-update.md", "07-state-update.md", "08-memory-impact.md"}
 AUDITED_PHASE_FILES = {
@@ -121,6 +123,29 @@ RUN_ARTIFACT_SEQUENCE = [
     "07-state-update.md",
     "08-memory-impact.md",
 ]
+
+
+def load_lint_module():
+    module_path = Path(__file__).with_name("lint-recursive-run.py")
+    spec = importlib.util.spec_from_file_location("recursive_mode_lint", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load lint module from {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_phase_rules_module():
+    module_path = Path(__file__).with_name("recursive_phase_rules.py")
+    spec = importlib.util.spec_from_file_location("recursive_phase_rules", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load phase rules module from {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+    except FileNotFoundError:
+        raise RuntimeError(f"Phase rules module not found: {module_path}")
+    return module
 
 
 def trim_md_value(value: str) -> str:
@@ -419,27 +444,27 @@ def get_phase_owned_actual_changed_files(file_name: str, actual_changed_files: l
     if file_name == "02-to-be-plan.md":
         return None
 
-    if file_name in DECISIONS_DIFF_PHASE_FILES:
-        return [path for path in actual_changed_files if path == ".recursive/DECISIONS.md"]
-    if file_name in STATE_DIFF_PHASE_FILES:
-        return [path for path in actual_changed_files if path == ".recursive/STATE.md"]
-    if file_name in MEMORY_DIFF_PHASE_FILES:
-        return [path for path in actual_changed_files if path.startswith(".recursive/memory/")]
-
-    if file_name not in PRODUCT_DIFF_PHASE_FILES:
-        return None
-
     owned_paths: list[str] = []
     for path in actual_changed_files:
         if path == ".recursive/DECISIONS.md":
+            if file_name in DECISIONS_DIFF_PHASE_FILES:
+                owned_paths.append(path)
             continue
         if path == ".recursive/STATE.md":
+            if file_name in STATE_DIFF_PHASE_FILES:
+                owned_paths.append(path)
             continue
         if path.startswith(".recursive/memory/"):
+            if file_name in MEMORY_DIFF_PHASE_FILES:
+                owned_paths.append(path)
             continue
         owned_paths.append(path)
 
-    return owned_paths
+    if file_name in PRODUCT_DIFF_PHASE_FILES:
+        return owned_paths
+    if file_name in DECISIONS_DIFF_PHASE_FILES | STATE_DIFF_PHASE_FILES | MEMORY_DIFF_PHASE_FILES:
+        return owned_paths
+    return None
 
 
 def get_related_addenda_paths(run_dir: Path, artifact_name: str) -> list[Path]:
@@ -452,22 +477,6 @@ def get_related_addenda_paths(run_dir: Path, artifact_name: str) -> list[Path]:
     for pattern in (f"{base_name}.addendum-*.md", f"{base_name}.upstream-gap.*.addendum-*.md"):
         matches.extend(sorted(addenda_dir.glob(pattern)))
     return matches
-
-
-def get_diff_accounting_addenda_paths(run_dir: Path, artifact_name: str) -> list[Path]:
-    addenda_dir = run_dir / "addenda"
-    if not addenda_dir.exists():
-        return []
-
-    base_name = artifact_name[:-3] if artifact_name.endswith(".md") else artifact_name
-    matches: list[Path] = []
-    for pattern in (
-        f"{base_name}.addendum-*.md",
-        f"{base_name}.*.addendum-*.md",
-        f"{base_name}.upstream-gap.*.addendum-*.md",
-    ):
-        matches.extend(sorted(addenda_dir.glob(pattern)))
-    return sorted(set(matches))
 
 
 def get_stage_local_addenda_paths(run_dir: Path, artifact_name: str) -> list[Path]:
@@ -556,7 +565,7 @@ def get_expected_effective_input_addenda_paths(run_dir: Path, file_name: str) ->
 
 
 def collect_effective_input_addenda_blockers(file_name: str, content: str, workflow_profile: str, run_dir: Path) -> list[str]:
-    if workflow_profile not in {STRICT_WORKFLOW_PROFILE, COMPAT_WORKFLOW_PROFILE}:
+    if workflow_profile not in (STRICT_WORKFLOW_PROFILES | {COMPAT_WORKFLOW_PROFILE}):
         return []
     if is_addendum_artifact(file_name):
         return []
@@ -571,7 +580,7 @@ def collect_effective_input_addenda_blockers(file_name: str, content: str, workf
     if missing_inputs:
         blockers.append(f"Missing effective-input addenda in Inputs: {', '.join(missing_inputs[:5])}")
 
-    if workflow_profile == STRICT_WORKFLOW_PROFILE and file_name in AUDITED_PHASE_FILES:
+    if workflow_profile in STRICT_WORKFLOW_PROFILES and file_name in AUDITED_PHASE_FILES:
         reread_paths = {normalize_repo_path(path) for path in extract_paths_from_text(get_heading_body(content, "Effective Inputs Re-read"))}
         missing_reread = [path for path in expected_addenda if path not in reread_paths]
         if missing_reread:
@@ -831,7 +840,7 @@ def collect_requirement_completion_blockers(
     repo_root: Path,
     actual_changed_files: list[str] | None,
 ) -> list[str]:
-    if workflow_profile != STRICT_WORKFLOW_PROFILE or file_name not in AUDITED_PHASE_FILES:
+    if workflow_profile not in STRICT_WORKFLOW_PROFILES or file_name not in AUDITED_PHASE_FILES:
         return []
 
     body = get_heading_body(content, "Requirement Completion Status")
@@ -868,14 +877,6 @@ def collect_requirement_completion_blockers(
                 status = trim_md_value(fields.get("Status", "")).lower()
                 if status in {"implemented", "verified"}:
                     claimed_changed_files.update(collect_requirement_field_paths(fields, ["Changed Files"]))
-            for addendum_path in get_diff_accounting_addenda_paths(run_dir, file_name):
-                addendum_content = addendum_path.read_text(encoding="utf-8")
-                addendum_body = get_heading_body(addendum_content, "Requirement Completion Status")
-                addendum_entries, _addendum_issues = parse_requirement_completion_entries(addendum_body)
-                for fields in addendum_entries.values():
-                    status = trim_md_value(fields.get("Status", "")).lower()
-                    if status in {"implemented", "verified"}:
-                        claimed_changed_files.update(collect_requirement_field_paths(fields, ["Changed Files"]))
             missing_claims = sorted(path for path in expected_scope if path not in claimed_changed_files)
             if missing_claims:
                 blockers.append(
@@ -892,7 +893,7 @@ def collect_prior_recursive_evidence_blockers(
     workflow_profile: str,
     repo_root: Path,
 ) -> list[str]:
-    if workflow_profile != STRICT_WORKFLOW_PROFILE or file_name not in PRIOR_RECURSIVE_EVIDENCE_FILES:
+    if workflow_profile not in STRICT_WORKFLOW_PROFILES or file_name not in PRIOR_RECURSIVE_EVIDENCE_FILES:
         return []
 
     body = get_heading_body(content, "Prior Recursive Evidence Reviewed")
@@ -991,7 +992,7 @@ def collect_subagent_contribution_blockers(
     repo_root: Path,
     actual_changed_files: list[str] | None,
 ) -> list[str]:
-    if workflow_profile != STRICT_WORKFLOW_PROFILE or file_name not in AUDITED_PHASE_FILES:
+    if workflow_profile not in STRICT_WORKFLOW_PROFILES or file_name not in AUDITED_PHASE_FILES:
         return []
 
     body = get_heading_body(content, "Subagent Contribution Verification")
@@ -1235,7 +1236,7 @@ def collect_subagent_contribution_blockers(
 
 def collect_reviewed_paths(run_dir: Path, artifact_name: str, content: str) -> set[str]:
     reviewed_paths = extract_paths_from_text(get_heading_body(content, "Worktree Diff Audit"))
-    for addendum_path in get_diff_accounting_addenda_paths(run_dir, artifact_name):
+    for addendum_path in get_related_addenda_paths(run_dir, artifact_name):
         reviewed_paths.update(extract_paths_from_text(addendum_path.read_text(encoding="utf-8")))
     return reviewed_paths
 
@@ -1420,31 +1421,17 @@ def collect_phase_specific_blockers(
     requirement_ids: list[str],
     actual_changed_files: list[str] | None,
 ) -> list[str]:
-    blockers: list[str] = []
-    blockers.extend(collect_effective_input_addenda_blockers(file_name, content, workflow_profile, run_dir))
-    blockers.extend(
-        collect_requirement_completion_blockers(
-            file_name,
-            content,
-            workflow_profile,
-            requirement_ids,
-            run_dir,
-            repo_root,
-            actual_changed_files,
-        )
+    lint = load_lint_module()
+    blockers = lint.lint_phase_specific_rules(
+        run_dir / file_name,
+        content,
+        workflow_profile,
+        run_dir,
+        repo_root,
+        requirement_ids,
+        actual_changed_files,
     )
-    blockers.extend(collect_prior_recursive_evidence_blockers(file_name, content, workflow_profile, repo_root))
-    blockers.extend(
-        collect_subagent_contribution_blockers(
-            file_name,
-            content,
-            workflow_profile,
-            run_dir,
-            repo_root,
-            actual_changed_files,
-        )
-    )
-    if workflow_profile != STRICT_WORKFLOW_PROFILE:
+    if workflow_profile not in STRICT_WORKFLOW_PROFILES:
         return blockers
 
     if file_name == "00-worktree.md":
@@ -1548,6 +1535,8 @@ def get_workflow_profile(run_dir: Path) -> str:
     if requirements_path.exists():
         content = requirements_path.read_text(encoding="utf-8")
         workflow_version = get_md_field_value(content, "Workflow version")
+        if workflow_version == CURRENT_WORKFLOW_PROFILE:
+            return CURRENT_WORKFLOW_PROFILE
         if workflow_version == STRICT_WORKFLOW_PROFILE:
             return STRICT_WORKFLOW_PROFILE
         if workflow_version == COMPAT_WORKFLOW_PROFILE:
@@ -1738,7 +1727,7 @@ def collect_audit_blockers(
     run_dir: Path,
 ) -> list[str]:
     blockers: list[str] = []
-    if workflow_profile != STRICT_WORKFLOW_PROFILE or file_name not in AUDITED_PHASE_FILES:
+    if workflow_profile not in STRICT_WORKFLOW_PROFILES or file_name not in AUDITED_PHASE_FILES:
         return blockers
 
     audit = get_gate_status(content, "Audit")
@@ -1856,7 +1845,7 @@ def get_artifact_state(
             lock_problems.append(f"Coverage gate is {coverage}")
         if approval != "PASS":
             lock_problems.append(f"Approval gate is {approval}")
-        if workflow_profile == STRICT_WORKFLOW_PROFILE and artifact_path.name in AUDITED_PHASE_FILES and audit != "PASS":
+        if workflow_profile in STRICT_WORKFLOW_PROFILES and artifact_path.name in AUDITED_PHASE_FILES and audit != "PASS":
             lock_problems.append(f"Audit gate is {audit}")
         if artifact_path.name == "03-implementation-summary.md" and tdd_compliance != "PASS":
             lock_problems.append(f"TDD Compliance gate is {tdd_compliance}")
@@ -1997,11 +1986,11 @@ def main() -> None:
     requirement_ids: list[str] = []
     requirements_path = run_dir / "00-requirements.md"
     if requirements_path.exists():
-        requirement_ids = parse_requirement_ids(requirements_path.read_text(encoding="utf-8"))
+        requirement_ids = load_lint_module().get_run_requirement_ids(run_dir, workflow_profile)
 
     actual_changed_files: list[str] | None = None
     diff_basis_error: str | None = None
-    if workflow_profile == STRICT_WORKFLOW_PROFILE:
+    if workflow_profile in STRICT_WORKFLOW_PROFILES:
         diff_basis = get_run_diff_basis(run_dir)
         raw_changed_files, diff_basis_error = get_git_changed_files(repo_root, diff_basis)
         if raw_changed_files is not None:
@@ -2047,11 +2036,34 @@ def main() -> None:
     print("=" * max(8, len(title)))
     print()
     print(f"Workflow Profile: {workflow_profile}")
-    if workflow_profile == STRICT_WORKFLOW_PROFILE:
+    if workflow_profile in STRICT_WORKFLOW_PROFILES:
         print("Audit Contract: audited phases must reach Audit: PASS before Coverage/Approval may pass")
     print()
     print_phase_status(phases, states, args.show_hashes, run_id, workflow_profile)
 
+    # Next-legal-phase and stale-chain summary using the canonical phase-rules model.
+    phase_rules = load_phase_rules_module()
+    next_legal = phase_rules.get_next_legal_phase(run_dir)
+    stale_entries = phase_rules.get_all_stale_receipts(run_dir)
+
+    if next_legal:
+        print(f"Next Legal Phase: {next_legal}")
+        prereq_blockers = phase_rules.get_prerequisite_blockers(next_legal, run_dir)
+        if prereq_blockers:
+            print("  Prerequisite blockers:")
+            for blocker in prereq_blockers:
+                print(f"    - {blocker['artifact']}: {blocker['status']}")
+    elif current_phase is None:
+        print("Next Legal Phase: COMPLETE (all phases locked)")
+    else:
+        print("Next Legal Phase: BLOCKED")
+        print("  All candidate phases have unresolved prerequisites.")
+
+    if stale_entries:
+        print()
+        print("Stale Lock-Chain Receipts (re-lock downstream phases in order):")
+        for entry in stale_entries:
+            print(f"  - {entry['artifact']}: {entry['reason']}")
     print()
     if current_phase is None:
         print("Current Phase: COMPLETE")
@@ -2073,7 +2085,7 @@ def main() -> None:
     print(f"  Exists: {'Yes' if evidence_dir.exists() else 'No'}")
     print(f"  Files:  {evidence_files}")
 
-    if workflow_profile == STRICT_WORKFLOW_PROFILE:
+    if workflow_profile in STRICT_WORKFLOW_PROFILES:
         print()
         print("Diff Audit:")
         if diff_basis_error:
@@ -2086,16 +2098,16 @@ def main() -> None:
     if current_phase is None:
         if workflow_profile == "legacy":
             print("  1. Legacy run is complete under the pre-Phase-8 workflow contract.")
-            print("  2. If you resume this run under the new workflow, add `Workflow version: recursive-mode-audit-v1` and continue with the stricter audited closeout.")
+            print("  2. If you resume this run under the new workflow, add `Workflow version: recursive-mode-audit-v2` and continue with the stricter audited closeout.")
         elif workflow_profile == COMPAT_WORKFLOW_PROFILE:
             print("  1. Compatibility run is complete through Phase 8.")
-            print("  2. Use `Workflow version: recursive-mode-audit-v1` for new runs that should enforce the stronger audit loop.")
+            print("  2. Use `Workflow version: recursive-mode-audit-v2` for new runs that should enforce the stronger audit loop.")
         else:
             print("  1. Run is complete through audited Phase 8.")
             print("  2. Merge the worktree branch when ready.")
     else:
         next_artifact = f".recursive/run/{run_id}/{current_phase['File']}"
-        if workflow_profile == STRICT_WORKFLOW_PROFILE and current_phase["File"] in AUDITED_PHASE_FILES:
+        if workflow_profile in STRICT_WORKFLOW_PROFILES and current_phase["File"] in AUDITED_PHASE_FILES:
             print(f"  1. Update {next_artifact} so the audit sections are complete and grounded in upstream artifacts plus the recorded diff basis.")
             print("  2. Repair any in-scope gaps or unexplained drift, then rerun the audit.")
             print("  3. Only after `Audit: PASS` may Coverage/Approval pass and the phase lock.")

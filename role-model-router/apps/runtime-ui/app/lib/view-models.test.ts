@@ -1787,7 +1787,7 @@ describe("telemetry view models", () => {
         requestId: "req-002",
         routingDecisionLabel: "route-002",
         sourceLabel: "Remote",
-        statusLabel: "504 upstream_timeout",
+        statusLabel: "504 Upstream timeout",
         providerFamilyLabel: "openai",
         finishReasonLabel: "length",
         cacheLabel: "Cache hit",
@@ -1807,6 +1807,46 @@ describe("telemetry view models", () => {
         latencyLabel: "280 ms",
         tokenLabel: "46 tokens",
         costLabel: "$0.0011 est.",
+      }),
+    ]);
+  });
+
+  test("prefers descriptive failure summaries over raw error-class slugs for failed request rows", () => {
+    expect(
+      buildTelemetryRequestRows([
+        {
+          requestId: "req-003",
+          endpointId: "routing.failed.pre-execution",
+          modelId: "difficulty.remote-only",
+          sourceType: "remote",
+          createdAtMs: 1_770_000_000_200,
+          latencyMs: 952,
+          totalTokens: 0,
+          actualCostUsd: 0,
+          estimatedCostUsd: 0,
+          errorClass: "execution_failed",
+          statusCode: 400,
+          finishReason: null,
+          promptCacheSupported: true,
+          promptCacheRequested: false,
+          promptCacheUsed: false,
+          streamTextDeltaCount: 0,
+          streamTextSupported: false,
+          streamToolCallDeltaCount: 0,
+          streamToolCallSupported: false,
+          streamToolArgumentDeltaCount: 0,
+          streamToolArgumentSupported: false,
+          dimensions: {
+            errorContext: {
+              message: "No eligible remote endpoint satisfied alias difficulty.remote-only.",
+            },
+          },
+        },
+      ]),
+    ).toEqual([
+      expect.objectContaining({
+        requestId: "req-003",
+        statusLabel: "400 No eligible remote endpoint satisfied alias difficulty.remote-only.",
       }),
     ]);
   });

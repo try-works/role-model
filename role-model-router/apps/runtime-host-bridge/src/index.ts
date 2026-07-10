@@ -1,6 +1,14 @@
 import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
 import os from "node:os";
@@ -19,8 +27,11 @@ import { canonicalTaxonomy, taxonomyManifest } from "@role-model-router/core";
 import type { EndpointRegistryResult } from "@role-model-router/endpoint-registry";
 import { type RegistrySources, buildEndpointRegistry } from "@role-model-router/endpoint-registry";
 import { ProcessSupervisor } from "@role-model-router/process-supervisor";
-import type { ObservedPerformanceSample } from "@role-model-router/profile-aggregator";
-import { resolveRoutingBenchmarkQuality } from "@role-model-router/profile-aggregator";
+import {
+  type ObservedPerformanceSample,
+  aggregateObservedPerformanceSamples,
+  resolveRoutingBenchmarkQuality,
+} from "@role-model-router/profile-aggregator";
 import {
   type RouteRuntimeRequestResult,
   type RoutingModelSelection,
@@ -2329,9 +2340,15 @@ export interface RuntimeTelemetryStreamEvent {
 export interface StartBridgeServerOptions {
   readonly host: string;
   readonly port: number;
+  readonly runtimeStateRoot?: string;
   readonly registry: EndpointRegistryResult;
   readonly getRegistry?: () => EndpointRegistryResult;
   readonly getExecutionCatalog?: () => NormalizedCatalog;
+  readonly readStartupReadiness?: () => {
+    readonly ready: boolean;
+    readonly status: "pending" | "ready" | "failed";
+    readonly message?: string;
+  };
   readonly executeChatCompletions: (
     body: OpenAIChatCompletionsBody,
     requestId: string,
@@ -3581,13 +3598,74 @@ function stringArrayValue(value: unknown): readonly string[] | undefined {
   return strings.length > 0 ? strings : undefined;
 }
 
+function humanizeRuntimeErrorClass(errorClass: string | null | undefined): string {
+  if (typeof errorClass !== "string" || errorClass.trim().length === 0) {
+    return "Execution failed";
+  }
+  const normalized = errorClass.replace(/[_-]+/g, " ").trim();
+  return normalized.length > 0
+    ? normalized.charAt(0).toUpperCase() + normalized.slice(1)
+    : "Execution failed";
+}
+
+function runtimeTelemetryErrorContextFor(error: unknown): Record<string, unknown> | null {
+  const context: Record<string, unknown> = {};
+  const message =
+    error instanceof Error && error.message.trim().length > 0 ? error.message.trim() : null;
+  if (message) {
+    context.message = message;
+  }
+
+  if (error instanceof BridgeHttpError) {
+    context.statusCode = error.statusCode;
+    const bodyError = error.body.error;
+    if (typeof bodyError === "object" && bodyError !== null) {
+      const errorRecord = bodyError as Record<string, unknown>;
+      for (const key of [
+        "type",
+        "code",
+        "requestedModel",
+        "endpointId",
+        "providerId",
+        "providerFamily",
+        "vendorId",
+        "executionFamily",
+        "adapterFamily",
+        "failurePhase",
+      ] as const) {
+        const value = errorRecord[key];
+        if (typeof value === "string" && value.trim().length > 0) {
+          context[key] = value.trim();
+        }
+      }
+      for (const key of ["retryable", "fallbackEligible"] as const) {
+        const value = errorRecord[key];
+        if (typeof value === "boolean") {
+          context[key] = value;
+        }
+      }
+      const errorPreview = errorRecord.errorPreview;
+      if (typeof errorPreview === "object" && errorPreview !== null) {
+        context.errorPreview = errorPreview;
+      }
+    }
+  }
+
+  return Object.keys(context).length > 0 ? context : null;
+}
+
 function runtimeTelemetryDimensionsFor(error: unknown): Record<string, unknown> | null {
+  const dimensions: Record<string, unknown> = {};
+  const errorContext = runtimeTelemetryErrorContextFor(error);
+  if (errorContext) {
+    dimensions.errorContext = errorContext;
+  }
   if (!(error instanceof BridgeHttpError)) {
-    return null;
+    return Object.keys(dimensions).length > 0 ? dimensions : null;
   }
   const bodyError = error.body.error;
   if (typeof bodyError !== "object" || bodyError === null) {
-    return null;
+    return Object.keys(dimensions).length > 0 ? dimensions : null;
   }
   const errorRecord = bodyError as Record<string, unknown>;
   const capabilityEligibility: Record<string, unknown> = {};
@@ -3666,7 +3744,6 @@ function runtimeTelemetryDimensionsFor(error: unknown): Record<string, unknown> 
       }
     }
   }
-  const dimensions: Record<string, unknown> = {};
   if (Object.keys(capabilityEligibility).length > 0) {
     dimensions.capabilityEligibility = capabilityEligibility;
   }
@@ -3674,6 +3751,199 @@ function runtimeTelemetryDimensionsFor(error: unknown): Record<string, unknown> 
     dimensions.executionCooldown = executionCooldown;
   }
   return Object.keys(dimensions).length > 0 ? dimensions : null;
+}
+
+function readTelemetryErrorContextFromDimensions(
+  dimensions: unknown,
+): Record<string, unknown> | null {
+  if (!dimensions || typeof dimensions !== "object") {
+    return null;
+  }
+  const value = (dimensions as Record<string, unknown>).errorContext;
+  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
+}
+
+function buildPreExecutionFailureObservation(input: {
+  readonly requestId: string;
+  readonly clientRequestId?: string | null;
+  readonly endpointId: string;
+  readonly modelId: string;
+  readonly sourceType: "local" | "remote";
+  readonly error: unknown;
+  readonly latencyMs: number;
+  readonly dimensions: Record<string, unknown> | null;
+  readonly toolingUsed: boolean;
+}): Record<string, unknown> {
+  const createdAtMs = Date.now();
+  const routingDecisionId = `decision-${input.requestId}`;
+  const errorClass = runtimeTelemetryErrorClassFor(input.error);
+  const errorContext = runtimeTelemetryErrorContextFor(input.error);
+  const executionFamily =
+    typeof errorContext?.executionFamily === "string" ? errorContext.executionFamily : "unknown";
+  const adapterFamily =
+    typeof errorContext?.adapterFamily === "string" ? errorContext.adapterFamily : "unknown";
+  const providerFamily =
+    typeof errorContext?.providerFamily === "string" ? errorContext.providerFamily : undefined;
+  const vendorId = typeof errorContext?.vendorId === "string" ? errorContext.vendorId : undefined;
+  const providerId = typeof errorContext?.providerId === "string" ? errorContext.providerId : null;
+  const statusCode = typeof errorContext?.statusCode === "number" ? errorContext.statusCode : 400;
+  const summaryMessage =
+    typeof errorContext?.message === "string" && errorContext.message.trim().length > 0
+      ? errorContext.message.trim()
+      : humanizeRuntimeErrorClass(errorClass);
+  const sample: ObservedPerformanceSample = {
+    endpoint_id: input.endpointId,
+    endpoint_version: "pre-execution-failure",
+    source_type: "live_request",
+    timestamp_ms: createdAtMs,
+    latency_ms: input.latencyMs,
+    failure: true,
+    error_class: errorClass,
+    request_id: input.requestId,
+    routing_decision_id: routingDecisionId,
+  };
+  const profile = aggregateObservedPerformanceSamples([sample], { nowMs: createdAtMs });
+  const diagnostics = {
+    routing: [],
+    execution: [
+      {
+        code: errorClass,
+        severity: "error",
+        message: summaryMessage,
+      },
+    ],
+    authAccount: [],
+    memoryQuality: [],
+    tooling: [],
+    operator: [],
+  } as const;
+  const capturePolicy = {
+    environment: "runtime-pre-execution-failure",
+    redactionLevel: "strict",
+    retentionClass: "standard",
+    structuredInspectionMode: "summary-only",
+    rawCaptureAvailable: false,
+    structuredInspectionAvailable: true,
+    redactedFields: [],
+    suppressedFields: ["request.body"],
+  } as const;
+
+  return {
+    requestId: input.requestId,
+    ...(input.clientRequestId ? { clientRequestId: input.clientRequestId } : {}),
+    routingDecisionId,
+    endpointId: input.endpointId,
+    conversationId: "conversation-main",
+    usageEvent: {
+      timestamp_ms: createdAtMs,
+      request_id: input.requestId,
+      routing_decision_id: routingDecisionId,
+      endpoint_id: input.endpointId,
+      model_id: input.modelId,
+      tokens_in: 0,
+      tokens_out: 0,
+      latency_ms: input.latencyMs,
+      cost_actual: null,
+      cost_estimate: null,
+      currency: "USD",
+      error_class: errorClass,
+    },
+    observedPerformance: {
+      endpointVersion: "pre-execution-failure",
+      sample,
+      history: [sample],
+      profile,
+    },
+    diagnostics,
+    capturePolicy,
+    executionTelemetry: {
+      ...(providerFamily ? { providerFamily } : {}),
+      ...(vendorId ? { vendorId } : {}),
+      finishReason: "error",
+      promptCaching: {
+        supported: true,
+      },
+      usageSupport: {
+        inputTokens: true,
+        outputTokens: true,
+        cacheReadTokens: true,
+        cacheWriteTokens: true,
+      },
+      costProvenance: "unavailable",
+    },
+    executionSemantics: {
+      executionFamily,
+      adapterFamily,
+      payloadBytes: {
+        ingress: 0,
+        translated: 0,
+        providerCanonical: 0,
+        providerWire: 0,
+        providerResponse: 0,
+      },
+      retryCount: 0,
+      rerouteCount: 0,
+      cooldownDecision: "not_applied",
+      idempotencyDecision: "not_needed",
+      toolSideEffectState: "none",
+    },
+    telemetrySnapshot: {
+      providerId,
+      providerAccountId: null,
+      sourceType: input.sourceType,
+      endpointKind: "unknown",
+      servingSource: executionFamily,
+      region: null,
+      lifecycleStateAtRequest: "unknown",
+      healthStatusAtRequest: null,
+      requestedModelId: input.modelId,
+      requestOperation: "chat",
+      roleIds: [],
+      toolingUsed: input.toolingUsed,
+      cacheState: "unknown",
+      eligibleEndpointIds: [],
+      eligibleModelIds: [],
+      candidateCostSnapshot: {},
+      selectedPricingSnapshot: null,
+      selectedUncachedCostUsd: 0,
+      baselineMaxEligibleCostUsd: 0,
+      routingCostSavingsUsd: 0,
+      cacheCostSavingsUsd: 0,
+      totalAvoidedCostUsd: 0,
+      costBaselineSource: null,
+      costSavingsSupport: null,
+      ...(input.dimensions ? { dimensions: input.dimensions } : {}),
+    },
+    privacyReceipt: {
+      samplingRate: 1,
+      retentionTtlHours: 720,
+      retainUntil: createdAtMs + 720 * 3600 * 1000,
+    },
+    inspection: {
+      request: {
+        requestId: input.requestId,
+        ...(input.clientRequestId ? { clientRequestId: input.clientRequestId } : {}),
+        routingDecisionId,
+        requestCapture: {
+          body: {
+            suppressed: true,
+            reason: "Pre-execution failure; raw request body is omitted from failure observation.",
+          },
+        },
+        responseCapture: {
+          statusCode,
+          ...(errorContext ? { body: errorContext } : {}),
+        },
+        diagnostics,
+        capturePolicy,
+      },
+      endpoint: {
+        endpointId: input.endpointId,
+        endpointVersion: "pre-execution-failure",
+        recentSamples: [],
+      },
+    },
+  };
 }
 
 function readExecutionCooldownsFromTelemetryDimensions(
@@ -12371,6 +12641,23 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    const startupReadiness = options.readStartupReadiness?.();
+    const isPotentialStaticUiRequest =
+      Boolean(options.staticRoot) &&
+      request.method === "GET" &&
+      !url.pathname.startsWith("/api/") &&
+      !url.pathname.startsWith("/v1/") &&
+      url.pathname !== "/logs" &&
+      !url.pathname.startsWith("/logs/");
+    if (startupReadiness && !startupReadiness.ready && !isPotentialStaticUiRequest) {
+      writeJson(response, 503, {
+        error: "runtime_initializing",
+        status: startupReadiness.status,
+        ...(startupReadiness.message ? { message: startupReadiness.message } : {}),
+      });
+      return;
+    }
+
     const registry = options.getRegistry?.() ?? options.registry;
 
     if (request.method === "GET" && url.pathname === "/v1/models") {
@@ -13874,7 +14161,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
                             ? "font/woff"
                             : "application/octet-stream";
         const data = readFileSync(resolvedPath);
-        response.writeHead(200, { "content-type": contentType, "content-length": data.length });
+        response.writeHead(200, {
+          "cache-control": "no-store",
+          "content-type": contentType,
+          "content-length": data.length,
+        });
         response.end(data);
         return;
       }
@@ -13899,8 +14190,49 @@ function listen(server: Server, host: string, port: number): Promise<number> {
   });
 }
 
+function appendRuntimeHttpTrace(runtimeStateRoot: string, message: string): void {
+  try {
+    const logPath = path.join(runtimeStateRoot, "logs", "runtime-http.log");
+    mkdirSync(path.dirname(logPath), { recursive: true });
+    appendFileSync(logPath, `${new Date().toISOString()} ${message}\n`, "utf8");
+  } catch {
+    // Ignore tracing failures while debugging packaged startup behavior.
+  }
+}
+
 export async function startBridgeServer(options: StartBridgeServerOptions): Promise<BridgeServer> {
   const server = createServer((request, response) => {
+    const requestStart = Date.now();
+    const requestPath = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
+    const runtimeStateRoot = options.runtimeStateRoot;
+    const shouldTraceRequest =
+      typeof runtimeStateRoot === "string" &&
+      runtimeStateRoot.length > 0 &&
+      request.method === "GET" &&
+      (requestPath === "/" ||
+        requestPath === "/app" ||
+        requestPath.startsWith("/assets/") ||
+        requestPath === "/favicon.ico");
+    if (shouldTraceRequest) {
+      appendRuntimeHttpTrace(
+        runtimeStateRoot,
+        `request-start method=${request.method} path=${requestPath}`,
+      );
+      response.on("finish", () => {
+        appendRuntimeHttpTrace(
+          runtimeStateRoot,
+          `request-finish method=${request.method} path=${requestPath} status=${response.statusCode} duration_ms=${Date.now() - requestStart}`,
+        );
+      });
+      response.on("close", () => {
+        if (!response.writableEnded) {
+          appendRuntimeHttpTrace(
+            runtimeStateRoot,
+            `request-close method=${request.method} path=${requestPath} duration_ms=${Date.now() - requestStart}`,
+          );
+        }
+      });
+    }
     void createRequestHandler(options)(request, response).catch((error: unknown) => {
       if (!writeUnhandledBridgeError(response, error)) {
         console.error("runtime host bridge request failed after response commit", error);
@@ -19526,6 +19858,8 @@ export async function createRuntimeBridgeBackend(
         currentUnifiedRuntimeConfig?.executionMode === "remote_only" ? "remote" : "local";
       const recordChatCompletionFailure = (error: unknown): void => {
         const statusCode = error instanceof BridgeHttpError ? error.statusCode : 400;
+        const latencyMs = Math.max(0, Date.now() - executionStartedAtMs);
+        const dimensions = runtimeTelemetryDimensionsFor(error);
         persistRuntimeTelemetryFailure({
           databasePath: initialization.databasePath,
           requestId,
@@ -19538,8 +19872,19 @@ export async function createRuntimeBridgeBackend(
           requestOperation: "chat",
           statusCode,
           errorClass: runtimeTelemetryErrorClassFor(error),
-          latencyMs: Math.max(0, Date.now() - executionStartedAtMs),
-          dimensions: runtimeTelemetryDimensionsFor(error),
+          latencyMs,
+          dimensions,
+          observation: buildPreExecutionFailureObservation({
+            requestId,
+            clientRequestId: requestOptions?.clientRequestId ?? null,
+            endpointId: fallbackFailureEndpointId,
+            modelId: body.model,
+            sourceType: fallbackFailureSourceType,
+            error,
+            latencyMs,
+            dimensions,
+            toolingUsed: Boolean(body.tools?.length),
+          }),
         });
       };
       try {
@@ -21468,6 +21813,23 @@ export async function createRuntimeBridgeBackend(
         const fallbackExecutionCooldowns = readExecutionCooldownsFromTelemetryDimensions(
           telemetryRecord.dimensions,
         );
+        const fallbackErrorContext = readTelemetryErrorContextFromDimensions(
+          telemetryRecord.dimensions,
+        );
+        const fallbackExecutionDiagnostics =
+          telemetryRecord.errorClass !== null
+            ? [
+                {
+                  code: telemetryRecord.errorClass,
+                  severity: "error",
+                  message:
+                    typeof fallbackErrorContext?.message === "string" &&
+                    fallbackErrorContext.message.trim().length > 0
+                      ? fallbackErrorContext.message.trim()
+                      : humanizeRuntimeErrorClass(telemetryRecord.errorClass),
+                },
+              ]
+            : [];
         return {
           requestId: telemetryRecord.requestId,
           routingDecisionId: telemetryRecord.routingDecisionId,
@@ -21495,6 +21857,14 @@ export async function createRuntimeBridgeBackend(
             currency: telemetryRecord.currency ?? "USD",
             error_class: telemetryRecord.errorClass,
             timestamp_ms: telemetryRecord.createdAtMs,
+          },
+          diagnostics: {
+            routing: [],
+            execution: fallbackExecutionDiagnostics,
+            authAccount: [],
+            memoryQuality: [],
+            tooling: [],
+            operator: [],
           },
           executionTelemetry: {
             providerFamily: telemetryRecord.providerFamily,
@@ -21601,6 +21971,25 @@ export async function createRuntimeBridgeBackend(
               }
             : {}),
           capturePolicy,
+          inspection: {
+            request: {
+              requestId: telemetryRecord.requestId,
+              ...(telemetryRecord.clientRequestId
+                ? { clientRequestId: telemetryRecord.clientRequestId }
+                : {}),
+              routingDecisionId: telemetryRecord.routingDecisionId,
+              responseCapture: {
+                ...(telemetryRecord.statusCode !== null
+                  ? { statusCode: telemetryRecord.statusCode }
+                  : {}),
+                ...(fallbackErrorContext ? { body: fallbackErrorContext } : {}),
+              },
+              diagnostics: {
+                execution: fallbackExecutionDiagnostics,
+              },
+              capturePolicy,
+            },
+          },
           ...(privacyReceipt ? { privacyReceipt } : {}),
           observationAvailability: {
             source: "telemetry-ledger-fallback",

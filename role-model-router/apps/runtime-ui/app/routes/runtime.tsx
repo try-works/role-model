@@ -18,36 +18,26 @@ import {
 import {
   type RuntimeConfigRecord,
   type RuntimeControllerAssignment,
-  type RuntimeSnapshot,
+  type RuntimeSummary,
   type RuntimeVersionInfo,
-  fetchControllerAssignment,
-  fetchRuntimeConfig,
-  fetchRuntimeSnapshot,
-  fetchVersionInfo,
+  fetchRuntimeShellSnapshot,
 } from "../lib/runtime-api";
 import { buildCredentialLifecycleBanner } from "../lib/view-models";
 
 export default function RuntimeRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [summary, setSummary] = useState<RuntimeSummary | null>(null);
   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
-  const [controllerLoaded, setControllerLoaded] = useState(false);
   const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
   const [version, setVersion] = useState<RuntimeVersionInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void Promise.all([
-      fetchRuntimeSnapshot(),
-      fetchControllerAssignment(),
-      fetchRuntimeConfig(),
-      fetchVersionInfo(),
-    ])
-      .then(([nextSnapshot, nextController, nextConfigRecord, nextVersion]) => {
-        setSnapshot(nextSnapshot);
-        setController(nextController);
-        setControllerLoaded(true);
-        setConfigRecord(nextConfigRecord);
-        setVersion(nextVersion);
+    void fetchRuntimeShellSnapshot()
+      .then(({ summary, controller, configRecord, version }) => {
+        setSummary(summary);
+        setController(controller);
+        setConfigRecord(configRecord);
+        setVersion(version);
       })
       .catch((value: unknown) =>
         setError(value instanceof Error ? value.message : "Could not load runtime summary."),
@@ -57,11 +47,11 @@ export default function RuntimeRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!snapshot || !controllerLoaded || !configRecord || !version) {
+  if (!summary || !configRecord || !version) {
     return <LoadingState label="Loading runtime summary…" />;
   }
 
-  const lifecycleBanner = buildCredentialLifecycleBanner(snapshot.summary);
+  const lifecycleBanner = buildCredentialLifecycleBanner(summary);
   const currentConfig = configRecord.config;
   const remoteMappingCount =
     currentConfig?.liteLLM.providers.reduce(
@@ -69,13 +59,13 @@ export default function RuntimeRoute() {
       0,
     ) ?? 0;
   const lifecycleSummaryRows = [
-    { label: "active endpoints", value: snapshot.summary.lifecycleSummary?.active ?? 0 },
-    { label: "degraded routes", value: snapshot.summary.lifecycleSummary?.degraded ?? 0 },
-    { label: "offline records", value: snapshot.summary.lifecycleSummary?.offline ?? 0 },
+    { label: "active endpoints", value: summary.lifecycleSummary?.active ?? 0 },
+    { label: "degraded routes", value: summary.lifecycleSummary?.degraded ?? 0 },
+    { label: "offline records", value: summary.lifecycleSummary?.offline ?? 0 },
   ];
   const appliedPolicyRows = [
     ["Config path", configRecord.path ?? "not configured"],
-    ["Execution mode", currentConfig?.executionMode ?? snapshot.summary.executionMode ?? "pending"],
+    ["Execution mode", currentConfig?.executionMode ?? summary.executionMode ?? "pending"],
     ["Routing strategy", currentConfig?.routingStrategy ?? "pending"],
     ["Local models", String(currentConfig?.llamaSwap.models.length ?? 0)],
     ["Remote mappings", String(remoteMappingCount)],
@@ -91,22 +81,16 @@ export default function RuntimeRoute() {
     ["Vendor host", version.version],
     ["Commit", version.commit],
     ["Build date", version.build_date],
-    ["Runtime state root", snapshot.summary.runtimeStateRoot ?? "unavailable"],
+    ["Runtime state root", summary.runtimeStateRoot ?? "unavailable"],
     ["Summary endpoint", "/api/role-model/runtime/summary"],
   ] as const;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
-        <StatusPill tone="success">
-          Active {snapshot.summary.lifecycleSummary?.active ?? 0}
-        </StatusPill>
-        <StatusPill tone="warning">
-          Degraded {snapshot.summary.lifecycleSummary?.degraded ?? 0}
-        </StatusPill>
-        <StatusPill tone="neutral">
-          Offline {snapshot.summary.lifecycleSummary?.offline ?? 0}
-        </StatusPill>
+        <StatusPill tone="success">Active {summary.lifecycleSummary?.active ?? 0}</StatusPill>
+        <StatusPill tone="warning">Degraded {summary.lifecycleSummary?.degraded ?? 0}</StatusPill>
+        <StatusPill tone="neutral">Offline {summary.lifecycleSummary?.offline ?? 0}</StatusPill>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(280px,0.72fr)]">

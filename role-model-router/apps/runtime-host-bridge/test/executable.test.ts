@@ -1,4 +1,4 @@
-import { access, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, mkdtemp, readFile, rm, stat, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -272,6 +272,28 @@ describe("runtime-host-bridge executable packaging", () => {
     );
   });
 
+  test("generates a direct Windows batch launcher without the PowerShell wrapper sidecar", () => {
+    expect(typeof packageSea.createWindowsLauncherBatchFile).toBe("function");
+
+    const batchFile = packageSea.createWindowsLauncherBatchFile();
+
+    expect(batchFile).toContain('"%SCRIPT_DIR%role-model-launcher.exe"');
+    expect(batchFile).not.toContain("role-model-launcher.ps1");
+    expect(batchFile).not.toContain("powershell");
+  });
+
+  test("builds the Windows launcher package so build-tag helper files are included", () => {
+    expect(typeof packageSea.createWindowsLauncherBuildArgs).toBe("function");
+
+    const args = packageSea.createWindowsLauncherBuildArgs("D:\\release");
+    const buildTarget = args.at(-1);
+
+    expect(args).toContain("build");
+    expect(args).toContain("-o");
+    expect(buildTarget).toBe("./role-model-router/apps/launcher");
+    expect(buildTarget).not.toMatch(/main\.go$/);
+  });
+
   test("ships install and compose artifacts for packaged runtime distribution", async () => {
     const installScriptPath = path.join(repoRoot, "scripts", "install.sh");
     const installPowerShellPath = path.join(repoRoot, "scripts", "install.ps1");
@@ -302,11 +324,9 @@ describe("runtime-host-bridge executable packaging", () => {
     );
     const cliText = await readFile(cliPath, "utf8");
 
-    expect(cliText).toContain(
-      "listProviderDeviceAuthorizations: backend.listProviderDeviceAuthorizations",
-    );
-    expect(cliText).toContain("listModels: backend.listModels");
-    expect(cliText).toContain("readVersionInfo: backend.readVersionInfo");
+    expect(cliText).toContain('"listProviderDeviceAuthorizations"');
+    expect(cliText).toContain('"listModels"');
+    expect(cliText).toContain('"readVersionInfo"');
   });
 
   test("packaged runtime validation exercises account activation and routed request flows", async () => {
@@ -390,6 +410,31 @@ describe("runtime-host-bridge executable packaging", () => {
     const packageSeaText = await readFile(packageSeaPath, "utf8");
 
     expect(packageSeaText).toContain("await rm(releaseDir, { recursive: true, force: true });");
+  });
+
+  test("release timestamp stamping refreshes nested copied assets with stale upstream mtimes", async () => {
+    expect(typeof packageSea.stampReleaseTreeModificationTimes).toBe("function");
+
+    const releaseDir = await mkdtemp(path.join(os.tmpdir(), "role-model-stale-release-"));
+    try {
+      const nestedDir = path.join(releaseDir, "build", "client", "assets", "fonts");
+      const fontAsset = path.join(nestedDir, "inter-latin-400-normal.woff2");
+      await mkdir(nestedDir, { recursive: true });
+      await writeFile(fontAsset, "font-bytes", "utf8");
+      await utimes(
+        fontAsset,
+        new Date("1985-10-26T08:15:00.000Z"),
+        new Date("1985-10-26T08:15:00.000Z"),
+      );
+
+      const packageBuildDate = new Date("2026-07-11T05:45:00.000Z");
+      await packageSea.stampReleaseTreeModificationTimes(releaseDir, packageBuildDate);
+
+      expect((await stat(fontAsset)).mtime.toISOString()).toBe(packageBuildDate.toISOString());
+      expect((await stat(nestedDir)).mtime.toISOString()).toBe(packageBuildDate.toISOString());
+    } finally {
+      await rm(releaseDir, { recursive: true, force: true });
+    }
   });
 
   test("production release guard accepts clean runtime artifacts", async () => {

@@ -22,6 +22,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import type {
   RuntimeTelemetryAnalyticsDimension,
   RuntimeTelemetryAnalyticsFilters,
@@ -370,14 +371,14 @@ export default function RequestsRoute() {
       }
     };
 
-    void load();
-    const unsubscribe = subscribeTelemetryStream(() => {
-      void load(true);
+    const dispose = startDeferredLiveRefresh({
+      load,
+      subscribe: (onEvent) => subscribeTelemetryStream(onEvent),
     });
 
     return () => {
       disposed = true;
-      unsubscribe();
+      dispose();
     };
   }, [breakdown, filters, rankingDimension, rankingMetric, timeRange]);
 

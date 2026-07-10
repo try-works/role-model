@@ -1084,18 +1084,41 @@ describe("runtime design system", () => {
     expect(runtimeRouteSource).toContain("No controller assigned");
   });
 
-  test("applies the Paper Linear palette, Inter typography, and explicit theme contract in shared app chrome", () => {
+  test("applies the Paper Linear palette, bundled Inter typography, and explicit theme contract in shared app chrome", () => {
     expect(appCss).toContain("--rm-font-display: var(--linear-font-display);");
     expect(appCss).toContain("--rm-font-body: var(--linear-font-sans);");
     expect(appCss).not.toContain("SF Pro");
     expect(designSystemDocSource).toContain("Paper Linear review design-system board");
     expect(designSystemDocSource).toContain("Status pills use solid token-backed backgrounds");
     expect(designSystemDocSource).toContain('"Inter", "Segoe UI", sans-serif');
+    expect(designSystemDocSource).toContain(
+      '"IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace',
+    );
     expect(designSystemDocSource).toContain("Apple reference remains historical only.");
     expect(designSystemDocSource).toContain(
       "not allowed to override Paper, this document, or the live runtime UI",
     );
+    expect(designSystemDocSource).toContain(
+      "Packaged runtime startup must not depend on remote font fetches.",
+    );
+    expect(designSystemDocSource).toContain("bundled font assets");
     expect(designSystemDocSource).not.toContain("Status pills stay transparent");
+    expect(appCss).toContain('@font-face {\n  font-family: "Inter";');
+    expect(appCss).toContain('url("/assets/fonts/inter-latin-400-normal.woff2")');
+    expect(appCss).toContain('url("/assets/fonts/inter-latin-600-normal.woff2")');
+    expect(appCss).toContain('url("/assets/fonts/inter-latin-700-normal.woff2")');
+    expect(appCss).toContain('@font-face {\n  font-family: "IBM Plex Mono";');
+    expect(appCss).toContain('url("/assets/fonts/ibm-plex-mono-latin-400-normal.woff2")');
+    expect(appCss).toContain('url("/assets/fonts/ibm-plex-mono-latin-500-normal.woff2")');
+    expect(appCss).toContain('url("/assets/fonts/ibm-plex-mono-latin-600-normal.woff2")');
+    expect(appCss).toContain(
+      '--linear-font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;',
+    );
+    expect(appCss).toContain(
+      '--linear-font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;',
+    );
+    expect(appCss).toContain('--linear-font-mono: "IBM Plex Mono", ui-monospace, monospace;');
+    expect(appCss).toContain("font-synthesis-weight: none;");
     expect(appCss).toContain("--rm-shadow-product: 0 3px 5px 30px rgb(0 0 0 / 22%);");
     expect(appCss).not.toContain("--rm-shadow-product: 0 24px 80px rgba(0, 0, 0, 0.22);");
     expect(appCss).toContain("--rm-bg: var(--linear-light-canvas);");
@@ -1106,9 +1129,9 @@ describe("runtime design system", () => {
     expect(appCss).toContain('html[data-theme="dark"]');
     expect(appCss).toContain("appearance: none;");
     expect(appCss).toContain("background-image: var(--rm-select-chevron);");
-    expect(appCss).toContain('"IBM Plex Mono"');
     expect(rootSource).toContain('meta name="color-scheme" content="light dark"');
-    expect(rootSource).toContain("family=Inter");
+    expect(rootSource).not.toContain("fonts.googleapis.com");
+    expect(rootSource).not.toContain("fonts.gstatic.com");
     expect(rootSource).toContain('meta name="theme-color" content="#010102"');
     expect(rootSource).not.toContain('meta name="theme-color" content="#fbfbfc"');
   });
@@ -1281,7 +1304,7 @@ describe("runtime design system", () => {
     expect(runtimeRouteSource).toContain("Lifecycle summary");
     expect(runtimeRouteSource).toContain("Controller posture");
     expect(runtimeRouteSource).toContain("Applied runtime policy");
-    expect(runtimeRouteSource).toContain("fetchRuntimeConfig");
+    expect(runtimeRouteSource).toContain("fetchRuntimeShellSnapshot");
     expect(runtimeRouteSource).toContain("Runtime config");
     expect(runtimeRouteSource).not.toContain("Open session readiness");
     expect(runtimeRouteSource).not.toContain("md:grid-cols-3");

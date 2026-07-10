@@ -88,6 +88,20 @@ If any bridge doc conflicts with `/.recursive/RECURSIVE.md`, follow `/.recursive
 - `scripts/lint-recursive-run.ps1`
 - `scripts/recursive-review-bundle.py`
 - `scripts/recursive-review-bundle.ps1`
+- `scripts/recursive-closeout.py`
+- `scripts/recursive-closeout.ps1`
+- `scripts/recursive-router-init.py`
+- `scripts/recursive-router-init.ps1`
+- `scripts/recursive-router-probe.py`
+- `scripts/recursive-router-probe.ps1`
+- `scripts/recursive-router-configure.py`
+- `scripts/recursive-router-configure.ps1`
+- `scripts/recursive-router-invoke.py`
+- `scripts/recursive-router-invoke.ps1`
+- `scripts/recursive-router-resolve.py`
+- `scripts/recursive-router-resolve.ps1`
+- `scripts/recursive-router-validate.py`
+- `scripts/recursive-router-validate.ps1`
 - `scripts/recursive-subagent-action.py`
 - `scripts/recursive-subagent-action.ps1`
 - `scripts/recursive-lock.py`
@@ -96,19 +110,59 @@ If any bridge doc conflicts with `/.recursive/RECURSIVE.md`, follow `/.recursive
 - `scripts/verify-locks.ps1`
 - `scripts/check-reusable-repo-hygiene.py`
 - `scripts/check-reusable-repo-hygiene.ps1`
+- `.recursive/scripts/recursive-training-grpo.py`
+- `.recursive/scripts/recursive-training-grpo.ps1`
+- `.recursive/scripts/recursive-training-phase8-trigger.py`
+- `.recursive/scripts/recursive-training-phase8-trigger.ps1`
+- `.recursive/scripts/recursive-training-extract.py`
+- `.recursive/scripts/recursive-training-extract.ps1`
+- `.recursive/scripts/recursive-training-sync.py`
+- `.recursive/scripts/recursive-training-sync.ps1`
+- `.recursive/scripts/recursive-training-loader.py`
+- `.recursive/scripts/recursive-training-loader.ps1`
+- `.recursive/scripts/recursive-training-mcp.py`
+- `.recursive/scripts/recursive-training-mcp.ps1`
 
 ## Subskills
 
+- `skills/recursive-spec/SKILL.md`
 - `skills/recursive-worktree/SKILL.md`
 - `skills/recursive-debugging/SKILL.md`
 - `skills/recursive-tdd/SKILL.md`
 - `skills/recursive-review-bundle/SKILL.md`
+- `skills/recursive-router/SKILL.md`
 - `skills/recursive-subagent/SKILL.md`
+- `skills/recursive-training/SKILL.md` — extract durable experiential knowledge from completed runs
 
 Use those subskills for their specialized discipline, but keep `/.recursive/RECURSIVE.md` as the single source of truth for the overall workflow contract.
 
+Canonical routed CLI config lives under:
+
+- `/.recursive/config/recursive-router.json`
+- `/.recursive/config/recursive-router-discovered.json`
+
+## Router-aware delegated execution
+
+When this skill or any recursive subskill is about to call another model or external CLI for delegated audit, review, bounded implementation, or other routed subagent work, re-read these routing files from disk immediately before choosing the CLI/model.
+
+Do not hardcode provider or model strings for routed delegation when repo policy already defines the route or fallback behavior.
+
+If routed delegation is in scope, prefer `skills/recursive-router/SKILL.md` plus the canonical `recursive-router-resolve` and `recursive-router-invoke` scripts over bespoke model selection logic.
+
+If routed delegation has been explicitly requested, or if `recursive-router-resolve` for the selected role returns `external-cli`, do not satisfy that delegated slot with local/self-audit work unless the effective route is `fallback-local`, `local-only`, `blocked`, or `ask-user` and that outcome is recorded. The controller may reject routed output after checking it against the actual files, diffs, and recursive artifacts, but unverified local work is not a substitute for a configured routed implementer, tester, reviewer, auditor, or planner role.
+
+If a routed invocation returns `success: false`, exits nonzero, or reports issues that the bounded role is responsible for fixing, run an audit-repair-retry loop: preserve the failed attempt as evidence, tell the routed subagent exactly what to fix, rerun the same route after repair, then verify the new output locally before acceptance. Do not mark the delegated role or phase gate complete from a nonzero-exit routed attempt.
+
+Before dispatching from an isolated worktree, make sure the routing policy and discovery inventory are present and current in that same worktree. Discovery inventory is often untracked, so a newly created worktree can have `/.recursive/config/recursive-router.json` without `/.recursive/config/recursive-router-discovered.json`; refresh discovery from the worktree or copy the current inventory from the controller/source repo before resolving or invoking a route, then record the paths and outcome in the phase artifact or action record.
+
+## Optional add-on
+
+- `recursive-benchmark` stays outside the default recursive-mode package surface.
+- Install it only when a user explicitly asks to benchmark recursive-mode, preferably via `find-skills` or by adding its dedicated benchmark add-on package or repo source.
+
 For audited phases, the installed workflow requires `draft -> audit -> repair -> re-audit -> pass -> lock`, with `Audit: PASS` required before Coverage/Approval may pass.
 Treat `## Worktree Diff Audit` as phase-scoped: Phase 2 owns planning completeness plus expected product/worktree paths, Phase 3-4 own actual product/worktree drift, Phase 6 owns `/.recursive/DECISIONS.md`, Phase 7 owns `/.recursive/STATE.md`, and Phase 8 owns `/.recursive/memory/**`.
+New runs should use `Workflow version: recursive-mode-audit-v2`, where Phase 1 must include `## Source Requirement Inventory` and Phase 2 must include `## Requirement Mapping`, `## Plan Drift Check`, and plan-stage `## Requirement Completion Status`.
 For Phase 3, declare `TDD Mode: strict|pragmatic`. Strict mode requires concrete RED and GREEN evidence paths. Pragmatic mode requires an explicit exception rationale plus compensating evidence.
 For Phase 5, declare `QA Execution Mode: human|agent-operated|hybrid`. Do not fake human sign-off for agent-operated QA, and do not omit sign-off for human or hybrid QA.
 For delegated review, prefer `scripts/recursive-review-bundle.py` or `scripts/recursive-review-bundle.ps1` so Phase 3.5 records a canonical `Review Bundle Path`.
@@ -127,6 +181,7 @@ If the run needs a specialized capability that is not already available, prefer 
 Diff audit ignores incidental runtime byproducts such as `__pycache__/`, `*.pyc`, `.pytest_cache/`, `.mypy_cache/`, and `.ruff_cache/` unless the repo intentionally tracks them.
 Treat Phase 6, Phase 7, and Phase 8 receipts as concise delta receipts that point to the final control-plane docs instead of restating large sections.
 Use `scripts/recursive-lock.py` or `scripts/recursive-lock.ps1` as the normal locking path instead of manually editing `Status`, `LockedAt`, and `LockHash`.
+`recursive-lock` enforces monotonic phase gating: it will reject a lock attempt if any earlier phase that exists in the run directory is not already LOCKED. To reopen a locked artifact and reset it to DRAFT (which also invalidates downstream receipts), use the `--reopen` flag.
 On Windows, run Node/Vite/Vitest commands from the real worktree path rather than `subst` or mapped-drive aliases.
 When evaluating or building browser-local apps, consult `references/local-first-web-app-checklist.md` for common import/persistence/QA edge cases.
 If the repository being improved is itself a reusable skill/workflow repo, do not commit current-session run folders, evidence logs, review bundles, subagent action records, or temp-path references unless they are intentional fixtures; use `scripts/check-reusable-repo-hygiene.py` or `scripts/check-reusable-repo-hygiene.ps1` before calling the repo clean.

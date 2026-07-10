@@ -2,6 +2,25 @@
 
 ## Recursive Run Index
 
+### Session `2026-07-10` — recursive-mode package refresh and scaffold reconciliation
+
+- What changed:
+  - ran `npx skills add https://github.com/try-works/recursive-mode --skill recursive-mode` on local `main`, then restored the full project skill package under `/.agents/skills/recursive-mode/` because the install reduced the tracked package to a lone `SKILL.md`
+  - reconciled the repo-owned recursive scaffold to the current upstream bootstrap contract: `/.recursive/RECURSIVE.md` now follows `recursive-mode-audit-v2`, `/.recursive/config/recursive-router.json` now exists, `/.recursive/scripts/recursive-training-*` now exist, and `/.recursive/memory/training/` is now present
+  - updated the live bridge/router docs (`/.recursive/AGENTS.md`, `/.codex/AGENTS.md`, `/.agent/PLANS.md`) and refreshed the durable memory router so the new router/training surfaces are discoverable without turning `MEMORY.md` into a session dump
+- Why:
+  - the repo’s tracked recursive-mode package had drifted behind the current upstream template, and the direct `skills add` install path did not preserve the tracked supporting files that the installed root skill references
+  - the bootstrap upsert would have replaced important repo-owned control-plane and memory blocks, so the scaffold had to be updated in a way that preserved local state, decisions, and curated memory links
+- How:
+  - cloned the upstream recursive-mode package, ran its installer against a temporary preview copy of the repo, compared the generated scaffold to the live repo, then manually applied only the required deltas
+  - treated `/.recursive/STATE.md`, `/.recursive/DECISIONS.md`, and `/.recursive/memory/MEMORY.md` as repo-owned documents and updated them manually instead of letting the bootstrap overwrite their marked blocks wholesale
+- What was not done:
+  - did not run the bootstrap installer directly against the live repo after confirming that it would clobber the existing `MEMORY.md` router block
+  - did not delete existing promoted skill-memory shards that are still repo-specific guidance beyond the upstream default template
+- Known issues / follow-ups:
+  - if a future `npx skills add ... --skill recursive-mode` install again collapses the tracked project skill package to a root `SKILL.md`, follow the install with a package-integrity check or adjust the upstream packaging behavior
+  - keep the repo-owned skill-memory index curated separately from the upstream default template when this repository intentionally carries additional promoted skill-memory shards
+
 ### Session `2026-07-06` — Codex Subscription routing hardening and release refresh
 
 - What changed:

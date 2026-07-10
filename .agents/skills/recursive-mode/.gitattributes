@@ -1,0 +1,12 @@
+# Normalize skill entrypoint files to LF so cross-platform tooling can reliably
+# detect and parse YAML frontmatter.
+SKILL.md text eol=lf
+skills/*/SKILL.md text eol=lf
+skills/**/SKILL.md text eol=lf
+
+# Exclude the heavy benchmark add-on from default exported recursive-mode package archives.
+references/benchmark-addon export-ignore
+references/benchmarks export-ignore
+scripts/run-recursive-benchmark.py export-ignore
+scripts/run-recursive-benchmark.ps1 export-ignore
+scripts/test_run_recursive_benchmark.py export-ignore

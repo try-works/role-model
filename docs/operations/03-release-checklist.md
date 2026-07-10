@@ -31,7 +31,7 @@ The tag should trigger `build-binaries.yml`, which now:
 4. adds installer scripts,
 5. writes `SHA256SUMS.txt`,
 6. generates a recursive changelog from implementation, decisions, and state receipts in the tag range,
-7. creates one GitHub Release using that recursive changelog plus generated release notes.
+7. creates one GitHub Release using those generated user-facing highlights.
 
 ## After publish
 
@@ -41,8 +41,8 @@ Verify the GitHub Release contains:
 - `install.sh`,
 - `install.ps1`,
 - `SHA256SUMS.txt`,
-- generated release notes grouped by the categories in [.github/release.yml](../../.github/release.yml),
-- the recursive changelog at the top of the release body.
+- user-facing release highlights generated from the recursive receipts,
+- no internal recursive run names or implementation-phase wording in the public release body.
 
 Also verify:
 

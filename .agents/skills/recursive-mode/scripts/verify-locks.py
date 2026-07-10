@@ -9,10 +9,24 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+def load_phase_rules_module():
+    module_path = Path(__file__).with_name("recursive_phase_rules.py")
+    spec = importlib.util.spec_from_file_location("recursive_phase_rules", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load phase rules module from {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+    except FileNotFoundError:
+        raise RuntimeError(f"Phase rules module not found: {module_path}")
+    return module
 
 
 STATUS_RE = re.compile(r'(?m)^[ \t]*Status:\s*(?:`|")?(\w+)(?:`|")?\s*$')
@@ -20,8 +34,10 @@ LOCK_HASH_RE = re.compile(r'(?m)^[ \t]*LockHash:\s*(?:`|")?([a-fA-F0-9]{64})(?:`
 LOCKED_AT_RE = re.compile(r'(?m)^[ \t]*LockedAt:\s*(?:`|")?([^`"\r\n]+)(?:`|")?\s*$')
 LOCK_HASH_LINE_RE = re.compile(r'(?m)^[ \t]*LockHash:.*(?:\n|$)')
 WORKFLOW_VERSION_RE = re.compile(r'(?m)^[ \t]*Workflow version:\s*(?:`|")?([^`"\r\n]+)(?:`|")?\s*$')
+CURRENT_WORKFLOW_PROFILE = "recursive-mode-audit-v2"
 STRICT_WORKFLOW_PROFILE = "recursive-mode-audit-v1"
 COMPAT_WORKFLOW_PROFILE = "memory-phase8"
+STRICT_WORKFLOW_PROFILES = {CURRENT_WORKFLOW_PROFILE, STRICT_WORKFLOW_PROFILE}
 AUDITED_PHASE_FILES = {
     "01-as-is.md",
     "01.5-root-cause.md",
@@ -69,6 +85,8 @@ def get_workflow_profile(run_dir: Path) -> str:
         match = WORKFLOW_VERSION_RE.search(content)
         if match:
             workflow_version = match.group(1).strip()
+            if workflow_version == CURRENT_WORKFLOW_PROFILE:
+                return CURRENT_WORKFLOW_PROFILE
             if workflow_version == STRICT_WORKFLOW_PROFILE:
                 return STRICT_WORKFLOW_PROFILE
             if workflow_version == COMPAT_WORKFLOW_PROFILE:
@@ -191,6 +209,9 @@ def main() -> int:
     valid_runs = 0
     fixed_runs = 0
     failed_runs = 0
+    stale_chain_runs = 0
+
+    phase_rules = load_phase_rules_module()
 
     for run in runs:
         total_runs += 1
@@ -248,7 +269,7 @@ def main() -> int:
             updated_content = artifact_path.read_text(encoding="utf-8")
             coverage_ok, coverage_reason = test_gate(updated_content, "Coverage")
             approval_ok, approval_reason = test_gate(updated_content, "Approval")
-            audit_required = workflow_profile == STRICT_WORKFLOW_PROFILE and artifact["file"] in AUDITED_PHASE_FILES
+            audit_required = workflow_profile in STRICT_WORKFLOW_PROFILES and artifact["file"] in AUDITED_PHASE_FILES
             audit_ok = True
             audit_reason = None
             if audit_required:
@@ -279,8 +300,22 @@ def main() -> int:
                         write_status("FAIL", f"  {addendum.name}: {result.error}")
                         run_valid = False
 
+        # Stale-chain detection: check whether any prerequisite hash in a receipt
+        # no longer matches the current artifact content.
+        stale_entries = phase_rules.get_all_stale_receipts(run_dir)
+        run_stale = False
+        if stale_entries:
+            print("\nStale lock-chain receipts:")
+            for entry in stale_entries:
+                write_status("WARN", f"  {entry['artifact']}: {entry['reason']}")
+                run_stale = True
+
         print()
-        if run_valid and not run_fixed:
+        if run_stale:
+            stale_chain_runs += 1
+            run_valid = False
+            write_status("WARN", f"Run '{run}': Stale lock-chain receipts detected (re-lock in phase order)")
+        elif run_valid and not run_fixed:
             valid_runs += 1
             write_status("PASS", f"Run '{run}': All locks valid")
         elif run_fixed:
@@ -296,15 +331,20 @@ def main() -> int:
     print("=====================\n")
     print(f"Total runs checked: {total_runs}")
     write_status("PASS", f"Valid runs: {valid_runs}")
+    if stale_chain_runs > 0:
+        write_status("WARN", f"Stale-chain runs: {stale_chain_runs}")
     if fixed_runs > 0:
         write_status("WARN", f"Fixed runs (tampered): {fixed_runs}")
     if failed_runs > 0:
         write_status("FAIL", f"Failed runs: {failed_runs}")
     print()
 
-    if failed_runs == 0:
+    if failed_runs == 0 and stale_chain_runs == 0:
         write_status("PASS", "All locks verified successfully")
         return 0
+    if failed_runs == 0:
+        write_status("WARN", "Lock hashes valid but stale-chain receipts detected")
+        return 1
     write_status("FAIL", "Some locks failed verification")
     return 1
 

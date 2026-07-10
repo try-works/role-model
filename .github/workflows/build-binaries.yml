@@ -257,7 +257,6 @@ jobs:
             gh release create "$TAG_NAME" release-assets/* \
               --verify-tag \
               --title "$TAG_NAME" \
-              --generate-notes \
               --notes "$notes" \
               "${prerelease_flag[@]}"
           fi

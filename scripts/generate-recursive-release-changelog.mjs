@@ -93,6 +93,142 @@ function parseRunId(filePath) {
   return match?.[1] ?? null;
 }
 
+function unique(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function normalizeWhitespace(value) {
+  return value.replace(/\s+/g, " ").trim();
+}
+
+function cleanScopeNote(scopeNote) {
+  return normalizeWhitespace(
+    scopeNote
+      .replace(/\brun-\d+\b/gi, "this release")
+      .replace(/\bPhase\s*\d+(\.\d+)?\b/gi, "")
+      .replace(/\bstrict-TDD\b/gi, "")
+      .replace(/\bimplementation\b/gi, "")
+      .replace(/\bartifact\b/gi, "")
+      .replace(/\baddendum\b/gi, "")
+      .replace(/\brecords?\b/gi, "")
+      .replace(/\bsummarizes?\b/gi, "")
+      .replace(/\bthis\b/gi, "")
+      .replace(/\s+,/g, ",")
+      .replace(/\s+\./g, "."),
+  );
+}
+
+function entryText(entry) {
+  return [
+    entry.subject,
+    ...entry.scopeNotes,
+    ...entry.implementationBullets,
+    ...entry.decisionBullets,
+    ...entry.stateBullets,
+  ]
+    .filter(Boolean)
+    .join("\n")
+    .toLowerCase();
+}
+
+function anyMatch(haystack, patterns) {
+  return patterns.some((pattern) => pattern.test(haystack));
+}
+
+function buildUserFacingHighlights(entries) {
+  const combined = entries.map((entry) => entryText(entry)).join("\n");
+  const highlights = [];
+
+  if (
+    anyMatch(combined, [
+      /\bresponses\b/,
+      /\breasoning\b/,
+      /\btool_choice\b/,
+      /\bprevious_response_id\b/,
+      /\bprompt-cache\b/,
+      /\bsession-affinity\b/,
+      /\bcontinuation\b/,
+    ])
+  ) {
+    highlights.push(
+      "Routed requests now preserve OpenAI Responses features such as reasoning, tool choice, continuation IDs, prompt caching, and request affinity when execution moves across compatible endpoints.",
+    );
+  }
+
+  if (
+    anyMatch(combined, [
+      /\bcodex\b/,
+      /\bsubscription\b/,
+      /\bendpoint compatibility\b/,
+      /\bstatic model\b/,
+      /\boperator-configured\b/,
+    ])
+  ) {
+    highlights.push(
+      "Codex subscription and operator-configured OpenAI endpoints are now selected using endpoint compatibility metadata instead of brittle hard-coded model lists, improving alias routing and support for newer model IDs.",
+    );
+  }
+
+  if (
+    anyMatch(combined, [
+      /\blitellm\b/,
+      /\brouter_settings\b/,
+      /\blitellm_settings\b/,
+      /\bunified runtime config\b/,
+    ])
+  ) {
+    highlights.push(
+      "Managed LiteLLM execution now preserves router and module settings from unified runtime configuration, reducing drift between configured policy and downstream execution behavior.",
+    );
+  }
+
+  if (
+    anyMatch(combined, [
+      /\btelemetry\b/,
+      /\bexecution-semantics\b/,
+      /\bretry\b/,
+      /\breroute\b/,
+      /\bcooldown\b/,
+      /\bidempotency\b/,
+      /\bpayload-byte\b/,
+      /\bfailure\b/,
+      /\bsqlite\b/,
+    ])
+  ) {
+    highlights.push(
+      "Request telemetry and failure receipts now capture execution path, payload sizing, retries, reroutes, cooldown decisions, idempotency state, and failure context so routing problems are diagnosable alongside successful calls.",
+    );
+  }
+
+  if (
+    anyMatch(combined, [
+      /\bvalidate-vendors\b/,
+      /\bcorpus\b/,
+      /\bdeterministic\b/,
+      /\bpackaged-runtime\b/,
+      /\brebuilt-runtime\b/,
+      /\bpi\b/,
+      /\bcraft\b/,
+    ])
+  ) {
+    highlights.push(
+      "Runtime validation now covers deterministic routed client flows and packaged-runtime checks, improving confidence in alias-based text, image, and degraded-primary routing behavior.",
+    );
+  }
+
+  if (highlights.length > 0) {
+    return unique(highlights);
+  }
+
+  const fallbackHighlights = entries
+    .flatMap((entry) => entry.scopeNotes)
+    .map((scopeNote) => cleanScopeNote(scopeNote))
+    .filter(Boolean)
+    .map((scopeNote) => scopeNote.replace(/^[a-z]/, (char) => char.toUpperCase()));
+
+  return unique(fallbackHighlights).slice(0, 5);
+}
+
 function parseImplementationArtifact(commit, filePath) {
   const content = tryGit(["show", `${commit}:${filePath}`]);
   if (!content) {
@@ -182,7 +318,6 @@ function determineRange(toRef, explicitFromRef) {
 
 function buildCommitEntry(commit) {
   const subject = git(["show", "-s", "--format=%s", commit]);
-  const shortSha = git(["rev-parse", "--short", commit]);
   const changedFiles = git(["diff-tree", "--no-commit-id", "--name-only", "-r", commit])
     .split(/\r?\n/)
     .filter(Boolean);
@@ -219,49 +354,28 @@ function buildCommitEntry(commit) {
     return null;
   }
 
-  const runIds = new Set(
-    [
-      ...implementationArtifacts.map((entry) => entry.runId),
-      ...decisionsArtifacts.map((entry) => entry.runId),
-      ...stateArtifacts.map((entry) => entry.runId),
-    ].filter(Boolean),
-  );
+  const runIds = unique([
+    ...implementationArtifacts.map((entry) => entry.runId),
+    ...decisionsArtifacts.map((entry) => entry.runId),
+    ...stateArtifacts.map((entry) => entry.runId),
+  ]);
 
-  const output = [`### ${subject} (${shortSha})`];
-  if (runIds.size > 0) {
-    output.push(`- Runs: ${[...runIds].map((runId) => `\`${runId}\``).join(", ")}`);
-  }
-
-  for (const artifact of implementationArtifacts) {
-    if (artifact.scopeNote) {
-      output.push(`- Implementation scope: ${artifact.scopeNote}`);
-    }
-    for (const bullet of artifact.bullets.slice(0, 4)) {
-      output.push(`- Implementation: ${bullet}`);
-    }
-  }
-
-  for (const artifact of decisionsArtifacts) {
-    for (const bullet of artifact.bullets.slice(0, 4)) {
-      output.push(`- Decisions: ${bullet}`);
-    }
-  }
-
-  for (const artifact of stateArtifacts) {
-    for (const bullet of artifact.bullets.slice(0, 4)) {
-      output.push(`- State: ${bullet}`);
-    }
-  }
-
-  for (const bullet of directDecisionBullets.slice(0, 4)) {
-    output.push(`- Decisions: ${bullet}`);
-  }
-
-  for (const bullet of directStateBullets.slice(0, 4)) {
-    output.push(`- State: ${bullet}`);
-  }
-
-  return output.join("\n");
+  return {
+    subject,
+    runIds,
+    scopeNotes: implementationArtifacts.map((artifact) => artifact.scopeNote).filter(Boolean),
+    implementationBullets: implementationArtifacts.flatMap((artifact) =>
+      artifact.bullets.slice(0, 4),
+    ),
+    decisionBullets: [
+      ...decisionsArtifacts.flatMap((artifact) => artifact.bullets.slice(0, 4)),
+      ...directDecisionBullets.slice(0, 4),
+    ],
+    stateBullets: [
+      ...stateArtifacts.flatMap((artifact) => artifact.bullets.slice(0, 4)),
+      ...directStateBullets.slice(0, 4),
+    ],
+  };
 }
 
 const toRef = process.argv[2];
@@ -274,9 +388,10 @@ if (!toRef) {
 
 const { fromRef, commits } = determineRange(toRef, explicitFromRef);
 const entries = commits.map((commit) => buildCommitEntry(commit)).filter(Boolean);
+const highlights = buildUserFacingHighlights(entries);
 
 const linesOut = [
-  "## Recursive Change Log",
+  "## Release Highlights",
   "",
   fromRef
     ? `Source range: \`${fromRef}..${toRef}\``
@@ -284,12 +399,12 @@ const linesOut = [
   "",
 ];
 
-if (entries.length === 0) {
+if (highlights.length === 0) {
   linesOut.push(
-    "No structured recursive implementation, decisions, or state-update artifacts were found in this release range.",
+    "No structured release highlights were derived from the recursive implementation, decisions, or state-update artifacts in this release range.",
   );
 } else {
-  linesOut.push(...entries.flatMap((entry) => [entry, ""]));
+  linesOut.push(...highlights.map((highlight) => `- ${highlight}`));
 }
 
 process.stdout.write(`${linesOut.join("\n").trim()}\n`);

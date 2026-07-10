@@ -22,6 +22,8 @@ import {
   fetchRouterDecisions,
   fetchRouterSummary,
   fetchRuntimeConfig,
+  fetchRuntimeDashboardSnapshot,
+  fetchRuntimeShellSnapshot,
   fetchRuntimeSnapshot,
   fetchRuntimeSummary,
   fetchTelemetryAnalytics,
@@ -263,6 +265,140 @@ describe("fetchRuntimeSummary", () => {
     expect(fetcher).toHaveBeenCalledTimes(3);
 
     vi.useRealTimers();
+  });
+});
+
+describe("fetchRuntimeShellSnapshot", () => {
+  test("loads only the runtime shell dependencies and skips heavyweight inventory endpoints", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+
+      switch (url) {
+        case "/api/role-model/runtime/summary":
+          return jsonResponse({
+            providerCount: 3,
+            accountCount: 2,
+            endpointCount: 4,
+            lifecycleSummary: {
+              active: 2,
+              degraded: 1,
+              offline: 1,
+            },
+          });
+        case "/api/role-model/controller":
+          return jsonResponse({
+            endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+            modelId: "chatgpt/gpt-5.4",
+            sourceType: "runtime-default",
+          });
+        case "/api/role-model/runtime/config":
+          return jsonResponse({
+            path: "C:/runtime-config.yaml",
+            config: {
+              executionMode: "remote_only",
+              routingStrategy: "difficulty",
+              llamaSwap: { models: [] },
+              liteLLM: { providers: [] },
+            },
+          });
+        case "/api/version":
+          return jsonResponse({
+            version: "1.2.3",
+            commit: "abc123",
+            build_date: "2026-07-10",
+          });
+        case "/api/role-model/requests":
+        case "/api/role-model/models":
+        case "/api/role-model/providers":
+        case "/api/role-model/accounts":
+        case "/api/role-model/accounts/device":
+        case "/api/role-model/endpoints":
+        case "/api/role-model/roles":
+          throw new Error(`Heavy endpoint should not be fetched: ${url}`);
+        default:
+          throw new Error(`Unexpected request: ${url}`);
+      }
+    });
+
+    await expect(fetchRuntimeShellSnapshot(fetcher)).resolves.toEqual({
+      summary: {
+        providerCount: 3,
+        accountCount: 2,
+        endpointCount: 4,
+        lifecycleSummary: {
+          active: 2,
+          degraded: 1,
+          offline: 1,
+        },
+      },
+      controller: {
+        endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        modelId: "chatgpt/gpt-5.4",
+        sourceType: "runtime-default",
+      },
+      configRecord: {
+        path: "C:/runtime-config.yaml",
+        config: {
+          executionMode: "remote_only",
+          routingStrategy: "difficulty",
+          llamaSwap: { models: [] },
+          liteLLM: { providers: [] },
+        },
+      },
+      version: {
+        version: "1.2.3",
+        commit: "abc123",
+        build_date: "2026-07-10",
+      },
+    });
+    expect(fetcher).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe("fetchRuntimeDashboardSnapshot", () => {
+  test("loads only endpoint inventory and role definitions for the overview route", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+
+      switch (url) {
+        case "/api/role-model/endpoints":
+          return jsonResponse([
+            {
+              endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+              providerId: "deepseek",
+              modelId: "deepseek/deepseek-v4-pro",
+            },
+          ]);
+        case "/api/role-model/roles":
+          return jsonResponse([{ roleId: "general.chat", label: "General chat" }]);
+        case "/api/role-model/runtime/summary":
+        case "/api/role-model/providers":
+        case "/api/role-model/accounts":
+        case "/api/role-model/accounts/device":
+        case "/api/role-model/requests":
+        case "/api/role-model/models":
+        case "/api/version":
+        case "/api/role-model/controller":
+        case "/api/role-model/runtime/config":
+          throw new Error(`Heavy endpoint should not be fetched: ${url}`);
+        default:
+          throw new Error(`Unexpected request: ${url}`);
+      }
+    });
+
+    await expect(fetchRuntimeDashboardSnapshot(fetcher)).resolves.toEqual({
+      endpoints: [
+        {
+          endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          providerId: "deepseek",
+          modelId: "deepseek/deepseek-v4-pro",
+        },
+      ],
+      roles: [{ roleId: "general.chat", label: "General chat" }],
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 });
 

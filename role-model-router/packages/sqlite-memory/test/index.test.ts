@@ -94,7 +94,11 @@ describe("initializeSqliteMemory", () => {
       ]),
     );
     expect(journalMode.journal_mode.toLowerCase()).toBe("wal");
-    expect(migrations).toEqual([{ migration_id: "run06-v1-initial-schema" }]);
+    expect(migrations).toEqual([
+      { migration_id: "run06-v1-initial-schema" },
+      { migration_id: "run62-observation-metadata-backfill-v1" },
+      { migration_id: "run62-telemetry-metadata-backfill-v1" },
+    ]);
   });
 
   test("persists validated provider accounts by credential reference without storing raw secrets", async () => {
@@ -613,6 +617,193 @@ describe("initializeSqliteMemory", () => {
         { maintenance_key: "retention.class", maintenance_value: "standard" },
       ]),
     );
+  });
+
+  test("does not repeat observation metadata JSON backfills after migration receipt", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-backfill-receipt",
+    });
+    const observationBackfillMigrationId = "run62-observation-metadata-backfill-v1";
+    const telemetryBackfillMigrationId = "run62-telemetry-metadata-backfill-v1";
+    const observationJson = JSON.stringify({
+      clientRequestId: "client-legacy-1",
+      observedPerformance: {
+        sample: {
+          source_type: "live_request",
+        },
+      },
+      executionSemantics: {
+        sourceClient: "pi",
+        executionFamily: "remote",
+        adapterFamily: "codex-subscription-responses",
+        payloadBytes: {
+          ingress: 111,
+          translated: 222,
+          providerCanonical: 333,
+          providerWire: 444,
+          providerResponse: 555,
+        },
+        cooldownDecision: "none",
+        idempotencyDecision: "new",
+        toolSideEffectState: "none",
+      },
+      executionTelemetry: {
+        vendorId: "chatgpt-codex-responses",
+      },
+      taxonomyDimensions: {},
+    });
+
+    const seedDatabase = new DatabaseSync(initialized.databasePath);
+    seedDatabase
+      .prepare(
+        "INSERT INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
+      )
+      .run(
+        "req-legacy-backfill",
+        "decision-legacy-backfill",
+        "endpoint-legacy",
+        "conversation-legacy",
+        1_000,
+        observationJson,
+      );
+    seedDatabase
+      .prepare(
+        `INSERT INTO runtime_telemetry_records (
+          request_id,
+          routing_decision_id,
+          endpoint_id,
+          conversation_id,
+          created_at_ms,
+          input_tokens,
+          output_tokens,
+          total_tokens,
+          prompt_cache_requested,
+          prompt_cache_used,
+          cache_read_tokens,
+          cache_write_tokens,
+          tool_call_count,
+          tool_execution_count,
+          cost_provenance
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        "req-legacy-backfill",
+        "decision-legacy-backfill",
+        "endpoint-legacy",
+        "conversation-legacy",
+        1_000,
+        1,
+        2,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "unavailable",
+      );
+    seedDatabase
+      .prepare("DELETE FROM migration_receipts WHERE migration_id IN (?, ?)")
+      .run(observationBackfillMigrationId, telemetryBackfillMigrationId);
+    seedDatabase.close();
+
+    initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-backfill-receipt",
+    });
+
+    const firstBackfillDatabase = new DatabaseSync(initialized.databasePath);
+    const receipts = firstBackfillDatabase
+      .prepare(
+        "SELECT migration_id FROM migration_receipts WHERE migration_id IN (?, ?) ORDER BY migration_id",
+      )
+      .all(observationBackfillMigrationId, telemetryBackfillMigrationId) as Array<{
+      migration_id: string;
+    }>;
+    const observationAfterFirstBackfill = firstBackfillDatabase
+      .prepare(
+        "SELECT client_request_id, request_class, taxonomy_role_id, taxonomy_task_type FROM runtime_observations WHERE request_id = ?",
+      )
+      .get("req-legacy-backfill") as {
+      client_request_id: string | null;
+      request_class: string | null;
+      taxonomy_role_id: string | null;
+      taxonomy_task_type: string | null;
+    };
+    const telemetryAfterFirstBackfill = firstBackfillDatabase
+      .prepare(
+        "SELECT client_request_id, request_class, source_client, execution_family, adapter_family, vendor_id, request_payload_bytes, response_payload_bytes FROM runtime_telemetry_records WHERE request_id = ?",
+      )
+      .get("req-legacy-backfill") as {
+      client_request_id: string | null;
+      request_class: string | null;
+      source_client: string | null;
+      execution_family: string | null;
+      adapter_family: string | null;
+      vendor_id: string | null;
+      request_payload_bytes: number | null;
+      response_payload_bytes: number | null;
+    };
+
+    expect(receipts.map((row) => row.migration_id)).toEqual([
+      observationBackfillMigrationId,
+      telemetryBackfillMigrationId,
+    ]);
+    expect(observationAfterFirstBackfill).toEqual({
+      client_request_id: null,
+      request_class: null,
+      taxonomy_role_id: null,
+      taxonomy_task_type: null,
+    });
+    expect(telemetryAfterFirstBackfill).toEqual({
+      client_request_id: null,
+      request_class: null,
+      source_client: null,
+      execution_family: null,
+      adapter_family: null,
+      vendor_id: null,
+      request_payload_bytes: null,
+      response_payload_bytes: null,
+    });
+    firstBackfillDatabase.close();
+
+    initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-backfill-receipt",
+    });
+
+    const secondBackfillDatabase = new DatabaseSync(initialized.databasePath);
+    const observationAfterSecondBackfill = secondBackfillDatabase
+      .prepare(
+        "SELECT client_request_id, request_class, taxonomy_role_id, taxonomy_task_type FROM runtime_observations WHERE request_id = ?",
+      )
+      .get("req-legacy-backfill");
+    const telemetryAfterSecondBackfill = secondBackfillDatabase
+      .prepare(
+        "SELECT client_request_id, request_class, source_client, execution_family, adapter_family, vendor_id, request_payload_bytes, response_payload_bytes FROM runtime_telemetry_records WHERE request_id = ?",
+      )
+      .get("req-legacy-backfill");
+    secondBackfillDatabase.close();
+
+    expect(observationAfterSecondBackfill).toEqual({
+      client_request_id: null,
+      request_class: null,
+      taxonomy_role_id: null,
+      taxonomy_task_type: null,
+    });
+    expect(telemetryAfterSecondBackfill).toEqual({
+      client_request_id: null,
+      request_class: null,
+      source_client: null,
+      execution_family: null,
+      adapter_family: null,
+      vendor_id: null,
+      request_payload_bytes: null,
+      response_payload_bytes: null,
+    });
   });
 
   test("persists and reloads the continuity rows needed for bounded context assembly", async () => {

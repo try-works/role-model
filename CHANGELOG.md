@@ -75,8 +75,8 @@ range, especially:
 - fallback deltas from `/.recursive/DECISIONS.md` and `/.recursive/STATE.md` when the structured receipts are not
   present in the same commit
 
-GitHub's generated release notes are still included alongside that recursive changelog so merged PRs,
-contributors, and uncategorized changes remain visible.
+GitHub Releases publish the repo-authored release body directly so the visible notes stay
+user-facing instead of mirroring internal PR titles or recursive run names.
 
 This project uses release tags of the form `vX.Y.Z` and follows Semantic Versioning for its public release
 surface.
