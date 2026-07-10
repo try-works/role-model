@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/61-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/runtime-observability
+
+(node:14280) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (5 tests | 4 skipped) 326ms
+   ✓ runtime-observability > captures execution semantics receipts and per-tool side-effect state  322ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 4 skipped (5)
+   Start at  00:58:15
+   Duration  2.61s (transform 626ms, setup 0ms, collect 726ms, tests 326ms, environment 0ms, prepare 631ms)
+

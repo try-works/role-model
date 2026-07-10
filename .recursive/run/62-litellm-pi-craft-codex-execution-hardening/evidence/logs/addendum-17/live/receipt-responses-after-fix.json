@@ -1,0 +1,32 @@
+{
+  "name": "receipt-responses-after-fix",
+  "clientRequestId": "add17-after-fix-receipt-responses",
+  "status": 200,
+  "ok": true,
+  "elapsedMs": 5398,
+  "response": {
+    "id": "chatcmpl_req-b434df49-0d2b-432f-b766-8c9e96bfee82",
+    "object": "response",
+    "created_at": 1783644105,
+    "status": "completed",
+    "model": "chatgpt/gpt-5.4",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_chatcmpl_req-b434df49-0d2b-432f-b766-8c9e96bfee82",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "ADD17_AFTER_FIX_RECEIPT_RESPONSES_OK"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 20,
+      "output_tokens": 15,
+      "total_tokens": 35
+    }
+  }
+}

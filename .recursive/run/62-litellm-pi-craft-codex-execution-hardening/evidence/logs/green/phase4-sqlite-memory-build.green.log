@@ -1,0 +1,4 @@
+
+> @role-model-router/sqlite-memory@0.0.0 build D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\packages\sqlite-memory
+> tsc -p tsconfig.json
+

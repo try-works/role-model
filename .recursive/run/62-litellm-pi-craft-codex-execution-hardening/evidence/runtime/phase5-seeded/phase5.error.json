@@ -1,0 +1,4 @@
+{
+  "error": "pi-alias-text-001 failed with HTTP 400: {\"error\":\"Stored OAuth credential api-key/deepseek/deepseek.personal.deepseek-api-key does not contain an access token.\"}",
+  "stack": "Error: pi-alias-text-001 failed with HTTP 400: {\"error\":\"Stored OAuth credential api-key/deepseek/deepseek.personal.deepseek-api-key does not contain an access token.\"}\n    at file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/[eval1]:488:13"
+}

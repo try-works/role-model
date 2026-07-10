@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://127.0.0.1:54901",
+  "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-agent-path-Zb2mbg",
+  "aliases": {
+    "difficultyHybrid": "difficulty.hybrid",
+    "difficultyRemoteOnly": "difficulty.remote-only"
+  }
+}

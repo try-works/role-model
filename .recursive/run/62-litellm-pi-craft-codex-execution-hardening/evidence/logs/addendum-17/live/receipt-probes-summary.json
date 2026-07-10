@@ -1,0 +1,19 @@
+{
+  "generatedAt": "2026-07-10T00:25:30.281Z",
+  "results": [
+    {
+      "name": "receipt-chat-completions",
+      "clientRequestId": "add17-receipt-chat-completions",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 2258
+    },
+    {
+      "name": "receipt-responses",
+      "clientRequestId": "add17-receipt-responses",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 3895
+    }
+  ]
+}

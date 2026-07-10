@@ -1,12 +1,10 @@
-import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from "node:http";
-import { createServer as createNetServer } from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { createInterface } from "node:readline";
 import { DatabaseSync } from "node:sqlite";
 import { setTimeout as delay } from "node:timers/promises";
 import { parse } from "yaml";
@@ -42,6 +40,8 @@ import { createOpenAIProviderAdapter } from "@role-model-router/provider-openai"
 import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
 import {
   type RuntimeCapturePolicy,
+  type RuntimeExecutionCooldownReceipt,
+  type RuntimeExecutionFailedAttemptReceipt,
   type RuntimeObservationBundle,
   type RuntimeObservationCapturePolicyReceipt,
   type RuntimeRoutingDiagnostics,
@@ -308,14 +308,22 @@ export const OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = OPENAI_CODEX_SUBSCRIPTION_MOD
   (entry) => entry.modelId,
 );
 const OPENAI_CODEX_SUBSCRIPTION_MODEL_ID_SET = new Set<string>(OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS);
+const OPENAI_CODEX_SUBSCRIPTION_ENDPOINT_ID_MARKERS = [
+  `.${OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID}.`,
+  ".codex-subscription.",
+] as const;
+const OPENAI_CODEX_SUBSCRIPTION_RESPONSES_ADAPTER_FAMILY = "codex-subscription-responses";
 const OPENAI_CODEX_SUBSCRIPTION_START_ENDPOINT = "codex://openai/chatgpt-device-code/start";
 const OPENAI_CODEX_SUBSCRIPTION_TOKEN_ENDPOINT = "codex://openai/chatgpt-device-code/token";
 const OPENAI_CODEX_SUBSCRIPTION_VERIFICATION_URL = "https://auth.openai.com/codex/device";
+const OPENAI_CODEX_OAUTH_CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann";
+const OPENAI_CODEX_DEVICE_USER_CODE_ENDPOINT =
+  "https://auth.openai.com/api/accounts/deviceauth/usercode";
+const OPENAI_CODEX_DEVICE_TOKEN_ENDPOINT = "https://auth.openai.com/api/accounts/deviceauth/token";
+const OPENAI_CODEX_OAUTH_TOKEN_ENDPOINT = "https://auth.openai.com/oauth/token";
 const OPENAI_CODEX_SUBSCRIPTION_AUTH_MISSING_ERROR =
   "Codex Subscription is connected on this machine, but the cached Codex auth session is missing or unreadable. Reconnect to continue.";
-const CODEX_APP_SERVER_DEVICE_CODE_PREFIX = "codex-app-server:";
-const CODEX_APP_SERVER_REQUEST_TIMEOUT_MS = 10_000;
-const CODEX_APP_SERVER_TURN_TIMEOUT_MS = 600_000;
+const OPENAI_CODEX_DEVICE_CODE_SESSION_PREFIX = "codex-oauth-device:";
 const CANONICAL_ROUTING_ALIAS_STRATEGIES = [
   null,
   "baseline",
@@ -416,6 +424,9 @@ interface OpenAIChatCompletionsBody {
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly tools?: readonly OpenAIChatCompletionsTool[];
   readonly tool_choice?: RuntimeExecutionToolChoice;
+  readonly reasoning_effort?: string;
+  readonly reasoning?: Record<string, unknown>;
+  readonly thinking?: Record<string, unknown>;
   readonly stream?: boolean;
   readonly max_tokens?: number;
   readonly temperature?: number;
@@ -434,9 +445,73 @@ interface OpenAIResponsesBody {
   readonly model: string;
   readonly input: OpenAIResponsesInput;
   readonly tools?: readonly OpenAIResponsesTool[];
+  readonly tool_choice?: RuntimeExecutionToolChoice;
+  readonly reasoning_effort?: string;
+  readonly reasoning?: Record<string, unknown>;
+  readonly thinking?: Record<string, unknown>;
+  readonly previous_response_id?: string;
+  readonly prompt_cache_key?: string;
   readonly stream?: boolean;
   readonly max_output_tokens?: number;
   readonly temperature?: number;
+}
+
+function asPlainRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function readOpenAIReasoningRequest(
+  body: Pick<OpenAIResponsesBody, "reasoning_effort" | "reasoning" | "thinking">,
+): RuntimeExecutionRequest["reasoning"] | undefined {
+  if (typeof body.reasoning_effort === "string") {
+    return {
+      effort: body.reasoning_effort,
+    };
+  }
+
+  const reasoning = asPlainRecord(body.reasoning);
+  if (reasoning) {
+    return {
+      ...(typeof reasoning.effort === "string" ? { effort: reasoning.effort } : {}),
+      raw: reasoning,
+    };
+  }
+
+  const thinking = asPlainRecord(body.thinking);
+  if (thinking) {
+    return {
+      channel: "thinking",
+      raw: thinking,
+    };
+  }
+
+  return undefined;
+}
+
+const readResponsesReasoningRequest = readOpenAIReasoningRequest;
+const readChatCompletionsReasoningRequest = readOpenAIReasoningRequest;
+
+function readResponsesPromptCacheRequest(
+  body: OpenAIResponsesBody,
+): RuntimeExecutionRequest["promptCache"] | undefined {
+  if (typeof body.prompt_cache_key !== "string" || body.prompt_cache_key.trim().length === 0) {
+    return undefined;
+  }
+  return {
+    mode: "prefer",
+    key: body.prompt_cache_key.trim(),
+  };
+}
+
+function readResponsesContinuationRequest(
+  body: OpenAIResponsesBody,
+): RuntimeExecutionRequest["continuation"] | undefined {
+  return typeof body.previous_response_id === "string" &&
+    body.previous_response_id.trim().length > 0
+    ? { previousResponseId: body.previous_response_id.trim() }
+    : undefined;
 }
 
 export interface BridgeModelRecord {
@@ -529,15 +604,7 @@ export interface BridgeControllerAssignment {
 
 export interface BridgeExecutionPlan {
   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
-  readonly fallbackAllowEndpoints?: readonly string[];
-  readonly executionRequest: {
-    readonly messages: readonly OpenAIChatCompletionsMessage[];
-    readonly tools?: readonly RuntimeExecutionToolDefinition[];
-    readonly toolChoice?: RuntimeExecutionToolChoice;
-    readonly stream?: boolean;
-    readonly maxOutputTokens?: number;
-    readonly temperature?: number;
-  };
+  readonly executionRequest: RuntimeExecutionRequest;
   readonly routingModel?: RoutingModelSelection;
   readonly routingDiagnostics?: Pick<
     RuntimeRoutingDiagnostics,
@@ -639,6 +706,18 @@ function hasActiveToolUsage(messages: readonly OpenAIChatCompletionsMessage[]): 
     }
   }
   return false;
+}
+
+function hasExplicitCodeRoutingTextSignal(value: string): boolean {
+  return (
+    /\b(code|patch|refactor|schema|test|debug|bug|diff|typescript|javascript|python)\b/.test(
+      value,
+    ) ||
+    /\b[\w./-]+\.(?:c|cc|cpp|cs|go|h|hpp|java|js|jsx|json|kt|md|php|py|rb|rs|swift|toml|ts|tsx|yaml|yml)\b/.test(
+      value,
+    ) ||
+    /\b(?:src|lib|app|packages|test|tests|docs)\//.test(value)
+  );
 }
 
 function isDifficultyAskMode(input: {
@@ -1027,10 +1106,8 @@ export function inferHeuristicControllerGuidance(input: {
     roleDefinitions: input.roleDefinitions,
     taskDefinitions: input.taskDefinitions,
   });
-  const hasCodeSignal =
-    /(code|patch|refactor|schema|test|debug|bug|diff|typescript|javascript|python|verify)/.test(
-      combinedText,
-    ) || input.toolCount > 0;
+  const hasToolUseSignal = hasActiveToolUsage(input.messages);
+  const hasCodeSignal = hasExplicitCodeRoutingTextSignal(combinedText) || hasToolUseSignal;
   const hasClassificationSignal =
     /(classif|categor|sentiment|label|language detect|embedding)/.test(combinedText);
   const codeRoleTask = inferHeuristicControllerCodeRoleTask({
@@ -1049,7 +1126,7 @@ export function inferHeuristicControllerGuidance(input: {
     preferredCapabilities.push("code.write");
   }
   if (
-    input.toolCount > 0 &&
+    hasToolUseSignal &&
     (knownCapabilities.size === 0 || knownCapabilities.has("tools.function_calling"))
   ) {
     preferredCapabilities.push("tools.function_calling");
@@ -1502,116 +1579,23 @@ function collectPreferredEndpointIds(
 }
 
 function isOpenAICodexSubscriptionEndpointId(endpointId: string): boolean {
-  return endpointId.includes(`.${OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID}.`);
+  return OPENAI_CODEX_SUBSCRIPTION_ENDPOINT_ID_MARKERS.some((marker) =>
+    endpointId.includes(marker),
+  );
 }
 
-function collectOpenAICodexSubscriptionAllowEndpoints(input: {
-  readonly registry: EndpointRegistryResult;
-  readonly allowEndpoints: readonly string[] | undefined;
-}): readonly string[] {
-  const allowSet = new Set(input.allowEndpoints ?? []);
-  return input.registry.endpoints
-    .filter(
-      (endpoint) =>
-        allowSet.has(endpoint.identity.endpoint_id) &&
-        isOpenAICodexSubscriptionEndpointId(endpoint.identity.endpoint_id) &&
-        OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS.includes(
-          endpoint.identity.model_id as (typeof OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS)[number],
-        ),
-    )
-    .map((endpoint) => endpoint.identity.endpoint_id)
-    .sort(compareText);
-}
-
-function mergeRoutingModelSelections(
-  primary: RoutingModelSelection | undefined,
-  secondary: RoutingModelSelection | undefined,
-): RoutingModelSelection | undefined {
-  if (!primary) {
-    return secondary;
-  }
-  if (!secondary) {
-    return primary;
-  }
-  return {
-    endpointId: primary.endpointId,
-    preferredEndpointIds: [
-      ...new Set([...primary.preferredEndpointIds, ...secondary.preferredEndpointIds]),
-    ],
-  };
-}
-
-function shouldPreferOpenAICodexSubscriptionForTurn(input: {
-  readonly messages: readonly OpenAIChatCompletionsMessage[];
-  readonly toolCount: number;
-  readonly requiredInputModalities: readonly string[];
-}): boolean {
-  if (input.requiredInputModalities.some((modality) => modality !== "text")) {
-    return true;
-  }
-  if (input.toolCount === 0) {
-    return false;
-  }
-  return summarizeDifficultySignals({
-    messages: input.messages,
-    contextTokens: 0,
-    toolCount: input.toolCount,
-  }).codeOrSchemaBurden;
-}
-
-function resolveOpenAICodexSubscriptionRoutingModel(input: {
-  readonly registry: EndpointRegistryResult;
-  readonly allowEndpoints: readonly string[] | undefined;
-  readonly messages: readonly OpenAIChatCompletionsMessage[];
-  readonly toolCount: number;
-  readonly requiredInputModalities: readonly string[];
-}): RoutingModelSelection | undefined {
-  if (!shouldPreferOpenAICodexSubscriptionForTurn(input)) {
-    return undefined;
-  }
-  const preferredEndpointIds = collectOpenAICodexSubscriptionAllowEndpoints({
-    registry: input.registry,
-    allowEndpoints: input.allowEndpoints,
-  });
-  const endpointId = preferredEndpointIds[0];
-  return endpointId
-    ? {
-        endpointId,
-        preferredEndpointIds,
-      }
-    : undefined;
-}
-
-function applyOpenAICodexSubscriptionInitialPin(input: {
-  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
-  readonly routingModel: RoutingModelSelection | undefined;
-  readonly preferredCodexRoutingModel: RoutingModelSelection | undefined;
-}): {
-  readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
-  readonly routingModel: RoutingModelSelection | undefined;
-  readonly fallbackAllowEndpoints?: readonly string[];
-} {
-  const pinnedEndpointId = input.preferredCodexRoutingModel?.endpointId;
-  const allowEndpoints = input.routingRequest.allowEndpoints;
+function resolveEffectiveExecutionAdapterFamily(input: {
+  readonly endpointId: string;
+  readonly adapterFamily: string;
+  readonly vendorId?: string | null;
+}): string {
   if (
-    !pinnedEndpointId ||
-    !allowEndpoints ||
-    allowEndpoints.length <= 1 ||
-    !allowEndpoints.includes(pinnedEndpointId)
+    isOpenAICodexSubscriptionEndpointId(input.endpointId) &&
+    input.vendorId === "chatgpt-codex-responses"
   ) {
-    return {
-      routingRequest: input.routingRequest,
-      routingModel: input.routingModel,
-    };
+    return OPENAI_CODEX_SUBSCRIPTION_RESPONSES_ADAPTER_FAMILY;
   }
-  return {
-    routingRequest: {
-      ...input.routingRequest,
-      allowEndpoints: [pinnedEndpointId],
-    },
-    routingModel: input.routingModel,
-    fallbackAllowEndpoints: allowEndpoints,
-  };
+  return input.adapterFamily;
 }
 
 function strategyToObservedDifficultyBucket(
@@ -1883,6 +1867,7 @@ type BridgeStreamMetadata = {
   readonly endpointId: string;
   readonly adapterFamily: string;
   readonly routingDecisionId?: string;
+  readonly reasoningRequested?: boolean;
 };
 type BridgeStreamWriter = (
   chunk: Record<string, unknown>,
@@ -2887,6 +2872,8 @@ interface CodexAuthAdapter {
   }>;
   readAccount(input: {
     readonly codexHome: string;
+    readonly loginId: string;
+    readonly userCode: string;
     readonly wsUrl: string;
     readonly refreshToken: boolean;
   }): Promise<{
@@ -2908,6 +2895,7 @@ export interface CodexExecutionAdapter {
     readonly modelId: string;
     readonly requestCapture: ProviderRequestCapture;
     readonly authPayload: CodexAuthCacheSnapshot;
+    readonly streamChunkWriter?: (chunk: string) => Promise<void> | void;
     readonly executeDynamicToolCall?: (input: {
       readonly toolCallId: string;
       readonly toolName: string;
@@ -2933,8 +2921,31 @@ export interface CodexExecutionAdapter {
       readonly cacheUsed?: boolean;
       readonly cacheReadTokens?: number;
       readonly cacheWriteTokens?: number;
+      readonly parameterSanitization?: readonly AdapterParameterDecision[];
     };
   }>;
+}
+
+type OpenAIIngressSurface = "openai.chat.completions" | "openai.responses";
+
+type AdapterParameterAction =
+  | "forward"
+  | "translate"
+  | "drop_with_receipt"
+  | "emulate_locally"
+  | "reject_with_local_error";
+
+interface AdapterParameterDecision {
+  readonly field: string;
+  readonly sourceSurface: OpenAIIngressSurface;
+  readonly targetSurface: string;
+  readonly action: AdapterParameterAction;
+  readonly reason: string;
+  readonly sourceValueKind: "present" | "absent";
+  readonly forwardedField?: string;
+  readonly adapterFamily: string;
+  readonly providerId: string;
+  readonly vendorId: string;
 }
 
 export interface BridgeServerOptions {
@@ -2951,7 +2962,10 @@ export interface BridgeExecutionRequestOptions {
   readonly routingModeOverride?: RuntimeRoutingMode;
   readonly endpointId?: string;
   readonly requestedRoleId?: string;
+  readonly sessionId?: string;
   readonly clientRequestId?: string;
+  readonly transportPreference?: RuntimeExecutionRequest["transportPreference"];
+  readonly abortSignal?: AbortSignal;
 }
 
 class BridgeHttpError extends Error {
@@ -2979,6 +2993,20 @@ class UpstreamExecutionError extends BridgeHttpError {
 
   readonly endpointId: string;
 
+  readonly providerId: string;
+
+  readonly providerFamily: string;
+
+  readonly vendorId?: string;
+
+  readonly executionFamily: string;
+
+  readonly adapterFamily: string;
+
+  readonly failurePhase: string;
+
+  readonly errorPreview: Readonly<Record<string, unknown>>;
+
   constructor(input: {
     readonly statusCode: number;
     readonly errorClass: string;
@@ -2986,6 +3014,13 @@ class UpstreamExecutionError extends BridgeHttpError {
     readonly retryable: boolean;
     readonly fallbackEligible: boolean;
     readonly endpointId: string;
+    readonly providerId: string;
+    readonly providerFamily: string;
+    readonly vendorId?: string;
+    readonly executionFamily: string;
+    readonly adapterFamily: string;
+    readonly failurePhase: string;
+    readonly errorPreview?: Readonly<Record<string, unknown>>;
     readonly upstreamBody?: unknown;
   }) {
     super(input.statusCode, {
@@ -2996,6 +3031,13 @@ class UpstreamExecutionError extends BridgeHttpError {
         retryable: input.retryable,
         fallbackEligible: input.fallbackEligible,
         endpointId: input.endpointId,
+        providerId: input.providerId,
+        providerFamily: input.providerFamily,
+        ...(input.vendorId ? { vendorId: input.vendorId } : {}),
+        executionFamily: input.executionFamily,
+        adapterFamily: input.adapterFamily,
+        failurePhase: input.failurePhase,
+        ...(input.errorPreview ? { errorPreview: input.errorPreview } : {}),
         ...(input.upstreamBody !== undefined ? { upstreamBody: input.upstreamBody } : {}),
       },
     });
@@ -3003,7 +3045,29 @@ class UpstreamExecutionError extends BridgeHttpError {
     this.retryable = input.retryable;
     this.fallbackEligible = input.fallbackEligible;
     this.endpointId = input.endpointId;
+    this.providerId = input.providerId;
+    this.providerFamily = input.providerFamily;
+    this.vendorId = input.vendorId;
+    this.executionFamily = input.executionFamily;
+    this.adapterFamily = input.adapterFamily;
+    this.failurePhase = input.failurePhase;
+    this.errorPreview = input.errorPreview ?? {
+      message: input.message,
+      statusCode: input.statusCode,
+    };
   }
+}
+
+const runtimeTelemetryPersistedErrors = new WeakSet<object>();
+
+function markRuntimeTelemetryPersisted(error: unknown): void {
+  if (typeof error === "object" && error !== null) {
+    runtimeTelemetryPersistedErrors.add(error);
+  }
+}
+
+function hasRuntimeTelemetryPersisted(error: unknown): boolean {
+  return typeof error === "object" && error !== null && runtimeTelemetryPersistedErrors.has(error);
 }
 
 const EXECUTION_FAILURE_COOLDOWN_MAINTENANCE_KEY = "routing.execution-failure-cooldowns.v1";
@@ -3022,6 +3086,17 @@ interface ExecutionFailureCooldownRecord {
   readonly cooldownUntilMs: number;
   readonly lastFailureAtMs: number;
   readonly lastErrorClass: string;
+  readonly sourceAttemptId?: string;
+  readonly sourceRequestId?: string;
+  readonly sourceRoutingDecisionId?: string;
+  readonly providerId?: string;
+  readonly providerFamily?: string;
+  readonly vendorId?: string;
+  readonly executionFamily?: string;
+  readonly adapterFamily?: string;
+  readonly failurePhase?: string;
+  readonly statusCode?: number;
+  readonly errorPreview?: Readonly<Record<string, unknown>>;
 }
 
 type ExecutionFailureCooldownState = Record<string, ExecutionFailureCooldownRecord>;
@@ -3076,8 +3151,30 @@ function isQuotaExhaustedErrorText(text: string): boolean {
     text.includes("no remaining credits") ||
     text.includes("has no remaining credits") ||
     text.includes("credit balance") ||
-    text.includes("credits exhausted")
+    text.includes("credits exhausted") ||
+    text.includes("insufficient balance") ||
+    text.includes("insufficient_balance")
   );
+}
+
+function buildUpstreamErrorPreview(input: {
+  readonly statusCode: number;
+  readonly message: string;
+  readonly body?: unknown;
+}): Readonly<Record<string, unknown>> {
+  const preview: Record<string, unknown> = {
+    message: input.message,
+    statusCode: input.statusCode,
+  };
+  const code = readNestedProviderErrorField(input.body, "code");
+  if (code) {
+    preview.code = code;
+  }
+  const type = readNestedProviderErrorField(input.body, "type");
+  if (type) {
+    preview.type = type;
+  }
+  return preview;
 }
 
 export function classifyUpstreamExecutionFailure(input: {
@@ -3086,6 +3183,12 @@ export function classifyUpstreamExecutionFailure(input: {
   readonly body?: unknown;
   readonly message?: string;
   readonly fallbackStatusCode?: number;
+  readonly providerId: string;
+  readonly providerFamily?: string;
+  readonly vendorId?: string;
+  readonly executionFamily: string;
+  readonly adapterFamily: string;
+  readonly failurePhase?: string;
 }): UpstreamExecutionError {
   const message = input.message?.trim().length
     ? input.message.trim()
@@ -3103,6 +3206,21 @@ export function classifyUpstreamExecutionFailure(input: {
     .toLowerCase();
   const hasStatusCode = typeof input.statusCode === "number";
   const statusCode = hasStatusCode ? input.statusCode : (input.fallbackStatusCode ?? 502);
+  const providerFamily = input.providerFamily ?? input.providerId;
+  const errorPreview = buildUpstreamErrorPreview({
+    statusCode,
+    message,
+    body: input.body,
+  });
+  const baseErrorContext = {
+    providerId: input.providerId,
+    providerFamily,
+    ...(input.vendorId ? { vendorId: input.vendorId } : {}),
+    executionFamily: input.executionFamily,
+    adapterFamily: input.adapterFamily,
+    failurePhase: input.failurePhase ?? "provider_execution",
+    errorPreview,
+  } as const;
 
   if (
     statusCode === 408 ||
@@ -3119,6 +3237,7 @@ export function classifyUpstreamExecutionFailure(input: {
       retryable: true,
       fallbackEligible: true,
       endpointId: input.endpointId,
+      ...baseErrorContext,
       upstreamBody: input.body,
     });
   }
@@ -3132,6 +3251,7 @@ export function classifyUpstreamExecutionFailure(input: {
         retryable: false,
         fallbackEligible: true,
         endpointId: input.endpointId,
+        ...baseErrorContext,
         upstreamBody: input.body,
       });
     }
@@ -3147,6 +3267,7 @@ export function classifyUpstreamExecutionFailure(input: {
         retryable: true,
         fallbackEligible: true,
         endpointId: input.endpointId,
+        ...baseErrorContext,
         upstreamBody: input.body,
       });
     }
@@ -3170,6 +3291,7 @@ export function classifyUpstreamExecutionFailure(input: {
       retryable: true,
       fallbackEligible: true,
       endpointId: input.endpointId,
+      ...baseErrorContext,
       upstreamBody: input.body,
     });
   }
@@ -3188,6 +3310,7 @@ export function classifyUpstreamExecutionFailure(input: {
       retryable: false,
       fallbackEligible: true,
       endpointId: input.endpointId,
+      ...baseErrorContext,
       upstreamBody: input.body,
     });
   }
@@ -3200,6 +3323,7 @@ export function classifyUpstreamExecutionFailure(input: {
       retryable: true,
       fallbackEligible: true,
       endpointId: input.endpointId,
+      ...baseErrorContext,
       upstreamBody: input.body,
     });
   }
@@ -3217,6 +3341,7 @@ export function classifyUpstreamExecutionFailure(input: {
       retryable: false,
       fallbackEligible: false,
       endpointId: input.endpointId,
+      ...baseErrorContext,
       upstreamBody: input.body,
     });
   }
@@ -3228,6 +3353,7 @@ export function classifyUpstreamExecutionFailure(input: {
     retryable: false,
     fallbackEligible: false,
     endpointId: input.endpointId,
+    ...baseErrorContext,
     upstreamBody: input.body,
   });
 }
@@ -3250,6 +3376,29 @@ function parseExecutionFailureCooldownState(
         const cooldownUntilMs = record.cooldownUntilMs;
         const lastFailureAtMs = record.lastFailureAtMs;
         const lastErrorClass = record.lastErrorClass;
+        const sourceAttemptId =
+          typeof record.sourceAttemptId === "string" ? record.sourceAttemptId : undefined;
+        const sourceRequestId =
+          typeof record.sourceRequestId === "string" ? record.sourceRequestId : undefined;
+        const sourceRoutingDecisionId =
+          typeof record.sourceRoutingDecisionId === "string"
+            ? record.sourceRoutingDecisionId
+            : undefined;
+        const providerId = typeof record.providerId === "string" ? record.providerId : undefined;
+        const providerFamily =
+          typeof record.providerFamily === "string" ? record.providerFamily : undefined;
+        const vendorId = typeof record.vendorId === "string" ? record.vendorId : undefined;
+        const executionFamily =
+          typeof record.executionFamily === "string" ? record.executionFamily : undefined;
+        const adapterFamily =
+          typeof record.adapterFamily === "string" ? record.adapterFamily : undefined;
+        const failurePhase =
+          typeof record.failurePhase === "string" ? record.failurePhase : undefined;
+        const statusCode = typeof record.statusCode === "number" ? record.statusCode : undefined;
+        const errorPreview =
+          typeof record.errorPreview === "object" && record.errorPreview !== null
+            ? (record.errorPreview as Record<string, unknown>)
+            : undefined;
         if (
           typeof failureCount !== "number" ||
           typeof cooldownUntilMs !== "number" ||
@@ -3267,6 +3416,17 @@ function parseExecutionFailureCooldownState(
               cooldownUntilMs,
               lastFailureAtMs,
               lastErrorClass,
+              ...(sourceAttemptId ? { sourceAttemptId } : {}),
+              ...(sourceRequestId ? { sourceRequestId } : {}),
+              ...(sourceRoutingDecisionId ? { sourceRoutingDecisionId } : {}),
+              ...(providerId ? { providerId } : {}),
+              ...(providerFamily ? { providerFamily } : {}),
+              ...(vendorId ? { vendorId } : {}),
+              ...(executionFamily ? { executionFamily } : {}),
+              ...(adapterFamily ? { adapterFamily } : {}),
+              ...(failurePhase ? { failurePhase } : {}),
+              ...(typeof statusCode === "number" ? { statusCode } : {}),
+              ...(errorPreview ? { errorPreview } : {}),
             } satisfies ExecutionFailureCooldownRecord,
           ],
         ];
@@ -3304,6 +3464,37 @@ function readActiveExecutionFailureCooldownEndpointIds(input: {
     .map((record) => record.endpointId);
 }
 
+function toExecutionCooldownReceipt(
+  record: ExecutionFailureCooldownRecord,
+  nowMs: number,
+): RuntimeExecutionCooldownReceipt {
+  return {
+    endpointId: record.endpointId,
+    active: record.cooldownUntilMs > nowMs,
+    failureCount: record.failureCount,
+    cooldownUntilMs: record.cooldownUntilMs,
+    lastFailureAtMs: record.lastFailureAtMs,
+    lastErrorClass: record.lastErrorClass,
+    ...(record.sourceAttemptId ? { sourceAttemptId: record.sourceAttemptId } : {}),
+    ...(record.sourceRequestId ? { sourceRequestId: record.sourceRequestId } : {}),
+    ...(record.sourceRoutingDecisionId
+      ? { sourceRoutingDecisionId: record.sourceRoutingDecisionId }
+      : {}),
+    ...(record.errorPreview ? { errorPreview: { ...record.errorPreview } } : {}),
+  };
+}
+
+function readExecutionCooldownReceipts(input: {
+  readonly databasePath: string;
+  readonly nowMs: number;
+  readonly endpointIds?: readonly string[];
+}): readonly RuntimeExecutionCooldownReceipt[] {
+  const endpointFilter = input.endpointIds ? new Set(input.endpointIds) : null;
+  return Object.values(readExecutionFailureCooldownState(input.databasePath))
+    .filter((record) => (endpointFilter ? endpointFilter.has(record.endpointId) : true))
+    .map((record) => toExecutionCooldownReceipt(record, input.nowMs));
+}
+
 export function resolveExecutionFailureCooldownDurationMs(failureCount: number): number {
   const scheduleIndex = Math.max(
     0,
@@ -3327,6 +3518,17 @@ function recordExecutionFailureCooldown(input: {
   readonly endpointId: string;
   readonly errorClass: string;
   readonly nowMs: number;
+  readonly sourceAttemptId?: string;
+  readonly sourceRequestId?: string;
+  readonly sourceRoutingDecisionId?: string;
+  readonly providerId?: string;
+  readonly providerFamily?: string;
+  readonly vendorId?: string;
+  readonly executionFamily?: string;
+  readonly adapterFamily?: string;
+  readonly failurePhase?: string;
+  readonly statusCode?: number;
+  readonly errorPreview?: Readonly<Record<string, unknown>>;
 }): ExecutionFailureCooldownRecord {
   const state = readExecutionFailureCooldownState(input.databasePath);
   const previousRecord = state[input.endpointId];
@@ -3338,6 +3540,19 @@ function recordExecutionFailureCooldown(input: {
     cooldownUntilMs: input.nowMs + cooldownDurationMs,
     lastFailureAtMs: input.nowMs,
     lastErrorClass: input.errorClass,
+    ...(input.sourceAttemptId ? { sourceAttemptId: input.sourceAttemptId } : {}),
+    ...(input.sourceRequestId ? { sourceRequestId: input.sourceRequestId } : {}),
+    ...(input.sourceRoutingDecisionId
+      ? { sourceRoutingDecisionId: input.sourceRoutingDecisionId }
+      : {}),
+    ...(input.providerId ? { providerId: input.providerId } : {}),
+    ...(input.providerFamily ? { providerFamily: input.providerFamily } : {}),
+    ...(input.vendorId ? { vendorId: input.vendorId } : {}),
+    ...(input.executionFamily ? { executionFamily: input.executionFamily } : {}),
+    ...(input.adapterFamily ? { adapterFamily: input.adapterFamily } : {}),
+    ...(input.failurePhase ? { failurePhase: input.failurePhase } : {}),
+    ...(typeof input.statusCode === "number" ? { statusCode: input.statusCode } : {}),
+    ...(input.errorPreview ? { errorPreview: { ...input.errorPreview } } : {}),
   };
   writeExecutionFailureCooldownState(input.databasePath, {
     ...state,
@@ -3409,7 +3624,101 @@ function runtimeTelemetryDimensionsFor(error: unknown): Record<string, unknown> 
       capabilityEligibility.excludedTargets = excludedTargets;
     }
   }
-  return Object.keys(capabilityEligibility).length > 0 ? { capabilityEligibility } : null;
+  const executionCooldown: Record<string, unknown> = {};
+  const deniedEndpointIds = stringArrayValue(errorRecord.deniedEndpointIds);
+  if (deniedEndpointIds) {
+    executionCooldown.deniedEndpointIds = deniedEndpointIds;
+  }
+  if (Array.isArray(errorRecord.executionCooldowns)) {
+    const cooldowns = errorRecord.executionCooldowns.flatMap((entry) => {
+      if (typeof entry !== "object" || entry === null) {
+        return [];
+      }
+      const record = entry as Record<string, unknown>;
+      const endpointId = record.endpointId;
+      const active = record.active;
+      const failureCount = record.failureCount;
+      const cooldownUntilMs = record.cooldownUntilMs;
+      const lastErrorClass = record.lastErrorClass;
+      if (
+        typeof endpointId !== "string" ||
+        typeof active !== "boolean" ||
+        typeof failureCount !== "number" ||
+        typeof cooldownUntilMs !== "number" ||
+        typeof lastErrorClass !== "string"
+      ) {
+        return [];
+      }
+      return [
+        {
+          endpointId,
+          active,
+          failureCount,
+          cooldownUntilMs,
+          lastErrorClass,
+        },
+      ];
+    });
+    if (cooldowns.length > 0) {
+      executionCooldown.entries = cooldowns;
+      if (!executionCooldown.deniedEndpointIds) {
+        executionCooldown.deniedEndpointIds = cooldowns.map((entry) => entry.endpointId);
+      }
+    }
+  }
+  const dimensions: Record<string, unknown> = {};
+  if (Object.keys(capabilityEligibility).length > 0) {
+    dimensions.capabilityEligibility = capabilityEligibility;
+  }
+  if (Object.keys(executionCooldown).length > 0) {
+    dimensions.executionCooldown = executionCooldown;
+  }
+  return Object.keys(dimensions).length > 0 ? dimensions : null;
+}
+
+function readExecutionCooldownsFromTelemetryDimensions(
+  dimensions: unknown,
+): readonly RuntimeExecutionCooldownReceipt[] {
+  if (!dimensions || typeof dimensions !== "object") {
+    return [];
+  }
+  const executionCooldown = (dimensions as Record<string, unknown>).executionCooldown;
+  if (!executionCooldown || typeof executionCooldown !== "object") {
+    return [];
+  }
+  const entries = (executionCooldown as Record<string, unknown>).entries;
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+  return entries.flatMap((entry) => {
+    if (typeof entry !== "object" || entry === null) {
+      return [];
+    }
+    const record = entry as Record<string, unknown>;
+    const endpointId = record.endpointId;
+    const active = record.active;
+    const failureCount = record.failureCount;
+    const cooldownUntilMs = record.cooldownUntilMs;
+    const lastErrorClass = record.lastErrorClass;
+    if (
+      typeof endpointId !== "string" ||
+      typeof active !== "boolean" ||
+      typeof failureCount !== "number" ||
+      typeof cooldownUntilMs !== "number" ||
+      typeof lastErrorClass !== "string"
+    ) {
+      return [];
+    }
+    return [
+      {
+        endpointId,
+        active,
+        failureCount,
+        cooldownUntilMs,
+        lastErrorClass,
+      } satisfies RuntimeExecutionCooldownReceipt,
+    ];
+  });
 }
 
 function slugify(value: string): string {
@@ -3431,6 +3740,7 @@ function createVendorError(vendorId: string, message: string): BridgeHttpError {
 }
 
 const VALID_RUNTIME_ROUTING_MODES = ["baseline", "difficulty", "controller", "hybrid"] as const;
+const VALID_TRANSPORT_PREFERENCES = ["auto", "sse", "websocket"] as const;
 
 function parseRuntimeRoutingModeOverride(value: string): RuntimeRoutingMode {
   if ((VALID_RUNTIME_ROUTING_MODES as readonly string[]).includes(value)) {
@@ -3438,6 +3748,18 @@ function parseRuntimeRoutingModeOverride(value: string): RuntimeRoutingMode {
   }
   throw new BridgeHttpError(400, {
     error: `Invalid x-role-model-routing-mode header value "${value}". Expected one of: baseline, difficulty, controller, hybrid.`,
+  });
+}
+
+function parseRuntimeTransportPreferenceHeader(
+  value: string,
+): RuntimeExecutionRequest["transportPreference"] {
+  const normalized = value.trim().toLowerCase();
+  if ((VALID_TRANSPORT_PREFERENCES as readonly string[]).includes(normalized)) {
+    return normalized as RuntimeExecutionRequest["transportPreference"];
+  }
+  throw new BridgeHttpError(400, {
+    error: `Invalid x-role-model-transport-preference header value "${value}". Expected one of: auto, sse, websocket.`,
   });
 }
 
@@ -3474,6 +3796,13 @@ function readBridgeRequestId(request: IncomingMessage): string {
   return `req-${randomUUID()}`;
 }
 
+function measureStructuredPayloadBytes(value: unknown): number {
+  return Buffer.byteLength(
+    typeof value === "string" ? value : JSON.stringify(value ?? null),
+    "utf8",
+  );
+}
+
 function formatRuntimeTelemetryLogs(
   records: ReturnType<typeof listRuntimeTelemetryRecords>,
 ): string {
@@ -3492,8 +3821,15 @@ function readBridgeExecutionRequestOptions(
   request: IncomingMessage,
 ): BridgeExecutionRequestOptions | undefined {
   const clientRequestId =
+    request.headers["x-client-request-id"]?.toString().trim() ||
     request.headers["x-request-id"]?.toString().trim() ||
     request.headers["x-role-model-request-id"]?.toString().trim();
+  const sessionId =
+    request.headers["session-id"]?.toString().trim() ||
+    request.headers["x-session-id"]?.toString().trim();
+  const transportPreferenceHeader = request.headers["x-role-model-transport-preference"]
+    ?.toString()
+    .trim();
   const routingModeOverrideHeader = request.headers["x-role-model-routing-mode"]?.toString().trim();
   const endpointIdHeader = request.headers["x-role-model-endpoint-id"]?.toString().trim();
   const requestedRoleIdHeader = request.headers["x-role-model-requested-role-id"]
@@ -3501,6 +3837,8 @@ function readBridgeExecutionRequestOptions(
     .trim();
   if (
     !clientRequestId &&
+    !sessionId &&
+    !transportPreferenceHeader &&
     !routingModeOverrideHeader &&
     !endpointIdHeader &&
     !requestedRoleIdHeader
@@ -3508,12 +3846,39 @@ function readBridgeExecutionRequestOptions(
     return undefined;
   }
   return {
+    ...(sessionId ? { sessionId } : {}),
     ...(clientRequestId ? { clientRequestId } : {}),
+    ...(transportPreferenceHeader
+      ? {
+          transportPreference: parseRuntimeTransportPreferenceHeader(transportPreferenceHeader),
+        }
+      : {}),
     ...(routingModeOverrideHeader
       ? { routingModeOverride: parseRuntimeRoutingModeOverride(routingModeOverrideHeader) }
       : {}),
     ...(endpointIdHeader ? { endpointId: endpointIdHeader } : {}),
     ...(requestedRoleIdHeader ? { requestedRoleId: requestedRoleIdHeader } : {}),
+  };
+}
+
+function buildBridgeExecutionSessionAffinity(
+  requestOptions?: BridgeExecutionRequestOptions,
+): RuntimeExecutionRequest["sessionAffinity"] | undefined {
+  const sessionId =
+    typeof requestOptions?.sessionId === "string" && requestOptions.sessionId.trim().length > 0
+      ? requestOptions.sessionId.trim()
+      : undefined;
+  const clientRequestId =
+    typeof requestOptions?.clientRequestId === "string" &&
+    requestOptions.clientRequestId.trim().length > 0
+      ? requestOptions.clientRequestId.trim()
+      : undefined;
+  if (!sessionId && !clientRequestId) {
+    return undefined;
+  }
+  return {
+    ...(sessionId ? { sessionId } : {}),
+    ...(clientRequestId ? { clientRequestId } : {}),
   };
 }
 
@@ -4414,11 +4779,6 @@ function applyUnifiedLiteLLMAdapterFamilyOverrides(
 
   return {
     ...catalog,
-    providers: catalog.providers.map((provider) =>
-      providerIds.has(provider.providerId)
-        ? { ...provider, adapterFamily: "litellm-proxy" }
-        : provider,
-    ),
     models: (() => {
       const configuredCapabilitiesByModelId = new Map<string, readonly string[]>();
       for (const provider of config.liteLLM.providers) {
@@ -7142,42 +7502,26 @@ export function mapChatCompletionsRequest(
     taskDefinitions,
     requestOptions,
   });
-  const preferredCodexRoutingModel = controllerRouting.routingModel
-    ? undefined
-    : resolveOpenAICodexSubscriptionRoutingModel({
-        registry,
-        allowEndpoints: rolePolicyExecution.routingRequest.allowEndpoints,
-        messages: body.messages,
-        toolCount: body.tools?.length ?? 0,
-        requiredInputModalities: capabilityRequirements.requiredInputModalities,
-      });
-  const codexRoutingModel = mergeRoutingModelSelections(
-    controllerRouting.routingModel,
-    preferredCodexRoutingModel,
-  );
-  const pinnedCodexExecution = applyOpenAICodexSubscriptionInitialPin({
-    routingRequest: rolePolicyExecution.routingRequest,
-    routingModel: codexRoutingModel,
-    preferredCodexRoutingModel,
-  });
+  const sessionAffinity = buildBridgeExecutionSessionAffinity(requestOptions);
+  const reasoning = readChatCompletionsReasoningRequest(body);
 
   return {
-    routingRequest: pinnedCodexExecution.routingRequest,
-    ...(pinnedCodexExecution.fallbackAllowEndpoints
-      ? { fallbackAllowEndpoints: pinnedCodexExecution.fallbackAllowEndpoints }
-      : {}),
+    routingRequest: rolePolicyExecution.routingRequest,
     executionRequest: {
       ...rolePolicyExecution.executionRequest,
       ...(body.tool_choice !== undefined && rolePolicyExecution.executionRequest.tools?.length
         ? { toolChoice: body.tool_choice }
         : {}),
+      ...(sessionAffinity ? { sessionAffinity } : {}),
+      ...(reasoning ? { reasoning } : {}),
+      ...(requestOptions?.transportPreference
+        ? { transportPreference: requestOptions.transportPreference }
+        : {}),
       ...(typeof body.stream === "boolean" ? { stream: body.stream } : {}),
       ...(typeof body.max_tokens === "number" ? { maxOutputTokens: body.max_tokens } : {}),
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
-    ...(pinnedCodexExecution.routingModel
-      ? { routingModel: pinnedCodexExecution.routingModel }
-      : {}),
+    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
     ...(rolePolicyExecution.routingDiagnostics
       ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
@@ -7320,41 +7664,32 @@ export function mapResponsesRequest(
     taskDefinitions,
     requestOptions,
   });
-  const preferredCodexRoutingModel = controllerRouting.routingModel
-    ? undefined
-    : resolveOpenAICodexSubscriptionRoutingModel({
-        registry,
-        allowEndpoints: rolePolicyExecution.routingRequest.allowEndpoints,
-        messages,
-        toolCount: body.tools?.length ?? 0,
-        requiredInputModalities: capabilityRequirements.requiredInputModalities,
-      });
-  const codexRoutingModel = mergeRoutingModelSelections(
-    controllerRouting.routingModel,
-    preferredCodexRoutingModel,
-  );
-  const pinnedCodexExecution = applyOpenAICodexSubscriptionInitialPin({
-    routingRequest: rolePolicyExecution.routingRequest,
-    routingModel: codexRoutingModel,
-    preferredCodexRoutingModel,
-  });
+  const reasoning = readResponsesReasoningRequest(body);
+  const promptCache = readResponsesPromptCacheRequest(body);
+  const continuation = readResponsesContinuationRequest(body);
+  const sessionAffinity = buildBridgeExecutionSessionAffinity(requestOptions);
 
   return {
-    routingRequest: pinnedCodexExecution.routingRequest,
-    ...(pinnedCodexExecution.fallbackAllowEndpoints
-      ? { fallbackAllowEndpoints: pinnedCodexExecution.fallbackAllowEndpoints }
-      : {}),
+    routingRequest: rolePolicyExecution.routingRequest,
     executionRequest: {
       ...rolePolicyExecution.executionRequest,
+      ...(body.tool_choice !== undefined && rolePolicyExecution.executionRequest.tools?.length
+        ? { toolChoice: body.tool_choice }
+        : {}),
+      ...(reasoning ? { reasoning } : {}),
+      ...(promptCache ? { promptCache } : {}),
+      ...(continuation ? { continuation } : {}),
+      ...(sessionAffinity ? { sessionAffinity } : {}),
+      ...(requestOptions?.transportPreference
+        ? { transportPreference: requestOptions.transportPreference }
+        : {}),
       ...(typeof body.stream === "boolean" ? { stream: body.stream } : {}),
       ...(typeof body.max_output_tokens === "number"
         ? { maxOutputTokens: body.max_output_tokens }
         : {}),
       ...(typeof body.temperature === "number" ? { temperature: body.temperature } : {}),
     },
-    ...(pinnedCodexExecution.routingModel
-      ? { routingModel: pinnedCodexExecution.routingModel }
-      : {}),
+    ...(controllerRouting.routingModel ? { routingModel: controllerRouting.routingModel } : {}),
     ...(rolePolicyExecution.routingDiagnostics
       ? { routingDiagnostics: rolePolicyExecution.routingDiagnostics }
       : {}),
@@ -7434,6 +7769,90 @@ function writeSseHeaders(response: ServerResponse): void {
 function writeSseEvent(response: ServerResponse, eventName: string, payload: unknown): void {
   response.write(`event: ${eventName}\n`);
   response.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
+class BridgeClientDisconnectedError extends Error {
+  constructor() {
+    super("Downstream client disconnected before the streamed response completed.");
+  }
+}
+
+function throwIfBridgeClientAborted(abortSignal: AbortSignal | undefined): void {
+  if (abortSignal?.aborted) {
+    throw new BridgeClientDisconnectedError();
+  }
+}
+
+function isBridgeClientDisconnectedError(error: unknown): boolean {
+  return error instanceof BridgeClientDisconnectedError;
+}
+
+function createBridgeRequestAbortSignal(
+  request: IncomingMessage,
+  response: ServerResponse,
+): AbortSignal {
+  const controller = new AbortController();
+  const abort = () => {
+    if (!controller.signal.aborted && !response.writableEnded) {
+      controller.abort();
+    }
+  };
+  request.on("aborted", abort);
+  response.on("close", abort);
+  response.on("error", abort);
+  return controller.signal;
+}
+
+function mergeBridgeRequestAbortSignal(
+  requestOptions: BridgeExecutionRequestOptions | undefined,
+  abortSignal: AbortSignal,
+): BridgeExecutionRequestOptions {
+  return {
+    ...(requestOptions ?? {}),
+    abortSignal,
+  };
+}
+
+async function writeSseChunk(
+  response: ServerResponse,
+  serializedChunk: string,
+  abortSignal?: AbortSignal,
+): Promise<void> {
+  if (abortSignal?.aborted || response.destroyed || response.writableEnded) {
+    throw new BridgeClientDisconnectedError();
+  }
+  if (response.write(serializedChunk)) {
+    return;
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const cleanup = () => {
+      response.off("drain", onDrain);
+      response.off("close", onClose);
+      response.off("error", onError);
+      abortSignal?.removeEventListener("abort", onAbort);
+    };
+    const onDrain = () => {
+      cleanup();
+      resolve();
+    };
+    const onClose = () => {
+      cleanup();
+      reject(new BridgeClientDisconnectedError());
+    };
+    const onError = () => {
+      cleanup();
+      reject(new BridgeClientDisconnectedError());
+    };
+    const onAbort = () => {
+      cleanup();
+      reject(new BridgeClientDisconnectedError());
+    };
+    response.once("drain", onDrain);
+    response.once("close", onClose);
+    response.once("error", onError);
+    abortSignal?.addEventListener("abort", onAbort, { once: true });
+  });
 }
 
 async function readJsonBody(request: IncomingMessage): Promise<Record<string, unknown>> {
@@ -8447,18 +8866,10 @@ interface StoredCodexAuthPayload extends CodexAuthCacheSnapshot {}
 
 interface CodexDeviceCodeSessionPayload {
   readonly loginId: string;
+  readonly userCode: string;
   readonly wsUrl: string;
   readonly codexHome: string;
   readonly pid: number;
-}
-
-interface MinimalWebSocket {
-  onopen: (() => void) | null;
-  onmessage: ((event: { readonly data: unknown }) => void) | null;
-  onerror: ((event: unknown) => void) | null;
-  onclose: (() => void) | null;
-  send(data: string): void;
-  close(): void;
 }
 
 function isCodexSubscriptionEndpoint(endpoint: string): boolean {
@@ -8502,21 +8913,22 @@ function readStoredCodexAuthSnapshot(
 }
 
 function encodeCodexDeviceCodeSessionPayload(payload: CodexDeviceCodeSessionPayload): string {
-  return `${CODEX_APP_SERVER_DEVICE_CODE_PREFIX}${Buffer.from(
+  return `${OPENAI_CODEX_DEVICE_CODE_SESSION_PREFIX}${Buffer.from(
     JSON.stringify(payload),
     "utf8",
   ).toString("base64url")}`;
 }
 
 function decodeCodexDeviceCodeSessionPayload(value: string): CodexDeviceCodeSessionPayload | null {
-  if (!value.startsWith(CODEX_APP_SERVER_DEVICE_CODE_PREFIX)) {
+  if (!value.startsWith(OPENAI_CODEX_DEVICE_CODE_SESSION_PREFIX)) {
     return null;
   }
   try {
     return JSON.parse(
-      Buffer.from(value.slice(CODEX_APP_SERVER_DEVICE_CODE_PREFIX.length), "base64url").toString(
-        "utf8",
-      ),
+      Buffer.from(
+        value.slice(OPENAI_CODEX_DEVICE_CODE_SESSION_PREFIX.length),
+        "base64url",
+      ).toString("utf8"),
     ) as CodexDeviceCodeSessionPayload;
   } catch {
     return null;
@@ -8531,268 +8943,71 @@ function resolveManagedCodexSubscriptionHome(
   return path.join(runtimeStateRoot, scopeId, "codex-subscription", authRequestId);
 }
 
-export function resolveManagedCodexExecutionHome(
-  runtimeStateRoot: string,
-  scopeId: string,
-  _requestId: string,
-): string {
-  const localAppData = process.env.LOCALAPPDATA?.trim();
-  const baseRoot =
-    localAppData && localAppData.length > 0
-      ? path.join(localAppData, "RMCS")
-      : path.join(os.homedir(), ".rmcs");
-  const scopeHash = createHash("sha256").update(scopeId).digest("hex").slice(0, 8);
-  return path.join(baseRoot, `s-${scopeHash}`);
+function readOpenAICodexAccountIdFromAccessToken(accessToken: string): string {
+  const payload = decodeJwtPayload(accessToken);
+  const authClaim = asPlainRecord(payload?.["https://api.openai.com/auth"]);
+  const accountId =
+    typeof authClaim?.chatgpt_account_id === "string" ? authClaim.chatgpt_account_id.trim() : "";
+  if (accountId.length === 0) {
+    throw new Error("OpenAI Codex OAuth token did not contain a ChatGPT account id.");
+  }
+  return accountId;
 }
 
-export function resolveManagedCodexWorkspaceRoot(codexHome: string, requestId: string): string {
-  const requestHash = createHash("sha256").update(requestId).digest("hex").slice(0, 10);
-  return path.join(codexHome, "ws", `r-${requestHash}`);
+async function readOpenAICodexJsonResponse(
+  response: Response,
+  fallback: string,
+): Promise<Record<string, unknown>> {
+  const text = await response.text();
+  let payload: Record<string, unknown>;
+  try {
+    payload = text.length > 0 ? (JSON.parse(text) as Record<string, unknown>) : {};
+  } catch {
+    payload = {};
+  }
+  if (!response.ok) {
+    throw new Error(
+      readCodexResponsesErrorMessage(payload) ??
+        (text.length > 0 ? text.slice(0, 2_000) : fallback),
+    );
+  }
+  return payload;
 }
 
-function readCodexAppServerMessageText(data: unknown): string {
-  if (typeof data === "string") {
-    return data;
-  }
-  if (data instanceof ArrayBuffer) {
-    return Buffer.from(data).toString("utf8");
-  }
-  if (ArrayBuffer.isView(data)) {
-    return Buffer.from(data.buffer, data.byteOffset, data.byteLength).toString("utf8");
-  }
-  return String(data);
-}
-
-function readCodexAppServerErrorMessage(error: unknown, fallback: string): string {
-  const parts: string[] = [];
-  const pending: unknown[] = [error];
-  const seen = new Set<unknown>();
-  while (pending.length > 0) {
-    const current = pending.shift();
-    if (current === null || current === undefined || seen.has(current)) {
-      continue;
-    }
-    seen.add(current);
-    if (typeof current === "string" && current.trim().length > 0) {
-      parts.push(current.trim());
-      continue;
-    }
-    if (typeof current !== "object") {
-      continue;
-    }
-    const record = current as Record<string, unknown>;
-    for (const key of ["message", "code", "type", "error_description", "detail", "details"]) {
-      const value = record[key];
-      if (typeof value === "string" && value.trim().length > 0) {
-        parts.push(value.trim());
-      }
-    }
-    for (const key of ["error", "cause", "data", "body", "response"]) {
-      if (key in record) {
-        pending.push(record[key]);
-      }
-    }
-  }
-  if (parts.length > 0) {
-    return [...new Set(parts)].join(" | ").slice(0, 2_000);
-  }
-  if (error !== undefined) {
-    try {
-      return JSON.stringify(error).slice(0, 2_000);
-    } catch {
-      return String(error);
-    }
-  }
-  return fallback;
-}
-
-function readCodexAppServerTurnStatus(turn: unknown): string {
-  if (typeof turn !== "object" || turn === null) {
-    return "";
-  }
-  const record = turn as Record<string, unknown>;
-  if (typeof record.status === "string" && record.status.trim().length > 0) {
-    return record.status.trim();
-  }
-  if (typeof record.status === "object" && record.status !== null) {
-    const statusRecord = record.status as Record<string, unknown>;
-    if (typeof statusRecord.type === "string" && statusRecord.type.trim().length > 0) {
-      return statusRecord.type.trim();
-    }
-  }
-  return "";
-}
-
-function resolveCodexWebSocketConstructor(): (new (url: string) => MinimalWebSocket) | null {
-  return (
-    (
-      globalThis as typeof globalThis & {
-        WebSocket?: new (url: string) => MinimalWebSocket;
-      }
-    ).WebSocket ?? null
+async function exchangeOpenAICodexAuthorizationCode(input: {
+  readonly networkFetcher: typeof fetch;
+  readonly authorizationCode: string;
+  readonly codeVerifier: string;
+}): Promise<StoredCodexAuthPayload> {
+  const response = await input.networkFetcher(OPENAI_CODEX_OAUTH_TOKEN_ENDPOINT, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      client_id: OPENAI_CODEX_OAUTH_CLIENT_ID,
+      code: input.authorizationCode,
+      code_verifier: input.codeVerifier,
+      redirect_uri: "https://auth.openai.com/deviceauth/callback",
+    }),
+  });
+  const payload = await readOpenAICodexJsonResponse(
+    response,
+    "OpenAI Codex authorization-code exchange failed.",
   );
-}
-
-async function reserveLoopbackPort(): Promise<number> {
-  return await new Promise<number>((resolve, reject) => {
-    const server = createNetServer();
-    server.unref();
-    server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => {
-      const address = server.address();
-      if (typeof address !== "object" || address === null) {
-        server.close();
-        reject(new Error("Could not reserve a loopback port for Codex app-server."));
-        return;
-      }
-      const port = address.port;
-      server.close((closeError) => {
-        if (closeError) {
-          reject(closeError);
-          return;
-        }
-        resolve(port);
-      });
-    });
-  });
-}
-
-async function waitForCodexAppServerReady(wsUrl: string): Promise<void> {
-  const httpUrl = wsUrl.replace(/^ws:/, "http:").replace(/^wss:/, "https:");
-  const readyUrl = `${httpUrl}/readyz`;
-  const startedAt = Date.now();
-  let lastError: unknown = null;
-  while (Date.now() - startedAt < CODEX_APP_SERVER_REQUEST_TIMEOUT_MS) {
-    try {
-      const response = await fetch(readyUrl, {
-        signal: AbortSignal.timeout(2_000),
-      });
-      if (response.ok) {
-        return;
-      }
-      lastError = new Error(`Codex app-server ready check returned ${response.status}.`);
-    } catch (error) {
-      lastError = error;
-    }
-    await delay(100);
+  const accessToken = typeof payload.access_token === "string" ? payload.access_token : "";
+  const refreshToken = typeof payload.refresh_token === "string" ? payload.refresh_token : "";
+  if (accessToken.length === 0 || refreshToken.length === 0) {
+    throw new Error("OpenAI Codex token response did not contain access and refresh tokens.");
   }
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("Timed out waiting for the managed Codex app-server.");
-}
-
-async function sendCodexAppServerRequest<TResult>(input: {
-  readonly wsUrl: string;
-  readonly method: string;
-  readonly params: Record<string, unknown>;
-}): Promise<TResult> {
-  const WebSocketConstructor = resolveCodexWebSocketConstructor();
-  if (!WebSocketConstructor) {
-    throw new Error("This Node runtime does not expose a WebSocket client.");
-  }
-
-  return await new Promise<TResult>((resolve, reject) => {
-    const socket = new WebSocketConstructor(input.wsUrl);
-    const timeout = setTimeout(() => {
-      fail(new Error(`Timed out waiting for Codex app-server ${input.method}.`));
-    }, CODEX_APP_SERVER_REQUEST_TIMEOUT_MS);
-    let settled = false;
-
-    const cleanup = (): void => {
-      clearTimeout(timeout);
-      try {
-        socket.close();
-      } catch {
-        // Ignore close failures.
-      }
-    };
-
-    const fail = (error: Error): void => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      cleanup();
-      reject(error);
-    };
-
-    const succeed = (result: TResult): void => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      cleanup();
-      resolve(result);
-    };
-
-    socket.onopen = () => {
-      socket.send(
-        JSON.stringify({
-          method: "initialize",
-          id: 1,
-          params: {
-            clientInfo: {
-              name: "role_model_runtime",
-              title: "Role Model Runtime",
-              version: "0.1.0",
-            },
-          },
-        }),
-      );
-    };
-
-    socket.onmessage = (event) => {
-      let message: Record<string, unknown>;
-      try {
-        message = JSON.parse(readCodexAppServerMessageText(event.data)) as Record<string, unknown>;
-      } catch (error) {
-        fail(error instanceof Error ? error : new Error("Codex app-server returned invalid JSON."));
-        return;
-      }
-
-      if (message.id === 1) {
-        if (message.error) {
-          fail(
-            new Error(
-              readCodexAppServerErrorMessage(message.error, "Codex app-server initialize failed."),
-            ),
-          );
-          return;
-        }
-        socket.send(JSON.stringify({ method: "initialized", params: {} }));
-        socket.send(JSON.stringify({ method: input.method, id: 2, params: input.params }));
-        return;
-      }
-
-      if (message.id !== 2) {
-        return;
-      }
-
-      if (message.error) {
-        fail(
-          new Error(
-            readCodexAppServerErrorMessage(
-              message.error,
-              `Codex app-server ${input.method} failed.`,
-            ),
-          ),
-        );
-        return;
-      }
-
-      succeed(message.result as TResult);
-    };
-
-    socket.onerror = () => {
-      fail(new Error(`Codex app-server ${input.method} failed.`));
-    };
-
-    socket.onclose = () => {
-      if (!settled) {
-        fail(new Error(`Codex app-server connection closed before ${input.method} completed.`));
-      }
-    };
-  });
+  return {
+    auth_mode: "chatgpt",
+    last_refresh: new Date().toISOString(),
+    tokens: {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      account_id: readOpenAICodexAccountIdFromAccessToken(accessToken),
+    },
+  };
 }
 
 function isProcessRunning(pid: number): boolean {
@@ -8820,96 +9035,83 @@ async function cleanupManagedCodexDeviceCodeSession(
   await removeDirectoryWithRetries(payload.codexHome).catch(() => undefined);
 }
 
-function resolveCodexCliPath(): string {
-  const configured = process.env.CODEX_CLI_PATH?.trim();
-  if (configured) {
-    return configured;
-  }
-
-  const localAppData = process.env.LOCALAPPDATA?.trim();
-  if (localAppData) {
-    const installRoot = path.join(localAppData, "OpenAI", "Codex", "bin");
-    try {
-      const candidates = readdirSync(installRoot, { withFileTypes: true })
-        .filter((entry) => entry.isDirectory())
-        .map((entry) => path.join(installRoot, entry.name, "codex.exe"))
-        .filter((candidate) => existsSync(candidate))
-        .sort((left, right) => statSync(right).mtimeMs - statSync(left).mtimeMs);
-      if (candidates.length > 0) {
-        return candidates[0] ?? "codex";
-      }
-    } catch {
-      // Fall through to PATH lookup.
-    }
-  }
-
-  return "codex";
-}
-
-function createSystemCodexAuthAdapter(): CodexAuthAdapter {
+function createSystemCodexAuthAdapter(networkFetcher: typeof fetch): CodexAuthAdapter {
   return {
     async startDeviceCodeLogin(input) {
       await mkdir(input.codexHome, { recursive: true });
-      const port = await reserveLoopbackPort();
-      const wsUrl = `ws://127.0.0.1:${port}`;
-      const codexCliPath = resolveCodexCliPath();
-      const child = spawn(
-        codexCliPath,
-        ["app-server", "-c", 'cli_auth_credentials_store="file"', "--listen", wsUrl],
-        {
-          cwd: input.codexHome,
-          detached: true,
-          windowsHide: true,
-          stdio: "ignore",
-          env: {
-            ...process.env,
-            CODEX_HOME: input.codexHome,
-          },
-        },
-      );
-      child.unref();
-      await waitForCodexAppServerReady(wsUrl);
-      const login = await sendCodexAppServerRequest<{
-        readonly loginId?: string;
-        readonly verificationUrl?: string;
-        readonly userCode?: string;
-      }>({
-        wsUrl,
-        method: "account/login/start",
-        params: {
-          type: "chatgptDeviceCode",
-        },
+      const response = await networkFetcher(OPENAI_CODEX_DEVICE_USER_CODE_ENDPOINT, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ client_id: OPENAI_CODEX_OAUTH_CLIENT_ID }),
       });
-      const loginId = typeof login.loginId === "string" ? login.loginId.trim() : "";
-      const verificationUrl =
-        typeof login.verificationUrl === "string" ? login.verificationUrl.trim() : "";
-      const userCode = typeof login.userCode === "string" ? login.userCode.trim() : "";
-      if (loginId.length === 0 || verificationUrl.length === 0 || userCode.length === 0) {
-        throw new Error("Codex app-server did not return a usable device-code login session.");
+      const payload = await readOpenAICodexJsonResponse(
+        response,
+        "OpenAI Codex device authorization failed.",
+      );
+      const loginId = typeof payload.device_auth_id === "string" ? payload.device_auth_id : "";
+      const userCode = typeof payload.user_code === "string" ? payload.user_code : "";
+      if (loginId.length === 0 || userCode.length === 0) {
+        throw new Error("OpenAI Codex device authorization response did not contain a code.");
       }
       return {
         loginId,
-        verificationUrl,
+        verificationUrl: OPENAI_CODEX_SUBSCRIPTION_VERIFICATION_URL,
         userCode,
-        wsUrl,
-        pid: child.pid ?? -1,
+        wsUrl: "",
+        pid: -1,
       };
     },
     async readAccount(input) {
-      return await sendCodexAppServerRequest<{
-        readonly account: {
-          readonly type?: string;
-          readonly email?: string;
-          readonly planType?: string;
-        } | null;
-        readonly requiresOpenaiAuth: boolean;
-      }>({
-        wsUrl: input.wsUrl,
-        method: "account/read",
-        params: {
-          refreshToken: input.refreshToken,
-        },
+      const response = await networkFetcher(OPENAI_CODEX_DEVICE_TOKEN_ENDPOINT, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          device_auth_id: input.loginId,
+          user_code: input.userCode,
+        }),
       });
+      const payloadText = await response.text();
+      const payload =
+        payloadText.length > 0 ? (JSON.parse(payloadText) as Record<string, unknown>) : {};
+      if (!response.ok) {
+        const error = asPlainRecord(payload.error);
+        const errorCode =
+          typeof error?.code === "string"
+            ? error.code
+            : typeof payload.error === "string"
+              ? payload.error
+              : "";
+        if (errorCode === "deviceauth_authorization_pending" || errorCode === "slow_down") {
+          return {
+            account: null,
+            requiresOpenaiAuth: true,
+          };
+        }
+        throw new Error(
+          readCodexResponsesErrorMessage(payload) ?? "OpenAI Codex device token polling failed.",
+        );
+      }
+      const authorizationCode =
+        typeof payload.authorization_code === "string" ? payload.authorization_code : "";
+      const codeVerifier = typeof payload.code_verifier === "string" ? payload.code_verifier : "";
+      if (authorizationCode.length === 0 || codeVerifier.length === 0) {
+        return {
+          account: null,
+          requiresOpenaiAuth: true,
+        };
+      }
+      const codexAuth = await exchangeOpenAICodexAuthorizationCode({
+        networkFetcher,
+        authorizationCode,
+        codeVerifier,
+      });
+      await writeStoredCodexAuthCache(input.codexHome, codexAuth);
+      return {
+        account: {
+          type: "chatgpt",
+        },
+        requiresOpenaiAuth: true,
+      };
     },
   };
 }
@@ -8918,6 +9120,12 @@ function readCodexExecutionRequestShape(
   requestCapture: ProviderRequestCapture,
 ): "responses" | "chat-completions" {
   return requestCapture.url.endsWith("/chat/completions") ? "chat-completions" : "responses";
+}
+
+function readOpenAIIngressSurface(
+  requestShape: "responses" | "chat-completions",
+): OpenAIIngressSurface {
+  return requestShape === "chat-completions" ? "openai.chat.completions" : "openai.responses";
 }
 
 function readCodexTurnMessages(
@@ -9009,611 +9217,12 @@ export function buildCodexDynamicTools(
   });
 }
 
-type CodexAppServerDynamicToolFunction = {
-  readonly type: "function";
-  readonly name: string;
-  readonly description?: string;
-  readonly inputSchema: Record<string, unknown>;
-};
-
-type CodexAppServerDynamicToolNamespace = {
-  readonly type: "namespace";
-  readonly name: string;
-  readonly description?: string;
-  readonly tools: readonly CodexAppServerDynamicToolFunction[];
-};
-
-type CodexAppServerDynamicToolBinding = {
-  readonly originalName: string;
-  readonly exposedName: string;
-  readonly description?: string;
-  readonly inputSchema: Record<string, unknown>;
-};
-
-const CODEX_APP_SERVER_REQUEST_TOOL_NAMESPACE = "role_model_request";
-const CODEX_APP_SERVER_REQUEST_TOOL_NAMESPACE_DESCRIPTION =
-  "Request-scoped tools bridged from the calling runtime.";
-const CODEX_APP_SERVER_REQUEST_TOOL_NAME_PREFIX = "request_";
-const CODEX_DYNAMIC_TOOL_DESCRIPTION_MAX_CHARS = 320;
-const CODEX_DYNAMIC_TOOL_NAME_LIST_LIMIT = 12;
-const CODEX_TURN_TEXT_ITEM_TOTAL_BUDGET_CHARS = 24_000;
-const CODEX_TURN_TEXT_ITEM_SOFT_LIMITS = {
-  instruction: 2_400,
-  developer: 8_000,
-  user: 8_000,
-  assistant: 6_000,
-  tool: 3_500,
-} as const;
-const CODEX_TURN_TEXT_ITEM_MIN_LIMITS = {
-  instruction: 1_200,
-  developer: 2_400,
-  user: 1_800,
-  assistant: 1_400,
-  tool: 1_000,
-} as const;
-const CODEX_SCHEMA_ANNOTATION_KEYS = new Set([
-  "$comment",
-  "default",
-  "description",
-  "examples",
-  "readOnly",
-  "title",
-  "writeOnly",
-]);
-
-function toCodexAppServerDynamicToolName(toolName: string): string {
-  const sanitizedName = toolName
-    .replace(/[^a-zA-Z0-9_-]+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "");
-  const prefixedName = `${CODEX_APP_SERVER_REQUEST_TOOL_NAME_PREFIX}${sanitizedName}`;
-  if (prefixedName.length <= 128) {
-    return prefixedName;
-  }
-  const nameHash = createHash("sha256").update(toolName).digest("hex").slice(0, 16);
-  return `${CODEX_APP_SERVER_REQUEST_TOOL_NAME_PREFIX}${nameHash}`;
-}
-
-function compactCodexText(text: string, maxChars: number, label: string): string {
-  const trimmed = text.trim();
-  if (trimmed.length <= maxChars) {
-    return trimmed;
-  }
-  const headChars = Math.max(200, Math.floor(maxChars * 0.7));
-  const tailChars = Math.max(120, maxChars - headChars);
-  const head = trimmed.slice(0, headChars).trimEnd();
-  const tail = trimmed.slice(-tailChars).trimStart();
-  const omittedChars = Math.max(0, trimmed.length - head.length - tail.length);
-  return `${head}\n...[${label} truncated ${omittedChars} chars]...\n${tail}`;
-}
-
-function compactCodexDynamicToolDescription(description: string | undefined): string | undefined {
-  if (typeof description !== "string") {
-    return undefined;
-  }
-  const trimmed = description.trim();
-  return trimmed.length > 0
-    ? compactCodexText(trimmed, CODEX_DYNAMIC_TOOL_DESCRIPTION_MAX_CHARS, "tool description")
-    : undefined;
-}
-
-function sanitizeCodexDynamicToolSchema(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map((entry) => sanitizeCodexDynamicToolSchema(entry));
-  }
-  if (typeof value !== "object" || value === null) {
-    return value;
-  }
-  const record = value as Record<string, unknown>;
-  return Object.fromEntries(
-    Object.entries(record).flatMap(([key, entryValue]) =>
-      CODEX_SCHEMA_ANNOTATION_KEYS.has(key)
-        ? []
-        : [[key, sanitizeCodexDynamicToolSchema(entryValue)]],
-    ),
-  );
-}
-
-function summarizeCodexToolNameList(toolNames: readonly string[]): string {
-  if (toolNames.length <= CODEX_DYNAMIC_TOOL_NAME_LIST_LIMIT) {
-    return toolNames.join(", ");
-  }
-  const visibleNames = toolNames.slice(0, CODEX_DYNAMIC_TOOL_NAME_LIST_LIMIT).join(", ");
-  return `${visibleNames}, +${toolNames.length - CODEX_DYNAMIC_TOOL_NAME_LIST_LIMIT} more`;
-}
-
-function buildCodexAppServerDynamicToolBindings(
-  requestCapture: Pick<ProviderRequestCapture, "url" | "body">,
-): readonly CodexAppServerDynamicToolBinding[] {
-  return buildCodexDynamicTools(requestCapture).map((tool) => ({
-    originalName: tool.name,
-    exposedName: toCodexAppServerDynamicToolName(tool.name),
-    description: compactCodexDynamicToolDescription(tool.description),
-    inputSchema: sanitizeCodexDynamicToolSchema(tool.inputSchema) as Record<string, unknown>,
-  }));
-}
-
-export function buildCodexAppServerDynamicTools(
-  requestCapture: Pick<ProviderRequestCapture, "url" | "body">,
-): readonly CodexAppServerDynamicToolNamespace[] {
-  const dynamicToolBindings = buildCodexAppServerDynamicToolBindings(requestCapture);
-  if (dynamicToolBindings.length === 0) {
-    return [];
-  }
-  return [
-    {
-      type: "namespace",
-      name: CODEX_APP_SERVER_REQUEST_TOOL_NAMESPACE,
-      description: CODEX_APP_SERVER_REQUEST_TOOL_NAMESPACE_DESCRIPTION,
-      tools: dynamicToolBindings.map((tool) => ({
-        type: "function",
-        name: tool.exposedName,
-        description: tool.description,
-        inputSchema: tool.inputSchema,
-      })),
-    },
-  ];
-}
-
-export function readCodexThreadIdFromAppServerMessage(message: Record<string, unknown>): string {
-  const result =
-    typeof message.result === "object" && message.result !== null
-      ? (message.result as Record<string, unknown>)
-      : {};
-  const resultThreadRecord =
-    typeof result.thread === "object" && result.thread !== null
-      ? (result.thread as Record<string, unknown>)
-      : null;
-  const params =
-    typeof message.params === "object" && message.params !== null
-      ? (message.params as Record<string, unknown>)
-      : {};
-  const paramsThreadRecord =
-    typeof params.thread === "object" && params.thread !== null
-      ? (params.thread as Record<string, unknown>)
-      : null;
-  return typeof result.threadId === "string" && result.threadId.trim().length > 0
-    ? result.threadId.trim()
-    : typeof resultThreadRecord?.id === "string" && resultThreadRecord.id.trim().length > 0
-      ? resultThreadRecord.id.trim()
-      : typeof params.threadId === "string" && params.threadId.trim().length > 0
-        ? params.threadId.trim()
-        : typeof paramsThreadRecord?.id === "string" && paramsThreadRecord.id.trim().length > 0
-          ? paramsThreadRecord.id.trim()
-          : "";
-}
-
-function readCodexHostedToolNames(
-  requestCapture: Pick<ProviderRequestCapture, "url" | "body">,
-): readonly string[] {
-  const requestShape = readCodexExecutionRequestShape(requestCapture as ProviderRequestCapture);
-  if (requestShape !== "responses" || !Array.isArray(requestCapture.body.tools)) {
-    return [];
-  }
-  return requestCapture.body.tools.flatMap((tool) => {
-    if (typeof tool !== "object" || tool === null) {
-      return [];
-    }
-    const record = tool as OpenAIResponsesTool;
-    return record.type === "function" ? [] : [record.type];
-  });
-}
-
-export function normalizeCodexAppServerModelName(model: string): string {
+export function normalizeCodexSubscriptionModelName(model: string): string {
   const trimmed = model.trim();
   if (trimmed.length === 0) {
     return trimmed;
   }
   return trimmed.includes("/") ? (trimmed.split("/").at(-1) ?? "").trim() : trimmed;
-}
-
-function buildCodexTurnInstructions(requestCapture: ProviderRequestCapture): string {
-  const dynamicToolBindings = buildCodexAppServerDynamicToolBindings(requestCapture);
-  const dynamicToolNames = dynamicToolBindings.map((tool) =>
-    tool.originalName === tool.exposedName
-      ? tool.originalName
-      : `${tool.originalName} -> ${tool.exposedName}`,
-  );
-  const hasRequestScopedFileTools = dynamicToolBindings.some((tool) =>
-    [
-      "read_file",
-      "grep_search",
-      "list_dir",
-      "write_file",
-      "create_directory",
-      "create_folder",
-      "mkdir",
-      "move_file",
-      "rename_file",
-      "delete_file",
-      "remove_file",
-      "apply_patch",
-    ].includes(tool.originalName),
-  );
-  const hostedToolNames = readCodexHostedToolNames(requestCapture);
-  return [
-    "You are answering an OpenAI-compatible runtime request through Codex Subscription.",
-    "Respond to the conversation directly.",
-    "Built-in web search is allowed when helpful.",
-    ...(hostedToolNames.length > 0
-      ? [`Requested hosted tools for this turn: ${summarizeCodexToolNameList(hostedToolNames)}.`]
-      : []),
-    ...(dynamicToolNames.length > 0
-      ? [
-          `Request-scoped dynamic tools are available for this turn: ${summarizeCodexToolNameList(dynamicToolNames)}.`,
-        ]
-      : []),
-    ...(hasRequestScopedFileTools
-      ? [
-          "Request-scoped file tools only operate inside the managed Codex workspace.",
-          "When the user references an absolute or external filesystem path outside that workspace, use shell tools to inspect and read it instead of assuming the path is inaccessible.",
-          "If a shell command successfully lists or reads an external path, continue with shell-based inspection rather than asking the user to copy files into the workspace.",
-        ]
-      : []),
-    "Use any available hosted or request-scoped tools whenever they help satisfy the request, including file and shell operations when exposed through those tools.",
-    "After completing any needed tool work, answer the conversation directly.",
-  ].join("\n");
-}
-
-type CodexTurnTextItemKind = "instruction" | "developer" | "user" | "assistant" | "tool";
-
-function codexTurnTextItemKindForRoleLabel(
-  roleLabel: string,
-): Exclude<CodexTurnTextItemKind, "instruction"> {
-  switch (roleLabel) {
-    case "DEVELOPER":
-      return "developer";
-    case "ASSISTANT":
-      return "assistant";
-    case "TOOL":
-      return "tool";
-    default:
-      return "user";
-  }
-}
-
-function readCodexHistoricalToolCallArgumentKeys(argumentsValue: unknown): readonly string[] {
-  let parsedArguments: unknown = argumentsValue;
-  if (typeof parsedArguments === "string") {
-    try {
-      parsedArguments = JSON.parse(parsedArguments) as unknown;
-    } catch {
-      return [];
-    }
-  }
-  if (
-    typeof parsedArguments !== "object" ||
-    parsedArguments === null ||
-    Array.isArray(parsedArguments)
-  ) {
-    return [];
-  }
-  return Object.keys(parsedArguments).slice(0, 6);
-}
-
-function summarizeCodexHistoricalToolCalls(toolCalls: readonly unknown[]): string {
-  const summaries = toolCalls.flatMap((toolCall) => {
-    if (typeof toolCall !== "object" || toolCall === null) {
-      return [];
-    }
-    const record = toolCall as {
-      readonly id?: unknown;
-      readonly function?: {
-        readonly name?: unknown;
-        readonly arguments?: unknown;
-      } | null;
-    };
-    const toolName =
-      typeof record.function?.name === "string" && record.function.name.trim().length > 0
-        ? record.function.name.trim()
-        : "function";
-    const toolId =
-      typeof record.id === "string" && record.id.trim().length > 0 ? ` (${record.id.trim()})` : "";
-    const argumentKeys = readCodexHistoricalToolCallArgumentKeys(record.function?.arguments);
-    const keySummary = argumentKeys.length > 0 ? ` args: ${argumentKeys.join(", ")}` : "";
-    return [`${toolName}${toolId}${keySummary}`];
-  });
-  return summaries.length > 0 ? summaries.join(", ") : "function tool calls";
-}
-
-type PreparedCodexTurnInputItem =
-  | {
-      readonly type: "text";
-      readonly text: string;
-      readonly text_elements: readonly [];
-      readonly compactKind: CodexTurnTextItemKind;
-    }
-  | {
-      readonly type: "localImage";
-      readonly path: string;
-      readonly detail?: string;
-    };
-
-export function buildCodexTurnPrompt(requestCapture: ProviderRequestCapture): string {
-  const rawMessages = readCodexTurnMessages(requestCapture);
-  const conversation = rawMessages
-    .map((message) => {
-      if (typeof message !== "object" || message === null) {
-        return null;
-      }
-      const record = message as {
-        readonly role?: unknown;
-        readonly content?: unknown;
-        readonly tool_calls?: unknown;
-        readonly tool_call_id?: unknown;
-      };
-      const role = typeof record.role === "string" ? record.role.toUpperCase() : "MESSAGE";
-      const content = renderCodexMessageContent(record.content);
-      const toolCalls = Array.isArray(record.tool_calls)
-        ? `\nTool calls: ${JSON.stringify(record.tool_calls)}`
-        : "";
-      const toolCallId =
-        typeof record.tool_call_id === "string" ? `\nTool call id: ${record.tool_call_id}` : "";
-      const body = [content, toolCalls, toolCallId].filter((entry) => entry.length > 0).join("");
-      return `[${role}]\n${body.length > 0 ? body : "(empty)"}`;
-    })
-    .filter((entry): entry is string => entry !== null)
-    .join("\n\n");
-
-  return [
-    buildCodexTurnInstructions(requestCapture),
-    "",
-    "Conversation:",
-    conversation.length > 0 ? conversation : "[USER]\n(empty request)",
-  ].join("\n");
-}
-
-type CodexAppServerTurnInputItem =
-  | {
-      readonly type: "text";
-      readonly text: string;
-      readonly text_elements: readonly [];
-    }
-  | {
-      readonly type: "localImage";
-      readonly path: string;
-      readonly detail?: string;
-    };
-
-function normalizeCodexAppServerMessageRoleLabel(role: unknown): string {
-  switch (typeof role === "string" ? role.trim().toLowerCase() : "") {
-    case "system":
-    case "developer":
-      return "DEVELOPER";
-    case "assistant":
-      return "ASSISTANT";
-    case "tool":
-      return "TOOL";
-    default:
-      return "USER";
-  }
-}
-
-function appendCodexTextInputItem(
-  items: PreparedCodexTurnInputItem[],
-  text: string,
-  compactKind: CodexTurnTextItemKind,
-): void {
-  const trimmed = text.trim();
-  if (trimmed.length === 0) {
-    return;
-  }
-  items.push({
-    type: "text",
-    text: trimmed,
-    text_elements: [],
-    compactKind,
-  });
-}
-
-function resolveCodexImageFileExtension(mimeType: string | null, sourceUrl: string): string {
-  const normalizedMimeType = mimeType?.trim().toLowerCase() ?? "";
-  if (normalizedMimeType === "image/jpeg" || normalizedMimeType === "image/jpg") {
-    return "jpg";
-  }
-  if (normalizedMimeType === "image/webp") {
-    return "webp";
-  }
-  if (normalizedMimeType === "image/gif") {
-    return "gif";
-  }
-  if (normalizedMimeType === "image/bmp") {
-    return "bmp";
-  }
-  if (normalizedMimeType === "image/svg+xml") {
-    return "svg";
-  }
-  if (normalizedMimeType === "image/png") {
-    return "png";
-  }
-  try {
-    const pathname = new URL(sourceUrl).pathname;
-    const extension = path.extname(pathname).replace(/^\./, "").trim().toLowerCase();
-    return extension.length > 0 ? extension : "png";
-  } catch {
-    return "png";
-  }
-}
-
-async function stageCodexAppServerImageInput(input: {
-  readonly workspaceRoot: string;
-  readonly sourceUrl: string;
-  readonly index: number;
-}): Promise<string> {
-  const imageDirectory = path.join(input.workspaceRoot, ".codex-inline-images");
-  await mkdir(imageDirectory, { recursive: true });
-  let mimeType: string | null = null;
-  let bytes: Uint8Array;
-  if (input.sourceUrl.startsWith("data:")) {
-    const match = /^data:([^;,]+)?;base64,(.+)$/i.exec(input.sourceUrl);
-    if (!match || typeof match[2] !== "string") {
-      throw new Error("Unsupported inline image input: expected a base64 data URL.");
-    }
-    mimeType = typeof match[1] === "string" ? match[1] : null;
-    bytes = Buffer.from(match[2], "base64");
-  } else {
-    const response = await fetch(input.sourceUrl);
-    if (!response.ok) {
-      throw new Error(
-        `Failed to download remote image input: ${response.status} ${response.statusText}`,
-      );
-    }
-    mimeType = response.headers.get("content-type");
-    bytes = new Uint8Array(await response.arrayBuffer());
-  }
-  const extension = resolveCodexImageFileExtension(mimeType, input.sourceUrl);
-  const imagePath = path.join(imageDirectory, `image-${input.index}.${extension}`);
-  await writeFile(imagePath, bytes);
-  return imagePath;
-}
-
-async function buildCodexAppServerTurnItemsForMessage(
-  message: OpenAIChatCompletionsMessage,
-  workspaceRoot: string,
-  imageIndexRef: { current: number },
-): Promise<readonly PreparedCodexTurnInputItem[]> {
-  const items: PreparedCodexTurnInputItem[] = [];
-  const roleLabel = normalizeCodexAppServerMessageRoleLabel(message.role);
-  const compactKind = codexTurnTextItemKindForRoleLabel(roleLabel);
-  let pendingText = `[${roleLabel}]`;
-  if (typeof message.content === "string" && message.content.length > 0) {
-    pendingText = `${pendingText}\n${message.content}`;
-  } else if (Array.isArray(message.content)) {
-    for (const entry of message.content) {
-      if (typeof entry !== "object" || entry === null) {
-        continue;
-      }
-      if (typeof entry.text === "string" && entry.text.length > 0) {
-        pendingText = `${pendingText}\n${entry.text}`;
-      }
-      const imageUrlRecord =
-        typeof entry.image_url === "object" && entry.image_url !== null
-          ? (entry.image_url as { readonly url?: unknown; readonly detail?: unknown })
-          : null;
-      if (entry.type === "image_url" && typeof imageUrlRecord?.url === "string") {
-        appendCodexTextInputItem(items, pendingText, compactKind);
-        pendingText = "";
-        imageIndexRef.current += 1;
-        const imagePath = await stageCodexAppServerImageInput({
-          workspaceRoot,
-          sourceUrl: imageUrlRecord.url,
-          index: imageIndexRef.current,
-        });
-        items.push({
-          type: "localImage",
-          path: imagePath,
-          ...(typeof imageUrlRecord.detail === "string" ? { detail: imageUrlRecord.detail } : {}),
-        });
-      }
-    }
-  }
-  if (Array.isArray(message.tool_calls) && message.tool_calls.length > 0) {
-    pendingText = `${pendingText}${pendingText.length > 0 ? "\n" : ""}Tool calls: ${summarizeCodexHistoricalToolCalls(message.tool_calls)}`;
-  }
-  if (typeof message.tool_call_id === "string" && message.tool_call_id.length > 0) {
-    pendingText = `${pendingText}${pendingText.length > 0 ? "\n" : ""}Tool call id: ${message.tool_call_id}`;
-  }
-  if (pendingText.length === 0 && items.length === 0) {
-    pendingText = `[${roleLabel}]\n(empty)`;
-  } else if (pendingText.length > 0 && pendingText === `[${roleLabel}]`) {
-    pendingText = `${pendingText}\n(empty)`;
-  }
-  appendCodexTextInputItem(items, pendingText, compactKind);
-  return items;
-}
-
-function compactPreparedCodexTurnInputItems(
-  items: readonly PreparedCodexTurnInputItem[],
-): readonly CodexAppServerTurnInputItem[] {
-  const textItems = items.map((item) => {
-    if (item.type !== "text") {
-      return item;
-    }
-    const softLimit = CODEX_TURN_TEXT_ITEM_SOFT_LIMITS[item.compactKind];
-    return {
-      ...item,
-      text: compactCodexText(item.text, softLimit, `${item.compactKind} message`),
-    };
-  });
-
-  const totalChars = textItems.reduce(
-    (sum, item) => sum + (item.type === "text" ? item.text.length : 0),
-    0,
-  );
-  if (totalChars <= CODEX_TURN_TEXT_ITEM_TOTAL_BUDGET_CHARS) {
-    return textItems.map((item) =>
-      item.type === "text"
-        ? {
-            type: "text" as const,
-            text: item.text,
-            text_elements: [],
-          }
-        : item,
-    );
-  }
-
-  let overflowChars = totalChars - CODEX_TURN_TEXT_ITEM_TOTAL_BUDGET_CHARS;
-  const compactedItems = [...textItems];
-  for (let index = 1; index < compactedItems.length && overflowChars > 0; index += 1) {
-    const item = compactedItems[index];
-    if (!item || item.type !== "text") {
-      continue;
-    }
-    const minLimit = CODEX_TURN_TEXT_ITEM_MIN_LIMITS[item.compactKind];
-    if (item.text.length <= minLimit) {
-      continue;
-    }
-    const nextText = compactCodexText(item.text, minLimit, `${item.compactKind} message`);
-    overflowChars -= Math.max(0, item.text.length - nextText.length);
-    compactedItems[index] = {
-      ...item,
-      text: nextText,
-    };
-  }
-
-  return compactedItems.map((item) =>
-    item.type === "text"
-      ? {
-          type: "text" as const,
-          text: item.text,
-          text_elements: [],
-        }
-      : item,
-  );
-}
-
-function buildCodexAppServerTurnInput(
-  requestCapture: ProviderRequestCapture,
-  workspaceRoot: string,
-): Promise<readonly CodexAppServerTurnInputItem[]> {
-  return buildCodexAppServerTurnInputInternal(requestCapture, workspaceRoot);
-}
-
-async function buildCodexAppServerTurnInputInternal(
-  requestCapture: ProviderRequestCapture,
-  workspaceRoot: string,
-): Promise<readonly CodexAppServerTurnInputItem[]> {
-  const inputItems: PreparedCodexTurnInputItem[] = [
-    {
-      type: "text",
-      text: buildCodexTurnInstructions(requestCapture),
-      text_elements: [],
-      compactKind: "instruction",
-    },
-  ];
-  const imageIndexRef = { current: 0 };
-  for (const message of readCodexTurnMessages(requestCapture)) {
-    if (typeof message !== "object" || message === null) {
-      continue;
-    }
-    inputItems.push(
-      ...(await buildCodexAppServerTurnItemsForMessage(message, workspaceRoot, imageIndexRef)),
-    );
-  }
-  if (inputItems.length === 1) {
-    appendCodexTextInputItem(inputItems, "[USER]\n(empty request)", "user");
-  }
-  return compactPreparedCodexTurnInputItems(inputItems);
 }
 
 function serializeCodexToolOutput(output: unknown): string {
@@ -9662,61 +9271,6 @@ function toCodexDynamicToolCallResult(execution: ToolRegistryExecution): {
   };
 }
 
-function readCodexStructuredOutputSchema(
-  requestCapture: ProviderRequestCapture,
-): Record<string, unknown> | null {
-  const requestShape = readCodexExecutionRequestShape(requestCapture);
-  if (requestShape === "chat-completions") {
-    const responseFormat = requestCapture.body.response_format;
-    if (typeof responseFormat !== "object" || responseFormat === null) {
-      return null;
-    }
-    const jsonSchema = (responseFormat as { readonly json_schema?: unknown }).json_schema;
-    if (typeof jsonSchema !== "object" || jsonSchema === null) {
-      return null;
-    }
-    const schema = (jsonSchema as { readonly schema?: unknown }).schema;
-    return typeof schema === "object" && schema !== null
-      ? (schema as Record<string, unknown>)
-      : null;
-  }
-
-  const text = requestCapture.body.text;
-  if (typeof text !== "object" || text === null) {
-    return null;
-  }
-  const format = (text as { readonly format?: unknown }).format;
-  if (typeof format !== "object" || format === null) {
-    return null;
-  }
-  const schema = (format as { readonly schema?: unknown }).schema;
-  return typeof schema === "object" && schema !== null ? (schema as Record<string, unknown>) : null;
-}
-
-async function waitForChildExit(child: ChildProcessWithoutNullStreams): Promise<void> {
-  if (child.exitCode !== null || child.killed) {
-    return;
-  }
-
-  await new Promise<void>((resolve) => {
-    let settled = false;
-    const finish = () => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      resolve();
-    };
-    child.once("exit", finish);
-    try {
-      child.kill();
-    } catch {
-      resolve();
-    }
-    setTimeout(finish, 3_000).unref();
-  });
-}
-
 async function removeDirectoryWithRetries(directoryPath: string): Promise<void> {
   for (let attempt = 0; attempt < 10; attempt += 1) {
     try {
@@ -9733,781 +9287,921 @@ async function removeDirectoryWithRetries(directoryPath: string): Promise<void> 
   await rm(directoryPath, { recursive: true, force: true });
 }
 
-export async function cleanupManagedCodexExecutionWorkspace(
-  codexHome: string,
-  workspaceRoot: string,
-): Promise<void> {
-  await removeDirectoryWithRetries(workspaceRoot).catch(() => undefined);
-  const workspaceParent = path.dirname(workspaceRoot);
-  const normalizedWorkspaceParent = path.resolve(workspaceParent);
-  const normalizedCodexHome = path.resolve(codexHome);
-  if (
-    normalizedWorkspaceParent === path.join(normalizedCodexHome, "ws") &&
-    existsSync(workspaceParent)
-  ) {
-    const remainingEntries = readdirSync(workspaceParent);
-    if (remainingEntries.length === 0) {
-      await removeDirectoryWithRetries(workspaceParent).catch(() => undefined);
-    }
-  }
-}
-
-function appendCodexAppServerStderr(message: string, stderrText: string): string {
-  const trimmed = stderrText
-    .split(/\r?\n/u)
-    .map((line) => line.trim())
-    .filter((line) => {
-      if (line.length === 0) {
-        return false;
-      }
-      if (line.startsWith("WARNING: proceeding, even though we could not create PATH aliases")) {
-        return false;
-      }
-      if (line.includes('"level":"WARN"')) {
-        return false;
-      }
-      return true;
-    })
-    .join("\n")
-    .trim();
-  return trimmed.length > 0 ? `${message}\n${trimmed}` : message;
-}
-
-export async function readCodexExecutionFailureFromSessionArtifacts(input: {
-  readonly codexHome: string;
-  readonly workspaceRoot: string;
-}): Promise<string | null> {
-  const sessionsRoot = path.join(input.codexHome, "sessions");
-  if (!existsSync(sessionsRoot)) {
-    return null;
-  }
-
-  const sessionFiles: string[] = [];
-  const visit = (directoryPath: string): void => {
-    for (const entry of readdirSync(directoryPath, { withFileTypes: true })) {
-      const resolvedPath = path.join(directoryPath, entry.name);
-      if (entry.isDirectory()) {
-        visit(resolvedPath);
-        continue;
-      }
-      if (entry.isFile() && resolvedPath.endsWith(".jsonl")) {
-        sessionFiles.push(resolvedPath);
-      }
-    }
-  };
-  visit(sessionsRoot);
-
-  const candidateFiles = sessionFiles
-    .sort((left, right) => statSync(right).mtimeMs - statSync(left).mtimeMs)
-    .slice(0, 12);
-
-  for (const sessionPath of candidateFiles) {
-    const raw = await readFile(sessionPath, "utf8").catch(() => "");
-    if (raw.trim().length === 0) {
-      continue;
-    }
-    const lines = raw.split(/\r?\n/);
-    let matchesWorkspace = false;
-    let creditsExhausted = false;
-    let taskCompletedWithoutMessage = false;
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed.length === 0) {
-        continue;
-      }
-      let record: Record<string, unknown>;
-      try {
-        record = JSON.parse(trimmed) as Record<string, unknown>;
-      } catch {
-        continue;
-      }
-
-      if (record.type === "session_meta") {
-        const payload =
-          typeof record.payload === "object" && record.payload !== null
-            ? (record.payload as Record<string, unknown>)
-            : {};
-        matchesWorkspace =
-          typeof payload.cwd === "string" &&
-          path.resolve(payload.cwd) === path.resolve(input.workspaceRoot);
-        continue;
-      }
-
-      if (!matchesWorkspace || record.type !== "event_msg") {
-        continue;
-      }
-
-      const payload =
-        typeof record.payload === "object" && record.payload !== null
-          ? (record.payload as Record<string, unknown>)
-          : {};
-      if (payload.type === "token_count") {
-        const rateLimits =
-          typeof payload.rate_limits === "object" && payload.rate_limits !== null
-            ? (payload.rate_limits as Record<string, unknown>)
-            : {};
-        const credits =
-          typeof rateLimits.credits === "object" && rateLimits.credits !== null
-            ? (rateLimits.credits as Record<string, unknown>)
-            : {};
-        creditsExhausted = credits.has_credits === false && credits.unlimited !== true;
-        continue;
-      }
-      if (payload.type === "task_complete") {
-        taskCompletedWithoutMessage =
-          payload.last_agent_message === null || payload.last_agent_message === undefined;
-      }
-    }
-
-    if (matchesWorkspace && creditsExhausted && taskCompletedWithoutMessage) {
-      return "Codex Subscription execution failed because the authenticated ChatGPT account has hit its current usage limit or has no remaining credits for this turn.";
-    }
-  }
-
-  return null;
-}
-
-export async function executeCodexAppServerTurnOverStdio(input: {
-  readonly child: ChildProcessWithoutNullStreams;
-  readonly model: string;
-  readonly requestCapture: ProviderRequestCapture;
-  readonly workspaceRoot: string;
-  readonly stderrText?: () => string;
-  readonly executeDynamicToolCall?: (input: {
-    readonly toolCallId: string;
-    readonly toolName: string;
-    readonly toolArguments: unknown;
-    readonly workspaceRoot: string;
-  }) => Promise<{
-    readonly success: boolean;
-    readonly contentItems: readonly {
-      readonly type: "inputText";
-      readonly text: string;
-    }[];
-    readonly execution?: ToolRegistryExecution;
-  }>;
-}): Promise<{
-  readonly finishReason: string;
+type CodexResponsesNormalizedTranscript = {
+  readonly responseId: string;
   readonly outputText: string;
+  readonly reasoningText: string;
+  readonly textDeltas: readonly string[];
+  readonly reasoningDeltas: readonly string[];
+  readonly finishReason: string;
   readonly usage: {
     readonly inputTokens: number;
     readonly outputTokens: number;
   };
-  readonly dynamicToolCalls: readonly BridgeToolCall[];
-  readonly dynamicToolExecutions: readonly ToolRegistryExecution[];
-}> {
-  const structuredOutputSchema = readCodexStructuredOutputSchema(input.requestCapture);
-  const appServerDynamicToolBindings = buildCodexAppServerDynamicToolBindings(input.requestCapture);
-  const appServerDynamicTools = buildCodexAppServerDynamicTools(input.requestCapture);
-  const originalToolNameByExposedName = new Map(
-    appServerDynamicToolBindings.map((tool) => [tool.exposedName, tool.originalName]),
+};
+
+function readSsePayloadTexts(transcript: string): readonly string[] {
+  return transcript.split(/\r?\n\r?\n/u).flatMap((block) =>
+    block
+      .split(/\r?\n/u)
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice("data:".length).trim())
+      .filter((line) => line.length > 0 && line !== "[DONE]"),
   );
-  const dynamicToolCalls: BridgeToolCall[] = [];
-  const dynamicToolExecutions: ToolRegistryExecution[] = [];
+}
+
+function readSsePayloadTextFromBlock(block: string): string | null {
+  const payloadText = block
+    .split(/\n/u)
+    .map((line) => line.trimEnd())
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.slice("data:".length).trimStart())
+    .join("\n")
+    .trim();
+  return payloadText.length > 0 && payloadText !== "[DONE]" ? payloadText : null;
+}
+
+async function readCodexResponsesSseTranscript(
+  response: Response,
+  onPayloadText?: (payloadText: string) => Promise<void> | void,
+): Promise<string> {
+  if (!response.body) {
+    const transcript = await response.text();
+    if (onPayloadText) {
+      for (const payloadText of readSsePayloadTexts(transcript)) {
+        await onPayloadText(payloadText);
+      }
+    }
+    return transcript;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let rawTranscript = "";
+  let normalizedBuffer = "";
+
+  const processCompleteBlocks = async (flush = false): Promise<void> => {
+    while (true) {
+      const separatorIndex = normalizedBuffer.indexOf("\n\n");
+      if (separatorIndex < 0) {
+        break;
+      }
+      const block = normalizedBuffer.slice(0, separatorIndex);
+      normalizedBuffer = normalizedBuffer.slice(separatorIndex + 2);
+      const payloadText = readSsePayloadTextFromBlock(block);
+      if (payloadText) {
+        await onPayloadText?.(payloadText);
+      }
+    }
+    if (flush && normalizedBuffer.trim().length > 0) {
+      const payloadText = readSsePayloadTextFromBlock(normalizedBuffer);
+      normalizedBuffer = "";
+      if (payloadText) {
+        await onPayloadText?.(payloadText);
+      }
+    }
+  };
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      const chunkText = decoder.decode(value, { stream: true });
+      rawTranscript += chunkText;
+      normalizedBuffer += chunkText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+      await processCompleteBlocks();
+    }
+    const finalText = decoder.decode();
+    if (finalText.length > 0) {
+      rawTranscript += finalText;
+      normalizedBuffer += finalText.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    }
+    await processCompleteBlocks(true);
+    return rawTranscript;
+  } catch (error) {
+    await reader.cancel(error).catch(() => undefined);
+    throw error;
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+function normalizeCodexResponsesTranscript(
+  transcript: string,
+  requestId: string,
+): CodexResponsesNormalizedTranscript {
+  let responseId = `resp_${sanitizeSegment(requestId)}`;
+  const textDeltas: string[] = [];
+  const reasoningDeltas: string[] = [];
+  let finalOutputText = "";
+  let finalReasoningText = "";
+  let finishReason = "stop";
   const usage = {
     inputTokens: 0,
     outputTokens: 0,
   };
 
-  return await new Promise((resolve, reject) => {
-    const reader = createInterface({
-      input: input.child.stdout,
-      crlfDelay: Number.POSITIVE_INFINITY,
+  for (const payloadText of readSsePayloadTexts(transcript)) {
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(payloadText) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+    const type = typeof payload.type === "string" ? payload.type : "";
+    if (type === "response.output_text.delta" && typeof payload.delta === "string") {
+      textDeltas.push(payload.delta);
+      continue;
+    }
+    if (
+      (type === "response.reasoning_summary_text.delta" ||
+        type === "response.reasoning_text.delta") &&
+      typeof payload.delta === "string"
+    ) {
+      reasoningDeltas.push(payload.delta);
+      continue;
+    }
+    if (type === "response.output_item.done") {
+      const item = asPlainRecord(payload.item);
+      if (item?.type === "message" && Array.isArray(item.content)) {
+        finalOutputText = item.content
+          .map((content) => {
+            const contentRecord = asPlainRecord(content);
+            return typeof contentRecord?.text === "string" ? contentRecord.text : "";
+          })
+          .filter(Boolean)
+          .join("");
+      }
+      if (item?.type === "reasoning") {
+        const summaryText = Array.isArray(item.summary)
+          ? item.summary
+              .map((summary) => {
+                const summaryRecord = asPlainRecord(summary);
+                return typeof summaryRecord?.text === "string" ? summaryRecord.text : "";
+              })
+              .filter(Boolean)
+              .join("\n\n")
+          : "";
+        const contentText = Array.isArray(item.content)
+          ? item.content
+              .map((content) => {
+                const contentRecord = asPlainRecord(content);
+                return typeof contentRecord?.text === "string" ? contentRecord.text : "";
+              })
+              .filter(Boolean)
+              .join("\n\n")
+          : "";
+        finalReasoningText = summaryText || contentText || finalReasoningText;
+      }
+      continue;
+    }
+    if (
+      type === "response.completed" ||
+      type === "response.incomplete" ||
+      type === "response.done"
+    ) {
+      const response = asPlainRecord(payload.response);
+      if (typeof response?.id === "string" && response.id.length > 0) {
+        responseId = response.id;
+      }
+      finishReason =
+        type === "response.incomplete" || response?.status === "incomplete" ? "length" : "stop";
+      const responseUsage = asPlainRecord(response?.usage);
+      usage.inputTokens =
+        typeof responseUsage?.input_tokens === "number"
+          ? responseUsage.input_tokens
+          : usage.inputTokens;
+      usage.outputTokens =
+        typeof responseUsage?.output_tokens === "number"
+          ? responseUsage.output_tokens
+          : usage.outputTokens;
+    }
+  }
+
+  const outputText = textDeltas.length > 0 ? textDeltas.join("") : finalOutputText;
+  const reasoningText = reasoningDeltas.length > 0 ? reasoningDeltas.join("") : finalReasoningText;
+
+  return {
+    responseId,
+    outputText,
+    reasoningText,
+    textDeltas: textDeltas.length > 0 ? textDeltas : outputText ? [outputText] : [],
+    reasoningDeltas:
+      reasoningDeltas.length > 0 ? reasoningDeltas : reasoningText ? [reasoningText] : [],
+    finishReason,
+    usage,
+  };
+}
+
+function createChatCompletionsSseFromCodexResponsesTranscript(input: {
+  readonly requestId: string;
+  readonly requestedModel: string;
+  readonly transcript: CodexResponsesNormalizedTranscript;
+}): string {
+  const created = Math.floor(Date.now() / 1000);
+  const baseChunk = {
+    id: `chatcmpl_${sanitizeSegment(input.requestId)}`,
+    object: "chat.completion.chunk",
+    created,
+    model: input.requestedModel,
+  };
+  const chunks: Record<string, unknown>[] = [];
+  let roleEmitted = false;
+  const nextDelta = (delta: Record<string, unknown>): Record<string, unknown> => {
+    const withRole = roleEmitted ? delta : { role: "assistant", ...delta };
+    roleEmitted = true;
+    return withRole;
+  };
+
+  for (const delta of input.transcript.reasoningDeltas) {
+    chunks.push({
+      ...baseChunk,
+      choices: [
+        {
+          index: 0,
+          delta: nextDelta({ reasoning_content: delta }),
+          finish_reason: null,
+        },
+      ],
     });
-    const pendingRequests = new Map<
-      number,
+  }
+  for (const delta of input.transcript.textDeltas) {
+    chunks.push({
+      ...baseChunk,
+      choices: [
+        {
+          index: 0,
+          delta: nextDelta({ content: delta }),
+          finish_reason: null,
+        },
+      ],
+    });
+  }
+  chunks.push({
+    ...baseChunk,
+    choices: [
       {
-        readonly method: string;
-        readonly resolve: (result: Record<string, unknown>) => void;
-        readonly reject: (error: Error) => void;
-      }
-    >();
-    let settled = false;
-    let threadId = "";
-    let threadStartAcknowledged = false;
-    let turnInFlight = false;
-    let turnAttemptCount = 0;
-    let nextRequestId = 3;
-    let outputText = "";
-    let finalAgentText = "";
-    let latestTurnError: string | null = null;
+        index: 0,
+        delta: {},
+        finish_reason: input.transcript.finishReason,
+      },
+    ],
+    usage: {
+      prompt_tokens: input.transcript.usage.inputTokens,
+      completion_tokens: input.transcript.usage.outputTokens,
+    },
+  });
 
-    const timeout = setTimeout(() => {
-      fail(new Error("Timed out waiting for Codex Subscription execution to complete."));
-    }, CODEX_APP_SERVER_TURN_TIMEOUT_MS);
+  return chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join("");
+}
 
-    const rejectPendingRequests = (error: Error): void => {
-      for (const pending of pendingRequests.values()) {
-        pending.reject(error);
+function readCodexResponsesErrorMessage(payload: unknown): string | null {
+  const pending: unknown[] = [payload];
+  const seen = new Set<unknown>();
+  const messages: string[] = [];
+  while (pending.length > 0) {
+    const current = pending.shift();
+    if (current === null || current === undefined || seen.has(current)) {
+      continue;
+    }
+    seen.add(current);
+    if (typeof current === "string" && current.trim().length > 0) {
+      messages.push(current.trim());
+      continue;
+    }
+    const record = asPlainRecord(current);
+    if (!record) {
+      continue;
+    }
+    for (const key of ["message", "code", "type", "error_description", "detail"]) {
+      const value = record[key];
+      if (typeof value === "string" && value.trim().length > 0) {
+        messages.push(value.trim());
       }
-      pendingRequests.clear();
-    };
+    }
+    for (const key of ["error", "cause", "data", "response"]) {
+      if (record[key] !== undefined) {
+        pending.push(record[key]);
+      }
+    }
+  }
+  return messages.length > 0 ? [...new Set(messages)].join(" | ").slice(0, 2_000) : null;
+}
 
-    const cleanup = (): void => {
-      clearTimeout(timeout);
-      reader.removeAllListeners();
-      reader.close();
-      input.child.removeAllListeners("error");
-      input.child.removeAllListeners("close");
-      input.child.stdout.removeAllListeners("error");
-      input.child.stdin.removeAllListeners("error");
-      if (!input.child.stdin.destroyed) {
-        input.child.stdin.end();
-      }
-    };
+function createCodexResponsesChatCompletionsStreamMapper(input: {
+  readonly requestId: string;
+  readonly requestedModel: string;
+}): (payloadText: string) => readonly string[] {
+  const created = Math.floor(Date.now() / 1000);
+  const baseChunk = {
+    id: `chatcmpl_${sanitizeSegment(input.requestId)}`,
+    object: "chat.completion.chunk",
+    created,
+    model: input.requestedModel,
+  };
+  const toolItemsByOutputIndex = new Map<
+    number,
+    { readonly id: string; readonly name: string; readonly callId: string }
+  >();
+  let roleEmitted = false;
+  let emittedToolCall = false;
 
-    function fail(error: Error): void {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      cleanup();
-      rejectPendingRequests(error);
-      reject(new Error(appendCodexAppServerStderr(error.message, input.stderrText?.() ?? "")));
+  const nextDelta = (delta: Record<string, unknown>): Record<string, unknown> => {
+    const withRole = roleEmitted ? delta : { role: "assistant", ...delta };
+    roleEmitted = true;
+    return withRole;
+  };
+  const encode = (chunk: Record<string, unknown>): string => `data: ${JSON.stringify(chunk)}\n\n`;
+  const deltaChunk = (delta: Record<string, unknown>): string =>
+    encode({
+      ...baseChunk,
+      choices: [
+        {
+          index: 0,
+          delta: nextDelta(delta),
+          finish_reason: null,
+        },
+      ],
+    });
+  const finishChunk = (finishReason: string, usage?: Record<string, unknown>): string =>
+    encode({
+      ...baseChunk,
+      choices: [
+        {
+          index: 0,
+          delta: {},
+          finish_reason: finishReason,
+        },
+      ],
+      ...(usage
+        ? {
+            usage: {
+              prompt_tokens: typeof usage.input_tokens === "number" ? usage.input_tokens : 0,
+              completion_tokens: typeof usage.output_tokens === "number" ? usage.output_tokens : 0,
+            },
+          }
+        : {}),
+    });
+
+  return (payloadText: string): readonly string[] => {
+    let payload: Record<string, unknown>;
+    try {
+      payload = JSON.parse(payloadText) as Record<string, unknown>;
+    } catch (error) {
+      throw new Error(
+        `Codex Responses stream emitted invalid JSON: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
     }
 
-    function succeed(): void {
-      if (settled) {
-        return;
+    const type = typeof payload.type === "string" ? payload.type : "";
+    const outputIndex =
+      typeof payload.output_index === "number"
+        ? payload.output_index
+        : typeof payload.item_index === "number"
+          ? payload.item_index
+          : 0;
+    if (type === "response.output_item.added") {
+      const item = asPlainRecord(payload.item);
+      if (item?.type === "function_call") {
+        const name = typeof item.name === "string" ? item.name : "";
+        const id = typeof item.id === "string" ? item.id : `call_${outputIndex}`;
+        const callId = typeof item.call_id === "string" ? item.call_id : id;
+        toolItemsByOutputIndex.set(outputIndex, { id, name, callId });
       }
-      settled = true;
-      cleanup();
-      resolve({
-        finishReason: "stop",
-        outputText: finalAgentText.length > 0 ? finalAgentText : outputText,
-        usage,
-        dynamicToolCalls: [...dynamicToolCalls],
-        dynamicToolExecutions: [...dynamicToolExecutions],
-      });
+      return [];
     }
+    if (
+      (type === "response.reasoning_summary_text.delta" ||
+        type === "response.reasoning_text.delta") &&
+      typeof payload.delta === "string"
+    ) {
+      return [deltaChunk({ reasoning_content: payload.delta })];
+    }
+    if (type === "response.output_text.delta" && typeof payload.delta === "string") {
+      return [deltaChunk({ content: payload.delta })];
+    }
+    if (type === "response.function_call_arguments.delta" && typeof payload.delta === "string") {
+      emittedToolCall = true;
+      const item = toolItemsByOutputIndex.get(outputIndex);
+      return [
+        deltaChunk({
+          tool_calls: [
+            {
+              index: outputIndex,
+              ...(item?.callId ? { id: item.callId } : {}),
+              type: "function",
+              function: {
+                ...(item?.name ? { name: item.name } : {}),
+                arguments: payload.delta,
+              },
+            },
+          ],
+        }),
+      ];
+    }
+    if (type === "response.function_call_arguments.done" && typeof payload.arguments === "string") {
+      emittedToolCall = true;
+      const item = toolItemsByOutputIndex.get(outputIndex);
+      return [
+        deltaChunk({
+          tool_calls: [
+            {
+              index: outputIndex,
+              ...(item?.callId ? { id: item.callId } : {}),
+              type: "function",
+              function: {
+                ...(item?.name ? { name: item.name } : {}),
+                arguments: "",
+              },
+            },
+          ],
+        }),
+      ];
+    }
+    if (
+      type === "response.completed" ||
+      type === "response.incomplete" ||
+      type === "response.done"
+    ) {
+      const response = asPlainRecord(payload.response);
+      const usage = asPlainRecord(response?.usage);
+      const finishReason =
+        type === "response.incomplete" || response?.status === "incomplete"
+          ? "length"
+          : emittedToolCall
+            ? "tool_calls"
+            : "stop";
+      return [finishChunk(finishReason, usage ?? undefined)];
+    }
+    if (type === "response.failed" || type === "error") {
+      const message =
+        readCodexResponsesErrorMessage(payload) ??
+        readCodexResponsesErrorMessage(asPlainRecord(payload.error)) ??
+        "Codex Responses stream failed.";
+      throw new Error(message);
+    }
+    return [];
+  };
+}
 
-    const buildEmptyTurnRetryInput = (): readonly CodexAppServerTurnInputItem[] => [
+function createChatCompletionsBodyFromCodexResponsesTranscript(input: {
+  readonly requestId: string;
+  readonly requestedModel: string;
+  readonly transcript: CodexResponsesNormalizedTranscript;
+}): Record<string, unknown> {
+  return {
+    id: `chatcmpl_${sanitizeSegment(input.requestId)}`,
+    object: "chat.completion",
+    model: input.requestedModel,
+    choices: [
       {
-        type: "text",
-        text: [
-          "Your previous turn completed without producing any assistant-visible output.",
-          "Continue from the existing thread context and finish the request now.",
-          "If the request depends on workspace files or another request-scoped tool, call that tool before answering.",
-          "Do not end the turn without either making the needed tool call or producing the final answer.",
-        ].join(" "),
-        text_elements: [],
+        index: 0,
+        finish_reason: input.transcript.finishReason,
+        message: {
+          role: "assistant",
+          content: input.transcript.outputText,
+          ...(input.transcript.reasoningText.length > 0
+            ? { reasoning_content: input.transcript.reasoningText }
+            : {}),
+        },
+      },
+    ],
+    usage: {
+      prompt_tokens: input.transcript.usage.inputTokens,
+      completion_tokens: input.transcript.usage.outputTokens,
+    },
+  };
+}
+
+function createResponsesBodyFromCodexResponsesTranscript(input: {
+  readonly requestId: string;
+  readonly requestedModel: string;
+  readonly transcript: CodexResponsesNormalizedTranscript;
+}): Record<string, unknown> {
+  return {
+    id: input.transcript.responseId || `resp_${sanitizeSegment(input.requestId)}`,
+    model: input.requestedModel,
+    output: [
+      ...(input.transcript.reasoningText.length > 0
+        ? [
+            {
+              type: "reasoning",
+              summary: [{ type: "summary_text", text: input.transcript.reasoningText }],
+            },
+          ]
+        : []),
+      {
+        type: "message",
+        role: "assistant",
+        content:
+          input.transcript.outputText.length > 0
+            ? [{ type: "output_text", text: input.transcript.outputText }]
+            : [],
+      },
+    ],
+    usage: {
+      input_tokens: input.transcript.usage.inputTokens,
+      output_tokens: input.transcript.usage.outputTokens,
+    },
+  };
+}
+
+function readCodexSubscriptionAccessToken(authPayload: CodexAuthCacheSnapshot): string {
+  const accessToken = authPayload.tokens?.access_token?.trim() ?? "";
+  if (accessToken.length === 0) {
+    throw new Error("Stored Codex Subscription credential does not contain an access token.");
+  }
+  return accessToken;
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) {
+      return null;
+    }
+    return JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as Record<
+      string,
+      unknown
+    >;
+  } catch {
+    return null;
+  }
+}
+
+function readCodexSubscriptionAccountId(authPayload: CodexAuthCacheSnapshot): string {
+  const explicitAccountId = authPayload.tokens?.account_id?.trim() ?? "";
+  if (explicitAccountId.length > 0) {
+    return explicitAccountId;
+  }
+  const accessToken = readCodexSubscriptionAccessToken(authPayload);
+  const payload = decodeJwtPayload(accessToken);
+  const authClaim = asPlainRecord(payload?.["https://api.openai.com/auth"]);
+  const claimAccountId =
+    typeof authClaim?.chatgpt_account_id === "string" ? authClaim.chatgpt_account_id.trim() : "";
+  if (claimAccountId.length === 0) {
+    throw new Error("Stored Codex Subscription credential does not contain a ChatGPT account id.");
+  }
+  return claimAccountId;
+}
+
+function toCodexResponsesTextPart(text: string, role: "user" | "assistant"): unknown {
+  return { type: role === "assistant" ? "output_text" : "input_text", text };
+}
+
+function toCodexResponsesContentPart(content: unknown, role: "user" | "assistant"): unknown {
+  if (typeof content === "string") {
+    return toCodexResponsesTextPart(content, role);
+  }
+  const record = asPlainRecord(content);
+  if (!record) {
+    return toCodexResponsesTextPart(String(content ?? ""), role);
+  }
+  if (
+    (record.type === "text" || record.type === "input_text" || record.type === "output_text") &&
+    typeof record.text === "string"
+  ) {
+    return toCodexResponsesTextPart(record.text, role);
+  }
+  if (role === "assistant" && record.type === "refusal") {
+    return record;
+  }
+  const imageUrl = asPlainRecord(record.image_url);
+  if (role === "user" && record.type === "image_url" && typeof imageUrl?.url === "string") {
+    return { type: "input_image", image_url: imageUrl.url };
+  }
+  return record;
+}
+
+function toCodexResponsesInputFromChatMessages(messages: unknown): {
+  readonly instructions?: string;
+  readonly input: readonly Record<string, unknown>[];
+} {
+  if (!Array.isArray(messages)) {
+    return { input: [] };
+  }
+  const instructions = messages
+    .flatMap((message) => {
+      const record = asPlainRecord(message);
+      return record?.role === "system" && typeof record.content === "string"
+        ? [record.content]
+        : [];
+    })
+    .join("\n\n");
+  const input = messages.flatMap((message) => {
+    const record = asPlainRecord(message);
+    if (!record || record.role === "system") {
+      return [];
+    }
+    const role =
+      typeof record.role === "string" && record.role === "assistant" ? "assistant" : "user";
+    const rawContent = record.content;
+    const content = Array.isArray(rawContent)
+      ? rawContent.map((part) => toCodexResponsesContentPart(part, role))
+      : [toCodexResponsesContentPart(rawContent, role)];
+    return [
+      {
+        role,
+        content,
       },
     ];
+  });
+  return {
+    ...(instructions.length > 0 ? { instructions } : {}),
+    input,
+  };
+}
 
-    const send = (message: Record<string, unknown>): void => {
-      if (!input.child.stdin.writable || input.child.stdin.destroyed) {
-        fail(new Error("Codex app-server stdin closed before the request completed."));
-        return;
-      }
-      input.child.stdin.write(`${JSON.stringify(message)}\n`);
-    };
+function toCodexResponsesInputFromResponsesInput(input: unknown): readonly unknown[] {
+  if (typeof input === "string") {
+    return [{ role: "user", content: [{ type: "input_text", text: input }] }];
+  }
+  return Array.isArray(input) ? input : [];
+}
 
-    const sendRequest = async (
-      id: number,
-      method: string,
-      params: Record<string, unknown>,
-    ): Promise<Record<string, unknown>> => {
-      return await new Promise<Record<string, unknown>>((resolveRequest, rejectRequest) => {
-        pendingRequests.set(id, {
-          method,
-          resolve: resolveRequest,
-          reject: rejectRequest,
-        });
-        send({
-          id,
-          method,
-          params,
-        });
-      });
-    };
+function toCodexResponsesTool(tool: unknown): unknown {
+  const record = asPlainRecord(tool);
+  if (!record) {
+    return tool;
+  }
+  if (record.type === "function") {
+    const fn = asPlainRecord(record.function);
+    if (fn) {
+      return {
+        type: "function",
+        name: fn.name,
+        ...(typeof fn.description === "string" ? { description: fn.description } : {}),
+        parameters: fn.parameters ?? {},
+      };
+    }
+  }
+  return record;
+}
 
-    const startTurn = (turnInput: readonly CodexAppServerTurnInputItem[]): void => {
-      if (turnInFlight || !threadStartAcknowledged || threadId.length === 0 || settled) {
-        return;
-      }
-      turnInFlight = true;
-      turnAttemptCount += 1;
-      send({
-        id: nextRequestId,
-        method: "turn/start",
-        params: {
-          threadId,
-          input: turnInput,
-          cwd: input.workspaceRoot,
-          approvalPolicy: "never",
-          sandboxPolicy: {
-            type: "dangerFullAccess",
-          },
-          ...(structuredOutputSchema ? { outputSchema: structuredOutputSchema } : {}),
-        },
-      });
-      nextRequestId += 1;
-    };
+function hasOwnRequestField(requestBody: Record<string, unknown>, field: string): boolean {
+  return Object.prototype.hasOwnProperty.call(requestBody, field);
+}
 
-    const maybeStartTurn = (): void => {
-      if (turnInFlight || !threadStartAcknowledged || threadId.length === 0) {
-        return;
-      }
-      void (async () => {
-        try {
-          startTurn(await buildCodexAppServerTurnInput(input.requestCapture, input.workspaceRoot));
-        } catch (error) {
-          fail(error instanceof Error ? error : new Error(String(error)));
-        }
-      })();
-    };
+function createCodexDroppedParameterDecision(
+  field: string,
+  sourceSurface: OpenAIIngressSurface,
+): AdapterParameterDecision {
+  return {
+    field,
+    sourceSurface,
+    targetSurface: "chatgpt.codex.responses",
+    action: "drop_with_receipt",
+    reason: "unsupported_by_selected_backend",
+    sourceValueKind: "present",
+    adapterFamily: "codex-subscription-responses",
+    providerId: "openai",
+    vendorId: "chatgpt-codex-responses",
+  };
+}
 
-    const onMessage = async (message: Record<string, unknown>): Promise<void> => {
-      if (typeof message.method === "string") {
-        if (message.method === "thread/started") {
-          threadStartAcknowledged = true;
-          const resolvedThreadId = readCodexThreadIdFromAppServerMessage(message);
-          if (resolvedThreadId.length > 0) {
-            threadId = resolvedThreadId;
-          }
-          maybeStartTurn();
-          return;
-        }
+function collectCodexResponsesParameterSanitization(input: {
+  readonly requestBody: Record<string, unknown>;
+  readonly sourceSurface: OpenAIIngressSurface;
+}): readonly AdapterParameterDecision[] {
+  const unsupportedOptionalFields =
+    input.sourceSurface === "openai.chat.completions"
+      ? ["temperature", "max_tokens", "max_completion_tokens", "max_output_tokens"]
+      : ["temperature", "max_output_tokens", "max_tokens", "max_completion_tokens"];
+  return unsupportedOptionalFields.flatMap((field) =>
+    hasOwnRequestField(input.requestBody, field)
+      ? [createCodexDroppedParameterDecision(field, input.sourceSurface)]
+      : [],
+  );
+}
 
-        if (message.method === "item/tool/call") {
-          const params =
-            typeof message.params === "object" && message.params !== null
-              ? (message.params as Record<string, unknown>)
-              : {};
-          const toolCallId =
-            typeof params.callId === "string" && params.callId.trim().length > 0
-              ? params.callId.trim()
-              : typeof params.id === "string" && params.id.trim().length > 0
-                ? params.id.trim()
-                : "";
-          const toolName =
-            typeof params.tool === "string" && params.tool.trim().length > 0
-              ? params.tool.trim()
-              : typeof params.name === "string" && params.name.trim().length > 0
-                ? params.name.trim()
-                : "";
-          const toolArguments = params.arguments;
-          const surfacedToolName = originalToolNameByExposedName.get(toolName) ?? toolName;
-          dynamicToolCalls.push({
-            id: toolCallId.length > 0 ? toolCallId : `call_${dynamicToolCalls.length + 1}`,
-            type: "function",
-            function: {
-              name: surfacedToolName,
-              arguments: serializeToolCallArguments(toolArguments),
-            },
-          });
-          if (typeof message.id !== "number") {
-            fail(new Error("Codex app-server emitted a tool call without a response id."));
-            return;
-          }
-          const toolResult = input.executeDynamicToolCall
-            ? await input.executeDynamicToolCall({
-                toolCallId,
-                toolName,
-                toolArguments,
-                workspaceRoot: input.workspaceRoot,
-              })
-            : {
-                success: false,
-                contentItems: [
-                  {
-                    type: "inputText" as const,
-                    text:
-                      toolName.length > 0
-                        ? `Tool ${toolName} is not available in this runtime.`
-                        : "This runtime does not expose request-scoped dynamic tools.",
-                  },
-                ],
-              };
-          if (toolResult.execution) {
-            dynamicToolExecutions.push(toolResult.execution);
-          }
-          send({
-            id: message.id,
-            result: {
-              success: toolResult.success,
-              contentItems: toolResult.contentItems,
-            },
-          });
-          return;
-        }
+function isOpenAIIngressSurface(value: unknown): value is OpenAIIngressSurface {
+  return value === "openai.chat.completions" || value === "openai.responses";
+}
 
-        if (message.method === "item/agentMessage/delta") {
-          const params =
-            typeof message.params === "object" && message.params !== null
-              ? (message.params as Record<string, unknown>)
-              : {};
-          if (typeof params.delta === "string" && params.delta.length > 0) {
-            outputText += params.delta;
-          }
-          return;
-        }
+function isAdapterParameterAction(value: unknown): value is AdapterParameterAction {
+  return (
+    value === "forward" ||
+    value === "translate" ||
+    value === "drop_with_receipt" ||
+    value === "emulate_locally" ||
+    value === "reject_with_local_error"
+  );
+}
 
-        if (message.method === "item/completed") {
-          const params =
-            typeof message.params === "object" && message.params !== null
-              ? (message.params as Record<string, unknown>)
-              : {};
-          const item =
-            typeof params.item === "object" && params.item !== null
-              ? (params.item as Record<string, unknown>)
-              : {};
-          if (
-            item.type === "agentMessage" &&
-            typeof item.text === "string" &&
-            item.text.length > 0
-          ) {
-            finalAgentText = item.text;
-          }
-          return;
-        }
-
-        if (message.method === "thread/tokenUsage/updated") {
-          const params =
-            typeof message.params === "object" && message.params !== null
-              ? (message.params as Record<string, unknown>)
-              : {};
-          const tokenUsage =
-            typeof params.tokenUsage === "object" && params.tokenUsage !== null
-              ? (params.tokenUsage as Record<string, unknown>)
-              : {};
-          const usageRecord =
-            typeof tokenUsage.last === "object" && tokenUsage.last !== null
-              ? (tokenUsage.last as Record<string, unknown>)
-              : typeof tokenUsage.total === "object" && tokenUsage.total !== null
-                ? (tokenUsage.total as Record<string, unknown>)
-                : {};
-          if (typeof usageRecord.inputTokens === "number") {
-            usage.inputTokens = usageRecord.inputTokens;
-          }
-          if (typeof usageRecord.outputTokens === "number") {
-            usage.outputTokens = usageRecord.outputTokens;
-          }
-          return;
-        }
-
-        if (message.method === "error") {
-          const params =
-            typeof message.params === "object" && message.params !== null
-              ? (message.params as Record<string, unknown>)
-              : {};
-          const errorMessage = readCodexAppServerErrorMessage(
-            params.error,
-            "Codex Subscription turn failed.",
-          );
-          latestTurnError = errorMessage;
-          if (params.willRetry !== true) {
-            turnInFlight = false;
-            fail(new Error(errorMessage));
-          }
-          return;
-        }
-
-        if (message.method === "turn/failed") {
-          turnInFlight = false;
-          const params =
-            typeof message.params === "object" && message.params !== null
-              ? (message.params as Record<string, unknown>)
-              : {};
-          latestTurnError = readCodexAppServerErrorMessage(
-            params.error,
-            "Codex Subscription turn failed.",
-          );
-          fail(new Error(latestTurnError));
-          return;
-        }
-
-        if (message.method === "turn/completed") {
-          turnInFlight = false;
-          const params =
-            typeof message.params === "object" && message.params !== null
-              ? (message.params as Record<string, unknown>)
-              : {};
-          const turn =
-            typeof params.turn === "object" && params.turn !== null
-              ? (params.turn as Record<string, unknown>)
-              : {};
-          const turnStatus = readCodexAppServerTurnStatus(turn);
-          const completedTurnError =
-            latestTurnError ??
-            (turn.error !== undefined
-              ? readCodexAppServerErrorMessage(turn.error, "Codex Subscription turn failed.")
-              : params.error !== undefined
-                ? readCodexAppServerErrorMessage(params.error, "Codex Subscription turn failed.")
-                : null);
-          if (
-            turnStatus === "failed" ||
-            turnStatus === "cancelled" ||
-            turnStatus === "systemError"
-          ) {
-            fail(new Error(completedTurnError ?? "Codex Subscription turn failed."));
-            return;
-          }
-          if (finalAgentText.length === 0 && outputText.length === 0) {
-            if (turnAttemptCount < 2) {
-              outputText = "";
-              finalAgentText = "";
-              latestTurnError = null;
-              startTurn(buildEmptyTurnRetryInput());
-              return;
-            }
-            fail(
-              new Error(
-                "Codex Subscription turn completed without producing an assistant response.",
-              ),
-            );
-            return;
-          }
-          succeed();
-          return;
-        }
-      }
-
-      if (typeof message.id === "number") {
-        const pendingRequest = pendingRequests.get(message.id);
-        if (pendingRequest) {
-          pendingRequests.delete(message.id);
-          if (message.error) {
-            pendingRequest.reject(
-              new Error(
-                readCodexAppServerErrorMessage(
-                  message.error,
-                  `Codex app-server ${pendingRequest.method} failed.`,
-                ),
-              ),
-            );
-            return;
-          }
-          pendingRequest.resolve(
-            typeof message.result === "object" && message.result !== null
-              ? (message.result as Record<string, unknown>)
-              : {},
-          );
-          return;
-        }
-
-        if (message.id === 3 && message.error) {
-          fail(
-            new Error(
-              readCodexAppServerErrorMessage(message.error, "Codex app-server turn/start failed."),
-            ),
-          );
-        }
-      }
-    };
-
-    reader.on("line", (line) => {
-      void (async () => {
-        const trimmed = line.trim();
-        if (trimmed.length === 0) {
-          return;
-        }
-        let message: Record<string, unknown>;
-        try {
-          message = JSON.parse(trimmed) as Record<string, unknown>;
-        } catch (error) {
-          fail(
-            error instanceof Error ? error : new Error("Codex app-server returned invalid JSON."),
-          );
-          return;
-        }
-        await onMessage(message);
-      })().catch((error: unknown) => {
-        fail(error instanceof Error ? error : new Error(String(error)));
-      });
-    });
-
-    input.child.on("error", (error) => {
-      fail(error instanceof Error ? error : new Error("Codex app-server process failed."));
-    });
-    input.child.on("close", () => {
-      if (!settled) {
-        fail(new Error("Codex app-server connection closed before the request completed."));
-      }
-    });
-    input.child.stdout.on("error", (error) => {
-      fail(error instanceof Error ? error : new Error("Codex app-server stdout failed."));
-    });
-    input.child.stdin.on("error", (error) => {
-      fail(error instanceof Error ? error : new Error("Codex app-server stdin failed."));
-    });
-
-    void (async () => {
-      try {
-        await sendRequest(1, "initialize", {
-          clientInfo: {
-            name: "role_model_runtime",
-            title: "Role Model Runtime",
-            version: "0.1.0",
-          },
-          capabilities: {
-            experimentalApi: true,
-          },
-        });
-        send({ method: "initialized", params: {} });
-        const threadStartResult = await sendRequest(2, "thread/start", {
-          model: input.model,
-          ...(appServerDynamicTools.length > 0 ? { dynamicTools: appServerDynamicTools } : {}),
-        });
-        threadStartAcknowledged = true;
-        const resolvedThreadId = readCodexThreadIdFromAppServerMessage({
-          result: threadStartResult,
-        });
-        if (resolvedThreadId.length > 0) {
-          threadId = resolvedThreadId;
-        }
-        maybeStartTurn();
-      } catch (error) {
-        fail(error instanceof Error ? error : new Error(String(error)));
-      }
-    })();
+function readAdapterParameterSanitization(
+  vendorMetadata: unknown,
+): readonly AdapterParameterDecision[] {
+  const record = asPlainRecord(vendorMetadata);
+  const rawDecisions = record?.parameterSanitization;
+  if (!Array.isArray(rawDecisions)) {
+    return [];
+  }
+  return rawDecisions.flatMap((rawDecision) => {
+    const decision = asPlainRecord(rawDecision);
+    if (!decision) {
+      return [];
+    }
+    if (
+      typeof decision.field !== "string" ||
+      !isOpenAIIngressSurface(decision.sourceSurface) ||
+      typeof decision.targetSurface !== "string" ||
+      !isAdapterParameterAction(decision.action) ||
+      typeof decision.reason !== "string" ||
+      decision.sourceValueKind !== "present" ||
+      typeof decision.adapterFamily !== "string" ||
+      typeof decision.providerId !== "string" ||
+      typeof decision.vendorId !== "string"
+    ) {
+      return [];
+    }
+    return [
+      {
+        field: decision.field,
+        sourceSurface: decision.sourceSurface,
+        targetSurface: decision.targetSurface,
+        action: decision.action,
+        reason: decision.reason,
+        sourceValueKind: decision.sourceValueKind,
+        ...(typeof decision.forwardedField === "string"
+          ? { forwardedField: decision.forwardedField }
+          : {}),
+        adapterFamily: decision.adapterFamily,
+        providerId: decision.providerId,
+        vendorId: decision.vendorId,
+      },
+    ];
   });
 }
 
-function createSystemCodexExecutionAdapter(): CodexExecutionAdapter {
+function buildCodexResponsesRequestBody(input: {
+  readonly modelId: string;
+  readonly requestCapture: ProviderRequestCapture;
+}): {
+  readonly body: Record<string, unknown>;
+  readonly parameterSanitization: readonly AdapterParameterDecision[];
+} {
+  const requestShape = readCodexExecutionRequestShape(input.requestCapture);
+  const sourceSurface = readOpenAIIngressSurface(requestShape);
+  const requestBody = input.requestCapture.body;
+  const requestedModel =
+    typeof requestBody.model === "string" && requestBody.model.trim().length > 0
+      ? normalizeCodexSubscriptionModelName(requestBody.model)
+      : normalizeCodexSubscriptionModelName(input.modelId);
+  const mappedInput =
+    requestShape === "chat-completions"
+      ? toCodexResponsesInputFromChatMessages(requestBody.messages)
+      : { input: toCodexResponsesInputFromResponsesInput(requestBody.input) };
+  const tools = Array.isArray(requestBody.tools) ? requestBody.tools.map(toCodexResponsesTool) : [];
+  const reasoning =
+    typeof requestBody.reasoning_effort === "string"
+      ? { effort: requestBody.reasoning_effort }
+      : asPlainRecord(requestBody.reasoning);
+  const parameterSanitization = collectCodexResponsesParameterSanitization({
+    requestBody,
+    sourceSurface,
+  });
+
+  return {
+    body: {
+      model: requestedModel,
+      store: false,
+      stream: true,
+      ...mappedInput,
+      include: ["reasoning.encrypted_content"],
+      ...(tools.length > 0
+        ? {
+            tools,
+            tool_choice: requestBody.tool_choice ?? "auto",
+            parallel_tool_calls: true,
+          }
+        : {}),
+      ...(reasoning ? { reasoning } : {}),
+      ...(typeof requestBody.prompt_cache_key === "string"
+        ? { prompt_cache_key: requestBody.prompt_cache_key }
+        : {}),
+    },
+    parameterSanitization,
+  };
+}
+
+function buildCodexResponsesHeaders(authPayload: CodexAuthCacheSnapshot): Headers {
+  const headers = new Headers();
+  headers.set("Authorization", `Bearer ${readCodexSubscriptionAccessToken(authPayload)}`);
+  headers.set("chatgpt-account-id", readCodexSubscriptionAccountId(authPayload));
+  headers.set("OpenAI-Beta", "responses=experimental");
+  headers.set("accept", "text/event-stream");
+  headers.set("content-type", "application/json");
+  return headers;
+}
+
+function resolveCodexResponsesUrl(): string {
+  return "https://chatgpt.com/backend-api/codex/responses";
+}
+
+export function createCodexSubscriptionResponsesExecutionAdapter(options?: {
+  readonly networkFetcher?: typeof fetch;
+}): CodexExecutionAdapter {
+  const networkFetcher = options?.networkFetcher ?? fetch;
   return {
     async executeRequest(input) {
-      const codexHome = resolveManagedCodexExecutionHome(
-        input.runtimeStateRoot,
-        input.scopeId,
-        input.requestId,
-      );
-      const workspaceRoot = resolveManagedCodexWorkspaceRoot(codexHome, input.requestId);
-      const codexCliPath = resolveCodexCliPath();
-      await mkdir(codexHome, { recursive: true });
-      await rm(workspaceRoot, { recursive: true, force: true });
-      await mkdir(workspaceRoot, { recursive: true });
-      await seedManagedCodexWorkspaceFixture(workspaceRoot);
-      await writeStoredCodexAuthCache(codexHome, input.authPayload);
-
-      const child = spawn(
-        codexCliPath,
-        ["app-server", "-c", 'cli_auth_credentials_store="file"', "--listen", "stdio://"],
-        {
-          cwd: workspaceRoot,
-          stdio: "pipe",
-          windowsHide: true,
-          env: {
-            ...process.env,
-            CODEX_HOME: codexHome,
-            HOME: codexHome,
-            USERPROFILE: codexHome,
-          },
-        },
-      );
-
-      let stderrText = "";
-      child.stderr.setEncoding("utf8");
-      child.stderr.on("data", (chunk: string) => {
-        stderrText = `${stderrText}${chunk}`.slice(-4_000);
+      const startedAt = Date.now();
+      const requestBuild = buildCodexResponsesRequestBody({
+        modelId: input.modelId,
+        requestCapture: input.requestCapture,
       });
-
-      try {
-        const model =
-          typeof input.requestCapture.body.model === "string" &&
-          input.requestCapture.body.model.trim().length > 0
-            ? normalizeCodexAppServerModelName(input.requestCapture.body.model)
-            : input.modelId.includes("/")
-              ? normalizeCodexAppServerModelName(input.modelId)
-              : normalizeCodexAppServerModelName(input.modelId);
-        const startedAt = Date.now();
-        const completedTurn = await executeCodexAppServerTurnOverStdio({
-          child,
-          model,
-          requestCapture: input.requestCapture,
-          workspaceRoot,
-          stderrText: () => stderrText,
-          executeDynamicToolCall: input.executeDynamicToolCall,
-        });
-        if (
-          completedTurn.outputText.trim().length === 0 &&
-          completedTurn.usage.inputTokens === 0 &&
-          completedTurn.usage.outputTokens === 0
-        ) {
-          const artifactFailure = await readCodexExecutionFailureFromSessionArtifacts({
-            codexHome,
-            workspaceRoot,
-          });
-          if (artifactFailure) {
-            throw new Error(artifactFailure);
-          }
-        }
-
-        const requestShape = readCodexExecutionRequestShape(input.requestCapture);
-        const surfacedDynamicToolCalls =
-          completedTurn.dynamicToolExecutions.length > 0 ? [] : completedTurn.dynamicToolCalls;
-        const body =
-          requestShape === "chat-completions"
-            ? {
-                id: "chatcmpl-codex-subscription",
-                object: "chat.completion",
-                choices: [
-                  {
-                    index: 0,
-                    finish_reason:
-                      surfacedDynamicToolCalls.length > 0
-                        ? "tool_calls"
-                        : completedTurn.finishReason,
-                    message: {
-                      role: "assistant",
-                      content: completedTurn.outputText,
-                      ...(surfacedDynamicToolCalls.length > 0
-                        ? { tool_calls: surfacedDynamicToolCalls }
-                        : {}),
-                    },
-                  },
-                ],
-                usage: {
-                  prompt_tokens: completedTurn.usage.inputTokens,
-                  completion_tokens: completedTurn.usage.outputTokens,
-                },
-              }
-            : {
-                id: `resp_${sanitizeSegment(input.requestId)}`,
-                output: [
-                  ...surfacedDynamicToolCalls.map((toolCall) => ({
-                    type: "function_call" as const,
-                    id: toolCall.id,
-                    call_id: toolCall.id,
-                    name: toolCall.function.name,
-                    arguments: toolCall.function.arguments,
-                  })),
-                  {
-                    type: "message",
-                    role: "assistant",
-                    content:
-                      completedTurn.outputText.length > 0
-                        ? [
-                            {
-                              type: "output_text",
-                              text: completedTurn.outputText,
-                            },
-                          ]
-                        : [],
-                  },
-                ],
-                usage: {
-                  input_tokens: completedTurn.usage.inputTokens,
-                  output_tokens: completedTurn.usage.outputTokens,
-                },
-              };
-
+      const requestBody = requestBuild.body;
+      const response = await networkFetcher(resolveCodexResponsesUrl(), {
+        method: "POST",
+        headers: buildCodexResponsesHeaders(input.authPayload),
+        body: JSON.stringify(requestBody),
+      });
+      if (!response.ok) {
+        const rawBody = await response.text();
         return {
-          statusCode: 200,
-          body,
-          ...(completedTurn.dynamicToolExecutions.length > 0
-            ? { dynamicToolExecutions: [...completedTurn.dynamicToolExecutions] }
-            : {}),
+          statusCode: response.status,
+          body: parseProviderResponseBody(rawBody),
           vendorMetadata: {
-            vendorId: "codex-app-server",
+            vendorId: "chatgpt-codex-responses",
             latencyMs: Math.max(0, Date.now() - startedAt),
+            ...(requestBuild.parameterSanitization.length > 0
+              ? { parameterSanitization: requestBuild.parameterSanitization }
+              : {}),
           },
         };
-      } finally {
-        await waitForChildExit(child);
-        await cleanupManagedCodexExecutionWorkspace(codexHome, workspaceRoot);
       }
+
+      const requestShape = readCodexExecutionRequestShape(input.requestCapture);
+      const requestedModel =
+        typeof input.requestCapture.body.model === "string"
+          ? input.requestCapture.body.model
+          : input.modelId;
+      const streamedDownstreamChunks: string[] = [];
+      const chatStreamMapper =
+        requestShape === "chat-completions" && input.requestCapture.body.stream === true
+          ? createCodexResponsesChatCompletionsStreamMapper({
+              requestId: input.requestId,
+              requestedModel,
+            })
+          : null;
+      const rawBody = await readCodexResponsesSseTranscript(response, async (payloadText) => {
+        if (chatStreamMapper && input.streamChunkWriter) {
+          const chunks = chatStreamMapper(payloadText);
+          for (const chunk of chunks) {
+            streamedDownstreamChunks.push(chunk);
+            await input.streamChunkWriter(chunk);
+          }
+          return;
+        }
+        if (
+          requestShape === "responses" &&
+          input.requestCapture.body.stream === true &&
+          input.streamChunkWriter
+        ) {
+          const chunk = `data: ${payloadText}\n\n`;
+          streamedDownstreamChunks.push(chunk);
+          await input.streamChunkWriter(chunk);
+        }
+      });
+      const transcript = normalizeCodexResponsesTranscript(rawBody, input.requestId);
+      const body =
+        streamedDownstreamChunks.length > 0
+          ? streamedDownstreamChunks.join("")
+          : requestShape === "chat-completions"
+            ? input.requestCapture.body.stream === true
+              ? createChatCompletionsSseFromCodexResponsesTranscript({
+                  requestId: input.requestId,
+                  requestedModel,
+                  transcript,
+                })
+              : createChatCompletionsBodyFromCodexResponsesTranscript({
+                  requestId: input.requestId,
+                  requestedModel,
+                  transcript,
+                })
+            : input.requestCapture.body.stream === true
+              ? rawBody
+              : createResponsesBodyFromCodexResponsesTranscript({
+                  requestId: input.requestId,
+                  requestedModel,
+                  transcript,
+                });
+
+      return {
+        statusCode: response.status,
+        body,
+        vendorMetadata: {
+          vendorId: "chatgpt-codex-responses",
+          latencyMs: Math.max(0, Date.now() - startedAt),
+          ...(requestBuild.parameterSanitization.length > 0
+            ? { parameterSanitization: requestBuild.parameterSanitization }
+            : {}),
+        },
+      };
     },
   };
 }
@@ -11174,6 +10868,62 @@ function parseProviderResponseBody(rawBody: string): unknown {
   }
 }
 
+function isReasoningOnlyChatCompletionsChunk(payload: Record<string, unknown>): boolean {
+  if (!Array.isArray(payload.choices) || payload.choices.length === 0) {
+    return false;
+  }
+  let sawReasoningOnlyDelta = false;
+  for (const choice of payload.choices) {
+    if (typeof choice !== "object" || choice === null) {
+      continue;
+    }
+    const delta = (choice as { delta?: Record<string, unknown> }).delta;
+    if (!delta || typeof delta !== "object") {
+      continue;
+    }
+    if (typeof delta.content === "string" && delta.content.length > 0) {
+      return false;
+    }
+    if (Array.isArray(delta.tool_calls) && delta.tool_calls.length > 0) {
+      return false;
+    }
+    if (typeof delta.reasoning_content === "string" && delta.reasoning_content.length > 0) {
+      sawReasoningOnlyDelta = true;
+    }
+  }
+  return sawReasoningOnlyDelta;
+}
+
+function countChatCompletionsReasoningDeltas(payload: Record<string, unknown>): number {
+  if (!Array.isArray(payload.choices)) {
+    return 0;
+  }
+  let count = 0;
+  for (const choice of payload.choices) {
+    if (typeof choice !== "object" || choice === null) {
+      continue;
+    }
+    const delta = (choice as { delta?: Record<string, unknown> }).delta;
+    if (
+      delta &&
+      typeof delta === "object" &&
+      typeof delta.reasoning_content === "string" &&
+      delta.reasoning_content.length > 0
+    ) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+function hasForwardedReasoningControl(body: Record<string, unknown>): boolean {
+  return (
+    typeof body.reasoning_effort === "string" ||
+    asPlainRecord(body.reasoning) !== undefined ||
+    asPlainRecord(body.thinking) !== undefined
+  );
+}
+
 async function readProviderStreamTranscript(
   response: Response,
   streamWriter: BridgeStreamWriter,
@@ -11187,6 +10937,7 @@ async function readProviderStreamTranscript(
   const decoder = new TextDecoder();
   let transcript = "";
   let pending = "";
+  let hasForwardedDownstreamSafeChunk = false;
 
   const flushBlocks = async (flushAll: boolean): Promise<void> => {
     const parts = pending.split(/\r?\n\r?\n/);
@@ -11209,9 +10960,21 @@ async function readProviderStreamTranscript(
         continue;
       }
 
+      let payload: Record<string, unknown>;
       try {
-        await streamWriter(JSON.parse(payloadText) as Record<string, unknown>, metadata);
-      } catch {}
+        payload = JSON.parse(payloadText) as Record<string, unknown>;
+      } catch {
+        continue;
+      }
+      if (
+        !metadata.reasoningRequested &&
+        !hasForwardedDownstreamSafeChunk &&
+        isReasoningOnlyChatCompletionsChunk(payload)
+      ) {
+        continue;
+      }
+      hasForwardedDownstreamSafeChunk = true;
+      await streamWriter(payload, metadata);
     }
   };
 
@@ -11238,6 +11001,7 @@ async function replayProviderStreamTranscript(
   streamWriter: BridgeStreamWriter,
   metadata: BridgeStreamMetadata,
 ): Promise<void> {
+  let hasForwardedDownstreamSafeChunk = false;
   for (const block of transcript.split(/\r?\n\r?\n/)) {
     const dataLines = block
       .split(/\r?\n/)
@@ -11254,9 +11018,21 @@ async function replayProviderStreamTranscript(
       continue;
     }
 
+    let payload: Record<string, unknown>;
     try {
-      await streamWriter(JSON.parse(payloadText) as Record<string, unknown>, metadata);
-    } catch {}
+      payload = JSON.parse(payloadText) as Record<string, unknown>;
+    } catch {
+      continue;
+    }
+    if (
+      !metadata.reasoningRequested &&
+      !hasForwardedDownstreamSafeChunk &&
+      isReasoningOnlyChatCompletionsChunk(payload)
+    ) {
+      continue;
+    }
+    hasForwardedDownstreamSafeChunk = true;
+    await streamWriter(payload, metadata);
   }
 }
 
@@ -12070,6 +11846,23 @@ function createChatCompletionsStreamChunks(
   };
 
   return [
+    ...(result.reasoningText && result.reasoningText.length > 0
+      ? [
+          {
+            ...baseChunk,
+            choices: [
+              {
+                index: 0,
+                delta: {
+                  role: "assistant",
+                  reasoning_content: result.reasoningText,
+                },
+                finish_reason: null,
+              },
+            ],
+          },
+        ]
+      : []),
     {
       ...baseChunk,
       choices: [
@@ -12182,6 +11975,282 @@ function createResponsesStreamChunks(
   });
 
   return chunks;
+}
+
+type ResponsesStreamNormalizationState = {
+  responseId: string;
+  messageId: string;
+  model: string;
+  createdAt: number;
+  nativeResponsesSeen: boolean;
+  chatCompletionsSeen: boolean;
+  createdEmitted: boolean;
+  messageItemEmitted: boolean;
+  textDeltaEmitted: boolean;
+  terminalEmitted: boolean;
+};
+
+function createResponsesStreamNormalizationState(
+  requestId: string,
+  requestedModel: string,
+): ResponsesStreamNormalizationState {
+  const responseId = `resp_${requestId}`;
+  return {
+    responseId,
+    messageId: `msg_${responseId}`,
+    model: requestedModel,
+    createdAt: Math.floor(Date.now() / 1000),
+    nativeResponsesSeen: false,
+    chatCompletionsSeen: false,
+    createdEmitted: false,
+    messageItemEmitted: false,
+    textDeltaEmitted: false,
+    terminalEmitted: false,
+  };
+}
+
+function isResponsesStreamEventPayload(payload: Record<string, unknown>): boolean {
+  return typeof payload.type === "string" && payload.type.startsWith("response.");
+}
+
+function isChatCompletionsStreamPayload(payload: Record<string, unknown>): boolean {
+  return payload.object === "chat.completion.chunk" && Array.isArray(payload.choices);
+}
+
+function readChatCompletionsStreamTextDeltas(payload: Record<string, unknown>): readonly string[] {
+  if (!Array.isArray(payload.choices)) {
+    return [];
+  }
+  const textDeltas: string[] = [];
+  for (const choice of payload.choices) {
+    if (typeof choice !== "object" || choice === null) {
+      continue;
+    }
+    const delta = (choice as { delta?: Record<string, unknown> }).delta;
+    if (!delta || typeof delta !== "object") {
+      continue;
+    }
+    if (typeof delta.content === "string" && delta.content.length > 0) {
+      textDeltas.push(delta.content);
+    }
+  }
+  return textDeltas;
+}
+
+function readChatCompletionsStreamFinishReason(
+  payload: Record<string, unknown>,
+): string | null | undefined {
+  if (!Array.isArray(payload.choices)) {
+    return undefined;
+  }
+  for (const choice of payload.choices) {
+    if (typeof choice !== "object" || choice === null) {
+      continue;
+    }
+    const finishReason = (choice as { finish_reason?: unknown }).finish_reason;
+    if (typeof finishReason === "string" && finishReason.length > 0) {
+      return finishReason;
+    }
+    if (finishReason === null) {
+      return null;
+    }
+  }
+  return undefined;
+}
+
+function readChatCompletionsStreamUsage(
+  payload: Record<string, unknown>,
+): { input_tokens: number; output_tokens: number } | null {
+  const usage =
+    typeof payload.usage === "object" && payload.usage !== null
+      ? (payload.usage as Record<string, unknown>)
+      : null;
+  const inputTokens = usage?.prompt_tokens;
+  const outputTokens = usage?.completion_tokens;
+  return typeof inputTokens === "number" && typeof outputTokens === "number"
+    ? {
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+      }
+    : null;
+}
+
+function normalizeResponsesStreamStateFromNativeEvent(
+  payload: Record<string, unknown>,
+  state: ResponsesStreamNormalizationState,
+): void {
+  state.nativeResponsesSeen = true;
+  const eventType = typeof payload.type === "string" ? payload.type : "";
+  if (
+    eventType === "response.created" &&
+    typeof payload.response === "object" &&
+    payload.response !== null
+  ) {
+    const response = payload.response as Record<string, unknown>;
+    if (typeof response.id === "string" && response.id.length > 0) {
+      state.responseId = response.id;
+      state.messageId = `msg_${response.id}`;
+    }
+    if (typeof response.model === "string" && response.model.length > 0) {
+      state.model = response.model;
+    }
+    if (typeof response.created_at === "number") {
+      state.createdAt = response.created_at;
+    }
+    state.createdEmitted = true;
+    return;
+  }
+  if (eventType === "response.output_item.added") {
+    const item =
+      typeof payload.item === "object" && payload.item !== null
+        ? (payload.item as Record<string, unknown>)
+        : null;
+    if (item?.type === "message") {
+      state.messageItemEmitted = true;
+    }
+    return;
+  }
+  if (eventType === "response.output_text.delta") {
+    state.textDeltaEmitted = true;
+    return;
+  }
+  if (eventType === "response.completed" || eventType === "response.incomplete") {
+    state.terminalEmitted = true;
+  }
+}
+
+function createResponsesEventsFromChatCompletionsStreamPayload(
+  payload: Record<string, unknown>,
+  state: ResponsesStreamNormalizationState,
+): ReadonlyArray<Record<string, unknown>> {
+  state.chatCompletionsSeen = true;
+  const events: Record<string, unknown>[] = [];
+  if (typeof payload.model === "string" && payload.model.length > 0) {
+    state.model = payload.model;
+  }
+  if (typeof payload.created === "number") {
+    state.createdAt = payload.created;
+  }
+  if (!state.createdEmitted) {
+    events.push({
+      type: "response.created",
+      response: {
+        id: state.responseId,
+        created_at: state.createdAt,
+        model: state.model,
+      },
+    });
+    state.createdEmitted = true;
+  }
+  if (!state.messageItemEmitted) {
+    events.push({
+      type: "response.output_item.added",
+      output_index: 0,
+      item: {
+        type: "message",
+        id: state.messageId,
+      },
+    });
+    state.messageItemEmitted = true;
+  }
+
+  const textDeltas = readChatCompletionsStreamTextDeltas(payload);
+  for (const delta of textDeltas) {
+    events.push({
+      type: "response.output_text.delta",
+      item_id: state.messageId,
+      output_index: 0,
+      delta,
+    });
+    state.textDeltaEmitted = true;
+  }
+
+  const finishReason = readChatCompletionsStreamFinishReason(payload);
+  if (typeof finishReason === "string" && finishReason.length > 0 && !state.terminalEmitted) {
+    const usage = readChatCompletionsStreamUsage(payload);
+    events.push({
+      type: finishReason === "stop" ? "response.completed" : "response.incomplete",
+      response: {
+        id: state.responseId,
+        ...(usage ? { usage } : {}),
+        ...(finishReason === "stop"
+          ? {}
+          : {
+              incomplete_details: {
+                reason: finishReason,
+              },
+            }),
+      },
+    });
+    state.terminalEmitted = true;
+  }
+
+  return events;
+}
+
+function normalizeResponsesStreamChunk(
+  payload: Record<string, unknown>,
+  state: ResponsesStreamNormalizationState,
+): ReadonlyArray<Record<string, unknown>> {
+  if (isResponsesStreamEventPayload(payload)) {
+    normalizeResponsesStreamStateFromNativeEvent(payload, state);
+    return [payload];
+  }
+  if (isChatCompletionsStreamPayload(payload)) {
+    return createResponsesEventsFromChatCompletionsStreamPayload(payload, state);
+  }
+  return [payload];
+}
+
+function createResponsesStreamFinalizationChunks(
+  result: BridgeResponsesExecutionResult,
+  state: ResponsesStreamNormalizationState,
+): ReadonlyArray<Record<string, unknown>> {
+  if (state.nativeResponsesSeen && !state.chatCompletionsSeen) {
+    if (state.terminalEmitted) {
+      return [];
+    }
+    return createResponsesStreamChunks({
+      ...result,
+      responseId: state.responseId,
+      model: state.model || result.model,
+    }).filter((chunk) => {
+      const eventType = typeof chunk.type === "string" ? chunk.type : "";
+      return eventType === "response.completed" || eventType === "response.incomplete";
+    });
+  }
+  const fallbackChunks = createResponsesStreamChunks({
+    ...result,
+    responseId: state.responseId,
+    model: state.model || result.model,
+  });
+  const finalized: Record<string, unknown>[] = [];
+  for (const chunk of fallbackChunks) {
+    const eventType = typeof chunk.type === "string" ? chunk.type : "";
+    if (eventType === "response.created" && state.createdEmitted) {
+      continue;
+    }
+    if (
+      eventType === "response.output_item.added" &&
+      typeof chunk.item === "object" &&
+      chunk.item !== null &&
+      (chunk.item as { type?: unknown }).type === "message" &&
+      state.messageItemEmitted
+    ) {
+      continue;
+    }
+    if (eventType === "response.output_text.delta" && state.textDeltaEmitted) {
+      continue;
+    }
+    if (
+      (eventType === "response.completed" || eventType === "response.incomplete") &&
+      state.terminalEmitted
+    ) {
+      continue;
+    }
+    finalized.push(chunk);
+  }
+  return finalized;
 }
 
 function parseStreamPayloads(rawTranscript: string): readonly Record<string, unknown>[] {
@@ -12327,7 +12396,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
       try {
         const requestId = readBridgeRequestId(request);
-        const requestOptions = readBridgeExecutionRequestOptions(request);
+        const requestAbortSignal = createBridgeRequestAbortSignal(request, response);
+        const requestOptions = mergeBridgeRequestAbortSignal(
+          readBridgeExecutionRequestOptions(request),
+          requestAbortSignal,
+        );
         const body = await readJsonBody(request);
         const parsedBody = parseChatCompletionsBody(body);
         if (parsedBody.stream) {
@@ -12352,11 +12425,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               });
               wroteStreamChunk = true;
               for (const pendingChunk of pendingChunks) {
-                response.write(pendingChunk);
+                await writeSseChunk(response, pendingChunk, requestAbortSignal);
               }
               pendingChunks.length = 0;
             }
-            response.write(serializedChunk);
+            await writeSseChunk(response, serializedChunk, requestAbortSignal);
           };
           const result = await options.executeChatCompletions(
             parsedBody,
@@ -12378,15 +12451,19 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             });
             if (pendingChunks.length > 0) {
               for (const pendingChunk of pendingChunks) {
-                response.write(pendingChunk);
+                await writeSseChunk(response, pendingChunk, requestAbortSignal);
               }
             } else {
               for (const chunk of createChatCompletionsStreamChunks(result)) {
-                response.write(`data: ${JSON.stringify(chunk)}\n\n`);
+                await writeSseChunk(
+                  response,
+                  `data: ${JSON.stringify(chunk)}\n\n`,
+                  requestAbortSignal,
+                );
               }
             }
           }
-          response.write("data: [DONE]\n\n");
+          await writeSseChunk(response, "data: [DONE]\n\n", requestAbortSignal);
           response.end();
           return;
         }
@@ -12412,6 +12489,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         if (error instanceof BridgeHttpError) {
           throw error;
         }
+        if (isBridgeClientDisconnectedError(error)) {
+          response.end();
+          return;
+        }
         const message = error instanceof Error ? error.message : "chat completions request failed";
         writeJson(response, 400, { error: message });
         return;
@@ -12421,18 +12502,28 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     if (request.method === "POST" && url.pathname === "/v1/responses") {
       try {
         const requestId = readBridgeRequestId(request);
-        const requestOptions = readBridgeExecutionRequestOptions(request);
+        const requestAbortSignal = createBridgeRequestAbortSignal(request, response);
+        const requestOptions = mergeBridgeRequestAbortSignal(
+          readBridgeExecutionRequestOptions(request),
+          requestAbortSignal,
+        );
         const body = await readJsonBody(request);
         const parsedBody = parseResponsesBody(body);
         if (parsedBody.stream) {
           let wroteStreamChunk = false;
           const pendingChunks: string[] = [];
-          const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
-            const serializedChunk = `data: ${JSON.stringify(chunk)}\n\n`;
+          const responsesStreamState = createResponsesStreamNormalizationState(
+            requestId,
+            parsedBody.model,
+          );
+          const writeNormalizedChunk = async (
+            serializedChunk: string,
+            metadata?: BridgeStreamMetadata,
+          ): Promise<boolean> => {
             if (!wroteStreamChunk) {
               if (!metadata) {
                 pendingChunks.push(serializedChunk);
-                return;
+                return false;
               }
               response.writeHead(200, {
                 "content-type": "text/event-stream; charset=utf-8",
@@ -12446,11 +12537,20 @@ function createRequestHandler(options: StartBridgeServerOptions) {
               });
               wroteStreamChunk = true;
               for (const pendingChunk of pendingChunks) {
-                response.write(pendingChunk);
+                await writeSseChunk(response, pendingChunk, requestAbortSignal);
               }
               pendingChunks.length = 0;
             }
-            response.write(serializedChunk);
+            await writeSseChunk(response, serializedChunk, requestAbortSignal);
+            return true;
+          };
+          const streamWriter: BridgeStreamWriter = async (chunk, metadata) => {
+            for (const normalizedChunk of normalizeResponsesStreamChunk(
+              chunk,
+              responsesStreamState,
+            )) {
+              await writeNormalizedChunk(`data: ${JSON.stringify(normalizedChunk)}\n\n`, metadata);
+            }
           };
           const result = await options.executeResponses(
             parsedBody,
@@ -12472,12 +12572,30 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             });
             if (pendingChunks.length > 0) {
               for (const pendingChunk of pendingChunks) {
-                response.write(pendingChunk);
+                await writeSseChunk(response, pendingChunk, requestAbortSignal);
               }
             } else {
-              for (const chunk of createResponsesStreamChunks(result)) {
-                response.write(`data: ${JSON.stringify(chunk)}\n\n`);
+              for (const chunk of createResponsesStreamFinalizationChunks(
+                result,
+                responsesStreamState,
+              )) {
+                await writeSseChunk(
+                  response,
+                  `data: ${JSON.stringify(chunk)}\n\n`,
+                  requestAbortSignal,
+                );
               }
+            }
+          } else {
+            for (const chunk of createResponsesStreamFinalizationChunks(
+              result,
+              responsesStreamState,
+            )) {
+              await writeSseChunk(
+                response,
+                `data: ${JSON.stringify(chunk)}\n\n`,
+                requestAbortSignal,
+              );
             }
           }
           response.end();
@@ -12504,6 +12622,10 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       } catch (error) {
         if (error instanceof BridgeHttpError) {
           throw error;
+        }
+        if (isBridgeClientDisconnectedError(error)) {
+          response.end();
+          return;
         }
         const message = error instanceof Error ? error.message : "responses request failed";
         writeJson(response, 400, { error: message });
@@ -13807,9 +13929,10 @@ export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
   const networkFetcher = options.networkFetcher ?? fetch;
-  const codexAuthAdapter = options.codexAuthAdapter ?? createSystemCodexAuthAdapter();
+  const codexAuthAdapter = options.codexAuthAdapter ?? createSystemCodexAuthAdapter(networkFetcher);
   const codexExecutionAdapter =
-    options.codexExecutionAdapter ?? createSystemCodexExecutionAdapter();
+    options.codexExecutionAdapter ??
+    createCodexSubscriptionResponsesExecutionAdapter({ networkFetcher });
   const codexDynamicToolExecutionsByRequestId = new Map<string, ToolRegistryExecution[]>();
   const runtimeVendorStartup = options.runtimeVendorStartup ?? "enabled";
   const fixtureRoot = options.fixtureRoot ?? null;
@@ -15649,6 +15772,8 @@ export async function createRuntimeBridgeBackend(
                 apiKeyRef: provider.apiKeyRef,
                 modelMappings: provider.modelMappings,
               })),
+              routerSettings: nextConfig.liteLLM.routerSettings,
+              litellmSettings: nextConfig.liteLLM.litellmSettings,
               command: nextConfig.liteLLM.process.command ?? undefined,
               args: nextConfig.liteLLM.process.args,
               env: nextConfig.liteLLM.process.env,
@@ -17561,6 +17686,7 @@ export async function createRuntimeBridgeBackend(
     executionOptions?: {
       readonly persistObservation?: boolean;
       readonly requestOptions?: BridgeExecutionRequestOptions;
+      readonly requestBody?: Record<string, unknown>;
       readonly requestedModel?: string;
       readonly requestOperation?: string;
       readonly executionSnapshot?: ReturnType<typeof createExecutionRuntimeSnapshot>;
@@ -17578,9 +17704,11 @@ export async function createRuntimeBridgeBackend(
       routingTimeMs,
     });
     let streamedChunkCount = 0;
+    let streamedReasoningDeltaCount = 0;
     const trackedStreamWriter: BridgeStreamWriter | undefined = streamWriter
       ? async (chunk, metadata) => {
           streamedChunkCount += 1;
+          streamedReasoningDeltaCount += countChatCompletionsReasoningDeltas(chunk);
           await streamWriter(chunk, metadata);
         }
       : undefined;
@@ -17617,16 +17745,11 @@ export async function createRuntimeBridgeBackend(
       readonly routed: ReturnType<typeof routeRuntimeRequest>;
     } => {
       const mergedDenyEndpoints = readMergedDeniedExecutionEndpoints(denyEndpoints);
-      const allowEndpoints =
-        mergedDenyEndpoints.length > 0 && plan.fallbackAllowEndpoints?.length
-          ? plan.fallbackAllowEndpoints
-          : plan.routingRequest.allowEndpoints;
       return {
         deniedEndpointIds: mergedDenyEndpoints,
         routed: routeRuntimeRequest({
           request: {
             ...plan.routingRequest,
-            ...(allowEndpoints ? { allowEndpoints } : {}),
             ...(mergedDenyEndpoints.length > 0 ? { denyEndpoints: mergedDenyEndpoints } : {}),
           },
           registry: executionSnapshot.registry,
@@ -17659,7 +17782,14 @@ export async function createRuntimeBridgeBackend(
       }
       const requestedModel = executionOptions?.requestedModel ?? null;
       const temporarilyUnavailable = input.deniedEndpointIds.length > 0;
-      throw new BridgeHttpError(temporarilyUnavailable ? 503 : 400, {
+      const executionCooldowns = temporarilyUnavailable
+        ? readExecutionCooldownReceipts({
+            databasePath: initialization.databasePath,
+            nowMs: Date.now(),
+            endpointIds: input.deniedEndpointIds,
+          })
+        : [];
+      throw new BridgeHttpError(400, {
         error: {
           type: "routing_error",
           code: "no_eligible_target",
@@ -17674,10 +17804,12 @@ export async function createRuntimeBridgeBackend(
           ...(input.deniedEndpointIds.length > 0
             ? { deniedEndpointIds: [...input.deniedEndpointIds] }
             : {}),
+          ...(executionCooldowns.length > 0 ? { executionCooldowns } : {}),
         },
       });
     };
     const deniedEndpointIds = [...(plan.routingRequest.denyEndpoints ?? [])];
+    const streamReasoningRequested = Boolean(plan.executionRequest.reasoning);
     let { routed, deniedEndpointIds: initialDeniedEndpointIds } =
       routeExecutionRequest(deniedEndpointIds);
     if (routed.decision.chosen_endpoint_id.trim().length === 0) {
@@ -17709,6 +17841,13 @@ export async function createRuntimeBridgeBackend(
         target.account?.credentialRef.backend === "local-file" ||
         target.account?.credentialRef.backend === "local-encrypted-file";
       const capture = captures.byEndpointId[target.endpointId];
+      const failureContext = {
+        providerId: target.providerId,
+        providerFamily: requestCapture.providerFamily,
+        executionFamily: target.candidate.identity.serving_source ?? target.adapterFamily,
+        adapterFamily: target.adapterFamily,
+        failurePhase: "provider_execution",
+      } as const;
       const usesFixtureAccount =
         target.providerAccountId !== null && fixtureAccountIds.has(target.providerAccountId);
 
@@ -17719,7 +17858,7 @@ export async function createRuntimeBridgeBackend(
         usesFixtureAccount
       ) {
         return {
-          providerFamily: target.adapterFamily,
+          providerFamily: requestCapture.providerFamily,
           endpointId: target.endpointId,
           statusCode: 200,
           body: capture.body,
@@ -17734,35 +17873,48 @@ export async function createRuntimeBridgeBackend(
               "Configure llama_swap.models to enable local execution.",
             );
           }
-          const result = await currentLlamaSwapVendor.execute(
-            {
-              providerFamily: requestCapture.providerFamily,
-              endpointId: requestCapture.endpointId,
-              url: requestCapture.url,
-              headers: requestCapture.headers,
-              body: requestCapture.body,
-            },
-            trackedStreamWriter && requestCapture.body.stream === true
-              ? {
-                  streamWriter: async (chunk) => {
-                    await trackedStreamWriter(chunk, {
-                      endpointId: target.endpointId,
-                      adapterFamily: target.adapterFamily,
-                      routingDecisionId,
-                    });
-                  },
-                }
-              : undefined,
-          );
+          const abortSignal = executionOptions?.requestOptions?.abortSignal;
+          throwIfBridgeClientAborted(abortSignal);
+          const result = await currentLlamaSwapVendor
+            .execute(
+              {
+                providerFamily: requestCapture.providerFamily,
+                endpointId: requestCapture.endpointId,
+                url: requestCapture.url,
+                headers: requestCapture.headers,
+                body: requestCapture.body,
+              },
+              trackedStreamWriter && requestCapture.body.stream === true
+                ? {
+                    streamWriter: async (chunk) => {
+                      await trackedStreamWriter(chunk, {
+                        endpointId: target.endpointId,
+                        adapterFamily: target.adapterFamily,
+                        routingDecisionId,
+                        reasoningRequested: streamReasoningRequested,
+                      });
+                    },
+                    abortSignal,
+                  }
+                : abortSignal
+                  ? { abortSignal }
+                  : undefined,
+            )
+            .catch((error: unknown) => {
+              throwIfBridgeClientAborted(abortSignal);
+              throw error;
+            });
           if (result.statusCode >= 400) {
             throw classifyUpstreamExecutionFailure({
               endpointId: target.endpointId,
               statusCode: result.statusCode,
               body: result.body,
+              vendorId: result.metadata?.vendorId ?? "llama-swap",
+              ...failureContext,
             });
           }
           return {
-            providerFamily: target.adapterFamily,
+            providerFamily: requestCapture.providerFamily,
             endpointId: target.endpointId,
             statusCode: result.statusCode,
             body: result.body,
@@ -17776,38 +17928,49 @@ export async function createRuntimeBridgeBackend(
               "Configure litellm_proxy.providers to enable remote execution.",
             );
           }
-          const result = await currentLiteLLMVendor.execute(
-            {
-              providerFamily: requestCapture.providerFamily,
-              endpointId: requestCapture.endpointId,
-              url: requestCapture.url,
-              headers: requestCapture.headers,
-              body: requestCapture.body,
-            },
-            {
-              ...(trackedStreamWriter && requestCapture.body.stream === true
-                ? {
-                    streamWriter: async (chunk) => {
-                      await trackedStreamWriter(chunk, {
-                        endpointId: target.endpointId,
-                        adapterFamily: target.adapterFamily,
-                        routingDecisionId,
-                      });
-                    },
-                  }
-                : {}),
-              ...(fallbackModelIds?.length ? { fallbackModelIds } : {}),
-            },
-          );
+          const abortSignal = executionOptions?.requestOptions?.abortSignal;
+          throwIfBridgeClientAborted(abortSignal);
+          const result = await currentLiteLLMVendor
+            .execute(
+              {
+                providerFamily: requestCapture.providerFamily,
+                endpointId: requestCapture.endpointId,
+                url: requestCapture.url,
+                headers: requestCapture.headers,
+                body: requestCapture.body,
+              },
+              {
+                ...(trackedStreamWriter && requestCapture.body.stream === true
+                  ? {
+                      streamWriter: async (chunk) => {
+                        await trackedStreamWriter(chunk, {
+                          endpointId: target.endpointId,
+                          adapterFamily: target.adapterFamily,
+                          routingDecisionId,
+                          reasoningRequested: streamReasoningRequested,
+                        });
+                      },
+                    }
+                  : {}),
+                ...(fallbackModelIds?.length ? { fallbackModelIds } : {}),
+                ...(abortSignal ? { abortSignal } : {}),
+              },
+            )
+            .catch((error: unknown) => {
+              throwIfBridgeClientAborted(abortSignal);
+              throw error;
+            });
           if (result.statusCode >= 400) {
             throw classifyUpstreamExecutionFailure({
               endpointId: target.endpointId,
               statusCode: result.statusCode,
               body: result.body,
+              vendorId: result.metadata?.vendorId ?? "litellm",
+              ...failureContext,
             });
           }
           return {
-            providerFamily: target.adapterFamily,
+            providerFamily: requestCapture.providerFamily,
             endpointId: target.endpointId,
             statusCode: result.statusCode,
             body: result.body,
@@ -17822,7 +17985,7 @@ export async function createRuntimeBridgeBackend(
           throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
         }
         return {
-          providerFamily: target.adapterFamily,
+          providerFamily: requestCapture.providerFamily,
           endpointId: target.endpointId,
           statusCode: 200,
           body: capture.body,
@@ -17848,11 +18011,7 @@ export async function createRuntimeBridgeBackend(
           });
         }
         const codexDynamicTools = buildCodexDynamicTools(requestCapture);
-        const codexDynamicToolBindings = buildCodexAppServerDynamicToolBindings(requestCapture);
         const dynamicToolNames = new Set(codexDynamicTools.map((tool) => tool.name));
-        const originalToolNameByExposedName = new Map(
-          codexDynamicToolBindings.map((tool) => [tool.exposedName, tool.originalName]),
-        );
         let runtimeToolRegistry: ToolRegistry | null = null;
         let codexResponse: Awaited<ReturnType<CodexExecutionAdapter["executeRequest"]>>;
         try {
@@ -17864,6 +18023,26 @@ export async function createRuntimeBridgeBackend(
             modelId: target.modelId,
             requestCapture,
             authPayload,
+            ...(trackedStreamWriter && requestCapture.body.stream === true
+              ? {
+                  streamChunkWriter: async (chunk: string) => {
+                    for (const payloadText of readSsePayloadTexts(chunk)) {
+                      let payload: Record<string, unknown>;
+                      try {
+                        payload = JSON.parse(payloadText) as Record<string, unknown>;
+                      } catch {
+                        continue;
+                      }
+                      await trackedStreamWriter(payload, {
+                        endpointId: target.endpointId,
+                        adapterFamily: target.adapterFamily,
+                        routingDecisionId,
+                        reasoningRequested: streamReasoningRequested,
+                      });
+                    }
+                  },
+                }
+              : {}),
             ...(codexDynamicTools.length > 0
               ? {
                   executeDynamicToolCall: async ({
@@ -17881,8 +18060,7 @@ export async function createRuntimeBridgeBackend(
                       workspaceRoot,
                       applyPatchMode: "mutate",
                     });
-                    const originalToolName =
-                      originalToolNameByExposedName.get(toolName) ?? toolName;
+                    const originalToolName = toolName;
                     const executionResult = dynamicToolNames.has(originalToolName)
                       ? await executeToolCalls(runtimeToolRegistry, {
                           requestId,
@@ -17944,6 +18122,8 @@ export async function createRuntimeBridgeBackend(
             endpointId: target.endpointId,
             message: error instanceof Error ? error.message : "Codex execution failed.",
             fallbackStatusCode: 503,
+            vendorId: "chatgpt-codex-responses",
+            ...failureContext,
           });
         }
         if (codexResponse.statusCode >= 400) {
@@ -17951,10 +18131,12 @@ export async function createRuntimeBridgeBackend(
             endpointId: target.endpointId,
             statusCode: codexResponse.statusCode,
             body: codexResponse.body,
+            vendorId: codexResponse.vendorMetadata?.vendorId ?? "chatgpt-codex-responses",
+            ...failureContext,
           });
         }
         return {
-          providerFamily: target.adapterFamily,
+          providerFamily: requestCapture.providerFamily,
           endpointId: target.endpointId,
           ...codexResponse,
         };
@@ -17991,14 +18173,17 @@ export async function createRuntimeBridgeBackend(
                 : {}),
               ...applyCredentialToHeaders(requestCapture.headers, resolvedCredentialValue),
             },
+            signal: executionOptions?.requestOptions?.abortSignal,
             body: JSON.stringify(requestCapture.body),
           });
         } catch (error) {
+          throwIfBridgeClientAborted(executionOptions?.requestOptions?.abortSignal);
           throw classifyUpstreamExecutionFailure({
             endpointId: target.endpointId,
             message:
               error instanceof Error ? error.message : "Provider request could not be completed.",
             fallbackStatusCode: 503,
+            ...failureContext,
           });
         }
         return {
@@ -18025,7 +18210,6 @@ export async function createRuntimeBridgeBackend(
         ({ response, latencyMs } = await performRequest(refreshedCredentialValue));
       }
       const measuredVendorMetadata = {
-        vendorId: "direct-http",
         latencyMs,
       };
       if (!response.ok) {
@@ -18035,6 +18219,7 @@ export async function createRuntimeBridgeBackend(
           endpointId: target.endpointId,
           statusCode: response.status,
           body: parsedBody,
+          ...failureContext,
         });
       }
       if (trackedStreamWriter && requestCapture.body.stream === true) {
@@ -18042,10 +18227,11 @@ export async function createRuntimeBridgeBackend(
           endpointId: target.endpointId,
           adapterFamily: target.adapterFamily,
           routingDecisionId,
+          reasoningRequested: streamReasoningRequested,
         });
         if (!rawBody.includes("data:")) {
           return {
-            providerFamily: target.adapterFamily,
+            providerFamily: requestCapture.providerFamily,
             endpointId: target.endpointId,
             statusCode: response.status,
             body: parseProviderResponseBody(rawBody),
@@ -18053,7 +18239,7 @@ export async function createRuntimeBridgeBackend(
           };
         }
         return {
-          providerFamily: target.adapterFamily,
+          providerFamily: requestCapture.providerFamily,
           endpointId: target.endpointId,
           statusCode: response.status,
           body: rawBody,
@@ -18065,7 +18251,7 @@ export async function createRuntimeBridgeBackend(
         const rawBody = await response.text();
         if (!rawBody.includes("data:")) {
           return {
-            providerFamily: target.adapterFamily,
+            providerFamily: requestCapture.providerFamily,
             endpointId: target.endpointId,
             statusCode: response.status,
             body: parseProviderResponseBody(rawBody),
@@ -18073,7 +18259,7 @@ export async function createRuntimeBridgeBackend(
           };
         }
         return {
-          providerFamily: target.adapterFamily,
+          providerFamily: requestCapture.providerFamily,
           endpointId: target.endpointId,
           statusCode: response.status,
           body: rawBody,
@@ -18083,12 +18269,425 @@ export async function createRuntimeBridgeBackend(
       const rawBody = await response.text();
       const parsedBody = parseProviderResponseBody(rawBody);
       return {
-        providerFamily: target.adapterFamily,
+        providerFamily: requestCapture.providerFamily,
         endpointId: target.endpointId,
         statusCode: response.status,
         body: parsedBody,
         vendorMetadata: measuredVendorMetadata,
       };
+    };
+    const executionSemanticsReceipt: {
+      retryCount: number;
+      rerouteCount: number;
+      cooldownDecision: string;
+      failedAttempts: RuntimeExecutionFailedAttemptReceipt[];
+      executionCooldownsByEndpointId: Map<string, RuntimeExecutionCooldownReceipt>;
+    } = {
+      retryCount: 0,
+      rerouteCount: 0,
+      cooldownDecision: "not_applied",
+      failedAttempts: [],
+      executionCooldownsByEndpointId: new Map(),
+    };
+    let routedAttemptSequence = 0;
+    const recordFailedAttemptReceipt = (input: {
+      readonly error: UpstreamExecutionError;
+      readonly cooldownRecord?: ExecutionFailureCooldownRecord;
+    }): RuntimeExecutionFailedAttemptReceipt => {
+      routedAttemptSequence += 1;
+      const attemptId = `${requestId}:attempt:${routedAttemptSequence}`;
+      const receipt: RuntimeExecutionFailedAttemptReceipt = {
+        attemptId,
+        routedAttemptId: attemptId,
+        requestId,
+        routingDecisionId,
+        failedEndpointId: input.error.endpointId,
+        providerId: input.error.providerId,
+        providerFamily: input.error.providerFamily,
+        ...(input.error.vendorId ? { vendorId: input.error.vendorId } : {}),
+        executionFamily: input.error.executionFamily,
+        adapterFamily: input.error.adapterFamily,
+        statusCode: input.error.statusCode,
+        failureClass: input.error.errorClass,
+        retryable: input.error.retryable,
+        fallbackEligible: input.error.fallbackEligible,
+        failurePhase: input.error.failurePhase,
+        cooldownRecorded: Boolean(input.cooldownRecord),
+        ...(typeof input.cooldownRecord?.failureCount === "number"
+          ? { cooldownFailureCount: input.cooldownRecord.failureCount }
+          : {}),
+        ...(typeof input.cooldownRecord?.cooldownUntilMs === "number"
+          ? { cooldownUntilMs: input.cooldownRecord.cooldownUntilMs }
+          : {}),
+        ...(input.error.errorPreview ? { errorPreview: { ...input.error.errorPreview } } : {}),
+      };
+      executionSemanticsReceipt.failedAttempts.push(receipt);
+      if (input.cooldownRecord) {
+        executionSemanticsReceipt.executionCooldownsByEndpointId.set(
+          input.cooldownRecord.endpointId,
+          toExecutionCooldownReceipt(input.cooldownRecord, Date.now()),
+        );
+      }
+      return receipt;
+    };
+    const persistRoutedProviderFailure = (error: UpstreamExecutionError): void => {
+      if (executionOptions?.persistObservation === false || hasRuntimeTelemetryPersisted(error)) {
+        return;
+      }
+      const selectedEndpointId = error.endpointId;
+      const candidateByEndpointId = new Map(
+        routed.projected.routeInput.candidates.map((candidate) => [
+          candidate.identity.endpoint_id,
+          candidate,
+        ]),
+      );
+      const selectedCandidate = candidateByEndpointId.get(selectedEndpointId);
+      const selectedRuntimeEndpoint = executionSnapshot.runtimeEndpoints.find(
+        (endpoint) => endpoint.endpointId === selectedEndpointId,
+      );
+      const selectedProviderAccount = selectedRuntimeEndpoint
+        ? executionSnapshot.accounts.find(
+            (account) => account.providerAccountId === selectedRuntimeEndpoint.providerAccountId,
+          )
+        : undefined;
+      const scoredEndpointIds = routed.decision.scored_candidates.map(
+        (candidate) => candidate.endpoint_id,
+      );
+      const eligibleEndpointIds = uniqueTelemetryStrings([
+        selectedEndpointId,
+        ...scoredEndpointIds,
+        ...routed.decision.fallback_endpoint_ids,
+      ]);
+      const eligibleModelIds = uniqueTelemetryStrings(
+        eligibleEndpointIds.map((endpointId) => {
+          const candidate = candidateByEndpointId.get(endpointId);
+          if (candidate) {
+            return candidate.identity.model_id;
+          }
+          return endpointId === selectedEndpointId
+            ? (selectedCandidate?.identity.model_id ?? executionOptions?.requestedModel)
+            : null;
+        }),
+      );
+      const sourceType = selectedCandidate
+        ? telemetrySourceTypeFromEndpointKind(selectedCandidate.identity.endpoint_kind)
+        : currentUnifiedRuntimeConfig?.executionMode === "remote_only"
+          ? "remote"
+          : "local";
+      const requestRoutingMode = summarizeRequestRoutingModeDiagnostics(
+        executionOptions?.requestOptions,
+      );
+      const sourceClient =
+        executionOptions?.requestOperation === "responses"
+          ? "openai.responses"
+          : "openai.chat.completions";
+      const failureLatencyMs = Math.max(0, Date.now() - routingTimeMs);
+      const payloadBytes = {
+        ingress: measureStructuredPayloadBytes(executionOptions?.requestBody ?? null),
+        translated: measureStructuredPayloadBytes(plan.executionRequest),
+        providerCanonical: measureStructuredPayloadBytes(plan.executionRequest),
+        providerWire: measureStructuredPayloadBytes(plan.executionRequest),
+        providerResponse: measureStructuredPayloadBytes(error.body),
+      };
+      const selectedEconomics = routed.catalogEconomicsByEndpointId[selectedEndpointId] ?? null;
+      const selectedModelId =
+        selectedCandidate?.identity.model_id ?? executionOptions?.requestedModel ?? null;
+      const selectedEndpointDimensions = {
+        selectedEndpointId,
+        candidateCount: eligibleEndpointIds.length,
+        failurePhase: error.failurePhase,
+        retryable: error.retryable,
+        fallbackEligible: error.fallbackEligible,
+        errorPreview: error.errorPreview,
+      };
+      const capturePolicy = {
+        environment: "runtime-failure",
+        redactionLevel: "strict",
+        retentionClass: "standard",
+        structuredInspectionMode: "summary",
+        rawCaptureAvailable: false,
+        structuredInspectionAvailable: true,
+        redactedFields: ["request.headers.authorization"],
+        suppressedFields: [],
+      } as const;
+      const telemetrySnapshot = {
+        providerId: error.providerId,
+        providerAccountId:
+          selectedProviderAccount?.providerAccountId ??
+          selectedRuntimeEndpoint?.providerAccountId ??
+          null,
+        sourceType,
+        endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
+        servingSource:
+          selectedCandidate?.identity.serving_source ?? error.executionFamily ?? "remote-service",
+        region: selectedCandidate?.identity.region ?? null,
+        lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
+        healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
+        requestedModelId: executionOptions?.requestedModel ?? null,
+        selectedModelId,
+        requestOperation: executionOptions?.requestOperation ?? "chat",
+        roleIds: uniqueTelemetryStrings([
+          plan.routingRequest.requestedRoleId,
+          plan.routingDiagnostics?.rolePolicy?.requestedRoleId,
+          plan.routingDiagnostics?.rolePolicy?.appliedRoleId,
+        ]),
+        toolingUsed: Boolean(plan.executionRequest.tools?.length),
+        cacheState: "unknown",
+        eligibleEndpointIds,
+        eligibleModelIds,
+        candidateCostSnapshot: Object.fromEntries(
+          eligibleEndpointIds.map((endpointId) => {
+            const candidate = candidateByEndpointId.get(endpointId);
+            const economics = routed.catalogEconomicsByEndpointId[endpointId] ?? null;
+            return [
+              endpointId,
+              {
+                modelId: candidate?.identity.model_id ?? endpointId,
+                providerId: endpointId === selectedEndpointId ? error.providerId : null,
+                providerKind: candidate?.identity.provider_kind ?? null,
+                sourceType: candidate
+                  ? telemetrySourceTypeFromEndpointKind(candidate.identity.endpoint_kind)
+                  : "remote",
+                endpointKind: candidate?.identity.endpoint_kind ?? null,
+                servingSource: candidate?.identity.serving_source ?? null,
+                region: candidate?.identity.region ?? null,
+                tokenEconomicsSource: economics?.tokenEconomicsSource ?? "unknown",
+                estimatedRequestUsd: economics?.estimatedRequestUsd ?? null,
+              },
+            ];
+          }),
+        ),
+        selectedPricingSnapshot: selectedEconomics
+          ? {
+              canonicalModelId: selectedEconomics.canonicalModelId,
+              tokenEconomicsSource: selectedEconomics.tokenEconomicsSource,
+              inputPer1M: selectedEconomics.inputPer1M,
+              outputPer1M: selectedEconomics.outputPer1M,
+              estimatedRequestUsd: selectedEconomics.estimatedRequestUsd,
+            }
+          : null,
+        selectedUncachedCostUsd: selectedEconomics?.estimatedRequestUsd ?? null,
+        baselineMaxEligibleCostUsd: null,
+        routingCostSavingsUsd: 0,
+        cacheCostSavingsUsd: 0,
+        totalAvoidedCostUsd: 0,
+        costBaselineSource: null,
+        costSavingsSupport: "partial",
+        dimensions: selectedEndpointDimensions,
+      } as const;
+      const failureObservation = {
+        requestId,
+        ...(executionOptions?.requestOptions?.clientRequestId
+          ? { clientRequestId: executionOptions.requestOptions.clientRequestId }
+          : {}),
+        routingDecisionId: routingDecisionId,
+        endpointId: selectedEndpointId,
+        conversationId: envelope.conversationId,
+        decision: {
+          ...routed.decision,
+          chosen_endpoint_id: selectedEndpointId,
+        },
+        routingDiagnostics: {
+          ...routed.routingDiagnostics,
+          ...plan.routingDiagnostics,
+          ...(requestRoutingMode ? { routingMode: requestRoutingMode } : {}),
+          catalogEconomics: selectedEconomics ?? undefined,
+          effectiveMetrics: summarizeEffectiveMetricsFromDecision(routed.decision),
+          selection: summarizeSelectionDiagnosticsFromDecision(routed.decision),
+          throughputPenalty: summarizeThroughputPenaltyFromDecision(routed.decision),
+        },
+        retrievalReceipt: {
+          receiptId: retrievalReceipt.receiptId,
+          summary: retrievalReceipt.summary,
+        },
+        contextEnvelope: {
+          conversationId: envelope.conversationId,
+          latestHandoffId: envelope.latestHandoff?.handoffId ?? null,
+          estimatedTokenCount: envelope.estimatedTokenCount,
+        },
+        usageEvent: {
+          request_id: requestId,
+          routing_decision_id: routingDecisionId,
+          endpoint_id: selectedEndpointId,
+          model_id: selectedModelId,
+          provider_kind: selectedCandidate?.identity.provider_kind ?? null,
+          tokens_in: 0,
+          tokens_out: 0,
+          latency_ms: failureLatencyMs,
+          cost_actual: null,
+          cost_estimate: null,
+          currency: "USD",
+          error_class: error.errorClass,
+          timestamp_ms: Date.now(),
+        },
+        diagnostics: {
+          routing: [],
+          execution: [
+            {
+              code: error.errorClass,
+              severity: "error",
+              message: error.message,
+            },
+          ],
+          authAccount: [],
+          memoryQuality: [],
+          tooling: [],
+          operator: [],
+        },
+        capturePolicy,
+        executionTelemetry: {
+          providerFamily: error.providerFamily,
+          ...(error.vendorId ? { vendorId: error.vendorId } : {}),
+          finishReason: "error",
+          stream: {
+            requested: Boolean(plan.executionRequest.stream),
+            textDeltas: streamedChunkCount,
+            toolCallDeltas: 0,
+            toolArgumentDeltas: 0,
+          },
+          streamSupport: {
+            supported: Boolean(plan.executionRequest.stream),
+          },
+          promptCaching: {
+            supported: true,
+          },
+          usageSupport: {
+            inputTokens: true,
+            outputTokens: true,
+            cacheReadTokens: true,
+            cacheWriteTokens: true,
+          },
+          costProvenance: "unavailable",
+        },
+        executionSemantics: {
+          sourceClient,
+          executionFamily: error.executionFamily,
+          adapterFamily: error.adapterFamily,
+          payloadBytes,
+          retryCount: executionSemanticsReceipt.retryCount,
+          rerouteCount: executionSemanticsReceipt.rerouteCount,
+          cooldownDecision: executionSemanticsReceipt.cooldownDecision,
+          idempotencyDecision: "not_needed",
+          toolSideEffectState: "none",
+          failedAttempts: executionSemanticsReceipt.failedAttempts,
+          ...(executionSemanticsReceipt.executionCooldownsByEndpointId.size > 0
+            ? {
+                executionCooldowns: [
+                  ...executionSemanticsReceipt.executionCooldownsByEndpointId.values(),
+                ],
+              }
+            : {}),
+        },
+        telemetrySnapshot,
+        privacyReceipt: {
+          samplingRate: 1,
+          retentionTtlHours: 720,
+          retainUntil: Date.now() + 720 * 3600 * 1000,
+        },
+        inspection: {
+          request: {
+            requestId,
+            routingDecisionId,
+            requestCapture: {
+              body: {
+                suppressed: true,
+                reason:
+                  "Provider execution failed; raw request body is omitted from failure observation.",
+              },
+            },
+            responseCapture: {
+              body: error.errorPreview,
+            },
+            diagnostics: {
+              execution: [
+                {
+                  code: error.errorClass,
+                  severity: "error",
+                  message: error.message,
+                },
+              ],
+            },
+            capturePolicy,
+          },
+          endpoint: {
+            endpointId: selectedEndpointId,
+            endpointVersion: selectedCandidate?.identity.runtime_version ?? "unknown",
+            recentSamples: [],
+          },
+        },
+      };
+      persistRuntimeTelemetryFailure({
+        databasePath: initialization.databasePath,
+        requestId,
+        routingDecisionId,
+        endpointId: selectedEndpointId,
+        modelId: selectedModelId ?? undefined,
+        requestedModelId: executionOptions?.requestedModel ?? selectedModelId,
+        selectedModelId,
+        requestOperation: executionOptions?.requestOperation ?? "chat",
+        statusCode: error.statusCode,
+        errorClass: error.errorClass,
+        latencyMs: failureLatencyMs,
+        clientRequestId: executionOptions?.requestOptions?.clientRequestId ?? null,
+        requestClass: "live_request",
+        sourceType,
+        providerKind: selectedCandidate?.identity.provider_kind ?? null,
+        providerFamily: error.providerFamily,
+        vendorId: error.vendorId ?? null,
+        providerId: error.providerId,
+        providerAccountId:
+          selectedProviderAccount?.providerAccountId ??
+          selectedRuntimeEndpoint?.providerAccountId ??
+          null,
+        endpointKind: selectedCandidate?.identity.endpoint_kind ?? "remote_api",
+        servingSource:
+          selectedCandidate?.identity.serving_source ?? error.executionFamily ?? "remote-service",
+        region: selectedCandidate?.identity.region ?? null,
+        lifecycleStateAtRequest: selectedCandidate?.status ?? "unknown",
+        healthStatusAtRequest: selectedProviderAccount?.healthStatus ?? null,
+        routingMode: requestRoutingMode?.effectiveMode ?? null,
+        selectedStrategy: plan.routingRequest.strategy,
+        sourceClient,
+        executionFamily: error.executionFamily,
+        adapterFamily: error.adapterFamily,
+        requestPayloadBytes: payloadBytes.ingress,
+        ingressPayloadBytes: payloadBytes.ingress,
+        translatedPayloadBytes: payloadBytes.translated,
+        providerCanonicalPayloadBytes: payloadBytes.providerCanonical,
+        providerWirePayloadBytes: payloadBytes.providerWire,
+        responsePayloadBytes: payloadBytes.providerResponse,
+        retryCount: executionSemanticsReceipt.retryCount,
+        rerouteCount: executionSemanticsReceipt.rerouteCount,
+        cooldownDecision: executionSemanticsReceipt.cooldownDecision,
+        idempotencyDecision: "not_needed",
+        toolSideEffectState: "none",
+        toolingUsed: Boolean(plan.executionRequest.tools?.length),
+        cacheState: "unknown",
+        roleIds: telemetrySnapshot.roleIds,
+        eligibleEndpointIds,
+        eligibleModelIds,
+        candidateCostSnapshot: telemetrySnapshot.candidateCostSnapshot,
+        selectedPricingSnapshot: telemetrySnapshot.selectedPricingSnapshot,
+        selectedUncachedCostUsd: telemetrySnapshot.selectedUncachedCostUsd,
+        baselineMaxEligibleCostUsd: telemetrySnapshot.baselineMaxEligibleCostUsd,
+        routingCostSavingsUsd: telemetrySnapshot.routingCostSavingsUsd,
+        cacheCostSavingsUsd: telemetrySnapshot.cacheCostSavingsUsd,
+        totalAvoidedCostUsd: telemetrySnapshot.totalAvoidedCostUsd,
+        costBaselineSource: telemetrySnapshot.costBaselineSource,
+        costSavingsSupport: telemetrySnapshot.costSavingsSupport,
+        samplingRate: failureObservation.privacyReceipt.samplingRate,
+        retentionTtlHours: failureObservation.privacyReceipt.retentionTtlHours,
+        retainUntil: failureObservation.privacyReceipt.retainUntil,
+        redactionLevel: capturePolicy.redactionLevel,
+        retentionClass: capturePolicy.retentionClass,
+        structuredInspectionMode: capturePolicy.structuredInspectionMode,
+        rawCaptureAvailable: capturePolicy.rawCaptureAvailable,
+        structuredInspectionAvailable: capturePolicy.structuredInspectionAvailable,
+        dimensions: selectedEndpointDimensions,
+        observation: failureObservation,
+      });
+      markRuntimeTelemetryPersisted(error);
+      emitTelemetryUpdate(requestId);
     };
     const executeCurrentExecutionRequest = async (
       executionRequest: RuntimeExecutionRequest,
@@ -18117,19 +18716,62 @@ export async function createRuntimeBridgeBackend(
           if (!(error instanceof UpstreamExecutionError) || streamedChunkCount > 0) {
             throw error;
           }
-          if (error.retryable && !retriedEndpointIds.has(error.endpointId)) {
+          const shouldRetry = error.retryable && !retriedEndpointIds.has(error.endpointId);
+          let cooldownRecord: ExecutionFailureCooldownRecord | undefined;
+          if (shouldRetry) {
             retriedEndpointIds.add(error.endpointId);
-            continue;
-          }
-          if (shouldRecordExecutionFailureCooldown(error)) {
-            recordExecutionFailureCooldown({
+            executionSemanticsReceipt.retryCount += 1;
+          } else if (shouldRecordExecutionFailureCooldown(error)) {
+            cooldownRecord = recordExecutionFailureCooldown({
               databasePath: initialization.databasePath,
               endpointId: error.endpointId,
               errorClass: error.errorClass,
               nowMs: Date.now(),
+              providerId: error.providerId,
+              providerFamily: error.providerFamily,
+              vendorId: error.vendorId,
+              executionFamily: error.executionFamily,
+              adapterFamily: error.adapterFamily,
+              failurePhase: error.failurePhase,
+              statusCode: error.statusCode,
+              errorPreview: error.errorPreview,
             });
+            executionSemanticsReceipt.cooldownDecision = "recorded";
+          }
+          const failedAttempt = recordFailedAttemptReceipt({
+            error,
+            cooldownRecord,
+          });
+          if (cooldownRecord) {
+            writeExecutionFailureCooldownState(initialization.databasePath, {
+              ...readExecutionFailureCooldownState(initialization.databasePath),
+              [cooldownRecord.endpointId]: {
+                ...cooldownRecord,
+                sourceAttemptId: failedAttempt.attemptId,
+                sourceRequestId: failedAttempt.requestId,
+                sourceRoutingDecisionId: failedAttempt.routingDecisionId,
+                errorPreview: failedAttempt.errorPreview,
+              },
+            });
+            executionSemanticsReceipt.executionCooldownsByEndpointId.set(
+              cooldownRecord.endpointId,
+              toExecutionCooldownReceipt(
+                {
+                  ...cooldownRecord,
+                  sourceAttemptId: failedAttempt.attemptId,
+                  sourceRequestId: failedAttempt.requestId,
+                  sourceRoutingDecisionId: failedAttempt.routingDecisionId,
+                  errorPreview: failedAttempt.errorPreview,
+                },
+                Date.now(),
+              ),
+            );
+          }
+          if (shouldRetry) {
+            continue;
           }
           if (!error.fallbackEligible || deniedEndpointIds.includes(error.endpointId)) {
+            persistRoutedProviderFailure(error);
             throw error;
           }
           deniedEndpointIds.push(error.endpointId);
@@ -18137,14 +18779,17 @@ export async function createRuntimeBridgeBackend(
           try {
             nextRoute = routeExecutionRequest(deniedEndpointIds);
           } catch {
+            persistRoutedProviderFailure(error);
             throw error;
           }
           if (nextRoute.routed.decision.chosen_endpoint_id.trim().length === 0) {
+            persistRoutedProviderFailure(error);
             throwUnavailableExecutionTarget({
               deniedEndpointIds: nextRoute.deniedEndpointIds,
               previousError: error,
             });
           }
+          executionSemanticsReceipt.rerouteCount += 1;
           routed = nextRoute.routed;
           routingDecisionId = routed.decision.routing_decision_id;
         }
@@ -18207,6 +18852,31 @@ export async function createRuntimeBridgeBackend(
         });
       }
     }
+    const executionVendorId =
+      execution.responseCapture.vendorMetadata?.vendorId ??
+      execution.normalized.vendorMetadata?.vendorId;
+    const effectiveExecutionAdapterFamily = resolveEffectiveExecutionAdapterFamily({
+      endpointId: execution.target.endpointId,
+      adapterFamily: execution.target.adapterFamily,
+      vendorId: executionVendorId,
+    });
+    const adapterParameterSanitization = [
+      ...readAdapterParameterSanitization(execution.responseCapture.vendorMetadata),
+      ...readAdapterParameterSanitization(execution.normalized.vendorMetadata),
+    ];
+    const ingressParameterSanitization =
+      executionOptions?.requestOperation === "responses" &&
+      effectiveExecutionAdapterFamily === "codex-subscription-responses" &&
+      executionOptions.requestBody
+        ? collectCodexResponsesParameterSanitization({
+            requestBody: executionOptions.requestBody,
+            sourceSurface: "openai.responses",
+          })
+        : [];
+    const executionParameterSanitization =
+      ingressParameterSanitization.length > 0
+        ? ingressParameterSanitization
+        : adapterParameterSanitization;
     if (
       trackedStreamWriter &&
       streamRequested === true &&
@@ -18216,8 +18886,9 @@ export async function createRuntimeBridgeBackend(
     ) {
       await replayProviderStreamTranscript(execution.responseCapture.body, trackedStreamWriter, {
         endpointId: execution.target.endpointId,
-        adapterFamily: execution.target.adapterFamily,
+        adapterFamily: effectiveExecutionAdapterFamily,
         routingDecisionId,
+        reasoningRequested: streamReasoningRequested,
       });
     }
     const bridgedToolExecutionResult = {
@@ -18277,6 +18948,18 @@ export async function createRuntimeBridgeBackend(
         executionSnapshot.roleDefinitions,
         executionSnapshot.taskDefinitions,
       );
+      const reasoningRequested = Boolean(plan.executionRequest.reasoning);
+      const syntheticReasoningDeltaCount =
+        plan.executionRequest.stream &&
+        execution.normalized.reasoningText &&
+        streamedReasoningDeltaCount === 0
+          ? 1
+          : 0;
+      const reasoningDeltaCount = streamedReasoningDeltaCount + syntheticReasoningDeltaCount;
+      const reasoningUnavailableReason =
+        reasoningRequested && !execution.normalized.reasoningText
+          ? "provider_returned_no_reasoning"
+          : undefined;
       const bundle = createRuntimeObservationBundle({
         decision: routed.decision,
         clientRequestId: executionOptions?.requestOptions?.clientRequestId,
@@ -18326,6 +19009,53 @@ export async function createRuntimeBridgeBackend(
         tooling: {
           executions: toolExecutionResult.executions,
           ...(continuedToolCalls.length > 0 ? { toolCalls: continuedToolCalls } : {}),
+        },
+        executionSemantics: {
+          sourceClient:
+            executionOptions?.requestOperation === "responses"
+              ? "openai.responses"
+              : "openai.chat.completions",
+          adapterFamily: effectiveExecutionAdapterFamily,
+          payloadBytes: {
+            ingress: measureStructuredPayloadBytes(executionOptions?.requestBody ?? null),
+            translated: measureStructuredPayloadBytes(plan.executionRequest),
+            providerCanonical: measureStructuredPayloadBytes(execution.requestCapture.body),
+            providerWire: measureStructuredPayloadBytes(execution.requestCapture.body),
+            providerResponse: measureStructuredPayloadBytes(execution.responseCapture.body),
+          },
+          retryCount: executionSemanticsReceipt.retryCount,
+          rerouteCount: executionSemanticsReceipt.rerouteCount,
+          cooldownDecision: executionSemanticsReceipt.cooldownDecision,
+          ...(reasoningRequested || execution.normalized.reasoningText
+            ? {
+                reasoning: {
+                  requested: reasoningRequested,
+                  controlForwarded: hasForwardedReasoningControl(execution.requestCapture.body),
+                  deltaCount: reasoningDeltaCount,
+                  streamSuppressed:
+                    reasoningRequested &&
+                    Boolean(plan.executionRequest.stream) &&
+                    Boolean(execution.normalized.reasoningText) &&
+                    reasoningDeltaCount === 0,
+                  ...(reasoningUnavailableReason
+                    ? { unavailableReason: reasoningUnavailableReason }
+                    : {}),
+                },
+              }
+            : {}),
+          ...(executionSemanticsReceipt.failedAttempts.length > 0
+            ? { failedAttempts: executionSemanticsReceipt.failedAttempts }
+            : {}),
+          ...(executionSemanticsReceipt.executionCooldownsByEndpointId.size > 0
+            ? {
+                executionCooldowns: [
+                  ...executionSemanticsReceipt.executionCooldownsByEndpointId.values(),
+                ],
+              }
+            : {}),
+          ...(executionParameterSanitization.length > 0
+            ? { parameterSanitization: executionParameterSanitization }
+            : {}),
         },
         telemetrySnapshot,
         ...(providerAccount
@@ -18883,6 +19613,7 @@ export async function createRuntimeBridgeBackend(
           streamWriter,
           {
             requestOptions,
+            requestBody: body as unknown as Record<string, unknown>,
             requestedModel: body.model,
             requestOperation: "chat",
             persistObservation: !requestId.startsWith("bench-"),
@@ -18895,6 +19626,14 @@ export async function createRuntimeBridgeBackend(
         const cacheUsed =
           execution.normalized.vendorMetadata?.cacheUsed ??
           execution.responseCapture.vendorMetadata?.cacheUsed;
+        const responseVendorId =
+          execution.responseCapture.vendorMetadata?.vendorId ??
+          execution.normalized.vendorMetadata?.vendorId;
+        const responseAdapterFamily = resolveEffectiveExecutionAdapterFamily({
+          endpointId: execution.target.endpointId,
+          adapterFamily: execution.target.adapterFamily,
+          vendorId: responseVendorId,
+        });
         const shouldSuppressResponseToolCalls = hasRequestScopedDynamicToolExecution(
           toolExecutionResult.executions,
         );
@@ -18905,16 +19644,9 @@ export async function createRuntimeBridgeBackend(
         return {
           model: execution.target.modelId,
           endpointId: execution.target.endpointId,
-          adapterFamily: execution.target.adapterFamily,
+          adapterFamily: responseAdapterFamily,
           routingDecisionId,
-          ...((execution.responseCapture.vendorMetadata?.vendorId ??
-          execution.normalized.vendorMetadata?.vendorId)
-            ? {
-                vendorId:
-                  execution.responseCapture.vendorMetadata?.vendorId ??
-                  execution.normalized.vendorMetadata?.vendorId,
-              }
-            : {}),
+          ...(responseVendorId ? { vendorId: responseVendorId } : {}),
           outputText: execution.normalized.outputText,
           contentText: execution.normalized.outputText,
           ...(execution.normalized.reasoningText
@@ -18949,7 +19681,9 @@ export async function createRuntimeBridgeBackend(
             : {}),
         };
       } catch (error) {
-        recordChatCompletionFailure(error);
+        if (!hasRuntimeTelemetryPersisted(error)) {
+          recordChatCompletionFailure(error);
+        }
         throw error;
       }
     },
@@ -19029,6 +19763,7 @@ export async function createRuntimeBridgeBackend(
         streamWriter,
         {
           requestOptions,
+          requestBody: body as unknown as Record<string, unknown>,
           requestedModel: body.model,
           requestOperation: "responses",
           executionSnapshot,
@@ -19040,6 +19775,14 @@ export async function createRuntimeBridgeBackend(
       const cacheUsed =
         execution.normalized.vendorMetadata?.cacheUsed ??
         execution.responseCapture.vendorMetadata?.cacheUsed;
+      const responseVendorId =
+        execution.responseCapture.vendorMetadata?.vendorId ??
+        execution.normalized.vendorMetadata?.vendorId;
+      const responseAdapterFamily = resolveEffectiveExecutionAdapterFamily({
+        endpointId: execution.target.endpointId,
+        adapterFamily: execution.target.adapterFamily,
+        vendorId: responseVendorId,
+      });
       const shouldSuppressResponseToolCalls = hasRequestScopedDynamicToolExecution(
         toolExecutionResult.executions,
       );
@@ -19051,16 +19794,9 @@ export async function createRuntimeBridgeBackend(
         responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
         model: execution.target.modelId,
         endpointId: execution.target.endpointId,
-        adapterFamily: execution.target.adapterFamily,
+        adapterFamily: responseAdapterFamily,
         routingDecisionId,
-        ...((execution.responseCapture.vendorMetadata?.vendorId ??
-        execution.normalized.vendorMetadata?.vendorId)
-          ? {
-              vendorId:
-                execution.responseCapture.vendorMetadata?.vendorId ??
-                execution.normalized.vendorMetadata?.vendorId,
-            }
-          : {}),
+        ...(responseVendorId ? { vendorId: responseVendorId } : {}),
         outputText: execution.normalized.outputText,
         finishReason: shouldSuppressResponseToolCalls ? "stop" : execution.normalized.finishReason,
         ...(responseToolCalls.length
@@ -19642,6 +20378,7 @@ export async function createRuntimeBridgeBackend(
               userCode: login.userCode,
               deviceCode: encodeCodexDeviceCodeSessionPayload({
                 loginId: login.loginId,
+                userCode: login.userCode,
                 wsUrl: login.wsUrl,
                 codexHome,
                 pid: login.pid,
@@ -20125,6 +20862,7 @@ export async function createRuntimeBridgeBackend(
             userCode: login.userCode,
             deviceCode: encodeCodexDeviceCodeSessionPayload({
               loginId: login.loginId,
+              userCode: login.userCode,
               wsUrl: login.wsUrl,
               codexHome,
               pid: login.pid,
@@ -20308,6 +21046,8 @@ export async function createRuntimeBridgeBackend(
         try {
           accountRead = await codexAuthAdapter.readAccount({
             codexHome: payload.codexHome,
+            loginId: payload.loginId,
+            userCode: payload.userCode,
             wsUrl: payload.wsUrl,
             refreshToken: false,
           });
@@ -20530,6 +21270,7 @@ export async function createRuntimeBridgeBackend(
         capabilities: readonly string[];
         toolCallingSupported: boolean;
         toolCallingStyle: string;
+        executionCooldown?: RuntimeExecutionCooldownReceipt;
         status: string;
       }[]
     > {
@@ -20541,6 +21282,12 @@ export async function createRuntimeBridgeBackend(
       );
       const accountsById = new Map(
         currentAccounts.map((account) => [account.providerAccountId, account] as const),
+      );
+      const cooldownsByEndpointId = new Map(
+        readExecutionCooldownReceipts({
+          databasePath: initialization.databasePath,
+          nowMs: Date.now(),
+        }).map((receipt) => [receipt.endpointId, receipt] as const),
       );
       return currentRegistry.endpoints.map((endpoint) => {
         const runtimeEndpoint = runtimeEndpointsById.get(endpoint.identity.endpoint_id);
@@ -20573,6 +21320,11 @@ export async function createRuntimeBridgeBackend(
           capabilities: endpoint.declared.capabilities,
           toolCallingSupported: endpoint.declared.tool_calling.supported,
           toolCallingStyle: endpoint.declared.tool_calling.style,
+          ...(cooldownsByEndpointId.get(endpoint.identity.endpoint_id)
+            ? {
+                executionCooldown: cooldownsByEndpointId.get(endpoint.identity.endpoint_id),
+              }
+            : {}),
           webSearchSupport: resolveEndpointWebSearchSupport(endpoint),
           status: endpoint.status,
         };
@@ -20713,6 +21465,9 @@ export async function createRuntimeBridgeBackend(
         }
         const capturePolicy = synthesizeFallbackCapturePolicy(telemetryRecord);
         const privacyReceipt = synthesizeFallbackPrivacyReceipt(telemetryRecord);
+        const fallbackExecutionCooldowns = readExecutionCooldownsFromTelemetryDimensions(
+          telemetryRecord.dimensions,
+        );
         return {
           requestId: telemetryRecord.requestId,
           routingDecisionId: telemetryRecord.routingDecisionId,
@@ -20743,6 +21498,7 @@ export async function createRuntimeBridgeBackend(
           },
           executionTelemetry: {
             providerFamily: telemetryRecord.providerFamily,
+            ...(telemetryRecord.vendorId ? { vendorId: telemetryRecord.vendorId } : {}),
             finishReason: telemetryRecord.finishReason,
             promptCaching: {
               supported: telemetryRecord.promptCacheSupported,
@@ -20754,6 +21510,35 @@ export async function createRuntimeBridgeBackend(
               cacheWriteTokens: telemetryRecord.cacheWriteTokensSupported,
             },
             costProvenance: telemetryRecord.costProvenance,
+          },
+          executionSemantics: {
+            ...(telemetryRecord.sourceClient ? { sourceClient: telemetryRecord.sourceClient } : {}),
+            executionFamily:
+              telemetryRecord.executionFamily ?? telemetryRecord.servingSource ?? "unknown",
+            adapterFamily: telemetryRecord.adapterFamily ?? "unknown",
+            payloadBytes: {
+              ingress:
+                telemetryRecord.ingressPayloadBytes ?? telemetryRecord.requestPayloadBytes ?? 0,
+              translated:
+                telemetryRecord.translatedPayloadBytes ?? telemetryRecord.requestPayloadBytes ?? 0,
+              providerCanonical:
+                telemetryRecord.providerCanonicalPayloadBytes ??
+                telemetryRecord.requestPayloadBytes ??
+                0,
+              providerWire:
+                telemetryRecord.providerWirePayloadBytes ??
+                telemetryRecord.requestPayloadBytes ??
+                0,
+              providerResponse: telemetryRecord.responsePayloadBytes ?? 0,
+            },
+            retryCount: telemetryRecord.retryCount,
+            rerouteCount: telemetryRecord.rerouteCount,
+            cooldownDecision: telemetryRecord.cooldownDecision ?? "not_applied",
+            idempotencyDecision: telemetryRecord.idempotencyDecision ?? "not_needed",
+            toolSideEffectState: telemetryRecord.toolSideEffectState ?? "none",
+            ...(fallbackExecutionCooldowns.length > 0
+              ? { executionCooldowns: fallbackExecutionCooldowns }
+              : {}),
           },
           telemetrySnapshot: {
             providerId: telemetryRecord.providerId,

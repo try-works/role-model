@@ -1,0 +1,1192 @@
+{
+  "checkedAt": "2026-07-10T00:15:42.2774245Z",
+  "listener": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 39732
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 5,
+      "OwningProcess": 39732
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "State": 2,
+      "OwningProcess": 39732
+    }
+  ],
+  "healthz": {
+    "status": "healthy",
+    "executionMode": "remote_only",
+    "vendors": {
+      "llama-swap": {
+        "vendorId": "llama-swap",
+        "healthStatus": "inactive"
+      },
+      "litellm": {
+        "vendorId": "litellm",
+        "healthStatus": "inactive"
+      }
+    },
+    "inactiveVendors": [
+      "llama-swap",
+      "litellm"
+    ],
+    "credentialLifecycleAuthority": {
+      "state": "provisional",
+      "bootstrapStatus": "running"
+    },
+    "sessionBootstrap": {
+      "status": "running",
+      "startedAt": "2026-07-10T00:15:48.149Z",
+      "finishedAt": null,
+      "stages": []
+    }
+  },
+  "models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "baseline.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "basic",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "baseline.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "basic",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "baseline.remote-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "basic",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "chatgpt/gpt-5.4",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1050000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "model",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1050000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "controller.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "intelligent",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "controller.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "intelligent",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "controller.remote-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "intelligent",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "deepseek/deepseek-v4-pro",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 384000,
+        "input": [
+          "text"
+        ],
+        "input_modalities": [
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "model",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 384000,
+          "input_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "default.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "basic",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "default.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "basic",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "default.remote-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "basic",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "difficulty.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "difficulty",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "difficulty.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "difficulty",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "difficulty.remote-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "difficulty",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "hybrid.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "hybrid",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "hybrid.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "hybrid",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      },
+      {
+        "id": "hybrid.remote-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "context_window": 1000000,
+        "max_tokens": 128000,
+        "input": [
+          "text",
+          "image"
+        ],
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "capabilities": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "role_model": {
+          "type": "alias",
+          "routing_mode": "hybrid",
+          "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+          "capability_revision": "51cfd6f1c5237ab8",
+          "context_window": 1000000,
+          "max_tokens": 128000,
+          "input_modalities": [
+            "image",
+            "pdf",
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tools": {
+            "function_calling": true
+          },
+          "reasoning": {
+            "supported": true,
+            "effort_control": true
+          },
+          "structured_output": {
+            "supported": true
+          },
+          "caching": {
+            "prompt_read": false,
+            "prompt_write": false,
+            "source": "catalog"
+          }
+        }
+      }
+    ]
+  },
+  "endpoints": [
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "providerId": "deepseek",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "coordinator",
+        "creative",
+        "data",
+        "designer",
+        "educator",
+        "finance",
+        "health",
+        "knowledge",
+        "legal",
+        "marketer",
+        "mathematician",
+        "operator",
+        "planner",
+        "procurement",
+        "product",
+        "recruiter",
+        "seller",
+        "strategist",
+        "support",
+        "translator",
+        "writer"
+      ],
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+        "code.edit"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "none",
+      "webSearchSupport": {
+        "mode": "runtime-fallback",
+        "currentRuntimeContract": null,
+        "documentedProviderContract": "deepseek.anthropic.server_web_search"
+      },
+      "status": "active"
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "modelId": "chatgpt/gpt-5.4",
+      "providerId": "openai",
+      "providerAccountId": "openai.personal.openai-codex-subscription",
+      "roleIds": [
+        "analyst",
+        "architect",
+        "coder",
+        "coordinator",
+        "creative",
+        "data",
+        "designer",
+        "educator",
+        "finance",
+        "health",
+        "knowledge",
+        "legal",
+        "marketer",
+        "mathematician",
+        "operator",
+        "planner",
+        "procurement",
+        "product",
+        "recruiter",
+        "researcher",
+        "scientist",
+        "security",
+        "seller",
+        "strategist",
+        "support",
+        "tester",
+        "translator",
+        "writer"
+      ],
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+        "code.edit"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "none",
+      "webSearchSupport": {
+        "mode": "native",
+        "currentRuntimeContract": "openai.responses.web_search",
+        "documentedProviderContract": "openai.responses.web_search"
+      },
+      "status": "active"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,16 @@
+{
+  "requestId": "req-aa0d2e29-9008-41cc-b323-4056119aacc2",
+  "decisionId": "decision-req-aa0d2e29-9008-41cc-b323-4056119aacc2",
+  "requestedModelId": "difficulty.remote-only",
+  "selectedEndpointId": null,
+  "providerId": "deepseek",
+  "providerFamily": "deepseek",
+  "vendorId": null,
+  "adapterFamily": "ai-sdk-openai-compatible",
+  "executionFamily": "remote-service",
+  "eligibleEndpointIds": [
+    "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "files": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-16\\live\\pi-cli\\alias-text-runtime"
+}

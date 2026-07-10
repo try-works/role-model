@@ -1,0 +1,29 @@
+{
+  "cleanedHeadlessCount": 3,
+  "remainingHeadlessCount": 0,
+  "runtimeListeners": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "OwningProcess": 62648,
+      "Name": "role-model-runtime.exe",
+      "ExecutablePath": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+      "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+    }
+  ],
+  "roleModelProcesses": [
+    {
+      "ProcessId": 62648,
+      "Name": "role-model-runtime.exe",
+      "ExecutablePath": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+      "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+    },
+    {
+      "ProcessId": 62516,
+      "Name": "pwsh.exe",
+      "ExecutablePath": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+      "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$repo='D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening'; $liveRoot=Join-Path $repo '.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-16\\live'; $selfPid=$PID; $headless = @(Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -ne $selfPid -and ($_.CommandLine -match '\\.tmp-craft-headless-addendum16' -or $_.CommandLine -match '\\.tmp-craft-headless-addendum16b') } | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine); $headless | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 (Join-Path $liveRoot 'craft-headless-processes-before-cleanup.json'); foreach ($proc in $headless) { Stop-Process -Id $proc.ProcessId -Force -ErrorAction SilentlyContinue }; Start-Sleep -Seconds 1; $remainingHeadless = @(Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -ne $selfPid -and ($_.CommandLine -match '\\.tmp-craft-headless-addendum16' -or $_.CommandLine -match '\\.tmp-craft-headless-addendum16b') } | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine); $runtimeListeners = @(Get-NetTCPConnection -LocalPort 3456 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { $pidValue=$_.OwningProcess; $p=Get-CimInstance Win32_Process -Filter \\\"ProcessId = $pidValue\\\"; [pscustomobject]@{ LocalAddress=$_.LocalAddress; LocalPort=$_.LocalPort; OwningProcess=$pidValue; Name=$p.Name; ExecutablePath=$p.ExecutablePath; CommandLine=$p.CommandLine } }); $roleModelProcesses = @(Get-CimInstance Win32_Process | Where-Object { $_.Name -eq 'role-model-runtime.exe' -or $_.CommandLine -match 'role-model-runtime' } | Select-Object ProcessId,Name,ExecutablePath,CommandLine); $summary=[pscustomobject]@{ cleanedHeadlessCount=$headless.Count; remainingHeadlessCount=$remainingHeadless.Count; runtimeListeners=$runtimeListeners; roleModelProcesses=$roleModelProcesses; checkedAt=(Get-Date).ToString('o') }; $summary | ConvertTo-Json -Depth 8 | Tee-Object -FilePath (Join-Path $liveRoot 'process-isolation-final.json')\""
+    }
+  ],
+  "checkedAt": "2026-07-09T21:51:50.4504400+08:00"
+}

@@ -1,0 +1,19 @@
+{
+  "model": "chatgpt/gpt-5.4",
+  "stream": false,
+  "reasoning_effort": "high",
+  "messages": [
+    {
+      "role": "user",
+      "content": "hey"
+    },
+    {
+      "role": "assistant",
+      "content": "Hey - what can I help with?"
+    },
+    {
+      "role": "user",
+      "content": "Reply exactly DIRECT_HISTORY_OK."
+    }
+  ]
+}

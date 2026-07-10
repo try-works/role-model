@@ -1,0 +1,9 @@
+{
+  "pid": 55300,
+  "userData": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum14\\user-data",
+  "configDir": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum14\\config",
+  "headless": "1",
+  "stdout": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\craft-headless\\craft-headless.stdout.log",
+  "stderr": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\craft-headless\\craft-headless.stderr.log",
+  "startedAt": "2026-07-09T12:51:30.3750305+08:00"
+}

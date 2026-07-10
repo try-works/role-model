@@ -1,8 +1,18 @@
 # Taxonomy V1
 
+Type: `domain`
 Status: `CURRENT`
+Scope: `Canonical taxonomy V1 schema/data contract, classification metadata, versioning, docs generation, and Pi compact taxonomy snapshot boundaries.`
 Owns-Paths: `schemas/role-model/taxonomy/**`, `role-model-router/packages/core/data/taxonomy/**`, `role-model-router/packages/core/src/taxonomy/**`, `docs/protocol/taxonomy-v1.md`
 Watch-Paths: `packages/pi-role-model/data/taxonomy/**`, `packages/pi-role-model/src/taxonomy/**`
+Source-Runs:
+- `57-role-model-taxonomy-v1-phase-1-4`
+- `58-role-model-taxonomy-v1-benchmark-telemetry`
+- `59-observe-taxonomy-analytics-completion`
+- `62-litellm-pi-craft-codex-execution-hardening`
+Validated-At-Commit: `26e6a4119a7338236fa7e97ff81629e80951e105`
+Last-Validated: `2026-07-08`
+Tags: `taxonomy`, `classification`, `schemas`, `docs-generation`, `pi-compact-taxonomy`
 Created: `2026-06-23`
 Last Validated: `2026-06-27`
 Validated By: `260626-still-diamond`

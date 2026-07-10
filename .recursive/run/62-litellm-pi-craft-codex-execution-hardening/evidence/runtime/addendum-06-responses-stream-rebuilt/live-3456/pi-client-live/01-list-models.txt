@@ -1,0 +1,19 @@
+provider    model                     context  max-out  thinking  images
+role-model  baseline.decision-only    1M       128K     yes       yes
+role-model  baseline.hybrid           1M       128K     yes       yes
+role-model  baseline.remote-only      1M       128K     yes       yes
+role-model  chatgpt/gpt-5.4           1.1M     128K     yes       yes
+role-model  controller.decision-only  1M       128K     yes       yes
+role-model  controller.hybrid         1M       128K     yes       yes
+role-model  controller.remote-only    1M       128K     yes       yes
+role-model  deepseek/deepseek-v4-pro  1M       384K     yes       no
+role-model  default.decision-only     1M       128K     yes       yes
+role-model  default.hybrid            1M       128K     yes       yes
+role-model  default.remote-only       1M       128K     yes       yes
+role-model  difficulty.decision-only  1M       128K     yes       yes
+role-model  difficulty.hybrid         1M       128K     yes       yes
+role-model  difficulty.remote-only    1M       128K     yes       yes
+role-model  hybrid.decision-only      1M       128K     yes       yes
+role-model  hybrid.hybrid             1M       128K     yes       yes
+role-model  hybrid.remote-only        1M       128K     yes       yes
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76

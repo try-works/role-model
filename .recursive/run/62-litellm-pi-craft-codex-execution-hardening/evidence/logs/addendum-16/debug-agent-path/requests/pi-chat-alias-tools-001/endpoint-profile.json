@@ -1,0 +1,176 @@
+{
+  "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+  "latestProfile": {
+    "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "endpoint_version": "run07-registry-v1:custom-base-url",
+    "measured_at_ms": 1783602852847,
+    "measurement_window": {
+      "started_at_ms": 1783602852361,
+      "ended_at_ms": 1783602852847
+    },
+    "sample_size": 2,
+    "sources": {
+      "live_request_samples": 2,
+      "benchmark_samples": 0
+    },
+    "latency_ms_p50": 2.5,
+    "latency_ms_p95": 2.95,
+    "failure_rate": 0,
+    "freshness_score": 1,
+    "confidence_score": 0.27941531270472214,
+    "tokens_per_sec": 2083.5,
+    "cost_per_1k_tokens_est": 0.0042,
+    "currency": "USD"
+  },
+  "recentSamples": [
+    {
+      "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "source_type": "live_request",
+      "difficulty_bucket": "easy",
+      "timestamp_ms": 1783602852361,
+      "latency_ms": 3,
+      "latency_ms_p95": 3,
+      "tokens_per_sec": 1667,
+      "cost_per_1k_tokens_est": 0.0042,
+      "failure": false,
+      "request_id": "req-c25ee331-bf6c-4be9-b198-15f4c0db7e31",
+      "routing_decision_id": "decision-req-c25ee331-bf6c-4be9-b198-15f4c0db7e31"
+    },
+    {
+      "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "source_type": "live_request",
+      "difficulty_bucket": "hard",
+      "timestamp_ms": 1783602852847,
+      "latency_ms": 2,
+      "latency_ms_p95": 2,
+      "tokens_per_sec": 2500,
+      "cost_per_1k_tokens_est": 0.0042,
+      "failure": false,
+      "request_id": "req-cfbe1340-f8e4-4bac-b900-76832b19e6bf",
+      "routing_decision_id": "decision-req-cfbe1340-f8e4-4bac-b900-76832b19e6bf"
+    }
+  ],
+  "difficultyProfiles": {
+    "easy": {
+      "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "measured_at_ms": 1783602852361,
+      "measurement_window": {
+        "started_at_ms": 1783602852361,
+        "ended_at_ms": 1783602852361
+      },
+      "sample_size": 1,
+      "sources": {
+        "live_request_samples": 1,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 3,
+      "latency_ms_p95": 3,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.1762914343888821,
+      "tokens_per_sec": 1667,
+      "cost_per_1k_tokens_est": 0.0042,
+      "currency": "USD"
+    },
+    "medium": null,
+    "hard": {
+      "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "measured_at_ms": 1783602852847,
+      "measurement_window": {
+        "started_at_ms": 1783602852847,
+        "ended_at_ms": 1783602852847
+      },
+      "sample_size": 1,
+      "sources": {
+        "live_request_samples": 1,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 2,
+      "latency_ms_p95": 2,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.1762914343888821,
+      "tokens_per_sec": 2500,
+      "cost_per_1k_tokens_est": 0.0042,
+      "currency": "USD"
+    }
+  },
+  "advisoryMaxDifficultyRecommendation": {
+    "recommendedMaxDifficulty": null,
+    "thresholds": {
+      "minSamples": 4,
+      "maxFailureRate": 0.2,
+      "minQualityScore": 0.8,
+      "minTokensPerSec": 22
+    },
+    "evaluations": {
+      "easy": {
+        "eligible": false,
+        "rejectionReasons": [
+          "min-samples"
+        ],
+        "profile": {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "measured_at_ms": 1783602852361,
+          "measurement_window": {
+            "started_at_ms": 1783602852361,
+            "ended_at_ms": 1783602852361
+          },
+          "sample_size": 1,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 3,
+          "latency_ms_p95": 3,
+          "failure_rate": 0,
+          "freshness_score": 1,
+          "confidence_score": 0.1762914343888821,
+          "tokens_per_sec": 1667,
+          "cost_per_1k_tokens_est": 0.0042,
+          "currency": "USD"
+        }
+      },
+      "medium": {
+        "eligible": false,
+        "rejectionReasons": [
+          "no-profile"
+        ],
+        "profile": null
+      },
+      "hard": {
+        "eligible": false,
+        "rejectionReasons": [
+          "min-samples"
+        ],
+        "profile": {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "measured_at_ms": 1783602852847,
+          "measurement_window": {
+            "started_at_ms": 1783602852847,
+            "ended_at_ms": 1783602852847
+          },
+          "sample_size": 1,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 2,
+          "latency_ms_p95": 2,
+          "failure_rate": 0,
+          "freshness_score": 1,
+          "confidence_score": 0.1762914343888821,
+          "tokens_per_sec": 2500,
+          "cost_per_1k_tokens_est": 0.0042,
+          "currency": "USD"
+        }
+      }
+    }
+  }
+}

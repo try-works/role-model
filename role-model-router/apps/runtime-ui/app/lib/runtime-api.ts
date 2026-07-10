@@ -440,6 +440,7 @@ export interface RuntimeTelemetryComparisonRow extends RuntimeTelemetrySourceSum
   readonly modelId: string | null;
   readonly providerKind?: string | null;
   readonly providerFamily?: string | null;
+  readonly vendorId?: string | null;
   readonly promptCacheSupported?: boolean;
   readonly sourceType: "local" | "remote";
   readonly providerId?: string | null;
@@ -461,8 +462,11 @@ export interface RuntimeTelemetryRequestRecord {
   readonly modelId?: string | null;
   readonly providerKind?: string | null;
   readonly providerFamily?: string | null;
+  readonly vendorId?: string | null;
   readonly sourceType: "local" | "remote";
   readonly providerId?: string | null;
+  readonly executionFamily?: string | null;
+  readonly adapterFamily?: string | null;
   readonly endpointKind?: string | null;
   readonly servingSource?: string | null;
   readonly healthStatus?: string;

@@ -1,0 +1,32 @@
+{
+  "name": "receipt-responses",
+  "clientRequestId": "add17-receipt-responses",
+  "status": 200,
+  "ok": true,
+  "elapsedMs": 3895,
+  "response": {
+    "id": "chatcmpl_req-8101c282-7e69-409d-9222-0b27269f2b01",
+    "object": "response",
+    "created_at": 1783643130,
+    "status": "completed",
+    "model": "chatgpt/gpt-5.4",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_chatcmpl_req-8101c282-7e69-409d-9222-0b27269f2b01",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "ADD17_RECEIPT_RESPONSES_OK"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 18,
+      "output_tokens": 13,
+      "total_tokens": 31
+    }
+  }
+}

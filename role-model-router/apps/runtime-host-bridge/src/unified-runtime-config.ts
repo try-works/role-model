@@ -199,6 +199,8 @@ export interface UnifiedRuntimeConfig {
   readonly liteLLM: {
     readonly enabled: boolean;
     readonly providers: readonly UnifiedRuntimeConfigProvider[];
+    readonly routerSettings: Readonly<Record<string, UnifiedRuntimeJSONValue>>;
+    readonly litellmSettings: Readonly<Record<string, UnifiedRuntimeJSONValue>>;
     readonly process: UnifiedRuntimeProcessConfig;
   };
 }
@@ -308,6 +310,8 @@ interface RawUnifiedRuntimeConfig {
   };
   readonly litellm_proxy?: {
     readonly providers?: Readonly<Record<string, RawLiteLLMProvider>>;
+    readonly router_settings?: Readonly<Record<string, unknown>>;
+    readonly litellm_settings?: Readonly<Record<string, unknown>>;
     readonly command?: string;
     readonly args?: readonly string[];
     readonly env?: Readonly<Record<string, string>>;
@@ -687,6 +691,8 @@ function normalizeLiteLLMInput(value: unknown): UnifiedRuntimeConfig["liteLLM"] 
     return {
       enabled: false,
       providers: [],
+      routerSettings: {},
+      litellmSettings: {},
       process: normalizeProcessConfigInput(undefined),
     };
   }
@@ -714,10 +720,30 @@ function normalizeLiteLLMInput(value: unknown): UnifiedRuntimeConfig["liteLLM"] 
     "process" in value && value.process && typeof value.process === "object"
       ? value.process
       : value;
+  const normalizedRouterSettings = normalizeJSONValue(
+    "routerSettings" in value
+      ? value.routerSettings
+      : "router_settings" in value
+        ? value.router_settings
+        : undefined,
+  );
+  const normalizedLiteLLMSettings = normalizeJSONValue(
+    "litellmSettings" in value
+      ? value.litellmSettings
+      : "litellm_settings" in value
+        ? value.litellm_settings
+        : undefined,
+  );
 
   return {
     enabled: providers.length > 0,
     providers,
+    routerSettings: isUnifiedRuntimeJSONObject(normalizedRouterSettings)
+      ? normalizedRouterSettings
+      : {},
+    litellmSettings: isUnifiedRuntimeJSONObject(normalizedLiteLLMSettings)
+      ? normalizedLiteLLMSettings
+      : {},
     process: normalizeProcessConfigInput(processSource),
   };
 }
@@ -1317,6 +1343,20 @@ function parseLiteLLMProviders(
   return {
     enabled: normalizedProviders.length > 0,
     providers: normalizedProviders,
+    routerSettings: isUnifiedRuntimeJSONObject(
+      normalizeJSONValue(rawConfig.litellm_proxy?.router_settings),
+    )
+      ? (normalizeJSONValue(rawConfig.litellm_proxy?.router_settings) as Readonly<
+          Record<string, UnifiedRuntimeJSONValue>
+        >)
+      : {},
+    litellmSettings: isUnifiedRuntimeJSONObject(
+      normalizeJSONValue(rawConfig.litellm_proxy?.litellm_settings),
+    )
+      ? (normalizeJSONValue(rawConfig.litellm_proxy?.litellm_settings) as Readonly<
+          Record<string, UnifiedRuntimeJSONValue>
+        >)
+      : {},
     process: parseProcessConfig(rawConfig.litellm_proxy),
   };
 }
@@ -1838,6 +1878,12 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
         },
       ]),
     );
+  }
+  if (Object.keys(config.liteLLM.routerSettings).length > 0) {
+    liteLLMSection.router_settings = config.liteLLM.routerSettings;
+  }
+  if (Object.keys(config.liteLLM.litellmSettings).length > 0) {
+    liteLLMSection.litellm_settings = config.liteLLM.litellmSettings;
   }
   if (config.liteLLM.providers.length > 0 || hasProcessConfig(config.liteLLM.process)) {
     document.litellm_proxy = liteLLMSection;

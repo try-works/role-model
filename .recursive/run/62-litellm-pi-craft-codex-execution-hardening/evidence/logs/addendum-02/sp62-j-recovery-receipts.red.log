@@ -1,0 +1,919 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:56248) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (185 tests | 1 failed | 183 skipped) 2260ms
+   ↓ runtime-host-bridge > summarizes selection diagnostics when a tie-break chooses the winner inside the score epsilon
+   ↓ runtime-host-bridge > creates a stable model-list response grouped by model id
+   ↓ runtime-host-bridge > creates alias entries in the model-list response alongside real models
+   ↓ runtime-host-bridge > adds compact Pi-compatible capability metadata to v1 model-list records
+   ↓ runtime-host-bridge > builds request-time routing telemetry snapshots from live routing candidates
+   ↓ runtime-host-bridge > builds QA bootstrap options with router surfaces and complete fixtures
+   ↓ runtime-host-bridge > builds QA backend options that start managed mock vendors for end-to-end Pi QA
+   ↓ runtime-host-bridge > seeds QA runtime config with executable local and remote mock backend commands
+   ↓ runtime-host-bridge > seeds QA runtime config with canonical task capabilities for role-routed backend QA
+   ↓ runtime-host-bridge > binds managed QA backends to canonical taxonomy roles for classified request QA
+   ↓ runtime-host-bridge > does not bootstrap placeholder remote control-plane endpoints by default
+   ↓ runtime-host-bridge > bootstraps QA control-plane state for mixed local+remote routing proof
+   ↓ runtime-host-bridge > builds packaged CLI options with static UI, router surfaces, and fixture-root defaults
+   ↓ runtime-host-bridge > passes the optional shutdown hook into CLI server options
+   ↓ runtime-host-bridge > suppresses placeholder provider accounts when using the packaged CLI defaults
+   ↓ runtime-host-bridge > purges stale runtime-config LiteLLM endpoints when startup has no runtime config
+   ↓ runtime-host-bridge > loads placeholder accounts only when fixture-root is explicitly provided
+   ↓ runtime-host-bridge > maps a chat-completions request into role-model routing and execution inputs
+   ↓ runtime-host-bridge > maps request role_model intent metadata into the routing request
+   ↓ runtime-host-bridge > maps stable proposal-shaped chat role_model intent metadata into the routing request
+   ↓ runtime-host-bridge > normalizes stable advisory role_model intent with ignored-field diagnostics
+   ↓ runtime-host-bridge > applies valid role_model intent as runtime role and task policy
+   ↓ runtime-host-bridge > keeps stable Pi role_model metadata advisory for exact-model routing
+   ↓ runtime-host-bridge > maps chat-completions tool-turn history with null assistant content without crashing
+   ↓ runtime-host-bridge > maps hosted OpenAI responses tools without rejecting them as function-only tools
+   ↓ runtime-host-bridge > maps mixed-provider responses web_search alias pools to runtime tool calling without excluding function-calling providers
+   ↓ runtime-host-bridge > maps exact non-OpenAI responses web-search requests to consumer-managed web_search tools
+   ↓ runtime-host-bridge > maps exact Kimi responses web-search requests to the hosted builtin_function contract
+   ↓ runtime-host-bridge > maps chat-completions continuation requests with Kimi hosted builtin_function tools
+   ↓ runtime-host-bridge > describes endpoint web-search support by active runtime transport
+   ↓ runtime-host-bridge > exports Codex dynamic-tool extraction for request-scoped function tools
+   ↓ runtime-host-bridge > exports createRequestScopedToolRegistry for request-scoped function tool registry
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry produces explicit failures for unimplemented bridged tool names
+   ↓ runtime-host-bridge > seedManagedCodexWorkspaceFixture stages benchmark files for Codex tool-heavy cases
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry executes read/list/write tools and apply_patch against a staged workspace
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry fails explicitly for unsupported bridged tools
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry tells Codex to use shell tools for external file paths
+   ↓ runtime-host-bridge > buildCodexDynamicTools output is compatible with createRequestScopedToolRegistry
+   ↓ runtime-host-bridge > buildCodexAppServerDynamicTools namespaces request-scoped tools for the app-server protocol
+   ↓ runtime-host-bridge > readCodexThreadIdFromAppServerMessage accepts both thread/start results and thread/started notifications
+   ↓ runtime-host-bridge > normalizeCodexAppServerModelName strips provider prefixes before calling the Codex app-server
+   ↓ runtime-host-bridge > executeCodexAppServerTurnOverStdio preserves image-bearing chat input as structured app-server content
+   ↓ runtime-host-bridge > executeCodexAppServerTurnOverStdio downloads remote image URLs into localImage inputs
+   ↓ runtime-host-bridge > executeCodexAppServerTurnOverStdio completes a turn over stdio JSONL and returns tool executions
+   ↓ runtime-host-bridge > executeCodexAppServerTurnOverStdio strips verbose schema annotations from dynamic tools
+   ↓ runtime-host-bridge > executeCodexAppServerTurnOverStdio compacts oversized historical tool transcripts
+   ↓ runtime-host-bridge > executeCodexAppServerTurnOverStdio retries once when a turn completes without any assistant output
+   ↓ runtime-host-bridge > executeCodexAppServerTurnOverStdio surfaces failed turn completions with embedded Codex errors
+   ↓ runtime-host-bridge > executeCodexAppServerTurnOverStdio preserves nested app-server error details for fallback classification
+   ↓ runtime-host-bridge > readCodexExecutionFailureFromSessionArtifacts reports a Codex Subscription usage-limit turn
+   ↓ runtime-host-bridge > resolveManagedCodexExecutionHome keeps the shared Codex home short on Windows-style paths
+   ↓ runtime-host-bridge > resolveManagedCodexWorkspaceRoot keeps request workspaces short under the shared Codex home
+   ↓ runtime-host-bridge > resolveManagedCodexWorkspaceRoot leaves enough room for deep plugin staging paths on Windows
+   ↓ runtime-host-bridge > cleanupManagedCodexExecutionWorkspace removes only the request workspace and preserves the shared Codex home
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry does not require repoRoot or file system access
+   ↓ runtime-host-bridge > non-tool Codex behavior: buildCodexDynamicTools returns empty array when no function tools present
+   ↓ runtime-host-bridge > loadMcpConnectorConfigs throws ENOENT when testdata file is absent (reproduces original packaged-runtime crash)
+   ↓ runtime-host-bridge > Codex tool path surfaces explicit failures for unimplemented request-scoped tool names in packaged-runtime-like environments
+   ↓ runtime-host-bridge > createRequestScopedToolRegistry signature has no repoRoot parameter (architecture-level guard against testdata reads)
+   ↓ runtime-host-bridge > buildCodexTurnPrompt allows full request-scoped tool usage for Codex Subscription turns
+   ↓ runtime-host-bridge > maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics
+   ↓ runtime-host-bridge > keeps exact-model routing unchanged when aliases are configured
+   ↓ runtime-host-bridge > narrows exact-model chat routing to an explicitly requested endpoint
+   ↓ runtime-host-bridge > maps validated controller guidance into an intelligent alias routing plan
+   ↓ runtime-host-bridge > uses a baseline override to bypass intelligent alias controller routing
+   ↓ runtime-host-bridge > applies a directly requested role to chat routing and execution policy
+   ↓ runtime-host-bridge > records explicit hybrid arbitration when controller guidance alters the difficulty plan
+   ↓ runtime-host-bridge > maps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics
+   ↓ runtime-host-bridge > escalates a high-risk single-turn code-change ask to hard difficulty and quality routing
+   ↓ runtime-host-bridge > escalates tool-bearing workspace file requests to hard difficulty instead of the cost lane
+   ↓ runtime-host-bridge > pins Codex subscription as the initial route for tool-bearing code turns without collapsing the broader alias pool
+   ↓ runtime-host-bridge > pins operator-configured Codex subscription endpoints even when the exact model id is newer than the static matrix
+   ↓ runtime-host-bridge > uses a baseline override to bypass difficulty alias gating
+   ↓ runtime-host-bridge > uses the persisted Strategy B mode as the default routing mode when no alias mode or request override is set
+   ↓ runtime-host-bridge > maps an alias responses request into a pooled endpoint allow-list and alias diagnostics
+   ↓ runtime-host-bridge > maps responses role_model intent metadata into the routing request
+   ↓ runtime-host-bridge > maps stable proposal-shaped responses role_model intent metadata into the routing request
+   ↓ runtime-host-bridge > maps responses tool choice, reasoning, prompt cache, affinity, and previous response id into the execution request
+   ↓ runtime-host-bridge > maps chat-completions session affinity and transport preference into the execution request
+   ↓ runtime-host-bridge > treats unknown stable role_model task metadata as advisory before routing
+   ↓ runtime-host-bridge > treats unknown stable role_model requested role metadata as advisory before routing
+   ↓ runtime-host-bridge > rejects explicit hard role_model task metadata before routing
+   ↓ runtime-host-bridge > maps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints
+   ↓ runtime-host-bridge > applies requested role execution policy to responses requests
+   ↓ runtime-host-bridge > prefers a configured alias in downstream OpenAI provider config
+   ↓ runtime-host-bridge > prefers the alias derived from the live runtime routing config in downstream OpenAI provider config
+   ↓ runtime-host-bridge > fallback downstream OpenAI provider config remains compatible with pi-role-model
+   ↓ runtime-host-bridge > serves health and model-list endpoints
+   ↓ runtime-host-bridge > accepts a local shutdown request when a shutdown hook is configured
+   ↓ runtime-host-bridge > serves alias entries in model-list and downstream provider config from runtime config
+   ↓ runtime-host-bridge > serves preserved host observability and vendor-facing utility endpoints
+   ↓ runtime-host-bridge > returns JSON for /logs/stream before static root catch-all
+   ↓ runtime-host-bridge > serves the runtime UI shell from root and app routes when static root exists
+   ↓ runtime-host-bridge > preserves x-role-model-request-id as client correlation metadata while generating a canonical request id
+   ↓ runtime-host-bridge > does not attempt to write a fallback error after the response is already committed
+   ↓ runtime-host-bridge > generates a unique canonical request id for each request when headers omit request ids
+   ↓ runtime-host-bridge > serves runtime control-plane summary, provider, account, and endpoint routes
+   ↓ runtime-host-bridge > serves canonical telemetry summary, comparison, and recent request routes
+   ↓ runtime-host-bridge > serves the generic telemetry analytics query route
+   ↓ runtime-host-bridge > serves downstream OpenAI-compatible provider metadata for consumer apps
+   ↓ runtime-host-bridge > serves chat-completions responses with role-model execution metadata
+   ↓ runtime-host-bridge > serves OpenAI-compatible SSE events for streaming responses requests
+   ↓ runtime-host-bridge > surfaces tool calls on chat-completions responses when the backend returns them
+   ↓ runtime-host-bridge > streams provider deltas through the bridge as they arrive
+   ↓ runtime-host-bridge > forwards x-role-model-routing-mode to chat-completions execution
+   ↓ runtime-host-bridge > forwards ingress session, client correlation, and transport headers to chat-completions execution
+   ↓ runtime-host-bridge > rejects an invalid x-role-model-routing-mode header
+   ↓ runtime-host-bridge > creates a runtime backend that executes chat-completions through the real routing and adapter path
+   ↓ runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state
+   ↓ runtime-host-bridge > persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests
+   ↓ runtime-host-bridge > persists applied role policy diagnostics and injected system instructions for runtime-backed chat requests
+   ↓ runtime-host-bridge > does not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap
+   ↓ runtime-host-bridge > upsertProviderAccount replaces existing model role assignments for the same model
+   ↓ runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests
+   ↓ runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path
+   ↓ runtime-host-bridge > filters router summary aliases and candidates by explicit remote-only execution mode
+   ↓ runtime-host-bridge > maps the full canonical alias matrix to non-empty candidate pools when matching inventory exists
+   ↓ runtime-host-bridge > routes execution-facing planning through the effective execution-mode registry
+   ↓ runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests
+   ↓ runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request
+   ↓ runtime-host-bridge > routes hard requests using bucketed observed profiles and records the selected difficulty bucket
+   ↓ runtime-host-bridge > infers a hard observed-profile bucket from controller quality strategy when difficulty routing is absent
+   ↓ runtime-host-bridge > keeps fresh endpoint-wide metrics when stale hard-bucket quality is present under benchmark-driven routing
+   ↓ runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests
+   ↓ runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests
+   ↓ runtime-host-bridge > uses the default controller timeout budget for realistic remote controller latency
+   ↓ runtime-host-bridge > records sanitized controller guidance through the live HTTP bridge for intelligent aliases
+   ↓ runtime-host-bridge > preserves accepted controller directives for known compatibility strategy aliases
+   ↓ runtime-host-bridge > gives controller routing enough output budget to avoid empty truncated guidance
+   ↓ runtime-host-bridge > backfills coding role and capability hints into minimal controller strategy guidance
+   ↓ runtime-host-bridge > retries controller routing once with a compact prompt when the first controller response is empty
+   ↓ runtime-host-bridge > falls back to heuristic controller guidance when the live controller returns prose instead of JSON
+   ↓ runtime-host-bridge > keeps controller.remote-only routing inside the remote-only alias slice even when the available inventory is hybrid
+   ↓ runtime-host-bridge > serves coherent live role and task policy over the HTTP control plane
+   ↓ runtime-host-bridge > ignores unsupported controller task and capability directives while keeping valid preferred endpoint subsets for coding-role requests
+   ↓ runtime-host-bridge > resolves explicit non-controller coder.review requests onto a role-compatible task
+   ↓ runtime-host-bridge > drops controller preferred endpoints when they merely restate the full allowed pool
+   ↓ runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config
+   ↓ runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests
+   ↓ runtime-host-bridge > falls back deterministically when the configured classifier times out
+   ↓ runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded
+   ↓ runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request
+   ↓ runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts
+   ↓ runtime-host-bridge > persists runtime-managed role policy and task allowlists across backend restart
+   ↓ runtime-host-bridge > executes env-backed api-key accounts through the live provider path when the env credential resolves
+   × runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion 1266ms
+     → expected { …(38) } to deeply equal ObjectContaining{…}
+   ↓ runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints
+   ↓ runtime-host-bridge > executes direct exact-model chat requests through the Codex subscription endpoint
+   ↓ runtime-host-bridge > exact Codex execution repairs stale bridge auth from standalone runtime and clears auth cooldowns
+   ✓ runtime-host-bridge > suppresses already-executed Codex dynamic tool calls from the final chat response and de-duplicates executions  989ms
+   ↓ runtime-host-bridge > classifies subscription quota exhaustion as fallback-eligible without retrying the same endpoint
+   ↓ runtime-host-bridge > uses an escalating execution-failure cooldown schedule
+   ↓ runtime-host-bridge > does not place Codex subscription endpoints on cooldown for invalid_request failures
+   ↓ runtime-host-bridge > keeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog
+   ↓ runtime-host-bridge > registers configured local OpenAI-compatible peers as execution-ready model endpoints
+   ↓ runtime-host-bridge > executes non-controller requested coder review task requests without empty chosen-endpoint failures
+   ↓ runtime-host-bridge > exposes llama-swap ownership and config metadata on local model and endpoint readback
+   ↓ runtime-host-bridge > rejects local model activation when no configured local endpoint exposes the requested model
+   ↓ runtime-host-bridge > rehydrates connected OAuth accounts from stored token files on backend restart
+   ↓ runtime-host-bridge > restores pending OAuth device-authorizations from SQLite after backend restart
+   ↓ runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint
+   ↓ runtime-host-bridge > executes exact Kimi hosted web-search requests through to a final assistant answer
+   ↓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-flash web-search requests as consumer-managed tool calls
+   ↓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-pro web-search requests as consumer-managed tool calls
+   ↓ runtime-host-bridge > normalizes DeepSeek DSML web_search markup into consumer-visible tool calls
+   ↓ runtime-host-bridge > normalizes DeepSeek DSML web_open markup into consumer-visible tool calls
+   ↓ runtime-host-bridge > normalizes DeepSeek DSML web_browse markup into consumer-visible tool calls
+   ↓ runtime-host-bridge > creates a runtime backend that executes responses through the real routing and adapter path
+   ↓ runtime-host-bridge > persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests
+   ↓ runtime-host-bridge > serves structured request and endpoint inspection routes through the bridge server
+   ↓ runtime-host-bridge > aggregates generic telemetry analytics from persisted request-time routing and cost facts
+   ↓ runtime-host-bridge > aggregates telemetry analytics over the full requested slice with contract metadata and aligned ledger filters
+   ↓ runtime-host-bridge > startup retention cleanup removes expired raw observations while preserving telemetry ledger evidence
+   ↓ runtime-host-bridge > keeps duplicate caller request ids as separate canonical telemetry rows
+   ↓ runtime-host-bridge > records caller correlation and live request classification for failed chat completions
+   ↓ runtime-host-bridge > reads bucketed endpoint profiles with an advisory max-difficulty recommendation
+   ↓ runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted
+   ↓ runtime-host-bridge > executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers
+   ↓ runtime-host-bridge > executes chat-completions through an api-key-static provider via environment credential
+   ↓ runtime-host-bridge > accepts legacy credentialized endpoint ids when pinning a requested endpoint
+   ↓ runtime-host-bridge > resolves bridge server options from explicit values and defaults
+   ↓ runtime-host-bridge > keeps repoRoot-derived static paths stable when runtimeStateRoot uses a different path dialect
+   ↓ runtime-host-bridge > resolves packaged bridge server options from executable path defaults
+   ↓ runtime-host-bridge > prefers repoRoot frontend assets over packaged assets when repoRoot is explicit
+   ↓ runtime-host-bridge > resolves packaged bridge server options from POSIX executable path defaults
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > runtime-host-bridge > retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+AssertionError: expected { …(38) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "executionSemantics": ObjectContaining {
+-     "cooldownDecision": "recorded",
++ {
++   "baselineMaxEligibleCostUsd": null,
++   "cacheCostSavingsUsd": 0,
++   "cacheObservability": {
++     "cacheReadTokens": 0,
++     "cacheWriteTokens": 0,
++     "promptCacheRequested": false,
++     "promptCacheUsed": false,
++     "routingCacheAffinity": false,
++   },
++   "capturePolicy": {
++     "environment": "local-dev",
++     "rawCaptureAvailable": true,
++     "redactedFields": [
++       "request.headers.authorization",
++     ],
++     "redactionLevel": "strict",
++     "retentionClass": "standard",
++     "structuredInspectionAvailable": true,
++     "structuredInspectionMode": "redacted",
++     "suppressedFields": [
++       "request.body",
++       "response.body",
++     ],
++   },
++   "contextEnvelope": {
++     "conversationId": "conversation-main",
++     "estimatedTokenCount": 240,
++     "latestHandoffId": "handoff-1",
++   },
++   "conversationId": "conversation-main",
++   "costBaselineSource": null,
++   "costCalculationBasis": "unavailable",
++   "costCalculationVersion": "run49.v1",
++   "costSavingsSupport": "partial",
++   "decision": {
++     "app_id": "unknown-app",
++     "chosen_endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++     "eligibility": [
++       {
++         "eligible": false,
++         "endpoint_id": "openai.personal.primary.us-east-1.fast",
++         "exclusions": [
++           {
++             "code": "POLICY_DENY_ENDPOINT",
++             "detail": "Endpoint is denied by routing policy.",
++           },
++         ],
++       },
++       {
++         "eligible": false,
++         "endpoint_id": "anthropic.team.shared.us-east-1.default",
++         "exclusions": [
++           {
++             "code": "POLICY_DENY_ENDPOINT",
++             "detail": "Endpoint is denied by routing policy.",
++           },
++         ],
++       },
++       {
++         "eligible": false,
++         "endpoint_id": "moonshot.personal.a-primary.global.kimi-k2.5",
++         "exclusions": [
++           {
++             "code": "POLICY_DENY_ENDPOINT",
++             "detail": "Endpoint is denied by routing policy.",
++           },
++         ],
++       },
++       {
++         "eligible": true,
++         "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++         "exclusions": [],
++       },
++       {
++         "eligible": false,
++         "endpoint_id": "cli.local.coder",
++         "exclusions": [
++           {
++             "code": "POLICY_DENY_ENDPOINT",
++             "detail": "Endpoint is denied by routing policy.",
++           },
++           {
++             "code": "CAPABILITY_MISSING",
++             "detail": "Endpoint is missing a required capability.",
++           },
++         ],
++       },
++     ],
++     "fallback_endpoint_ids": [],
++     "org_id": null,
++     "policy_snapshot": {
++       "allow_endpoints": [
++         "moonshot.personal.a-primary.global.kimi-k2.5",
++         "moonshot.personal.z-backup.global.kimi-k2.5",
++       ],
++       "allow_provider_kinds": [],
++       "budget": {
++         "currency": "USD",
++         "enabled": false,
++       },
++       "budget_mode": "disabled",
++       "compute_preference": "auto",
++       "deny_endpoints": [
++         "moonshot.personal.a-primary.global.kimi-k2.5",
++       ],
++       "deny_provider_kinds": [],
++       "policy_id": "balanced-policy",
++       "prefer_local": false,
++       "privacy": {
++         "allow_remote": true,
++       },
++       "require_tools": false,
++       "required_capabilities": [
++         "text.chat",
++       ],
++       "required_modalities": [
++         "text",
++       ],
++       "strategy": "balanced",
++       "targets": {
++         "latency_max_ms": 300,
++         "latency_target_ms": 150,
++         "throughput_target_tps": 40,
++       },
++       "tie_break_order": [
++         "quality",
++         "latency_ms",
++         "reliability",
++         "endpoint_id",
++       ],
++     },
++     "request_id": "req-runtime-bridge-live-fallback-001",
++     "routing_decision_id": "decision-req-runtime-bridge-live-fallback-001",
++     "scored_candidates": [
++       {
++         "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++         "metric_breakdown": {
++           "cost": {
++             "source": "default",
++             "value": 0.5,
++           },
++           "latency": {
++             "source": "default",
++             "value": 0.5,
++           },
++           "preference": {
++             "raw": {
++               "cache_affinity": true,
++               "cache_affinity_delta": 0.1,
++             },
++             "source": "declared",
++             "value": 0.6,
++           },
++           "quality": {
++             "source": "default",
++             "value": 0.5,
++           },
++           "reliability": {
++             "source": "default",
++             "value": 0.7,
++           },
++           "throughput": {
++             "source": "default",
++             "value": 0.5,
++           },
++         },
++         "tie_break": {
++           "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++           "latency_ms": 250,
++           "quality": 0.5,
++           "reliability": 0.7,
++         },
++         "total_score": 0.6,
++       },
++     ],
++     "scoring_version": "baseline-v2",
++     "selection_reasons": [
++       "BEST_TOTAL_SCORE",
++       "DECLARED_PROFILE_USED",
++       "DEFAULT_PROFILE_USED",
++       "CACHE_AFFINITY_APPLIED",
++     ],
++     "used_declared": true,
++     "used_measured": false,
++   },
++   "diagnostics": {
++     "authAccount": [],
++     "execution": [],
++     "memoryQuality": [
++       {
++         "code": "MEMORY_CONTEXT_OMITTED",
++         "message": "Context assembly omitted 2 turns and 2 artifacts.",
++         "severity": "warning",
++       },
++       {
++         "code": "MEMORY_LATEST_HANDOFF_LINKED",
++         "message": "Context inspection preserves latest handoff handoff-1.",
++         "severity": "info",
++       },
++     ],
++     "operator": [
++       {
++         "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
++         "message": "Raw operator captures remain available through the preserved host capture surface.",
++         "severity": "info",
++       },
++     ],
++     "routing": [
++       {
++         "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
++         "message": "Routing diagnostics link request req-runtime-bridge-live-fallback-001 to retrieval receipt conversation-main-retrieval-receipt.",
++         "severity": "info",
++       },
++     ],
++     "tooling": [],
++   },
++   "effectiveCostUsd": 0,
++   "endpointId": "moonshot.personal.z-backup.global.kimi-k2.5",
++   "endpointKind": "remote_api",
++   "executionSemantics": {
++     "adapterFamily": "ai-sdk-openai-compatible",
++     "cooldownDecision": "not_applied",
++     "executionFamily": "remote-service",
+      "idempotencyDecision": "not_needed",
+-     "rerouteCount": 1,
+-     "retryCount": 1,
++     "payloadBytes": {
++       "ingress": 102,
++       "providerCanonical": 93,
++       "providerResponse": 284,
++       "providerWire": 93,
++       "translated": 73,
++     },
++     "rerouteCount": 0,
++     "retryCount": 0,
++     "sourceClient": "openai.chat.completions",
+      "toolSideEffectState": "none",
++   },
++   "executionTelemetry": {
++     "costProvenance": "unavailable",
++     "finishReason": "stop",
++     "promptCaching": {
++       "mode": "unsupported",
++       "supported": false,
++     },
++     "providerFamily": "ai-sdk-openai-compatible",
++     "stream": {
++       "requested": false,
++       "textDeltas": 1,
++       "toolArgumentDeltas": 0,
++       "toolCallDeltas": 0,
++     },
++     "streamSupport": {
++       "text": "delta",
++       "toolArguments": "delta",
++       "toolCalls": "delta",
++     },
++     "usageSupport": {
++       "cacheReadTokens": false,
++       "cacheWriteTokens": false,
++       "inputTokens": true,
++       "outputTokens": true,
++     },
++   },
++   "healthStatus": "healthy",
++   "inspection": {
++     "endpoint": {
++       "endpointId": "moonshot.personal.z-backup.global.kimi-k2.5",
++       "endpointVersion": "run07-registry-v1:custom-base-url",
++       "latestProfile": {
++         "confidence_score": 0.1762914343888821,
++         "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++         "endpoint_version": "run07-registry-v1:custom-base-url",
++         "failure_rate": 0,
++         "freshness_score": 1,
++         "latency_ms_p50": 0,
++         "latency_ms_p95": 0,
++         "measured_at_ms": 1783473532968,
++         "measurement_window": {
++           "ended_at_ms": 1783473532968,
++           "started_at_ms": 1783473532968,
++         },
++         "sample_size": 1,
++         "sources": {
++           "benchmark_samples": 0,
++           "live_request_samples": 1,
++         },
++       },
++       "recentSamples": [
++         {
++           "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++           "endpoint_version": "run07-registry-v1:custom-base-url",
++           "failure": false,
++           "latency_ms": 0,
++           "latency_ms_p95": 0,
++           "request_id": "req-runtime-bridge-live-fallback-001",
++           "routing_decision_id": "decision-req-runtime-bridge-live-fallback-001",
++           "source_type": "live_request",
++           "timestamp_ms": 1783473532968,
++         },
++       ],
++     },
++     "request": {
++       "capturePolicy": {
++         "environment": "local-dev",
++         "rawCaptureAvailable": true,
++         "redactedFields": [
++           "request.headers.authorization",
++         ],
++         "redactionLevel": "strict",
++         "retentionClass": "standard",
++         "structuredInspectionAvailable": true,
++         "structuredInspectionMode": "redacted",
++         "suppressedFields": [
++           "request.body",
++           "response.body",
++         ],
++       },
++       "diagnostics": {
++         "authAccount": [],
++         "execution": [],
++         "memoryQuality": [
++           {
++             "code": "MEMORY_CONTEXT_OMITTED",
++             "message": "Context assembly omitted 2 turns and 2 artifacts.",
++             "severity": "warning",
++           },
++           {
++             "code": "MEMORY_LATEST_HANDOFF_LINKED",
++             "message": "Context inspection preserves latest handoff handoff-1.",
++             "severity": "info",
++           },
++         ],
++         "operator": [
++           {
++             "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
++             "message": "Raw operator captures remain available through the preserved host capture surface.",
++             "severity": "info",
++           },
++         ],
++         "routing": [
++           {
++             "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
++             "message": "Routing diagnostics link request req-runtime-bridge-live-fallback-001 to retrieval receipt conversation-main-retrieval-receipt.",
++             "severity": "info",
++           },
++         ],
++         "tooling": [],
++       },
++       "requestCapture": {
++         "body": {
++           "reason": "policy.rawCapture.requestBody.disabled",
++           "suppressed": true,
++         },
++         "headers": {
++           "authorization": "[redacted]",
++         },
++       },
++       "requestId": "req-runtime-bridge-live-fallback-001",
++       "responseCapture": {
++         "body": {
++           "reason": "policy.rawCapture.responseBody.disabled",
++           "suppressed": true,
++         },
++         "statusCode": 200,
++       },
++       "routingDecisionId": "decision-req-runtime-bridge-live-fallback-001",
++     },
++   },
++   "observationAvailability": {
++     "rawObservationAvailable": true,
++     "reason": "Request detail is backed by the preserved runtime observation bundle plus telemetry ledger supplements.",
++     "source": "raw-observation",
++     "structuredInspectionAvailable": true,
++   },
++   "observedPerformance": {
++     "endpointVersion": "run07-registry-v1:custom-base-url",
++     "history": [
++       {
++         "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++         "endpoint_version": "run07-registry-v1:custom-base-url",
++         "failure": false,
++         "latency_ms": 0,
++         "latency_ms_p95": 0,
++         "request_id": "req-runtime-bridge-live-fallback-001",
++         "routing_decision_id": "decision-req-runtime-bridge-live-fallback-001",
++         "source_type": "live_request",
++         "timestamp_ms": 1783473532968,
++       },
++     ],
++     "profile": {
++       "confidence_score": 0.1762914343888821,
++       "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++       "endpoint_version": "run07-registry-v1:custom-base-url",
++       "failure_rate": 0,
++       "freshness_score": 1,
++       "latency_ms_p50": 0,
++       "latency_ms_p95": 0,
++       "measured_at_ms": 1783473532968,
++       "measurement_window": {
++         "ended_at_ms": 1783473532968,
++         "started_at_ms": 1783473532968,
++       },
++       "sample_size": 1,
++       "sources": {
++         "benchmark_samples": 0,
++         "live_request_samples": 1,
++       },
++     },
++     "sample": {
++       "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++       "endpoint_version": "run07-registry-v1:custom-base-url",
++       "failure": false,
++       "latency_ms": 0,
++       "latency_ms_p95": 0,
++       "request_id": "req-runtime-bridge-live-fallback-001",
++       "routing_decision_id": "decision-req-runtime-bridge-live-fallback-001",
++       "source_type": "live_request",
++       "timestamp_ms": 1783473532968,
++     },
++   },
++   "privacyReceipt": {
++     "retainUntil": 1786065532988,
++     "retentionTtlHours": 720,
++     "samplingRate": 1,
++   },
++   "providerId": "moonshot",
++   "requestId": "req-runtime-bridge-live-fallback-001",
++   "retrievalReceipt": {
++     "receiptId": "conversation-main-retrieval-receipt",
++     "summary": {
++       "estimatedTokens": 240,
++       "omittedArtifacts": 2,
++       "omittedTurns": 2,
++       "selectedArtifacts": 1,
++       "selectedTurns": 2,
++     },
++   },
++   "roleIds": [
++     "analyst",
++     "architect",
++     "coder",
++     "coordinator",
++     "creative",
++     "data",
++     "designer",
++     "educator",
++     "finance",
++     "health",
++     "knowledge",
++     "legal",
++     "marketer",
++     "mathematician",
++     "operator",
++     "planner",
++     "procurement",
++     "product",
++     "recruiter",
++     "researcher",
++     "scientist",
++     "security",
++     "seller",
++     "strategist",
++     "support",
++     "tester",
++     "translator",
++     "writer",
++   ],
++   "routingCostSavingsUsd": 0,
++   "routingDecisionId": "decision-req-runtime-bridge-live-fallback-001",
++   "routingDiagnostics": {
++     "capabilityEligibility": {
++       "advisoryCapabilities": [],
++       "excludedTargets": [],
++       "includedEndpoints": [
++         "moonshot.personal.a-primary.global.kimi-k2.5",
++         "moonshot.personal.z-backup.global.kimi-k2.5",
++       ],
++       "requiredCapabilities": [
++         "text.chat",
++       ],
++       "requiredInputModalities": [
++         "text",
++       ],
++       "requiredOutputModalities": [
++         "text",
++       ],
++     },
++     "catalogEconomics": {
++       "canonicalModelId": "moonshot/kimi-k2.5",
++       "cost_per_1k_tokens_est": null,
++       "estimatedRequestUsd": null,
++       "inputPer1M": null,
++       "outputPer1M": null,
++       "tokenEconomicsSource": "unknown",
++     },
++     "effectiveMetrics": {
++       "cost": {
++         "source": "default",
++         "value": 0.5,
++       },
++       "latency": {
++         "source": "default",
++         "value": 0.5,
++       },
++       "quality": {
++         "source": "default",
++         "value": 0.5,
++       },
++       "reliability": {
++         "source": "default",
++         "value": 0.7,
++       },
++       "throughput": {
++         "source": "default",
++         "value": 0.5,
++       },
++     },
++     "observedProfile": {
++       "endpointId": "moonshot.personal.z-backup.global.kimi-k2.5",
++       "readMode": "per-request",
++       "source": "none",
++     },
++     "retrievalReceiptId": "conversation-main-retrieval-receipt",
++     "rewrite": {
++       "applied": false,
++       "downstreamModelId": "moonshot/kimi-k2.5",
++       "reason": "requested-model-matches-downstream",
++       "requestedModel": "moonshot/kimi-k2.5",
++     },
++     "routingModel": {
++       "enabled": false,
++       "endpointId": null,
++       "ignoredEndpointIds": [
++         "openai.personal.primary.us-east-1.fast",
++       ],
++       "preferredEndpointIds": [],
++     },
++     "selection": {
++       "mode": "best-total-score",
++       "scoreTieEpsilon": 0.01,
++       "tieBreakOrder": [
++         "quality",
++         "latency_ms",
++         "reliability",
++         "endpoint_id",
++       ],
++       "winnerEndpointId": "moonshot.personal.z-backup.global.kimi-k2.5",
++       "winnerTotalScore": 0.6,
++     },
++     "throughputPenalty": {
++       "active": false,
++       "endpointId": "moonshot.personal.z-backup.global.kimi-k2.5",
++     },
++   },
++   "selectedUncachedCostUsd": null,
++   "servingSource": "remote-service",
++   "sourceType": "remote",
++   "status": "active",
++   "telemetrySnapshot": {
++     "baselineMaxEligibleCostUsd": null,
++     "cacheCostSavingsUsd": 0,
++     "cacheState": "unsupported",
++     "candidateCostSnapshot": {
++       "moonshot.personal.z-backup.global.kimi-k2.5": {
++         "costPer1kTokensEst": null,
++         "endpointKind": "remote_api",
++         "estimatedRequestUsd": null,
++         "inputPer1M": null,
++         "modelId": "moonshot/kimi-k2.5",
++         "outputPer1M": null,
++         "providerId": "moonshot",
++         "providerKind": "remote_openai_compat",
++         "region": "global",
++         "servingSource": "remote-service",
++         "sourceType": "remote",
++         "tokenEconomicsSource": "unknown",
++       },
++     },
++     "costBaselineSource": null,
++     "costSavingsSupport": "partial",
++     "dimensions": {
++       "candidateCount": 1,
++       "selectedEndpointId": "moonshot.personal.z-backup.global.kimi-k2.5",
++     },
++     "eligibleEndpointIds": [
++       "moonshot.personal.z-backup.global.kimi-k2.5",
++     ],
++     "eligibleModelIds": [
++       "moonshot/kimi-k2.5",
++     ],
++     "endpointKind": "remote_api",
++     "healthStatusAtRequest": "healthy",
++     "lifecycleStateAtRequest": "active",
++     "providerAccountId": "moonshot.personal.z-backup",
++     "providerId": "moonshot",
++     "region": "global",
++     "requestOperation": "chat",
++     "requestedModelId": "moonshot/kimi-k2.5",
++     "roleIds": [],
++     "routingCostSavingsUsd": 0,
++     "selectedModelId": "moonshot/kimi-k2.5",
++     "selectedPricingSnapshot": {
++       "costPer1kTokensEst": null,
++       "estimatedRequestUsd": null,
++       "inputPer1M": null,
++       "modelId": "moonshot/kimi-k2.5",
++       "outputPer1M": null,
++       "providerAccountId": "moonshot.personal.z-backup",
++       "providerId": "moonshot",
++       "sourceType": "remote",
++       "tokenEconomicsSource": "unknown",
++     },
++     "selectedUncachedCostUsd": null,
++     "servingSource": "remote-service",
++     "sourceType": "remote",
++     "toolingUsed": false,
++     "totalAvoidedCostUsd": 0,
++   },
++   "tooling": {
++     "diagnostics": [],
++     "executions": [],
++     "toolCalls": [],
++   },
++   "totalAvoidedCostUsd": 0,
++   "trace": {
++     "events": [
++       {
++         "event_id": "event-provider-load-req-runtime-bridge-live-fallback-001",
++         "event_type": "trace.span.opened",
++         "payload": {
++           "adapter_family": "ai-sdk-openai-compatible",
++           "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++         },
++         "request_id": "req-runtime-bridge-live-fallback-001",
++         "routing_decision_id": "decision-req-runtime-bridge-live-fallback-001",
++         "span_id": "span-provider-load-req-runtime-bridge-live-fallback-001",
++         "timestamp_ms": 1783473532968,
++         "trace_id": "trace-req-runtime-bridge-live-fallback-001",
++       },
++       {
++         "event_id": "event-usage-req-runtime-bridge-live-fallback-001",
++         "event_type": "usage.event.created",
++         "payload": {
++           "input_tokens": 24,
++           "output_tokens": 7,
++         },
++         "request_id": "req-runtime-bridge-live-fallback-001",
++         "routing_decision_id": "decision-req-runtime-bridge-live-fallback-001",
++         "span_id": "span-provider-decode-req-runtime-bridge-live-fallback-001",
++         "timestamp_ms": 1783473532977,
++         "trace_id": "trace-req-runtime-bridge-live-fallback-001",
++       },
++     ],
++     "spans": [
++       {
++         "attributes": {
++           "adapter_family": "ai-sdk-openai-compatible",
++           "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++         },
++         "ended_at_ms": 1783473532972,
++         "request_id": "req-runtime-bridge-live-fallback-001",
++         "routing_decision_id": "decision-req-runtime-bridge-live-fallback-001",
++         "span_id": "span-provider-load-req-runtime-bridge-live-fallback-001",
++         "span_type": "provider.load",
++         "started_at_ms": 1783473532967,
++         "status": "ok",
++         "trace_id": "trace-req-runtime-bridge-live-fallback-001",
++       },
++       {
++         "attributes": {
++           "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++           "text_delta_count": 1,
++         },
++         "ended_at_ms": 1783473532977,
++         "parent_span_id": "span-provider-load-req-runtime-bridge-live-fallback-001",
++         "request_id": "req-runtime-bridge-live-fallback-001",
++         "routing_decision_id": "decision-req-runtime-bridge-live-fallback-001",
++         "span_id": "span-provider-decode-req-runtime-bridge-live-fallback-001",
++         "span_type": "provider.decode",
++         "started_at_ms": 1783473532972,
++         "status": "ok",
++         "trace_id": "trace-req-runtime-bridge-live-fallback-001",
++       },
++     ],
++   },
++   "usageEvent": {
++     "app_id": "unknown-app",
++     "endpoint_id": "moonshot.personal.z-backup.global.kimi-k2.5",
++     "event_id": "usage-req-runtime-bridge-live-fallback-001",
++     "latency_ms": 0,
++     "model_id": "moonshot/kimi-k2.5",
++     "package_id": "provider-openai",
++     "provider_kind": "remote_openai_compat",
++     "request_id": "req-runtime-bridge-live-fallback-001",
++     "routing_decision_id": "decision-req-runtime-bridge-live-fallback-001",
++     "sample_source": "live_request",
++     "timestamp_ms": 1783473532968,
++     "tokens_in": 24,
++     "tokens_out": 7,
+    },
+  }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 183 skipped (185)
+   Start at  09:18:48
+   Duration  5.92s (transform 1.95s, setup 0ms, collect 2.75s, tests 2.26s, environment 0ms, prepare 270ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts --testNamePattern retries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion|suppresses already-executed Codex dynamic tool calls from the final chat response and de-duplicates executions

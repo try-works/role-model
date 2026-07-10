@@ -1,0 +1,28 @@
+{
+  "name": "receipt-chat-completions-after-fix",
+  "clientRequestId": "add17-after-fix-receipt-chat-completions",
+  "status": 200,
+  "ok": true,
+  "elapsedMs": 2676,
+  "response": {
+    "id": "chatcmpl-role-model",
+    "object": "chat.completion",
+    "created": 1783644099,
+    "model": "chatgpt/gpt-5.4",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "ADD17_AFTER_FIX_RECEIPT_CHAT_OK"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 18,
+      "completion_tokens": 13,
+      "total_tokens": 31
+    }
+  }
+}

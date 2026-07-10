@@ -1,0 +1,116 @@
+[
+  {
+    "requestId": "req-1d504e81-4a87-44fe-b7de-97d73226807e",
+    "requestedModelId": "deepseek/deepseek-v4-pro",
+    "selectedModelId": "deepseek/deepseek-v4-pro",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "providerId": "deepseek",
+    "providerFamily": "deepseek",
+    "vendorId": null,
+    "executionFamily": "remote-service",
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "sourceClient": "openai.chat.completions",
+    "stream": {
+      "requested": true,
+      "textDeltas": 30,
+      "toolCallDeltas": 0,
+      "toolArgumentDeltas": 0
+    },
+    "status": "active"
+  },
+  {
+    "requestId": "req-33c82fcd-e71b-484e-909c-140d246708b5",
+    "requestedModelId": "chatgpt/gpt-5.4",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "executionFamily": "remote-service",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "stream": {
+      "requested": true,
+      "textDeltas": 8,
+      "toolCallDeltas": 0,
+      "toolArgumentDeltas": 0
+    },
+    "status": "active"
+  },
+  {
+    "requestId": "req-92b5455b-efec-4d99-90a0-505f7a663bc1",
+    "requestedModelId": "baseline.remote-only",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "executionFamily": "remote-service",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "stream": {
+      "requested": true,
+      "textDeltas": 8,
+      "toolCallDeltas": 0,
+      "toolArgumentDeltas": 0
+    },
+    "status": "active"
+  },
+  {
+    "requestId": "req-05119797-f5a3-428c-8771-9954cbdcb9b4",
+    "requestedModelId": "difficulty.remote-only",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "executionFamily": "remote-service",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "stream": {
+      "requested": true,
+      "textDeltas": 8,
+      "toolCallDeltas": 0,
+      "toolArgumentDeltas": 0
+    },
+    "status": "active"
+  },
+  {
+    "requestId": "req-ff5cf2ca-c884-4c91-9f77-af48fb5b4056",
+    "requestedModelId": "difficulty.remote-only",
+    "selectedModelId": "deepseek/deepseek-v4-pro",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "providerId": "deepseek",
+    "providerFamily": "deepseek",
+    "vendorId": null,
+    "executionFamily": "remote-service",
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "sourceClient": "openai.chat.completions",
+    "stream": {
+      "requested": true,
+      "textDeltas": 27,
+      "toolCallDeltas": 0,
+      "toolArgumentDeltas": 0
+    },
+    "status": "active"
+  },
+  {
+    "requestId": "req-b91a1fbf-f46d-4a5c-bae4-214dcf5182da",
+    "requestedModelId": "difficulty.remote-only",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "executionFamily": "remote-service",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "stream": {
+      "requested": true,
+      "textDeltas": 7,
+      "toolCallDeltas": 0,
+      "toolArgumentDeltas": 0
+    },
+    "status": "active"
+  }
+]

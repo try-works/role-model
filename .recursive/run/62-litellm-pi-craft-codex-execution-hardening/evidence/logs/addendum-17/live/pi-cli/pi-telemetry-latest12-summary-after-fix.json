@@ -1,0 +1,206 @@
+[
+  {
+    "requestId": "req-b03b1838-b044-4aef-883c-43180d4e23d5",
+    "requestedModelId": "difficulty.remote-only",
+    "modelId": "deepseek/deepseek-v4-pro",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "providerId": "deepseek",
+    "providerFamily": "deepseek",
+    "vendorId": null,
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "sourceClient": "openai.chat.completions",
+    "statusCode": 200,
+    "finishReason": "stop",
+    "latencyMs": 365,
+    "eligibleEndpointIds": [
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ]
+  },
+  {
+    "requestId": "req-8961f8c0-c4e0-4d5c-9cfc-9d46328b25ba",
+    "requestedModelId": "difficulty.remote-only",
+    "modelId": "difficulty.remote-only",
+    "endpointId": "routing.failed.pre-execution",
+    "providerId": null,
+    "providerFamily": null,
+    "vendorId": null,
+    "adapterFamily": null,
+    "sourceClient": null,
+    "statusCode": 400,
+    "finishReason": null,
+    "latencyMs": 300862,
+    "eligibleEndpointIds": []
+  },
+  {
+    "requestId": "req-dcb0ac98-8f34-4c52-971e-2f3b08b404fc",
+    "requestedModelId": "difficulty.remote-only",
+    "modelId": "deepseek/deepseek-v4-pro",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "providerId": "deepseek",
+    "providerFamily": "deepseek",
+    "vendorId": null,
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "sourceClient": "openai.chat.completions",
+    "statusCode": 200,
+    "finishReason": "stop",
+    "latencyMs": 792,
+    "eligibleEndpointIds": [
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ]
+  },
+  {
+    "requestId": "req-cc6a5a89-ca92-4200-a635-01d719cdcd91",
+    "requestedModelId": "difficulty.remote-only",
+    "modelId": "deepseek/deepseek-v4-pro",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "providerId": "deepseek",
+    "providerFamily": "deepseek",
+    "vendorId": null,
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "sourceClient": "openai.chat.completions",
+    "statusCode": 200,
+    "finishReason": "stop",
+    "latencyMs": 786,
+    "eligibleEndpointIds": [
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ]
+  },
+  {
+    "requestId": "req-72b0abca-e218-471a-a313-2897e27cf4d2",
+    "requestedModelId": "chatgpt/gpt-5.4",
+    "modelId": "chatgpt/gpt-5.4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "statusCode": 200,
+    "finishReason": "stop",
+    "latencyMs": 3596,
+    "eligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ]
+  },
+  {
+    "requestId": "req-cf2b67a4-ccd3-45d0-82fa-3e21d915130c",
+    "requestedModelId": "chatgpt/gpt-5.4",
+    "modelId": "chatgpt/gpt-5.4",
+    "endpointId": "routing.failed.pre-execution",
+    "providerId": null,
+    "providerFamily": null,
+    "vendorId": null,
+    "adapterFamily": null,
+    "sourceClient": null,
+    "statusCode": 400,
+    "finishReason": null,
+    "latencyMs": 1218,
+    "eligibleEndpointIds": []
+  },
+  {
+    "requestId": "req-b434df49-0d2b-432f-b766-8c9e96bfee82",
+    "requestedModelId": "chatgpt/gpt-5.4",
+    "modelId": "chatgpt/gpt-5.4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.responses",
+    "statusCode": 200,
+    "finishReason": "stop",
+    "latencyMs": 3100,
+    "eligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ]
+  },
+  {
+    "requestId": "req-7137f92b-aa19-41a3-9156-13a802d388f9",
+    "requestedModelId": "chatgpt/gpt-5.4",
+    "modelId": "chatgpt/gpt-5.4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "statusCode": 200,
+    "finishReason": "stop",
+    "latencyMs": 2156,
+    "eligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ]
+  },
+  {
+    "requestId": "req-c857ad3f-ac54-49d2-8d9f-14b3c6a2a67f",
+    "requestedModelId": "difficulty.remote-only",
+    "modelId": "chatgpt/gpt-5.4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "statusCode": 200,
+    "finishReason": "stop",
+    "latencyMs": 17566,
+    "eligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+    ]
+  },
+  {
+    "requestId": "req-2cfbf714-0909-4c91-9541-7a38080c5796",
+    "requestedModelId": "difficulty.remote-only",
+    "modelId": "chatgpt/gpt-5.4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "statusCode": 200,
+    "finishReason": "stop",
+    "latencyMs": 22596,
+    "eligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+    ]
+  },
+  {
+    "requestId": "req-08afb41d-59f3-4f31-ae99-b74f26ee6f05",
+    "requestedModelId": "difficulty.remote-only",
+    "modelId": "chatgpt/gpt-5.4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "statusCode": 200,
+    "finishReason": "tool_calls",
+    "latencyMs": 28128,
+    "eligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+    ]
+  },
+  {
+    "requestId": "req-5fc64d28-fd81-4334-8440-28569869b26b",
+    "requestedModelId": "difficulty.remote-only",
+    "modelId": "difficulty.remote-only",
+    "endpointId": "routing.failed.pre-execution",
+    "providerId": null,
+    "providerFamily": null,
+    "vendorId": null,
+    "adapterFamily": null,
+    "sourceClient": null,
+    "statusCode": 400,
+    "finishReason": null,
+    "latencyMs": 299968,
+    "eligibleEndpointIds": []
+  }
+]

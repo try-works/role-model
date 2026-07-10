@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/61-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/unified-runtime-config.test.ts (27 tests | 26 skipped) 36ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 26 skipped (27)
+   Start at  00:47:16
+   Duration  1.55s (transform 190ms, setup 0ms, collect 367ms, tests 36ms, environment 0ms, prepare 356ms)
+

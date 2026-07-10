@@ -1,0 +1,51 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/61-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/vendor-litellm
+
+ ❯ test/index.test.ts (13 tests | 1 failed | 12 skipped) 34ms
+   ↓ vendor-litellm > renders LiteLLM provider inventory into a deterministic config document
+   ↓ vendor-litellm > renders advanced litellm params needed for a real proxy-backed upstream
+   × vendor-litellm > renders router and litellm settings into the generated config 31ms
+     → expected 'model_list:\n  - model_name: openai/g…' to contain 'router_settings:'
+   ↓ vendor-litellm > installs litellm into a role-model-owned uv tool directory
+   ↓ vendor-litellm > prefers uv already on PATH before downloading another copy
+   ↓ vendor-litellm > uses default litellm args when unified config does not provide any
+   ↓ vendor-litellm > uses a longer default startup timeout for the real litellm proxy
+   ↓ vendor-litellm > forces utf-8 python io for the real litellm proxy process
+   ↓ vendor-litellm > starts a managed LiteLLM vendor and captures cost plus cache metadata from responses
+   ↓ vendor-litellm > captures response cost from LiteLLM headers when the proxy strips hidden params
+   ↓ vendor-litellm > captures cache status from LiteLLM headers when the proxy omits hidden cache markers
+   ↓ vendor-litellm > forwards fallback model ids into the LiteLLM request body
+   ↓ vendor-litellm > streams chat-completions deltas through the managed LiteLLM vendor
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > vendor-litellm > renders router and litellm settings into the generated config
+AssertionError: expected 'model_list:\n  - model_name: openai/g…' to contain 'router_settings:'
+
+- Expected
++ Received
+
+- router_settings:
++ model_list:
++   - model_name: openai/gpt-4.1-mini-fast
++     litellm_params:
++       model: openai/gpt-4.1-mini
++       api_key: ${OPENAI_API_KEY}
++
+
+ ❯ test/index.test.ts:136:22
+    134|     });
+    135|
+    136|     expect(rendered).toContain("router_settings:");
+       |                      ^
+    137|     expect(rendered).toContain("num_retries: 2");
+    138|     expect(rendered).toContain("timeout: 30");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  00:46:00
+   Duration  1.96s (transform 246ms, setup 0ms, collect 412ms, tests 34ms, environment 0ms, prepare 610ms)
+

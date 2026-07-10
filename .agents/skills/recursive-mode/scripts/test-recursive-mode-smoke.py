@@ -2100,6 +2100,71 @@ class SmokeHarness:
         finally:
             write_text(target, original)
 
+    def positive_topic_addenda_diff_accounting_case(self) -> None:
+        late_file = self.repo_root / "late_diff_accounting.py"
+        write_text(late_file, "def late_value() -> int:\n    return 62\n")
+        addenda_dir = self.run_dir / "addenda"
+        phase_files = [
+            ("03-implementation-summary", "Implementation"),
+            ("03.5-code-review", "Code Review"),
+            ("04-test-summary", "Test Summary"),
+        ]
+        for artifact_base, phase in phase_files:
+            addendum_path = addenda_dir / f"{artifact_base}.late-diff-accounting.addendum-99.md"
+            write_text(
+                addendum_path,
+                dedent_block(
+                    f"""
+                    Run: `/.recursive/run/{self.run_id}/`
+                    Phase: `{phase}`
+                    Addendum: `99`
+                    Status: `DRAFT`
+                    Workflow version: `recursive-mode-audit-v1`
+                    Inputs:
+                    - `/.recursive/run/{self.run_id}/{artifact_base}.md`
+                    Outputs:
+                    - `/.recursive/run/{self.run_id}/addenda/{addendum_path.name}`
+                    Scope note: Records late diff accounting for topic-qualified addenda names.
+
+                    # Late Diff Accounting Addendum
+
+                    ## TODO
+
+                    - [x] Record the late changed file.
+
+                    ## Worktree Diff Audit
+
+                    - Accounted changed file: `late_diff_accounting.py`
+
+                    ## Requirement Completion Status
+
+                    - R1 | Status: verified | Changed Files: `late_diff_accounting.py` | Implementation Evidence: topic-qualified addendum accounting | Verification Evidence: lint smoke regression.
+
+                    ## Coverage Gate
+
+                    Coverage: PASS
+
+                    ## Approval Gate
+
+                    Approval: PASS
+                    """
+                ),
+            )
+        try:
+            for toolchain in self.validation_toolchains():
+                lint_result = self.run_lint(toolchain, expect_success=True)
+                status_result = self.run_status(toolchain)
+                if "current phase: complete" not in status_result.stdout.lower():
+                    raise SmokeError(self.format_failure(f"{toolchain} status regressed with topic addenda accounting", status_result))
+                self.summary.append(f"Topic-qualified addenda diff accounting passed for {toolchain} ({lint_result.duration_seconds:.2f}s).")
+        finally:
+            if late_file.exists():
+                late_file.unlink()
+            for artifact_base, _phase in phase_files:
+                addendum_path = addenda_dir / f"{artifact_base}.late-diff-accounting.addendum-99.md"
+                if addendum_path.exists():
+                    addendum_path.unlink()
+
     def negative_context_free_review_case(self) -> None:
         target = self.run_dir / "03.5-code-review.md"
         original = target.read_text(encoding="utf-8")
@@ -2315,6 +2380,7 @@ class SmokeHarness:
         self.negative_context_free_review_case()
         self.negative_review_bundle_scope_case()
         self.negative_addenda_case()
+        self.positive_topic_addenda_diff_accounting_case()
         self.positive_subagent_action_record_case()
         self.negative_subagent_action_record_case()
         self.negative_human_qa_case()

@@ -1,0 +1,14 @@
+[
+  {
+    "ProcessId": 34240,
+    "Name": "role-model-runtime.exe",
+    "ExecutablePath": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+    "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+  },
+  {
+    "ProcessId": 26896,
+    "Name": "pwsh.exe",
+    "ExecutablePath": "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+    "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\nGet-CimInstance Win32_Process | Where-Object { $_.Name -like '*role-model*' -or $_.CommandLine -like '*role-model-runtime*' -or $_.CommandLine -like '*runtime-host-bridge*' } | Select-Object ProcessId,Name,ExecutablePath,CommandLine | ConvertTo-Json -Depth 4 | Tee-Object -FilePath .recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\green\\role-model-processes-before-packaging-cleanup.json\""
+  }
+]

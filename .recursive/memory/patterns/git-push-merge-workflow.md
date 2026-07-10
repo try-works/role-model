@@ -1,6 +1,20 @@
 # Git Push and Merge Workflow
 
+Type: `pattern`
 Status: `CURRENT`
+Scope: `Repository-safe Git push and merge workflow expectations, especially PR-only merge discipline and direct-main anti-pattern recovery guidance.`
+Owns-Paths:
+- `/.recursive/memory/patterns/git-push-merge-workflow.md`
+Watch-Paths:
+- `/.recursive/DECISIONS.md`
+- `/.recursive/STATE.md`
+- `/.github/workflows/**`
+Source-Runs:
+- `260624-clever-seal`
+- `62-litellm-pi-craft-codex-execution-hardening`
+Validated-At-Commit: `26e6a4119a7338236fa7e97ff81629e80951e105`
+Last-Validated: `2026-07-08`
+Tags: `git`, `workflow`, `pull-request`, `branch-protection`, `anti-pattern`
 Created: `2026-06-24`
 Last Validated: `2026-06-24`
 Validated By: `260624-clever-seal`

@@ -1,0 +1,15 @@
+{
+  "requestId": "req-76b9cfc4-57e8-4329-821d-1e5092b910fc",
+  "requestedModel": "difficulty.remote-only",
+  "aliasId": "difficulty.remote-only",
+  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "selectedModel": "deepseek/deepseek-v4-pro",
+  "providerId": "deepseek",
+  "providerFamily": "deepseek",
+  "vendorId": null,
+  "adapterFamily": "ai-sdk-openai-compatible",
+  "executionFamily": "remote-service",
+  "statusCode": null,
+  "latencyMs": null,
+  "difficulty": "easy"
+}

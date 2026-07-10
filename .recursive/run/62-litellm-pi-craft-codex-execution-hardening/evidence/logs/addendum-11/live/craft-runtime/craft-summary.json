@@ -1,0 +1,42 @@
+[
+  {
+    "model": "difficulty.remote-only",
+    "name": "craft-difficulty-remote-only",
+    "exitCode": 0,
+    "durationMs": 11448,
+    "log": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\craft-runtime\\craft-difficulty-remote-only.log",
+    "output": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\craft-runtime\\craft-difficulty-remote-only-result.json",
+    "outputExists": true,
+    "logPreview": "{\r\n  \"ok\": true,\r\n  \"elapsedMs\": 10480,\r\n  \"sessionId\": \"260709-noble-ember\",\r\n  \"messageCount\": 2\r\n}\r\n"
+  },
+  {
+    "model": "baseline.remote-only",
+    "name": "craft-baseline-remote-only",
+    "exitCode": 0,
+    "durationMs": 9680,
+    "log": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\craft-runtime\\craft-baseline-remote-only.log",
+    "output": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\craft-runtime\\craft-baseline-remote-only-result.json",
+    "outputExists": true,
+    "logPreview": "{\r\n  \"ok\": true,\r\n  \"elapsedMs\": 9061,\r\n  \"sessionId\": \"260709-prime-granite\",\r\n  \"messageCount\": 2\r\n}\r\n"
+  },
+  {
+    "model": "deepseek/deepseek-v4-pro",
+    "name": "craft-deepseek-exact",
+    "exitCode": 0,
+    "durationMs": 7523,
+    "log": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\craft-runtime\\craft-deepseek-exact.log",
+    "output": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\craft-runtime\\craft-deepseek-exact-result.json",
+    "outputExists": true,
+    "logPreview": "{\r\n  \"ok\": true,\r\n  \"elapsedMs\": 6881,\r\n  \"sessionId\": \"260709-windy-eagle\",\r\n  \"messageCount\": 2\r\n}\r\n"
+  },
+  {
+    "model": "chatgpt/gpt-5.4",
+    "name": "craft-chatgpt-exact",
+    "exitCode": 0,
+    "durationMs": 10389,
+    "log": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\craft-runtime\\craft-chatgpt-exact.log",
+    "output": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\craft-runtime\\craft-chatgpt-exact-result.json",
+    "outputExists": true,
+    "logPreview": "{\r\n  \"ok\": true,\r\n  \"elapsedMs\": 9760,\r\n  \"sessionId\": \"260709-safe-opal\",\r\n  \"messageCount\": 2\r\n}\r\n"
+  }
+]

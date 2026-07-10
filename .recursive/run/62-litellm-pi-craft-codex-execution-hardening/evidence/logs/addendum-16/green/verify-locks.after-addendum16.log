@@ -1,0 +1,83 @@
+
+Recursive Lock Verification
+=====================
+
+Repository: D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+Run ID: 62-litellm-pi-craft-codex-execution-hardening
+
+Checking run: 62-litellm-pi-craft-codex-execution-hardening
+--------------------------------------------------
+Workflow profile: recursive-mode-audit-v1
+[PASS] Requirements: Valid (locked at 2026-07-07T17:54:39Z)
+[PASS] Worktree Setup: Valid (locked at 2026-07-07T19:38:35Z)
+[PASS] AS-IS Analysis: Valid (locked at 2026-07-07T17:54:39Z)
+[PASS] Root Cause: Valid (locked at 2026-07-07T17:54:39Z)
+[PASS] TO-BE Plan: Valid (locked at 2026-07-07T17:54:39Z)
+[PASS] Implementation: Valid (locked at 2026-07-07T19:38:35Z)
+[PASS] Code Review: Valid (locked at 2026-07-08T00:43:33Z)
+[PASS] Test Summary: Valid (locked at 2026-07-07T19:38:40Z)
+[PASS] Manual QA: Valid (locked at 2026-07-07T19:38:53Z)
+[PASS] Decisions Update: Valid (locked at 2026-07-07T19:38:53Z)
+[PASS] State Update: Valid (locked at 2026-07-07T19:38:53Z)
+[PASS] Memory Impact: Valid (locked at 2026-07-08T00:13:12Z)
+
+Addenda:
+[PASS]   01-as-is.upstream-gap.00-worktree.addendum-01.md: Valid
+[PASS]   01.5-root-cause.audit-remediation.addendum-09.md: Valid
+[FAIL]   01.5-root-cause.codex-assistant-history-content-parts.addendum-15.md: No Status field found
+[FAIL]   01.5-root-cause.codex-subscription-responses-transport.addendum-13.md: Status is 'DRAFT', expected 'LOCKED'
+[PASS]   01.5-root-cause.pi-cooldown-retry.addendum-10.md: Valid
+[PASS]   01.5-root-cause.provider-agnostic-routing-preferences.addendum-16.md: Valid
+[FAIL]   01.5-root-cause.reasoning-stream-routing-agnostic.addendum-12.md: Status is 'DRAFT', expected 'LOCKED'
+[PASS]   02-to-be-plan.audit-remediation.addendum-02.md: Valid
+[PASS]   02-to-be-plan.audit-remediation.addendum-03.md: Valid
+[PASS]   02-to-be-plan.audit-remediation.addendum-04.md: Valid
+[PASS]   02-to-be-plan.audit-remediation.addendum-05.md: Valid
+[FAIL]   02-to-be-plan.audit-remediation.addendum-06.md: Status is 'DRAFT', expected 'LOCKED'
+[FAIL]   02-to-be-plan.audit-remediation.addendum-07.md: Status is 'DRAFT', expected 'LOCKED'
+[PASS]   02-to-be-plan.audit-remediation.addendum-08.md: Valid
+[FAIL]   02-to-be-plan.codex-assistant-history-content-parts.addendum-15.md: No Status field found
+[FAIL]   02-to-be-plan.codex-subscription-native-streaming-parity.addendum-14.md: Status is 'COMPLETE', expected 'LOCKED'
+[FAIL]   02-to-be-plan.codex-subscription-responses-transport.addendum-13.md: Status is 'DRAFT', expected 'LOCKED'
+[PASS]   02-to-be-plan.pi-cooldown-retry.addendum-10.md: Valid
+[PASS]   02-to-be-plan.provider-agnostic-routing-preferences.addendum-16.md: Valid
+[FAIL]   02-to-be-plan.reasoning-stream-consumer-runtime.addendum-11.md: Status is 'DRAFT', expected 'LOCKED'
+[FAIL]   02-to-be-plan.reasoning-stream-routing-agnostic.addendum-12.md: Status is 'DRAFT', expected 'LOCKED'
+[PASS]   03-implementation-summary.audit-remediation.addendum-01.md: Valid
+[PASS]   03-implementation-summary.audit-remediation.addendum-04.md: Valid
+[PASS]   03-implementation-summary.audit-remediation.addendum-05.md: Valid
+[PASS]   03-implementation-summary.audit-remediation.addendum-08.md: Valid
+[PASS]   03-implementation-summary.audit-remediation.addendum-09.md: Valid
+[FAIL]   03-implementation-summary.codex-assistant-history-content-parts.addendum-15.md: No Status field found
+[FAIL]   03-implementation-summary.codex-subscription-native-streaming-parity.addendum-14.md: Status is 'COMPLETE', expected 'LOCKED'
+[PASS]   03-implementation-summary.pi-cooldown-retry.addendum-10.md: Valid
+[PASS]   03-implementation-summary.provider-agnostic-routing-preferences.addendum-16.md: Valid
+[FAIL]   03-implementation-summary.reasoning-stream-consumer-runtime.addendum-11.md: Status is 'DRAFT', expected 'LOCKED'
+[FAIL]   03.5-code-review.reasoning-stream-consumer-runtime.addendum-11.md: Status is 'DRAFT', expected 'LOCKED'
+[PASS]   04-test-summary.audit-remediation.addendum-08.md: Valid
+[PASS]   04-test-summary.audit-remediation.addendum-09.md: Valid
+[FAIL]   04-test-summary.codex-assistant-history-content-parts.addendum-15.md: No Status field found
+[FAIL]   04-test-summary.codex-subscription-native-streaming-parity.addendum-14.md: Status is 'COMPLETE', expected 'LOCKED'
+[PASS]   04-test-summary.pi-cooldown-retry.addendum-10.md: Valid
+[PASS]   04-test-summary.provider-agnostic-routing-preferences.addendum-16.md: Valid
+[FAIL]   04-test-summary.reasoning-stream-consumer-runtime.addendum-11.md: Status is 'DRAFT', expected 'LOCKED'
+[PASS]   05-manual-qa.audit-remediation.addendum-03.md: Valid
+[PASS]   05-manual-qa.audit-remediation.addendum-08.md: Valid
+[FAIL]   05-manual-qa.codex-assistant-history-content-parts.addendum-15.md: No Status field found
+[FAIL]   05-manual-qa.codex-subscription-native-streaming-parity.addendum-14.md: Status is 'COMPLETE', expected 'LOCKED'
+[PASS]   05-manual-qa.pi-cooldown-retry.addendum-10.md: Valid
+[PASS]   05-manual-qa.provider-agnostic-routing-preferences.addendum-16.md: Valid
+[FAIL]   05-manual-qa.reasoning-stream-consumer-runtime.addendum-11.md: Status is 'DRAFT', expected 'LOCKED'
+[PASS]   08-memory-impact.upstream-gap.02-to-be-plan.addendum-01.md: Valid
+
+[FAIL] Run '62-litellm-pi-craft-codex-execution-hardening': Lock verification failed
+
+=====================
+Summary
+=====================
+
+Total runs checked: 1
+[PASS] Valid runs: 0
+[FAIL] Failed runs: 1
+
+[FAIL] Some locks failed verification

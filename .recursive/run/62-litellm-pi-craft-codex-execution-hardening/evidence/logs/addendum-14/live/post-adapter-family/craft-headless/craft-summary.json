@@ -1,0 +1,42 @@
+[
+  {
+    "model": "difficulty.remote-only",
+    "name": "craft-difficulty-remote-only",
+    "exitCode": 0,
+    "durationMs": 5669,
+    "log": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\post-adapter-family\\craft-headless\\craft-difficulty-remote-only.log",
+    "output": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\post-adapter-family\\craft-headless\\craft-difficulty-remote-only-result.json",
+    "outputExists": true,
+    "logPreview": "{\r\n  \"ok\": true,\r\n  \"elapsedMs\": 4980,\r\n  \"sessionId\": \"260709-fresh-cliff\",\r\n  \"messageCount\": 2\r\n}"
+  },
+  {
+    "model": "baseline.remote-only",
+    "name": "craft-baseline-remote-only",
+    "exitCode": 0,
+    "durationMs": 6354,
+    "log": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\post-adapter-family\\craft-headless\\craft-baseline-remote-only.log",
+    "output": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\post-adapter-family\\craft-headless\\craft-baseline-remote-only-result.json",
+    "outputExists": true,
+    "logPreview": "{\r\n  \"ok\": true,\r\n  \"elapsedMs\": 5201,\r\n  \"sessionId\": \"260709-smooth-spray\",\r\n  \"messageCount\": 2\r\n}"
+  },
+  {
+    "model": "chatgpt/gpt-5.4",
+    "name": "craft-chatgpt-exact",
+    "exitCode": 0,
+    "durationMs": 5600,
+    "log": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\post-adapter-family\\craft-headless\\craft-chatgpt-exact.log",
+    "output": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\post-adapter-family\\craft-headless\\craft-chatgpt-exact-result.json",
+    "outputExists": true,
+    "logPreview": "{\r\n  \"ok\": true,\r\n  \"elapsedMs\": 4981,\r\n  \"sessionId\": \"260709-long-inlet\",\r\n  \"messageCount\": 2\r\n}"
+  },
+  {
+    "model": "deepseek/deepseek-v4-pro",
+    "name": "craft-deepseek-exact",
+    "exitCode": 0,
+    "durationMs": 7422,
+    "log": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\post-adapter-family\\craft-headless\\craft-deepseek-exact.log",
+    "output": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\post-adapter-family\\craft-headless\\craft-deepseek-exact-result.json",
+    "outputExists": true,
+    "logPreview": "{\r\n  \"ok\": true,\r\n  \"elapsedMs\": 6810,\r\n  \"sessionId\": \"260709-silver-bison\",\r\n  \"messageCount\": 2\r\n}"
+  }
+]

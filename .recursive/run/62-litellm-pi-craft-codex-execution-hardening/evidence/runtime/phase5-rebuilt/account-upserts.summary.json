@@ -1,0 +1,191 @@
+[
+  {
+    "providerAccountId": "moonshot.personal.kimi-code",
+    "statusCode": 200,
+    "ok": true,
+    "headers": {
+      "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+      "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": "*",
+      "connection": "keep-alive",
+      "content-length": "722",
+      "content-type": "application/json",
+      "date": "Tue, 07 Jul 2026 18:47:58 GMT",
+      "keep-alive": "timeout=5"
+    },
+    "body": {
+      "providerAccountId": "moonshot.personal.kimi-code",
+      "providerId": "moonshot",
+      "providerKind": "provider-openai",
+      "orgScope": "personal",
+      "accountScope": "workspace-default",
+      "credentialRef": {
+        "backend": "local-file",
+        "ref": "oauth/moonshot/moonshot.personal.kimi-code"
+      },
+      "authMode": "oauth2-device-code",
+      "regionPolicy": {
+        "mode": "prefer",
+        "regions": [
+          "global"
+        ]
+      },
+      "baseUrlOverride": null,
+      "allowedModels": [
+        "moonshot/kimi-k2.7-code"
+      ],
+      "modelRoleBindings": [
+        {
+          "modelId": "moonshot/kimi-k2.7-code",
+          "roleIds": [
+            "analyst",
+            "coder",
+            "data",
+            "writer",
+            "translator",
+            "operator"
+          ]
+        }
+      ],
+      "deniedModels": [],
+      "entitlementTags": [
+        "chat"
+      ],
+      "budgetPolicyRef": "budget.default",
+      "quotaPolicyRef": "quota.default",
+      "status": "active",
+      "healthStatus": "healthy",
+      "rotationState": "stable"
+    }
+  },
+  {
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "statusCode": 200,
+    "ok": true,
+    "headers": {
+      "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+      "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": "*",
+      "connection": "keep-alive",
+      "content-length": "882",
+      "content-type": "application/json",
+      "date": "Tue, 07 Jul 2026 18:47:58 GMT",
+      "keep-alive": "timeout=5"
+    },
+    "body": {
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "providerId": "deepseek",
+      "providerKind": "provider-openai",
+      "orgScope": "personal",
+      "accountScope": "workspace-default",
+      "credentialRef": {
+        "backend": "local-file",
+        "ref": "api-key/deepseek/deepseek.personal.deepseek-api-key"
+      },
+      "authMode": "api-key-static",
+      "regionPolicy": {
+        "mode": "prefer",
+        "regions": [
+          "global"
+        ]
+      },
+      "baseUrlOverride": null,
+      "allowedModels": [
+        "deepseek/deepseek-v4-flash",
+        "deepseek/deepseek-v4-pro"
+      ],
+      "modelRoleBindings": [
+        {
+          "modelId": "deepseek/deepseek-v4-flash",
+          "roleIds": [
+            "analyst",
+            "coder",
+            "data",
+            "writer",
+            "translator",
+            "operator"
+          ]
+        },
+        {
+          "modelId": "deepseek/deepseek-v4-pro",
+          "roleIds": [
+            "analyst",
+            "coder",
+            "data",
+            "writer",
+            "translator",
+            "operator"
+          ]
+        }
+      ],
+      "deniedModels": [],
+      "entitlementTags": [
+        "chat"
+      ],
+      "budgetPolicyRef": "budget.default",
+      "quotaPolicyRef": "quota.default",
+      "status": "active",
+      "healthStatus": "healthy",
+      "rotationState": "not-required"
+    }
+  },
+  {
+    "providerAccountId": "openai.personal.openai-codex-subscription",
+    "statusCode": 200,
+    "ok": true,
+    "headers": {
+      "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+      "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": "*",
+      "connection": "keep-alive",
+      "content-length": "730",
+      "content-type": "application/json",
+      "date": "Tue, 07 Jul 2026 18:47:58 GMT",
+      "keep-alive": "timeout=5"
+    },
+    "body": {
+      "providerAccountId": "openai.personal.openai-codex-subscription",
+      "providerId": "openai",
+      "providerKind": "provider-openai",
+      "orgScope": "personal",
+      "accountScope": "workspace-default",
+      "credentialRef": {
+        "backend": "local-file",
+        "ref": "oauth/openai/openai.personal.openai-codex-subscription"
+      },
+      "authMode": "oauth2-device-code",
+      "regionPolicy": {
+        "mode": "prefer",
+        "regions": [
+          "global"
+        ]
+      },
+      "baseUrlOverride": null,
+      "allowedModels": [
+        "chatgpt/gpt-5.4"
+      ],
+      "modelRoleBindings": [
+        {
+          "modelId": "chatgpt/gpt-5.4",
+          "roleIds": [
+            "analyst",
+            "coder",
+            "data",
+            "writer",
+            "translator",
+            "operator"
+          ]
+        }
+      ],
+      "deniedModels": [],
+      "entitlementTags": [
+        "chat"
+      ],
+      "budgetPolicyRef": "budget.default",
+      "quotaPolicyRef": "quota.default",
+      "status": "active",
+      "healthStatus": "healthy",
+      "rotationState": "stable"
+    }
+  }
+]

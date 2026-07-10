@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/sqlite-memory
+
+(node:41092) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (35 tests | 34 skipped) 335ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure preserves routed provider failure context and structured observation  333ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 34 skipped (35)
+   Start at  11:02:08
+   Duration  2.52s (transform 751ms, setup 0ms, collect 984ms, tests 335ms, environment 0ms, prepare 481ms)
+

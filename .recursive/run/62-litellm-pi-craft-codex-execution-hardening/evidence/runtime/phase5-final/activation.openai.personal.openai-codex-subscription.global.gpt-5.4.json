@@ -1,0 +1,22 @@
+{
+  "providerAccountId": "openai.personal.openai-codex-subscription",
+  "modelId": "chatgpt/gpt-5.4",
+  "region": "global",
+  "statusCode": 200,
+  "ok": true,
+  "body": {
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "providerAccountId": "openai.personal.openai-codex-subscription",
+    "providerId": "openai",
+    "modelId": "chatgpt/gpt-5.4",
+    "roleIds": [
+      "analyst",
+      "coder",
+      "data",
+      "operator",
+      "translator",
+      "writer"
+    ],
+    "status": "active"
+  }
+}

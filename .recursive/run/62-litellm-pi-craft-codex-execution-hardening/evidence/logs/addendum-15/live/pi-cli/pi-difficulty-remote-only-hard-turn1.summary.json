@@ -1,0 +1,7 @@
+{
+  "name": "pi-difficulty-remote-only-hard-turn1",
+  "exitCode": 0,
+  "durationMs": 7498,
+  "stdout": "PI_ALIAS_HARD_TURN1_OK\r\n",
+  "stderr": null
+}

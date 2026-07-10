@@ -1,0 +1,8 @@
+{
+  "model": "baseline.remote-only",
+  "timedOut": false,
+  "exitCode": 0,
+  "durationMs": 5006,
+  "stdout": "OK\n",
+  "stderr": null
+}

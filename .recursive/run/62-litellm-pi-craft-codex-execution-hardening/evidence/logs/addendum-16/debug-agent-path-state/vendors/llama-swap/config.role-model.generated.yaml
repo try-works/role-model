@@ -1,0 +1,7 @@
+logLevel: info
+metricsMaxInMemory: 100
+captureBuffer: 5
+models:
+  local/llama-3.1-8b-instruct:
+    cmd: llama-server --port ${PORT} --model ./models/llama-3.1-8b-instruct-q4.gguf
+groups: {}

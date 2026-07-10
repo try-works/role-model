@@ -1,0 +1,32 @@
+[
+  {
+    "requestId": "req-2c2cf0fb-2e60-4af1-b043-c5caef45fce7",
+    "requestedModel": "difficulty.remote-only",
+    "aliasId": "difficulty.remote-only",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "selectedModel": "chatgpt/gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "ai-sdk-openai",
+    "executionFamily": "remote-service",
+    "statusCode": null,
+    "latencyMs": null,
+    "difficulty": "hard"
+  },
+  {
+    "requestId": "req-dde3be2d-4f09-445b-8e8a-33bd5c0ca362",
+    "requestedModel": "difficulty.remote-only",
+    "aliasId": "difficulty.remote-only",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "selectedModel": "chatgpt/gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "ai-sdk-openai",
+    "executionFamily": "remote-service",
+    "statusCode": null,
+    "latencyMs": null,
+    "difficulty": "hard"
+  }
+]

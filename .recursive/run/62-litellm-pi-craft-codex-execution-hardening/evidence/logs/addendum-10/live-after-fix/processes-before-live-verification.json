@@ -1,0 +1,128 @@
+[
+  {
+    "ProcessId": 12320,
+    "ParentProcessId": 1688,
+    "Name": "RuntimeBroker.exe",
+    "CommandLine": "C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"
+  },
+  {
+    "ProcessId": 12540,
+    "ParentProcessId": 1688,
+    "Name": "WidgetService.exe",
+    "CommandLine": "\"C:\\Program Files\\WindowsApps\\Microsoft.WidgetsPlatformRuntime_1.6.19.0_x64__8wekyb3d8bbwe\\WidgetService\\WidgetService.exe\" -RegisterProcessAsComServer -Embedding"
+  },
+  {
+    "ProcessId": 15952,
+    "ParentProcessId": 1688,
+    "Name": "RuntimeBroker.exe",
+    "CommandLine": "C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"
+  },
+  {
+    "ProcessId": 21304,
+    "ParentProcessId": 1688,
+    "Name": "RuntimeBroker.exe",
+    "CommandLine": "C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"
+  },
+  {
+    "ProcessId": 22544,
+    "ParentProcessId": 10092,
+    "Name": "SnippingTool.exe",
+    "CommandLine": "\"C:\\Program Files\\WindowsApps\\Microsoft.ScreenSketch_11.2602.49.0_x64__8wekyb3d8bbwe\\SnippingTool\\SnippingTool.exe\" "
+  },
+  {
+    "ProcessId": 22268,
+    "ParentProcessId": 10092,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" "
+  },
+  {
+    "ProcessId": 25460,
+    "ParentProcessId": 22268,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=gpu-process --user-data-dir=\"C:\\Users\\erikb\\AppData\\Roaming\\Craft Agents\" --gpu-preferences=SAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAAQAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --field-trial-handle=1760,i,5653684168707859410,1982671062641355655,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=1756 /prefetch:2"
+  },
+  {
+    "ProcessId": 12604,
+    "ParentProcessId": 22268,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --user-data-dir=\"C:\\Users\\erikb\\AppData\\Roaming\\Craft Agents\" --standard-schemes=thumbnail --secure-schemes=sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=thumbnail,sentry-ipc --fetch-schemes=thumbnail,sentry-ipc --streaming-schemes=thumbnail --field-trial-handle=1760,i,5653684168707859410,1982671062641355655,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2016 /prefetch:11"
+  },
+  {
+    "ProcessId": 23044,
+    "ParentProcessId": 22268,
+    "Name": "Craft Agents.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=renderer --user-data-dir=\"C:\\Users\\erikb\\AppData\\Roaming\\Craft Agents\" --standard-schemes=thumbnail --secure-schemes=sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=thumbnail,sentry-ipc --fetch-schemes=thumbnail,sentry-ipc --streaming-schemes=thumbnail --app-path=\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\" --no-sandbox --no-zygote --video-capture-use-gpu-memory-buffer --lang=en-US --device-scale-factor=1.5 --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=4 --time-ticks-at-unix-epoch=-1783145382433654 --launch-time-ticks=75757204838 --field-trial-handle=1760,i,5653684168707859410,1982671062641355655,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708990060038890 --mojo-platform-channel-handle=3264 /prefetch:1"
+  },
+  {
+    "ProcessId": 20080,
+    "ParentProcessId": 10204,
+    "Name": "python.exe",
+    "CommandLine": "\"C:\\Python314\\python.exe\" -m http.server 8765 --directory D:\\DEV\\role-model\\.recursive\\run\\60-runtime-ui-paper-linear-review-alignment\\evidence"
+  },
+  {
+    "ProcessId": 44124,
+    "ParentProcessId": 1688,
+    "Name": "RuntimeBroker.exe",
+    "CommandLine": "C:\\Windows\\System32\\RuntimeBroker.exe -Embedding"
+  },
+  {
+    "ProcessId": 33972,
+    "ParentProcessId": 24436,
+    "Name": "pwsh.exe",
+    "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\nnode -e \\\"const http=require('http'); const fs=require('fs'); const path='C:/Users/erikb/AppData/Local/Temp/role-model-red/red.png'; const data=fs.readFileSync(path); const server=http.createServer((req,res)=>{ if(req.url==='/red.png'){ res.writeHead(200,{'Content-Type':'image/png','Content-Length':data.length}); res.end(data); return; } res.writeHead(404); res.end('not found'); }); server.listen(45678,'127.0.0.1',()=>console.log('red-server-ready'));\\\"\""
+  },
+  {
+    "ProcessId": 51800,
+    "ParentProcessId": 33972,
+    "Name": "node.exe",
+    "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" -e \"const http=require('http'); const fs=require('fs'); const path='C:/Users/erikb/AppData/Local/Temp/role-model-red/red.png'; const data=fs.readFileSync(path); const server=http.createServer((req,res)=>{ if(req.url==='/red.png'){ res.writeHead(200,{'Content-Type':'image/png','Content-Length':data.length}); res.end(data); return; } res.writeHead(404); res.end('not found'); }); server.listen(45678,'127.0.0.1',()=>console.log('red-server-ready'));\""
+  },
+  {
+    "ProcessId": 35724,
+    "ParentProcessId": 24436,
+    "Name": "pwsh.exe",
+    "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\nGet-ChildItem -Recurse -Force D:\\DEV\\role-model\\role-model-router -Include *.sqlite,*.db,*.sqlite-wal,*.sqlite-shm | Select-Object FullName, Length, LastWriteTime | Sort-Object LastWriteTime -Descending | Select-Object -First 40 | Format-Table -AutoSize\""
+  },
+  {
+    "ProcessId": 38368,
+    "ParentProcessId": 48772,
+    "Name": "node_repl.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\1b23c930bdf84ed6\\bin\\node_repl.exe\""
+  },
+  {
+    "ProcessId": 56912,
+    "ParentProcessId": 48772,
+    "Name": "node_repl.exe",
+    "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\1b23c930bdf84ed6\\bin\\node_repl.exe\""
+  },
+  {
+    "ProcessId": 57044,
+    "ParentProcessId": 1688,
+    "Name": "mscopilot_proxy.exe",
+    "CommandLine": "\"C:\\Program Files (x86)\\Microsoft\\Copilot\\Application\\mscopilot_proxy.exe\" -Embedding"
+  },
+  {
+    "ProcessId": 50360,
+    "ParentProcessId": 48772,
+    "Name": "pwsh.exe",
+    "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\nGet-ChildItem -Recurse D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router -Include *.log,*.jsonl -File | Select-Object FullName,Length,LastWriteTime | Sort-Object LastWriteTime -Descending | Select-Object -First 60 | Format-Table -AutoSize | Out-String -Width 220\""
+  },
+  {
+    "ProcessId": 44316,
+    "ParentProcessId": 14524,
+    "Name": "node.exe",
+    "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" D:\\pi\\node_modules\\.bin/../@earendil-works/pi-coding-agent/dist/cli.js "
+  },
+  {
+    "ProcessId": 34240,
+    "ParentProcessId": 14268,
+    "Name": "role-model-runtime.exe",
+    "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+  },
+  {
+    "ProcessId": 62488,
+    "ParentProcessId": 48772,
+    "Name": "pwsh.exe",
+    "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$outDir='.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/logs/addendum-10/live-after-fix'; New-Item -ItemType Directory -Force $outDir | Out-Null; Get-CimInstance Win32_Process | Where-Object { $_.Name -match 'role-model|runtime|llama|litellm|python|node|pi|Craft Agents' -or $_.CommandLine -match 'role-model|runtime|llama|litellm|pi-role-model|Craft Agents|\\.tmp-craft-headless' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 \\\"$outDir/processes-before-live-verification.json\\\"; Get-NetTCPConnection -LocalPort 3456 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State,OwningProcess | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 \\\"$outDir/port-3456-before-live-verification.json\\\"; Get-Content \\\"$outDir/port-3456-before-live-verification.json\\\"\""
+  }
+]

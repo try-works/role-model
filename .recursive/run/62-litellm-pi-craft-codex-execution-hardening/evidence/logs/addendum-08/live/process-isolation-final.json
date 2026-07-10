@@ -1,0 +1,120 @@
+{
+  "port3456": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 62535,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 62037,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 55684,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 59979,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50345,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 58236,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 62416,
+      "State": 5,
+      "OwningProcess": 19056
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 54008,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "0.0.0.0",
+      "RemotePort": 0,
+      "State": 2,
+      "OwningProcess": 19056
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 58802,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 59517,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 58350,
+      "State": 11,
+      "OwningProcess": 0
+    }
+  ],
+  "matchingProcesses": [
+    {
+      "ProcessId": 19056,
+      "ParentProcessId": 43644,
+      "Name": "role-model-runtime.exe",
+      "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+    },
+    {
+      "ProcessId": 6480,
+      "ParentProcessId": 48772,
+      "Name": "pwsh.exe",
+      "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$ErrorActionPreference = 'Continue'\n$port = Get-NetTCPConnection -LocalPort 3456 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State,OwningProcess\n$related = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'side-by-side|ckpt|role-model-runtime|\\.tmp-craft-headless' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine\n$craftTmp = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '\\.tmp-craft-headless' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine\n[pscustomobject]@{ port3456 = $port; matchingProcesses = $related; remainingTmpCraftProcesses = $craftTmp } | ConvertTo-Json -Depth 8 | Tee-Object -FilePath '.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-08\\live\\process-isolation-final.json'\""
+    }
+  ],
+  "remainingTmpCraftProcesses": {
+    "ProcessId": 6480,
+    "ParentProcessId": 48772,
+    "Name": "pwsh.exe",
+    "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$ErrorActionPreference = 'Continue'\n$port = Get-NetTCPConnection -LocalPort 3456 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State,OwningProcess\n$related = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'side-by-side|ckpt|role-model-runtime|\\.tmp-craft-headless' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine\n$craftTmp = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '\\.tmp-craft-headless' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine\n[pscustomobject]@{ port3456 = $port; matchingProcesses = $related; remainingTmpCraftProcesses = $craftTmp } | ConvertTo-Json -Depth 8 | Tee-Object -FilePath '.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-08\\live\\process-isolation-final.json'\""
+  }
+}

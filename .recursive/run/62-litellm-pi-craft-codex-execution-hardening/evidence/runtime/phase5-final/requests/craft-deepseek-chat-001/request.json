@@ -1,0 +1,13 @@
+{
+  "model": "deepseek/deepseek-v4-flash",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Reply with exactly two words."
+    },
+    {
+      "role": "user",
+      "content": "Describe the chosen endpoint."
+    }
+  ]
+}

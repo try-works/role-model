@@ -1,0 +1,61 @@
+{
+  "providerAccountId": "deepseek.personal.deepseek-api-key",
+  "statusCode": 200,
+  "ok": true,
+  "body": {
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "providerId": "deepseek",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "workspace-default",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "api-key/deepseek/deepseek.personal.deepseek-api-key"
+    },
+    "authMode": "api-key-static",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "global"
+      ]
+    },
+    "baseUrlOverride": null,
+    "allowedModels": [
+      "deepseek/deepseek-v4-flash",
+      "deepseek/deepseek-v4-pro"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "deepseek/deepseek-v4-flash",
+        "roleIds": [
+          "analyst",
+          "coder",
+          "data",
+          "writer",
+          "translator",
+          "operator"
+        ]
+      },
+      {
+        "modelId": "deepseek/deepseek-v4-pro",
+        "roleIds": [
+          "analyst",
+          "coder",
+          "data",
+          "writer",
+          "translator",
+          "operator"
+        ]
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "not-required"
+  }
+}

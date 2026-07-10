@@ -3076,1344 +3076,662 @@ describe("runtime-host-bridge", () => {
     expect(registry.connectors[0].tools.map((t) => t.name)).toEqual(["lookupRegistry"]);
   });
 
-  test("buildCodexAppServerDynamicTools namespaces request-scoped tools for the app-server protocol", () => {
-    expect(
-      typeof (bridge as { buildCodexAppServerDynamicTools?: unknown })
-        .buildCodexAppServerDynamicTools,
-    ).toBe("function");
-
-    const dynamicTools = (
+  test("Codex Subscription sanitizes unsupported Chat Completions optional parameters", async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+    const fetchMock = vi.fn(async (_url: string | URL, init?: RequestInit) => {
+      capturedBody = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+      return new Response(
+        `data: ${JSON.stringify({
+          type: "response.completed",
+          response: {
+            id: "resp_codex_parameter_policy_chat",
+            status: "completed",
+            output_text: "ok",
+            usage: { input_tokens: 3, output_tokens: 1 },
+          },
+        })}\n\n`,
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      );
+    });
+    const adapter = (
       bridge as {
-        buildCodexAppServerDynamicTools: (requestCapture: {
-          url: string;
-          body: Record<string, unknown>;
-        }) => readonly unknown[];
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{
+            statusCode: number;
+            vendorMetadata?: {
+              parameterSanitization?: readonly Record<string, unknown>[];
+            };
+          }>;
+        };
       }
-    ).buildCodexAppServerDynamicTools({
-      url: "https://api.openai.test/v1/chat/completions",
-      body: {
-        model: "gpt-5.4",
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "read_file",
-              description: "Read a file from the repository.",
-              parameters: {
-                type: "object",
-                properties: {
-                  path: {
-                    type: "string",
-                  },
-                },
-                required: ["path"],
-              },
-            },
-          },
-          {
-            type: "function",
-            function: {
-              name: "apply_patch",
-              description: "Apply a diff patch.",
-              parameters: {
-                type: "object",
-                properties: {
-                  diff: {
-                    type: "string",
-                  },
-                },
-                required: ["diff"],
-              },
-            },
-          },
-        ],
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
+
+    const result = await adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-parameter-policy-tests",
+      requestId: "req-codex-parameter-policy-chat-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/chat/completions",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: true,
+          temperature: 0,
+          max_tokens: 32,
+          max_completion_tokens: 32,
+          messages: [{ role: "user", content: "Say OK." }],
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
       },
     });
 
-    expect(dynamicTools).toEqual([
-      {
-        type: "namespace",
-        name: "role_model_request",
-        description: "Request-scoped tools bridged from the calling runtime.",
-        tools: [
-          {
-            type: "function",
-            name: "request_read_file",
-            description: "Read a file from the repository.",
-            inputSchema: {
-              type: "object",
-              properties: {
-                path: {
-                  type: "string",
-                },
-              },
-              required: ["path"],
-            },
-          },
-          {
-            type: "function",
-            name: "request_apply_patch",
-            description: "Apply a diff patch.",
-            inputSchema: {
-              type: "object",
-              properties: {
-                diff: {
-                  type: "string",
-                },
-              },
-              required: ["diff"],
-            },
-          },
-        ],
-      },
+    expect(result.statusCode).toBe(200);
+    expect(capturedBody).toEqual(
+      expect.objectContaining({
+        model: "gpt-5.4",
+        store: false,
+        stream: true,
+        include: ["reasoning.encrypted_content"],
+        input: [{ role: "user", content: [{ type: "input_text", text: "Say OK." }] }],
+      }),
+    );
+    expect(capturedBody).not.toHaveProperty("temperature");
+    expect(capturedBody).not.toHaveProperty("max_tokens");
+    expect(capturedBody).not.toHaveProperty("max_completion_tokens");
+    expect(capturedBody).not.toHaveProperty("max_output_tokens");
+    expect(result.vendorMetadata?.parameterSanitization).toEqual([
+      expect.objectContaining({
+        field: "temperature",
+        sourceSurface: "openai.chat.completions",
+        targetSurface: "chatgpt.codex.responses",
+        action: "drop_with_receipt",
+        adapterFamily: "codex-subscription-responses",
+        providerId: "openai",
+        vendorId: "chatgpt-codex-responses",
+      }),
+      expect.objectContaining({
+        field: "max_tokens",
+        sourceSurface: "openai.chat.completions",
+        targetSurface: "chatgpt.codex.responses",
+        action: "drop_with_receipt",
+      }),
+      expect.objectContaining({
+        field: "max_completion_tokens",
+        sourceSurface: "openai.chat.completions",
+        targetSurface: "chatgpt.codex.responses",
+        action: "drop_with_receipt",
+      }),
     ]);
   });
 
-  test("readCodexThreadIdFromAppServerMessage accepts both thread/start results and thread/started notifications", () => {
-    expect(
-      typeof (bridge as { readCodexThreadIdFromAppServerMessage?: unknown })
-        .readCodexThreadIdFromAppServerMessage,
-    ).toBe("function");
-
-    const readCodexThreadIdFromAppServerMessage = (
-      bridge as {
-        readCodexThreadIdFromAppServerMessage: (message: Record<string, unknown>) => string;
-      }
-    ).readCodexThreadIdFromAppServerMessage;
-
-    expect(
-      readCodexThreadIdFromAppServerMessage({
-        id: 2,
-        result: {
-          thread: {
-            id: "thr_from_result",
+  test("Codex Subscription sanitizes unsupported Responses optional parameters", async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+    const fetchMock = vi.fn(async (_url: string | URL, init?: RequestInit) => {
+      capturedBody = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+      return new Response(
+        `data: ${JSON.stringify({
+          type: "response.completed",
+          response: {
+            id: "resp_codex_parameter_policy_responses",
+            status: "completed",
+            output_text: "ok",
+            usage: { input_tokens: 3, output_tokens: 1 },
           },
-        },
-      }),
-    ).toBe("thr_from_result");
-
-    expect(
-      readCodexThreadIdFromAppServerMessage({
-        method: "thread/started",
-        params: {
-          thread: {
-            id: "thr_from_notification",
-          },
-        },
-      }),
-    ).toBe("thr_from_notification");
-  });
-
-  test("normalizeCodexAppServerModelName strips provider prefixes before calling the Codex app-server", () => {
-    expect(
-      typeof (bridge as { normalizeCodexAppServerModelName?: unknown })
-        .normalizeCodexAppServerModelName,
-    ).toBe("function");
-
-    const normalizeCodexAppServerModelName = (
-      bridge as {
-        normalizeCodexAppServerModelName: (model: string) => string;
-      }
-    ).normalizeCodexAppServerModelName;
-
-    expect(normalizeCodexAppServerModelName("chatgpt/gpt-5.4")).toBe("gpt-5.4");
-    expect(normalizeCodexAppServerModelName("openai/gpt-5.5")).toBe("gpt-5.5");
-    expect(normalizeCodexAppServerModelName("gpt-5.4")).toBe("gpt-5.4");
-  });
-
-  test("executeCodexAppServerTurnOverStdio preserves image-bearing chat input as structured app-server content", async () => {
-    expect(
-      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
-        .executeCodexAppServerTurnOverStdio,
-    ).toBe("function");
-
-    const fakeAppServer = spawn(
-      process.execPath,
-      [
-        "-e",
-        [
-          "const fs = require('node:fs');",
-          "const readline = require('node:readline');",
-          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
-          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
-          "rl.on('line', (line) => {",
-          "  const message = JSON.parse(line);",
-          "  if (message.id === 1 && message.method === 'initialize') {",
-          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
-          "    return;",
-          "  }",
-          "  if (message.method === 'initialized') {",
-          "    return;",
-          "  }",
-          "  if (message.id === 2 && message.method === 'thread/start') {",
-          "    send({ id: 2, result: { thread: { id: 'thr_test_stdio_image' } } });",
-          "    return;",
-          "  }",
-          "  if (message.id === 3 && message.method === 'turn/start') {",
-          "    const input = Array.isArray(message.params?.input) ? message.params.input : [];",
-          "    const hasInputImage = input.some((entry) => entry && entry.type === 'localImage' && typeof entry.path === 'string' && entry.path.endsWith('.png') && fs.existsSync(entry.path));",
-          "    const hasInputText = input.some((entry) => entry && entry.type === 'text' && Array.isArray(entry.text_elements) && typeof entry.text === 'string' && entry.text.includes('Reply with the dominant color.'));",
-          "    if (!hasInputImage || !hasInputText) {",
-          "      send({ method: 'turn/failed', params: { error: { message: 'missing structured multimodal input', code: 'invalid_request', data: { input } } } });",
-          "      setTimeout(() => process.exit(0), 0);",
-          "      return;",
-          "    }",
-          "    send({ id: 3, result: { accepted: true } });",
-          "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 7, outputTokens: 2 } } } });",
-          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'red' } } });",
-          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_stdio_image_1' } } });",
-          "    setTimeout(() => process.exit(0), 0);",
-          "  }",
-          "});",
-        ].join(" "),
-      ],
-      {
-        stdio: ["pipe", "pipe", "pipe"],
-        windowsHide: true,
-      },
-    );
-
-    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-image-"));
-
-    try {
-      const result = await (
-        bridge as {
-          executeCodexAppServerTurnOverStdio: (input: {
-            child: ReturnType<typeof spawn>;
-            model: string;
-            requestCapture: {
-              url: string;
-              body: Record<string, unknown>;
-            };
-            workspaceRoot: string;
-          }) => Promise<{
-            finishReason: string;
-            outputText: string;
-            usage: {
-              inputTokens: number;
-              outputTokens: number;
-            };
-          }>;
-        }
-      ).executeCodexAppServerTurnOverStdio({
-        child: fakeAppServer,
-        model: "gpt-5.4",
-        requestCapture: {
-          url: "https://api.openai.com/v1/chat/completions",
-          body: {
-            model: "chatgpt/gpt-5.4",
-            messages: [
-              {
-                role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: "Reply with the dominant color.",
-                  },
-                  {
-                    type: "image_url",
-                    image_url: {
-                      url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFElEQVR42mP8z8DAwMDAxMDAwMAAAAf+AQM7vRztAAAAAElFTkSuQmCC",
-                      detail: "high",
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-        },
-        workspaceRoot,
-      });
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          finishReason: "stop",
-          outputText: "red",
-          usage: {
-            inputTokens: 7,
-            outputTokens: 2,
-          },
-        }),
-      );
-    } finally {
-      fakeAppServer.kill();
-      await rm(workspaceRoot, { recursive: true, force: true });
-    }
-  });
-
-  test("executeCodexAppServerTurnOverStdio downloads remote image URLs into localImage inputs", async () => {
-    expect(
-      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
-        .executeCodexAppServerTurnOverStdio,
-    ).toBe("function");
-
-    const imageBytes = Buffer.from(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY/jPwPAfAAUAAf+mXJtdAAAAAElFTkSuQmCC",
-      "base64",
-    );
-    const imageServer = createServer((request, response) => {
-      if (request.url === "/red.png") {
-        response.writeHead(200, {
-          "content-type": "image/png",
-          "content-length": String(imageBytes.length),
-        });
-        response.end(imageBytes);
-        return;
-      }
-      response.writeHead(404);
-      response.end("not found");
-    });
-    await new Promise<void>((resolve) => imageServer.listen(0, "127.0.0.1", () => resolve()));
-    const imageAddress = imageServer.address();
-    expect(imageAddress && typeof imageAddress === "object").toBeTruthy();
-    const imagePort = imageAddress && typeof imageAddress === "object" ? imageAddress.port : 0;
-
-    const fakeAppServer = spawn(
-      process.execPath,
-      [
-        "-e",
-        [
-          "const fs = require('node:fs');",
-          "const readline = require('node:readline');",
-          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
-          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
-          "rl.on('line', (line) => {",
-          "  const message = JSON.parse(line);",
-          "  if (message.id === 1 && message.method === 'initialize') {",
-          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
-          "    return;",
-          "  }",
-          "  if (message.method === 'initialized') {",
-          "    return;",
-          "  }",
-          "  if (message.id === 2 && message.method === 'thread/start') {",
-          "    send({ id: 2, result: { thread: { id: 'thr_test_stdio_remote_image' } } });",
-          "    return;",
-          "  }",
-          "  if (message.id === 3 && message.method === 'turn/start') {",
-          "    const input = Array.isArray(message.params?.input) ? message.params.input : [];",
-          "    const remoteImage = input.find((entry) => entry && entry.type === 'localImage' && typeof entry.path === 'string');",
-          "    const hasExpectedBytes = remoteImage && fs.existsSync(remoteImage.path) && fs.readFileSync(remoteImage.path).toString('base64') === 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY/jPwPAfAAUAAf+mXJtdAAAAAElFTkSuQmCC';",
-          "    if (!hasExpectedBytes) {",
-          "      send({ method: 'turn/failed', params: { error: { message: 'remote image was not staged locally', code: 'invalid_request', data: { input } } } });",
-          "      setTimeout(() => process.exit(0), 0);",
-          "      return;",
-          "    }",
-          "    send({ id: 3, result: { accepted: true } });",
-          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'red' } } });",
-          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_stdio_remote_image_1' } } });",
-          "    setTimeout(() => process.exit(0), 0);",
-          "  }",
-          "});",
-        ].join(" "),
-      ],
-      {
-        stdio: ["pipe", "pipe", "pipe"],
-        windowsHide: true,
-      },
-    );
-
-    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-remote-image-"));
-
-    try {
-      const result = await (
-        bridge as {
-          executeCodexAppServerTurnOverStdio: (input: {
-            child: ReturnType<typeof spawn>;
-            model: string;
-            requestCapture: {
-              url: string;
-              body: Record<string, unknown>;
-            };
-            workspaceRoot: string;
-          }) => Promise<{
-            finishReason: string;
-            outputText: string;
-          }>;
-        }
-      ).executeCodexAppServerTurnOverStdio({
-        child: fakeAppServer,
-        model: "gpt-5.4",
-        requestCapture: {
-          url: "https://api.openai.com/v1/chat/completions",
-          body: {
-            model: "chatgpt/gpt-5.4",
-            messages: [
-              {
-                role: "user",
-                content: [
-                  {
-                    type: "text",
-                    text: "Reply with the dominant color.",
-                  },
-                  {
-                    type: "image_url",
-                    image_url: {
-                      url: `http://127.0.0.1:${imagePort}/red.png`,
-                      detail: "high",
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-        },
-        workspaceRoot,
-      });
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          finishReason: "stop",
-          outputText: "red",
-        }),
-      );
-    } finally {
-      fakeAppServer.kill();
-      imageServer.closeAllConnections?.();
-      await new Promise<void>((resolve) => imageServer.close(() => resolve()));
-      await rm(workspaceRoot, { recursive: true, force: true });
-    }
-  });
-
-  test("executeCodexAppServerTurnOverStdio completes a turn over stdio JSONL and returns tool executions", async () => {
-    expect(
-      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
-        .executeCodexAppServerTurnOverStdio,
-    ).toBe("function");
-
-    const fakeAppServer = spawn(
-      process.execPath,
-      [
-        "-e",
-        [
-          "const readline = require('node:readline');",
-          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
-          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
-          "rl.on('line', (line) => {",
-          "  const message = JSON.parse(line);",
-          "  if (message.id === 1 && message.method === 'initialize') {",
-          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
-          "    return;",
-          "  }",
-          "  if (message.method === 'initialized') {",
-          "    return;",
-          "  }",
-          "  if (message.id === 2 && message.method === 'thread/start') {",
-          "    send({ method: 'thread/started', params: { thread: { id: 'thr_test_stdio' } } });",
-          "    send({ id: 2, result: { thread: { id: 'thr_test_stdio' } } });",
-          "    return;",
-          "  }",
-          "  if (message.id === 3 && message.method === 'turn/start') {",
-          "    if (message.params?.sandboxPolicy?.type !== 'dangerFullAccess') {",
-          "      send({ method: 'turn/failed', params: { error: { message: 'sandbox policy mismatch', code: 'invalid_request', data: { received: message.params?.sandboxPolicy } } } });",
-          "      return;",
-          "    }",
-          "    send({ id: 3, result: { accepted: true } });",
-          "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 11, outputTokens: 0 } } } });",
-          "    send({ id: 91, method: 'item/tool/call', params: { callId: 'call_stdio_1', tool: 'request_read_file', arguments: { path: 'README.md' } } });",
-          "    return;",
-          "  }",
-          "  if (message.id === 91) {",
-          "    send({ method: 'item/agentMessage/delta', params: { delta: 'HEL' } });",
-          "    send({ method: 'item/agentMessage/delta', params: { delta: 'LO' } });",
-          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'HELLO' } } });",
-          "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 11, outputTokens: 5 } } } });",
-          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_stdio_1' } } });",
-          "    setTimeout(() => process.exit(0), 0);",
-          "  }",
-          "});",
-        ].join(" "),
-      ],
-      {
-        stdio: ["pipe", "pipe", "pipe"],
-        windowsHide: true,
-      },
-    );
-
-    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-turn-"));
-
-    try {
-      const result = await (
-        bridge as {
-          executeCodexAppServerTurnOverStdio: (input: {
-            child: ReturnType<typeof spawn>;
-            model: string;
-            requestCapture: {
-              url: string;
-              body: Record<string, unknown>;
-            };
-            workspaceRoot: string;
-            executeDynamicToolCall: (input: {
-              toolCallId: string;
-              toolName: string;
-              toolArguments: unknown;
-              workspaceRoot: string;
-            }) => Promise<{
-              success: boolean;
-              contentItems: readonly {
-                type: "inputText";
-                text: string;
-              }[];
-              execution: {
-                toolName: string;
-              };
-            }>;
-          }) => Promise<{
-            finishReason: string;
-            outputText: string;
-            usage: {
-              inputTokens: number;
-              outputTokens: number;
-            };
-            dynamicToolCalls: readonly {
-              id: string;
-              type: "function";
-              function: {
-                name: string;
-                arguments: string;
-              };
-            }[];
-            dynamicToolExecutions: readonly {
-              toolName: string;
-            }[];
-          }>;
-        }
-      ).executeCodexAppServerTurnOverStdio({
-        child: fakeAppServer,
-        model: "gpt-5.4",
-        requestCapture: {
-          url: "https://api.openai.com/v1/chat/completions",
-          body: {
-            model: "chatgpt/gpt-5.4",
-            messages: [{ role: "user", content: "Reply with exactly HELLO." }],
-            tools: [
-              {
-                type: "function",
-                function: {
-                  name: "read_file",
-                  description: "Read a file",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      path: {
-                        type: "string",
-                      },
-                    },
-                    required: ["path"],
-                  },
-                },
-              },
-            ],
-          },
-        },
-        workspaceRoot,
-        executeDynamicToolCall: async ({ toolCallId, toolName, toolArguments }) => ({
-          success: true,
-          contentItems: [
-            {
-              type: "inputText",
-              text: JSON.stringify({ toolCallId, toolName, toolArguments }),
-            },
-          ],
-          execution: {
-            toolName,
-          },
-        }),
-      });
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          finishReason: "stop",
-          outputText: "HELLO",
-          dynamicToolCalls: [
-            {
-              id: "call_stdio_1",
-              type: "function",
-              function: {
-                name: "read_file",
-                arguments: '{"path":"README.md"}',
-              },
-            },
-          ],
-          usage: {
-            inputTokens: 11,
-            outputTokens: 5,
-          },
-        }),
-      );
-      expect(result.dynamicToolExecutions).toEqual([{ toolName: "request_read_file" }]);
-    } finally {
-      fakeAppServer.kill();
-      await rm(workspaceRoot, { recursive: true, force: true });
-    }
-  });
-
-  test("executeCodexAppServerTurnOverStdio strips verbose schema annotations from dynamic tools", async () => {
-    expect(
-      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
-        .executeCodexAppServerTurnOverStdio,
-    ).toBe("function");
-
-    const verboseMarker = "VERBOSE_SCHEMA_DESCRIPTION_BLOCK_1234567890";
-    const fakeAppServer = spawn(
-      process.execPath,
-      [
-        "-e",
-        [
-          "const readline = require('node:readline');",
-          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
-          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
-          "rl.on('line', (line) => {",
-          "  const message = JSON.parse(line);",
-          "  if (message.id === 1 && message.method === 'initialize') {",
-          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
-          "    return;",
-          "  }",
-          "  if (message.method === 'initialized') {",
-          "    return;",
-          "  }",
-          "  if (message.id === 2 && message.method === 'thread/start') {",
-          "    const dynamicToolsJson = JSON.stringify(message.params?.dynamicTools ?? []);",
-          `    if (dynamicToolsJson.includes(${JSON.stringify(verboseMarker)})) {`,
-          "      send({ method: 'turn/failed', params: { error: { message: 'verbose schema annotations leaked into dynamic tools', code: 'invalid_request', data: { dynamicToolsJson } } } });",
-          "      setTimeout(() => process.exit(0), 0);",
-          "      return;",
-          "    }",
-          "    send({ id: 2, result: { thread: { id: 'thr_test_schema_compaction' } } });",
-          "    return;",
-          "  }",
-          "  if (message.id === 3 && message.method === 'turn/start') {",
-          "    send({ id: 3, result: { accepted: true } });",
-          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'ok' } } });",
-          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_schema_compaction_1' } } });",
-          "    setTimeout(() => process.exit(0), 0);",
-          "  }",
-          "});",
-        ].join(" "),
-      ],
-      {
-        stdio: ["pipe", "pipe", "pipe"],
-        windowsHide: true,
-      },
-    );
-
-    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-schema-compact-"));
-
-    try {
-      const result = await (
-        bridge as {
-          executeCodexAppServerTurnOverStdio: (input: {
-            child: ReturnType<typeof spawn>;
-            model: string;
-            requestCapture: {
-              url: string;
-              body: Record<string, unknown>;
-            };
-            workspaceRoot: string;
-          }) => Promise<{
-            finishReason: string;
-            outputText: string;
-          }>;
-        }
-      ).executeCodexAppServerTurnOverStdio({
-        child: fakeAppServer,
-        model: "gpt-5.4",
-        requestCapture: {
-          url: "https://api.openai.com/v1/chat/completions",
-          body: {
-            model: "chatgpt/gpt-5.4",
-            messages: [{ role: "user", content: "Reply with ok." }],
-            tools: [
-              {
-                type: "function",
-                function: {
-                  name: "read_file",
-                  description: "Read a file",
-                  parameters: {
-                    type: "object",
-                    description: verboseMarker,
-                    properties: {
-                      path: {
-                        type: "string",
-                        description: verboseMarker,
-                      },
-                    },
-                    required: ["path"],
-                  },
-                },
-              },
-            ],
-          },
-        },
-        workspaceRoot,
-      });
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          finishReason: "stop",
-          outputText: "ok",
-        }),
-      );
-    } finally {
-      fakeAppServer.kill();
-      await rm(workspaceRoot, { recursive: true, force: true });
-    }
-  });
-
-  test("executeCodexAppServerTurnOverStdio compacts oversized historical tool transcripts", async () => {
-    expect(
-      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
-        .executeCodexAppServerTurnOverStdio,
-    ).toBe("function");
-
-    const oversizedToolArguments = `VERBOSE_TOOL_ARGUMENT_BLOB_${"X".repeat(8_000)}`;
-    const oversizedToolOutput = `BEGIN-${"A".repeat(24_000)}-END`;
-    const fakeAppServer = spawn(
-      process.execPath,
-      [
-        "-e",
-        [
-          "const readline = require('node:readline');",
-          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
-          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
-          "rl.on('line', (line) => {",
-          "  const message = JSON.parse(line);",
-          "  if (message.id === 1 && message.method === 'initialize') {",
-          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
-          "    return;",
-          "  }",
-          "  if (message.method === 'initialized') {",
-          "    return;",
-          "  }",
-          "  if (message.id === 2 && message.method === 'thread/start') {",
-          "    send({ id: 2, result: { thread: { id: 'thr_test_history_compaction' } } });",
-          "    return;",
-          "  }",
-          "  if (message.id === 3 && message.method === 'turn/start') {",
-          "    const input = Array.isArray(message.params?.input) ? message.params.input : [];",
-          "    const turnText = input.filter((entry) => entry && entry.type === 'text' && typeof entry.text === 'string').map((entry) => entry.text).join('\\n\\n');",
-          `    if (turnText.includes(${JSON.stringify(oversizedToolArguments)})) {`,
-          "      send({ method: 'turn/failed', params: { error: { message: 'assistant tool-call arguments were replayed verbatim', code: 'invalid_request', data: { length: turnText.length } } } });",
-          "      setTimeout(() => process.exit(0), 0);",
-          "      return;",
-          "    }",
-          "    const repeatedA = (turnText.match(/A/g) ?? []).length;",
-          "    if (repeatedA > 6000) {",
-          "      send({ method: 'turn/failed', params: { error: { message: 'historical tool output was replayed at near-full size', code: 'invalid_request', data: { repeatedA, length: turnText.length } } } });",
-          "      setTimeout(() => process.exit(0), 0);",
-          "      return;",
-          "    }",
-          "    if (!turnText.includes('read_file') || !turnText.includes('BEGIN-') || !turnText.includes('-END')) {",
-          "      send({ method: 'turn/failed', params: { error: { message: 'compaction dropped important tool-history context', code: 'invalid_request', data: { turnText } } } });",
-          "      setTimeout(() => process.exit(0), 0);",
-          "      return;",
-          "    }",
-          "    send({ id: 3, result: { accepted: true } });",
-          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'compacted' } } });",
-          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_history_compaction_1' } } });",
-          "    setTimeout(() => process.exit(0), 0);",
-          "  }",
-          "});",
-        ].join(" "),
-      ],
-      {
-        stdio: ["pipe", "pipe", "pipe"],
-        windowsHide: true,
-      },
-    );
-
-    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-history-compact-"));
-
-    try {
-      const result = await (
-        bridge as {
-          executeCodexAppServerTurnOverStdio: (input: {
-            child: ReturnType<typeof spawn>;
-            model: string;
-            requestCapture: {
-              url: string;
-              body: Record<string, unknown>;
-            };
-            workspaceRoot: string;
-          }) => Promise<{
-            finishReason: string;
-            outputText: string;
-          }>;
-        }
-      ).executeCodexAppServerTurnOverStdio({
-        child: fakeAppServer,
-        model: "gpt-5.4",
-        requestCapture: {
-          url: "https://api.openai.com/v1/chat/completions",
-          body: {
-            model: "chatgpt/gpt-5.4",
-            messages: [
-              { role: "user", content: "Inspect the previous tool results and continue." },
-              {
-                role: "assistant",
-                content: "",
-                tool_calls: [
-                  {
-                    id: "call_history_1",
-                    type: "function",
-                    function: {
-                      name: "read_file",
-                      arguments: JSON.stringify({
-                        path: "src/router.ts",
-                        verbose: oversizedToolArguments,
-                      }),
-                    },
-                  },
-                ],
-              },
-              {
-                role: "tool",
-                tool_call_id: "call_history_1",
-                content: oversizedToolOutput,
-              },
-              { role: "user", content: "What should we do next?" },
-            ],
-          },
-        },
-        workspaceRoot,
-      });
-
-      expect(result).toEqual(
-        expect.objectContaining({
-          finishReason: "stop",
-          outputText: "compacted",
-        }),
-      );
-    } finally {
-      fakeAppServer.kill();
-      await rm(workspaceRoot, { recursive: true, force: true });
-    }
-  });
-
-  test("executeCodexAppServerTurnOverStdio retries once when a turn completes without any assistant output", async () => {
-    expect(
-      typeof (bridge as { executeCodexAppServerTurnOverStdio?: unknown })
-        .executeCodexAppServerTurnOverStdio,
-    ).toBe("function");
-
-    const fakeAppServer = spawn(
-      process.execPath,
-      [
-        "-e",
-        [
-          "const readline = require('node:readline');",
-          "const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });",
-          "const send = (message) => process.stdout.write(JSON.stringify(message) + '\\n');",
-          "let turnStarts = 0;",
-          "rl.on('line', (line) => {",
-          "  const message = JSON.parse(line);",
-          "  if (message.id === 1 && message.method === 'initialize') {",
-          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
-          "    return;",
-          "  }",
-          "  if (message.method === 'initialized') {",
-          "    return;",
-          "  }",
-          "  if (message.id === 2 && message.method === 'thread/start') {",
-          "    send({ method: 'thread/started', params: { thread: { id: 'thr_retry_stdio' } } });",
-          "    send({ id: 2, result: { thread: { id: 'thr_retry_stdio' } } });",
-          "    return;",
-          "  }",
-          "  if (message.method === 'turn/start') {",
-          "    turnStarts += 1;",
-          "    send({ id: message.id, result: { accepted: true, attempt: turnStarts } });",
-          "    if (turnStarts === 1) {",
-          "      send({ method: 'turn/completed', params: { turn: { id: 'turn_retry_empty' } } });",
-          "      return;",
-          "    }",
-          "    send({ id: 92, method: 'item/tool/call', params: { callId: 'call_retry_1', tool: 'request_read_file', arguments: { path: 'src/router.ts' } } });",
-          "    return;",
-          "  }",
-          "  if (message.id === 92) {",
-          "    send({ method: 'item/agentMessage/delta', params: { delta: 'route' } });",
-          "    send({ method: 'item/completed', params: { item: { type: 'agentMessage', text: 'route' } } });",
-          "    send({ method: 'thread/tokenUsage/updated', params: { tokenUsage: { last: { inputTokens: 9, outputTokens: 5 } } } });",
-          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_retry_recovered' } } });",
-          "    setTimeout(() => process.exit(0), 0);",
-          "  }",
-          "});",
-        ].join(" "),
-      ],
-      {
-        stdio: ["pipe", "pipe", "pipe"],
-        windowsHide: true,
-      },
-    );
-
-    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-retry-"));
-
-    try {
-      const result = await (
-        bridge as {
-          executeCodexAppServerTurnOverStdio: (input: {
-            child: ReturnType<typeof spawn>;
-            model: string;
-            requestCapture: {
-              url: string;
-              body: Record<string, unknown>;
-            };
-            workspaceRoot: string;
-            executeDynamicToolCall: (input: {
-              toolCallId: string;
-              toolName: string;
-              toolArguments: unknown;
-              workspaceRoot: string;
-            }) => Promise<{
-              success: boolean;
-              contentItems: readonly {
-                type: "inputText";
-                text: string;
-              }[];
-              execution: {
-                toolName: string;
-              };
-            }>;
-          }) => Promise<{
-            finishReason: string;
-            outputText: string;
-            dynamicToolCalls: readonly {
-              id: string;
-              type: "function";
-              function: {
-                name: string;
-                arguments: string;
-              };
-            }[];
-            dynamicToolExecutions: readonly {
-              toolName: string;
-            }[];
-          }>;
-        }
-      ).executeCodexAppServerTurnOverStdio({
-        child: fakeAppServer,
-        model: "gpt-5.4",
-        requestCapture: {
-          url: "https://api.openai.com/v1/chat/completions",
-          body: {
-            model: "chatgpt/gpt-5.4",
-            messages: [
-              {
-                role: "user",
-                content:
-                  "Read src/router.ts and reply with the first word of its exported function name only.",
-              },
-            ],
-            tools: [
-              {
-                type: "function",
-                function: {
-                  name: "read_file",
-                  description: "Read a file",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      path: {
-                        type: "string",
-                      },
-                    },
-                    required: ["path"],
-                  },
-                },
-              },
-            ],
-          },
-        },
-        workspaceRoot,
-        executeDynamicToolCall: async ({ toolName }) => ({
-          success: true,
-          contentItems: [
-            {
-              type: "inputText",
-              text: '{"path":"src/router.ts","contents":"export function route() {}"}',
-            },
-          ],
-          execution: {
-            toolName,
-          },
-        }),
-      });
-
-      expect(result.finishReason).toBe("stop");
-      expect(result.outputText).toBe("route");
-      expect(result.dynamicToolCalls).toEqual([
+        })}\n\n`,
         {
-          id: "call_retry_1",
-          type: "function",
-          function: {
-            name: "read_file",
-            arguments: '{"path":"src/router.ts"}',
-          },
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
         },
-      ]);
-      expect(result.dynamicToolExecutions).toEqual([{ toolName: "request_read_file" }]);
-    } finally {
-      fakeAppServer.kill();
-      await rm(workspaceRoot, { recursive: true, force: true });
-    }
+      );
+    });
+    const adapter = (
+      bridge as {
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{
+            statusCode: number;
+            vendorMetadata?: {
+              parameterSanitization?: readonly Record<string, unknown>[];
+            };
+          }>;
+        };
+      }
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
+
+    const result = await adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-parameter-policy-tests",
+      requestId: "req-codex-parameter-policy-responses-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/responses",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: true,
+          temperature: 0,
+          max_output_tokens: 32,
+          input: "Say OK.",
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
+      },
+    });
+
+    expect(result.statusCode).toBe(200);
+    expect(capturedBody).toEqual(
+      expect.objectContaining({
+        model: "gpt-5.4",
+        store: false,
+        stream: true,
+        include: ["reasoning.encrypted_content"],
+        input: [{ role: "user", content: [{ type: "input_text", text: "Say OK." }] }],
+      }),
+    );
+    expect(capturedBody).not.toHaveProperty("temperature");
+    expect(capturedBody).not.toHaveProperty("max_output_tokens");
+    expect(result.vendorMetadata?.parameterSanitization).toEqual([
+      expect.objectContaining({
+        field: "temperature",
+        sourceSurface: "openai.responses",
+        targetSurface: "chatgpt.codex.responses",
+        action: "drop_with_receipt",
+      }),
+      expect.objectContaining({
+        field: "max_output_tokens",
+        sourceSurface: "openai.responses",
+        targetSurface: "chatgpt.codex.responses",
+        action: "drop_with_receipt",
+      }),
+    ]);
   });
 
-  test("executeCodexAppServerTurnOverStdio surfaces failed turn completions with embedded Codex errors", async () => {
-    const fakeAppServer = spawn(
-      process.execPath,
-      [
-        "-e",
-        [
-          "const { createInterface } = require('node:readline');",
-          "const rl = createInterface({ input: process.stdin, crlfDelay: Infinity });",
-          "const send = (payload) => process.stdout.write(JSON.stringify(payload) + '\\n');",
-          "rl.on('line', (line) => {",
-          "  const message = JSON.parse(line);",
-          "  if (message.id === 1 && message.method === 'initialize') {",
-          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
-          "    return;",
-          "  }",
-          "  if (message.method === 'initialized') {",
-          "    return;",
-          "  }",
-          "  if (message.id === 2 && message.method === 'thread/start') {",
-          "    send({ id: 2, result: { thread: { id: 'thr_failed_turn_stdio' } } });",
-          "    return;",
-          "  }",
-          "  if (message.id === 3 && message.method === 'turn/start') {",
-          "    send({ id: 3, result: { turn: { id: 'turn_failed_stdio_1', status: 'inProgress' } } });",
-          "    send({ method: 'account/rateLimits/updated', params: { rateLimits: { credits: { hasCredits: false, unlimited: false, balance: '0' } } } });",
-          "    send({ method: 'error', params: { error: { message: 'You\\'ve hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits.', codexErrorInfo: 'usageLimitExceeded' }, willRetry: false, turnId: 'turn_failed_stdio_1' } });",
-          "    send({ method: 'turn/completed', params: { turn: { id: 'turn_failed_stdio_1', status: 'failed', error: { message: 'You\\'ve hit your usage limit. Visit https://chatgpt.com/codex/settings/usage to purchase more credits.', codexErrorInfo: 'usageLimitExceeded' } } } });",
-          "    setTimeout(() => process.exit(0), 0);",
-          "  }",
-          "});",
-        ].join(" "),
-      ],
-      {
-        stdio: ["pipe", "pipe", "pipe"],
-        windowsHide: true,
-      },
+  test("Codex Subscription applies the same parameter policy after alias routing", async () => {
+    const capturedBodies: Record<string, unknown>[] = [];
+    const fetchMock = vi.fn(async (_url: string | URL, init?: RequestInit) => {
+      capturedBodies.push(JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>);
+      return new Response(
+        `data: ${JSON.stringify({
+          type: "response.completed",
+          response: {
+            id: "resp_codex_parameter_policy_alias",
+            status: "completed",
+            output_text: "ok",
+            usage: { input_tokens: 3, output_tokens: 1 },
+          },
+        })}\n\n`,
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      );
+    });
+    const adapter = (
+      bridge as {
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{
+            statusCode: number;
+            vendorMetadata?: {
+              parameterSanitization?: readonly Record<string, unknown>[];
+            };
+          }>;
+        };
+      }
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
+
+    const execute = (model: string, requestId: string) =>
+      adapter.executeRequest({
+        runtimeStateRoot: os.tmpdir(),
+        scopeId: "codex-parameter-policy-tests",
+        requestId,
+        providerAccountId: "openai.personal.codex-subscription",
+        modelId: "gpt-5.4",
+        requestCapture: {
+          providerFamily: "ai-sdk-openai",
+          endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+          url: "https://api.openai.com/v1/chat/completions",
+          headers: {},
+          body: {
+            model,
+            stream: true,
+            temperature: 0,
+            max_tokens: 32,
+            messages: [{ role: "user", content: "Say OK." }],
+          },
+        },
+        authPayload: {
+          auth_mode: "chatgpt",
+          tokens: {
+            access_token: "codex-access-test",
+            refresh_token: "codex-refresh-test",
+            account_id: "acct_codex_test",
+          },
+        },
+      });
+
+    const exactResult = await execute("chatgpt/gpt-5.4", "req-codex-parameter-policy-exact-001");
+    const aliasResult = await execute(
+      "difficulty.remote-only",
+      "req-codex-parameter-policy-alias-001",
     );
 
-    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-failed-turn-"));
+    expect(exactResult.statusCode).toBe(200);
+    expect(aliasResult.statusCode).toBe(200);
+    expect(capturedBodies).toHaveLength(2);
+    for (const body of capturedBodies) {
+      expect(body).not.toHaveProperty("temperature");
+      expect(body).not.toHaveProperty("max_tokens");
+      expect(body).not.toHaveProperty("max_output_tokens");
+    }
+    expect(
+      exactResult.vendorMetadata?.parameterSanitization?.map((decision) => decision.field),
+    ).toEqual(["temperature", "max_tokens"]);
+    expect(
+      aliasResult.vendorMetadata?.parameterSanitization?.map((decision) => decision.field),
+    ).toEqual(["temperature", "max_tokens"]);
+  });
 
-    try {
-      const executionPromise = (
-        bridge as {
-          executeCodexAppServerTurnOverStdio: (input: {
-            child: ReturnType<typeof spawn>;
-            model: string;
+  test("Codex Subscription execution uses ChatGPT Codex Responses SSE and preserves downstream chat deltas", async () => {
+    expect(
+      typeof (bridge as { createCodexSubscriptionResponsesExecutionAdapter?: unknown })
+        .createCodexSubscriptionResponsesExecutionAdapter,
+    ).toBe("function");
+
+    const upstreamEvents = [
+      {
+        type: "response.output_item.added",
+        output_index: 0,
+        item: { type: "reasoning", id: "rs_1", summary: [] },
+      },
+      {
+        type: "response.reasoning_summary_text.delta",
+        output_index: 0,
+        delta: "thinking",
+      },
+      {
+        type: "response.output_item.added",
+        output_index: 1,
+        item: { type: "message", id: "msg_1", role: "assistant", content: [] },
+      },
+      {
+        type: "response.content_part.added",
+        output_index: 1,
+        part: { type: "output_text", text: "" },
+      },
+      { type: "response.output_text.delta", output_index: 1, delta: "Hel" },
+      { type: "response.output_text.delta", output_index: 1, delta: "lo" },
+      {
+        type: "response.completed",
+        response: {
+          id: "resp_codex_test",
+          status: "completed",
+          usage: {
+            input_tokens: 5,
+            output_tokens: 3,
+            total_tokens: 8,
+            output_tokens_details: { reasoning_tokens: 1 },
+          },
+        },
+      },
+    ];
+    const upstreamSse = `${upstreamEvents
+      .map((event) => `data: ${JSON.stringify(event)}`)
+      .join("\n\n")}\n\n`;
+    const fetchMock = vi.fn(async (url: string | URL, init?: RequestInit) => {
+      expect(String(url)).toBe("https://chatgpt.com/backend-api/codex/responses");
+      const headers = init?.headers instanceof Headers ? init.headers : new Headers(init?.headers);
+      expect(headers.get("authorization")).toBe("Bearer codex-access-test");
+      expect(headers.get("chatgpt-account-id")).toBe("acct_codex_test");
+      expect(headers.get("openai-beta")).toBe("responses=experimental");
+      expect(headers.get("accept")).toBe("text/event-stream");
+      expect(headers.has("x-api-key")).toBe(false);
+      const body = JSON.parse(String(init?.body ?? "{}")) as {
+        model?: string;
+        stream?: boolean;
+        include?: string[];
+        input?: unknown[];
+        reasoning?: { effort?: string };
+      };
+      expect(body.model).toBe("gpt-5.4");
+      expect(body.stream).toBe(true);
+      expect(body.include).toEqual(["reasoning.encrypted_content"]);
+      expect(body.reasoning?.effort).toBe("high");
+      expect(body.input).toEqual([
+        { role: "user", content: [{ type: "input_text", text: "Say hello." }] },
+      ]);
+      return new Response(upstreamSse, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      });
+    });
+
+    const adapter = (
+      bridge as {
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: {
+            runtimeStateRoot: string;
+            scopeId: string;
+            requestId: string;
+            providerAccountId: string;
+            modelId: string;
             requestCapture: {
+              providerFamily: string;
+              endpointId: string;
               url: string;
+              headers: Record<string, string>;
               body: Record<string, unknown>;
             };
-            workspaceRoot: string;
-            stderrText?: () => string;
-          }) => Promise<unknown>;
-        }
-      ).executeCodexAppServerTurnOverStdio({
-        child: fakeAppServer,
-        model: "gpt-5.4",
-        requestCapture: {
-          url: "https://api.openai.com/v1/chat/completions",
-          body: {
-            model: "chatgpt/gpt-5.4",
-            messages: [{ role: "user", content: "Reply with exactly final-gpt54-ok." }],
-          },
-        },
-        workspaceRoot,
-        stderrText: () =>
-          [
-            "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir",
-            '{"timestamp":"2026-07-06T04:08:42.264610Z","level":"WARN","fields":{"message":"ignoring interface.defaultPrompt[0]: prompt must be at most 128 characters"},"target":"codex_core_plugins::manifest"}',
-          ].join("\n"),
-      });
-      const error = await executionPromise.catch((caught) => caught as Error);
-      expect(error).toBeInstanceOf(Error);
-      expect(error.message).toMatch(/usage limit|usageLimitExceeded/i);
-      expect(error.message).not.toMatch(/defaultPrompt|codex_core_plugins|PATH aliases/i);
-    } finally {
-      fakeAppServer.kill();
-      await rm(workspaceRoot, { recursive: true, force: true });
-    }
-  });
-
-  test("executeCodexAppServerTurnOverStdio preserves nested app-server error details for fallback classification", async () => {
-    const fakeAppServer = spawn(
-      process.execPath,
-      [
-        "-e",
-        [
-          "const { createInterface } = require('node:readline');",
-          "const rl = createInterface({ input: process.stdin, crlfDelay: Infinity });",
-          "const send = (payload) => process.stdout.write(JSON.stringify(payload) + '\\n');",
-          "rl.on('line', (line) => {",
-          "  const message = JSON.parse(line);",
-          "  if (message.id === 1 && message.method === 'initialize') {",
-          "    send({ id: 1, result: { serverInfo: { name: 'fake-codex' } } });",
-          "    return;",
-          "  }",
-          "  if (message.method === 'initialized') {",
-          "    return;",
-          "  }",
-          "  if (message.id === 2 && message.method === 'thread/start') {",
-          "    send({ id: 2, result: { thread: { id: 'thr_test_stdio_error' } } });",
-          "    return;",
-          "  }",
-          "  if (message.id === 3 && message.method === 'turn/start') {",
-          "    send({ method: 'turn/failed', params: { error: { message: 'Invalid Request: The API rejected this request.', code: 'invalid_request', data: { code: 'insufficient_quota', detail: 'The authenticated ChatGPT account has no remaining credits for this turn.' } } } });",
-          "    setTimeout(() => process.exit(0), 0);",
-          "  }",
-          "});",
-        ].join(" "),
-      ],
-      {
-        stdio: ["pipe", "pipe", "pipe"],
-        windowsHide: true,
-      },
-    );
-
-    const workspaceRoot = await mkdtemp(path.join(os.tmpdir(), "codex-stdio-error-"));
-
-    try {
-      await expect(
-        (
-          bridge as {
-            executeCodexAppServerTurnOverStdio: (input: {
-              child: ReturnType<typeof spawn>;
-              model: string;
-              requestCapture: {
-                url: string;
-                body: Record<string, unknown>;
+            authPayload: {
+              auth_mode: string;
+              tokens: {
+                access_token: string;
+                refresh_token: string;
+                account_id: string;
               };
-              workspaceRoot: string;
-            }) => Promise<unknown>;
-          }
-        ).executeCodexAppServerTurnOverStdio({
-          child: fakeAppServer,
-          model: "gpt-5.4",
-          requestCapture: {
-            url: "https://api.openai.com/v1/responses",
-            body: {
-              model: "gpt-5.4",
-              input: "Check the fallback behavior.",
-            },
+            };
+          }) => Promise<{
+            statusCode: number;
+            body: unknown;
+            vendorMetadata?: { vendorId?: string };
+          }>;
+        };
+      }
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
+
+    const result = await adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-responses-contract-tests",
+      requestId: "req-codex-responses-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/chat/completions",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: true,
+          reasoning_effort: "high",
+          messages: [{ role: "user", content: "Say hello." }],
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
+      },
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result.statusCode).toBe(200);
+    expect(result.vendorMetadata?.vendorId).toBe("chatgpt-codex-responses");
+    expect(result.body).not.toContain("response.output_text.delta");
+    expect(result.body).not.toContain("chatgpt-codex-responses");
+
+    const payloads = String(result.body)
+      .split(/\n\n/u)
+      .map((chunk) => chunk.trim())
+      .filter((chunk) => chunk.startsWith("data: "))
+      .map((chunk) => chunk.slice("data: ".length))
+      .filter((chunk) => chunk !== "[DONE]")
+      .map(
+        (chunk) =>
+          JSON.parse(chunk) as {
+            choices?: Array<{ delta?: Record<string, unknown>; finish_reason?: string | null }>;
           },
-          workspaceRoot,
-        }),
-      ).rejects.toThrow(/insufficient_quota|no remaining credits/i);
-    } finally {
-      await rm(workspaceRoot, { recursive: true, force: true });
-    }
+      );
+    expect(
+      payloads.flatMap((payload) =>
+        (payload.choices ?? []).map((choice) => choice.delta?.reasoning_content).filter(Boolean),
+      ),
+    ).toEqual(["thinking"]);
+    expect(
+      payloads.flatMap((payload) =>
+        (payload.choices ?? []).map((choice) => choice.delta?.content).filter(Boolean),
+      ),
+    ).toEqual(["Hel", "lo"]);
+    expect(
+      payloads.flatMap((payload) =>
+        (payload.choices ?? []).map((choice) => choice.finish_reason).filter(Boolean),
+      ),
+    ).toEqual(["stop"]);
   });
 
-  test("readCodexExecutionFailureFromSessionArtifacts reports a Codex Subscription usage-limit turn", async () => {
+  test("Codex Subscription execution writes chat-completions deltas before upstream completion", async () => {
     expect(
-      typeof (bridge as { readCodexExecutionFailureFromSessionArtifacts?: unknown })
-        .readCodexExecutionFailureFromSessionArtifacts,
+      typeof (bridge as { createCodexSubscriptionResponsesExecutionAdapter?: unknown })
+        .createCodexSubscriptionResponsesExecutionAdapter,
     ).toBe("function");
 
-    const codexHome = await mkdtemp(path.join(os.tmpdir(), "codex-session-limit-"));
-    const workspaceRoot = path.join(codexHome, "ws", "r-test-limit");
-    const sessionDir = path.join(codexHome, "sessions", "2026", "06", "20");
-    const sessionPath = path.join(sessionDir, "rollout-usage-limit.jsonl");
+    let streamController: ReadableStreamDefaultController<Uint8Array> | null = null;
+    const encoder = new TextEncoder();
+    const upstreamStream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        streamController = controller;
+      },
+    });
+    const fetchMock = vi.fn(async () => {
+      return new Response(upstreamStream, {
+        status: 200,
+        headers: { "content-type": "text/event-stream" },
+      });
+    });
+    const streamedChunks: string[] = [];
+    const adapter = (
+      bridge as {
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{
+            statusCode: number;
+            body: unknown;
+          }>;
+        };
+      }
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
 
-    await mkdir(workspaceRoot, { recursive: true });
-    await mkdir(sessionDir, { recursive: true });
-    await writeFile(
-      sessionPath,
-      [
-        JSON.stringify({
-          timestamp: "2026-06-20T18:45:11.573Z",
-          type: "session_meta",
-          payload: {
-            cwd: workspaceRoot,
-          },
-        }),
-        JSON.stringify({
-          timestamp: "2026-06-20T18:45:16.682Z",
-          type: "event_msg",
-          payload: {
-            type: "token_count",
-            rate_limits: {
-              credits: {
-                has_credits: false,
-                unlimited: false,
-                balance: "0",
-              },
-            },
-          },
-        }),
-        JSON.stringify({
-          timestamp: "2026-06-20T18:45:16.714Z",
-          type: "event_msg",
-          payload: {
-            type: "task_complete",
-            last_agent_message: null,
-          },
-        }),
-      ].join("\n"),
-      "utf8",
+    const execution = adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-responses-streaming-tests",
+      requestId: "req-codex-responses-streaming-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/chat/completions",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: true,
+          messages: [{ role: "user", content: "Stream one token." }],
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
+      },
+      streamChunkWriter: async (chunk: string) => {
+        streamedChunks.push(chunk);
+      },
+    });
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    streamController?.enqueue(
+      encoder.encode(
+        `data: ${JSON.stringify({
+          type: "response.output_text.delta",
+          output_index: 0,
+          delta: "early",
+        })}\n\n`,
+      ),
     );
+
+    const firstChunk = await Promise.race([
+      (async () => {
+        while (streamedChunks.length === 0) {
+          await delay(5);
+        }
+        return streamedChunks.join("");
+      })(),
+      delay(100).then(() => "timeout"),
+    ]);
 
     try {
-      const message = await (
-        bridge as {
-          readCodexExecutionFailureFromSessionArtifacts: (input: {
-            codexHome: string;
-            workspaceRoot: string;
-          }) => Promise<string | null>;
-        }
-      ).readCodexExecutionFailureFromSessionArtifacts({
-        codexHome,
-        workspaceRoot,
-      });
-
-      expect(message).toMatch(/usage limit|credits/i);
+      expect(firstChunk).toContain('"content":"early"');
     } finally {
-      await rm(codexHome, { recursive: true, force: true });
+      streamController?.enqueue(
+        encoder.encode(
+          `data: ${JSON.stringify({
+            type: "response.completed",
+            response: {
+              id: "resp_codex_streaming_test",
+              status: "completed",
+              usage: { input_tokens: 1, output_tokens: 1 },
+            },
+          })}\n\n`,
+        ),
+      );
+      streamController?.close();
+      await execution;
     }
   });
 
-  test("resolveManagedCodexExecutionHome keeps the shared Codex home short on Windows-style paths", () => {
-    expect(
-      typeof (bridge as { resolveManagedCodexExecutionHome?: unknown })
-        .resolveManagedCodexExecutionHome,
-    ).toBe("function");
-
-    const result = (
+  test("Codex Subscription request conversion preserves assistant history as output_text", async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+    const fetchMock = vi.fn(async (_url: string | URL, init?: RequestInit) => {
+      capturedBody = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+      return new Response(
+        `data: ${JSON.stringify({
+          type: "response.completed",
+          response: {
+            id: "resp_codex_history_test",
+            status: "completed",
+            output_text: "ok",
+            usage: { input_tokens: 3, output_tokens: 1 },
+          },
+        })}\n\n`,
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      );
+    });
+    const adapter = (
       bridge as {
-        resolveManagedCodexExecutionHome: (
-          runtimeStateRoot: string,
-          scopeId: string,
-          requestId: string,
-        ) => string;
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{ statusCode: number }>;
+        };
       }
-    ).resolveManagedCodexExecutionHome(
-      "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime",
-      "standalone-runtime",
-      "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
-    );
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
 
-    const segments = splitPathSegments(result);
-    const finalSegment = segments.at(-1) ?? "";
-    expect(segments.some((segment) => segment === "RMCS" || segment === ".rmcs")).toBe(true);
-    expect(finalSegment).toMatch(/^s-/);
-    expect(finalSegment).not.toMatch(/^r-/);
-    expect(result.length).toBeLessThan(120);
-    expect(result).not.toContain(
-      "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
-    );
+    await adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-responses-history-tests",
+      requestId: "req-codex-responses-history-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/chat/completions",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: false,
+          messages: [
+            { role: "user", content: "hey" },
+            { role: "assistant", content: "Hey - what can I help with?" },
+            { role: "user", content: "sdfsdf" },
+          ],
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
+      },
+    });
+
+    expect(capturedBody?.input).toEqual([
+      { role: "user", content: [{ type: "input_text", text: "hey" }] },
+      {
+        role: "assistant",
+        content: [{ type: "output_text", text: "Hey - what can I help with?" }],
+      },
+      { role: "user", content: [{ type: "input_text", text: "sdfsdf" }] },
+    ]);
   });
 
-  test("resolveManagedCodexWorkspaceRoot keeps request workspaces short under the shared Codex home", () => {
-    expect(
-      typeof (bridge as { resolveManagedCodexWorkspaceRoot?: unknown })
-        .resolveManagedCodexWorkspaceRoot,
-    ).toBe("function");
+  test("Codex Subscription runtime source no longer contains app-server execution code", () => {
+    const runtimeSource = readFileSync(path.join(__dirname, "..", "src", "index.ts"), "utf8");
+    const forbiddenPatterns = [
+      /codex app-server/iu,
+      /app-server/iu,
+      /executeCodexAppServer/u,
+      /createCodexAppServer/u,
+      /buildCodexAppServer/u,
+      /CODEX_APP_SERVER/u,
+    ];
 
-    const codexHome = (
-      bridge as {
-        resolveManagedCodexExecutionHome: (
-          runtimeStateRoot: string,
-          scopeId: string,
-          requestId: string,
-        ) => string;
-      }
-    ).resolveManagedCodexExecutionHome(
-      "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime",
-      "standalone-runtime",
-      "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
-    );
-
-    const workspaceRoot = (
-      bridge as {
-        resolveManagedCodexWorkspaceRoot: (codexHome: string, requestId: string) => string;
-      }
-    ).resolveManagedCodexWorkspaceRoot(
-      codexHome,
-      "bench-p17-tools-multi-hard-openai.personal.openai-codex-subscription.global.gpt-5.4-turn1-36895931-f445-442a-a0c0-90b0d7fa1ed0",
-    );
-
-    const segments = splitPathSegments(workspaceRoot);
-    const finalSegment = segments.at(-1) ?? "";
-    expect(segments).toContain("ws");
-    expect(finalSegment).toMatch(/^r-/);
-    expect(workspaceRoot.length).toBeLessThan(170);
-  });
-
-  test("resolveManagedCodexWorkspaceRoot leaves enough room for deep plugin staging paths on Windows", () => {
-    expect(
-      typeof (bridge as { resolveManagedCodexWorkspaceRoot?: unknown })
-        .resolveManagedCodexWorkspaceRoot,
-    ).toBe("function");
-
-    const codexHome = (
-      bridge as {
-        resolveManagedCodexExecutionHome: (
-          runtimeStateRoot: string,
-          scopeId: string,
-          requestId: string,
-        ) => string;
-      }
-    ).resolveManagedCodexExecutionHome(
-      "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime",
-      "standalone-runtime",
-      "bench-x01-max-signal-openai.personal.openai-codex-subscription.global.gpt-5.4",
-    );
-
-    const executionHome = (
-      bridge as {
-        resolveManagedCodexWorkspaceRoot: (codexHome: string, requestId: string) => string;
-      }
-    ).resolveManagedCodexWorkspaceRoot(
-      codexHome,
-      "bench-x01-max-signal-openai.personal.openai-codex-subscription.global.gpt-5.4",
-    );
-
-    const stagedPluginPath = path.join(
-      executionHome,
-      ".tmp",
-      "plugins",
-      "plugins",
-      "build-web-data-visualization",
-      "skills",
-      "geospatial-and-cartographic-visualization",
-      "references",
-      "source-method-and-coordinate-ledger.md",
-    );
-
-    expect(stagedPluginPath.length).toBeLessThan(240);
-  });
-
-  test("cleanupManagedCodexExecutionWorkspace removes only the request workspace and preserves the shared Codex home", async () => {
-    expect(
-      typeof (bridge as { cleanupManagedCodexExecutionWorkspace?: unknown })
-        .cleanupManagedCodexExecutionWorkspace,
-    ).toBe("function");
-
-    const codexHome = await mkdtemp(path.join(os.tmpdir(), "role-model-codex-home-"));
-    const workspaceRoot = path.join(codexHome, "ws", "r-1234567890");
-    await mkdir(workspaceRoot, { recursive: true });
-    await mkdir(path.join(codexHome, "auth"), { recursive: true });
-    await writeFile(path.join(codexHome, "auth", "session.json"), '{"ok":true}');
-    await writeFile(path.join(workspaceRoot, "router.ts"), "export const ok = true;\n");
-
-    await (
-      bridge as {
-        cleanupManagedCodexExecutionWorkspace: (
-          codexHome: string,
-          workspaceRoot: string,
-        ) => Promise<void>;
-      }
-    ).cleanupManagedCodexExecutionWorkspace(codexHome, workspaceRoot);
-
-    expect(existsSync(codexHome)).toBe(true);
-    expect(existsSync(path.join(codexHome, "auth", "session.json"))).toBe(true);
-    expect(existsSync(workspaceRoot)).toBe(false);
-    expect(existsSync(path.join(codexHome, "ws"))).toBe(false);
-
-    await rm(codexHome, { recursive: true, force: true });
+    for (const pattern of forbiddenPatterns) {
+      expect(runtimeSource).not.toMatch(pattern);
+    }
   });
 
   test("createRequestScopedToolRegistry does not require repoRoot or file system access", () => {
@@ -4584,58 +3902,6 @@ describe("runtime-host-bridge", () => {
 
     expect(registry).toBeDefined();
     expect((registry as { connectors: unknown[] }).connectors).toHaveLength(1);
-  });
-
-  test("buildCodexTurnPrompt allows full request-scoped tool usage for Codex Subscription turns", () => {
-    expect(typeof (bridge as { buildCodexTurnPrompt?: unknown }).buildCodexTurnPrompt).toBe(
-      "function",
-    );
-
-    const prompt = (
-      bridge as {
-        buildCodexTurnPrompt: (requestCapture: {
-          url: string;
-          body: Record<string, unknown>;
-        }) => string;
-      }
-    ).buildCodexTurnPrompt({
-      url: "https://api.openai.test/v1/responses",
-      body: {
-        model: "gpt-5.4",
-        input: "Find the current Cloudflare stock price with a source.",
-        tools: [
-          {
-            type: "function",
-            name: "read_file",
-            description: "Read a file.",
-            parameters: {
-              type: "object",
-              properties: {
-                path: {
-                  type: "string",
-                },
-              },
-              required: ["path"],
-            },
-          },
-        ],
-      },
-    });
-
-    expect(prompt).not.toContain(
-      "Do not run commands, modify files, access the network, or ask for approvals.",
-    );
-    expect(prompt).not.toContain("Do not run shell commands, modify files, or ask for approvals.");
-    expect(prompt).toContain("Built-in web search is allowed when helpful.");
-    expect(prompt).toContain(
-      "Use any available hosted or request-scoped tools whenever they help satisfy the request",
-    );
-    expect(prompt).toContain(
-      "Request-scoped file tools only operate inside the managed Codex workspace.",
-    );
-    expect(prompt).toContain(
-      "use shell tools to inspect and read it instead of assuming the path is inaccessible",
-    );
   });
 
   test("maps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics", () => {
@@ -5594,7 +4860,7 @@ describe("runtime-host-bridge", () => {
     });
   });
 
-  test("pins Codex subscription as the initial route for tool-bearing code turns without collapsing the broader alias pool", () => {
+  test("keeps ordinary tool code aliases provider agnostic", () => {
     const mixedRegistry: EndpointRegistryResult = {
       endpoints: [
         {
@@ -5673,7 +4939,6 @@ describe("runtime-host-bridge", () => {
             allowEndpoints: readonly string[];
             strategy: string;
           };
-          fallbackAllowEndpoints?: readonly string[];
           routingModel?: {
             endpointId: string;
             preferredEndpointIds: readonly string[];
@@ -5701,7 +4966,7 @@ describe("runtime-host-bridge", () => {
           },
         ],
       },
-      "req-host-difficulty-codex-pin-001",
+      "req-host-difficulty-provider-agnostic-001",
       [
         {
           aliasId: "difficulty.remote-only",
@@ -5718,16 +4983,101 @@ describe("runtime-host-bridge", () => {
     );
 
     expect(result.routingRequest.allowEndpoints).toEqual([
-      "openai.personal.openai-codex-subscription.global.gpt-5.4",
-    ]);
-    expect(result.fallbackAllowEndpoints).toEqual([
       "deepseek.personal.primary.global.deepseek-v4-flash",
       "openai.personal.openai-codex-subscription.global.gpt-5.4",
     ]);
-    expect(result.routingModel).toEqual({
-      endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
-      preferredEndpointIds: ["openai.personal.openai-codex-subscription.global.gpt-5.4"],
-    });
+    expect(result.routingModel).toBeUndefined();
+    expect(result.routingRequest.strategy).toBe("quality");
+  });
+
+  test("does not contain provider-specific routing pin helpers", () => {
+    const runtimeSource = readFileSync(path.join(__dirname, "..", "src", "index.ts"), "utf8");
+    expect(runtimeSource).not.toContain("applyOpenAICodexSubscriptionInitialPin");
+    expect(runtimeSource).not.toContain("resolveOpenAICodexSubscriptionRoutingModel");
+    expect(runtimeSource).not.toContain("shouldPreferOpenAICodexSubscriptionForTurn");
+    expect(runtimeSource).not.toContain("preferredCodexRoutingModel");
+    expect(runtimeSource).not.toContain("fallbackAllowEndpoints");
+  });
+
+  test("keeps operator-configured Codex subscription exact endpoints eligible even when the model id is newer than the static matrix", () => {
+    const codexRegistry: EndpointRegistryResult = {
+      endpoints: [
+        {
+          identity: {
+            endpoint_id: "openai.personal.openai-codex-subscription.global.gpt-5.6-preview",
+            endpoint_kind: "remote_api",
+            provider_kind: "remote_openai_compat",
+            serving_source: "remote-service",
+            model_id: "chatgpt/gpt-5.6-preview",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "openai.personal.openai-codex-subscription.global.gpt-5.6-preview",
+            capabilities: ["text.chat", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 200000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      diagnostics: [],
+      lifecycleSummary: {
+        active: 1,
+        degraded: 0,
+        offline: 0,
+      },
+    };
+
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            allowEndpoints: readonly string[];
+          };
+          routingModel?: {
+            endpointId: string;
+            preferredEndpointIds: readonly string[];
+          };
+        };
+      }
+    ).mapChatCompletionsRequest(
+      codexRegistry,
+      {
+        model: "chatgpt/gpt-5.6-preview",
+        messages: [
+          {
+            role: "user",
+            content: "Read src/router.ts and answer with the first exported symbol name only.",
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "read_file",
+              parameters: { type: "object", properties: {} },
+            },
+          },
+        ],
+      },
+      "req-host-codex-compat-001",
+    );
+
+    expect(result.routingRequest.allowEndpoints).toEqual([
+      "openai.personal.openai-codex-subscription.global.gpt-5.6-preview",
+    ]);
+    expect(result.routingModel).toBeUndefined();
   });
 
   test("uses a baseline override to bypass difficulty alias gating", () => {
@@ -6103,6 +5453,240 @@ describe("runtime-host-bridge", () => {
         confidence: 0.72,
       }),
     );
+  });
+
+  test("maps responses tool choice, reasoning, prompt cache, affinity, and previous response id into the execution request", () => {
+    const reasoningRegistry: EndpointRegistryResult = {
+      ...registry,
+      endpoints: registry.endpoints.map((endpoint) =>
+        endpoint.identity.endpoint_id === "moonshot.personal.primary.global.kimi-k2.5"
+          ? {
+              ...endpoint,
+              declared: {
+                ...endpoint.declared,
+                capabilities: [...endpoint.declared.capabilities, "reasoning"],
+              },
+            }
+          : endpoint,
+      ),
+    };
+
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly unknown[],
+          difficultyContext?: unknown,
+          controllerContext?: unknown,
+          requestOptions?: {
+            sessionId?: string;
+            clientRequestId?: string;
+            transportPreference?: string;
+          },
+        ) => {
+          executionRequest: Record<string, unknown>;
+        };
+      }
+    ).mapResponsesRequest(
+      reasoningRegistry,
+      {
+        model: "moonshot/kimi-k2.5",
+        input: "Use the lookupRegistry tool and continue the previous response.",
+        tools: [
+          {
+            type: "function",
+            name: "lookupRegistry",
+            parameters: {
+              type: "object",
+              properties: {
+                endpointId: { type: "string" },
+              },
+              required: ["endpointId"],
+            },
+          },
+        ],
+        tool_choice: {
+          type: "function",
+          function: {
+            name: "lookupRegistry",
+          },
+        },
+        reasoning_effort: "high",
+        previous_response_id: "resp_prev_001",
+        prompt_cache_key: "cache-key-001",
+      },
+      "resp-propagation-001",
+      [],
+      undefined,
+      undefined,
+      {
+        sessionId: "session-alpha",
+        clientRequestId: "client-req-001",
+        transportPreference: "websocket",
+      },
+    );
+
+    expect(result.executionRequest.toolChoice).toEqual({
+      type: "function",
+      function: {
+        name: "lookupRegistry",
+      },
+    });
+    expect(result.executionRequest.promptCache).toEqual({
+      mode: "prefer",
+      key: "cache-key-001",
+    });
+    expect(result.executionRequest.reasoning).toEqual({
+      effort: "high",
+    });
+    expect(result.executionRequest.continuation).toEqual({
+      previousResponseId: "resp_prev_001",
+    });
+    expect(result.executionRequest.sessionAffinity).toEqual({
+      sessionId: "session-alpha",
+      clientRequestId: "client-req-001",
+    });
+    expect(result.executionRequest.transportPreference).toBe("websocket");
+  });
+
+  test("maps chat-completions session affinity and transport preference into the execution request", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+          modelAliases?: readonly unknown[],
+          difficultyContext?: unknown,
+          controllerContext?: unknown,
+          requestOptions?: {
+            sessionId?: string;
+            clientRequestId?: string;
+            transportPreference?: string;
+          },
+        ) => {
+          executionRequest: Record<string, unknown>;
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Route this with preserved affinity." }],
+      },
+      "chat-affinity-001",
+      [],
+      undefined,
+      undefined,
+      {
+        sessionId: "session-chat-001",
+        clientRequestId: "client-chat-001",
+        transportPreference: "sse",
+      },
+    );
+
+    expect(result.executionRequest.sessionAffinity).toEqual({
+      sessionId: "session-chat-001",
+      clientRequestId: "client-chat-001",
+    });
+    expect(result.executionRequest.transportPreference).toBe("sse");
+  });
+
+  test("maps chat-completions reasoning effort into the execution request", () => {
+    const reasoningRegistry: EndpointRegistryResult = {
+      ...registry,
+      endpoints: registry.endpoints.map((endpoint) =>
+        endpoint.identity.endpoint_id === "moonshot.personal.primary.global.kimi-k2.5"
+          ? {
+              ...endpoint,
+              declared: {
+                ...endpoint.declared,
+                capabilities: [...endpoint.declared.capabilities, "reasoning"],
+              },
+            }
+          : endpoint,
+      ),
+    };
+
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            requiredCapabilities: readonly string[];
+          };
+          executionRequest: Record<string, unknown>;
+        };
+      }
+    ).mapChatCompletionsRequest(
+      reasoningRegistry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Use high reasoning effort." }],
+        reasoning_effort: "high",
+      },
+      "chat-reasoning-effort-001",
+    );
+
+    expect(result.routingRequest.requiredCapabilities).toContain("reasoning.effort_control");
+    expect(result.executionRequest.reasoning).toEqual({
+      effort: "high",
+    });
+  });
+
+  test("maps chat-completions thinking controls into the execution request", () => {
+    const reasoningRegistry: EndpointRegistryResult = {
+      ...registry,
+      endpoints: registry.endpoints.map((endpoint) =>
+        endpoint.identity.endpoint_id === "moonshot.personal.primary.global.kimi-k2.5"
+          ? {
+              ...endpoint,
+              declared: {
+                ...endpoint.declared,
+                capabilities: [...endpoint.declared.capabilities, "reasoning"],
+              },
+            }
+          : endpoint,
+      ),
+    };
+
+    const thinking = {
+      type: "enabled",
+      budget_tokens: 1024,
+    };
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          routingRequest: {
+            requiredCapabilities: readonly string[];
+          };
+          executionRequest: Record<string, unknown>;
+        };
+      }
+    ).mapChatCompletionsRequest(
+      reasoningRegistry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Use explicit thinking controls." }],
+        thinking,
+      },
+      "chat-thinking-control-001",
+    );
+
+    expect(result.routingRequest.requiredCapabilities).toContain("reasoning.control");
+    expect(result.executionRequest.reasoning).toEqual({
+      channel: "thinking",
+      raw: thinking,
+    });
   });
 
   test("treats unknown stable role_model task metadata as advisory before routing", () => {
@@ -8559,6 +8143,254 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("normalizes chat-completions provider SSE into Responses events on streamed /v1/responses", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    let executionCompleted = false;
+    const server = await (
+      bridge as {
+        startBridgeServer: (
+          options: Record<string, unknown> & {
+            host: string;
+            port: number;
+            registry: EndpointRegistryResult;
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            ) => Promise<unknown>;
+            executeResponses: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            ) => Promise<{
+              responseId: string;
+              model: string;
+              endpointId: string;
+              adapterFamily: string;
+              routingDecisionId?: string;
+              outputText: string;
+              finishReason: string;
+              usage: {
+                inputTokens: number;
+                outputTokens: number;
+              };
+            }>;
+          },
+        ) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      executeResponses: async (_body, _requestId, streamWriter) => {
+        expect(typeof streamWriter).toBe("function");
+        const metadata = {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-pro",
+          adapterFamily: "ai-sdk-openai-compatible",
+          routingDecisionId: "decision-responses-normalized-123",
+        };
+        await streamWriter?.(
+          {
+            id: "chatcmpl-deepseek",
+            object: "chat.completion.chunk",
+            created: 1,
+            model: "deepseek/deepseek-v4-pro",
+            choices: [
+              {
+                index: 0,
+                delta: {
+                  role: "assistant",
+                  content: null,
+                  reasoning_content: "",
+                },
+                finish_reason: null,
+              },
+            ],
+          },
+          metadata,
+        );
+        await delay(10);
+        await streamWriter?.(
+          {
+            id: "chatcmpl-deepseek",
+            object: "chat.completion.chunk",
+            created: 1,
+            model: "deepseek/deepseek-v4-pro",
+            choices: [
+              {
+                index: 0,
+                delta: {
+                  content: null,
+                  reasoning_content: "Thinking...",
+                },
+                finish_reason: null,
+              },
+            ],
+          },
+          metadata,
+        );
+        await delay(10);
+        await streamWriter?.(
+          {
+            id: "chatcmpl-deepseek",
+            object: "chat.completion.chunk",
+            created: 1,
+            model: "deepseek/deepseek-v4-pro",
+            choices: [
+              {
+                index: 0,
+                delta: {
+                  content: "OK",
+                },
+                finish_reason: null,
+              },
+            ],
+          },
+          metadata,
+        );
+        await delay(10);
+        await streamWriter?.(
+          {
+            id: "chatcmpl-deepseek",
+            object: "chat.completion.chunk",
+            created: 1,
+            model: "deepseek/deepseek-v4-pro",
+            choices: [
+              {
+                index: 0,
+                delta: {},
+                finish_reason: "stop",
+              },
+            ],
+            usage: {
+              prompt_tokens: 7,
+              completion_tokens: 1,
+            },
+          },
+          metadata,
+        );
+        executionCompleted = true;
+        return {
+          responseId: "resp_deepseek_123",
+          model: "deepseek/deepseek-v4-pro",
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-pro",
+          adapterFamily: "ai-sdk-openai-compatible",
+          routingDecisionId: "decision-responses-normalized-123",
+          outputText: "OK",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 7,
+            outputTokens: 1,
+          },
+        };
+      },
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "difficulty.remote-only",
+          stream: true,
+          input: "Say OK.",
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toContain("text/event-stream");
+      expect(response.headers.get("x-role-model-endpoint-id")).toBe(
+        "deepseek.personal.primary.global.deepseek-v4-pro",
+      );
+      expect(response.headers.get("x-role-model-adapter-family")).toBe("ai-sdk-openai-compatible");
+      expect(response.headers.get("x-role-model-routing-decision-id")).toBe(
+        "decision-responses-normalized-123",
+      );
+
+      const reader = response.body?.getReader();
+      expect(reader).toBeDefined();
+      if (!reader) {
+        throw new Error("Expected responses stream body reader to be available.");
+      }
+      const decoder = new TextDecoder();
+      const firstChunk = await reader.read();
+      const streamedPrefix = decoder.decode(firstChunk.value ?? new Uint8Array(), { stream: true });
+      expect(streamedPrefix).toContain('"type":"response.created"');
+      expect(streamedPrefix).not.toContain('"chat.completion.chunk"');
+      expect(streamedPrefix).not.toContain('"reasoning_content"');
+      expect(executionCompleted).toBe(false);
+
+      let transcript = streamedPrefix;
+      while (true) {
+        const chunk = await reader.read();
+        transcript += decoder.decode(chunk.value ?? new Uint8Array(), { stream: !chunk.done });
+        if (chunk.done) {
+          break;
+        }
+      }
+
+      expect(transcript).not.toContain('"chat.completion.chunk"');
+      expect(transcript).not.toContain('"reasoning_content"');
+
+      const payloads = transcript
+        .trim()
+        .split("\n\n")
+        .map((entry) => entry.trim())
+        .filter(Boolean)
+        .map((entry) => entry.replace(/^data:\s*/, ""))
+        .map((entry) => JSON.parse(entry) as Record<string, unknown>);
+
+      expect(payloads.map((payload) => payload.type)).toEqual([
+        "response.created",
+        "response.output_item.added",
+        "response.output_text.delta",
+        "response.completed",
+      ]);
+      expect(payloads[0]).toEqual(
+        expect.objectContaining({
+          type: "response.created",
+          response: expect.objectContaining({
+            model: "deepseek/deepseek-v4-pro",
+          }),
+        }),
+      );
+      expect(payloads[1]).toEqual(
+        expect.objectContaining({
+          type: "response.output_item.added",
+          output_index: 0,
+          item: expect.objectContaining({
+            type: "message",
+          }),
+        }),
+      );
+      expect(payloads[2]).toEqual(
+        expect.objectContaining({
+          type: "response.output_text.delta",
+          delta: "OK",
+        }),
+      );
+      expect(payloads[3]).toEqual(
+        expect.objectContaining({
+          type: "response.completed",
+          response: expect.objectContaining({
+            usage: {
+              input_tokens: 7,
+              output_tokens: 1,
+            },
+          }),
+        }),
+      );
+    } finally {
+      await server.close();
+    }
+  });
+
   test("streams provider deltas through the bridge as they arrive", async () => {
     expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
 
@@ -8787,6 +8619,104 @@ describe("runtime-host-bridge", () => {
     }
   });
 
+  test("emits reasoning_content before visible content for synthetic chat-completions streams", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            reasoningText?: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => ({
+        model: "moonshot/kimi-k2.5",
+        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+        adapterFamily: "ai-sdk-openai",
+        outputText: "Ready",
+        reasoningText: "I should answer briefly.",
+        finishReason: "stop",
+        usage: {
+          inputTokens: 1,
+          outputTokens: 1,
+        },
+      }),
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "moonshot/kimi-k2.5",
+          stream: true,
+          messages: [{ role: "user", content: "Stream this." }],
+          reasoning_effort: "high",
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      const transcript = await response.text();
+      const payloads = transcript
+        .trim()
+        .split("\n\n")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry && entry !== "data: [DONE]")
+        .map((entry) => entry.replace(/^data:\s*/, ""))
+        .map((entry) => JSON.parse(entry) as Record<string, unknown>);
+
+      expect(payloads[0]).toMatchObject({
+        choices: [
+          {
+            index: 0,
+            delta: {
+              role: "assistant",
+              reasoning_content: "I should answer briefly.",
+            },
+            finish_reason: null,
+          },
+        ],
+      });
+      expect(JSON.stringify(payloads[0])).not.toContain('"content"');
+      expect(payloads[1]).toMatchObject({
+        choices: [
+          {
+            index: 0,
+            delta: {
+              content: "Ready",
+            },
+            finish_reason: null,
+          },
+        ],
+      });
+    } finally {
+      await server.close();
+    }
+  });
+
   test("forwards x-role-model-routing-mode to chat-completions execution", async () => {
     expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
 
@@ -8863,11 +8793,103 @@ describe("runtime-host-bridge", () => {
       });
 
       expect(response.status).toBe(200);
-      expect(requestOptions).toEqual({
+      expect(requestOptions).toMatchObject({
         routingModeOverride: "baseline",
         endpointId: "moonshot.personal.primary.global.kimi-k2.5",
         requestedRoleId: "qa.reviewer",
       });
+      expect(requestOptions?.abortSignal).toBeDefined();
+      expect(requestOptions?.abortSignal?.aborted).toBe(false);
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("forwards ingress session, client correlation, and transport headers to chat-completions execution", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    let requestOptions:
+      | {
+          sessionId?: string;
+          clientRequestId?: string;
+          transportPreference?: string;
+          abortSignal?: AbortSignal;
+        }
+      | undefined;
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            requestOptions?: {
+              sessionId?: string;
+              clientRequestId?: string;
+              transportPreference?: string;
+              abortSignal?: AbortSignal;
+            },
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
+        requestOptions = value;
+        return {
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          adapterFamily: "ai-sdk-openai-compatible",
+          routingDecisionId: "decision-chat-ingress-affinity-123",
+          outputText: "ok",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 1,
+            outputTokens: 1,
+          },
+        };
+      },
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-client-request-id": "client-chat-header-001",
+          "session-id": "session-chat-header-001",
+          "x-role-model-transport-preference": "websocket",
+        },
+        body: JSON.stringify({
+          model: "moonshot/kimi-k2.5",
+          messages: [{ role: "user", content: "Preserve ingress semantics." }],
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(requestOptions).toMatchObject({
+        clientRequestId: "client-chat-header-001",
+        sessionId: "session-chat-header-001",
+        transportPreference: "websocket",
+      });
+      expect(requestOptions?.abortSignal).toBeDefined();
+      expect(requestOptions?.abortSignal?.aborted).toBe(false);
     } finally {
       await server.close();
     }
@@ -11810,6 +11832,27 @@ describe("runtime-host-bridge", () => {
     });
   });
 
+  test("does not infer coding guidance solely from consumer-declared default tools", () => {
+    const heuristic = bridge.inferHeuristicControllerGuidance({
+      messages: [
+        {
+          role: "user",
+          content: "hey",
+        },
+      ],
+      toolCount: 4,
+    });
+
+    expect(heuristic).toMatchObject({
+      strategy: "balanced",
+    });
+    expect(heuristic).not.toMatchObject({
+      requestedRoleId: "coder",
+      taskType: "coder.edit",
+    });
+    expect(heuristic?.preferredCapabilities ?? []).not.toContain("tools.function_calling");
+  });
+
   test("retries controller routing once with a compact prompt when the first controller response is empty", async () => {
     const runtimeStateRoot = await mkdtemp(
       path.join(os.tmpdir(), "role-model-runtime-host-controller-compact-retry-"),
@@ -13813,6 +13856,23 @@ describe("runtime-host-bridge", () => {
                 outputTokens: number;
               };
             }>;
+            listTelemetryRequests: () => Promise<
+              readonly {
+                requestId: string;
+                retryCount: number;
+                rerouteCount: number;
+                cooldownDecision?: string | null;
+              }[]
+            >;
+            readRequestObservation: (requestId: string) => Promise<{
+              executionSemantics: {
+                retryCount: number;
+                rerouteCount: number;
+                cooldownDecision: string;
+                idempotencyDecision: string;
+                toolSideEffectState: string;
+              };
+            } | null>;
           }>;
         }
       ).createRuntimeBridgeBackend({
@@ -13968,6 +14028,16 @@ describe("runtime-host-bridge", () => {
                 outputTokens: number;
               };
             }>;
+            readRequestObservation: (requestId: string) => Promise<{
+              executionSemantics?: {
+                retryCount?: number;
+                rerouteCount?: number;
+                cooldownDecision?: string | null;
+                idempotencyDecision?: string | null;
+                toolSideEffectState?: string | null;
+                failedAttempts?: Array<Record<string, unknown>>;
+              };
+            } | null>;
           }>;
         }
       ).createRuntimeBridgeBackend({
@@ -14127,6 +14197,49 @@ describe("runtime-host-bridge", () => {
       expect(result.finishReason).toBe("stop");
       expect(result.usage.inputTokens).toBe(24);
       expect(result.usage.outputTokens).toBe(7);
+      await expect(
+        backend.readRequestObservation("req-runtime-bridge-live-fallback-001"),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          executionSemantics: expect.objectContaining({
+            retryCount: 1,
+            rerouteCount: 1,
+            cooldownDecision: "recorded",
+            idempotencyDecision: "not_needed",
+            toolSideEffectState: "none",
+            failedAttempts: expect.arrayContaining([
+              expect.objectContaining({
+                failedEndpointId: "moonshot.personal.a-primary.global.kimi-k2.5",
+                failureClass: "upstream_timeout",
+                retryable: true,
+                fallbackEligible: true,
+                cooldownRecorded: false,
+              }),
+              expect.objectContaining({
+                failedEndpointId: "moonshot.personal.a-primary.global.kimi-k2.5",
+                failureClass: "quota_exhausted",
+                retryable: false,
+                fallbackEligible: true,
+                cooldownRecorded: true,
+                cooldownFailureCount: 1,
+                errorPreview: expect.objectContaining({
+                  message: expect.stringContaining("usage limit"),
+                }),
+              }),
+            ]),
+          }),
+        }),
+      );
+      await expect(backend.listTelemetryRequests()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            requestId: "req-runtime-bridge-live-fallback-001",
+            retryCount: 1,
+            rerouteCount: 1,
+            cooldownDecision: "recorded",
+          }),
+        ]),
+      );
       const followUpResult = await backend.executeChatCompletions(
         {
           model: "moonshot/kimi-k2.5",
@@ -14154,6 +14267,201 @@ describe("runtime-host-bridge", () => {
       } else {
         process.env.MOONSHOT_BACKUP_API_KEY = originalBackupApiKey;
       }
+    }
+  });
+
+  test("persists routed provider execution failures with selected endpoint inspection context", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "runtime-host-failure-capture-"));
+    const originalApiKey = process.env.DEEPSEEK_FAILURE_CAPTURE_API_KEY;
+    process.env.DEEPSEEK_FAILURE_CAPTURE_API_KEY = "deepseek-failure-capture-key";
+    const requestId = "req-runtime-bridge-routed-provider-failure-001";
+    const seenRequestBodies: unknown[] = [];
+
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          networkFetcher?: typeof fetch;
+        }) => Promise<{
+          upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          listTelemetryRequests: () => Promise<
+            readonly Array<{
+              requestId: string;
+              endpointId: string;
+              modelId?: string | null;
+              requestedModelId?: string | null;
+              selectedModelId?: string | null;
+              providerId?: string | null;
+              providerFamily?: string | null;
+              providerAccountId?: string | null;
+              endpointKind?: string | null;
+              servingSource?: string | null;
+              sourceType?: string | null;
+              errorClass?: string | null;
+              statusCode?: number | null;
+              adapterFamily?: string | null;
+              executionFamily?: string | null;
+              eligibleEndpointIds?: readonly string[];
+            }>
+          >;
+          readRequestObservation: (requestId: string) => Promise<Record<string, unknown> | null>;
+          shutdown: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-failure-capture-tests",
+      networkFetcher: async (input, init) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        expect(url).toBe("https://api.deepseek.com/v1/chat/completions");
+        seenRequestBodies.push(JSON.parse(String(init?.body)));
+        return new Response(
+          JSON.stringify({
+            error: {
+              message: "Insufficient Balance",
+              type: "unknown_error",
+              code: "invalid_request_error",
+            },
+          }),
+          { status: 402, headers: { "content-type": "application/json" } },
+        );
+      },
+    });
+
+    try {
+      await backend.upsertProviderAccount({
+        providerAccountId: "deepseek.personal.failure-capture",
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "DEEPSEEK_FAILURE_CAPTURE_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: "https://api.deepseek.com/v1",
+        allowedModels: ["deepseek/deepseek-v4-pro"],
+        modelRoleBindings: [
+          {
+            modelId: "deepseek/deepseek-v4-pro",
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      const endpoint = await backend.activateEndpoint({
+        providerAccountId: "deepseek.personal.failure-capture",
+        modelId: "deepseek/deepseek-v4-pro",
+        region: "global",
+      });
+
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "deepseek/deepseek-v4-pro",
+            messages: [{ role: "user", content: "Return OK." }],
+          },
+          requestId,
+        ),
+      ).rejects.toThrow(/Insufficient Balance/);
+      expect(seenRequestBodies).toHaveLength(1);
+
+      const telemetryRows = await backend.listTelemetryRequests();
+      const failureRow = telemetryRows.find((row) => row.requestId === requestId);
+      expect(failureRow).toEqual(
+        expect.objectContaining({
+          endpointId: endpoint.endpointId,
+          modelId: "deepseek/deepseek-v4-pro",
+          requestedModelId: "deepseek/deepseek-v4-pro",
+          selectedModelId: "deepseek/deepseek-v4-pro",
+          providerId: "deepseek",
+          providerFamily: "deepseek",
+          providerAccountId: "deepseek.personal.failure-capture",
+          endpointKind: "remote_api",
+          servingSource: "remote-service",
+          sourceType: "remote",
+          errorClass: "quota_exhausted",
+          statusCode: 402,
+          adapterFamily: "ai-sdk-openai-compatible",
+          executionFamily: "remote-service",
+          eligibleEndpointIds: [endpoint.endpointId],
+        }),
+      );
+      expect(failureRow?.endpointId).not.toBe("routing.failed.pre-execution");
+
+      await expect(backend.readRequestObservation(requestId)).resolves.toEqual(
+        expect.objectContaining({
+          endpointId: endpoint.endpointId,
+          observationAvailability: expect.objectContaining({
+            source: "raw-observation",
+            rawObservationAvailable: true,
+            structuredInspectionAvailable: true,
+          }),
+          executionSemantics: expect.objectContaining({
+            sourceClient: "openai.chat.completions",
+            adapterFamily: "ai-sdk-openai-compatible",
+            executionFamily: "remote-service",
+            failedAttempts: [
+              expect.objectContaining({
+                failedEndpointId: endpoint.endpointId,
+                providerId: "deepseek",
+                failureClass: "quota_exhausted",
+                failurePhase: "provider_execution",
+                retryable: false,
+                fallbackEligible: true,
+                errorPreview: expect.objectContaining({
+                  message: "Insufficient Balance",
+                  statusCode: 402,
+                }),
+              }),
+            ],
+          }),
+          telemetrySnapshot: expect.objectContaining({
+            providerId: "deepseek",
+            providerAccountId: "deepseek.personal.failure-capture",
+            requestedModelId: "deepseek/deepseek-v4-pro",
+            selectedModelId: "deepseek/deepseek-v4-pro",
+            eligibleEndpointIds: [endpoint.endpointId],
+          }),
+        }),
+      );
+    } finally {
+      if (originalApiKey === undefined) {
+        process.env.DEEPSEEK_FAILURE_CAPTURE_API_KEY = undefined;
+      } else {
+        process.env.DEEPSEEK_FAILURE_CAPTURE_API_KEY = originalApiKey;
+      }
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   });
 
@@ -14201,6 +14509,7 @@ describe("runtime-host-bridge", () => {
             }) => Promise<unknown>;
           };
         }) => Promise<{
+          registry: EndpointRegistryResult;
           startProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<{
             status: string;
             authRequestId: string;
@@ -14213,6 +14522,27 @@ describe("runtime-host-bridge", () => {
             body: Record<string, unknown>,
             requestId: string,
           ) => Promise<unknown>;
+          executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
+          listTelemetryRequests?: () => Promise<unknown>;
+          listEndpoints: () => Promise<
+            Array<{
+              endpointId: string;
+              executionCooldown?: {
+                active?: boolean;
+                failureCount?: number;
+                cooldownUntilMs?: number;
+                lastErrorClass?: string;
+              };
+            }>
+          >;
+          readRequestObservation: (requestId: string) => Promise<{
+            executionSemantics?: {
+              executionCooldowns?: Array<Record<string, unknown>>;
+            };
+            telemetrySnapshot?: {
+              dimensions?: Record<string, unknown>;
+            };
+          } | null>;
           shutdown: () => Promise<void>;
         }>;
       }
@@ -14309,16 +14639,191 @@ describe("runtime-host-bridge", () => {
         ),
       ).rejects.toThrow(/could not reach the ai service|timed out/i);
       expect(executeAttempts).toBe(2);
+      const timeoutTelemetryRows = ((await backend.listTelemetryRequests?.()) ?? []) as Array<{
+        requestId?: string;
+        endpointId?: string;
+        errorClass?: string | null;
+        providerId?: string | null;
+        providerFamily?: string | null;
+        providerAccountId?: string | null;
+        requestedModelId?: string | null;
+        vendorId?: string | null;
+        adapterFamily?: string | null;
+      }>;
+      const timeoutFailureRow = timeoutTelemetryRows.find(
+        (row) => row.requestId === "req-runtime-bridge-codex-timeout-001",
+      );
+      expect(timeoutFailureRow).toEqual(
+        expect.objectContaining({
+          endpointId: endpoint.endpointId,
+          errorClass: "upstream_timeout",
+          providerId: "openai",
+          providerFamily: "openai",
+          providerAccountId: "openai.personal.codex-subscription",
+          requestedModelId: "chatgpt/gpt-5.4",
+          vendorId: "chatgpt-codex-responses",
+          adapterFamily: "ai-sdk-openai",
+        }),
+      );
+      expect(timeoutFailureRow?.endpointId).not.toBe("routing.failed.pre-execution");
       await expect(
-        backend.executeChatCompletions(
+        backend.readRequestObservation("req-runtime-bridge-codex-timeout-001"),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          endpointId: endpoint.endpointId,
+          observationAvailability: expect.objectContaining({
+            source: "raw-observation",
+            structuredInspectionAvailable: true,
+          }),
+          executionSemantics: expect.objectContaining({
+            retryCount: 1,
+            failedAttempts: expect.arrayContaining([
+              expect.objectContaining({
+                failedEndpointId: endpoint.endpointId,
+                failureClass: "upstream_timeout",
+                failurePhase: "provider_execution",
+                retryable: true,
+                fallbackEligible: true,
+              }),
+            ]),
+          }),
+        }),
+      );
+      let cooldownError: unknown;
+      try {
+        await backend.executeChatCompletions(
           {
             model: "chatgpt/gpt-5.4",
             messages: [{ role: "user", content: "Try again while the endpoint is cooling down." }],
           },
           "req-runtime-bridge-codex-timeout-002",
-        ),
-      ).rejects.toThrow(/temporarily unavailable|recent execution failures/i);
+        );
+      } catch (error) {
+        cooldownError = error;
+      }
+      expect(cooldownError).toBeInstanceOf(Error);
+      expect((cooldownError as Error).message).toMatch(
+        /temporarily unavailable|recent execution failures/i,
+      );
       expect(executeAttempts).toBe(2);
+
+      const server = await (
+        bridge as {
+          startBridgeServer: (options: {
+            host: string;
+            port: number;
+            registry: EndpointRegistryResult;
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: unknown,
+              requestOptions?: {
+                clientRequestId?: string;
+              },
+            ) => Promise<unknown>;
+            executeResponses: (
+              body: Record<string, unknown>,
+              requestId: string,
+            ) => Promise<unknown>;
+            listTelemetryRequests?: () => Promise<unknown>;
+            readRequestObservation?: (requestId: string) => Promise<unknown>;
+          }) => Promise<{ port: number; close(): Promise<void> }>;
+        }
+      ).startBridgeServer({
+        host: "127.0.0.1",
+        port: 0,
+        registry: backend.registry,
+        executeChatCompletions: backend.executeChatCompletions,
+        executeResponses: backend.executeResponses,
+        listTelemetryRequests: backend.listTelemetryRequests,
+        readRequestObservation: backend.readRequestObservation,
+      });
+
+      try {
+        const httpClientRequestId = "req-runtime-bridge-codex-timeout-http-001";
+        const httpResponse = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-request-id": httpClientRequestId,
+          },
+          body: JSON.stringify({
+            model: "chatgpt/gpt-5.4",
+            messages: [{ role: "user", content: "Try the cooling endpoint through HTTP." }],
+          }),
+        });
+        expect(httpResponse.status).toBe(400);
+        await expect(httpResponse.json()).resolves.toEqual(
+          expect.objectContaining({
+            error: expect.objectContaining({
+              type: "routing_error",
+              code: "no_eligible_target",
+              requestedModel: "chatgpt/gpt-5.4",
+              deniedEndpointIds: [endpoint.endpointId],
+              executionCooldowns: [
+                expect.objectContaining({
+                  endpointId: endpoint.endpointId,
+                  active: true,
+                  failureCount: 1,
+                  lastErrorClass: "upstream_timeout",
+                }),
+              ],
+            }),
+          }),
+        );
+        expect(executeAttempts).toBe(2);
+
+        const telemetryResponse = await fetch(
+          `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
+        );
+        expect(telemetryResponse.status).toBe(200);
+        const telemetryRows = (await telemetryResponse.json()) as Array<{
+          clientRequestId?: string | null;
+          errorClass?: string | null;
+          requestedModelId?: string | null;
+          requestId?: string;
+          statusCode?: number | null;
+        }>;
+        const httpTelemetryRow = telemetryRows.find(
+          (row) => row.clientRequestId === httpClientRequestId,
+        );
+        expect(httpTelemetryRow).toEqual(
+          expect.objectContaining({
+            errorClass: "no_eligible_target",
+            requestedModelId: "chatgpt/gpt-5.4",
+            statusCode: 400,
+          }),
+        );
+        expect(httpTelemetryRow?.requestId).toBeTruthy();
+
+        const httpObservationResponse = await fetch(
+          `http://127.0.0.1:${server.port}/api/role-model/requests/${httpTelemetryRow?.requestId}`,
+        );
+        expect(httpObservationResponse.status).toBe(200);
+        await expect(httpObservationResponse.json()).resolves.toEqual(
+          expect.objectContaining({
+            executionSemantics: expect.objectContaining({
+              executionCooldowns: [
+                expect.objectContaining({
+                  endpointId: endpoint.endpointId,
+                  active: true,
+                  failureCount: 1,
+                  lastErrorClass: "upstream_timeout",
+                }),
+              ],
+            }),
+            telemetrySnapshot: expect.objectContaining({
+              dimensions: expect.objectContaining({
+                executionCooldown: expect.objectContaining({
+                  deniedEndpointIds: [endpoint.endpointId],
+                }),
+              }),
+            }),
+          }),
+        );
+      } finally {
+        await server.close();
+      }
 
       const databasePath = resolveSqliteMemoryLocation({
         runtimeStateRoot,
@@ -14353,6 +14858,43 @@ describe("runtime-host-bridge", () => {
       } finally {
         database.close();
       }
+
+      const observation = await backend.readRequestObservation(
+        "req-runtime-bridge-codex-timeout-002",
+      );
+      expect(observation).toEqual(
+        expect.objectContaining({
+          executionSemantics: expect.objectContaining({
+            executionCooldowns: [
+              expect.objectContaining({
+                endpointId: endpoint.endpointId,
+                active: true,
+                failureCount: 1,
+                lastErrorClass: "upstream_timeout",
+              }),
+            ],
+          }),
+          telemetrySnapshot: expect.objectContaining({
+            dimensions: expect.objectContaining({
+              executionCooldown: expect.objectContaining({
+                deniedEndpointIds: [endpoint.endpointId],
+              }),
+            }),
+          }),
+        }),
+      );
+      await expect(backend.listEndpoints()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            endpointId: endpoint.endpointId,
+            executionCooldown: expect.objectContaining({
+              active: true,
+              failureCount: 1,
+              lastErrorClass: "upstream_timeout",
+            }),
+          }),
+        ]),
+      );
     } finally {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
@@ -14431,6 +14973,14 @@ describe("runtime-host-bridge", () => {
             endpointId: string;
             outputText: string;
           }>;
+          readRequestObservation: (requestId: string) => Promise<{
+            executionSemantics?: {
+              adapterFamily?: string;
+            };
+            executionTelemetry?: {
+              vendorId?: string;
+            };
+          } | null>;
           shutdown: () => Promise<void>;
         }>;
       }
@@ -14504,7 +15054,7 @@ describe("runtime-host-bridge", () => {
               },
             },
             vendorMetadata: {
-              vendorId: "codex-app-server",
+              vendorId: "chatgpt-codex-responses",
               latencyMs: 9,
             },
           };
@@ -14571,6 +15121,240 @@ describe("runtime-host-bridge", () => {
           requestModel: "gpt-5.4",
         },
       ]);
+
+      await expect(
+        backend.readRequestObservation("req-runtime-bridge-codex-direct-001"),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          executionSemantics: expect.objectContaining({
+            adapterFamily: "codex-subscription-responses",
+          }),
+          executionTelemetry: expect.objectContaining({
+            vendorId: "chatgpt-codex-responses",
+          }),
+        }),
+      );
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("Codex Subscription request detail preserves Responses-ingress parameter policy", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "runtime-host-codex-responses-policy-"),
+    );
+    const scopeId = "runtime-host-codex-responses-policy-tests";
+    const backend = await (
+      bridge as {
+        createRuntimeBridgeBackend: (options: {
+          repoRoot: string;
+          fixtureRoot: string;
+          runtimeStateRoot: string;
+          scopeId: string;
+          codexAuthAdapter: {
+            startDeviceCodeLogin: () => Promise<Record<string, unknown>>;
+            readAccount: (input: { codexHome: string }) => Promise<Record<string, unknown>>;
+          };
+          codexExecutionAdapter: {
+            executeRequest: (input: { requestId: string }) => Promise<{
+              statusCode: number;
+              body: Record<string, unknown>;
+              vendorMetadata: {
+                vendorId: string;
+                latencyMs: number;
+                parameterSanitization: readonly Record<string, unknown>[];
+              };
+            }>;
+          };
+        }) => Promise<{
+          startProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<{
+            authRequestId: string;
+          }>;
+          pollProviderDeviceAuthorization: (body: Record<string, unknown>) => Promise<unknown>;
+          activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
+          executeResponses: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              endpointId?: string;
+            },
+          ) => Promise<unknown>;
+          readRequestObservation: (requestId: string) => Promise<{
+            executionSemantics?: {
+              parameterSanitization?: readonly Record<string, unknown>[];
+            };
+          } | null>;
+          shutdown: () => Promise<void>;
+        }>;
+      }
+    ).createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      codexAuthAdapter: {
+        startDeviceCodeLogin: async () => ({
+          loginId: "login-codex-responses-policy-001",
+          verificationUrl: "https://auth.openai.com/codex/device",
+          userCode: "RESP-001",
+          wsUrl: "ws://127.0.0.1:4598",
+          pid: 4598,
+        }),
+        readAccount: async ({ codexHome }) => {
+          await mkdir(codexHome, { recursive: true });
+          await writeFile(
+            path.join(codexHome, "auth.json"),
+            JSON.stringify(
+              {
+                auth_mode: "chatgpt",
+                tokens: {
+                  access_token: "codex-access-responses-policy-001",
+                  refresh_token: "codex-refresh-responses-policy-001",
+                  account_id: "codex-account-responses-policy-001",
+                },
+                last_refresh: "2026-07-06T09:45:00.000Z",
+              },
+              null,
+              2,
+            ),
+            "utf8",
+          );
+          return {
+            account: {
+              type: "chatgpt",
+              email: "responses-policy@example.com",
+              planType: "pro",
+            },
+            requiresOpenaiAuth: true,
+          };
+        },
+      },
+      codexExecutionAdapter: {
+        executeRequest: async ({ requestId }) => ({
+          statusCode: 200,
+          body: {
+            id: `chatcmpl-${requestId}`,
+            choices: [
+              {
+                index: 0,
+                finish_reason: "stop",
+                message: {
+                  role: "assistant",
+                  content: "Responses ingress policy OK",
+                },
+              },
+            ],
+            usage: {
+              prompt_tokens: 18,
+              completion_tokens: 5,
+            },
+          },
+          vendorMetadata: {
+            vendorId: "chatgpt-codex-responses",
+            latencyMs: 7,
+            parameterSanitization: [
+              {
+                field: "temperature",
+                sourceSurface: "openai.chat.completions",
+                targetSurface: "chatgpt.codex.responses",
+                action: "drop_with_receipt",
+                reason: "unsupported_by_selected_backend",
+                sourceValueKind: "present",
+                adapterFamily: "codex-subscription-responses",
+                providerId: "openai",
+                vendorId: "chatgpt-codex-responses",
+              },
+              {
+                field: "max_tokens",
+                sourceSurface: "openai.chat.completions",
+                targetSurface: "chatgpt.codex.responses",
+                action: "drop_with_receipt",
+                reason: "unsupported_by_selected_backend",
+                sourceValueKind: "present",
+                adapterFamily: "codex-subscription-responses",
+                providerId: "openai",
+                vendorId: "chatgpt-codex-responses",
+              },
+            ],
+          },
+        }),
+      },
+    });
+
+    try {
+      const pending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        variantId: "openai-codex-subscription",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["chatgpt/gpt-5.4"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+
+      await expect(
+        backend.pollProviderDeviceAuthorization({
+          authRequestId: pending.authRequestId,
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          status: "connected",
+          providerAccountId: "openai.personal.codex-subscription",
+        }),
+      );
+
+      const endpoint = await backend.activateEndpoint({
+        providerAccountId: "openai.personal.codex-subscription",
+        modelId: "chatgpt/gpt-5.4",
+        region: "global",
+      });
+
+      await backend.executeResponses(
+        {
+          model: "chatgpt/gpt-5.4",
+          input: "Reply exactly RESPONSES_INGRESS_POLICY_OK.",
+          temperature: 0,
+          max_output_tokens: 32,
+        },
+        "req-runtime-bridge-codex-responses-policy-001",
+        undefined,
+        {
+          endpointId: endpoint.endpointId,
+        },
+      );
+
+      await expect(
+        backend.readRequestObservation("req-runtime-bridge-codex-responses-policy-001"),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          executionSemantics: expect.objectContaining({
+            parameterSanitization: [
+              expect.objectContaining({
+                field: "temperature",
+                sourceSurface: "openai.responses",
+                targetSurface: "chatgpt.codex.responses",
+                action: "drop_with_receipt",
+              }),
+              expect.objectContaining({
+                field: "max_output_tokens",
+                sourceSurface: "openai.responses",
+                targetSurface: "chatgpt.codex.responses",
+                action: "drop_with_receipt",
+              }),
+            ],
+          }),
+        }),
+      );
     } finally {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
@@ -14739,7 +15523,7 @@ describe("runtime-host-bridge", () => {
               },
             },
             vendorMetadata: {
-              vendorId: "codex-app-server",
+              vendorId: "chatgpt-codex-responses",
               latencyMs: 11,
             },
           };
@@ -15005,6 +15789,23 @@ describe("runtime-host-bridge", () => {
               diagnostics: readonly unknown[];
             }[];
           }>;
+          listTelemetryRequests: () => Promise<
+            readonly {
+              requestId: string;
+              retryCount: number;
+              rerouteCount: number;
+              idempotencyDecision?: string | null;
+              toolSideEffectState?: string | null;
+            }[]
+          >;
+          readRequestObservation: (requestId: string) => Promise<{
+            executionSemantics: {
+              retryCount: number;
+              rerouteCount: number;
+              idempotencyDecision: string;
+              toolSideEffectState: string;
+            };
+          } | null>;
           shutdown: () => Promise<void>;
         }>;
       }
@@ -15116,7 +15917,7 @@ describe("runtime-host-bridge", () => {
               },
               dynamicToolExecutions: toolResult?.execution ? [toolResult.execution] : [],
               vendorMetadata: {
-                vendorId: "codex-app-server",
+                vendorId: "chatgpt-codex-responses",
                 latencyMs: 12,
               },
             };
@@ -15152,6 +15953,7 @@ describe("runtime-host-bridge", () => {
         region: "global",
       });
 
+      const requestId = "req-runtime-bridge-codex-dynamic-collapse-001";
       const result = await backend.executeChatCompletions(
         {
           model: "chatgpt/gpt-5.4",
@@ -15185,7 +15987,7 @@ describe("runtime-host-bridge", () => {
             },
           },
         },
-        "req-runtime-bridge-codex-dynamic-collapse-001",
+        requestId,
       );
 
       expect(result.model).toBe("chatgpt/gpt-5.4");
@@ -15202,6 +16004,27 @@ describe("runtime-host-bridge", () => {
           status: "succeeded",
         }),
       ]);
+      await expect(backend.readRequestObservation(requestId)).resolves.toEqual(
+        expect.objectContaining({
+          executionSemantics: expect.objectContaining({
+            retryCount: 0,
+            rerouteCount: 0,
+            idempotencyDecision: "tool_replay_guard_required",
+            toolSideEffectState: "executed",
+          }),
+        }),
+      );
+      await expect(backend.listTelemetryRequests()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            requestId,
+            retryCount: 0,
+            rerouteCount: 0,
+            idempotencyDecision: "tool_replay_guard_required",
+            toolSideEffectState: "executed",
+          }),
+        ]),
+      );
     } finally {
       await backend.shutdown();
       await rm(runtimeStateRoot, { recursive: true, force: true });
@@ -15235,6 +16058,51 @@ describe("runtime-host-bridge", () => {
     });
 
     expect(error.statusCode).toBe(429);
+    expect(error.errorClass).toBe("quota_exhausted");
+    expect(error.retryable).toBe(false);
+    expect(error.fallbackEligible).toBe(true);
+  });
+
+  test("classifies provider insufficient balance failures as quota exhaustion", () => {
+    expect(
+      typeof (bridge as { classifyUpstreamExecutionFailure?: unknown })
+        .classifyUpstreamExecutionFailure,
+    ).toBe("function");
+
+    const error = (
+      bridge as {
+        classifyUpstreamExecutionFailure: (input: {
+          endpointId: string;
+          statusCode: number;
+          body: unknown;
+          providerId: string;
+          providerFamily: string;
+          executionFamily: string;
+          adapterFamily: string;
+        }) => {
+          statusCode: number;
+          errorClass: string;
+          retryable: boolean;
+          fallbackEligible: boolean;
+        };
+      }
+    ).classifyUpstreamExecutionFailure({
+      endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      statusCode: 402,
+      body: {
+        error: {
+          message: "Insufficient Balance",
+          type: "unknown_error",
+          code: "invalid_request_error",
+        },
+      },
+      providerId: "deepseek",
+      providerFamily: "deepseek",
+      executionFamily: "remote-service",
+      adapterFamily: "ai-sdk-openai-compatible",
+    });
+
+    expect(error.statusCode).toBe(402);
     expect(error.errorClass).toBe("quota_exhausted");
     expect(error.retryable).toBe(false);
     expect(error.fallbackEligible).toBe(true);
@@ -17739,7 +18607,8 @@ describe("runtime-host-bridge", () => {
           expect.objectContaining({
             endpointId: "test.capture.chat-v1",
             sourceType: "remote",
-            providerFamily: "ai-sdk-openai-compatible",
+            providerId: "deepseek",
+            providerFamily: "deepseek",
             promptCacheSupported: false,
             requestCount: 1,
           }),
@@ -17753,7 +18622,8 @@ describe("runtime-host-bridge", () => {
             clientRequestId,
             endpointId: "test.capture.chat-v1",
             sourceType: "remote",
-            providerFamily: "ai-sdk-openai-compatible",
+            providerId: "deepseek",
+            providerFamily: "deepseek",
             finishReason: "tool_calls",
             promptCacheSupported: false,
             streamTextDeltaCount: 1,
@@ -19448,6 +20318,107 @@ describe("runtime-host-bridge", () => {
     }
   }, 15_000);
 
+  test("aborts streamed chat execution when the downstream client disconnects", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    let resolveAbortObserved: (aborted: boolean) => void = () => {};
+    const abortObserved = new Promise<boolean>((resolve) => {
+      resolveAbortObserved = resolve;
+    });
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (
+              chunk: Record<string, unknown>,
+              metadata?: Record<string, unknown>,
+            ) => void | Promise<void>,
+            requestOptions?: { abortSignal?: AbortSignal },
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: { inputTokens: number; outputTokens: number };
+          }>;
+          executeResponses: () => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async (_body, _requestId, streamWriter, requestOptions) => {
+        if (!requestOptions?.abortSignal) {
+          resolveAbortObserved(false);
+        } else {
+          requestOptions.abortSignal.addEventListener(
+            "abort",
+            () => {
+              resolveAbortObserved(true);
+            },
+            { once: true },
+          );
+        }
+        await streamWriter?.(
+          {
+            id: "chatcmpl-abort-test",
+            object: "chat.completion.chunk",
+            choices: [{ index: 0, delta: { content: "partial" }, finish_reason: null }],
+          },
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            adapterFamily: "test-adapter",
+            routingDecisionId: "decision-abort-test",
+          },
+        );
+        await delay(1_000);
+        return {
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          adapterFamily: "test-adapter",
+          outputText: "partial",
+          finishReason: "stop",
+          usage: { inputTokens: 1, outputTokens: 1 },
+        };
+      },
+      executeResponses: async () => ({}),
+    });
+
+    const abortController = new AbortController();
+
+    try {
+      const streamResponse = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        signal: abortController.signal,
+        body: JSON.stringify({
+          model: "baseline.remote-only",
+          stream: true,
+          messages: [{ role: "user", content: "open a stream" }],
+        }),
+      });
+      expect(streamResponse.status).toBe(200);
+      const reader = streamResponse.body?.getReader();
+      expect(reader).toBeDefined();
+      await reader?.read();
+
+      abortController.abort();
+
+      await expect(Promise.race([abortObserved, delay(500).then(() => false)])).resolves.toBe(true);
+    } finally {
+      abortController.abort();
+      await server.close();
+    }
+  }, 5_000);
+
   test("executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers", async () => {
     // This test exercises the PRODUCTION path where provider-presets.json is empty
     // and OAuth config comes entirely from KNOWN_PROVIDER_OVERRIDES in litellm-catalog.ts.
@@ -19767,6 +20738,427 @@ describe("runtime-host-bridge", () => {
       expect(capturedAuthHeaders.length).toBeGreaterThan(0);
       // resolveCredentialValue reads access_token from the local-file; applyCredentialToHeaders prefixes Bearer
       expect(capturedAuthHeaders[0]).toBe("Bearer sk-test-moonshot-api-key-001");
+    } finally {
+      await rm(credentialFile, { force: true });
+    }
+  });
+
+  test("propagates downstream stream-writer failures during direct provider streaming", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(os.tmpdir(), "role-model-stream-disconnect-tests");
+    const scopeId = "runtime-stream-disconnect-tests";
+    const credentialDir = path.join(runtimeStateRoot, scopeId, "credentials", "oauth", "deepseek");
+    const credentialFile = path.join(credentialDir, "deepseek.personal.apikey.json");
+    await rm(runtimeStateRoot, { recursive: true, force: true });
+    await mkdir(credentialDir, { recursive: true });
+    await writeFile(
+      credentialFile,
+      JSON.stringify({ access_token: "sk-test-deepseek-api-key-001" }),
+      "utf8",
+    );
+
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher?: typeof fetch;
+          }) => Promise<{
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            ) => Promise<{
+              model: string;
+              endpointId: string;
+              outputText: string;
+              finishReason: string;
+            }>;
+            upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url === "https://api.deepseek.com/chat/completions") {
+            const encoder = new TextEncoder();
+            return new Response(
+              new ReadableStream({
+                start(controller) {
+                  controller.enqueue(
+                    encoder.encode(
+                      'data: {"id":"chatcmpl-disconnect","object":"chat.completion.chunk","created":1,"model":"deepseek/deepseek-v4-flash","choices":[{"index":0,"delta":{"content":"partial"},"finish_reason":null}]}\n\n',
+                    ),
+                  );
+                  controller.enqueue(
+                    encoder.encode(
+                      'data: {"id":"chatcmpl-disconnect","object":"chat.completion.chunk","created":1,"model":"deepseek/deepseek-v4-flash","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":8,"completion_tokens":4}}\n\n',
+                    ),
+                  );
+                  controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                  controller.close();
+                },
+              }),
+              { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
+            );
+          }
+          throw new Error(`Unexpected network request: ${url}`);
+        },
+      });
+
+      await backend.upsertProviderAccount?.({
+        providerAccountId: "deepseek.personal.apikey",
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "local-file",
+          ref: "oauth/deepseek/deepseek.personal.apikey",
+        },
+        authMode: "api-key-static",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        baseUrlOverride: "https://api.deepseek.com",
+        allowedModels: ["deepseek/deepseek-v4-flash"],
+        modelRoleBindings: [
+          {
+            modelId: "deepseek/deepseek-v4-flash",
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+
+      await backend.activateEndpoint?.({
+        providerAccountId: "deepseek.personal.apikey",
+        modelId: "deepseek/deepseek-v4-flash",
+        region: "global",
+      });
+
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "deepseek/deepseek-v4-flash",
+            stream: true,
+            messages: [{ role: "user", content: "Open a stream." }],
+          },
+          "req-stream-disconnect-001",
+          async () => {
+            throw new Error("downstream stream writer disconnected");
+          },
+        ),
+      ).rejects.toThrow(/downstream stream writer disconnected/);
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("forwards reasoning-only upstream SSE chunks when chat-completions opted into reasoning", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(os.tmpdir(), "role-model-stream-normalization-tests");
+    const scopeId = "runtime-stream-normalization-tests";
+    const credentialDir = path.join(runtimeStateRoot, scopeId, "credentials", "oauth", "deepseek");
+    const credentialFile = path.join(credentialDir, "deepseek.personal.apikey.json");
+    await rm(runtimeStateRoot, { recursive: true, force: true });
+    await mkdir(credentialDir, { recursive: true });
+    await writeFile(
+      credentialFile,
+      JSON.stringify({ access_token: "sk-test-deepseek-api-key-001" }),
+      "utf8",
+    );
+
+    const streamedChunks: Array<Record<string, unknown>> = [];
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher?: typeof fetch;
+          }) => Promise<{
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            ) => Promise<{
+              model: string;
+              endpointId: string;
+              outputText: string;
+              finishReason: string;
+            }>;
+            upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url === "https://api.deepseek.com/chat/completions") {
+            const encoder = new TextEncoder();
+            return new Response(
+              new ReadableStream({
+                start(controller) {
+                  controller.enqueue(
+                    encoder.encode(
+                      'data: {"id":"chatcmpl-deepseek-stream","object":"chat.completion.chunk","created":1,"model":"deepseek/deepseek-v4-flash","choices":[{"index":0,"delta":{"reasoning_content":"Thinking..."}}]}\n\n',
+                    ),
+                  );
+                  controller.enqueue(
+                    encoder.encode(
+                      'data: {"id":"chatcmpl-deepseek-stream","object":"chat.completion.chunk","created":1,"model":"deepseek/deepseek-v4-flash","choices":[{"index":0,"delta":{"content":"Ready"}}]}\n\n',
+                    ),
+                  );
+                  controller.enqueue(
+                    encoder.encode(
+                      'data: {"id":"chatcmpl-deepseek-stream","object":"chat.completion.chunk","created":1,"model":"deepseek/deepseek-v4-flash","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":8,"completion_tokens":4}}\n\n',
+                    ),
+                  );
+                  controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                  controller.close();
+                },
+              }),
+              { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
+            );
+          }
+          throw new Error(`Unexpected network request: ${url}`);
+        },
+      });
+
+      await backend.upsertProviderAccount?.({
+        providerAccountId: "deepseek.personal.apikey",
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "local-file",
+          ref: "oauth/deepseek/deepseek.personal.apikey",
+        },
+        authMode: "api-key-static",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        baseUrlOverride: "https://api.deepseek.com",
+        allowedModels: ["deepseek/deepseek-v4-flash"],
+        modelRoleBindings: [
+          {
+            modelId: "deepseek/deepseek-v4-flash",
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+
+      await backend.activateEndpoint?.({
+        providerAccountId: "deepseek.personal.apikey",
+        modelId: "deepseek/deepseek-v4-flash",
+        region: "global",
+      });
+
+      const result = await backend.executeChatCompletions(
+        {
+          model: "deepseek/deepseek-v4-flash",
+          stream: true,
+          reasoning_effort: "high",
+          messages: [{ role: "user", content: "Say Ready." }],
+        },
+        "req-stream-normalization-001",
+        async (chunk) => {
+          streamedChunks.push(chunk);
+        },
+      );
+
+      expect(result.outputText).toBe("Ready");
+      expect(streamedChunks.length).toBeGreaterThan(0);
+      expect(streamedChunks[0]).toMatchObject({
+        choices: [
+          expect.objectContaining({
+            delta: expect.objectContaining({ reasoning_content: "Thinking..." }),
+          }),
+        ],
+      });
+      expect(JSON.stringify(streamedChunks[0])).not.toContain('"content"');
+      expect(streamedChunks[1]).toMatchObject({
+        choices: [
+          expect.objectContaining({ delta: expect.objectContaining({ content: "Ready" }) }),
+        ],
+      });
+    } finally {
+      await rm(credentialFile, { force: true });
+    }
+  });
+
+  test("suppresses reasoning-only upstream SSE chunks until downstream-safe content is available when reasoning is not requested", async () => {
+    expect(
+      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+    ).toBe("function");
+
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      "role-model-stream-normalization-no-reasoning-tests",
+    );
+    const scopeId = "runtime-stream-normalization-no-reasoning-tests";
+    const credentialDir = path.join(runtimeStateRoot, scopeId, "credentials", "oauth", "deepseek");
+    const credentialFile = path.join(credentialDir, "deepseek.personal.apikey.json");
+    await rm(runtimeStateRoot, { recursive: true, force: true });
+    await mkdir(credentialDir, { recursive: true });
+    await writeFile(
+      credentialFile,
+      JSON.stringify({ access_token: "sk-test-deepseek-api-key-002" }),
+      "utf8",
+    );
+
+    const streamedChunks: Array<Record<string, unknown>> = [];
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            networkFetcher?: typeof fetch;
+          }) => Promise<{
+            executeChatCompletions: (
+              body: Record<string, unknown>,
+              requestId: string,
+              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            ) => Promise<{
+              model: string;
+              endpointId: string;
+              outputText: string;
+              finishReason: string;
+            }>;
+            upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
+          }>;
+        }
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url === "https://api.deepseek.com/chat/completions") {
+            const encoder = new TextEncoder();
+            return new Response(
+              new ReadableStream({
+                start(controller) {
+                  controller.enqueue(
+                    encoder.encode(
+                      'data: {"id":"chatcmpl-deepseek-stream","object":"chat.completion.chunk","created":1,"model":"deepseek/deepseek-v4-flash","choices":[{"index":0,"delta":{"reasoning_content":"Thinking..."}}]}\n\n',
+                    ),
+                  );
+                  controller.enqueue(
+                    encoder.encode(
+                      'data: {"id":"chatcmpl-deepseek-stream","object":"chat.completion.chunk","created":1,"model":"deepseek/deepseek-v4-flash","choices":[{"index":0,"delta":{"content":"Ready"}}]}\n\n',
+                    ),
+                  );
+                  controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                  controller.close();
+                },
+              }),
+              { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
+            );
+          }
+          throw new Error(`Unexpected network request: ${url}`);
+        },
+      });
+
+      await backend.upsertProviderAccount?.({
+        providerAccountId: "deepseek.personal.apikey",
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "local-file",
+          ref: "oauth/deepseek/deepseek.personal.apikey",
+        },
+        authMode: "api-key-static",
+        regionPolicy: { mode: "prefer", regions: ["global"] },
+        baseUrlOverride: "https://api.deepseek.com",
+        allowedModels: ["deepseek/deepseek-v4-flash"],
+        modelRoleBindings: [
+          {
+            modelId: "deepseek/deepseek-v4-flash",
+            roleAssignmentMode: "all",
+            roleIds: [],
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+
+      await backend.activateEndpoint?.({
+        providerAccountId: "deepseek.personal.apikey",
+        modelId: "deepseek/deepseek-v4-flash",
+        region: "global",
+      });
+
+      const result = await backend.executeChatCompletions(
+        {
+          model: "deepseek/deepseek-v4-flash",
+          stream: true,
+          messages: [{ role: "user", content: "Say Ready." }],
+        },
+        "req-stream-normalization-no-reasoning-001",
+        async (chunk) => {
+          streamedChunks.push(chunk);
+        },
+      );
+
+      expect(result.outputText).toBe("Ready");
+      expect(streamedChunks.length).toBeGreaterThan(0);
+      expect(streamedChunks[0]).toMatchObject({
+        choices: [
+          expect.objectContaining({ delta: expect.objectContaining({ content: "Ready" }) }),
+        ],
+      });
     } finally {
       await rm(credentialFile, { force: true });
     }

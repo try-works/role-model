@@ -663,7 +663,7 @@ describe("account repair mutations", () => {
                   },
                 },
             vendorMetadata: {
-              vendorId: "codex-app-server",
+              vendorId: "chatgpt-codex-responses",
               latencyMs: 12,
             },
           };

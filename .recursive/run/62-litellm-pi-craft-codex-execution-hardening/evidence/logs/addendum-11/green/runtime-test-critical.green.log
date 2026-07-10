@@ -1,0 +1,170 @@
+
+> role-model@0.0.0 runtime:test-critical D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm --filter @role-model-router/runtime-host-bridge run test:critical && corepack pnpm --filter @role-model-router/runtime-ui run test:critical && corepack pnpm run runtime:validate-ui && corepack pnpm run runtime:validate-observability
+
+
+> @role-model-router/runtime-host-bridge@0.0.0 test:critical D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge
+> vitest run test/account-repair.test.ts test/unified-runtime-config.test.ts test/provider-overlap-metadata.test.ts test/benchmark-summary.test.ts test/validate-observability.test.ts test/validate-ui.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/unified-runtime-config.test.ts (27 tests) 122ms
+(node:10892) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:34700) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/benchmark-summary.test.ts (8 tests) 111ms
+(node:62676) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:37600) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/account-repair.test.ts (6 tests) 5613ms
+   ✓ account repair mutations > reconnect returns the current pending device-authorization session for the same account  1127ms
+   ✓ account repair mutations > reconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one  812ms
+   ✓ account repair mutations > starting Codex Subscription authorization again supersedes the older pending session  793ms
+   ✓ account repair mutations > update API key preserves account identity, bindings, and endpoint associations  862ms
+   ✓ account repair mutations > rejects overlapping repair mutations for the same account without partially mutating state  910ms
+   ✓ account repair mutations > codex subscription start returns a real device-code session and poll connects through managed Codex auth  1104ms
+ ✓ test/validate-ui.test.ts (1 test) 7250ms
+   ✓ runRuntimeUiValidation > validates runtime config reads and the main control-plane mutations  7248ms
+ ✓ test/validate-observability.test.ts (1 test) 7254ms
+   ✓ runRuntimeObservabilityValidation > proves structured request, capture, metrics, and otel observability over the real host path  7251ms
+ ✓ test/provider-overlap-metadata.test.ts (45 tests) 22906ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for baseten  1092ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cerebras  1099ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for cohere  1046ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for databricks  1118ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepinfra  1276ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for deepseek  1089ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for groq  1052ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for minimax  1015ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for mistral  1119ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for morph  1096ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for nebius  1067ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for openrouter  1086ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for ovhcloud  958ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for perplexity  1005ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for sarvam  942ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for v0  1001ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for wandb  910ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for xai  1019ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes validation-canonical providerKind for zai  1037ms
+   ✓ listProviders overlap metadata (R1 integration) > listProviders exposes one OpenAI provider with API Key and Codex Subscription variants  831ms
+
+ Test Files  6 passed (6)
+      Tests  88 passed (88)
+   Start at  09:30:37
+   Duration  26.14s (transform 2.41s, setup 0ms, collect 9.46s, tests 43.26s, environment 2ms, prepare 2.20s)
+
+
+> @role-model-router/runtime-ui@ test:critical D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-chart-config.test.ts app/lib/theme.test.ts app/components/page-primitives.test.tsx
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/telemetry-chart-config.test.ts (2 tests) 10ms
+ ✓ app/lib/theme.test.ts (4 tests) 10ms
+ ✓ app/lib/telemetry-analytics.test.ts (10 tests) 21ms
+ ✓ app/lib/view-models.test.ts (34 tests) 112ms
+ ✓ app/lib/runtime-api.test.ts (49 tests) 147ms
+ ✓ app/components/page-primitives.test.tsx (6 tests) 66ms
+
+ Test Files  6 passed (6)
+      Tests  105 passed (105)
+   Start at  09:31:07
+   Duration  2.09s (transform 1.04s, setup 0ms, collect 2.61s, tests 366ms, environment 3ms, prepare 2.20s)
+
+
+> role-model@0.0.0 runtime:validate-ui D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-ui.ts
+
+(node:46064) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "providerCount": 232,
+  "accountCount": 1,
+  "endpointCount": 2,
+  "runtimeConfigPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-ui-validation\\runtime-config.yaml",
+  "runtimeConfigInitialApplied": true,
+  "runtimeConfigUpdatedVersion": "1.1",
+  "runtimeConfigUpdatedRoutingStrategy": "baseline",
+  "moonshotVariantIds": [
+    "moonshot-open-platform",
+    "kimi-code"
+  ],
+  "availableRoleIds": [
+    "analyst",
+    "architect",
+    "coder",
+    "coordinator",
+    "creative",
+    "data",
+    "designer",
+    "educator",
+    "finance",
+    "health",
+    "knowledge",
+    "legal",
+    "marketer",
+    "mathematician",
+    "operator",
+    "planner",
+    "procurement",
+    "product",
+    "recruiter",
+    "researcher",
+    "scientist",
+    "security",
+    "seller",
+    "strategist",
+    "support",
+    "tester",
+    "translator",
+    "writer"
+  ],
+  "upsertedAccountId": "moonshot.personal.primary",
+  "accountListIncludesUpsert": true,
+  "accountRoleBindingIncludesUpsert": true,
+  "activatedEndpointId": "moonshot.personal.primary.global.kimi-k2.5",
+  "endpointListIncludesActivation": true,
+  "routedRequestId": "req-runtime-ui-routing-001",
+  "telemetryListIncludesRoutedRequest": true,
+  "routedRequestRoutingDecisionId": "route-runtime-ui-routing-001",
+  "routedRequestEffectiveMode": "baseline",
+  "routedRequestRewriteReason": "requested-model-matches-downstream",
+  "mixedAliasId": "mixed.local-remote",
+  "mixedAliasModelListIncludesAlias": false,
+  "mixedAliasRequestId": "req-runtime-ui-mixed-alias-001",
+  "mixedAliasAllowEndpoints": [
+    "llama-swap.local.lfm2-5-1-2b-instruct",
+    "moonshot.personal.primary.global.kimi-k2.5"
+  ],
+  "mixedAliasResolvedModelIds": [
+    "lfm2.5-1.2b-instruct",
+    "moonshot/kimi-k2.5"
+  ],
+  "mixedAliasTelemetryListIncludesRequest": true,
+  "mixedAliasRequestDetailAliasResolvedModelIds": [
+    "lfm2.5-1.2b-instruct",
+    "moonshot/kimi-k2.5"
+  ],
+  "mixedAliasRouterDecisionMatchesRequest": true,
+  "mixedAliasOverviewIncludesSelectedEndpoint": true,
+  "mixedAliasEndpointsIncludeSelectedEndpoint": true
+}
+
+> role-model@0.0.0 runtime:validate-observability D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsx src/validate-observability.ts
+
+(node:33532) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "routedRequestId": "req-runtime-ui-routing-001",
+  "telemetryListIncludesRoutedRequest": true,
+  "routedRequestRoutingDecisionId": "route-runtime-ui-routing-001",
+  "mixedAliasTelemetryListIncludesRequest": true,
+  "mixedAliasRouterDecisionMatchesRequest": true,
+  "mixedAliasOverviewIncludesSelectedEndpoint": true
+}

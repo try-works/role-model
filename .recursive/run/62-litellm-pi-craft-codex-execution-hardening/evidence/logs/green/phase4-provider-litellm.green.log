@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/provider-litellm
+
+ ✓ test/index.test.ts (3 tests) 17ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  01:56:03
+   Duration  4.46s (transform 438ms, setup 0ms, collect 397ms, tests 17ms, environment 0ms, prepare 1.09s)
+

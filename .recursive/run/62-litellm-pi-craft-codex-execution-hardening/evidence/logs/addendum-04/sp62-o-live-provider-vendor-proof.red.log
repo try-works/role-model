@@ -1,0 +1,58 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/packages/pi-role-model
+
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+(node:65224) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/validate-agent-path.test.ts (7 tests | 1 failed) 16007ms
+   ✓ validate-agent-path helper > prepares a Pi alias-routed chat payload through the extension flow 137ms
+   ✓ validate-agent-path helper > builds a Craft alias-routed declared-tools payload 2ms
+   ✓ validate-agent-path helper > builds a Craft alias-routed inline-image payload 1ms
+   ✓ validate-agent-path helper > resolves runtime request ids from telemetry when observations are unavailable 110ms
+   ✓ validate-agent-path helper > temporarily seeds OPENAI_API_KEY for mock runtime validation 1ms
+   ✓ validate-agent-path helper > waits for required runtime model endpoints to become active and healthy 60ms
+   × validate-agent-path helper > runs the rebuilt-runtime alias proof through canonical runtime aliases 15694ms
+     → expected { …(12) } to match object { …(6) }
+(17 matching properties omitted from actual)
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-agent-path.test.ts > validate-agent-path helper > runs the rebuilt-runtime alias proof through canonical runtime aliases
+AssertionError: expected { …(12) } to match object { …(6) }
+(17 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "adapterFamily": "litellm-proxy",
+    "executionFamily": "vendor-litellm",
+-   "providerFamily": "openai",
++   "providerFamily": "litellm-proxy",
+    "requestedAlias": "difficulty.remote-only",
+    "selectedEndpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+-   "vendorId": "litellm",
+  }
+
+ ❯ test/validate-agent-path.test.ts:317:53
+    315|     );
+    316|     const casesById = new Map(summary.cases.map((entry) => [String(ent…
+    317|     expect(casesById.get("pi-chat-alias-text-001")).toMatchObject({
+       |                                                     ^
+    318|       requestedAlias: "difficulty.remote-only",
+    319|       selectedEndpointId: "openai.litellm.global.openai-gpt-4-1-mini-f…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  15:42:44
+   Duration  17.33s (transform 1.60s, setup 0ms, collect 391ms, tests 16.01s, environment 0ms, prepare 269ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/validate-agent-path.test.ts

@@ -1,0 +1,29 @@
+{
+  "statusCode": 200,
+  "ok": true,
+  "headers": {
+    "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-origin": "*",
+    "connection": "keep-alive",
+    "content-length": "285",
+    "content-type": "application/json",
+    "date": "Tue, 07 Jul 2026 18:47:58 GMT",
+    "keep-alive": "timeout=5"
+  },
+  "body": {
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "providerId": "deepseek",
+    "modelId": "deepseek/deepseek-v4-flash",
+    "roleIds": [
+      "analyst",
+      "coder",
+      "data",
+      "operator",
+      "translator",
+      "writer"
+    ],
+    "status": "active"
+  }
+}

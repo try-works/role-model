@@ -1,0 +1,1054 @@
+{
+  "ok": true,
+  "elapsedMs": 41994,
+  "clientId": "2639bf61-0cfd-4efb-b922-b781c7c0ad47",
+  "serverVersion": "0.10.3",
+  "roleModelEndpoint": "http://127.0.0.1:3456/v1",
+  "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35",
+  "sessionId": "260710-keen-wave",
+  "connectionSlug": "role-model-run62-verification",
+  "model": "difficulty.remote-only",
+  "thinkingLevel": "high",
+  "prompt": "Reply with exactly CRAFT_ADD17_ALIAS_OK.",
+  "expectedText": "CRAFT_ADD17_ALIAS_OK",
+  "accepted": {
+    "accepted": true,
+    "messageId": "msg-1783645094684-4rzjwg"
+  },
+  "completion": {
+    "completedBy": "event",
+    "event": {
+      "type": "complete",
+      "sessionId": "260710-keen-wave",
+      "tokenUsage": {
+        "inputTokens": 14839,
+        "outputTokens": 10,
+        "totalTokens": 14849,
+        "contextTokens": 0,
+        "costUsd": 0,
+        "cacheReadTokens": 0,
+        "cacheCreationTokens": 0
+      },
+      "hasUnread": true
+    }
+  },
+  "eventCompletion": {
+    "completedBy": "event",
+    "event": {
+      "type": "complete",
+      "sessionId": "260710-keen-wave",
+      "tokenUsage": {
+        "inputTokens": 14839,
+        "outputTokens": 10,
+        "totalTokens": 14849,
+        "contextTokens": 0,
+        "costUsd": 0,
+        "cacheReadTokens": 0,
+        "cacheCreationTokens": 0
+      },
+      "hasUnread": true
+    }
+  },
+  "messages": [
+    {
+      "id": "msg-1783645094684-4rzjwg",
+      "role": "user",
+      "content": "Reply with exactly CRAFT_ADD17_ALIAS_OK.",
+      "timestamp": 1783645094684,
+      "attachments": []
+    },
+    {
+      "id": "msg-1783645136351-qg0re6",
+      "role": "assistant",
+      "content": "CRAFT_ADD17_ALIAS_OK",
+      "timestamp": 1783645136351,
+      "isIntermediate": false,
+      "turnId": "pi-turn-1__m0"
+    }
+  ],
+  "events": [
+    {
+      "at": "2026-07-10T00:58:14.496Z",
+      "type": "envelope",
+      "envelope": {
+        "id": "688f43f9-0655-4e1e-a3ca-01db5cb68bee",
+        "type": "handshake_ack",
+        "protocolVersion": "1.0",
+        "serverVersion": "0.10.3",
+        "clientId": "218b1f59-7089-472d-9ccd-be241af2fd92",
+        "registeredChannels": [
+          "auth:showLogoutConfirmation",
+          "auth:showDeleteSessionConfirmation",
+          "auth:logout",
+          "credentials:healthCheck",
+          "automations:get",
+          "automations:test",
+          "automations:setEnabled",
+          "automations:duplicate",
+          "automations:delete",
+          "automations:getHistory",
+          "automations:replay",
+          "automations:getLastExecuted",
+          "file:read",
+          "file:readDataUrl",
+          "file:readPreviewDataUrl",
+          "file:readBinary",
+          "file:openDialog",
+          "file:readAttachment",
+          "file:readUserAttachment",
+          "file:generateThumbnail",
+          "file:storeAttachment",
+          "fs:search",
+          "fs:listDirectory",
+          "labels:list",
+          "labels:create",
+          "labels:delete",
+          "settings:setupLlmConnection",
+          "settings:testLlmConnectionSetup",
+          "pi:getApiKeyProviders",
+          "pi:getProviderBaseUrl",
+          "pi:getProviderModels",
+          "LLM_Connection:list",
+          "LLM_Connection:listWithStatus",
+          "LLM_Connection:get",
+          "LLM_Connection:getApiKey",
+          "LLM_Connection:save",
+          "LLM_Connection:delete",
+          "LLM_Connection:test",
+          "LLM_Connection:setDefault",
+          "LLM_Connection:setWorkspaceDefault",
+          "LLM_Connection:refreshModels",
+          "chatgpt:startOAuth",
+          "chatgpt:completeOAuth",
+          "chatgpt:cancelOAuth",
+          "chatgpt:getAuthStatus",
+          "chatgpt:logout",
+          "copilot:startOAuth",
+          "copilot:cancelOAuth",
+          "copilot:getAuthStatus",
+          "copilot:logout",
+          "oauth:start",
+          "oauth:complete",
+          "oauth:cancel",
+          "oauth:revoke",
+          "onboarding:getAuthState",
+          "onboarding:validateMcp",
+          "onboarding:startMcpOAuth",
+          "onboarding:startClaudeOAuth",
+          "onboarding:exchangeClaudeCode",
+          "onboarding:hasClaudeOAuthState",
+          "onboarding:clearClaudeOAuthState",
+          "onboarding:deferSetup",
+          "resources:export",
+          "resources:import",
+          "sessions:get",
+          "sessions:getUnreadSummary",
+          "sessions:markAllRead",
+          "sessions:getMessages",
+          "sessions:create",
+          "sessions:delete",
+          "sessions:sendMessage",
+          "sessions:cancel",
+          "sessions:killShell",
+          "tasks:getOutput",
+          "sessions:respondToPermission",
+          "sessions:respondToCredential",
+          "sessions:command",
+          "sessions:getPendingPlanExecution",
+          "sessions:getPermissionModeState",
+          "sessions:searchContent",
+          "sessions:getFiles",
+          "sessions:watchFiles",
+          "sessions:unwatchFiles",
+          "sessions:getNotes",
+          "sessions:setNotes",
+          "sessions:export",
+          "sessions:import",
+          "sessions:exportRemoteTransfer",
+          "sessions:importRemoteTransfer",
+          "server:getWorkspaces",
+          "server:createWorkspace",
+          "server:getStatus",
+          "server:getHealth",
+          "server:getActiveSessions",
+          "server:homeDir",
+          "settings:getDefaultThinkingLevel",
+          "settings:setDefaultThinkingLevel",
+          "session:getModel",
+          "session:setModel",
+          "dialog:openFolder",
+          "workspaceSettings:get",
+          "workspaceSettings:update",
+          "preferences:read",
+          "preferences:write",
+          "drafts:get",
+          "drafts:set",
+          "drafts:delete",
+          "drafts:getAll",
+          "input:getAutoCapitalisation",
+          "input:setAutoCapitalisation",
+          "input:getSendMessageKey",
+          "input:setSendMessageKey",
+          "input:getSpellCheck",
+          "input:setSpellCheck",
+          "power:getKeepAwake",
+          "appearance:getRichToolDescriptions",
+          "appearance:setRichToolDescriptions",
+          "caching:getExtendedPromptCache",
+          "caching:setExtendedPromptCache",
+          "caching:getEnable1MContext",
+          "caching:setEnable1MContext",
+          "rtk:getEnabled",
+          "rtk:setEnabled",
+          "rtk:getStatus",
+          "rtk:getGain",
+          "tools:getBrowserToolEnabled",
+          "tools:setBrowserToolEnabled",
+          "settings:getNetworkProxy",
+          "skills:get",
+          "skills:getFiles",
+          "skills:delete",
+          "skills:openEditor",
+          "skills:openFinder",
+          "sources:get",
+          "sources:create",
+          "sources:delete",
+          "sources:startOAuth",
+          "sources:saveCredentials",
+          "sources:getPermissions",
+          "workspace:getPermissions",
+          "permissions:getDefaults",
+          "sources:getMcpTools",
+          "statuses:list",
+          "statuses:reorder",
+          "theme:getSystemPreference",
+          "system:versions",
+          "system:homeDir",
+          "system:isDebugMode",
+          "releaseNotes:get",
+          "releaseNotes:getLatestVersion",
+          "git:getBranch",
+          "gitbash:check",
+          "gitbash:browse",
+          "gitbash:setPath",
+          "debug:log",
+          "shell:openUrl",
+          "shell:openFile",
+          "shell:showInFolder",
+          "transfer:start",
+          "transfer:chunk",
+          "transfer:commit",
+          "transfer:abort",
+          "workspaces:get",
+          "workspaces:create",
+          "workspaces:checkSlug",
+          "workspaces:updateRemote",
+          "window:getWorkspace",
+          "window:getMode",
+          "window:switchWorkspace",
+          "workspace:readImage",
+          "workspace:writeImage",
+          "theme:getApp",
+          "theme:getPresets",
+          "theme:loadPreset",
+          "theme:getColorTheme",
+          "theme:setColorTheme",
+          "theme:broadcastPreferences",
+          "theme:getWorkspaceColorTheme",
+          "theme:setWorkspaceColorTheme",
+          "theme:getAllWorkspaceThemes",
+          "theme:broadcastWorkspaceTheme",
+          "views:list",
+          "views:save",
+          "toolIcons:getMappings",
+          "logo:getUrl",
+          "messaging:getConfig",
+          "messaging:updateConfig",
+          "messaging:testTelegram",
+          "messaging:saveTelegram",
+          "messaging:testLark",
+          "messaging:saveLark",
+          "messaging:disconnect",
+          "messaging:forget",
+          "messaging:getBindings",
+          "messaging:generateCode",
+          "messaging:unbind",
+          "messaging:unbindBinding",
+          "messaging:generateSupergroupCode",
+          "messaging:getSupergroup",
+          "messaging:unbindSupergroup",
+          "messaging:wa:startConnect",
+          "messaging:wa:submitPhone",
+          "messaging:access:getOwners",
+          "messaging:access:setOwners",
+          "messaging:access:getMode",
+          "messaging:access:setMode",
+          "messaging:access:getPending",
+          "messaging:access:dismissPending",
+          "messaging:access:allowPending",
+          "messaging:access:setBindingAccess",
+          "settings:getServerConfig",
+          "settings:setServerConfig",
+          "settings:getServerStatus"
+        ]
+      },
+      "workspaceId": null
+    },
+    {
+      "at": "2026-07-10T00:58:14.497Z",
+      "type": "handshake_ack",
+      "clientId": "218b1f59-7089-472d-9ccd-be241af2fd92",
+      "serverVersion": "0.10.3",
+      "channelCount": 213
+    },
+    {
+      "at": "2026-07-10T00:58:14.497Z",
+      "type": "invoke",
+      "channel": "server:getWorkspaces",
+      "id": "aaa147c8-bced-414e-a929-f79d8617b1f7",
+      "workspaceId": null
+    },
+    {
+      "at": "2026-07-10T00:58:14.502Z",
+      "type": "invoke",
+      "channel": "server:createWorkspace",
+      "id": "2dd8df3a-1977-4e55-9f53-06bc08fa9722",
+      "workspaceId": null
+    },
+    {
+      "at": "2026-07-10T00:58:14.569Z",
+      "type": "envelope",
+      "envelope": {
+        "id": "4b56bb6d-453a-4821-b069-cce5682e30d0",
+        "type": "handshake_ack",
+        "protocolVersion": "1.0",
+        "serverVersion": "0.10.3",
+        "clientId": "2639bf61-0cfd-4efb-b922-b781c7c0ad47",
+        "registeredChannels": [
+          "auth:showLogoutConfirmation",
+          "auth:showDeleteSessionConfirmation",
+          "auth:logout",
+          "credentials:healthCheck",
+          "automations:get",
+          "automations:test",
+          "automations:setEnabled",
+          "automations:duplicate",
+          "automations:delete",
+          "automations:getHistory",
+          "automations:replay",
+          "automations:getLastExecuted",
+          "file:read",
+          "file:readDataUrl",
+          "file:readPreviewDataUrl",
+          "file:readBinary",
+          "file:openDialog",
+          "file:readAttachment",
+          "file:readUserAttachment",
+          "file:generateThumbnail",
+          "file:storeAttachment",
+          "fs:search",
+          "fs:listDirectory",
+          "labels:list",
+          "labels:create",
+          "labels:delete",
+          "settings:setupLlmConnection",
+          "settings:testLlmConnectionSetup",
+          "pi:getApiKeyProviders",
+          "pi:getProviderBaseUrl",
+          "pi:getProviderModels",
+          "LLM_Connection:list",
+          "LLM_Connection:listWithStatus",
+          "LLM_Connection:get",
+          "LLM_Connection:getApiKey",
+          "LLM_Connection:save",
+          "LLM_Connection:delete",
+          "LLM_Connection:test",
+          "LLM_Connection:setDefault",
+          "LLM_Connection:setWorkspaceDefault",
+          "LLM_Connection:refreshModels",
+          "chatgpt:startOAuth",
+          "chatgpt:completeOAuth",
+          "chatgpt:cancelOAuth",
+          "chatgpt:getAuthStatus",
+          "chatgpt:logout",
+          "copilot:startOAuth",
+          "copilot:cancelOAuth",
+          "copilot:getAuthStatus",
+          "copilot:logout",
+          "oauth:start",
+          "oauth:complete",
+          "oauth:cancel",
+          "oauth:revoke",
+          "onboarding:getAuthState",
+          "onboarding:validateMcp",
+          "onboarding:startMcpOAuth",
+          "onboarding:startClaudeOAuth",
+          "onboarding:exchangeClaudeCode",
+          "onboarding:hasClaudeOAuthState",
+          "onboarding:clearClaudeOAuthState",
+          "onboarding:deferSetup",
+          "resources:export",
+          "resources:import",
+          "sessions:get",
+          "sessions:getUnreadSummary",
+          "sessions:markAllRead",
+          "sessions:getMessages",
+          "sessions:create",
+          "sessions:delete",
+          "sessions:sendMessage",
+          "sessions:cancel",
+          "sessions:killShell",
+          "tasks:getOutput",
+          "sessions:respondToPermission",
+          "sessions:respondToCredential",
+          "sessions:command",
+          "sessions:getPendingPlanExecution",
+          "sessions:getPermissionModeState",
+          "sessions:searchContent",
+          "sessions:getFiles",
+          "sessions:watchFiles",
+          "sessions:unwatchFiles",
+          "sessions:getNotes",
+          "sessions:setNotes",
+          "sessions:export",
+          "sessions:import",
+          "sessions:exportRemoteTransfer",
+          "sessions:importRemoteTransfer",
+          "server:getWorkspaces",
+          "server:createWorkspace",
+          "server:getStatus",
+          "server:getHealth",
+          "server:getActiveSessions",
+          "server:homeDir",
+          "settings:getDefaultThinkingLevel",
+          "settings:setDefaultThinkingLevel",
+          "session:getModel",
+          "session:setModel",
+          "dialog:openFolder",
+          "workspaceSettings:get",
+          "workspaceSettings:update",
+          "preferences:read",
+          "preferences:write",
+          "drafts:get",
+          "drafts:set",
+          "drafts:delete",
+          "drafts:getAll",
+          "input:getAutoCapitalisation",
+          "input:setAutoCapitalisation",
+          "input:getSendMessageKey",
+          "input:setSendMessageKey",
+          "input:getSpellCheck",
+          "input:setSpellCheck",
+          "power:getKeepAwake",
+          "appearance:getRichToolDescriptions",
+          "appearance:setRichToolDescriptions",
+          "caching:getExtendedPromptCache",
+          "caching:setExtendedPromptCache",
+          "caching:getEnable1MContext",
+          "caching:setEnable1MContext",
+          "rtk:getEnabled",
+          "rtk:setEnabled",
+          "rtk:getStatus",
+          "rtk:getGain",
+          "tools:getBrowserToolEnabled",
+          "tools:setBrowserToolEnabled",
+          "settings:getNetworkProxy",
+          "skills:get",
+          "skills:getFiles",
+          "skills:delete",
+          "skills:openEditor",
+          "skills:openFinder",
+          "sources:get",
+          "sources:create",
+          "sources:delete",
+          "sources:startOAuth",
+          "sources:saveCredentials",
+          "sources:getPermissions",
+          "workspace:getPermissions",
+          "permissions:getDefaults",
+          "sources:getMcpTools",
+          "statuses:list",
+          "statuses:reorder",
+          "theme:getSystemPreference",
+          "system:versions",
+          "system:homeDir",
+          "system:isDebugMode",
+          "releaseNotes:get",
+          "releaseNotes:getLatestVersion",
+          "git:getBranch",
+          "gitbash:check",
+          "gitbash:browse",
+          "gitbash:setPath",
+          "debug:log",
+          "shell:openUrl",
+          "shell:openFile",
+          "shell:showInFolder",
+          "transfer:start",
+          "transfer:chunk",
+          "transfer:commit",
+          "transfer:abort",
+          "workspaces:get",
+          "workspaces:create",
+          "workspaces:checkSlug",
+          "workspaces:updateRemote",
+          "window:getWorkspace",
+          "window:getMode",
+          "window:switchWorkspace",
+          "workspace:readImage",
+          "workspace:writeImage",
+          "theme:getApp",
+          "theme:getPresets",
+          "theme:loadPreset",
+          "theme:getColorTheme",
+          "theme:setColorTheme",
+          "theme:broadcastPreferences",
+          "theme:getWorkspaceColorTheme",
+          "theme:setWorkspaceColorTheme",
+          "theme:getAllWorkspaceThemes",
+          "theme:broadcastWorkspaceTheme",
+          "views:list",
+          "views:save",
+          "toolIcons:getMappings",
+          "logo:getUrl",
+          "messaging:getConfig",
+          "messaging:updateConfig",
+          "messaging:testTelegram",
+          "messaging:saveTelegram",
+          "messaging:testLark",
+          "messaging:saveLark",
+          "messaging:disconnect",
+          "messaging:forget",
+          "messaging:getBindings",
+          "messaging:generateCode",
+          "messaging:unbind",
+          "messaging:unbindBinding",
+          "messaging:generateSupergroupCode",
+          "messaging:getSupergroup",
+          "messaging:unbindSupergroup",
+          "messaging:wa:startConnect",
+          "messaging:wa:submitPhone",
+          "messaging:access:getOwners",
+          "messaging:access:setOwners",
+          "messaging:access:getMode",
+          "messaging:access:setMode",
+          "messaging:access:getPending",
+          "messaging:access:dismissPending",
+          "messaging:access:allowPending",
+          "messaging:access:setBindingAccess",
+          "settings:getServerConfig",
+          "settings:setServerConfig",
+          "settings:getServerStatus"
+        ]
+      },
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:14.570Z",
+      "type": "handshake_ack",
+      "clientId": "2639bf61-0cfd-4efb-b922-b781c7c0ad47",
+      "serverVersion": "0.10.3",
+      "channelCount": 213
+    },
+    {
+      "at": "2026-07-10T00:58:14.570Z",
+      "type": "invoke",
+      "channel": "LLM_Connection:save",
+      "id": "96934c06-8379-4acf-a474-868e1b453e55",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:14.598Z",
+      "type": "invoke",
+      "channel": "sessions:create",
+      "id": "80c7b847-7206-44ef-804a-704f2c1d705a",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:14.626Z",
+      "type": "invoke",
+      "channel": "session:setModel",
+      "id": "316fc5e6-089d-47b8-a4f4-33486298f5c9",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:14.664Z",
+      "type": "event",
+      "channel": "session:event",
+      "args": [
+        {
+          "type": "session_model_changed",
+          "sessionId": "260710-keen-wave",
+          "model": "difficulty.remote-only"
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:14.665Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "846de6c0-2de8-49c1-8dec-81b0d81991f0",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:14.666Z",
+      "type": "invoke",
+      "channel": "sessions:sendMessage",
+      "id": "d0a3aacf-5870-4a76-bde8-25d6824bc9a1",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:14.700Z",
+      "type": "event",
+      "channel": "session:event",
+      "args": [
+        {
+          "type": "user_message",
+          "sessionId": "260710-keen-wave",
+          "message": {
+            "id": "msg-1783645094684-4rzjwg",
+            "role": "user",
+            "content": "Reply with exactly CRAFT_ADD17_ALIAS_OK.",
+            "timestamp": 1783645094684,
+            "attachments": []
+          },
+          "status": "accepted"
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:14.706Z",
+      "type": "event",
+      "channel": "session:event",
+      "args": [
+        {
+          "type": "connection_changed",
+          "sessionId": "260710-keen-wave",
+          "connectionSlug": "role-model-run62-verification",
+          "supportsBranching": true
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:15.687Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "3f77c6f6-7459-4071-b50f-27a844afd96b",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:16.696Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "c63e1346-d095-46fe-af13-b3038bb284a6",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:17.702Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "56d2d240-b046-4690-90b3-30173c6a59e9",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:18.709Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "74f88d8f-5dc9-4e77-a532-d9c17b53db07",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:19.718Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "466219b7-e69d-4a46-b9ad-58caa71fd4de",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:20.723Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "455ea9cc-41a3-4119-a75d-b71d65cbf99b",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:21.219Z",
+      "type": "event",
+      "channel": "update:available",
+      "args": [
+        {
+          "available": true,
+          "currentVersion": "0.10.3",
+          "latestVersion": "0.11.0",
+          "downloadState": "ready",
+          "downloadProgress": 100
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:21.743Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "b51383ef-ae3f-400e-8080-55bf99b13c30",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:22.747Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "d20733ec-52a2-4927-9216-098ea1552fb5",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:23.754Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "659aa18e-9ad8-452a-8048-dc2309d6932a",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:24.762Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "9f4882f8-ebd3-427a-b8b8-3615ae6a7f7a",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:25.769Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "77fdee8b-7d7c-40e6-9c9e-2d958a7036f2",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:26.777Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "18282b6e-1eb0-4da1-8f3b-14423a769311",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:27.784Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "14568a1a-7e9f-4c69-a5c6-bad2e33a148a",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:28.789Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "412e00bb-b63f-4dc4-bc75-c0ccd4f3c99a",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:29.797Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "54bd4498-b7cb-4eba-9be3-d6882f6627dd",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:30.805Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "a62c12aa-eaa5-4571-abb4-e5937856a7fe",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:31.811Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "517f1703-0d68-481e-b3a9-1ce1df37f13f",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:32.819Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "ab4ff586-ead7-46e9-ac97-085307b304c4",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:33.825Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "1d2b0a0d-15f0-47c0-a170-187910404b60",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:34.832Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "f7302a54-5758-4719-a94c-d3f2c719dd65",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:35.839Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "38754248-cbea-4a55-bae4-952743f03ea4",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:36.846Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "b261ec53-589a-4084-a421-86d1296d4556",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:37.855Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "363a194d-9e84-46d4-b7ce-0deca8ecc970",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:38.864Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "53147c07-3b97-4b5b-9dcd-f2950dcfe4b4",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:39.869Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "86ff322f-331e-44c8-b79e-63380bf8a4bf",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:40.875Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "acc9c145-2697-45d3-806a-ffb5e4bd5076",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:41.881Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "dc541f32-f6c3-454f-80b0-906ac2e05e8b",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:42.887Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "4938be46-ac27-4b30-be21-54c858675a01",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:43.893Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "022e19a2-7261-4d44-8891-f5996bb66803",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:44.900Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "2a076493-7cc9-4b70-aae6-27bf4b108fda",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:45.907Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "806f6548-12f4-444f-be2b-9deafa23e86a",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:46.915Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "5f2c5e7d-41a7-40f0-aada-2803846a6155",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:47.922Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "c67d5c7a-dc19-4b72-a3bd-fc57817d725c",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:48.928Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "bca4b0cf-5220-456e-a1be-d2b1c298cf5b",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:49.932Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "1912f1cb-12c4-432d-8c37-1bc404e5694e",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:50.941Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "1ca82ad0-3bc9-4e50-acd8-a28b6686a854",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:51.946Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "b835d924-6a31-452a-86b1-9de1e1c99533",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:52.952Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "adb7a14f-86a0-4bfe-b61f-561c38238784",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:53.957Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "78ca92bb-2c6c-4165-9f7e-de331855ebb6",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:54.966Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "e9567d5c-58ae-40b8-9861-2e4405dc2ce3",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:55.909Z",
+      "type": "event",
+      "channel": "session:event",
+      "args": [
+        {
+          "type": "text_delta",
+          "sessionId": "260710-keen-wave",
+          "delta": "CRAFT_ADD17_ALIAS",
+          "turnId": "pi-turn-1__m0"
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:55.973Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "8f1cb9e0-e7a9-4c29-af6b-06bbc7efef80",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:55.990Z",
+      "type": "event",
+      "channel": "session:event",
+      "args": [
+        {
+          "type": "text_delta",
+          "sessionId": "260710-keen-wave",
+          "delta": "_OK",
+          "turnId": "pi-turn-1__m0"
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:56.352Z",
+      "type": "event",
+      "channel": "session:event",
+      "args": [
+        {
+          "type": "text_complete",
+          "sessionId": "260710-keen-wave",
+          "text": "CRAFT_ADD17_ALIAS_OK",
+          "isIntermediate": false,
+          "turnId": "pi-turn-1__m0",
+          "timestamp": 1783645136351,
+          "messageId": "msg-1783645136351-qg0re6"
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:56.353Z",
+      "type": "event",
+      "channel": "session:event",
+      "args": [
+        {
+          "type": "usage_update",
+          "sessionId": "260710-keen-wave",
+          "tokenUsage": {
+            "inputTokens": 14839
+          }
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:56.366Z",
+      "type": "event",
+      "channel": "badge:draw-windows",
+      "args": [
+        {
+          "count": 1
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:56.366Z",
+      "type": "event",
+      "channel": "sessions:unreadSummaryChanged",
+      "args": [
+        {
+          "totalUnreadSessions": 1,
+          "byWorkspace": {
+            "0cc32e50-0b68-c1f4-dc58-13eba1e48b35": 1
+          },
+          "hasUnreadByWorkspace": {
+            "0cc32e50-0b68-c1f4-dc58-13eba1e48b35": true
+          }
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:56.366Z",
+      "type": "event",
+      "channel": "session:event",
+      "args": [
+        {
+          "type": "complete",
+          "sessionId": "260710-keen-wave",
+          "tokenUsage": {
+            "inputTokens": 14839,
+            "outputTokens": 10,
+            "totalTokens": 14849,
+            "contextTokens": 0,
+            "costUsd": 0,
+            "cacheReadTokens": 0,
+            "cacheCreationTokens": 0
+          },
+          "hasUnread": true
+        }
+      ],
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    },
+    {
+      "at": "2026-07-10T00:58:56.367Z",
+      "type": "invoke",
+      "channel": "sessions:getMessages",
+      "id": "e236b499-e05b-4908-bedc-c7fbdb64c202",
+      "workspaceId": "0cc32e50-0b68-c1f4-dc58-13eba1e48b35"
+    }
+  ]
+}

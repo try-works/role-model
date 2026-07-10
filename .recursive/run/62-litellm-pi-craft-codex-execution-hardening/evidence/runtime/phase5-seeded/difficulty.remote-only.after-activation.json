@@ -1,0 +1,65 @@
+{
+  "id": "difficulty.remote-only",
+  "object": "model",
+  "owned_by": "role-model",
+  "endpoint_ids": [
+    "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "context_window": 262144,
+  "max_tokens": 128000,
+  "input": [
+    "text",
+    "image"
+  ],
+  "input_modalities": [
+    "image",
+    "pdf",
+    "text",
+    "video"
+  ],
+  "output_modalities": [
+    "text"
+  ],
+  "capabilities": [
+    "code.edit",
+    "reasoning",
+    "structured.output",
+    "text.chat",
+    "tools.function_calling"
+  ],
+  "role_model": {
+    "type": "alias",
+    "routing_mode": "difficulty",
+    "discovery_url": "http://127.0.0.1:60779/api/role-model/downstream/openai",
+    "capability_revision": "6724b58e69412806",
+    "context_window": 262144,
+    "max_tokens": 128000,
+    "input_modalities": [
+      "image",
+      "pdf",
+      "text",
+      "video"
+    ],
+    "output_modalities": [
+      "text"
+    ],
+    "tools": {
+      "function_calling": true
+    },
+    "reasoning": {
+      "supported": true,
+      "effort_control": true
+    },
+    "structured_output": {
+      "supported": true
+    },
+    "caching": {
+      "prompt_read": false,
+      "prompt_write": false,
+      "source": "catalog"
+    }
+  }
+}

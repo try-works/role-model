@@ -152,6 +152,7 @@ export default function RequestDetailRoute() {
   const usageEvent = asRecord(request.usageEvent) ?? {};
   const telemetrySnapshot = asRecord(request.telemetrySnapshot) ?? {};
   const executionTelemetry = asRecord(request.executionTelemetry) ?? {};
+  const executionSemantics = asRecord(request.executionSemantics) ?? {};
   const executionStream = asRecord(executionTelemetry.stream) ?? {};
   const executionStreamSupport = asRecord(executionTelemetry.streamSupport) ?? {};
   const executionPromptCaching = asRecord(executionTelemetry.promptCaching) ?? {};
@@ -225,7 +226,14 @@ export default function RequestDetailRoute() {
   );
   const costBaselineSource = pickCostString("costBaselineSource", "cost_baseline_source");
   const costSavingsSupport = pickCostString("costSavingsSupport", "cost_savings_support");
+  const providerId =
+    pickString(request, "providerId") ?? pickString(telemetrySnapshot, "providerId");
   const providerFamily = pickString(executionTelemetry, "providerFamily");
+  const vendorId =
+    pickString(executionTelemetry, "vendorId") ??
+    pickString(asRecord(responseCapture.vendorMetadata) ?? {}, "vendorId");
+  const executionFamily = pickString(executionSemantics, "executionFamily");
+  const adapterFamily = pickString(executionSemantics, "adapterFamily");
   const finishReason = pickString(executionTelemetry, "finishReason");
   const promptCacheSupported =
     pickBoolean(request, "promptCacheSupported") ??
@@ -453,9 +461,29 @@ export default function RequestDetailRoute() {
           detail="Canonical source family used by the telemetry ledger."
         />
         <FactCard
+          label="Provider"
+          value={renderMetricValue(providerId)}
+          detail="Actual provider identity for the selected endpoint."
+        />
+        <FactCard
           label="Provider family"
           value={renderMetricValue(providerFamily)}
-          detail="Execution adapter family preserved in the canonical telemetry contract."
+          detail="Provider semantic family preserved in the canonical telemetry contract."
+        />
+        <FactCard
+          label="Vendor"
+          value={renderMetricValue(vendorId)}
+          detail="Optional intermediary execution vendor such as LiteLLM."
+        />
+        <FactCard
+          label="Execution path"
+          value={renderMetricValue(executionFamily)}
+          detail="High-level routed execution family selected for this request."
+        />
+        <FactCard
+          label="Adapter"
+          value={renderMetricValue(adapterFamily)}
+          detail="Concrete adapter implementation used to shape and execute the provider request."
         />
         <FactCard
           label="Latency"

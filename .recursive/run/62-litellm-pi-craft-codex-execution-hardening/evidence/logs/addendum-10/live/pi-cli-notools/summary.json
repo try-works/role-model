@@ -1,0 +1,34 @@
+[
+  {
+    "model": "difficulty.remote-only",
+    "timedOut": false,
+    "exitCode": 0,
+    "durationMs": 5485,
+    "stdout": "OK\n",
+    "stderr": null
+  },
+  {
+    "model": "baseline.remote-only",
+    "timedOut": false,
+    "exitCode": 0,
+    "durationMs": 7781,
+    "stdout": "OK\n",
+    "stderr": null
+  },
+  {
+    "model": "deepseek/deepseek-v4-pro",
+    "timedOut": false,
+    "exitCode": 0,
+    "durationMs": 5102,
+    "stdout": "OK.\n",
+    "stderr": null
+  },
+  {
+    "model": "chatgpt/gpt-5.4",
+    "timedOut": false,
+    "exitCode": 0,
+    "durationMs": 8705,
+    "stdout": "OK\n",
+    "stderr": null
+  }
+]

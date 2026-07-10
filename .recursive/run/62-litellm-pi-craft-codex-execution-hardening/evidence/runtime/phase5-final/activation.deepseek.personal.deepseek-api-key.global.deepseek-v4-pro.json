@@ -1,0 +1,22 @@
+{
+  "providerAccountId": "deepseek.personal.deepseek-api-key",
+  "modelId": "deepseek/deepseek-v4-pro",
+  "region": "global",
+  "statusCode": 200,
+  "ok": true,
+  "body": {
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "providerId": "deepseek",
+    "modelId": "deepseek/deepseek-v4-pro",
+    "roleIds": [
+      "analyst",
+      "coder",
+      "data",
+      "operator",
+      "translator",
+      "writer"
+    ],
+    "status": "active"
+  }
+}

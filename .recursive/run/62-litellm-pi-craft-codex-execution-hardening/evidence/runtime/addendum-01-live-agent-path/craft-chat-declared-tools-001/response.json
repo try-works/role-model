@@ -1,0 +1,37 @@
+{
+  "status": 200,
+  "headers": {
+    "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-origin": "*",
+    "connection": "keep-alive",
+    "content-length": "283",
+    "content-type": "application/json",
+    "date": "Wed, 08 Jul 2026 00:08:39 GMT",
+    "keep-alive": "timeout=5",
+    "x-role-model-adapter-family": "ai-sdk-openai-compatible",
+    "x-role-model-endpoint-id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "x-role-model-routing-decision-id": "decision-req-288f5a01-76c1-48b6-aeff-50b86f484811"
+  },
+  "body": {
+    "id": "chatcmpl-role-model",
+    "object": "chat.completion",
+    "created": 1783469319,
+    "model": "deepseek/deepseek-v4-pro",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "CRAFT_OK"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 379,
+      "completion_tokens": 42,
+      "total_tokens": 421
+    }
+  }
+}

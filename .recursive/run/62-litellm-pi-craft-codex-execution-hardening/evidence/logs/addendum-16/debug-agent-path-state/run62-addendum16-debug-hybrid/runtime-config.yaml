@@ -1,0 +1,315 @@
+version: "1.0"
+execution_mode: hybrid
+routing:
+  strategy: balanced
+observed_data:
+  enabled: true
+  aggregation:
+    min_samples: 2
+  difficulty_learning:
+    cache_ttl_ms: 900000
+    invalidation:
+      max_context_tokens_delta: 800
+      max_history_turn_delta: 2
+      max_tool_count_delta: 1
+      max_instruction_constraint_delta: 3
+      max_decomposition_keyword_delta: 2
+      reclassify_on_code_or_schema_change: true
+    override:
+      min_samples: 999
+      max_failure_rate: 0.35
+      min_quality_score: 0.7
+      min_tokens_per_sec: 18
+    recommendation:
+      min_samples: 4
+      max_failure_rate: 0.2
+      min_quality_score: 0.8
+      min_tokens_per_sec: 22
+  metric_halflives:
+    quality_ms: 900000
+    latency_ms: 300000
+    throughput_ms: 120000
+    reliability_ms: 600000
+    cost_ms: 1800000
+  throughput_sla:
+    enabled: true
+    min_tokens_per_sec: 24
+    penalty_timeout_ms: 600000
+    penalty_factor: 0
+difficulty_classifier:
+  enabled: true
+  rubric_version: v1
+  source_type: remote
+  model_id: openai/gpt-4.1-mini-fast
+  timeout_ms: 1500
+  fallback_difficulty: medium
+controller:
+  enabled: true
+  source_type: remote
+  model_id: openai/gpt-4.1-mini-fast
+  timeout_ms: 1500
+model_aliases:
+  default.decision-only:
+    mode: basic
+    model_ids:
+      - chatgpt/gpt-5.4
+      - local/llama-3.1-8b-instruct
+      - openai/gpt-4.1-mini-fast
+  baseline.decision-only:
+    mode: basic
+    model_ids:
+      - chatgpt/gpt-5.4
+      - local/llama-3.1-8b-instruct
+      - openai/gpt-4.1-mini-fast
+  controller.decision-only:
+    mode: intelligent
+    model_ids:
+      - chatgpt/gpt-5.4
+      - local/llama-3.1-8b-instruct
+      - openai/gpt-4.1-mini-fast
+  difficulty.decision-only:
+    mode: difficulty
+    model_ids:
+      - chatgpt/gpt-5.4
+      - local/llama-3.1-8b-instruct
+      - openai/gpt-4.1-mini-fast
+  hybrid.decision-only:
+    mode: hybrid
+    model_ids:
+      - chatgpt/gpt-5.4
+      - local/llama-3.1-8b-instruct
+      - openai/gpt-4.1-mini-fast
+  default.hybrid:
+    mode: basic
+    model_ids:
+      - chatgpt/gpt-5.4
+      - local/llama-3.1-8b-instruct
+      - openai/gpt-4.1-mini-fast
+  baseline.hybrid:
+    mode: basic
+    model_ids:
+      - chatgpt/gpt-5.4
+      - local/llama-3.1-8b-instruct
+      - openai/gpt-4.1-mini-fast
+  controller.hybrid:
+    mode: intelligent
+    model_ids:
+      - chatgpt/gpt-5.4
+      - local/llama-3.1-8b-instruct
+      - openai/gpt-4.1-mini-fast
+  difficulty.hybrid:
+    mode: difficulty
+    model_ids:
+      - chatgpt/gpt-5.4
+      - local/llama-3.1-8b-instruct
+      - openai/gpt-4.1-mini-fast
+  hybrid.hybrid:
+    mode: hybrid
+    model_ids:
+      - chatgpt/gpt-5.4
+      - local/llama-3.1-8b-instruct
+      - openai/gpt-4.1-mini-fast
+  default.local-only:
+    mode: basic
+    model_ids:
+      - local/llama-3.1-8b-instruct
+  baseline.local-only:
+    mode: basic
+    model_ids:
+      - local/llama-3.1-8b-instruct
+  controller.local-only:
+    mode: intelligent
+    model_ids:
+      - local/llama-3.1-8b-instruct
+  difficulty.local-only:
+    mode: difficulty
+    model_ids:
+      - local/llama-3.1-8b-instruct
+  hybrid.local-only:
+    mode: hybrid
+    model_ids:
+      - local/llama-3.1-8b-instruct
+  default.remote-only:
+    mode: basic
+    model_ids:
+      - chatgpt/gpt-5.4
+      - openai/gpt-4.1-mini-fast
+  baseline.remote-only:
+    mode: basic
+    model_ids:
+      - chatgpt/gpt-5.4
+      - openai/gpt-4.1-mini-fast
+  controller.remote-only:
+    mode: intelligent
+    model_ids:
+      - chatgpt/gpt-5.4
+      - openai/gpt-4.1-mini-fast
+  difficulty.remote-only:
+    mode: difficulty
+    model_ids:
+      - chatgpt/gpt-5.4
+      - openai/gpt-4.1-mini-fast
+  hybrid.remote-only:
+    mode: hybrid
+    model_ids:
+      - chatgpt/gpt-5.4
+      - openai/gpt-4.1-mini-fast
+llama_swap:
+  command: node
+  args:
+    - -e
+    - "const http=require(\"node:http\");const
+      port=Number(process.env.PORT??process.argv[2]);const
+      server=http.createServer((req,res)=>{if(req.url===\"/health\"){res.status\
+      Code=200;res.end(\"ok\");return;}if(req.url===\"/v1/responses\"){let
+      body=\"\";req.on(\"data\",chunk=>body+=chunk);req.on(\"end\",()=>{const
+      parsed=JSON.parse(body||\"{}\");if(parsed.stream){res.writeHead(200,{\"co\
+      ntent-type\":\"text/event-stream; charset=utf-8\"});res.write('data:
+      {\"type\":\"response.created\",\"response\":{\"id\":\"resp-local\",\"crea\
+      ted_at\":1,\"model\":\"local/llama-3.1-8b-instruct\"}}'+\"\\n\\n\");setTi\
+      meout(()=>{res.write('data:
+      {\"type\":\"response.output_text.delta\",\"item_id\":\"msg_1\",\"delta\":\
+      \"local llama summary\"}'+\"\\n\\n\");setTimeout(()=>{res.end('data:
+      {\"type\":\"response.completed\",\"response\":{\"usage\":{\"input_tokens\
+      \":11,\"output_tokens\":4}},\"_hidden_params\":{\"response_cost\":0.0005,\
+      \"cache_hit\":false}}'+\"\\n\\n\"+'data:
+      [DONE]'+\"\\n\\n\");},10);},10);return;}res.setHeader(\"content-type\",\"\
+      application/json\");res.end(JSON.stringify({id:\"resp-local\",output:[{ty\
+      pe:\"message\",role:\"assistant\",content:[{type:\"output_text\",text:\"l\
+      ocal llama
+      summary\"}]}],usage:{input_tokens:11,output_tokens:4},_hidden_params:{res\
+      ponse_cost:0.0005,cache_hit:false}}));});return;}if(req.url===\"/v1/chat/\
+      completions\"){let
+      body=\"\";req.on(\"data\",chunk=>body+=chunk);req.on(\"end\",()=>{const
+      parsed=JSON.parse(body||\"{}\");if(parsed.stream){res.writeHead(200,{\"co\
+      ntent-type\":\"text/event-stream; charset=utf-8\"});res.write('data:
+      {\"id\":\"chat-local\",\"object\":\"chat.completion.chunk\",\"created\":1,\
+      \"model\":\"local/llama-3.1-8b-instruct\",\"choices\":[{\"index\":0,\"del\
+      ta\":{\"role\":\"assistant\",\"content\":\"local
+      \"},\"finish_reason\":null}]}'+\"\\n\\n\");setTimeout(()=>{res.write('dat\
+      a:
+      {\"id\":\"chat-local\",\"object\":\"chat.completion.chunk\",\"created\":1,\
+      \"model\":\"local/llama-3.1-8b-instruct\",\"choices\":[{\"index\":0,\"del\
+      ta\":{\"content\":\"llama
+      summary\"},\"finish_reason\":null}]}'+\"\\n\\n\");setTimeout(()=>{res.end\
+      ('data:
+      {\"id\":\"chat-local\",\"object\":\"chat.completion.chunk\",\"created\":1,\
+      \"model\":\"local/llama-3.1-8b-instruct\",\"choices\":[{\"index\":0,\"del\
+      ta\":{},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":11,\"co\
+      mpletion_tokens\":4},\"_hidden_params\":{\"response_cost\":0.0005,\"cache\
+      _hit\":false}}'+\"\\n\\n\"+'data:
+      [DONE]'+\"\\n\\n\");},10);},10);return;}res.setHeader(\"content-type\",\"\
+      application/json\");res.end(JSON.stringify({id:\"chat-local\",object:\"ch\
+      at.completion\",choices:[{index:0,message:{role:\"assistant\",content:\"l\
+      ocal llama
+      summary\"},finish_reason:\"stop\"}],usage:{prompt_tokens:11,completion_to\
+      kens:4,total_tokens:15},_hidden_params:{response_cost:0.0005,cache_hit:fa\
+      lse}}));});return;}res.statusCode=404;res.end(\"missing\");});server.list\
+      en(port,\"127.0.0.1\");const
+      shutdown=()=>server.close(()=>process.exit(0));process.on(\"SIGTERM\",shu\
+      tdown);process.on(\"SIGINT\",shutdown);"
+  models:
+    local/llama-3.1-8b-instruct:
+      path: ./models/llama-3.1-8b-instruct-q4.gguf
+      max_difficulty: easy
+litellm_proxy:
+  command: node
+  args:
+    - -e
+    - "const http=require(\"node:http\");const
+      port=Number(process.env.PORT??process.argv[2]);const
+      server=http.createServer((req,res)=>{if(req.url===\"/health/liveliness\")\
+      {res.statusCode=200;res.end(\"ok\");return;}if(req.url===\"/v1/models\"){\
+      res.setHeader(\"content-type\",\"application/json\");res.end(JSON.stringi\
+      fy({object:\"list\",data:[{id:\"openai/gpt-4.1-mini-fast\",object:\"model\
+      \",owned_by:\"openai\"}]}));return;}if(req.url===\"/v1/responses\"){let
+      body=\"\";req.on(\"data\",chunk=>body+=chunk);req.on(\"end\",()=>{const
+      parsed=JSON.parse(body||\"{}\");const joinedInput=typeof
+      parsed.input===\"string\"?parsed.input:JSON.stringify(parsed.input??\"\")\
+      ;const
+      isClassifier=joinedInput.includes(\"ROLE_MODEL_DIFFICULTY_CLASSIFIER\");c\
+      onst
+      isController=joinedInput.includes(\"ROLE_MODEL_ROUTING_CONTROLLER\");const
+      isHardPrompt=joinedInput.includes(\"Analyze this code-edit
+      workflow\")||joinedInput.includes('\"toolCount\":2')||joinedInput.include\
+      s('\"toolCount\":
+      2')||joinedInput.includes('\"codeOrSchemaBurden\":true')||joinedInput.inc\
+      ludes('\"codeOrSchemaBurden\": true');const
+      classifierResponse=isHardPrompt?JSON.stringify({difficulty:\"hard\"}):JSO\
+      N.stringify({difficulty:\"easy\"});const
+      controllerResponse=joinedInput.includes(\"invalid-controller-fallback\")?\
+      \"not-json-controller-output\":JSON.stringify({strategy:\"quality\",prefe\
+      rredEndpointIds:[\"openai.litellm.global.openai-gpt-4-1-mini-fast\"]});co\
+      nst
+      responseText=isController?controllerResponse:(isClassifier?classifierResp\
+      onse:\"remote litellm
+      summary\");if(parsed.stream){res.writeHead(200,{\"content-type\":\"text/e\
+      vent-stream; charset=utf-8\"});res.write('data:
+      {\"type\":\"response.created\",\"response\":{\"id\":\"resp-remote\",\"cre\
+      ated_at\":1,\"model\":\"openai/gpt-4.1-mini-fast\"}}'+\"\\n\\n\");setTime\
+      out(()=>{res.write('data:
+      {\"type\":\"response.output_text.delta\",\"item_id\":\"msg_1\",\"delta\":\
+      '+JSON.stringify(responseText)+'}'+\"\\n\\n\");setTimeout(()=>{res.end('d\
+      ata:
+      {\"type\":\"response.completed\",\"response\":{\"usage\":{\"input_tokens\
+      \":14,\"output_tokens\":5}},\"_hidden_params\":{\"response_cost\":0.0042,\
+      \"cache_hit\":true}}'+\"\\n\\n\"+'data:
+      [DONE]'+\"\\n\\n\");},10);},10);return;}res.setHeader(\"content-type\",\"\
+      application/json\");res.end(JSON.stringify({id:\"resp-remote\",output:[{t\
+      ype:\"message\",role:\"assistant\",content:[{type:\"output_text\",text:re\
+      sponseText}]}],usage:{input_tokens:14,output_tokens:5,prompt_tokens_detai\
+      ls:{cached_tokens:9}},_hidden_params:{response_cost:0.0042,cache_hit:true\
+      }}));});return;}if(req.url===\"/v1/chat/completions\"){let
+      body=\"\";req.on(\"data\",chunk=>body+=chunk);req.on(\"end\",()=>{const
+      parsed=JSON.parse(body||\"{}\");const
+      joinedMessages=JSON.stringify(parsed.messages??[]);const
+      isClassifier=joinedMessages.includes(\"ROLE_MODEL_DIFFICULTY_CLASSIFIER\"\
+      );const
+      isController=joinedMessages.includes(\"ROLE_MODEL_ROUTING_CONTROLLER\");c\
+      onst isHardPrompt=joinedMessages.includes(\"Analyze this code-edit
+      workflow\")||joinedMessages.includes('\"toolCount\":2')||joinedMessages.i\
+      ncludes('\"toolCount\":
+      2')||joinedMessages.includes('\"codeOrSchemaBurden\":true')||joinedMessag\
+      es.includes('\"codeOrSchemaBurden\": true');const
+      classifierResponse=isHardPrompt?JSON.stringify({difficulty:\"hard\"}):JSO\
+      N.stringify({difficulty:\"easy\"});const
+      controllerResponse=joinedMessages.includes(\"invalid-controller-fallback\
+      \")?\"not-json-controller-output\":JSON.stringify({strategy:\"quality\",p\
+      referredEndpointIds:[\"openai.litellm.global.openai-gpt-4-1-mini-fast\"]}\
+      );const
+      responseText=isController?controllerResponse:(isClassifier?classifierResp\
+      onse:\"remote litellm
+      summary\");if(parsed.stream){res.writeHead(200,{\"content-type\":\"text/e\
+      vent-stream; charset=utf-8\"});res.write('data:
+      {\"id\":\"chat-remote\",\"object\":\"chat.completion.chunk\",\"created\":\
+      1,\"model\":\"openai/gpt-4.1-mini-fast\",\"choices\":[{\"index\":0,\"delta\
+      \":{\"role\":\"assistant\",\"content\":\"remote
+      \"},\"finish_reason\":null}]}'+\"\\n\\n\");setTimeout(()=>{res.write('dat\
+      a:
+      {\"id\":\"chat-remote\",\"object\":\"chat.completion.chunk\",\"created\":\
+      1,\"model\":\"openai/gpt-4.1-mini-fast\",\"choices\":[{\"index\":0,\"delta\
+      \":{\"content\":\"litellm
+      summary\"},\"finish_reason\":null}]}'+\"\\n\\n\");setTimeout(()=>{res.end\
+      ('data:
+      {\"id\":\"chat-remote\",\"object\":\"chat.completion.chunk\",\"created\":\
+      1,\"model\":\"openai/gpt-4.1-mini-fast\",\"choices\":[{\"index\":0,\"delta\
+      \":{},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":14,\"comp\
+      letion_tokens\":5},\"_hidden_params\":{\"response_cost\":0.0042,\"cache_h\
+      it\":true}}'+\"\\n\\n\"+'data:
+      [DONE]'+\"\\n\\n\");},10);},10);return;}res.setHeader(\"content-type\",\"\
+      application/json\");res.end(JSON.stringify({id:\"chat-remote\",object:\"c\
+      hat.completion\",choices:[{index:0,message:{role:\"assistant\",content:re\
+      sponseText},finish_reason:\"stop\"}],usage:{prompt_tokens:14,completion_t\
+      okens:5,total_tokens:19},_hidden_params:{response_cost:0.0042,cache_hit:t\
+      rue}}));});return;}res.statusCode=404;res.end(\"missing\");});server.list\
+      en(port,\"127.0.0.1\");const
+      shutdown=()=>server.close(()=>process.exit(0));process.on(\"SIGTERM\",shu\
+      tdown);process.on(\"SIGINT\",shutdown);"
+  providers:
+    openai:
+      api_key: ${OPENAI_API_KEY}
+      model_list:
+        - model_name: openai/gpt-4.1-mini-fast
+          max_difficulty: hard
+          litellm_params:
+            model: openai/gpt-4.1-mini

@@ -1,0 +1,61 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/runtime-observability
+
+(node:15264) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (5 tests | 1 failed) 855ms
+   ✓ runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates  352ms
+   ✓ runtime-observability > tags live-request samples with the classified difficulty bucket when difficulty routing is present 249ms
+   × runtime-observability > captures execution semantics receipts and per-tool side-effect state 248ms
+     → expected { …(20) } to match object { executionSemantics: { …(11) }, …(1) }
+(89 matching properties omitted from actual)
+   ✓ extractTaxonomyFields > extracts all fields from a fully populated normalizedIntent 2ms
+   ✓ extractTaxonomyFields > returns null for missing fields 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > runtime-observability > captures execution semantics receipts and per-tool side-effect state
+AssertionError: expected { …(20) } to match object { executionSemantics: { …(11) }, …(1) }
+(89 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -18,17 +18,10 @@
+        "providerCanonical": 333,
+        "providerResponse": 444,
+        "providerWire": 280,
+        "translated": 222,
+      },
+-     "reasoning": {
+-       "controlForwarded": true,
+-       "deltaCount": 2,
+-       "outputTokens": 17,
+-       "requested": true,
+-       "streamSuppressed": false,
+-     },
+      "rerouteCount": 2,
+      "retryCount": 1,
+      "sourceClient": "openai.responses",
+      "toolSideEffectState": "executed",
+    },
+
+ ❯ test/index.test.ts:428:22
+    426|       });
+    427|
+    428|       expect(bundle).toMatchObject({
+       |                      ^
+    429|         executionSemantics: {
+    430|           sourceClient: "openai.responses",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  09:23:52
+   Duration  2.55s (transform 526ms, setup 0ms, collect 666ms, tests 855ms, environment 0ms, prepare 303ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\packages\runtime-observability:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts

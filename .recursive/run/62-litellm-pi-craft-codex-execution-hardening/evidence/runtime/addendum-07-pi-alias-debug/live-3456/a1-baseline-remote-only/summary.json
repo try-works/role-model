@@ -1,0 +1,55 @@
+{
+  "caseId": "a1-baseline-remote-only",
+  "model": "baseline.remote-only",
+  "prompt": "hey",
+  "elapsedMs": 16286,
+  "timedOut": false,
+  "exitCode": 0,
+  "stdout": "Hey.",
+  "stderr": "",
+  "requestId": "req-6f72d933-3a29-424a-bef1-41b8648b8bee",
+  "selectedEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "selectedModelId": "chatgpt/gpt-5.4",
+  "providerFamily": "openai",
+  "adapterFamily": "ai-sdk-openai",
+  "sourceClient": "openai.chat.completions",
+  "difficultyBucket": null,
+  "selectedStrategy": null,
+  "requestPayloadBytes": 6341,
+  "ingressPayloadBytes": 7607,
+  "translatedPayloadBytes": 6203,
+  "inputTokens": 11744,
+  "latencyMs": 11371,
+  "taxonomyRoleId": "coder",
+  "taxonomyTaskType": "coder.edit",
+  "taxonomyToolClassIds": [
+    "filesystem.read",
+    "filesystem.write",
+    "shell.execute"
+  ],
+  "requireTools": true,
+  "requiredCapabilities": [
+    "reasoning.effort_control",
+    "text.chat",
+    "tools.function_calling"
+  ],
+  "allowEndpoints": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "preferredEndpointIds": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "difficultySignals": null,
+  "aliasResolution": {
+    "requestedModel": "baseline.remote-only",
+    "aliasId": "baseline.remote-only",
+    "resolvedModelIds": [
+      "chatgpt/gpt-5.4",
+      "deepseek/deepseek-v4-pro"
+    ],
+    "allowEndpoints": [
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ]
+  }
+}

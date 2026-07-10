@@ -1,0 +1,49 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/packages/pi-role-model
+
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+(node:60140) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/validate-agent-path.test.ts (7 tests | 1 failed) 15844ms
+   ✓ validate-agent-path helper > prepares a Pi alias-routed chat payload through the extension flow 138ms
+   ✓ validate-agent-path helper > builds a Craft alias-routed declared-tools payload 4ms
+   ✓ validate-agent-path helper > builds a Craft alias-routed inline-image payload 1ms
+   ✓ validate-agent-path helper > resolves runtime request ids from telemetry when observations are unavailable 108ms
+   ✓ validate-agent-path helper > temporarily seeds OPENAI_API_KEY for mock runtime validation 1ms
+   ✓ validate-agent-path helper > waits for required runtime model endpoints to become active and healthy 64ms
+   × validate-agent-path helper > runs the rebuilt-runtime alias proof through canonical runtime aliases 15527ms
+     → expected [ { …(12) }, { …(12) }, …(2) ] to have a length of 6 but got 4
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-agent-path.test.ts > validate-agent-path helper > runs the rebuilt-runtime alias proof through canonical runtime aliases
+AssertionError: expected [ { …(12) }, { …(12) }, …(2) ] to have a length of 6 but got 4
+
+- Expected
++ Received
+
+- 6
++ 4
+
+ ❯ test/validate-agent-path.test.ts:312:27
+    310|     });
+    311|
+    312|     expect(summary.cases).toHaveLength(6);
+       |                           ^
+    313|     expect(new Set(summary.cases.map((entry) => entry.requestedAlias))…
+    314|       new Set(["difficulty.remote-only"]),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 6 passed (7)
+   Start at  12:30:51
+   Duration  17.53s (transform 1.71s, setup 0ms, collect 471ms, tests 15.84s, environment 0ms, prepare 373ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/validate-agent-path.test.ts

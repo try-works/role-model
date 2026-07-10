@@ -1,0 +1,13 @@
+I'd be happy to help. Let's start by getting a view of the project. Could you run this and share the output?
+
+```bash
+dir
+```
+
+Or if you're on Linux/macOS:
+
+```bash
+ls -la
+```
+
+That way I can see the file layout and understand what's in this litellm/pi-craft/codex hardening branch — then I can dive into the relevant code.

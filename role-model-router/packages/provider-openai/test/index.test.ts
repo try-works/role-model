@@ -128,6 +128,7 @@ describe("OpenAI provider adapter", () => {
     });
 
     expect(capabilities.structuredOutputs).toBe("native");
+    expect(requestCapture.providerFamily).toBe("openai");
     expect(requestCapture.url).toBe("https://api.openai.test/v1/responses");
     expect(requestCapture.body).toMatchObject({
       model: "gpt-4.1-mini-fast",
@@ -225,6 +226,7 @@ describe("OpenAI provider adapter", () => {
       capabilities,
     });
 
+    expect(requestCapture.providerFamily).toBe("openai");
     expect(normalized.outputText).toBe("Ready now");
     expect(normalized.toolCalls).toEqual([
       {
@@ -421,6 +423,7 @@ describe("OpenAI provider adapter", () => {
       capabilities,
     });
 
+    expect(requestCapture.providerFamily).toBe("moonshot");
     expect(requestCapture.url).toBe("https://api.kimi.test/coding/v1/chat/completions");
     expect(requestCapture.body.tools).toEqual([
       {
@@ -588,6 +591,156 @@ describe("OpenAI provider adapter", () => {
         name: "add_numbers",
       },
     });
+  });
+
+  test("forwards chat-completions reasoning controls to the downstream OpenAI request body", () => {
+    const target = {
+      endpointId: "deepseek.personal.primary.global.deepseek-v4-pro",
+      modelId: "deepseek/deepseek-v4-pro",
+      providerId: "deepseek",
+      providerKind: "provider-openai",
+      providerAccountId: "deepseek.personal.primary",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.deepseek.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "reasoning_effort"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "deepseek.personal.primary.global.deepseek-v4-pro",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "DEEPSEEK_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Use high reasoning effort." }],
+      reasoning: {
+        effort: "high",
+      },
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.providerFamily).toBe("deepseek");
+    expect(requestCapture.url).toBe("https://api.deepseek.test/v1/chat/completions");
+    expect(requestCapture.body.reasoning_effort).toBe("high");
+    expect(requestCapture.body.reasoning).toBeUndefined();
+    expect(requestCapture.body.thinking).toBeUndefined();
+  });
+
+  test("forwards responses tool_choice, reasoning, continuation, and session-affinity hints", () => {
+    const target = {
+      endpointId: "openai.personal.primary.global.gpt-5.4",
+      modelId: "chatgpt/gpt-5.4",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.responses",
+        bodyKeys: [
+          "temperature",
+          "max_output_tokens",
+          "tools",
+          "tool_choice",
+          "reasoning",
+          "previous_response_id",
+          "prompt_cache_key",
+        ],
+        headerKeys: ["Authorization", "OpenAI-Beta", "session-id", "x-client-request-id"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.global.gpt-5.4",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Use the lookupRegistry tool and continue the turn." }],
+      tools: [
+        {
+          name: "lookupRegistry",
+          description: "Look up endpoint details.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              endpointId: { type: "string" },
+            },
+            required: ["endpointId"],
+          },
+        },
+      ],
+      toolChoice: {
+        type: "function",
+        function: {
+          name: "lookupRegistry",
+        },
+      },
+      reasoning: {
+        effort: "high",
+      },
+      promptCache: {
+        mode: "prefer",
+        key: "cache-key-001",
+      },
+      continuation: {
+        previousResponseId: "resp_prev_001",
+      },
+      sessionAffinity: {
+        sessionId: "session-alpha",
+        clientRequestId: "client-req-001",
+      },
+      // biome-ignore lint/suspicious/noExplicitAny: RED test for additive contract fields
+    } as any;
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.url).toBe("https://api.openai.test/v1/responses");
+    expect(requestCapture.body.tool_choice).toEqual({
+      type: "function",
+      function: {
+        name: "lookupRegistry",
+      },
+    });
+    expect(requestCapture.body.reasoning).toEqual({
+      effort: "high",
+    });
+    expect(requestCapture.body.previous_response_id).toBe("resp_prev_001");
+    expect(requestCapture.body.prompt_cache_key).toBe("cache-key-001");
+    expect(requestCapture.headers["session-id"]).toBe("session-alpha");
+    expect(requestCapture.headers["x-client-request-id"]).toBe("client-req-001");
   });
 
   test("normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming", () => {

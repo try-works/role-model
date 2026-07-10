@@ -25,6 +25,7 @@ const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
   "model_id",
   "provider_kind",
   "provider_family",
+  "vendor_id",
   "provider_id",
   "provider_account_id",
   "selected_model_id",
@@ -39,7 +40,21 @@ const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
   "requested_role_id",
   "selected_strategy",
   "request_operation",
+  "source_client",
+  "execution_family",
+  "adapter_family",
   "status_family",
+  "request_payload_bytes",
+  "ingress_payload_bytes",
+  "translated_payload_bytes",
+  "provider_canonical_payload_bytes",
+  "provider_wire_payload_bytes",
+  "response_payload_bytes",
+  "retry_count",
+  "reroute_count",
+  "cooldown_decision",
+  "idempotency_decision",
+  "tool_side_effect_state",
   "tooling_used",
   "cache_state",
   "role_ids_json",
@@ -324,6 +339,7 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   model_id TEXT,
   provider_kind TEXT,
   provider_family TEXT,
+  vendor_id TEXT,
   provider_id TEXT,
   provider_account_id TEXT,
   selected_model_id TEXT,
@@ -338,7 +354,21 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   requested_role_id TEXT,
   selected_strategy TEXT,
   request_operation TEXT,
+  source_client TEXT,
+  execution_family TEXT,
+  adapter_family TEXT,
   status_family TEXT,
+  request_payload_bytes INTEGER,
+  ingress_payload_bytes INTEGER,
+  translated_payload_bytes INTEGER,
+  provider_canonical_payload_bytes INTEGER,
+  provider_wire_payload_bytes INTEGER,
+  response_payload_bytes INTEGER,
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  reroute_count INTEGER NOT NULL DEFAULT 0,
+  cooldown_decision TEXT,
+  idempotency_decision TEXT,
+  tool_side_effect_state TEXT,
   tooling_used INTEGER NOT NULL DEFAULT 0,
   cache_state TEXT,
   role_ids_json TEXT NOT NULL DEFAULT '[]',
@@ -807,6 +837,7 @@ export interface RuntimeTelemetryRecord {
   readonly modelId: string | null;
   readonly providerKind: string | null;
   readonly providerFamily: string | null;
+  readonly vendorId: string | null;
   readonly providerId: string | null;
   readonly providerAccountId: string | null;
   readonly selectedModelId: string | null;
@@ -821,7 +852,21 @@ export interface RuntimeTelemetryRecord {
   readonly requestedRoleId: string | null;
   readonly selectedStrategy: string | null;
   readonly requestOperation: string | null;
+  readonly sourceClient: string | null;
+  readonly executionFamily: string | null;
+  readonly adapterFamily: string | null;
   readonly statusFamily: "success" | "failure" | "unknown" | null;
+  readonly requestPayloadBytes: number | null;
+  readonly ingressPayloadBytes: number | null;
+  readonly translatedPayloadBytes: number | null;
+  readonly providerCanonicalPayloadBytes: number | null;
+  readonly providerWirePayloadBytes: number | null;
+  readonly responsePayloadBytes: number | null;
+  readonly retryCount: number;
+  readonly rerouteCount: number;
+  readonly cooldownDecision: string | null;
+  readonly idempotencyDecision: string | null;
+  readonly toolSideEffectState: string | null;
   readonly toolingUsed: boolean;
   readonly cacheState: string | null;
   readonly roleIds: readonly string[];
@@ -964,6 +1009,7 @@ export interface PersistedRuntimeObservationBundle {
   };
   readonly executionTelemetry?: {
     readonly providerFamily?: string;
+    readonly vendorId?: string;
     readonly finishReason?: string;
     readonly stream?: {
       readonly textDeltas?: number;
@@ -1008,6 +1054,23 @@ export interface PersistedRuntimeObservationBundle {
   readonly tooling?: {
     readonly toolCalls?: readonly unknown[];
     readonly executions?: readonly unknown[];
+  };
+  readonly executionSemantics?: {
+    readonly sourceClient?: string;
+    readonly executionFamily?: string;
+    readonly adapterFamily?: string;
+    readonly payloadBytes?: {
+      readonly ingress?: number;
+      readonly translated?: number;
+      readonly providerCanonical?: number;
+      readonly providerWire?: number;
+      readonly providerResponse?: number;
+    };
+    readonly retryCount?: number;
+    readonly rerouteCount?: number;
+    readonly cooldownDecision?: string;
+    readonly idempotencyDecision?: string;
+    readonly toolSideEffectState?: string;
   };
   readonly telemetrySnapshot?: {
     readonly providerId: string | null;
@@ -1145,6 +1208,7 @@ function initializeSchema(database: DatabaseSync): void {
     "request_class TEXT",
     "source_type TEXT",
     "provider_family TEXT",
+    "vendor_id TEXT",
     "provider_id TEXT",
     "provider_account_id TEXT",
     "selected_model_id TEXT",
@@ -1159,7 +1223,21 @@ function initializeSchema(database: DatabaseSync): void {
     "requested_role_id TEXT",
     "selected_strategy TEXT",
     "request_operation TEXT",
+    "source_client TEXT",
+    "execution_family TEXT",
+    "adapter_family TEXT",
     "status_family TEXT",
+    "request_payload_bytes INTEGER",
+    "ingress_payload_bytes INTEGER",
+    "translated_payload_bytes INTEGER",
+    "provider_canonical_payload_bytes INTEGER",
+    "provider_wire_payload_bytes INTEGER",
+    "response_payload_bytes INTEGER",
+    "retry_count INTEGER NOT NULL DEFAULT 0",
+    "reroute_count INTEGER NOT NULL DEFAULT 0",
+    "cooldown_decision TEXT",
+    "idempotency_decision TEXT",
+    "tool_side_effect_state TEXT",
     "tooling_used INTEGER NOT NULL DEFAULT 0",
     "cache_state TEXT",
     "role_ids_json TEXT NOT NULL DEFAULT '[]'",
@@ -1221,6 +1299,58 @@ function initializeSchema(database: DatabaseSync): void {
         request_class,
         (SELECT request_class FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
       ),
+      source_client = COALESCE(
+        source_client,
+        (SELECT json_extract(observation_json, '$.executionSemantics.sourceClient') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      vendor_id = COALESCE(
+        vendor_id,
+        (SELECT json_extract(observation_json, '$.executionTelemetry.vendorId') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      execution_family = COALESCE(
+        execution_family,
+        (SELECT json_extract(observation_json, '$.executionSemantics.executionFamily') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      adapter_family = COALESCE(
+        adapter_family,
+        (SELECT json_extract(observation_json, '$.executionSemantics.adapterFamily') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      request_payload_bytes = COALESCE(
+        request_payload_bytes,
+        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerCanonical') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      ingress_payload_bytes = COALESCE(
+        ingress_payload_bytes,
+        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.ingress') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      translated_payload_bytes = COALESCE(
+        translated_payload_bytes,
+        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.translated') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      provider_canonical_payload_bytes = COALESCE(
+        provider_canonical_payload_bytes,
+        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerCanonical') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      provider_wire_payload_bytes = COALESCE(
+        provider_wire_payload_bytes,
+        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerWire') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      response_payload_bytes = COALESCE(
+        response_payload_bytes,
+        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerResponse') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      cooldown_decision = COALESCE(
+        cooldown_decision,
+        (SELECT json_extract(observation_json, '$.executionSemantics.cooldownDecision') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      idempotency_decision = COALESCE(
+        idempotency_decision,
+        (SELECT json_extract(observation_json, '$.executionSemantics.idempotencyDecision') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
+      tool_side_effect_state = COALESCE(
+        tool_side_effect_state,
+        (SELECT json_extract(observation_json, '$.executionSemantics.toolSideEffectState') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+      ),
       taxonomy_group_id = COALESCE(
         taxonomy_group_id,
         (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_group_id') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
@@ -1251,6 +1381,9 @@ function initializeSchema(database: DatabaseSync): void {
       )
     WHERE client_request_id IS NULL
       OR request_class IS NULL
+      OR source_client IS NULL
+      OR execution_family IS NULL
+      OR adapter_family IS NULL
       OR taxonomy_group_id IS NULL
       OR taxonomy_role_id IS NULL
       OR taxonomy_task_type IS NULL
@@ -2101,6 +2234,7 @@ function mapRuntimeTelemetryRecord(row: {
   model_id: string | null;
   provider_kind: string | null;
   provider_family: string | null;
+  vendor_id: string | null;
   provider_id: string | null;
   provider_account_id: string | null;
   selected_model_id: string | null;
@@ -2115,7 +2249,21 @@ function mapRuntimeTelemetryRecord(row: {
   requested_role_id: string | null;
   selected_strategy: string | null;
   request_operation: string | null;
+  source_client: string | null;
+  execution_family: string | null;
+  adapter_family: string | null;
   status_family: string | null;
+  request_payload_bytes: number | null;
+  ingress_payload_bytes: number | null;
+  translated_payload_bytes: number | null;
+  provider_canonical_payload_bytes: number | null;
+  provider_wire_payload_bytes: number | null;
+  response_payload_bytes: number | null;
+  retry_count: number;
+  reroute_count: number;
+  cooldown_decision: string | null;
+  idempotency_decision: string | null;
+  tool_side_effect_state: string | null;
   tooling_used: number;
   cache_state: string | null;
   role_ids_json: string | null;
@@ -2200,6 +2348,7 @@ function mapRuntimeTelemetryRecord(row: {
     modelId: row.model_id,
     providerKind: row.provider_kind,
     providerFamily: row.provider_family,
+    vendorId: row.vendor_id,
     providerId: row.provider_id,
     providerAccountId: row.provider_account_id,
     selectedModelId: row.selected_model_id,
@@ -2225,12 +2374,26 @@ function mapRuntimeTelemetryRecord(row: {
     requestedRoleId: row.requested_role_id,
     selectedStrategy: row.selected_strategy,
     requestOperation: row.request_operation,
+    sourceClient: row.source_client,
+    executionFamily: row.execution_family,
+    adapterFamily: row.adapter_family,
     statusFamily:
       row.status_family === "success" ||
       row.status_family === "failure" ||
       row.status_family === "unknown"
         ? row.status_family
         : null,
+    requestPayloadBytes: row.request_payload_bytes,
+    ingressPayloadBytes: row.ingress_payload_bytes,
+    translatedPayloadBytes: row.translated_payload_bytes,
+    providerCanonicalPayloadBytes: row.provider_canonical_payload_bytes,
+    providerWirePayloadBytes: row.provider_wire_payload_bytes,
+    responsePayloadBytes: row.response_payload_bytes,
+    retryCount: row.retry_count,
+    rerouteCount: row.reroute_count,
+    cooldownDecision: row.cooldown_decision,
+    idempotencyDecision: row.idempotency_decision,
+    toolSideEffectState: row.tool_side_effect_state,
     toolingUsed: row.tooling_used === 1,
     cacheState: row.cache_state,
     roleIds: row.role_ids_json ? (JSON.parse(row.role_ids_json) as string[]) : [],
@@ -2351,6 +2514,7 @@ function toRuntimeTelemetryRecord(
   )
     ? routingModeCandidate
     : null;
+  const executionSemantics = observation.executionSemantics;
   const selectedStrategy =
     routingDiagnostics?.hybridArbitration?.finalStrategy ??
     routingDiagnostics?.controllerRouting?.acceptedDirectives?.strategy ??
@@ -2386,6 +2550,7 @@ function toRuntimeTelemetryRecord(
     modelId: observation.usageEvent.model_id ?? null,
     providerKind: observation.usageEvent.provider_kind ?? null,
     providerFamily: executionTelemetry?.providerFamily ?? null,
+    vendorId: executionTelemetry?.vendorId ?? null,
     providerId: telemetrySnapshot?.providerId ?? null,
     providerAccountId: telemetrySnapshot?.providerAccountId ?? null,
     selectedModelId: telemetrySnapshot?.selectedModelId ?? observation.usageEvent.model_id ?? null,
@@ -2403,7 +2568,22 @@ function toRuntimeTelemetryRecord(
       null,
     selectedStrategy,
     requestOperation: telemetrySnapshot?.requestOperation ?? null,
+    sourceClient: executionSemantics?.sourceClient ?? null,
+    executionFamily:
+      executionSemantics?.executionFamily ?? telemetrySnapshot?.servingSource ?? null,
+    adapterFamily: executionSemantics?.adapterFamily ?? null,
     statusFamily,
+    requestPayloadBytes: executionSemantics?.payloadBytes?.providerCanonical ?? null,
+    ingressPayloadBytes: executionSemantics?.payloadBytes?.ingress ?? null,
+    translatedPayloadBytes: executionSemantics?.payloadBytes?.translated ?? null,
+    providerCanonicalPayloadBytes: executionSemantics?.payloadBytes?.providerCanonical ?? null,
+    providerWirePayloadBytes: executionSemantics?.payloadBytes?.providerWire ?? null,
+    responsePayloadBytes: executionSemantics?.payloadBytes?.providerResponse ?? null,
+    retryCount: executionSemantics?.retryCount ?? 0,
+    rerouteCount: executionSemantics?.rerouteCount ?? 0,
+    cooldownDecision: executionSemantics?.cooldownDecision ?? null,
+    idempotencyDecision: executionSemantics?.idempotencyDecision ?? null,
+    toolSideEffectState: executionSemantics?.toolSideEffectState ?? null,
     toolingUsed:
       telemetrySnapshot?.toolingUsed ??
       ((observation.tooling?.toolCalls?.length ?? 0) > 0 ||
@@ -2494,6 +2674,7 @@ function runtimeTelemetryInsertValues(
     record.modelId,
     record.providerKind,
     record.providerFamily,
+    record.vendorId,
     record.providerId,
     record.providerAccountId,
     record.selectedModelId,
@@ -2508,7 +2689,21 @@ function runtimeTelemetryInsertValues(
     record.requestedRoleId,
     record.selectedStrategy,
     record.requestOperation,
+    record.sourceClient,
+    record.executionFamily,
+    record.adapterFamily,
     record.statusFamily,
+    record.requestPayloadBytes,
+    record.ingressPayloadBytes,
+    record.translatedPayloadBytes,
+    record.providerCanonicalPayloadBytes,
+    record.providerWirePayloadBytes,
+    record.responsePayloadBytes,
+    record.retryCount,
+    record.rerouteCount,
+    record.cooldownDecision,
+    record.idempotencyDecision,
+    record.toolSideEffectState,
     record.toolingUsed ? 1 : 0,
     record.cacheState,
     JSON.stringify(record.roleIds),
@@ -2577,6 +2772,12 @@ function toFailureRuntimeTelemetryRecord(
   endpointId: string,
   createdAtMs: number,
 ): RuntimeTelemetryRecord {
+  const observationCapturePolicy =
+    input.observation &&
+    typeof input.observation.capturePolicy === "object" &&
+    input.observation.capturePolicy !== null
+      ? (input.observation.capturePolicy as Record<string, unknown>)
+      : null;
   return {
     requestId: input.requestId,
     routingDecisionId,
@@ -2587,30 +2788,45 @@ function toFailureRuntimeTelemetryRecord(
     requestClass: input.requestClass ?? "unknown",
     sourceType: input.sourceType ?? null,
     modelId: input.modelId ?? null,
-    providerKind: null,
-    providerFamily: null,
-    providerId: null,
-    providerAccountId: null,
-    selectedModelId: null,
-    endpointKind: null,
-    servingSource: null,
-    region: null,
-    lifecycleStateAtRequest: null,
-    healthStatusAtRequest: null,
+    providerKind: input.providerKind ?? null,
+    providerFamily: input.providerFamily ?? null,
+    vendorId: input.vendorId ?? null,
+    providerId: input.providerId ?? null,
+    providerAccountId: input.providerAccountId ?? null,
+    selectedModelId: input.selectedModelId ?? null,
+    endpointKind: input.endpointKind ?? null,
+    servingSource: input.servingSource ?? null,
+    region: input.region ?? null,
+    lifecycleStateAtRequest: input.lifecycleStateAtRequest ?? null,
+    healthStatusAtRequest: input.healthStatusAtRequest ?? null,
     requestedModelId: input.requestedModelId ?? input.modelId ?? null,
-    difficultyBucket: null,
-    routingMode: null,
-    requestedRoleId: null,
-    selectedStrategy: null,
+    difficultyBucket: input.difficultyBucket ?? null,
+    routingMode: input.routingMode ?? null,
+    requestedRoleId: input.requestedRoleId ?? null,
+    selectedStrategy: input.selectedStrategy ?? null,
     requestOperation: input.requestOperation ?? null,
+    sourceClient: input.sourceClient ?? null,
+    executionFamily: input.executionFamily ?? null,
+    adapterFamily: input.adapterFamily ?? null,
     statusFamily: "failure",
-    toolingUsed: false,
-    cacheState: null,
-    roleIds: [],
-    eligibleEndpointIds: [],
-    eligibleModelIds: [],
-    candidateCostSnapshot: null,
-    selectedPricingSnapshot: null,
+    requestPayloadBytes: input.requestPayloadBytes ?? null,
+    ingressPayloadBytes: input.ingressPayloadBytes ?? null,
+    translatedPayloadBytes: input.translatedPayloadBytes ?? null,
+    providerCanonicalPayloadBytes: input.providerCanonicalPayloadBytes ?? null,
+    providerWirePayloadBytes: input.providerWirePayloadBytes ?? null,
+    responsePayloadBytes: input.responsePayloadBytes ?? null,
+    retryCount: input.retryCount ?? 0,
+    rerouteCount: input.rerouteCount ?? 0,
+    cooldownDecision: input.cooldownDecision ?? null,
+    idempotencyDecision: input.idempotencyDecision ?? null,
+    toolSideEffectState: input.toolSideEffectState ?? null,
+    toolingUsed: input.toolingUsed ?? false,
+    cacheState: input.cacheState ?? null,
+    roleIds: input.roleIds ?? [],
+    eligibleEndpointIds: input.eligibleEndpointIds ?? [],
+    eligibleModelIds: input.eligibleModelIds ?? [],
+    candidateCostSnapshot: input.candidateCostSnapshot ?? null,
+    selectedPricingSnapshot: input.selectedPricingSnapshot ?? null,
     inputTokens: 0,
     outputTokens: 0,
     totalTokens: 0,
@@ -2637,30 +2853,38 @@ function toFailureRuntimeTelemetryRecord(
     actualCostUsd: null,
     estimatedCostUsd: null,
     effectiveCostUsd: 0,
-    selectedUncachedCostUsd: 0,
-    baselineMaxEligibleCostUsd: 0,
-    routingCostSavingsUsd: 0,
-    cacheCostSavingsUsd: 0,
-    totalAvoidedCostUsd: 0,
+    selectedUncachedCostUsd: input.selectedUncachedCostUsd ?? 0,
+    baselineMaxEligibleCostUsd: input.baselineMaxEligibleCostUsd ?? 0,
+    routingCostSavingsUsd: input.routingCostSavingsUsd ?? 0,
+    cacheCostSavingsUsd: input.cacheCostSavingsUsd ?? 0,
+    totalAvoidedCostUsd: input.totalAvoidedCostUsd ?? 0,
     costCalculationBasis: "no_execution_zero",
     costCalculationVersion: COST_CALCULATION_VERSION,
-    costBaselineSource: null,
-    costSavingsSupport: null,
-    samplingRate: null,
-    retentionTtlHours: null,
-    retainUntil: null,
-    redactionLevel: null,
-    retentionClass: null,
-    structuredInspectionMode: null,
-    rawCaptureAvailable: false,
-    structuredInspectionAvailable: false,
-    taxonomyGroupId: null,
-    taxonomyRoleId: null,
-    taxonomyTaskType: null,
-    taxonomyTaskVariant: null,
-    taxonomyCapabilityIds: [],
-    taxonomyModalityIds: [],
-    taxonomyToolClassIds: [],
+    costBaselineSource: input.costBaselineSource ?? null,
+    costSavingsSupport: input.costSavingsSupport ?? null,
+    samplingRate: input.samplingRate ?? null,
+    retentionTtlHours: input.retentionTtlHours ?? null,
+    retainUntil: input.retainUntil ?? null,
+    redactionLevel: input.redactionLevel ?? null,
+    retentionClass: input.retentionClass ?? null,
+    structuredInspectionMode: input.structuredInspectionMode ?? null,
+    rawCaptureAvailable:
+      input.rawCaptureAvailable ??
+      (typeof observationCapturePolicy?.rawCaptureAvailable === "boolean"
+        ? observationCapturePolicy.rawCaptureAvailable
+        : false),
+    structuredInspectionAvailable:
+      input.structuredInspectionAvailable ??
+      (typeof observationCapturePolicy?.structuredInspectionAvailable === "boolean"
+        ? observationCapturePolicy.structuredInspectionAvailable
+        : false),
+    taxonomyGroupId: input.taxonomyGroupId ?? null,
+    taxonomyRoleId: input.taxonomyRoleId ?? null,
+    taxonomyTaskType: input.taxonomyTaskType ?? null,
+    taxonomyTaskVariant: input.taxonomyTaskVariant ?? null,
+    taxonomyCapabilityIds: input.taxonomyCapabilityIds ?? [],
+    taxonomyModalityIds: input.taxonomyModalityIds ?? [],
+    taxonomyToolClassIds: input.taxonomyToolClassIds ?? [],
     currency: null,
     dimensions: input.dimensions ?? null,
   };
@@ -2689,7 +2913,7 @@ function listRuntimeTelemetryRecordsInternal(
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, status_family, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
+      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, vendor_id, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, source_client, execution_family, adapter_family, status_family, request_payload_bytes, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
         " AND ",
       )} ORDER BY created_at_ms DESC, request_id DESC${limitClause}`,
     )
@@ -2705,6 +2929,7 @@ function listRuntimeTelemetryRecordsInternal(
     model_id: string | null;
     provider_kind: string | null;
     provider_family: string | null;
+    vendor_id: string | null;
     provider_id: string | null;
     provider_account_id: string | null;
     selected_model_id: string | null;
@@ -2719,7 +2944,21 @@ function listRuntimeTelemetryRecordsInternal(
     requested_role_id: string | null;
     selected_strategy: string | null;
     request_operation: string | null;
+    source_client: string | null;
+    execution_family: string | null;
+    adapter_family: string | null;
     status_family: string | null;
+    request_payload_bytes: number | null;
+    ingress_payload_bytes: number | null;
+    translated_payload_bytes: number | null;
+    provider_canonical_payload_bytes: number | null;
+    provider_wire_payload_bytes: number | null;
+    response_payload_bytes: number | null;
+    retry_count: number;
+    reroute_count: number;
+    cooldown_decision: string | null;
+    idempotency_decision: string | null;
+    tool_side_effect_state: string | null;
     tooling_used: number;
     cache_state: string | null;
     role_ids_json: string | null;
@@ -3262,6 +3501,7 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly endpointId?: string;
   readonly modelId?: string;
   readonly requestedModelId?: string | null;
+  readonly selectedModelId?: string | null;
   readonly requestOperation?: string | null;
   readonly statusCode: number;
   readonly errorClass: string;
@@ -3269,7 +3509,65 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly clientRequestId?: string | null;
   readonly requestClass?: "benchmark" | "live_request" | "unknown";
   readonly sourceType?: "local" | "remote" | null;
+  readonly providerKind?: string | null;
+  readonly providerFamily?: string | null;
+  readonly vendorId?: string | null;
+  readonly providerId?: string | null;
+  readonly providerAccountId?: string | null;
+  readonly endpointKind?: string | null;
+  readonly servingSource?: string | null;
+  readonly region?: string | null;
+  readonly lifecycleStateAtRequest?: string | null;
+  readonly healthStatusAtRequest?: string | null;
+  readonly difficultyBucket?: RuntimeTelemetryRecord["difficultyBucket"];
+  readonly routingMode?: RuntimeTelemetryRecord["routingMode"];
+  readonly requestedRoleId?: string | null;
+  readonly selectedStrategy?: string | null;
+  readonly sourceClient?: string | null;
+  readonly executionFamily?: string | null;
+  readonly adapterFamily?: string | null;
+  readonly requestPayloadBytes?: number | null;
+  readonly ingressPayloadBytes?: number | null;
+  readonly translatedPayloadBytes?: number | null;
+  readonly providerCanonicalPayloadBytes?: number | null;
+  readonly providerWirePayloadBytes?: number | null;
+  readonly responsePayloadBytes?: number | null;
+  readonly retryCount?: number;
+  readonly rerouteCount?: number;
+  readonly cooldownDecision?: string | null;
+  readonly idempotencyDecision?: string | null;
+  readonly toolSideEffectState?: string | null;
+  readonly toolingUsed?: boolean;
+  readonly cacheState?: string | null;
+  readonly roleIds?: readonly string[];
+  readonly eligibleEndpointIds?: readonly string[];
+  readonly eligibleModelIds?: readonly string[];
+  readonly candidateCostSnapshot?: Record<string, unknown> | null;
+  readonly selectedPricingSnapshot?: Record<string, unknown> | null;
+  readonly selectedUncachedCostUsd?: number | null;
+  readonly baselineMaxEligibleCostUsd?: number | null;
+  readonly routingCostSavingsUsd?: number;
+  readonly cacheCostSavingsUsd?: number;
+  readonly totalAvoidedCostUsd?: number;
+  readonly costBaselineSource?: string | null;
+  readonly costSavingsSupport?: string | null;
+  readonly samplingRate?: number | null;
+  readonly retentionTtlHours?: number | null;
+  readonly retainUntil?: number | null;
+  readonly redactionLevel?: string | null;
+  readonly retentionClass?: string | null;
+  readonly structuredInspectionMode?: string | null;
+  readonly rawCaptureAvailable?: boolean;
+  readonly structuredInspectionAvailable?: boolean;
+  readonly taxonomyGroupId?: string | null;
+  readonly taxonomyRoleId?: string | null;
+  readonly taxonomyTaskType?: string | null;
+  readonly taxonomyTaskVariant?: string | null;
+  readonly taxonomyCapabilityIds?: readonly string[];
+  readonly taxonomyModalityIds?: readonly string[];
+  readonly taxonomyToolClassIds?: readonly string[];
   readonly dimensions?: Record<string, unknown> | null;
+  readonly observation?: Record<string, unknown> | null;
 }
 
 export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFailureInput): void {
@@ -3283,6 +3581,25 @@ export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFai
     createdAtMs,
   );
   withSqliteBusyRetry(input.databasePath, (database) => {
+    if (input.observation) {
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, taxonomy_role_id, taxonomy_task_type, client_request_id, request_class, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          input.requestId,
+          routingDecisionId,
+          endpointId,
+          "conversation-main",
+          createdAtMs,
+          input.retainUntil ?? null,
+          input.taxonomyRoleId ?? null,
+          input.taxonomyTaskType ?? null,
+          input.clientRequestId ?? null,
+          input.requestClass ?? null,
+          JSON.stringify(input.observation),
+        );
+    }
     database
       .prepare(
         `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,

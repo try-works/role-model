@@ -1,0 +1,23 @@
+{
+  "caseId": "a1-baseline-remote-only",
+  "model": "baseline.remote-only",
+  "noTools": false,
+  "prompt": "hey",
+  "elapsedMs": 5918,
+  "exitCode": 0,
+  "stdout": "Hey! How can I help you today?",
+  "requestId": null,
+  "selectedEndpointId": null,
+  "selectedModelId": null,
+  "providerFamily": null,
+  "sourceClient": null,
+  "requestPayloadBytes": null,
+  "inputTokens": null,
+  "latencyMs": null,
+  "taxonomyRoleId": null,
+  "taxonomyTaskType": null,
+  "taxonomyToolClassIds": null,
+  "requireTools": null,
+  "requiredCapabilities": null,
+  "allowEndpoints": null
+}

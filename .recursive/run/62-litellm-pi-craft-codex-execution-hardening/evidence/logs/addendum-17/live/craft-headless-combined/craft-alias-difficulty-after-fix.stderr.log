@@ -1,0 +1,41 @@
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+ErrorEvent {
+  Symbol(type): 'error',
+  Symbol(kTarget): WebSocket {
+    Symbol(kEvents): SafeMap(3) {
+      'open' => <ref *1> {
+        size: 1,
+        next: Listener {
+          next: undefined,
+          previous: [Circular *1],
+          listener: [Function (anonymous)],
+          flags: 1,
+          callback: [Function (anonymous)]
+        },
+        resistStopPropagation: false
+      },
+      'error' => { size: 0, next: undefined, resistStopPropagation: false },
+      'message' => <ref *2> {
+        size: 1,
+        next: Listener {
+          next: undefined,
+          previous: [Circular *2],
+          listener: [Function (anonymous)],
+          flags: 0,
+          callback: [Function (anonymous)]
+        },
+        resistStopPropagation: false
+      }
+    },
+    Symbol(events.maxEventTargetListeners): 10,
+    Symbol(events.maxEventTargetListenersWarned): false,
+    Symbol(kHandlers): SafeMap(0) {}
+  },
+  Symbol(kIsBeingDispatched): false,
+  Symbol(kInPassiveListener): false
+}
+
+Node.js v24.11.0

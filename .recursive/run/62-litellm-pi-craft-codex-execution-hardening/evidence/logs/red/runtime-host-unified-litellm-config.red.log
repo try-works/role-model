@@ -1,0 +1,80 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/61-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+ ❯ test/unified-runtime-config.test.ts (27 tests | 1 failed | 26 skipped) 64ms
+   ↓ unified runtime config > derives hybrid mode when both vendor sections are populated
+   ↓ unified runtime config > derives decision-only mode when no vendor sections are active
+   ↓ unified runtime config > preserves explicit execution mode from parsed YAML and normalized API payloads
+   ↓ unified runtime config > derives remote-only mode when only the LiteLLM section is populated
+   ↓ unified runtime config > preserves advanced real-vendor settings for llama-swap and litellm
+   × unified runtime config > round-trips litellm router and module settings through the unified runtime config 60ms
+     → expected { version: '1.0', …(4) } to match object { liteLLM: { enabled: true, …(2) } }
+(14 matching properties omitted from actual)
+   ↓ unified runtime config > leaves process startup timeouts unset unless the unified config specifies them
+   ↓ unified runtime config > normalizes object input and round-trips advanced vendor settings back to config text
+   ↓ unified runtime config > parses observed-data policy and round-trips it back to config text
+   ↓ unified runtime config > rejects invalid observed-data throughput SLA policy values
+   ↓ unified runtime config > parses difficulty-learning policy and round-trips it back to config text
+   ↓ unified runtime config > parses model-alias policy and round-trips it back to config text
+   ↓ unified runtime config > rejects invalid model-alias definitions
+   ↓ unified runtime config > parses difficulty-classifier policy, alias difficulty mode, and max-difficulty settings
+   ↓ unified runtime config > parses and renders controller config for intelligent aliases
+   ↓ unified runtime config > defaults controller timeout to the longer shared controller latency budget when omitted
+   ↓ unified runtime config > rejects invalid difficulty-classifier and max-difficulty settings
+   ↓ unified runtime config > merges partial runtime config patches without dropping existing routing strategy
+   ↓ unified runtime config > accepts routing_strategy alias in partial runtime config patches
+   ↓ unified runtime config > derives the primary routing alias from routing strategy and execution mode
+   ↓ unified runtime config > derives the routing alias matrix across strategy families and execution modes
+   ↓ unified runtime config > normalizes legacy craft-ask routing strategy inputs out of persisted config
+   ↓ unified runtime config > normalizes persisted craft-ask alias ids out of multi-alias config payloads
+   ↓ unified runtime config > canonicalizes the primary routing alias to the default matrix when persisted strategy is unset
+   ↓ unified runtime config > preserves custom single-alias ids when they are not the primary routing alias
+   ↓ unified runtime config > preserves explicitly configured modern primary alias ids even when routing strategy differs
+   ↓ unified runtime config > renames a single primary alias when its execution suffix becomes stale
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/unified-runtime-config.test.ts > unified runtime config > round-trips litellm router and module settings through the unified runtime config
+AssertionError: expected { version: '1.0', …(4) } to match object { liteLLM: { enabled: true, …(2) } }
+(14 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "liteLLM": {
+      "enabled": true,
+-     "litellmSettings": {
+-       "default_fallbacks": [
+-         "openai/gpt-4.1-mini-slow",
+-       ],
+-       "request_timeout": 45,
+-     },
+-     "routerSettings": {
+-       "enable_pre_call_checks": true,
+-       "num_retries": 2,
+-       "optional_pre_call_checks": [
+-         "prompt_caching",
+-         "session_affinity",
+-       ],
+-       "timeout": 30,
+-     },
+    },
+  }
+
+ ❯ test/unified-runtime-config.test.ts:228:87
+    226|     });
+    227|
+    228|     expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigTex…
+       |                                                                                       ^
+    229|       liteLLM: {
+    230|         enabled: true,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 26 skipped (27)
+   Start at  00:46:00
+   Duration  2.13s (transform 181ms, setup 0ms, collect 368ms, tests 64ms, environment 0ms, prepare 266ms)
+

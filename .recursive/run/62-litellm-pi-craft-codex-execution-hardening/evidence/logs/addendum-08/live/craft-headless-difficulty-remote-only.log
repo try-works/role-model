@@ -1,0 +1,11 @@
+file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/scripts/craft-headless-verify.mjs:84
+    const timer = setTimeout(() => reject(new Error(`Craft session completion timed out: ${sessionId}`)), timeoutMs);
+                                          ^
+
+Error: Craft session completion timed out: 260708-high-wolf
+    at Timeout._onTimeout (file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/scripts/craft-headless-verify.mjs:84:43)
+    at listOnTimeout (node:internal/timers:608:17)
+    at process.processTimers (node:internal/timers:543:7)
+
+Node.js v24.11.0
+elapsed_ms=150459

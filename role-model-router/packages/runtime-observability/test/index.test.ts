@@ -102,7 +102,7 @@ describe("runtime-observability", () => {
         routingDecisionId: validation.decision.routing_decision_id,
         endpointId: validation.decision.chosen_endpoint_id,
         executionTelemetry: {
-          providerFamily: validation.execution.normalized.providerFamily,
+          providerFamily: validation.execution.target.providerId,
           finishReason: validation.execution.normalized.finishReason,
           stream: {
             requested: validation.execution.normalized.stream.requested,
@@ -166,6 +166,15 @@ describe("runtime-observability", () => {
           classification_contract_version: "role-model.classification.v1",
         },
       });
+      expect(
+        (
+          bundle as {
+            executionTelemetry: {
+              vendorId?: string;
+            };
+          }
+        ).executionTelemetry.vendorId,
+      ).toBe(validation.execution.normalized.vendorMetadata?.vendorId);
 
       expect((bundle.diagnostics as { routing: Array<{ code: string }> }).routing).toEqual(
         expect.arrayContaining([expect.objectContaining({ code: "ROUTING_MODEL_ENABLED" })]),
@@ -307,6 +316,235 @@ describe("runtime-observability", () => {
       expect(typeof bundle.privacyReceipt.retainUntil).toBe("number");
       // taxonomyDimensions absent when normalizedIntent is not provided
       expect(bundle.taxonomyDimensions).toBeUndefined();
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("captures execution semantics receipts and per-tool side-effect state", async () => {
+    const moduleImport = import(pathToFileURL(path.join(__dirname, "..", "src", "index.js")).href);
+    await expect(moduleImport).resolves.toHaveProperty("createRuntimeObservationBundle");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-observability-semantics-"),
+    );
+
+    try {
+      const runtimeObservability = (await moduleImport) as {
+        createRuntimeObservationBundle(input: Record<string, unknown>): Record<string, unknown>;
+      };
+      const validation = await runRuntimeAdapterValidation({
+        repoRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        runtimeStateRoot,
+        scopeId: "runtime-observability-semantics-test",
+      });
+      const history = await readJson<{
+        byEndpointId: Record<string, unknown[]>;
+      }>("testdata/router-runtime/observability-history.json");
+      const policy = await readJson<Record<string, unknown>>(
+        "testdata/router-runtime/observability-policy.json",
+      );
+
+      const bundle = runtimeObservability.createRuntimeObservationBundle({
+        decision: validation.decision,
+        clientRequestId: "client-semantic-001",
+        routingDiagnostics: validation.routingDiagnostics,
+        retrievalReceipt: validation.retrievalReceipt,
+        contextEnvelope: validation.contextEnvelope,
+        execution: validation.execution,
+        priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+        capturePolicy: policy,
+        executionSemantics: {
+          sourceClient: "openai.responses",
+          payloadBytes: {
+            ingress: 111,
+            translated: 222,
+            providerCanonical: 333,
+            providerWire: 280,
+            providerResponse: 444,
+          },
+          retryCount: 1,
+          rerouteCount: 2,
+          cooldownDecision: "skipped-no-failure",
+          idempotencyDecision: "tool_replay_guard_required",
+          reasoning: {
+            requested: true,
+            controlForwarded: true,
+            deltaCount: 2,
+            outputTokens: 17,
+            streamSuppressed: false,
+          },
+          failedAttempts: [
+            {
+              attemptId: "attempt-1",
+              requestId: validation.decision.request_id,
+              routingDecisionId: validation.decision.routing_decision_id,
+              failedEndpointId: validation.execution.target.endpointId,
+              providerId: validation.execution.target.providerId,
+              providerFamily: validation.execution.target.providerId,
+              executionFamily: validation.execution.target.candidate.identity.serving_source,
+              adapterFamily: validation.execution.target.adapterFamily,
+              statusCode: 503,
+              failureClass: "upstream_timeout",
+              retryable: true,
+              fallbackEligible: true,
+              failurePhase: "provider_execution",
+              cooldownRecorded: true,
+              cooldownFailureCount: 1,
+              cooldownUntilMs: 1_750_000_000_000,
+              errorPreview: {
+                message: "Provider request timed out.",
+              },
+            },
+          ],
+        },
+        tooling: {
+          toolCalls: [
+            {
+              name: "apply_patch",
+              arguments: {
+                file: "src/router.ts",
+              },
+              providerToolId: "provider-tool-1",
+            },
+          ],
+          executions: [
+            {
+              toolCallId: "provider-tool-1",
+              toolName: "apply_patch",
+              connectorId: "filesystem",
+              connectorKind: "local",
+              status: "succeeded",
+              output: {
+                patched: true,
+              },
+              diagnostics: [],
+            },
+          ],
+        },
+      });
+
+      expect(bundle).toMatchObject({
+        executionSemantics: {
+          sourceClient: "openai.responses",
+          executionFamily: validation.execution.target.candidate.identity.serving_source,
+          adapterFamily: validation.execution.target.adapterFamily,
+          payloadBytes: {
+            ingress: 111,
+            translated: 222,
+            providerCanonical: 333,
+            providerWire: 280,
+            providerResponse: 444,
+          },
+          retryCount: 1,
+          rerouteCount: 2,
+          cooldownDecision: "skipped-no-failure",
+          idempotencyDecision: "tool_replay_guard_required",
+          toolSideEffectState: "executed",
+          reasoning: {
+            requested: true,
+            controlForwarded: true,
+            deltaCount: 2,
+            outputTokens: 17,
+            streamSuppressed: false,
+          },
+          failedAttempts: [
+            expect.objectContaining({
+              attemptId: "attempt-1",
+              failedEndpointId: validation.execution.target.endpointId,
+              failureClass: "upstream_timeout",
+              cooldownRecorded: true,
+              cooldownFailureCount: 1,
+            }),
+          ],
+        },
+        tooling: {
+          toolCalls: [
+            {
+              toolCallId: "provider-tool-1",
+              toolName: "apply_patch",
+              providerToolId: "provider-tool-1",
+              sideEffectState: "executed",
+            },
+          ],
+        },
+      });
+      expect(
+        (
+          bundle as {
+            executionSemantics: {
+              payloadBytes: {
+                ingress: number;
+                translated: number;
+                providerCanonical: number;
+                providerWire: number;
+                providerResponse: number;
+              };
+            };
+          }
+        ).executionSemantics.payloadBytes.ingress,
+      ).toBe(111);
+      expect(
+        (
+          bundle as {
+            executionSemantics: {
+              payloadBytes: {
+                ingress: number;
+                translated: number;
+                providerCanonical: number;
+                providerWire: number;
+                providerResponse: number;
+              };
+            };
+          }
+        ).executionSemantics.payloadBytes.translated,
+      ).toBe(222);
+      expect(
+        (
+          bundle as {
+            executionSemantics: {
+              payloadBytes: {
+                ingress: number;
+                translated: number;
+                providerCanonical: number;
+                providerWire: number;
+                providerResponse: number;
+              };
+            };
+          }
+        ).executionSemantics.payloadBytes.providerCanonical,
+      ).toBe(333);
+      expect(
+        (
+          bundle as {
+            executionSemantics: {
+              payloadBytes: {
+                ingress: number;
+                translated: number;
+                providerCanonical: number;
+                providerWire: number;
+                providerResponse: number;
+              };
+            };
+          }
+        ).executionSemantics.payloadBytes.providerWire,
+      ).toBe(280);
+      expect(
+        (
+          bundle as {
+            executionSemantics: {
+              payloadBytes: {
+                ingress: number;
+                translated: number;
+                providerCanonical: number;
+                providerWire: number;
+                providerResponse: number;
+              };
+            };
+          }
+        ).executionSemantics.payloadBytes.providerResponse,
+      ).toBe(444);
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }

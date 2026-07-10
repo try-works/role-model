@@ -1,0 +1,5 @@
+model_list:
+  - model_name: openai/gpt-4.1-mini-fast
+    litellm_params:
+      model: openai/gpt-4.1-mini
+      api_key: ${OPENAI_API_KEY}

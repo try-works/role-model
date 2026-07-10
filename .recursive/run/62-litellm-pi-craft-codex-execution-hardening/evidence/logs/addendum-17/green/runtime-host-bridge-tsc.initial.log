@@ -1,0 +1,9 @@
+src/index.ts(18624,9): error TS2322: Type '{ parameterSanitization?: AdapterParameterDecision[] | undefined; executionCooldowns?: RuntimeExecutionCooldownReceipt[] | undefined; ... 7 more ...; cooldownDecision: string; }' is not assignable to type '{ readonly sourceClient?: string | undefined; readonly executionFamily?: string | undefined; readonly adapterFamily?: string | undefined; readonly payloadBytes?: { readonly ingress?: number | undefined; readonly translated?: number | undefined; readonly providerCanonical?: number | undefined; readonly providerWire?:...'.
+  Types of property 'parameterSanitization' are incompatible.
+    Type 'AdapterParameterDecision[] | undefined' is not assignable to type 'readonly Readonly<Record<string, unknown>>[] | undefined'.
+      Type 'AdapterParameterDecision[]' is not assignable to type 'readonly Readonly<Record<string, unknown>>[]'.
+        Type 'AdapterParameterDecision' is not assignable to type 'Readonly<Record<string, unknown>>'.
+          Index signature for type 'string' is missing in type 'AdapterParameterDecision'.
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 2: tsc --noEmit --pretty false

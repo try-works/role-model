@@ -1,0 +1,14 @@
+
+> @role-model-router/provider-litellm@0.0.0 test D:\wt\rm61\role-model-router\packages\provider-litellm
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/wt/rm61/role-model-router/packages/provider-litellm
+
+ ✓ test/index.test.ts (2 tests) 16ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  21:11:51
+   Duration  3.10s (transform 384ms, setup 0ms, collect 422ms, tests 16ms, environment 1ms, prepare 1.06s)
+

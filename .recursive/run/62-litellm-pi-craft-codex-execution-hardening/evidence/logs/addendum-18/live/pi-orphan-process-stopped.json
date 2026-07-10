@@ -1,0 +1,4 @@
+{
+  "ProcessId": 26532,
+  "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" D:\\pi\\node_modules\\.bin/../@earendil-works/pi-coding-agent/dist/cli.js --approve --verbose -e packages/pi-role-model/extensions/role-model.ts --provider role-model --model difficulty.remote-only --thinking off --no-tools --no-session -p Reply with exactly PI_ADDENDUM18_OK."
+}

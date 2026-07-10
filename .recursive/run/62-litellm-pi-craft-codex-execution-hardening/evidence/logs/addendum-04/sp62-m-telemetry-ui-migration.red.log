@@ -1,0 +1,147 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/sqlite-memory
+
+(node:52876) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (34 tests | 1 failed) 8264ms
+   ✓ initializeSqliteMemory > creates the planned schema, WAL mode, and initial migration receipt under the runtime state root 88ms
+   ✓ initializeSqliteMemory > persists validated provider accounts by credential reference without storing raw secrets 157ms
+   ✓ initializeSqliteMemory > upserts and lists provider accounts for runtime control-plane reads 98ms
+   ✓ initializeSqliteMemory > persists runtime-managed endpoint activations for dynamic registry materialization 93ms
+   ✓ initializeSqliteMemory > persists and reads the global controller assignment for the runtime control plane 91ms
+   ✓ initializeSqliteMemory > persists device-auth session state for runtime OAuth polling 101ms
+   ✓ initializeSqliteMemory > records explicit maintenance defaults and idempotent migration behavior 98ms
+   ✓ initializeSqliteMemory > persists and reloads the continuity rows needed for bounded context assembly 123ms
+   ✓ initializeSqliteMemory > persists retrieval receipts for later routing diagnostics 103ms
+   ✓ initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads 277ms
+   ✓ initializeSqliteMemory > stores and reads conversation-level difficulty classification cache entries 96ms
+   ✓ initializeSqliteMemory > persists and reads segmented observed samples and profiles by difficulty bucket 258ms
+   ✓ initializeSqliteMemory > derives an advisory max-difficulty recommendation from bucketed observed profiles 103ms
+   ✓ initializeSqliteMemory > reads the latest observed profiles for a set of endpoint ids 226ms
+   ✓ initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows  311ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure records latencyMs in telemetry summary average 220ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure preserves caller correlation and request classification for failed rows 249ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures 219ms
+   ✓ initializeSqliteMemory > persistRuntimeObservationBundle projects telemetry handling receipts into the telemetry ledger 234ms
+   × initializeSqliteMemory > persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger 239ms
+     → no such column: vendor_id
+   ✓ initializeSqliteMemory > exports persisted runtime state for operator drills 247ms
+   ✓ initializeSqliteMemory > restores runtime state from a backup after scoped deletion 236ms
+   ✓ initializeSqliteMemory > persists throughput penalty state and expires it after the penalty window 94ms
+   ✓ clearAllObservedBenchmarkData > removes all benchmark samples across endpoints and clears profiles 134ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retains benchmark_mode on readback for quick benchmark samples 104ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting benchmark samples  555ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles  648ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading difficulty classification cache  531ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting difficulty classification cache  444ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading advisory max difficulty recommendations  436ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records  617ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns  561ms
+   ✓ clearObservedBenchmarkDataForEndpoint > removes benchmark samples and clears the endpoint profile when no live samples remain 119ms
+   ✓ runRuntimeStateValidation > validates provider accounts and initializes SQLite through the local validation path 146ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger
+Error: no such column: vendor_id
+ ❯ test/index.test.ts:2317:8
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 33 passed (34)
+   Start at  15:40:51
+   Duration  10.15s (transform 628ms, setup 0ms, collect 836ms, tests 8.26s, environment 0ms, prepare 267ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\packages\sqlite-memory:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/view-models.test.ts (34 tests | 1 failed) 95ms
+   ✓ buildProviderCards > turns provider variants and account state into provider cards for the onboarding page 3ms
+   ✓ summarizeRuntimeStats > creates stable dashboard stat cards from the runtime summary counts 1ms
+   ✓ session readiness view models > builds bootstrap rows and inventory stats from runtime summary 3ms
+   ✓ buildCredentialReadinessRows > turns the runtime readiness summary into operator-facing readiness rows 1ms
+   ✓ buildCredentialReadinessRows > prefers canonical credential lifecycle counts when they are present 0ms
+   ✓ buildCredentialLifecycleBanner > summarizes authority, blocking rows, and archived stale counts from the canonical lifecycle contract 1ms
+   ✓ buildCredentialLifecycleAccountRows > returns canonical lifecycle account diagnostics for blocking and ready accounts 21ms
+   ✓ buildCredentialLifecycleAccountRows > treats Codex Subscription as a standard connected account that can activate an endpoint 1ms
+   ✓ buildArchivedArtifactRows > returns archived stale diagnostics separately from blocking lifecycle rows 1ms
+   ✓ buildWorkbenchModelOptions > sorts and deduplicates model options for the workbench composer 1ms
+   ✓ buildWorkbenchEndpointOptions > prefers saved OAuth endpoints over shared LiteLLM endpoints for the selected model 1ms
+   ✓ buildConfiguredModelCards > builds unified local and remote model cards with controller and tooling state 2ms
+   ✓ buildConfiguredModelMetadataRows > formats model specifications and pricing for the inspection panel 15ms
+   ✓ buildModelCatalogRows > turns the runtime model catalog into sorted rows with endpoint ids 1ms
+   ✓ buildEndpointCatalogRows > turns the runtime endpoint registry into stable endpoint catalog rows 1ms
+   ✓ countActiveEndpointModels > counts distinct active local and remote model ids from registry endpoints 0ms
+   ✓ buildAliasReadinessRows > summarizes alias pools across mixed local and remote endpoint candidates 1ms
+   ✓ buildDashboardLatestRequestRows > prefers live canonical requests over benchmark telemetry rows in the overview rail 8ms
+   ✓ buildDashboardLatestRequestRows > groups repeated alias-routed executions by caller interaction in the overview rail 1ms
+   ✓ buildStructuredLogRows > parses raw logs into structured rows with source, severity, and request correlation when available 1ms
+   ✓ buildStructuredLogRows > preserves request correlation for packaged runtime log lines without explicit severity tokens 0ms
+   ✓ buildAccountModelCatalogIds > prefers provider catalog order while constraining to account-allowed models 0ms
+   ✓ buildConfiguredProviderRows > summarizes configured providers and models from saved accounts plus live endpoints 1ms
+   ✓ buildConfiguredProviderRows > prefers canonical provider rollups over route-local readiness inference 0ms
+   ✓ buildConfiguredProviderRows > preserves env-unresolved and reconnect-required provider lifecycle counts from fallback account inference 0ms
+   ✓ buildProviderMaintenanceRows > formats saved-account lifecycle badges and normalized credential posture from the canonical lifecycle contract 1ms
+   ✓ summarizeWorkbenchResult > extracts text, tool calls, tool executions, and usage for the studio inspector 1ms
+   ✓ summarizeWorkbenchResult > falls back to reasoning_content when chat completion content is empty 0ms
+   ✓ buildDownstreamProviderGuide > creates stable connection rows and examples for downstream OpenAI-compatible clients 1ms
+   ✓ buildActivitySummary > turns raw activity metrics into operator summary cards and ledger rows 1ms
+   ✓ buildActivitySummary > preserves newest-first activity order from the metrics API instead of re-sorting by synthetic ids 0ms
+   ✓ telemetry view models > creates stable summary cards from the canonical telemetry summary 1ms
+   ✓ telemetry view models > builds telemetry comparison cards for local and remote endpoint rows 1ms
+   × telemetry view models > builds telemetry-backed request ledger rows in newest-first order 21ms
+     → expected [ …(2) ] to deeply equal [ ObjectContaining{…}, …(1) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/view-models.test.ts > telemetry view models > builds telemetry-backed request ledger rows in newest-first order
+AssertionError: expected [ …(2) ] to deeply equal [ ObjectContaining{…}, …(1) ]
+
+- Expected
++ Received
+
+@@ -1,12 +1,16 @@
+  [
+-   ObjectContaining {
++   {
+      "cacheLabel": "Cache hit",
++     "clientRequestId": null,
+      "costLabel": "$0.0042 actual",
++     "createdAtLabel": "Feb 02, 10:40 AM",
++     "endpointId": "openai.personal.primary.us-east-1.fast",
+      "finishReasonLabel": "length",
+      "latencyLabel": "880 ms",
+-     "providerFamilyLabel": "openai",
++     "modelId": "openai/gpt-4.1-mini-fast",
++     "providerFamilyLabel": "ai-sdk-openai",
+      "requestId": "req-002",
+      "routingDecisionLabel": "route-002",
+      "sourceLabel": "Remote",
+      "statusLabel": "504 upstream_timeout",
+      "streamLabel": "4 text deltas / 1 tool / 2 args",
+
+ ❯ app/lib/view-models.test.ts:1785:7
+    1783|         },
+    1784|       ]),
+    1785|     ).toEqual([
+       |       ^
+    1786|       expect.objectContaining({
+    1787|         requestId: "req-002",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 33 passed (34)
+   Start at  15:42:34
+   Duration  1.25s (transform 117ms, setup 0ms, collect 149ms, tests 95ms, environment 0ms, prepare 299ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/view-models.test.ts

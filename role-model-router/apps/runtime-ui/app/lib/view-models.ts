@@ -788,7 +788,7 @@ export function buildTelemetryComparisonCards(
     endpointId: row.endpointId,
     modelId: row.modelId,
     sourceLabel: formatSourceLabel(row.sourceType),
-    providerLabel: row.providerFamily ?? row.providerKind ?? row.providerId ?? "unknown provider",
+    providerLabel: row.providerId ?? row.providerFamily ?? row.providerKind ?? "unknown provider",
     cacheLabel: summarizeCachePosture({
       promptCacheSupported: row.promptCacheSupported,
       cachedRequestCount: row.cachedRequestCount,
@@ -866,7 +866,7 @@ export function buildTelemetryRequestRows(
       sourceLabel: formatSourceLabel(row.sourceType),
       statusLabel: `${row.statusCode ?? 0} ${row.errorClass ?? "ok"}`,
       providerFamilyLabel:
-        row.providerFamily ?? row.providerKind ?? row.providerId ?? "unknown provider",
+        row.providerId ?? row.providerFamily ?? row.providerKind ?? "unknown provider",
       finishReasonLabel: row.finishReason ?? "unknown",
       cacheLabel: summarizeCachePosture({
         promptCacheSupported: row.promptCacheSupported,

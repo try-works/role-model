@@ -259,10 +259,67 @@ export interface RuntimeTelemetrySnapshot {
   readonly dimensions?: Record<string, unknown>;
 }
 
+export interface RuntimeExecutionFailedAttemptReceipt {
+  readonly attemptId: string;
+  readonly routedAttemptId?: string;
+  readonly requestId: string;
+  readonly routingDecisionId: string;
+  readonly failedEndpointId: string;
+  readonly providerId: string;
+  readonly providerFamily: string;
+  readonly vendorId?: string;
+  readonly executionFamily: string;
+  readonly adapterFamily: string;
+  readonly statusCode: number;
+  readonly failureClass: string;
+  readonly retryable: boolean;
+  readonly fallbackEligible: boolean;
+  readonly failurePhase: string;
+  readonly cooldownRecorded: boolean;
+  readonly cooldownFailureCount?: number;
+  readonly cooldownUntilMs?: number;
+  readonly errorPreview?: Readonly<Record<string, unknown>>;
+}
+
+export interface RuntimeExecutionCooldownReceipt {
+  readonly endpointId: string;
+  readonly active: boolean;
+  readonly failureCount: number;
+  readonly cooldownUntilMs: number;
+  readonly lastFailureAtMs?: number;
+  readonly lastErrorClass: string;
+  readonly sourceAttemptId?: string;
+  readonly sourceRequestId?: string;
+  readonly sourceRoutingDecisionId?: string;
+  readonly errorPreview?: Readonly<Record<string, unknown>>;
+}
+
+export interface RuntimeReasoningStreamReceipt {
+  readonly requested: boolean;
+  readonly controlForwarded: boolean;
+  readonly deltaCount: number;
+  readonly outputTokens?: number;
+  readonly streamSuppressed: boolean;
+  readonly unavailableReason?: string;
+}
+
 export interface RuntimeDiagnostic {
   readonly code: string;
   readonly severity: "info" | "warning" | "error";
   readonly message: string;
+}
+
+export interface RuntimeParameterSanitizationDecision {
+  readonly field: string;
+  readonly sourceSurface: string;
+  readonly targetSurface: string;
+  readonly action: string;
+  readonly reason: string;
+  readonly sourceValueKind: string;
+  readonly forwardedField?: string;
+  readonly adapterFamily: string;
+  readonly providerId: string;
+  readonly vendorId: string;
 }
 
 export interface RuntimeObservationBundleInput {
@@ -295,6 +352,27 @@ export interface RuntimeObservationBundleInput {
   readonly telemetryConfig?: {
     readonly samplingRate?: number;
     readonly retentionTtlHours?: number;
+  };
+  readonly executionSemantics?: {
+    readonly sourceClient?: string;
+    readonly executionFamily?: string;
+    readonly adapterFamily?: string;
+    readonly payloadBytes?: {
+      readonly ingress?: number;
+      readonly translated?: number;
+      readonly providerCanonical?: number;
+      readonly providerWire?: number;
+      readonly providerResponse?: number;
+    };
+    readonly retryCount?: number;
+    readonly rerouteCount?: number;
+    readonly cooldownDecision?: string;
+    readonly idempotencyDecision?: string;
+    readonly toolSideEffectState?: string;
+    readonly reasoning?: RuntimeReasoningStreamReceipt;
+    readonly failedAttempts?: readonly RuntimeExecutionFailedAttemptReceipt[];
+    readonly executionCooldowns?: readonly RuntimeExecutionCooldownReceipt[];
+    readonly parameterSanitization?: readonly RuntimeParameterSanitizationDecision[];
   };
 }
 
@@ -372,6 +450,7 @@ export interface RuntimeObservationBundle {
   };
   readonly executionTelemetry: {
     readonly providerFamily: string;
+    readonly vendorId?: string;
     readonly finishReason: string;
     readonly stream: {
       readonly requested: boolean;
@@ -383,6 +462,27 @@ export interface RuntimeObservationBundle {
     readonly promptCaching: RoutedExecutionResult["capabilities"]["promptCaching"];
     readonly usageSupport: RoutedExecutionResult["capabilities"]["usage"];
     readonly costProvenance: "actual" | "estimated" | "unavailable";
+  };
+  readonly executionSemantics: {
+    readonly sourceClient?: string;
+    readonly executionFamily: string;
+    readonly adapterFamily: string;
+    readonly payloadBytes: {
+      readonly ingress: number;
+      readonly translated: number;
+      readonly providerCanonical: number;
+      readonly providerWire: number;
+      readonly providerResponse: number;
+    };
+    readonly retryCount: number;
+    readonly rerouteCount: number;
+    readonly cooldownDecision: string;
+    readonly idempotencyDecision: string;
+    readonly toolSideEffectState: string;
+    readonly reasoning?: RuntimeReasoningStreamReceipt;
+    readonly failedAttempts?: readonly RuntimeExecutionFailedAttemptReceipt[];
+    readonly executionCooldowns?: readonly RuntimeExecutionCooldownReceipt[];
+    readonly parameterSanitization?: readonly RuntimeParameterSanitizationDecision[];
   };
   readonly cacheObservability: {
     readonly promptCacheRequested: boolean;
@@ -397,6 +497,7 @@ export interface RuntimeObservationBundle {
       readonly toolName: string;
       readonly arguments: unknown;
       readonly providerToolId?: string;
+      readonly sideEffectState: string;
     }>;
     readonly executions: readonly ToolRegistryExecution[];
     readonly diagnostics: readonly RuntimeDiagnostic[];
@@ -586,15 +687,166 @@ function buildTooling(
   diagnostics: readonly RuntimeDiagnostic[],
 ): RuntimeObservationBundle["tooling"] {
   const toolCalls = input.tooling?.toolCalls ?? input.execution.normalized.toolCalls;
+  const executions = input.tooling?.executions ?? [];
   return {
     toolCalls: toolCalls.map((toolCall, index) => ({
       toolCallId: toolCall.providerToolId ?? `${toolCall.name}-${index + 1}`,
       toolName: toolCall.name,
       arguments: toolCall.arguments,
       ...(toolCall.providerToolId ? { providerToolId: toolCall.providerToolId } : {}),
+      sideEffectState: deriveToolCallSideEffectState(
+        toolCall.providerToolId ?? `${toolCall.name}-${index + 1}`,
+        executions,
+      ),
     })),
-    executions: input.tooling?.executions ?? [],
+    executions,
     diagnostics,
+  };
+}
+
+function deriveToolCallSideEffectState(
+  toolCallId: string,
+  executions: readonly ToolRegistryExecution[],
+): string {
+  const execution = executions.find((entry) => entry.toolCallId === toolCallId);
+  if (!execution) {
+    return "not_executed";
+  }
+  switch (execution.status) {
+    case "succeeded":
+      return "executed";
+    case "failed":
+      return "attempted_failed";
+    case "rejected":
+      return "rejected";
+    default:
+      return "not_executed";
+  }
+}
+
+function deriveToolSideEffectState(tooling: RuntimeObservationBundle["tooling"]): string {
+  if (tooling.toolCalls.length === 0 && tooling.executions.length === 0) {
+    return "none";
+  }
+  const states = new Set(tooling.toolCalls.map((toolCall) => toolCall.sideEffectState));
+  if (states.size === 1) {
+    return tooling.toolCalls[0]?.sideEffectState ?? "none";
+  }
+  return "mixed";
+}
+
+function measurePayloadBytes(value: unknown): number {
+  return Buffer.byteLength(
+    typeof value === "string" ? value : JSON.stringify(value ?? null),
+    "utf8",
+  );
+}
+
+function readNonNegativeCount(value: number | undefined): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+}
+
+function readMeasuredPayloadBytes(value: number | undefined): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? Math.floor(value)
+    : undefined;
+}
+
+function buildReasoningStreamReceipt(
+  value: RuntimeReasoningStreamReceipt | undefined,
+): RuntimeReasoningStreamReceipt | undefined {
+  if (!value) {
+    return undefined;
+  }
+  return {
+    requested: Boolean(value.requested),
+    controlForwarded: Boolean(value.controlForwarded),
+    deltaCount: readNonNegativeCount(value.deltaCount),
+    ...(typeof value.outputTokens === "number" && Number.isFinite(value.outputTokens)
+      ? { outputTokens: readNonNegativeCount(value.outputTokens) }
+      : {}),
+    streamSuppressed: Boolean(value.streamSuppressed),
+    ...(typeof value.unavailableReason === "string" && value.unavailableReason.length > 0
+      ? { unavailableReason: value.unavailableReason }
+      : {}),
+  };
+}
+
+function cloneReadonlyRecord(
+  value: Readonly<Record<string, unknown>> | undefined,
+): Record<string, unknown> | undefined {
+  return value ? { ...value } : undefined;
+}
+
+function buildExecutionSemantics(
+  input: RuntimeObservationBundleInput,
+  tooling: RuntimeObservationBundle["tooling"],
+): RuntimeObservationBundle["executionSemantics"] {
+  const toolSideEffectState =
+    input.executionSemantics?.toolSideEffectState ?? deriveToolSideEffectState(tooling);
+  const executionFamily =
+    input.executionSemantics?.executionFamily ??
+    input.telemetrySnapshot?.servingSource ??
+    input.execution.target.candidate.identity.serving_source ??
+    input.execution.target.adapterFamily;
+  const adapterFamily =
+    input.executionSemantics?.adapterFamily ?? input.execution.target.adapterFamily;
+  const providerCanonicalBytes =
+    readMeasuredPayloadBytes(input.executionSemantics?.payloadBytes?.providerCanonical) ??
+    measurePayloadBytes(input.execution.requestCapture.body);
+  const providerResponseBytes =
+    readMeasuredPayloadBytes(input.executionSemantics?.payloadBytes?.providerResponse) ??
+    measurePayloadBytes(input.execution.responseCapture.body);
+  const failedAttempts = input.executionSemantics?.failedAttempts
+    ?.filter((attempt) => typeof attempt.attemptId === "string" && attempt.attemptId.length > 0)
+    .map((attempt) => ({
+      ...attempt,
+      ...(attempt.errorPreview ? { errorPreview: cloneReadonlyRecord(attempt.errorPreview) } : {}),
+    }));
+  const executionCooldowns = input.executionSemantics?.executionCooldowns
+    ?.filter(
+      (cooldown) => typeof cooldown.endpointId === "string" && cooldown.endpointId.length > 0,
+    )
+    .map((cooldown) => ({
+      ...cooldown,
+      ...(cooldown.errorPreview
+        ? { errorPreview: cloneReadonlyRecord(cooldown.errorPreview) }
+        : {}),
+    }));
+  const parameterSanitization = input.executionSemantics?.parameterSanitization
+    ?.filter((decision) => typeof decision.field === "string" && decision.field.length > 0)
+    .map((decision) => ({ ...decision }));
+  const reasoning = buildReasoningStreamReceipt(input.executionSemantics?.reasoning);
+  return {
+    ...(input.executionSemantics?.sourceClient
+      ? { sourceClient: input.executionSemantics.sourceClient }
+      : {}),
+    executionFamily,
+    adapterFamily,
+    payloadBytes: {
+      ingress:
+        readMeasuredPayloadBytes(input.executionSemantics?.payloadBytes?.ingress) ??
+        providerCanonicalBytes,
+      translated:
+        readMeasuredPayloadBytes(input.executionSemantics?.payloadBytes?.translated) ??
+        providerCanonicalBytes,
+      providerCanonical: providerCanonicalBytes,
+      providerWire:
+        readMeasuredPayloadBytes(input.executionSemantics?.payloadBytes?.providerWire) ??
+        providerCanonicalBytes,
+      providerResponse: providerResponseBytes,
+    },
+    retryCount: readNonNegativeCount(input.executionSemantics?.retryCount),
+    rerouteCount: readNonNegativeCount(input.executionSemantics?.rerouteCount),
+    cooldownDecision: input.executionSemantics?.cooldownDecision ?? "not_applied",
+    idempotencyDecision:
+      input.executionSemantics?.idempotencyDecision ??
+      (toolSideEffectState === "none" ? "not_needed" : "tool_replay_guard_required"),
+    toolSideEffectState,
+    ...(reasoning ? { reasoning } : {}),
+    ...(failedAttempts && failedAttempts.length > 0 ? { failedAttempts } : {}),
+    ...(executionCooldowns && executionCooldowns.length > 0 ? { executionCooldowns } : {}),
+    ...(parameterSanitization && parameterSanitization.length > 0 ? { parameterSanitization } : {}),
   };
 }
 
@@ -738,6 +990,7 @@ export function createRuntimeObservationBundle(
     operator: buildOperatorDiagnostics(capturePolicy),
   } as const;
   const tooling = buildTooling(input, diagnostics.tooling);
+  const executionSemantics = buildExecutionSemantics(input, tooling);
 
   return {
     requestId: input.decision.request_id,
@@ -762,6 +1015,14 @@ export function createRuntimeObservationBundle(
     capturePolicy,
     executionTelemetry: {
       providerFamily: input.execution.normalized.providerFamily,
+      ...((input.execution.responseCapture.vendorMetadata?.vendorId ??
+      input.execution.normalized.vendorMetadata?.vendorId)
+        ? {
+            vendorId:
+              input.execution.responseCapture.vendorMetadata?.vendorId ??
+              input.execution.normalized.vendorMetadata?.vendorId,
+          }
+        : {}),
       finishReason: input.execution.normalized.finishReason,
       stream: {
         requested: input.execution.normalized.stream.requested,
@@ -774,6 +1035,7 @@ export function createRuntimeObservationBundle(
       usageSupport: input.execution.capabilities.usage,
       costProvenance: deriveCostProvenance(input.execution.usageEvent),
     },
+    executionSemantics,
     cacheObservability: {
       promptCacheRequested: input.execution.normalized.promptCache.requested,
       promptCacheUsed: input.execution.normalized.promptCache.used,

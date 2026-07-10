@@ -1,0 +1,8 @@
+{
+  "pid": 55300,
+  "hasExited": false,
+  "url": "ws://127.0.0.1:54503",
+  "tokenPresent": true,
+  "stdout": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\craft-headless\\craft-headless.stdout.log",
+  "stderr": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\craft-headless\\craft-headless.stderr.log"
+}

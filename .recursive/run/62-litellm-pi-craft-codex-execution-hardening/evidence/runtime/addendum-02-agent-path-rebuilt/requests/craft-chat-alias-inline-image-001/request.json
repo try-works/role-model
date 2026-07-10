@@ -1,0 +1,18 @@
+{
+  "model": "codex-capable.hybrid",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Describe the attached inline image and reply with exactly IMAGE_OK."
+        },
+        {
+          "type": "image",
+          "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z4x8AAAAASUVORK5CYII="
+        }
+      ]
+    }
+  ]
+}

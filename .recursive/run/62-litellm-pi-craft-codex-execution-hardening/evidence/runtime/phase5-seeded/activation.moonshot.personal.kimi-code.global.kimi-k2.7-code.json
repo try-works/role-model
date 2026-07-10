@@ -1,0 +1,22 @@
+{
+  "providerAccountId": "moonshot.personal.kimi-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "region": "global",
+  "statusCode": 200,
+  "ok": true,
+  "body": {
+    "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "providerAccountId": "moonshot.personal.kimi-code",
+    "providerId": "moonshot",
+    "modelId": "moonshot/kimi-k2.7-code",
+    "roleIds": [
+      "analyst",
+      "coder",
+      "data",
+      "operator",
+      "translator",
+      "writer"
+    ],
+    "status": "active"
+  }
+}

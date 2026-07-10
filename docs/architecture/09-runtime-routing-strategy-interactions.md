@@ -570,6 +570,19 @@ These examples matter because they show the intended composition:
 2. ordinary controller routing still distributes across DeepSeek and Kimi
 3. the hosted-tool fix is intentionally narrow and does not replace the general router
 
+## Provider-agnostic preference boundary
+
+Provider, vendor, execution-family, adapter, and endpoint-capability metadata are facts
+that can affect eligibility and diagnostics. They must not become hardcoded routing
+preferences for ordinary alias requests.
+
+For example, a hosted OpenAI `responses` tool can narrow an alias pool when no other
+target declares equivalent support, but an ordinary text or function-tool request
+through `difficulty.remote-only` should keep all compatible targets in the pool. If one
+endpoint should win more often, that should come from benchmark-backed quality,
+observed performance, role/task policy, request constraints, or advisory routing-model
+scoring rather than a provider-specific rule such as "try Codex first."
+
 ## Practical consequences for future work
 
 Future routing changes should preserve these rules:
@@ -579,7 +592,8 @@ Future routing changes should preserve these rules:
 3. alias resolution must stay strict to the alias slice
 4. request-surface-specific eligibility filters must run before difficulty/controller
    routing when the transport surface requires them
-5. controller guidance must stay bounded to runtime-known roles, tasks, capabilities,
+5. ordinary alias scoring must stay provider-agnostic and metadata-driven
+6. controller guidance must stay bounded to runtime-known roles, tasks, capabilities,
    and candidate endpoints
-6. routing should continue to score concrete endpoints using live observed data, while
+7. routing should continue to score concrete endpoints using live observed data, while
    benchmark data remains an input to that evidence model rather than a parallel router

@@ -107,6 +107,45 @@ describe("vendor-litellm", () => {
     expect(rendered).toContain("temperature: 0");
   });
 
+  test("renders router and litellm settings into the generated config", () => {
+    const rendered = renderLiteLLMConfig({
+      providers: [
+        {
+          providerId: "openai",
+          apiKeyRef: "${OPENAI_API_KEY}",
+          modelMappings: [
+            {
+              modelId: "openai/gpt-4.1-mini-fast",
+              litellmModel: "openai/gpt-4.1-mini",
+            },
+          ],
+        },
+      ],
+      routerSettings: {
+        num_retries: 2,
+        timeout: 30,
+        enable_pre_call_checks: true,
+        optional_pre_call_checks: ["prompt_caching", "session_affinity"],
+      },
+      litellmSettings: {
+        request_timeout: 45,
+        default_fallbacks: ["openai/gpt-4.1-mini-slow"],
+      },
+    });
+
+    expect(rendered).toContain("router_settings:");
+    expect(rendered).toContain("num_retries: 2");
+    expect(rendered).toContain("timeout: 30");
+    expect(rendered).toContain("enable_pre_call_checks: true");
+    expect(rendered).toContain("optional_pre_call_checks:");
+    expect(rendered).toContain("- prompt_caching");
+    expect(rendered).toContain("- session_affinity");
+    expect(rendered).toContain("litellm_settings:");
+    expect(rendered).toContain("request_timeout: 45");
+    expect(rendered).toContain("default_fallbacks:");
+    expect(rendered).toContain("- openai/gpt-4.1-mini-slow");
+  });
+
   test("installs litellm into a role-model-owned uv tool directory", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-litellm-provision-"));
     tempRoots.push(tempRoot);

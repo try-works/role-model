@@ -1,0 +1,142 @@
+[
+  {
+    "requestId": "req-296655f2-7f11-4af5-a3a9-7bc4ad717000",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-296655f2-7f11-4af5-a3a9-7bc4ad717000",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "createdAtMs": 1783562370067
+  },
+  {
+    "requestId": "req-1906bc32-0584-4a37-9266-0929c7829aba",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-1906bc32-0584-4a37-9266-0929c7829aba",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1783562359658
+  },
+  {
+    "requestId": "req-a25b43ba-2e54-4730-8124-f88b75f1f7a9",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-a25b43ba-2e54-4730-8124-f88b75f1f7a9",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "createdAtMs": 1783562352134
+  },
+  {
+    "requestId": "req-2933c791-f70b-4808-9118-60d0c7278654",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-2933c791-f70b-4808-9118-60d0c7278654",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "createdAtMs": 1783562342058
+  },
+  {
+    "requestId": "req-ad7a23b1-dfeb-4b9d-98c2-94e5127c83a2",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-ad7a23b1-dfeb-4b9d-98c2-94e5127c83a2",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "createdAtMs": 1783561698884
+  },
+  {
+    "requestId": "req-158f2c0c-0271-4f37-b9b7-b5bcf0f32b5d",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-158f2c0c-0271-4f37-b9b7-b5bcf0f32b5d",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1783561673341
+  },
+  {
+    "requestId": "req-d6561e9a-0bc7-492f-9e44-5c5f039ebc27",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-d6561e9a-0bc7-492f-9e44-5c5f039ebc27",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1783561673113
+  },
+  {
+    "requestId": "req-54e60434-10c0-4917-9019-8e6ea7a3431b",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-54e60434-10c0-4917-9019-8e6ea7a3431b",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1783561647454
+  },
+  {
+    "requestId": "req-168559f8-ff40-4bca-a0d6-ea3c87bef5d6",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-168559f8-ff40-4bca-a0d6-ea3c87bef5d6",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "createdAtMs": 1783558996344
+  },
+  {
+    "requestId": "req-f5377798-aaaf-4610-a82a-176850c4d911",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-f5377798-aaaf-4610-a82a-176850c4d911",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1783558966326
+  },
+  {
+    "requestId": "req-792b6f82-76fc-410c-8d03-4805b2340da1",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-792b6f82-76fc-410c-8d03-4805b2340da1",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "createdAtMs": 1783558833965
+  },
+  {
+    "requestId": "req-9c91deea-537a-442a-8798-0a5ce4915df0",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-9c91deea-537a-442a-8798-0a5ce4915df0",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1783558782863
+  },
+  {
+    "requestId": "req-ca6ed322-0e98-47f2-b063-d2785bcb05cd",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-ca6ed322-0e98-47f2-b063-d2785bcb05cd",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "createdAtMs": 1783558720476
+  },
+  {
+    "requestId": "req-1ee4b438-c262-476b-8518-f5ad953939c1",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-1ee4b438-c262-476b-8518-f5ad953939c1",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1783558697834
+  },
+  {
+    "requestId": "req-693ad23f-437d-479e-aa8d-6f477da9dd2b",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-693ad23f-437d-479e-aa8d-6f477da9dd2b",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "createdAtMs": 1783558672085
+  },
+  {
+    "requestId": "req-409135cb-2a45-40a9-a5d3-212a77a2db26",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-409135cb-2a45-40a9-a5d3-212a77a2db26",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1783558639614
+  },
+  {
+    "requestId": "req-73733e9a-b251-4579-b0d2-42f8093b61b0",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-73733e9a-b251-4579-b0d2-42f8093b61b0",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "createdAtMs": 1783558620367
+  },
+  {
+    "requestId": "req-52453baf-9cc2-433f-8a3e-eb3b048f4058",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-52453baf-9cc2-433f-8a3e-eb3b048f4058",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1783558592050
+  },
+  {
+    "requestId": "req-c54d8fbf-2306-4d09-8c2a-db51a26c91e4",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-c54d8fbf-2306-4d09-8c2a-db51a26c91e4",
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "createdAtMs": 1783558544584
+  },
+  {
+    "requestId": "req-1b08ccee-71a9-4100-9104-103554f8239b",
+    "clientRequestId": null,
+    "routingDecisionId": "decision-req-1b08ccee-71a9-4100-9104-103554f8239b",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "createdAtMs": 1783558516645
+  }
+]

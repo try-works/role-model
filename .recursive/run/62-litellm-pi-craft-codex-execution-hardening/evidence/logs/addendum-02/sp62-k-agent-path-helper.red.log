@@ -1,0 +1,12 @@
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening
+
+ ❯ packages/pi-role-model/test/validate-agent-path.test.ts (6 tests | 3 failed) 145ms
+   ✓ validate-agent-path helper > prepares a Pi alias-routed chat payload through the extension flow 127ms
+   ✓ validate-agent-path helper > builds a Craft alias-routed declared-tools payload 2ms
+   ✓ validate-agent-path helper > builds a Craft alias-routed inline-image payload 1ms
+   × validate-agent-path helper > resolves runtime request ids from telemetry when observations are unavailable 9ms
+     → (0 , resolveRuntimeRequestId) is not a function
+   × validate-agent-path helper > temporarily seeds OPENAI_API_KEY for mock runtime validation 1ms
+     → (0 , withMockValidationOpenAiApiKey) is not a function
+   × validate-agent-path helper > waits for required runtime model endpoints to become active and healthy 1ms
+     → (0 , waitForRuntimeModelEndpointsReady) is not a function

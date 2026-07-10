@@ -184,6 +184,66 @@ litellm_proxy:
     ]);
   });
 
+  test("round-trips litellm router and module settings through the unified runtime config", () => {
+    const normalized = normalizeUnifiedRuntimeConfigInput({
+      version: "1.0",
+      routingStrategy: "balanced",
+      liteLLM: {
+        providers: [
+          {
+            providerId: "openai",
+            apiKeyRef: "${OPENAI_API_KEY}",
+            modelNames: ["openai/gpt-4.1-mini-fast"],
+            modelMappings: [
+              {
+                modelId: "openai/gpt-4.1-mini-fast",
+                litellmModel: "openai/gpt-4.1-mini",
+                litellmParams: {
+                  model: "openai/gpt-4.1-mini",
+                },
+              },
+            ],
+          },
+        ],
+        routerSettings: {
+          num_retries: 2,
+          timeout: 30,
+          enable_pre_call_checks: true,
+          optional_pre_call_checks: ["prompt_caching", "session_affinity"],
+        },
+        litellmSettings: {
+          request_timeout: 45,
+          default_fallbacks: ["openai/gpt-4.1-mini-slow"],
+        },
+        process: {
+          command: null,
+          args: [],
+          env: {},
+          cwd: null,
+          startupTimeoutMs: null,
+        },
+      },
+    });
+
+    expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(normalized))).toMatchObject(
+      {
+        liteLLM: {
+          enabled: true,
+          routerSettings: {
+            num_retries: 2,
+            timeout: 30,
+            enable_pre_call_checks: true,
+            optional_pre_call_checks: ["prompt_caching", "session_affinity"],
+          },
+          litellmSettings: {
+            request_timeout: 45,
+            default_fallbacks: ["openai/gpt-4.1-mini-slow"],
+          },
+        },
+      },
+    );
+  });
+
   test("leaves process startup timeouts unset unless the unified config specifies them", () => {
     const result = parseUnifiedRuntimeConfigText(`
 version: "1.0"
