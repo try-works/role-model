@@ -734,6 +734,37 @@ function summarizeStreamLabel(
   return "Streaming unavailable";
 }
 
+function readFailureMessageFromDimensions(
+  dimensions: Record<string, unknown> | null | undefined,
+): string | null {
+  if (!dimensions || typeof dimensions !== "object") {
+    return null;
+  }
+  const errorContext = dimensions.errorContext;
+  if (!errorContext || typeof errorContext !== "object") {
+    return null;
+  }
+  const message = (errorContext as Record<string, unknown>).message;
+  return typeof message === "string" && message.trim().length > 0 ? message.trim() : null;
+}
+
+function humanizeTelemetryErrorClass(errorClass: string | null | undefined): string {
+  if (typeof errorClass !== "string" || errorClass.trim().length === 0) {
+    return "ok";
+  }
+  const normalized = errorClass.replace(/[_-]+/g, " ").trim();
+  return normalized.length > 0 ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "ok";
+}
+
+function buildTelemetryStatusLabel(
+  row: Pick<RuntimeTelemetryRequestRecord, "statusCode" | "errorClass" | "dimensions">,
+): string {
+  if (!row.errorClass) {
+    return `${row.statusCode ?? 0} ok`;
+  }
+  return `${row.statusCode ?? 0} ${readFailureMessageFromDimensions(row.dimensions) ?? humanizeTelemetryErrorClass(row.errorClass)}`;
+}
+
 export function summarizeTelemetryStats(
   summary: RuntimeTelemetrySummary,
 ): Array<{ label: string; value: string; detail: string }> {
@@ -823,6 +854,7 @@ export function buildTelemetryRequestRows(
       | "estimatedCostUsd"
       | "errorClass"
       | "statusCode"
+      | "dimensions"
       | "providerFamily"
       | "providerKind"
       | "providerId"
@@ -864,7 +896,7 @@ export function buildTelemetryRequestRows(
       endpointId: row.endpointId,
       modelId: row.modelId,
       sourceLabel: formatSourceLabel(row.sourceType),
-      statusLabel: `${row.statusCode ?? 0} ${row.errorClass ?? "ok"}`,
+      statusLabel: buildTelemetryStatusLabel(row),
       providerFamilyLabel:
         row.providerId ?? row.providerFamily ?? row.providerKind ?? "unknown provider",
       finishReasonLabel: row.finishReason ?? "unknown",
@@ -908,6 +940,7 @@ export function buildDashboardLatestRequestRows(
       | "estimatedCostUsd"
       | "errorClass"
       | "statusCode"
+      | "dimensions"
       | "providerFamily"
       | "providerKind"
       | "providerId"

@@ -96,4 +96,43 @@ describe("resolveRuntimeVersionInfo", () => {
       configVersion: "1.1",
     });
   });
+
+  test("prefers explicit build date over git commit date for local packaged builds", async () => {
+    const repoRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-version-build-date-"),
+    );
+    tempDirs.push(repoRoot);
+
+    await expect(
+      resolveRuntimeVersionInfo({
+        repoRoot,
+        fallbackConfigVersion: "1.1",
+        env: {
+          BUILD_DATE: "2026-07-11T05:45:00.000Z",
+        },
+        runGitCommand: (args) => {
+          const command = args.join(" ");
+          if (command.startsWith("tag --list")) {
+            return "v0.0.5";
+          }
+          if (command.startsWith("describe --tags")) {
+            return "v0.0.5-dirty";
+          }
+          if (command === "rev-parse HEAD") {
+            return "e78ba9411dca6cc925f6b572ddc734f3f44f50c5";
+          }
+          if (command === "show -s --format=%cI HEAD") {
+            return "2026-07-10T13:37:20+08:00";
+          }
+          return null;
+        },
+      }),
+    ).resolves.toEqual({
+      version: "0.0.5-dirty",
+      release_version: "0.0.5",
+      commit: "e78ba9411dca6cc925f6b572ddc734f3f44f50c5",
+      build_date: "2026-07-11T05:45:00.000Z",
+      configVersion: "1.1",
+    });
+  });
 });

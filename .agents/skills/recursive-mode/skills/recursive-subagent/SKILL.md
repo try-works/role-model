@@ -1,6 +1,6 @@
 ---
 name: recursive-subagent
-description: 'Use when recursive-mode work may benefit from delegated audit, review, or bounded implementation support. This skill prioritizes phase-auditor, traceability-auditor, code-reviewer, memory-auditor, and test-reviewer roles, with mandatory self-audit fallback when subagents are unavailable.'
+description: 'Use when recursive-mode work may benefit from delegated audit, review, or bounded implementation support. This skill prioritizes analyst, planner, code-reviewer, memory-auditor, tester, and implementer roles, with mandatory self-audit fallback when subagents are unavailable.'
 ---
 
 # recursive-subagent
@@ -10,20 +10,33 @@ Use this skill to decide whether subagents help a recursive-mode phase and to en
 This skill does not relax the canonical workflow. The main agent remains responsible for:
 
 - one active recursive phase at a time
+- serving as the single orchestrator the user is currently interacting with
 - full audit rigor before lock
 - rejecting incomplete or context-free subagent output
 - falling back to `self-audit` when subagents are unavailable
+
+If `recursive-router` is installed, consult it when the user has explicitly asked to use routing or when an active configured external route exists for the selected delegated role. Because router discovery and configuration may inspect local CLI and provider configuration on the device, ask the user first before new setup or policy changes. Do not ask again merely to honor an already configured external route for a role that must now be dispatched.
+
+Once the user confirms routed setup, explicitly requests routed delegation, or the role has an active configured external route, consult:
+
+- `/.recursive/config/recursive-router.json`
+- `/.recursive/config/recursive-router-discovered.json`
+- `/skills/recursive-router/SKILL.md`
+
+before choosing a routed external CLI/model path for a role.
+
+Re-read those files from disk immediately before every routed dispatch. Do not reuse an earlier in-memory resolution if policy, discovery state, or fallback behavior may have changed during the run. If `recursive-router-resolve` returns `external-cli`, use `recursive-router-invoke` for that delegated slot. Local/self-audit execution is only the valid path when the route resolves to `fallback-local`, `local-only`, `blocked`, or `ask-user`, and the recorded artifact must say so.
 
 ## Priority Of Use
 
 Use subagents in this order of value:
 
-1. phase auditor
-2. traceability auditor
+1. analyst
+2. planner
 3. code reviewer
 4. memory auditor
-5. test reviewer
-6. bounded implementer for truly disjoint write scopes
+5. tester
+6. implementer for truly disjoint write scopes
 
 Do not treat subagents as required infrastructure. They are optional infrastructure, but delegated audit/review is the preferred default when subagents are available and the context bundle is complete.
 
@@ -41,6 +54,7 @@ If subagents are available:
 
 - record `Subagent Availability: available`
 - delegate by default for audit/review work when the context bundle is complete
+- consult router policy before dispatch when the current task explicitly requests routed delegation or external CLI routing is configured for the selected role
 - if the controller still chooses `self-audit`, record a concrete `Delegation Override Reason`
 - keep the same audit checklist and acceptance standard
 
@@ -88,11 +102,13 @@ Before dispatch:
 - [ ] Confirm the handoff bundle is complete
 - [ ] Confirm the canonical review bundle path exists when delegation is being recorded in a phase artifact
 - [ ] Confirm a durable subagent action record will be written under `/.recursive/run/<run-id>/subagents/`
+- [ ] Confirm initial prompt bundles are cited from a prompt-bundle path, and routed assistant output, stdout/stderr transcripts, and invoke metadata will be captured under `/.recursive/run/<run-id>/evidence/router/`, not directly under `subagents/`
 - [ ] Confirm the target subagent role matches the task
 - [ ] Confirm write scopes are disjoint before any write-capable delegation
 
 Before accepting a result:
 
+- [ ] Verify the routed invocation has `success: true` and exit code `0` when external CLI routing was used
 - [ ] Verify the subagent read the named upstream artifacts
 - [ ] Verify the subagent read the review bundle or its full equivalent
 - [ ] Verify the subagent returned enough detail to populate the action record fields
@@ -107,11 +123,13 @@ Before accepting a result:
 - [ ] Reject action records that leave claimed file impact or claimed artifact impact as `none` for materially contributing work
 - [ ] Reject the output if it is context-free, hand-wavy, or missing required checks
 
+If a routed subagent reports failures, findings, incomplete work, `success: false`, or a nonzero external CLI exit code, do not accept the result. The controller must run an audit-repair-retry loop: record the failed attempt and diagnostic evidence, tell the same bounded role exactly what to fix when it has ownership to fix it, rerun the route, and then repeat controller verification against the actual diff and artifacts. If the routed role cannot fix the issue or the route remains unavailable, record an explicit fallback before using local repair or self-audit evidence.
+
 ## Recommended Roles
 
-### Phase Auditor
+### Analyst
 
-Use for audited phases that need an independent pass over:
+Use for AS-IS analysis, root-cause analysis, and other audited phases that need an independent analytical pass over:
 
 - current draft
 - upstream locked artifacts
@@ -119,9 +137,9 @@ Use for audited phases that need an independent pass over:
 - requirement coverage
 - gaps, drift, and repair needs
 
-### Traceability Auditor
+### Planner
 
-Use when checking that downstream artifacts explicitly cover every in-scope `R#` and do not hide behind vague summaries.
+Use for Phase 2 planning and traceability-heavy checks where downstream artifacts must explicitly cover every in-scope `R#` and not hide behind vague summaries.
 
 ### Code Reviewer
 
@@ -139,7 +157,7 @@ Expected checks:
 
 Use in Phase 8 to verify that touched paths, memory status transitions, and router updates match the final validated repo state.
 
-### Test Reviewer
+### Tester
 
 Use in Phase 4 to audit test adequacy, exact commands, evidence capture, and whether the implementation is truly complete before test results are trusted.
 
@@ -157,7 +175,7 @@ Use this structure whenever you delegate an audit or review. Prefer generating t
 Review Bundle Path: `/.recursive/run/<run-id>/evidence/review-bundles/<bundle>.md`
 Phase: `03.5 Code Review`
 Artifact path: `/.recursive/run/<run-id>/03.5-code-review.md`
-Role: `phase-auditor`
+Role: `analyst`
 Audit execution expectation: return findings plus `Audit: PASS` or `Audit: FAIL`
 
 Bundle freshness check:
@@ -219,6 +237,6 @@ Reject a delegated result if any of the following are true:
 ## References
 
 - Canonical workflow: `/.recursive/RECURSIVE.md`
-- Artifact templates: `references/artifact-template.md`
-- Code reviewer prompt: `agents/code-reviewer.md`
-- Implementer prompt: `agents/implementer.md`
+- Artifact templates: `/references/artifact-template.md`
+- Code reviewer prompt: `/skills/recursive-subagent/agents/code-reviewer.md`
+- Implementer prompt: `/skills/recursive-subagent/agents/implementer.md`

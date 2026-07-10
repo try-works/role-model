@@ -505,6 +505,7 @@ export interface RuntimeTelemetryRequestRecord {
   readonly taxonomyCapabilityIds?: readonly string[];
   readonly taxonomyModalityIds?: readonly string[];
   readonly taxonomyToolClassIds?: readonly string[];
+  readonly dimensions?: Record<string, unknown> | null;
 }
 
 export interface RuntimeTelemetryDashboard {
@@ -856,6 +857,18 @@ export interface RuntimeSnapshot {
   readonly endpoints: readonly RuntimeEndpoint[];
   readonly requests: readonly RuntimeRequestListItem[];
   readonly models: readonly RuntimeModelRecord[];
+  readonly roles: readonly RuntimeRoleDefinition[];
+}
+
+export interface RuntimeShellSnapshot {
+  readonly summary: RuntimeSummary;
+  readonly controller: RuntimeControllerAssignment | null;
+  readonly configRecord: RuntimeConfigRecord;
+  readonly version: RuntimeVersionInfo;
+}
+
+export interface RuntimeDashboardSnapshot {
+  readonly endpoints: readonly RuntimeEndpoint[];
   readonly roles: readonly RuntimeRoleDefinition[];
 }
 
@@ -1270,6 +1283,38 @@ export async function fetchRuntimeSnapshot(
     roles,
     requests,
     models,
+  };
+}
+
+export async function fetchRuntimeShellSnapshot(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeShellSnapshot> {
+  const [summary, controller, configRecord, version] = await Promise.all([
+    fetchRuntimeSummaryWithRetry(fetcher),
+    fetchControllerAssignment(fetcher),
+    fetchRuntimeConfig(fetcher),
+    fetchVersionInfo(fetcher),
+  ]);
+
+  return {
+    summary,
+    controller,
+    configRecord,
+    version,
+  };
+}
+
+export async function fetchRuntimeDashboardSnapshot(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeDashboardSnapshot> {
+  const [endpoints, roles] = await Promise.all([
+    fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher),
+    fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher),
+  ]);
+
+  return {
+    endpoints,
+    roles,
   };
 }
 

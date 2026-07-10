@@ -134,7 +134,7 @@ If either gate fails, set `FAIL` and list exact fixes required before proceeding
 
 ## Universal Audit Sections (Audited Phases)
 
-Use this block in every audited phase for `recursive-mode-audit-v1`:
+Use this block in every audited phase for `recursive-mode-audit-v1` and `recursive-mode-audit-v2`:
 
 ```md
 ## Audit Context
@@ -320,6 +320,13 @@ Role: `code-reviewer`
 Artifact path: `/.recursive/run/<run-id>/03.5-code-review.md`
 Artifact Content Hash: `<sha256>`
 
+## Routing
+
+- Routed CLI: `none`
+- Routed Model: `none`
+- Routing Config Path: `none`
+- Routing Discovery Path: `none`
+
 ## Upstream Artifacts
 
 - `/.recursive/run/<run-id>/00-requirements.md`
@@ -410,6 +417,20 @@ Use this when a meaningful subagent invocation contributes to a phase outcome. T
 - Code Refs:
 - Memory Refs:
 - Audit / Task Questions:
+
+## Routing
+- Router Used:
+- Routed Role:
+- Routed CLI:
+- Routed Model:
+- Routing Config Path:
+- Routing Discovery Path:
+- Routing Resolution Basis:
+- Routing Fallback Reason:
+- CLI Probe Summary:
+- Prompt Bundle Path:
+- Invocation Exit Code:
+- Output Capture Paths:
 
 ## Claimed Actions Taken
 - [bullet list]
@@ -632,7 +653,7 @@ Required outcome:
 Run: `/.recursive/run/<run-id>/`
 Phase: `00 Requirements`
 Status: `DRAFT`
-Workflow version: `recursive-mode-audit-v1`
+Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - [chat summary or source notes if captured in repo]
 Outputs:
@@ -668,10 +689,6 @@ Acceptance criteria:
 - `OOS2`: ...
 
 ## Constraints
-
-- ...
-
-## Assumptions
 
 - ...
 

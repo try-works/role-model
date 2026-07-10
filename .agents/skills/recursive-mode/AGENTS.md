@@ -45,6 +45,9 @@ Required recursive-mode audit behavior:
 - Do not set `Coverage: PASS` or `Approval: PASS` for an audited phase unless the artifact ends with `Audit: PASS`.
 - Record `Subagent Capability Probe` and `Delegation Decision Basis` in every audited phase.
 - If meaningful subagent work contributes to a phase, require a durable action record under `/.recursive/run/<run-id>/subagents/` and verify it against actual files, actual recursive artifacts, and the actual diff before acceptance. For review/audit delegation, prefer a stable reviewed artifact for `Current Artifact`.
+- Store routed assistant output, raw transcripts, stdout/stderr captures, and invocation metadata under `/.recursive/run/<run-id>/evidence/router/`; cite them from action records rather than placing raw transcript Markdown directly under `subagents/`.
+- Store initial routed prompt bundles only under run-scoped paths such as `/.recursive/run/<run-id>/router-prompts/`; do not bootstrap top-level `/.recursive/router-prompts/`.
+- Treat `success: false` or any nonzero routed-assistant exit code as a failed attempt: preserve diagnostics, instruct the bounded routed role to repair owned issues when applicable, rerun the route, then verify the result before acceptance or record an explicit fallback.
 - If delegated work is accepted after main-agent checks reveal issues, record the concrete repair performed after verification; do not accept stale delegated context silently.
 - For Phase 3, declare `TDD Mode: strict|pragmatic`. Strict mode requires RED and GREEN evidence paths. Pragmatic mode requires an explicit exception rationale plus compensating evidence.
 - For Phase 5, declare `QA Execution Mode: human|agent-operated|hybrid`. Human and hybrid require user sign-off. Agent-operated and hybrid require execution metadata plus evidence paths.
@@ -60,27 +63,26 @@ Required recursive-mode audit behavior:
 - If a run needs missing specialized capability, prefer the `find-skills` skill when available. Otherwise use the Skills CLI (`npx skills find`, `npx skills add`, `npx skills check`, `npx skills update`) and record the outcome when skill usage is relevant.
 - When working inside a reusable skill/workflow repo, do not leave committed run residue such as concrete `/.recursive/run/<run-id>/` folders, evidence logs, review bundles, action records, or temp-path references unless they are intentional fixtures or examples.
 
-Useful scripts:
+Useful helpers:
 
-- `scripts/install-recursive-mode.py`
-- `scripts/install-recursive-mode.ps1`
-- `scripts/install-recursive-mode.sh`
-- `scripts/recursive-init.py`
-- `scripts/recursive-init.ps1`
-- `scripts/recursive-status.py`
-- `scripts/recursive-status.ps1`
-- `scripts/lint-recursive-run.py`
-- `scripts/lint-recursive-run.ps1`
-- `scripts/recursive-review-bundle.py`
-- `scripts/recursive-review-bundle.ps1`
-- `scripts/recursive-subagent-action.py`
-- `scripts/recursive-subagent-action.ps1`
-- `scripts/recursive-lock.py`
-- `scripts/recursive-lock.ps1`
-- `scripts/verify-locks.py`
-- `scripts/verify-locks.ps1`
-- `scripts/check-reusable-repo-hygiene.py`
-- `scripts/check-reusable-repo-hygiene.ps1`
+Invoke these helper names from the installed recursive-mode skill directory or the source package checkout:
+
+- `install-recursive-mode`
+- `recursive-init`
+- `recursive-status`
+- `lint-recursive-run`
+- `recursive-review-bundle`
+- `recursive-closeout`
+- `recursive-subagent-action`
+- `recursive-training-grpo`
+- `recursive-training-extract`
+- `recursive-training-phase8-trigger`
+- `recursive-training-sync`
+- `recursive-training-loader`
+- `recursive-training-mcp`
+- `recursive-lock`
+- `verify-locks`
+- `check-reusable-repo-hygiene`
 
 Diff ownership rules:
 
@@ -94,4 +96,6 @@ Diff ownership rules:
 Locking rule:
 
 - Use `recursive-lock` as the primary supported way to write `Status: LOCKED`, `LockedAt`, and `LockHash`.
+- `recursive-lock` enforces monotonic phase gating: all earlier phases that exist in the run directory must be LOCKED before the target phase can be locked.
+- To reopen a locked artifact (reset to DRAFT and invalidate downstream receipts), pass `--reopen` to `recursive-lock`.
 <!-- RECURSIVE-MODE-AGENTS:END -->

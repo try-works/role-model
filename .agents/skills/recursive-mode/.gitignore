@@ -1,0 +1,34 @@
+# Python local execution residue
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*$py.class
+
+# Python test and analysis caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+
+# Conservative local coverage output
+.coverage
+htmlcov/
+
+# Local benchmark workspaces
+.benchmark-workspaces/
+
+# Local benchmark toolchain cache
+.benchmark-toolchain/
+
+# Local recursive worktrees
+.worktrees/
+
+# Device-local router discovery inventory
+/.recursive/config/recursive-router-discovered.json
+
+# Local benchmark runtime byproducts
+.playwright-mcp/
+.cargo-target-dir/

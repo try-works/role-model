@@ -1,6 +1,16 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmod, copyFile, cp, mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  copyFile,
+  cp,
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  utimes,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -330,23 +340,43 @@ async function stageStandaloneReleaseFiles(releaseDir: string): Promise<void> {
   }
 }
 
+export async function stampReleaseTreeModificationTimes(
+  releaseDir: string,
+  packageBuildDate: Date,
+): Promise<void> {
+  const entries = await readdir(releaseDir, { withFileTypes: true });
+  for (const entry of entries) {
+    const entryPath = path.join(releaseDir, entry.name);
+    if (entry.isDirectory()) {
+      await stampReleaseTreeModificationTimes(entryPath, packageBuildDate);
+      continue;
+    }
+    if (entry.isFile()) {
+      await utimes(entryPath, packageBuildDate, packageBuildDate);
+    }
+  }
+  await utimes(releaseDir, packageBuildDate, packageBuildDate);
+}
+
 async function buildWindowsLauncher(releaseDir: string): Promise<void> {
   if (process.platform !== "win32") {
     return;
   }
-  const launcherMainPath = path.join(routerRoot, "apps", "launcher", "main.go");
-  runOrThrow(
-    resolveGoCommand(),
-    ["build", "-o", path.join(releaseDir, "role-model-launcher.exe"), launcherMainPath],
-    repoRoot,
-    {
-      GO111MODULE: "off",
-      GOWORK: "off",
-    },
-  );
+  runOrThrow(resolveGoCommand(), createWindowsLauncherBuildArgs(releaseDir), repoRoot, {
+    GO111MODULE: "off",
+    GOWORK: "off",
+  });
 }
 
-function createWindowsLauncherBatchFile(): string {
+export function createWindowsLauncherBuildArgs(releaseDir: string): string[] {
+  const launcherPackagePath = `./${path
+    .relative(repoRoot, path.join(routerRoot, "apps", "launcher"))
+    .split(path.sep)
+    .join("/")}`;
+  return ["build", "-o", path.join(releaseDir, "role-model-launcher.exe"), launcherPackagePath];
+}
+
+export function createWindowsLauncherBatchFile(): string {
   return [
     "@echo off",
     "set SCRIPT_DIR=%~dp0",
@@ -469,6 +499,8 @@ export async function packageSeaRuntime(): Promise<{
   if (!buildTarget) {
     throw new Error(`Unsupported runtime packaging target: ${process.platform}-${process.arch}`);
   }
+  const packageBuildDate = new Date();
+  const packageBuildDateIso = packageBuildDate.toISOString();
   const versionInfo = await resolveRuntimeVersionInfo({
     repoRoot,
     env: {
@@ -476,7 +508,7 @@ export async function packageSeaRuntime(): Promise<{
       BUILD_DATE:
         process.env.BUILD_DATE && process.env.BUILD_DATE.trim().length > 0
           ? process.env.BUILD_DATE
-          : new Date().toISOString(),
+          : packageBuildDateIso,
     },
   });
   const releaseTarget = `${buildTarget.platform}-${buildTarget.arch}`;
@@ -540,6 +572,7 @@ export async function packageSeaRuntime(): Promise<{
     "utf8",
   );
   await assertProductionReleaseHasNoQaArtifacts(releaseDir);
+  await stampReleaseTreeModificationTimes(releaseDir, new Date(versionInfo.build_date));
 
   return {
     outputPath,

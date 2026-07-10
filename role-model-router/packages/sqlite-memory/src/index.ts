@@ -11,6 +11,8 @@ import type { ProviderAccountRecord } from "@role-model-router/provider-account"
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
+const OBSERVATION_METADATA_BACKFILL_MIGRATION_ID = "run62-observation-metadata-backfill-v1";
+const TELEMETRY_METADATA_BACKFILL_MIGRATION_ID = "run62-telemetry-metadata-backfill-v1";
 const CURRENT_SCHEMA_VERSION = 1;
 const COST_CALCULATION_VERSION = "run49.v1";
 const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
@@ -1140,6 +1142,36 @@ function ensureNonEmpty(value: string, label: string): string {
   return value;
 }
 
+function hasMigrationReceipt(database: DatabaseSync, migrationId: string): boolean {
+  const row = database
+    .prepare("SELECT migration_id FROM migration_receipts WHERE migration_id = ? AND status = ?")
+    .get(migrationId, "applied") as { migration_id?: string } | undefined;
+  return row?.migration_id === migrationId;
+}
+
+function recordMigrationReceipt(database: DatabaseSync, migrationId: string): void {
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO migration_receipts (migration_id, schema_version, applied_at_ms, status) VALUES (?, ?, ?, ?)",
+    )
+    .run(migrationId, CURRENT_SCHEMA_VERSION, Date.now(), "applied");
+}
+
+function runOnceMigration(
+  database: DatabaseSync,
+  migrationId: string,
+  shouldRunMigration: boolean,
+  migrate: () => void,
+): void {
+  if (hasMigrationReceipt(database, migrationId)) {
+    return;
+  }
+  if (shouldRunMigration) {
+    migrate();
+  }
+  recordMigrationReceipt(database, migrationId);
+}
+
 export function resolveSqliteMemoryLocation(input: SqliteMemoryLocationInput): string {
   const runtimeStateRoot = ensureNonEmpty(input.runtimeStateRoot, "runtimeStateRoot");
   const scopeId = ensureNonEmpty(input.scopeId, "scopeId");
@@ -1174,6 +1206,7 @@ function initializeSchema(database: DatabaseSync): void {
     "CREATE INDEX IF NOT EXISTS idx_obs_retain_until ON runtime_observations(retain_until_ms)",
   );
   // R-PERF1: Add metadata columns to avoid JSON parsing on every telemetry query
+  let addedObservationMetadataColumn = false;
   for (const [colName, colType] of [
     ["taxonomy_role_id", "TEXT"],
     ["taxonomy_task_type", "TEXT"],
@@ -1182,19 +1215,28 @@ function initializeSchema(database: DatabaseSync): void {
   ] as const) {
     if (!observationColumns.has(colName)) {
       database.exec(`ALTER TABLE runtime_observations ADD COLUMN ${colName} ${colType}`);
+      addedObservationMetadataColumn = true;
     }
   }
-  // R-PERF3: Backfill existing records from observation_json
-  database.exec(
-    `UPDATE runtime_observations SET
-      client_request_id = COALESCE(client_request_id, json_extract(observation_json, '$.clientRequestId')),
-      request_class = COALESCE(request_class, CASE
-        WHEN json_extract(observation_json, '$.observedPerformance.sample.source_type') = 'benchmark' THEN 'benchmark'
-        WHEN json_extract(observation_json, '$.observedPerformance.sample.source_type') = 'live_request' THEN 'live_request'
-        ELSE NULL END),
-      taxonomy_role_id = COALESCE(taxonomy_role_id, json_extract(observation_json, '$.taxonomyDimensions.taxonomy_role_id')),
-      taxonomy_task_type = COALESCE(taxonomy_task_type, json_extract(observation_json, '$.taxonomyDimensions.taxonomy_task_type'))
-    WHERE client_request_id IS NULL OR taxonomy_role_id IS NULL`,
+  runOnceMigration(
+    database,
+    OBSERVATION_METADATA_BACKFILL_MIGRATION_ID,
+    addedObservationMetadataColumn,
+    () =>
+      database.exec(
+        `UPDATE runtime_observations SET
+          client_request_id = COALESCE(client_request_id, json_extract(observation_json, '$.clientRequestId')),
+          request_class = COALESCE(request_class, CASE
+            WHEN json_extract(observation_json, '$.observedPerformance.sample.source_type') = 'benchmark' THEN 'benchmark'
+            WHEN json_extract(observation_json, '$.observedPerformance.sample.source_type') = 'live_request' THEN 'live_request'
+            ELSE NULL END),
+          taxonomy_role_id = COALESCE(taxonomy_role_id, json_extract(observation_json, '$.taxonomyDimensions.taxonomy_role_id')),
+          taxonomy_task_type = COALESCE(taxonomy_task_type, json_extract(observation_json, '$.taxonomyDimensions.taxonomy_task_type'))
+        WHERE client_request_id IS NULL
+          OR request_class IS NULL
+          OR taxonomy_role_id IS NULL
+          OR taxonomy_task_type IS NULL`,
+      ),
   );
   const runtimeTelemetryColumns = new Set(
     (
@@ -1283,114 +1325,132 @@ function initializeSchema(database: DatabaseSync): void {
     "taxonomy_tool_class_ids_json TEXT",
     "dimensions_json TEXT",
   ] as const;
+  let addedRuntimeTelemetryMetadataColumn = false;
   for (const definition of telemetryColumnDefinitions) {
     const [columnName] = definition.split(" ");
     if (!runtimeTelemetryColumns.has(columnName)) {
       database.exec(`ALTER TABLE runtime_telemetry_records ADD COLUMN ${definition}`);
+      addedRuntimeTelemetryMetadataColumn = true;
     }
   }
-  database.exec(
-    `UPDATE runtime_telemetry_records SET
-      client_request_id = COALESCE(
-        client_request_id,
-        (SELECT client_request_id FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+  runOnceMigration(
+    database,
+    TELEMETRY_METADATA_BACKFILL_MIGRATION_ID,
+    addedRuntimeTelemetryMetadataColumn,
+    () =>
+      database.exec(
+        `UPDATE runtime_telemetry_records SET
+          client_request_id = COALESCE(
+            client_request_id,
+            (SELECT client_request_id FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          request_class = COALESCE(
+            request_class,
+            (SELECT request_class FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          source_client = COALESCE(
+            source_client,
+            (SELECT json_extract(observation_json, '$.executionSemantics.sourceClient') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          vendor_id = COALESCE(
+            vendor_id,
+            (SELECT json_extract(observation_json, '$.executionTelemetry.vendorId') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          execution_family = COALESCE(
+            execution_family,
+            (SELECT json_extract(observation_json, '$.executionSemantics.executionFamily') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          adapter_family = COALESCE(
+            adapter_family,
+            (SELECT json_extract(observation_json, '$.executionSemantics.adapterFamily') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          request_payload_bytes = COALESCE(
+            request_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerCanonical') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          ingress_payload_bytes = COALESCE(
+            ingress_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.ingress') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          translated_payload_bytes = COALESCE(
+            translated_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.translated') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          provider_canonical_payload_bytes = COALESCE(
+            provider_canonical_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerCanonical') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          provider_wire_payload_bytes = COALESCE(
+            provider_wire_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerWire') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          response_payload_bytes = COALESCE(
+            response_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerResponse') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          cooldown_decision = COALESCE(
+            cooldown_decision,
+            (SELECT json_extract(observation_json, '$.executionSemantics.cooldownDecision') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          idempotency_decision = COALESCE(
+            idempotency_decision,
+            (SELECT json_extract(observation_json, '$.executionSemantics.idempotencyDecision') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          tool_side_effect_state = COALESCE(
+            tool_side_effect_state,
+            (SELECT json_extract(observation_json, '$.executionSemantics.toolSideEffectState') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_group_id = COALESCE(
+            taxonomy_group_id,
+            (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_group_id') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_role_id = COALESCE(
+            taxonomy_role_id,
+            (SELECT taxonomy_role_id FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_task_type = COALESCE(
+            taxonomy_task_type,
+            (SELECT taxonomy_task_type FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_task_variant = COALESCE(
+            taxonomy_task_variant,
+            (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_task_variant') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_capability_ids_json = COALESCE(
+            taxonomy_capability_ids_json,
+            (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_capability_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_modality_ids_json = COALESCE(
+            taxonomy_modality_ids_json,
+            (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_modality_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_tool_class_ids_json = COALESCE(
+            taxonomy_tool_class_ids_json,
+            (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_tool_class_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          )
+        WHERE client_request_id IS NULL
+          OR request_class IS NULL
+          OR source_client IS NULL
+          OR vendor_id IS NULL
+          OR execution_family IS NULL
+          OR adapter_family IS NULL
+          OR request_payload_bytes IS NULL
+          OR ingress_payload_bytes IS NULL
+          OR translated_payload_bytes IS NULL
+          OR provider_canonical_payload_bytes IS NULL
+          OR provider_wire_payload_bytes IS NULL
+          OR response_payload_bytes IS NULL
+          OR cooldown_decision IS NULL
+          OR idempotency_decision IS NULL
+          OR tool_side_effect_state IS NULL
+          OR taxonomy_group_id IS NULL
+          OR taxonomy_role_id IS NULL
+          OR taxonomy_task_type IS NULL
+          OR taxonomy_task_variant IS NULL
+          OR taxonomy_capability_ids_json IS NULL
+          OR taxonomy_modality_ids_json IS NULL
+          OR taxonomy_tool_class_ids_json IS NULL`,
       ),
-      request_class = COALESCE(
-        request_class,
-        (SELECT request_class FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      source_client = COALESCE(
-        source_client,
-        (SELECT json_extract(observation_json, '$.executionSemantics.sourceClient') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      vendor_id = COALESCE(
-        vendor_id,
-        (SELECT json_extract(observation_json, '$.executionTelemetry.vendorId') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      execution_family = COALESCE(
-        execution_family,
-        (SELECT json_extract(observation_json, '$.executionSemantics.executionFamily') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      adapter_family = COALESCE(
-        adapter_family,
-        (SELECT json_extract(observation_json, '$.executionSemantics.adapterFamily') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      request_payload_bytes = COALESCE(
-        request_payload_bytes,
-        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerCanonical') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      ingress_payload_bytes = COALESCE(
-        ingress_payload_bytes,
-        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.ingress') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      translated_payload_bytes = COALESCE(
-        translated_payload_bytes,
-        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.translated') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      provider_canonical_payload_bytes = COALESCE(
-        provider_canonical_payload_bytes,
-        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerCanonical') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      provider_wire_payload_bytes = COALESCE(
-        provider_wire_payload_bytes,
-        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerWire') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      response_payload_bytes = COALESCE(
-        response_payload_bytes,
-        (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerResponse') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      cooldown_decision = COALESCE(
-        cooldown_decision,
-        (SELECT json_extract(observation_json, '$.executionSemantics.cooldownDecision') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      idempotency_decision = COALESCE(
-        idempotency_decision,
-        (SELECT json_extract(observation_json, '$.executionSemantics.idempotencyDecision') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      tool_side_effect_state = COALESCE(
-        tool_side_effect_state,
-        (SELECT json_extract(observation_json, '$.executionSemantics.toolSideEffectState') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      taxonomy_group_id = COALESCE(
-        taxonomy_group_id,
-        (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_group_id') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      taxonomy_role_id = COALESCE(
-        taxonomy_role_id,
-        (SELECT taxonomy_role_id FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      taxonomy_task_type = COALESCE(
-        taxonomy_task_type,
-        (SELECT taxonomy_task_type FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      taxonomy_task_variant = COALESCE(
-        taxonomy_task_variant,
-        (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_task_variant') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      taxonomy_capability_ids_json = COALESCE(
-        taxonomy_capability_ids_json,
-        (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_capability_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      taxonomy_modality_ids_json = COALESCE(
-        taxonomy_modality_ids_json,
-        (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_modality_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      ),
-      taxonomy_tool_class_ids_json = COALESCE(
-        taxonomy_tool_class_ids_json,
-        (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_tool_class_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
-      )
-    WHERE client_request_id IS NULL
-      OR request_class IS NULL
-      OR source_client IS NULL
-      OR execution_family IS NULL
-      OR adapter_family IS NULL
-      OR taxonomy_group_id IS NULL
-      OR taxonomy_role_id IS NULL
-      OR taxonomy_task_type IS NULL
-      OR taxonomy_task_variant IS NULL
-      OR taxonomy_capability_ids_json IS NULL
-      OR taxonomy_modality_ids_json IS NULL
-      OR taxonomy_tool_class_ids_json IS NULL`,
   );
 }
 

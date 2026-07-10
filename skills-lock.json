@@ -27,7 +27,8 @@
     "recursive-mode": {
       "source": "try-works/recursive-mode",
       "sourceType": "github",
-      "computedHash": "65258e6353888303a3f760e7696ae458e60fbd9ccaed2ba0e89c8bec702f9e29"
+      "skillPath": "SKILL.md",
+      "computedHash": "87a11161269549d2593e37c98db88dee29d088838b23a1ae3a769fc9689b0f72"
     },
     "recursive-review-bundle": {
       "source": "try-works/recursive-mode",

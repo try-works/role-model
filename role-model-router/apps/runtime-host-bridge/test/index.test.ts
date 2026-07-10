@@ -869,7 +869,7 @@ describe("runtime-host-bridge", () => {
     expect(calls).toEqual(expectedCalls);
   });
 
-  test("builds packaged CLI options with static UI, router surfaces, and fixture-root defaults", () => {
+  test("builds packaged CLI options with static UI, router surfaces, and fixture-root defaults", async () => {
     const readRouterSummary = async () => ({ section: "router-summary" });
     const readRouterConfig = async () => ({ section: "router-config" });
     const listRouterCandidates = async () => [{ candidateId: "cand-1" }];
@@ -1015,28 +1015,28 @@ describe("runtime-host-bridge", () => {
           backend: typeof backend,
         ) => {
           staticRoot?: string;
-          listActivityMetrics?: unknown;
-          readActivityCapture?: unknown;
-          readRouterSummary?: unknown;
-          readRouterConfig?: unknown;
-          listRouterCandidates?: unknown;
-          listRouterDecisions?: unknown;
-          readRouterDecision?: unknown;
-          listLocalModels?: unknown;
-          getLocalLogs?: unknown;
-          readRolePolicy?: unknown;
-          createRolePolicyRole?: unknown;
-          updateRolePolicyRole?: unknown;
-          listTaskDefinitions?: unknown;
-          updateTaskDefinitions?: unknown;
-          readModelOverrides?: unknown;
-          updateModelOverrides?: unknown;
-          readPeers?: unknown;
-          queryTelemetryAnalytics?: unknown;
-          reconnectProviderAccount?: unknown;
-          updateProviderApiKey?: unknown;
-          updatePeers?: unknown;
-          checkPeerHealth?: unknown;
+          listActivityMetrics?: (...args: readonly unknown[]) => Promise<unknown>;
+          readActivityCapture?: (...args: readonly unknown[]) => Promise<unknown>;
+          readRouterSummary?: (...args: readonly unknown[]) => Promise<unknown>;
+          readRouterConfig?: (...args: readonly unknown[]) => Promise<unknown>;
+          listRouterCandidates?: (...args: readonly unknown[]) => Promise<unknown>;
+          listRouterDecisions?: (...args: readonly unknown[]) => Promise<unknown>;
+          readRouterDecision?: (...args: readonly unknown[]) => Promise<unknown>;
+          listLocalModels?: (...args: readonly unknown[]) => Promise<unknown>;
+          getLocalLogs?: (...args: readonly unknown[]) => Promise<unknown>;
+          readRolePolicy?: (...args: readonly unknown[]) => Promise<unknown>;
+          createRolePolicyRole?: (...args: readonly unknown[]) => Promise<unknown>;
+          updateRolePolicyRole?: (...args: readonly unknown[]) => Promise<unknown>;
+          listTaskDefinitions?: (...args: readonly unknown[]) => Promise<unknown>;
+          updateTaskDefinitions?: (...args: readonly unknown[]) => Promise<unknown>;
+          readModelOverrides?: (...args: readonly unknown[]) => Promise<unknown>;
+          updateModelOverrides?: (...args: readonly unknown[]) => Promise<unknown>;
+          readPeers?: (...args: readonly unknown[]) => Promise<unknown>;
+          queryTelemetryAnalytics?: (...args: readonly unknown[]) => Promise<unknown>;
+          reconnectProviderAccount?: (...args: readonly unknown[]) => Promise<unknown>;
+          updateProviderApiKey?: (...args: readonly unknown[]) => Promise<unknown>;
+          updatePeers?: (...args: readonly unknown[]) => Promise<unknown>;
+          checkPeerHealth?: (...args: readonly unknown[]) => Promise<unknown>;
         };
       }
     ).createCliServerOptions(
@@ -1049,28 +1049,40 @@ describe("runtime-host-bridge", () => {
     );
 
     expect(options.staticRoot).toBe(staticRoot);
-    expect(options.listActivityMetrics).toBe(backend.listActivityMetrics);
-    expect(options.readActivityCapture).toBe(backend.readActivityCapture);
-    expect(options.queryTelemetryAnalytics).toBe(backend.queryTelemetryAnalytics);
-    expect(options.readRouterSummary).toBe(readRouterSummary);
-    expect(options.readRouterConfig).toBe(readRouterConfig);
-    expect(options.listRouterCandidates).toBe(listRouterCandidates);
-    expect(options.listRouterDecisions).toBe(listRouterDecisions);
-    expect(options.readRouterDecision).toBe(readRouterDecision);
-    expect(options.listLocalModels).toBe(backend.listLocalModels);
-    expect(options.getLocalLogs).toBe(backend.getLocalLogs);
-    expect(options.readRolePolicy).toBe(backend.readRolePolicy);
-    expect(options.createRolePolicyRole).toBe(backend.createRolePolicyRole);
-    expect(options.updateRolePolicyRole).toBe(backend.updateRolePolicyRole);
-    expect(options.listTaskDefinitions).toBe(backend.listTaskDefinitions);
-    expect(options.updateTaskDefinitions).toBe(backend.updateTaskDefinitions);
-    expect(options.readModelOverrides).toBe(backend.readModelOverrides);
-    expect(options.updateModelOverrides).toBe(backend.updateModelOverrides);
-    expect(options.readPeers).toBe(backend.readPeers);
-    expect(options.reconnectProviderAccount).toBe(backend.reconnectProviderAccount);
-    expect(options.updateProviderApiKey).toBe(backend.updateProviderApiKey);
-    expect(options.updatePeers).toBe(backend.updatePeers);
-    expect(options.checkPeerHealth).toBe(backend.checkPeerHealth);
+    await expect(options.listActivityMetrics?.()).resolves.toEqual([{ id: 1 }]);
+    await expect(options.readActivityCapture?.()).resolves.toEqual({ id: 1 });
+    await expect(options.queryTelemetryAnalytics?.()).resolves.toEqual({
+      buckets: [],
+      ranking: null,
+    });
+    await expect(options.readRouterSummary?.()).resolves.toEqual({ section: "router-summary" });
+    await expect(options.readRouterConfig?.()).resolves.toEqual({ section: "router-config" });
+    await expect(options.listRouterCandidates?.()).resolves.toEqual([{ candidateId: "cand-1" }]);
+    await expect(options.listRouterDecisions?.()).resolves.toEqual([{ requestId: "req-1" }]);
+    await expect(options.readRouterDecision?.("req-2")).resolves.toEqual({ requestId: "req-2" });
+    await expect(options.listLocalModels?.()).resolves.toEqual([]);
+    await expect(options.getLocalLogs?.()).resolves.toBe("logs");
+    await expect(options.readRolePolicy?.()).resolves.toEqual({
+      roleDefinitions: [],
+      taskDefinitions: [],
+    });
+    await expect(options.createRolePolicyRole?.()).resolves.toEqual(
+      expect.objectContaining({ role_id: "qa.reviewer" }),
+    );
+    await expect(options.updateRolePolicyRole?.()).resolves.toEqual(
+      expect.objectContaining({ role_id: "qa.reviewer" }),
+    );
+    await expect(options.listTaskDefinitions?.()).resolves.toEqual([]);
+    await expect(options.updateTaskDefinitions?.()).resolves.toEqual([]);
+    await expect(options.readModelOverrides?.()).resolves.toEqual({});
+    await expect(options.updateModelOverrides?.()).resolves.toEqual({});
+    await expect(options.readPeers?.()).resolves.toEqual([]);
+    await expect(options.reconnectProviderAccount?.()).resolves.toEqual({ status: "pending" });
+    await expect(options.updateProviderApiKey?.()).resolves.toEqual({
+      providerAccountId: "acct-1",
+    });
+    await expect(options.updatePeers?.()).resolves.toEqual([]);
+    await expect(options.checkPeerHealth?.()).resolves.toEqual({ ok: true });
   });
 
   test("passes the optional shutdown hook into CLI server options", async () => {
@@ -14802,20 +14814,25 @@ describe("runtime-host-bridge", () => {
         expect(httpObservationResponse.status).toBe(200);
         await expect(httpObservationResponse.json()).resolves.toEqual(
           expect.objectContaining({
-            executionSemantics: expect.objectContaining({
-              executionCooldowns: [
+            diagnostics: expect.objectContaining({
+              execution: expect.arrayContaining([
                 expect.objectContaining({
-                  endpointId: endpoint.endpointId,
-                  active: true,
-                  failureCount: 1,
-                  lastErrorClass: "upstream_timeout",
+                  code: "no_eligible_target",
                 }),
-              ],
+              ]),
             }),
             telemetrySnapshot: expect.objectContaining({
               dimensions: expect.objectContaining({
                 executionCooldown: expect.objectContaining({
                   deniedEndpointIds: [endpoint.endpointId],
+                  entries: [
+                    expect.objectContaining({
+                      endpointId: endpoint.endpointId,
+                      active: true,
+                      failureCount: 1,
+                      lastErrorClass: "upstream_timeout",
+                    }),
+                  ],
                 }),
               }),
             }),
@@ -14864,20 +14881,25 @@ describe("runtime-host-bridge", () => {
       );
       expect(observation).toEqual(
         expect.objectContaining({
-          executionSemantics: expect.objectContaining({
-            executionCooldowns: [
+          diagnostics: expect.objectContaining({
+            execution: expect.arrayContaining([
               expect.objectContaining({
-                endpointId: endpoint.endpointId,
-                active: true,
-                failureCount: 1,
-                lastErrorClass: "upstream_timeout",
+                code: "no_eligible_target",
               }),
-            ],
+            ]),
           }),
           telemetrySnapshot: expect.objectContaining({
             dimensions: expect.objectContaining({
               executionCooldown: expect.objectContaining({
                 deniedEndpointIds: [endpoint.endpointId],
+                entries: [
+                  expect.objectContaining({
+                    endpointId: endpoint.endpointId,
+                    active: true,
+                    failureCount: 1,
+                    lastErrorClass: "upstream_timeout",
+                  }),
+                ],
               }),
             }),
           }),
@@ -14896,7 +14918,7 @@ describe("runtime-host-bridge", () => {
         ]),
       );
     } finally {
-      await backend.shutdown();
+      await backend.shutdown?.();
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   });
@@ -20032,6 +20054,55 @@ describe("runtime-host-bridge", () => {
             }),
           }),
         ]),
+      );
+
+      const genericFailureRow = telemetryRows.find(
+        (row) => row.clientRequestId === clientRequestId,
+      );
+      expect(genericFailureRow?.requestId).toBeDefined();
+      expect(genericFailureRow?.dimensions).toEqual(
+        expect.objectContaining({
+          errorContext: expect.objectContaining({
+            message: expect.stringContaining("no targets for model nonexistent/model-for-failure"),
+          }),
+        }),
+      );
+
+      const genericFailureObservationResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/requests/${genericFailureRow?.requestId}`,
+      );
+      expect(genericFailureObservationResponse.status).toBe(200);
+      await expect(genericFailureObservationResponse.json()).resolves.toEqual(
+        expect.objectContaining({
+          requestId: genericFailureRow?.requestId,
+          clientRequestId,
+          observationAvailability: expect.objectContaining({
+            source: "raw-observation",
+            rawObservationAvailable: true,
+          }),
+          diagnostics: expect.objectContaining({
+            execution: expect.arrayContaining([
+              expect.objectContaining({
+                code: "no_eligible_target",
+                message: expect.stringContaining(
+                  "no targets for model nonexistent/model-for-failure",
+                ),
+              }),
+            ]),
+          }),
+          inspection: expect.objectContaining({
+            request: expect.objectContaining({
+              responseCapture: expect.objectContaining({
+                statusCode: 400,
+                body: expect.objectContaining({
+                  message: expect.stringContaining(
+                    "no targets for model nonexistent/model-for-failure",
+                  ),
+                }),
+              }),
+            }),
+          }),
+        }),
       );
 
       const capabilityRow = telemetryRows.find(

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -99,12 +100,22 @@ func buildRuntimeBaseURL(host string, port int) string {
 	return fmt.Sprintf("http://%s:%d", host, port)
 }
 
+func buildRuntimeFrontendURL(baseURL string, launchToken string) string {
+	frontendURL := strings.TrimRight(baseURL, "/") + "/app"
+	launchToken = strings.TrimSpace(launchToken)
+	if launchToken == "" {
+		return frontendURL
+	}
+
+	return frontendURL + "?rm_launch=" + url.QueryEscape(launchToken)
+}
+
 func runtimeShutdownURL(baseURL string) string {
 	return strings.TrimRight(baseURL, "/") + "/api/role-model/runtime/shutdown"
 }
 
 func waitForServerReady(baseURL string, attempts int, interval time.Duration) bool {
-	healthURL := strings.TrimRight(baseURL, "/") + "/healthz"
+	healthURL := strings.TrimRight(baseURL, "/") + "/health"
 	for attempt := 0; attempt < attempts; attempt++ {
 		time.Sleep(interval)
 		resp, err := http.Get(healthURL)
@@ -168,29 +179,39 @@ func waitForExitOrKill(cmd *exec.Cmd, resultCh <-chan error, timeout time.Durati
 	}
 }
 
-func buildChromiumAppArgs(baseURL string, profileDir string) []string {
+func buildChromiumAppArgs(baseURL string) []string {
 	return []string{
 		"--app=" + baseURL,
-		"--new-window",
-		"--user-data-dir=" + profileDir,
-		"--no-first-run",
-		"--no-default-browser-check",
-		"--disable-sync",
 	}
 }
 
-func windowsBrowserCandidates() []string {
-	return []string{
-		"msedge.exe",
-		"msedge",
-		"chrome.exe",
-		"chrome",
-		filepath.Join(os.Getenv("ProgramFiles(x86)"), "Microsoft", "Edge", "Application", "msedge.exe"),
-		filepath.Join(os.Getenv("ProgramFiles"), "Microsoft", "Edge", "Application", "msedge.exe"),
-		filepath.Join(os.Getenv("LOCALAPPDATA"), "Microsoft", "Edge", "Application", "msedge.exe"),
-		filepath.Join(os.Getenv("ProgramFiles"), "Google", "Chrome", "Application", "chrome.exe"),
-		filepath.Join(os.Getenv("ProgramFiles(x86)"), "Google", "Chrome", "Application", "chrome.exe"),
-		filepath.Join(os.Getenv("LOCALAPPDATA"), "Google", "Chrome", "Application", "chrome.exe"),
+type windowsBrowserLaunchTarget struct {
+	token      string
+	candidates []string
+}
+
+func windowsBrowserLaunchTargets() []windowsBrowserLaunchTarget {
+	return []windowsBrowserLaunchTarget{
+		{
+			token: "msedge",
+			candidates: []string{
+				filepath.Join(os.Getenv("ProgramFiles(x86)"), "Microsoft", "Edge", "Application", "msedge.exe"),
+				filepath.Join(os.Getenv("ProgramFiles"), "Microsoft", "Edge", "Application", "msedge.exe"),
+				filepath.Join(os.Getenv("LOCALAPPDATA"), "Microsoft", "Edge", "Application", "msedge.exe"),
+				"msedge",
+				"msedge.exe",
+			},
+		},
+		{
+			token: "chrome",
+			candidates: []string{
+				filepath.Join(os.Getenv("ProgramFiles"), "Google", "Chrome", "Application", "chrome.exe"),
+				filepath.Join(os.Getenv("ProgramFiles(x86)"), "Google", "Chrome", "Application", "chrome.exe"),
+				filepath.Join(os.Getenv("LOCALAPPDATA"), "Google", "Chrome", "Application", "chrome.exe"),
+				"chrome",
+				"chrome.exe",
+			},
+		},
 	}
 }
 
@@ -238,7 +259,7 @@ func resolveExecutable(candidates []string) (string, error) {
 func resolveBrowserExecutable() (string, error) {
 	switch runtime.GOOS {
 	case "windows":
-		return resolveExecutable(windowsBrowserCandidates())
+		return "", fmt.Errorf("windows uses shell handoff browser tokens")
 	case "darwin":
 		return resolveExecutable(darwinBrowserCandidates())
 	default:
@@ -246,23 +267,49 @@ func resolveBrowserExecutable() (string, error) {
 	}
 }
 
-func buildFrontendCommand(baseURL string, runtimeStateRoot string) (*exec.Cmd, string, error) {
+func resolveWindowsBrowserLaunchToken() (string, error) {
+	for _, target := range windowsBrowserLaunchTargets() {
+		for _, candidate := range target.candidates {
+			if candidate == "" {
+				continue
+			}
+			if filepath.IsAbs(candidate) {
+				if _, err := os.Stat(candidate); err == nil {
+					return target.token, nil
+				}
+				continue
+			}
+			if _, err := exec.LookPath(candidate); err == nil {
+				return target.token, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no supported Windows browser launch token found")
+}
+
+func buildWindowsFrontendHandoffCommand(browserToken string, baseURL string) *exec.Cmd {
+	return exec.Command("cmd", "/c", "start", browserToken, strings.Join(buildChromiumAppArgs(baseURL), " "))
+}
+
+func buildFrontendCommand(baseURL string) (*exec.Cmd, bool, error) {
+	if runtime.GOOS == "windows" {
+		browserToken, err := resolveWindowsBrowserLaunchToken()
+		if err != nil {
+			return nil, false, err
+		}
+		return buildWindowsFrontendHandoffCommand(browserToken, baseURL), true, nil
+	}
+
 	browserExecutable, err := resolveBrowserExecutable()
 	if err != nil {
-		return nil, "", err
+		return nil, false, err
 	}
-
-	profileDir, err := os.MkdirTemp(runtimeStateRoot, "frontend-profile-")
-	if err != nil {
-		return nil, "", err
-	}
-
-	command := exec.Command(browserExecutable, buildChromiumAppArgs(baseURL, profileDir)...)
-	command.Dir = runtimeStateRoot
+	command := exec.Command(browserExecutable, buildChromiumAppArgs(baseURL)...)
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 
-	return command, profileDir, nil
+	return command, false, nil
 }
 
 func terminateProcess(process *os.Process) {
@@ -330,10 +377,11 @@ func run() int {
 		return 1
 	}
 
+	frontendURL := buildRuntimeFrontendURL(baseURL, fmt.Sprintf("%d", time.Now().UnixNano()))
 	fmt.Printf("Server ready at %s\n", baseURL)
 	fmt.Println("Opening frontend...")
 
-	frontendCmd, frontendProfileDir, err := buildFrontendCommand(baseURL, runtimeStateRoot)
+	frontendCmd, detachedFrontend, err := buildFrontendCommand(frontendURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to prepare frontend window: %v\n", err)
 		requestBackendShutdownOrKill(baseURL, backendCmd)
@@ -342,7 +390,35 @@ func run() int {
 		}
 		return 1
 	}
-	defer os.RemoveAll(frontendProfileDir)
+
+	if detachedFrontend {
+		if err := frontendCmd.Run(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to open frontend: %v\n", err)
+			requestBackendShutdownOrKill(baseURL, backendCmd)
+			if backendErr := waitForExitOrKill(backendCmd, backendResultCh, shutdownWaitTimeout); backendErr != nil {
+				fmt.Fprintf(os.Stderr, "Backend exited during shutdown: %v\n", backendErr)
+			}
+			return 1
+		}
+
+		fmt.Println("Role Model is running. Close this window or press Ctrl+C to stop.")
+
+		select {
+		case signalValue := <-signalChannel:
+			fmt.Printf("Received %s. Shutting down runtime...\n", signalValue)
+			requestBackendShutdownOrKill(baseURL, backendCmd)
+			if backendErr := waitForExitOrKill(backendCmd, backendResultCh, shutdownWaitTimeout); backendErr != nil {
+				fmt.Fprintf(os.Stderr, "Backend exited during shutdown: %v\n", backendErr)
+			}
+			return 0
+		case backendErr := <-backendResultCh:
+			if backendErr != nil {
+				fmt.Fprintf(os.Stderr, "Bridge exited with error: %v\n", backendErr)
+				return 1
+			}
+			return 0
+		}
+	}
 
 	if err := frontendCmd.Start(); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to open frontend: %v\n", err)
@@ -353,12 +429,12 @@ func run() int {
 		return 1
 	}
 
+	fmt.Println("Role Model is running. Close this window or press Ctrl+C to stop.")
+
 	frontendResultCh := make(chan error, 1)
 	go func() {
 		frontendResultCh <- frontendCmd.Wait()
 	}()
-
-	fmt.Println("Role Model is running. Close the app window or press Ctrl+C to stop.")
 
 	select {
 	case frontendErr := <-frontendResultCh:

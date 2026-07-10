@@ -20,7 +20,7 @@ This shell must not clone the vendored llama-swap UI, and it must not treat Swis
 2. **Quiet chrome, strong content.** Shell, cards, tables, and controls stay restrained so runtime facts, ledgers, and results remain primary.
 3. **Linear accent is the main interactive accent.** Primary actions, active states, links, and focus treatment inherit the current Paper Linear purple-blue family.
 4. **Soft radii follow the Paper runtime shell grammar.** Shared surfaces use `8px`, `12px`, `16px`, and `28px` radii with pill actions where appropriate.
-5. **Typography is Inter-led and tokenized.** `Inter` is the shared sans family for display and body roles, and `IBM Plex Mono` remains reserved for ids, paths, JSON, and transport artifacts.
+5. **Typography is Inter-led and startup-safe.** `Inter` is the shared sans family for display and body roles, and `IBM Plex Mono` remains reserved for ids, paths, JSON, and transport artifacts. Packaged runtime startup must not depend on remote font fetches. The runtime ships bundled font assets.
 6. **One shell header.** The shell header is the **only** route-level header. Route files do not duplicate eyebrow, title, or description blocks.
 7. **Analytics routes and evidence routes stay distinct.** `/app` and charted Observe pages lead with analytics bands; raw-host and request-detail pages remain evidence-first.
 8. **Status pills use solid token-backed backgrounds.** Semantic status pills use shared pill background and text tokens with explicit contrast, not transparent borders.

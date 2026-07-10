@@ -329,6 +329,55 @@ class SmokeHarness:
                 cwd=self.repo_root,
             )
 
+        recursive_agents = (self.repo_root / ".recursive" / "AGENTS.md").read_text(encoding="utf-8")
+        if "/skills/recursive-benchmark/SKILL.md" in recursive_agents or "/references/benchmarks/" in recursive_agents:
+            raise SmokeError("Default recursive-mode bootstrap still hard-wires benchmark skill/file paths into .recursive/AGENTS.md.")
+        if "separate optional `recursive-benchmark` add-on" not in recursive_agents:
+            raise SmokeError("Default recursive-mode bootstrap did not explain that recursive-benchmark is a separate opt-in add-on in .recursive/AGENTS.md.")
+        for forbidden in (
+            "`/.recursive/README.md`",
+            "`/skills/recursive-spec/SKILL.md`",
+            "`/scripts/install-recursive-mode.py`",
+            "`/references/artifact-template.md`",
+        ):
+            if forbidden in recursive_agents:
+                raise SmokeError(f"Default recursive-mode bootstrap still points .recursive/AGENTS.md at missing source-repo path {forbidden}.")
+
+        plans_bridge = (self.repo_root / ".agent" / "PLANS.md").read_text(encoding="utf-8")
+        if "separate optional `recursive-benchmark` add-on" not in plans_bridge:
+            raise SmokeError("Default recursive-mode bootstrap did not explain that recursive-benchmark is a separate opt-in add-on in .agent/PLANS.md.")
+        if "should use the packaged benchmark fixture" in plans_bridge:
+            raise SmokeError("Default recursive-mode bootstrap still assumes benchmark fixtures are present in .agent/PLANS.md.")
+
+        codex_agents = (self.repo_root / ".codex" / "AGENTS.md").read_text(encoding="utf-8")
+        for forbidden in (
+            "`scripts/install-recursive-mode.py`",
+            "`scripts/recursive-status.py`",
+            "`scripts/lint-recursive-run.py`",
+            "`scripts/verify-locks.py`",
+        ):
+            if forbidden in codex_agents:
+                raise SmokeError(f"Default recursive-mode bootstrap still points .codex/AGENTS.md at missing source-repo helper path {forbidden}.")
+
+        router_policy_path = self.repo_root / ".recursive" / "config" / "recursive-router.json"
+        router_discovery_path = self.repo_root / ".recursive" / "config" / "recursive-router-discovered.json"
+        gitignore_path = self.repo_root / ".gitignore"
+        if not router_policy_path.exists():
+            raise SmokeError("Default recursive-mode bootstrap did not create /.recursive/config/recursive-router.json.")
+        if router_discovery_path.exists():
+            raise SmokeError("Default recursive-mode bootstrap should not create /.recursive/config/recursive-router-discovered.json before probe.")
+        if not gitignore_path.exists():
+            raise SmokeError("Default recursive-mode bootstrap did not create .gitignore for device-local router discovery state.")
+        gitignore = gitignore_path.read_text(encoding="utf-8")
+        if "/.recursive/config/recursive-router-discovered.json" not in gitignore:
+            raise SmokeError("Default recursive-mode bootstrap did not gitignore /.recursive/config/recursive-router-discovered.json.")
+        self.run_command(
+            self.python_command("recursive-router-probe.py", "--repo-root", str(self.repo_root), "--json"),
+            cwd=self.repo_root,
+        )
+        if not router_discovery_path.exists():
+            raise SmokeError("recursive-router probe did not create /.recursive/config/recursive-router-discovered.json.")
+
         self.run_command([str(self.python_exe), "-m", "unittest", "-q"], cwd=self.repo_root)
         self.git("add", "-A")
         self.git("commit", "-m", "Base tiny tasks app with recursive-mode scaffold")
@@ -414,6 +463,9 @@ class SmokeHarness:
         for snippet in expected_snippets:
             if snippet not in scaffold:
                 raise SmokeError(f"recursive-init did not prefill the expected Phase 0 diff-basis snippet: {snippet}")
+        requirements_scaffold = (self.run_dir / "00-requirements.md").read_text(encoding="utf-8")
+        if "Workflow version: `recursive-mode-audit-v2`" not in requirements_scaffold:
+            raise SmokeError("recursive-init did not default new runs to recursive-mode-audit-v2.")
         self.summary.append("Run scaffold success: recursive-init produced a reusable Phase 0 diff basis.")
 
     @property
@@ -905,7 +957,7 @@ class SmokeHarness:
                         outputs=[f"{run_prefix}/00-requirements.md"],
                         scope_note="Defines the stable requirement IDs for the disposable Tiny Tasks smoke run.",
                     ),
-                    "Workflow version: `recursive-mode-audit-v1`",
+                    "Workflow version: `recursive-mode-audit-v2`",
                     self.todo_section(
                         [
                             "Define requirement identifiers and acceptance criteria",
@@ -934,10 +986,6 @@ class SmokeHarness:
 
                         - Use only the Python standard library.
                         - Keep the fixture limited to `tiny_tasks.py` and `test_tiny_tasks.py`.
-
-                        ## Assumptions
-
-                        - The disposable repo may keep run artifacts uncommitted while product files remain in the working tree.
                         """
                     ),
                     self.gate_section("Coverage Gate", "Coverage", "R1 and its acceptance criteria are fully specified."),
@@ -1049,6 +1097,10 @@ class SmokeHarness:
 
                         - `R1`: Before implementation, `summarize_tasks()` only returned the total count, so completed and active counts were missing.
 
+                        ## Source Requirement Inventory
+
+                        - `R1 | Source Quote: Tiny Tasks must report total, completed, and active task counts for a list of task dictionaries. | Summary: The task summary must expose total, completed, and active counts. | Disposition: in-scope`
+
                         ## Relevant Code Pointers
 
                         - `tiny_tasks.py`
@@ -1100,6 +1152,10 @@ class SmokeHarness:
                         - `tiny_tasks.py`: add completed and active count reporting.
                         - `test_tiny_tasks.py`: add a failing test that asserts the detailed summary output.
 
+                        ## Requirement Mapping
+
+                        - `R1 | Coverage: direct | Source Quote: Tiny Tasks must report total, completed, and active task counts for a list of task dictionaries. | Implementation Surface: tiny_tasks.py, test_tiny_tasks.py | Verification Surface: test_tiny_tasks.py, /.recursive/run/<run-id>/04-test-summary.md | QA Surface: /.recursive/run/<run-id>/05-manual-qa.md`
+
                         ## Implementation Steps
 
                         - Write a failing unittest for the new summary string.
@@ -1127,6 +1183,11 @@ class SmokeHarness:
                         - `SP1`: failing test
                         - `SP2`: implementation update
                         - `SP3`: review, test, and closeout
+
+                        ## Plan Drift Check
+
+                        - No source obligations were merged, deferred, or narrowed in the Phase 2 plan.
+                        - The source quote for `R1` is preserved directly in `## Requirement Mapping`.
                         """
                     ),
                     self.audit_sections(
@@ -1134,6 +1195,13 @@ class SmokeHarness:
                         prior=audited_common["prior"],
                         reviewed_paths=product_paths,
                         reconciliation=["The plan is still consistent with the recorded as-is behavior and the narrow fixture scope."],
+                        requirement_statuses=[
+                            (
+                                "R1 | Status: planned | Implementation Surface: `tiny_tasks.py`, `test_tiny_tasks.py` "
+                                f"| Verification Surface: `test_tiny_tasks.py`, `{run_prefix}/04-test-summary.md` "
+                                f"| QA Surface: `{run_prefix}/05-manual-qa.md`"
+                            )
+                        ],
                     ),
                     self.traceability_section(["- R1 -> both planned file edits and the validation path are explicit."]),
                     self.gate_section("Coverage Gate", "Coverage", "The planned file changes and test strategy cover the full requirement."),
@@ -1786,6 +1854,8 @@ class SmokeHarness:
             verify_result = self.run_verify(toolchain)
             if "Current Phase: COMPLETE" not in status_result.stdout:
                 raise SmokeError(self.format_failure(f"{toolchain} status did not report completion", status_result))
+            if "Workflow Profile: recursive-mode-audit-v2" not in status_result.stdout:
+                raise SmokeError(self.format_failure(f"{toolchain} status did not report the v2 workflow profile", status_result))
             if require_subagent_review:
                 review_content = (self.run_dir / "03.5-code-review.md").read_text(encoding="utf-8")
                 if "Audit Execution Mode: subagent" not in review_content:
@@ -2052,6 +2122,58 @@ class SmokeHarness:
         finally:
             write_text(target, original)
 
+    def negative_source_inventory_case(self) -> None:
+        target = self.run_dir / "01-as-is.md"
+        original = target.read_text(encoding="utf-8")
+        broken = strip_lock_metadata(original)
+        broken = replace_section(broken, "Source Requirement Inventory", "- none")
+        write_text(target, broken)
+        try:
+            for toolchain in self.validation_toolchains():
+                lint_result = self.run_lint(toolchain, expect_success=False)
+                combined = (lint_result.stdout + lint_result.stderr).lower()
+                if "source requirement inventory" not in combined:
+                    raise SmokeError(self.format_failure(f"{toolchain} lint missed source-inventory failure", lint_result))
+                status_result = self.run_status(toolchain)
+                status_text = (status_result.stdout + status_result.stderr).lower()
+                if "source requirement inventory" not in status_text:
+                    raise SmokeError(self.format_failure(f"{toolchain} status missed source-inventory blocker", status_result))
+                try:
+                    self.lock_artifact(toolchain, "01-as-is.md")
+                except SmokeError:
+                    pass
+                else:
+                    raise SmokeError(f"{toolchain} recursive-lock unexpectedly succeeded without a valid source requirement inventory.")
+            self.summary.append("Negative source-inventory case passed.")
+        finally:
+            write_text(target, original)
+
+    def negative_phase2_mapping_case(self) -> None:
+        target = self.run_dir / "02-to-be-plan.md"
+        original = target.read_text(encoding="utf-8")
+        broken = strip_lock_metadata(original)
+        broken = replace_section(broken, "Requirement Mapping", "- none")
+        write_text(target, broken)
+        try:
+            for toolchain in self.validation_toolchains():
+                lint_result = self.run_lint(toolchain, expect_success=False)
+                combined = (lint_result.stdout + lint_result.stderr).lower()
+                if "requirement mapping" not in combined:
+                    raise SmokeError(self.format_failure(f"{toolchain} lint missed phase-2 mapping failure", lint_result))
+                status_result = self.run_status(toolchain)
+                status_text = (status_result.stdout + status_result.stderr).lower()
+                if "requirement mapping" not in status_text:
+                    raise SmokeError(self.format_failure(f"{toolchain} status missed phase-2 mapping blocker", status_result))
+                try:
+                    self.lock_artifact(toolchain, "02-to-be-plan.md")
+                except SmokeError:
+                    pass
+                else:
+                    raise SmokeError(f"{toolchain} recursive-lock unexpectedly succeeded without a valid Phase 2 requirement mapping.")
+            self.summary.append("Negative Phase 2 mapping case passed.")
+        finally:
+            write_text(target, original)
+
     def negative_review_bundle_case(self) -> None:
         target = self.run_dir / "03.5-code-review.md"
         original = target.read_text(encoding="utf-8")
@@ -2099,71 +2221,6 @@ class SmokeHarness:
             self.summary.append("Negative addenda-omission case passed.")
         finally:
             write_text(target, original)
-
-    def positive_topic_addenda_diff_accounting_case(self) -> None:
-        late_file = self.repo_root / "late_diff_accounting.py"
-        write_text(late_file, "def late_value() -> int:\n    return 62\n")
-        addenda_dir = self.run_dir / "addenda"
-        phase_files = [
-            ("03-implementation-summary", "Implementation"),
-            ("03.5-code-review", "Code Review"),
-            ("04-test-summary", "Test Summary"),
-        ]
-        for artifact_base, phase in phase_files:
-            addendum_path = addenda_dir / f"{artifact_base}.late-diff-accounting.addendum-99.md"
-            write_text(
-                addendum_path,
-                dedent_block(
-                    f"""
-                    Run: `/.recursive/run/{self.run_id}/`
-                    Phase: `{phase}`
-                    Addendum: `99`
-                    Status: `DRAFT`
-                    Workflow version: `recursive-mode-audit-v1`
-                    Inputs:
-                    - `/.recursive/run/{self.run_id}/{artifact_base}.md`
-                    Outputs:
-                    - `/.recursive/run/{self.run_id}/addenda/{addendum_path.name}`
-                    Scope note: Records late diff accounting for topic-qualified addenda names.
-
-                    # Late Diff Accounting Addendum
-
-                    ## TODO
-
-                    - [x] Record the late changed file.
-
-                    ## Worktree Diff Audit
-
-                    - Accounted changed file: `late_diff_accounting.py`
-
-                    ## Requirement Completion Status
-
-                    - R1 | Status: verified | Changed Files: `late_diff_accounting.py` | Implementation Evidence: topic-qualified addendum accounting | Verification Evidence: lint smoke regression.
-
-                    ## Coverage Gate
-
-                    Coverage: PASS
-
-                    ## Approval Gate
-
-                    Approval: PASS
-                    """
-                ),
-            )
-        try:
-            for toolchain in self.validation_toolchains():
-                lint_result = self.run_lint(toolchain, expect_success=True)
-                status_result = self.run_status(toolchain)
-                if "current phase: complete" not in status_result.stdout.lower():
-                    raise SmokeError(self.format_failure(f"{toolchain} status regressed with topic addenda accounting", status_result))
-                self.summary.append(f"Topic-qualified addenda diff accounting passed for {toolchain} ({lint_result.duration_seconds:.2f}s).")
-        finally:
-            if late_file.exists():
-                late_file.unlink()
-            for artifact_base, _phase in phase_files:
-                addendum_path = addenda_dir / f"{artifact_base}.late-diff-accounting.addendum-99.md"
-                if addendum_path.exists():
-                    addendum_path.unlink()
 
     def negative_context_free_review_case(self) -> None:
         target = self.run_dir / "03.5-code-review.md"
@@ -2375,12 +2432,13 @@ class SmokeHarness:
     def run_full_regression_suite(self) -> None:
         self.negative_phase0_diff_basis_case()
         self.negative_strict_tdd_case()
+        self.negative_source_inventory_case()
+        self.negative_phase2_mapping_case()
         self.negative_requirement_proof_case()
         self.negative_review_bundle_case()
         self.negative_context_free_review_case()
         self.negative_review_bundle_scope_case()
         self.negative_addenda_case()
-        self.positive_topic_addenda_diff_accounting_case()
         self.positive_subagent_action_record_case()
         self.negative_subagent_action_record_case()
         self.negative_human_qa_case()

@@ -20,6 +20,7 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
+import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import {
   type RuntimeActivityCapture,
   type RuntimeActivityLogEntry,
@@ -66,14 +67,16 @@ export default function ObserveActivityRoute() {
       }
     };
 
-    void load();
-    const unsubscribe = subscribeTelemetryStream(() => {
-      void load();
+    const dispose = startDeferredLiveRefresh({
+      load: async () => {
+        await load();
+      },
+      subscribe: (onEvent) => subscribeTelemetryStream(onEvent),
     });
 
     return () => {
       disposed = true;
-      unsubscribe();
+      dispose();
     };
   }, []);
 

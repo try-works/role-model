@@ -19,15 +19,16 @@ import {
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
+import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import type {
-  RuntimeSnapshot,
+  RuntimeDashboardSnapshot,
   RuntimeTelemetryAnalyticsDimension,
   RuntimeTelemetryAnalyticsFilters,
   RuntimeTelemetryAnalyticsResponse,
   RuntimeTelemetryRequestRecord,
 } from "../lib/runtime-api";
 import {
-  fetchRuntimeSnapshot,
+  fetchRuntimeDashboardSnapshot,
   fetchTelemetryAnalytics,
   fetchTelemetryRequests,
   subscribeTelemetryStream,
@@ -97,7 +98,7 @@ function collectSelectOptions(
 }
 
 export default function DashboardRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<RuntimeDashboardSnapshot | null>(null);
   const [requests, setRequests] = useState<readonly RuntimeTelemetryRequestRecord[]>([]);
   const [charts, setCharts] = useState<readonly OverviewChartRecord[]>([]);
   const [timeRange, setTimeRange] = useState<TelemetryTimeRangeValue>("day");
@@ -303,7 +304,7 @@ export default function DashboardRoute() {
           breakdown,
         });
         const [nextSnapshot, nextRequests, chartResults] = await Promise.all([
-          fetchRuntimeSnapshot(),
+          fetchRuntimeDashboardSnapshot(),
           fetchTelemetryRequests({
             limit: 60,
             filters,
@@ -359,14 +360,14 @@ export default function DashboardRoute() {
       }
     };
 
-    void load();
-    const unsubscribe = subscribeTelemetryStream(() => {
-      void load(true);
+    const dispose = startDeferredLiveRefresh({
+      load,
+      subscribe: (onEvent) => subscribeTelemetryStream(onEvent),
     });
 
     return () => {
       disposed = true;
-      unsubscribe();
+      dispose();
     };
   }, [breakdown, filters, timeRange]);
 

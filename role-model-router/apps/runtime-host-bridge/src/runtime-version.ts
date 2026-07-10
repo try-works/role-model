@@ -136,6 +136,8 @@ export async function resolveRuntimeVersionInfo(
       ...(latestReleaseVersion ? { release_version: latestReleaseVersion } : {}),
       commit: runGitCommand(["rev-parse", "HEAD"], options.repoRoot) ?? "runtime-derived",
       build_date:
+        readNonEmptyString(env.BUILD_DATE) ??
+        readNonEmptyString(env.GITHUB_RUN_CREATED_AT) ??
         runGitCommand(["show", "-s", "--format=%cI", "HEAD"], options.repoRoot) ??
         "runtime-derived",
       ...(options.fallbackConfigVersion ? { configVersion: options.fallbackConfigVersion } : {}),
@@ -148,6 +150,8 @@ export async function resolveRuntimeVersionInfo(
       release_version: latestReleaseVersion,
       commit: runGitCommand(["rev-parse", "HEAD"], options.repoRoot) ?? "runtime-derived",
       build_date:
+        readNonEmptyString(env.BUILD_DATE) ??
+        readNonEmptyString(env.GITHUB_RUN_CREATED_AT) ??
         runGitCommand(["show", "-s", "--format=%cI", "HEAD"], options.repoRoot) ??
         "runtime-derived",
       ...(options.fallbackConfigVersion ? { configVersion: options.fallbackConfigVersion } : {}),

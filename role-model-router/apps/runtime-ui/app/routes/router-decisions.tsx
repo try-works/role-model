@@ -11,6 +11,7 @@ import {
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
+import { startDeferredLiveRefresh } from "../lib/live-refresh";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import {
   type RouterDecisionListItem,
@@ -40,13 +41,15 @@ export default function RouterDecisionsRoute() {
       }
     };
 
-    void load();
-    const unsubscribe = subscribeTelemetryStream(() => {
-      void load();
+    const dispose = startDeferredLiveRefresh({
+      load: async () => {
+        await load();
+      },
+      subscribe: (onEvent) => subscribeTelemetryStream(onEvent),
     });
     return () => {
       disposed = true;
-      unsubscribe();
+      dispose();
     };
   }, []);
 
