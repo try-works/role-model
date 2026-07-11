@@ -2,6 +2,46 @@
 
 ## Recursive Run Index
 
+### Run `63-router-backend-regression-and-telemetry-surface-hardening`
+
+- Run folder: `/.recursive/run/63-router-backend-regression-and-telemetry-surface-hardening/`
+- Worktree: `.worktrees/63-router-backend-regression-and-telemetry-surface-hardening`
+- Branch: `recursive/63-router-backend-regression-and-telemetry-surface-hardening`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added a first-class root `runtime:test-router` regression lane, a matching `test:router` subset in `@role-model-router/runtime-host-bridge`, and CI workflow coverage for that lane; updated the runtime testing architecture and regression matrix docs to make the lane the canonical router-focused backend floor
+  - added package-level Vitest entrypoints plus deterministic temp-dir round-trip and negative-linkage coverage for `@role-model-router/trace` and `@role-model-router/usage`; `readTraceArtifacts()` now tolerates a missing `trace-events.jsonl` when no events were emitted
+  - hardened telemetry analytics refresh behavior across dashboard, Observe Requests, and Observe Routing by moving stale-response reuse onto shared stale-refresh resolution that emits bounded structured diagnostics, shows a visible cached-data warning, and clears stale-chart state after a later successful refresh
+  - strengthened rebuilt-runtime request-analytics coverage so `/app/observe/requests` now proves filter narrowing, query-param restoration after reload, and request-detail drill-in using uniquely seeded telemetry rows instead of render-only assertions
+  - reopened the runtime-ui implementation/test/QA phases once the audit found remaining `R4` and `R5` gaps, then closed those gaps without changing the earlier router-lane, trace/usage, CI, or docs scope
+- Why:
+  - router-affecting backend changes still lacked one explicit regression lane that future contributors and CI could run without inferring scope from omnibus suites
+  - trace and usage artifact helpers were part of the routing-explanation contract but still had no direct package-level regression floor
+  - telemetry-heavy routes could silently reuse stale chart data, leave the stale warning stuck after recovery, and omit the structured diagnostics needed for operator-facing degraded-refresh truth
+  - the existing request-analytics browser net proved rendering but not the actual operator behaviors required by the run, and persisted QA telemetry made naive assertions brittle
+- How:
+  - implemented with strict TDD for the router-lane, trace/usage package coverage, and the reopened stale-refresh helper repair
+  - verified with focused runtime-host router tests, trace and usage package tests, `runtime:validate-routing`, `runtime:validate-observability`, runtime-ui suite/build proof, and rebuilt-runtime Playwright request-analytics coverage
+  - reread the locked requirements and plan during the reopen so the repaired runtime-ui delta stayed confined to the missing `R4` and `R5` behaviors
+- What was not done:
+  - packaged-runtime verification was not rerun because no packaging-affecting files changed
+  - no router strategy, provider-capability, or telemetry contract redesign was introduced beyond the regression and degraded-refresh hardening needed by the run
+  - GitHub-hosted CI was not executed from this local worktree; merge-time CI still needs to validate the final branch
+- Known issues / follow-ups:
+  - the shared-surface Playwright screenshot helper still points at the historical run-60 evidence folder, so browser-proof captures can dirty tracked prior-run artifacts; redirect that helper to a generic ignored evidence path in a future harness-hygiene pass
+  - if future router-owned backend surfaces are added, keep `runtime:test-router`, `/.github/workflows/ci.yml`, and the testing docs aligned so the dedicated lane does not drift back into an implicit catch-all
+
 ### Session `2026-07-10` — recursive-mode package refresh and scaffold reconciliation
 
 - What changed:

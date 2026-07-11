@@ -86,6 +86,7 @@ Default CI and local development must remain deterministic and offline-safe. Liv
 | Command | Tier | CI-safe | Description |
 | --- | --- | --- | --- |
 | `runtime:test-critical` | Critical regression | Yes | Focused host + UI tests plus `runtime:validate-ui` and `runtime:validate-observability` |
+| `runtime:test-router` | Router-focused regression | Yes | Curated router-backend tests, trace/usage package tests, plus `runtime:validate-routing` and `runtime:validate-observability` |
 | `runtime:test-validators` | Validator coverage | Yes | UI, observability, tools, and catalog-economics validators |
 | `runtime:test-browser` | Browser E2E | Yes (local) | Playwright rebuilt-runtime browser regression |
 | `runtime:test-full` | Full runtime regression | Yes (local) | Critical regression plus browser E2E |

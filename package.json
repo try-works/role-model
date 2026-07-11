@@ -41,6 +41,7 @@
     "runtime:test-critical": "corepack pnpm --filter @role-model-router/runtime-host-bridge run test:critical && corepack pnpm --filter @role-model-router/runtime-ui run test:critical && corepack pnpm run runtime:validate-ui && corepack pnpm run runtime:validate-observability",
     "runtime:test-browser": "corepack pnpm --filter @role-model-router/runtime-ui run test:browser",
     "runtime:test-validators": "corepack pnpm run runtime:validate-ui && corepack pnpm run runtime:validate-observability && corepack pnpm run runtime:validate-tools && corepack pnpm run runtime:validate-catalog-economics",
+    "runtime:test-router": "corepack pnpm --filter @role-model-router/runtime-host-bridge run test:router && corepack pnpm --filter @role-model-router/trace test && corepack pnpm --filter @role-model-router/usage test && corepack pnpm run runtime:validate-routing && corepack pnpm run runtime:validate-observability",
     "runtime:test-full": "corepack pnpm run runtime:test-critical && corepack pnpm run runtime:test-browser",
     "build": "corepack pnpm run types:generate && corepack pnpm -r --if-present build",
     "test": "corepack pnpm run test:release-workflows && corepack pnpm -r --if-present test",

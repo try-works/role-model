@@ -57,8 +57,9 @@ Source-Runs:
 - `58-role-model-taxonomy-v1-benchmark-telemetry`
 - `59-observe-taxonomy-analytics-completion`
 - `62-litellm-pi-craft-codex-execution-hardening`
+- `63-router-backend-regression-and-telemetry-surface-hardening`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-10`
+Last-Validated: `2026-07-11`
 Tags:
 - `runtime`
 - `routing`
@@ -151,6 +152,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - The telemetry analytics contract now returns applied query metadata, slice metadata, metric support, and dimension support. Analytics aggregation is full-slice by default and must not silently inherit request-ledger pagination caps.
 - Request-ledger reads and telemetry analytics reads share overlapping filter semantics for operator-visible dimensions while preserving separate ledger pagination behavior.
 - Runtime UI telemetry charts consume shared semantic states (`loading`, `refreshing`, `empty`, `unsupported`, `partial`, `truncated`, `error`, `populated`) instead of treating missing buckets as the only source of chart truth.
+- Dashboard, Observe Requests, and Observe Routing now resolve background chart refreshes through one shared stale-refresh path. If a background analytics request fails and prior chart data is reused, the route must surface a visible cached-data warning, emit bounded structured diagnostics with route, chart, query-snapshot, and error context, and clear the stale-chart warning after the next successful refresh.
 - Horizontal ranking telemetry charts use bottom legends for long technical labels and a concrete plot height so Recharts has stable geometry.
 - The current runtime telemetry graph matrix architecture reference is `/docs/architecture/11-runtime-ui-telemetry-graph-matrix.md`.
 - `runtime:validate-ui` teardown must shut down cleanly after backend shutdown; validator cleanup is part of the durable runtime baseline, not a one-off test harness fix.
@@ -161,6 +163,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - For routing or provider-capability changes, prefer focused runtime-host and runtime-ui tests first, then the repo-owned validators such as `runtime:validate-host`, `runtime:validate-vendors`, and `runtime:validate-ui`.
 - When claims depend on rebuilt operator truth, verify against the rebuilt runtime in-browser instead of relying only on fixture tests or stale local ports.
 - For telemetry chart changes, include both contract-level tests and browser/runtime verification that chart primitives render non-empty geometry when data is present.
+- For request-ledger or telemetry-analytics browser proof on the persistent QA runtime, seed unique per-run identifiers before asserting filters or drill-in behavior. Prove narrowing, query-param restoration after reload, and request-detail navigation through operator-visible controls instead of row-order or clean-ledger assumptions.
 - For alias-matrix or controller behavior changes, confirm persisted config truth, live `/v1/models` exposure, and Pi-originated requests for every configured alias when Pi compatibility is in scope.
 - For downstream discovery changes, confirm both `/v1/models` compact metadata and the rich route against the current runtime config alias set, including empty-pool aliases where feasible, and validate the downstream OpenAI schema/fixtures.
 - For provider capability changes, verify exact-model and alias-path behavior separately where the transport boundary can differ.

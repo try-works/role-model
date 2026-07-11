@@ -10,8 +10,9 @@ Source-Runs:
 - `16-router-runtime-unified-telemetry-dashboard`
 - `34-router-runtime-role-policy-and-ui-fixture-reduction`
 - `35-runtime-ui-connect-declutter`
+- `63-router-backend-regression-and-telemetry-surface-hardening`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-06-08T11:15:00Z`
+Last-Validated: `2026-07-11T00:00:00Z`
 Tags:
 - `skills`
 - `browser`
@@ -52,6 +53,8 @@ On Windows, prefer direct Edge CDP for the final receipt when:
 
 - Keep the browser proof same-origin to the live repo-owned UI and bridge.
 - Save both screenshots and text-or-JSON companion receipts when the scenario is stateful.
+- For request-ledger or telemetry-analytics proof against a persistent QA runtime, seed unique per-run identifiers and drive narrowing through visible filter controls before asserting reload or drill-in behavior.
+- Store screenshots and companion receipts in ignored run-local or `runtime-output/` paths; do not point new browser-proof captures at historical tracked `/.recursive/run/<old-run>/evidence/**` folders.
 - When refreshing SSE or other live data proof, use explicit request ids so new events do not overwrite each other in the captured ledger.
 - Use the QA bridge/browser flow to prove operator reachability, form behavior, and live readback, but switch to backend validators or a direct HTTP harness when the QA launcher does not persist runtime config or cannot faithfully prove downstream routing behavior.
 - When `browser_snapshot` returns empty refs but the page has rendered content, use CDP `Runtime.evaluate` against `document.body.innerText` or targeted selectors as the visual receipt companion to screenshots.

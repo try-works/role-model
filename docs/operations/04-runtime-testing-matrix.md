@@ -10,6 +10,7 @@ This document maps changed repository paths to the minimum verification tiers re
 | --- | --- | --- | --- |
 | Fast unit | Package-level Vitest suites | Yes | Seconds |
 | Critical regression | `runtime:test-critical` (focused host + UI + validators) | Yes | Under 1 minute |
+| Router regression | `runtime:test-router` (curated router-backend, trace/usage packages, routing + observability validators) | Yes | Under 1 minute |
 | Full package tests | `pnpm run test` (all workspace packages) | Yes | Minutes |
 | Browser E2E | `runtime:test-browser` (Playwright rebuilt runtime) | Yes (local) | Tens of seconds |
 | Rebuilt-runtime QA | Manual or agent-operated browser proof against rebuilt runtime | Yes (local) | Minutes |
@@ -60,8 +61,9 @@ Packaged-runtime verification is required when:
 3. `pnpm run build`
 4. `pnpm run test`
 5. `pnpm run runtime:test-critical`
-6. `pnpm run test:rust`
-7. `pnpm run smoke`
+6. `pnpm run runtime:test-router`
+7. `pnpm run test:rust`
+8. `pnpm run smoke`
 
 ### Heavier verification (manual dispatch or change-triggered)
 

@@ -15,8 +15,9 @@ Watch-Paths:
 - `/.recursive/DECISIONS.md`
 Source-Runs:
 - `maintenance-ci-release-automation-2026-06-16`
+- `63-router-backend-regression-and-telemetry-surface-hardening`
 Validated-At-Commit: `WORKTREE-UNCOMMITTED`
-Last-Validated: `2026-06-16T00:00:00Z`
+Last-Validated: `2026-07-11T00:00:00Z`
 Tags:
 - `github-actions`
 - `ci`
@@ -32,6 +33,7 @@ Trust: current repo-local baseline; validate again after workflow topology or re
 
 - Keep `/.github/workflows/ci.yml` phase-attributed. GitHub-only failures are easier to diagnose when install, lint, typecheck, test, docs build, and workspace validation fail as separate steps instead of one parity wrapper.
 - Preserve the repo-level parity command (`corepack pnpm run ci:check`) for local validation, but do not hide the failing phase inside GitHub behind that single wrapper.
+- When router-affecting backend coverage gains a dedicated lane such as `pnpm run runtime:test-router`, keep it as its own workflow step instead of folding it back into `pnpm run test` or `runtime:test-critical`; router regressions should fail the router phase directly.
 - When a workflow step can fail for packaging or environment reasons, emit phase-local diagnostics or artifacts instead of forcing operators to reconstruct the failure from raw logs.
 
 ## Docs deploy pattern
