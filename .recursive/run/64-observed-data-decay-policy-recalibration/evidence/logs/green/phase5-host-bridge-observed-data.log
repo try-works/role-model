@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/64-observed-data-decay-policy-recalibration/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/observed-data-decay-policy.test.ts (5 tests) 62ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  06:34:16
+   Duration  2.95s (transform 322ms, setup 0ms, collect 558ms, tests 62ms, environment 1ms, prepare 906ms)
+

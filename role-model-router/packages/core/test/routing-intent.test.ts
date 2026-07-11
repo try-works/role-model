@@ -203,12 +203,9 @@ describe("routing intent metadata", () => {
       candidates: [c],
       observedDataConfig: {
         enabled: false,
-        metricHalflives: {
-          qualityMs: 900000,
-          latencyMs: 300000,
-          throughputMs: 120000,
-          reliabilityMs: 600000,
-          costMs: 1800000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
         difficultyLearning: {
@@ -252,12 +249,9 @@ describe("routing intent metadata", () => {
       candidates: [c],
       observedDataConfig: {
         enabled: false,
-        metricHalflives: {
-          qualityMs: 900000,
-          latencyMs: 300000,
-          throughputMs: 120000,
-          reliabilityMs: 600000,
-          costMs: 1800000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
         difficultyLearning: {
@@ -301,12 +295,9 @@ describe("routing intent metadata", () => {
       candidates: [c],
       observedDataConfig: {
         enabled: false,
-        metricHalflives: {
-          qualityMs: 900000,
-          latencyMs: 300000,
-          throughputMs: 120000,
-          reliabilityMs: 600000,
-          costMs: 1800000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
         difficultyLearning: {
@@ -333,12 +324,9 @@ describe("routing intent metadata", () => {
       candidates: [c],
       observedDataConfig: {
         enabled: false,
-        metricHalflives: {
-          qualityMs: 900000,
-          latencyMs: 300000,
-          throughputMs: 120000,
-          reliabilityMs: 600000,
-          costMs: 1800000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
         difficultyLearning: {
@@ -370,12 +358,9 @@ describe("routing intent metadata", () => {
       candidates: [c1, c2],
       observedDataConfig: {
         enabled: false,
-        metricHalflives: {
-          qualityMs: 900000,
-          latencyMs: 300000,
-          throughputMs: 120000,
-          reliabilityMs: 600000,
-          costMs: 1800000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: { enabled: false, minTokensPerSec: 24, penaltyTimeoutMs: 600000 },
         difficultyLearning: {
@@ -397,12 +382,9 @@ describe("routing intent metadata", () => {
 
   const minimalObservedConfig = {
     enabled: false,
-    metricHalflives: {
-      qualityMs: 900000,
-      latencyMs: 300000,
-      throughputMs: 120000,
-      reliabilityMs: 600000,
-      costMs: 1800000,
+    metricDecayPercentPerDay: {
+      latency: 10,
+      throughput: 10,
     },
   } as const;
 

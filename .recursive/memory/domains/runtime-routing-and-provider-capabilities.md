@@ -58,8 +58,9 @@ Source-Runs:
 - `59-observe-taxonomy-analytics-completion`
 - `62-litellm-pi-craft-codex-execution-hardening`
 - `63-router-backend-regression-and-telemetry-surface-hardening`
+- `64-observed-data-decay-policy-recalibration`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-11`
+Last-Validated: `2026-07-12`
 Tags:
 - `runtime`
 - `routing`
@@ -107,6 +108,9 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - Mixed-alias capability claims must distinguish guaranteed, available, conditional, declared, and currently routable support. Capability-constrained requests must filter incompatible targets before scoring.
 - Routing semantics are split across `baseline`, `difficulty`, `controller`, and `hybrid`, with request-level overrides producing durable routing diagnostics rather than mutating saved operator config.
 - Difficulty routing, controller routing, rewrite behavior, hybrid arbitration, observed-profile selection, effective metrics, throughput penalties, and alias resolution are all runtime-owned diagnostics that should remain inspectable in request receipts.
+- The canonical observed-data decay contract is now `metric_decay_percent_per_day` for `latency` and `throughput` only. Legacy halflife keys may still parse for compatibility, but canonical config truth and rendered readback should no longer imply that quality, reliability, or cost have active time-decay knobs.
+- Observed-data time decay now applies only to latency and throughput, on a 10%-per-day retained-deviation loss curve. Fresh samples reset the age calculation. Benchmark or measured quality, measured reliability, and measured cost remain age-invariant during route scoring unless a future run explicitly introduces a new policy.
+- Effective-metric diagnostics must say whether time decay actually applied. Request-detail and routing receipts should distinguish pass-through metrics from time-decayed metrics through explicit freshness source, time-decay-applied, measured-at, and decay-rate facts rather than implying decay from generic freshness fields alone.
 - The operator-facing routing interaction reference is `/docs/architecture/09-runtime-routing-strategy-interactions.md`; when routing semantics change, that doc must stay aligned with runtime truth.
 - Operator-facing OpenAI inventory collapses to one `OpenAI` provider surface with `API Key` plus `Codex Subscription`; raw `chatgpt/*` provider rows are not an operator-facing provider baseline.
 - `Codex Subscription` is a truthful auth-boundary path, not an API-key equivalent:

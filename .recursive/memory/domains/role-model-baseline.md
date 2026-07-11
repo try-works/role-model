@@ -57,8 +57,9 @@ Source-Runs:
 - `53-runtime-telemetry-analytics-contract-hardening`
 - `60-runtime-ui-paper-linear-review-alignment`
 - `63-router-backend-regression-and-telemetry-surface-hardening`
+- `64-observed-data-decay-policy-recalibration`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-11T00:00:00Z`
+Last-Validated: `2026-07-12T00:00:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -141,9 +142,9 @@ This repository now has a real product baseline rather than only recursive scaff
 - The bridge now reads latest observed profiles from SQLite runtime state on each request instead of routing from the startup fixture-only `routing-observed-profiles.json` map
 - Runtime request observations now expose `routingDiagnostics.observedProfile` with source, `per-request` read mode, and measured-at metadata so operators can confirm which persisted profile influenced a route
 - The repo-owned validation floor for this routing-feedback baseline now includes focused bridge tests plus `runtime:validate-host` and `runtime:validate-vendors`, including local-and-remote feedback-loop readback visibility
-- The runtime now also owns an explicit `observedData` policy contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, including metric-halflife tuning and throughput-SLA configuration with shared local-plus-remote semantics
-- Adaptive routing now uses freshness-decayed effective metrics plus SQLite-backed throughput-penalty state to change real route outcomes in `/role-model-router/packages/core/`, `/role-model-router/packages/protocol-routing/`, and `/role-model-router/apps/runtime-host-bridge/`
-- Runtime request observations and validator proof now also expose `routingDiagnostics.effectiveMetrics` and `routingDiagnostics.throughputPenalty`, so operators can see the adaptive metric values, freshness weighting, and current penalty state behind a routing decision
+- The runtime now also owns an explicit `observedData` policy contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, with canonical `metric_decay_percent_per_day` controls for `latency` and `throughput` plus throughput-SLA configuration shared across local and remote endpoints. Legacy halflife keys can still parse for compatibility, but canonical config truth no longer advertises quality, reliability, or cost decay knobs.
+- Adaptive routing now uses freshness-decayed effective metrics plus SQLite-backed throughput-penalty state to change real route outcomes in `/role-model-router/packages/core/`, `/role-model-router/packages/protocol-routing/`, and `/role-model-router/apps/runtime-host-bridge/`. Only latency and throughput age over time, on a 10%-per-day retained-deviation loss curve; quality, reliability, and cost remain age-invariant.
+- Runtime request observations and validator proof now also expose `routingDiagnostics.effectiveMetrics` and `routingDiagnostics.throughputPenalty`, so operators can see the adaptive metric values, whether time decay actually applied, and the current penalty state behind a routing decision
 - The runtime now also owns a `model_aliases` contract in `/role-model-router/apps/runtime-host-bridge/src/unified-runtime-config.ts`, and bridge discovery surfaces expose configured alias ids beside real model ids
 - Alias requests now expand into pooled real endpoint candidates in `/role-model-router/apps/runtime-host-bridge/src/index.ts` before the existing routing stack runs, while exact-model requests remain additive and unchanged
 - Runtime request observations and validator proof now also expose durable `routingDiagnostics.aliasResolution` metadata, including one hybrid local-plus-remote alias pool readback

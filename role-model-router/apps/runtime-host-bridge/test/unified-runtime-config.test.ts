@@ -393,12 +393,9 @@ observed_data:
   enabled: true
   aggregation:
     min_samples: 3
-  metric_halflives:
-    quality_ms: 900000
-    latency_ms: 300000
-    throughput_ms: 120000
-    reliability_ms: 600000
-    cost_ms: 1800000
+  metric_decay_percent_per_day:
+    latency: 10
+    throughput: 10
   throughput_sla:
     enabled: true
     min_tokens_per_sec: 24
@@ -435,12 +432,9 @@ observed_data:
                 minTokensPerSec: number;
               };
             };
-            metricHalflives: {
-              qualityMs: number;
-              latencyMs: number;
-              throughputMs: number;
-              reliabilityMs: number;
-              costMs: number;
+            metricDecayPercentPerDay: {
+              latency: number;
+              throughput: number;
             };
             throughputSla: {
               enabled: boolean;
@@ -479,12 +473,9 @@ observed_data:
           minTokensPerSec: 22,
         },
       },
-      metricHalflives: {
-        qualityMs: 900000,
-        latencyMs: 300000,
-        throughputMs: 120000,
-        reliabilityMs: 600000,
-        costMs: 1800000,
+      metricDecayPercentPerDay: {
+        latency: 10,
+        throughput: 10,
       },
       throughputSla: {
         enabled: true,
@@ -503,12 +494,9 @@ observed_data:
             aggregation: {
               minSamples: 3,
             },
-            metricHalflives: {
-              qualityMs: 900000,
-              latencyMs: 300000,
-              throughputMs: 120000,
-              reliabilityMs: 600000,
-              costMs: 1800000,
+            metricDecayPercentPerDay: {
+              latency: 10,
+              throughput: 10,
             },
             throughputSla: {
               enabled: true,
@@ -624,12 +612,9 @@ observed_data:
             aggregation: {
               minSamples: 2,
             },
-            metricHalflives: {
-              qualityMs: 900000,
-              latencyMs: 300000,
-              throughputMs: 120000,
-              reliabilityMs: 600000,
-              costMs: 1800000,
+            metricDecayPercentPerDay: {
+              latency: 10,
+              throughput: 10,
             },
             throughputSla: {
               enabled: true,

@@ -1,0 +1,22 @@
+RUN 64 GREEN EVIDENCE
+
+Command: corepack pnpm run schemas:validate
+Result: PASS (37 schema files, 30 fixture files)
+
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec tsc --noEmit
+Result: PASS
+
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/observed-data-decay-policy.test.ts test/unified-runtime-config.test.ts
+Result: PASS (32 tests)
+
+Command: corepack pnpm --filter @role-model-router/core exec vitest run test/observed-data-decay-policy.test.ts test/routing-intent.test.ts
+Result: PASS (33 tests)
+
+Command: corepack pnpm --filter @role-model-router/protocol-routing test
+Result: PASS (15 tests)
+
+Command: corepack pnpm run runtime:validate-routing
+Result: PASS
+
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge run test:router
+Result: PASS (38 tests)

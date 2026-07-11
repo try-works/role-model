@@ -1,6 +1,8 @@
 Run: `/.recursive/run/64-observed-data-decay-policy-recalibration/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-07-11T21:30:54Z`
+LockHash: `d4361f9ee9b42dfce2efd50d5427c214537e9a9c90879926fb6b28f2c03b5540`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/RECURSIVE.md`

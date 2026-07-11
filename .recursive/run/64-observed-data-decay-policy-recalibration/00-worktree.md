@@ -1,6 +1,8 @@
 Run: `/.recursive/run/64-observed-data-decay-policy-recalibration/`
 Phase: `00 Worktree`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-07-11T22:44:48Z`
+LockHash: `de05484ed3f8efe511a4a7417a61c4fc2cd427daa4711ca85380eea5dab68c3d`
 Inputs:
 - `/.recursive/run/64-observed-data-decay-policy-recalibration/00-requirements.md`
 - Current git repository state
@@ -10,28 +12,30 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 
 ## TODO
 
-- [ ] Confirm the selected worktree location and isolation approach
-- [ ] Confirm the base branch and worktree branch values
-- [ ] Run setup and verify the clean test baseline
-- [ ] Confirm the diff basis fields still match live git state
-- [ ] Complete Coverage Gate checklist
-- [ ] Complete Approval Gate checklist
+- [x] Confirm the selected worktree location and isolation approach
+- [x] Confirm the base branch and worktree branch values
+- [x] Run setup and verify the clean test baseline
+- [x] Confirm the diff basis fields still match live git state
+- [x] Complete Coverage Gate checklist
+- [x] Complete Approval Gate checklist
 
 ## Directory Selection
 
 - Repository root: `D:\DEV\role-model`
-- Preferred worktree location: `.worktrees/64-observed-data-decay-policy-recalibration/`
-- Update this section with the actual selected location before locking Phase 0.
+- Actual worktree location: `.worktrees/64-observed-data-decay-policy-recalibration/`
+- Full path: `D:\dev\role-model\.worktrees\64-observed-data-decay-policy-recalibration\`
 
 ## Safety Verification
 
 - Original branch / repo state observed at init time: `main`
-- Isolation still must be confirmed after the actual worktree is created.
+- Worktree created on isolated branch `recursive/64-observed-data-decay-policy-recalibration`
+- Main branch `main` is protected from direct changes
 
 ## Worktree Creation
 
-- Intended worktree branch: `main`
-- Record the actual worktree creation command and output before locking.
+- Command: `git worktree add .worktrees/64-observed-data-decay-policy-recalibration -b recursive/64-observed-data-decay-policy-recalibration`
+- Created branch: `recursive/64-observed-data-decay-policy-recalibration`
+- HEAD: `8a577150`
 
 ## Main Branch Protection
 
@@ -40,29 +44,29 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 
 ## Project Setup
 
-- Init-time note: recursive-init detected the current repository context and prefilled the Phase 0 diff basis.
-- Replace this section with the actual setup commands and results during Phase 0.
+- `corepack pnpm install --no-frozen-lockfile` completed successfully
+- All workspace dependencies resolved
 
 ## Test Baseline Verification
 
-- Record the baseline commands and results after setup completes.
+- `corepack pnpm run schemas:validate` — PASS (37 schemas, 30 fixtures)
 
 ## Worktree Context
 
 - Base branch: `main`
-- Worktree branch: `main`
-- Base commit: `fdd1c7cb052a109e4f79ada257b54b54ff7ae17e`
+- Worktree branch: `recursive/64-observed-data-decay-policy-recalibration`
+- Base commit: `8a577150`
 
 ## Diff Basis For Later Audits
 
 - Baseline type: `local commit`
-- Baseline reference: `fdd1c7cb052a109e4f79ada257b54b54ff7ae17e`
+- Baseline reference: `8a5771506715251440f68a6643de30a66ac4f454`
 - Comparison reference: `working-tree`
-- Normalized baseline: `fdd1c7cb052a109e4f79ada257b54b54ff7ae17e`
+- Normalized baseline: `8a5771506715251440f68a6643de30a66ac4f454`
 - Normalized comparison: `working-tree`
-- Normalized diff command: `git diff --name-only fdd1c7cb052a109e4f79ada257b54b54ff7ae17e`
+- Normalized diff command: `git diff --name-only 8a5771506715251440f68a6643de30a66ac4f454`
 - Base branch: `main`
-- Worktree branch: `main`
+- Worktree branch: `recursive/64-observed-data-decay-policy-recalibration`
 - Diff basis notes: `recursive-init prefilled this executable diff basis from the current HEAD commit. If Phase 0 later changes the chosen baseline, update every diff-basis field and rerun lint before locking.`
 
 ## Traceability
@@ -71,15 +75,15 @@ Scope note: This document records the Phase 0 worktree context and the executabl
 
 ## Coverage Gate
 
-- [ ] Worktree location and branch context are recorded
-- [ ] Setup and clean baseline verification are recorded
-- [ ] Diff basis fields are executable against live git state
+- [x] Worktree location and branch context are recorded
+- [x] Setup and clean baseline verification are recorded
+- [x] Diff basis fields are executable against live git state
 
-Coverage: FAIL
+Coverage: PASS
 
 ## Approval Gate
 
-- [ ] Phase 0 context is ready for downstream audited phases
-- [ ] No unresolved setup or diff-basis inconsistencies remain
+- [x] Phase 0 context is ready for downstream audited phases
+- [x] No unresolved setup or diff-basis inconsistencies remain
 
-Approval: FAIL
+Approval: PASS

@@ -989,7 +989,7 @@ describe("routeRuntimeRequest", () => {
     });
   });
 
-  test("prefers fresher latency observations when adaptive observed-data scoring is enabled", () => {
+  test("does not over-penalize a remote latency sample that is only minutes old", () => {
     const result = routeRuntimeRequest({
       request: {
         requestId: "req-runtime-adaptive-latency-1",
@@ -1122,12 +1122,9 @@ describe("routeRuntimeRequest", () => {
       observedDataConfig: {
         enabled: true,
         aggregation: { minSamples: 1 },
-        metricHalflives: {
-          qualityMs: 900_000,
-          latencyMs: 30_000,
-          throughputMs: 120_000,
-          reliabilityMs: 600_000,
-          costMs: 1_800_000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: {
           enabled: true,
@@ -1139,7 +1136,7 @@ describe("routeRuntimeRequest", () => {
       routingTimeMs: 1_000_000,
     } as Parameters<typeof routeRuntimeRequest>[0]);
 
-    expect(result.decision.chosen_endpoint_id).toBe("local.fresh.steady");
+    expect(result.decision.chosen_endpoint_id).toBe("remote.stale.fast");
   });
 
   test("preserves benchmark-only quality freshness for quality routing even when benchmark samples are old", () => {
@@ -1285,12 +1282,9 @@ describe("routeRuntimeRequest", () => {
       observedDataConfig: {
         enabled: true,
         aggregation: { minSamples: 1 },
-        metricHalflives: {
-          qualityMs: 900_000,
-          latencyMs: 300_000,
-          throughputMs: 120_000,
-          reliabilityMs: 600_000,
-          costMs: 1_800_000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: {
           enabled: true,
@@ -1443,12 +1437,9 @@ describe("routeRuntimeRequest", () => {
       observedDataConfig: {
         enabled: true,
         aggregation: { minSamples: 1 },
-        metricHalflives: {
-          qualityMs: 900_000,
-          latencyMs: 300_000,
-          throughputMs: 120_000,
-          reliabilityMs: 600_000,
-          costMs: 1_800_000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: {
           enabled: true,

@@ -34,6 +34,10 @@ const THROUGHPUT_TARGET_TPS = 40;
 const DEFAULT_COST_TARGET = 0.01;
 const FRESHNESS_NEUTRAL = 0.5;
 const RELIABILITY_NEUTRAL = 0.7;
+const DEFAULT_METRIC_DECAY_PERCENT_PER_DAY = {
+  latency: 10,
+  throughput: 10,
+} as const;
 const STRATEGY_WEIGHTS: Record<
   RoutingPolicyStrategy,
   Record<"quality" | "latency" | "throughput" | "cost" | "reliability" | "preference", number>
@@ -106,11 +110,12 @@ type QualityScopedObservedProfile = NonNullable<EndpointCandidate["observed"]> &
   quality_live_request_samples?: number;
   quality_benchmark_samples?: number;
 };
+type TimeDecayedMetricName = keyof typeof DEFAULT_METRIC_DECAY_PERCENT_PER_DAY;
 
 function getFreshnessWeight(
   input: RouteRequestInput,
   candidate: EndpointCandidate,
-  halflifeMs: number,
+  decayPercentPerDay: number,
 ): number {
   const measuredAtMs = candidate.observed?.measured_at_ms;
   if (!input.observedDataConfig?.enabled || typeof measuredAtMs !== "number") {
@@ -123,7 +128,20 @@ function getFreshnessWeight(
   if (ageMs === 0) {
     return 1;
   }
-  return Math.exp((-Math.LN2 * ageMs) / halflifeMs);
+  const ageDays = ageMs / (24 * 60 * 60 * 1000);
+  // 10% per day: each day retains (1 - 0.10) = 0.90 of deviation from neutral
+  // N days = 0.90^N
+  return (1 - decayPercentPerDay / 100) ** ageDays;
+}
+
+function getMetricDecayPercentPerDay(
+  input: RouteRequestInput,
+  metricName: TimeDecayedMetricName,
+): number {
+  return (
+    input.observedDataConfig?.metricDecayPercentPerDay?.[metricName] ??
+    DEFAULT_METRIC_DECAY_PERCENT_PER_DAY[metricName]
+  );
 }
 
 function decayToNeutral(
@@ -401,7 +419,9 @@ function resolveQualityFreshness(
 ): {
   freshnessWeight: number;
   measuredAtMs: number | undefined;
-  source: "profile" | "halflife";
+  source: "profile" | "passthrough";
+  profileFreshnessScore?: number;
+  timeDecayApplied: boolean;
 } {
   const observed = candidate.observed as QualityScopedObservedProfile | undefined;
   const qualityBenchmarkOnly =
@@ -410,9 +430,11 @@ function resolveQualityFreshness(
     (observed.quality_benchmark_samples ?? 0) > 0;
   if (qualityBenchmarkOnly) {
     return {
-      freshnessWeight: clamp(observed.quality_freshness_score ?? 0),
+      freshnessWeight: 1,
       measuredAtMs: observed.quality_measured_at_ms ?? observed.measured_at_ms,
       source: "profile",
+      profileFreshnessScore: clamp(observed.quality_freshness_score ?? 0),
+      timeDecayApplied: false,
     };
   }
 
@@ -422,20 +444,21 @@ function resolveQualityFreshness(
     (observed.sources?.benchmark_samples ?? 0) > 0;
   if (profileBenchmarkOnly) {
     return {
-      freshnessWeight: clamp(observed.freshness_score ?? 0),
+      freshnessWeight: 1,
       measuredAtMs: observed.measured_at_ms,
       source: "profile",
+      profileFreshnessScore: clamp(observed.freshness_score ?? 0),
+      timeDecayApplied: false,
     };
   }
 
+  // Quality, reliability, and cost are no longer time-decayed.
+  // Only latency and throughput use the new 10%/day decay shape.
   return {
-    freshnessWeight: getFreshnessWeight(
-      input,
-      candidate,
-      input.observedDataConfig?.metricHalflives.qualityMs ?? 1,
-    ),
+    freshnessWeight: 1,
     measuredAtMs: observed?.measured_at_ms,
-    source: "halflife",
+    source: "passthrough",
+    timeDecayApplied: false,
   };
 }
 
@@ -498,9 +521,15 @@ export function getQualityMetric(
       ...(benchmarkGroupIds.length > 0 ? { benchmark_group_ids: benchmarkGroupIds } : {}),
       benchmark_reason: benchmarkReason,
       benchmark_source: "routing-capability-benchmark",
+      measured_at_ms: freshness.measuredAtMs,
       freshness_weight: freshnessWeight,
+      freshness_source: freshness.source,
+      time_decay_applied: freshness.timeDecayApplied,
       neutral_value: FRESHNESS_NEUTRAL,
     };
+    if (typeof freshness.profileFreshnessScore === "number") {
+      raw.profile_freshness_score = freshness.profileFreshnessScore;
+    }
     if (roleScoreLowCoverage) {
       raw.benchmark_role_score_low_coverage = true;
       raw.benchmark_role_case_count =
@@ -549,6 +578,10 @@ export function getQualityMetric(
         measured_at_ms: freshness.measuredAtMs,
         freshness_weight: freshnessWeight,
         freshness_source: freshness.source,
+        time_decay_applied: freshness.timeDecayApplied,
+        ...(typeof freshness.profileFreshnessScore === "number"
+          ? { profile_freshness_score: freshness.profileFreshnessScore }
+          : {}),
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
       },
@@ -570,6 +603,10 @@ export function getQualityMetric(
         measured_at_ms: freshness.measuredAtMs,
         freshness_weight: freshnessWeight,
         freshness_source: freshness.source,
+        time_decay_applied: freshness.timeDecayApplied,
+        ...(typeof freshness.profileFreshnessScore === "number"
+          ? { profile_freshness_score: freshness.profileFreshnessScore }
+          : {}),
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
       },
@@ -603,11 +640,8 @@ function getLatencyMetric(
     Math.log1p(effectiveLatencyMs / policySnapshot.targets.latency_target_ms) /
       Math.log1p(policySnapshot.targets.latency_max_ms / policySnapshot.targets.latency_target_ms);
   const observedValue = clamp(normalized);
-  const freshnessWeight = getFreshnessWeight(
-    input,
-    candidate,
-    input.observedDataConfig?.metricHalflives.latencyMs ?? 1,
-  );
+  const decayPercentPerDay = getMetricDecayPercentPerDay(input, "latency");
+  const freshnessWeight = getFreshnessWeight(input, candidate, decayPercentPerDay);
   const value = input.observedDataConfig?.enabled
     ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
     : observedValue;
@@ -621,6 +655,9 @@ function getLatencyMetric(
       effective_latency_ms: effectiveLatencyMs,
       measured_at_ms: candidate.observed.measured_at_ms,
       freshness_weight: freshnessWeight,
+      freshness_source: "time-decay",
+      time_decay_applied: Boolean(input.observedDataConfig?.enabled),
+      decay_percent_per_day: decayPercentPerDay,
       neutral_value: FRESHNESS_NEUTRAL,
       observed_value: observedValue,
       effective_value: value,
@@ -644,11 +681,8 @@ function getThroughputMetric(
     Math.log1p(candidate.observed.tokens_per_sec) /
     Math.log1p(policySnapshot.targets.throughput_target_tps);
   const observedValue = clamp(normalized);
-  const freshnessWeight = getFreshnessWeight(
-    input,
-    candidate,
-    input.observedDataConfig?.metricHalflives.throughputMs ?? 1,
-  );
+  const decayPercentPerDay = getMetricDecayPercentPerDay(input, "throughput");
+  const freshnessWeight = getFreshnessWeight(input, candidate, decayPercentPerDay);
   const decayedValue = input.observedDataConfig?.enabled
     ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
     : observedValue;
@@ -664,6 +698,9 @@ function getThroughputMetric(
       tokens_per_sec: candidate.observed.tokens_per_sec,
       measured_at_ms: candidate.observed.measured_at_ms,
       freshness_weight: freshnessWeight,
+      freshness_source: "time-decay",
+      time_decay_applied: Boolean(input.observedDataConfig?.enabled),
+      decay_percent_per_day: decayPercentPerDay,
       neutral_value: FRESHNESS_NEUTRAL,
       observed_value: observedValue,
       effective_value: value,
@@ -707,24 +744,17 @@ function getCostMetric(
   const targetCost = policySnapshot.budget.target_cost_per_request ?? DEFAULT_COST_TARGET;
   const costPer1k = catalogCostPer1k ?? observedCostPer1k ?? targetCost;
   const observedValue = clamp(1 - costPer1k / targetCost);
-  const freshnessWeight = getFreshnessWeight(
-    input,
-    candidate,
-    input.observedDataConfig?.metricHalflives.costMs ?? 1,
-  );
-  const value =
-    typeof catalogCostPer1k === "number"
-      ? observedValue
-      : input.observedDataConfig?.enabled
-        ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
-        : observedValue;
+  const freshnessWeight = 1;
+  const value = observedValue;
   return {
     value,
     source: typeof catalogCostPer1k === "number" ? "catalog" : "measured",
     raw: {
       cost_per_1k_tokens_est: costPer1k,
       measured_at_ms: candidate.observed?.measured_at_ms ?? null,
-      freshness_weight: typeof catalogCostPer1k === "number" ? 1 : freshnessWeight,
+      freshness_weight: freshnessWeight,
+      freshness_source: "passthrough",
+      time_decay_applied: false,
       neutral_value: FRESHNESS_NEUTRAL,
       estimated_request_usd: catalogEstimate?.estimatedRequestUsd ?? null,
       input_per_1m: catalogEstimate?.inputPer1M ?? null,
@@ -747,14 +777,8 @@ function getReliabilityMetric(candidate: EndpointCandidate, input: RouteRequestI
   }
 
   const observedValue = clamp(1 - candidate.observed.failure_rate);
-  const freshnessWeight = getFreshnessWeight(
-    input,
-    candidate,
-    input.observedDataConfig?.metricHalflives.reliabilityMs ?? 1,
-  );
-  const value = input.observedDataConfig?.enabled
-    ? decayToNeutral(observedValue, RELIABILITY_NEUTRAL, freshnessWeight)
-    : observedValue;
+  const freshnessWeight = 1;
+  const value = observedValue;
   return {
     value,
     source: "measured",
@@ -762,6 +786,8 @@ function getReliabilityMetric(candidate: EndpointCandidate, input: RouteRequestI
       failure_rate: candidate.observed.failure_rate,
       measured_at_ms: candidate.observed.measured_at_ms,
       freshness_weight: freshnessWeight,
+      freshness_source: "passthrough",
+      time_decay_applied: false,
       neutral_value: RELIABILITY_NEUTRAL,
       observed_value: observedValue,
       effective_value: value,

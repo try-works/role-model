@@ -807,12 +807,9 @@ describe("routeRequest", () => {
             minTokensPerSec: 22,
           },
         },
-        metricHalflives: {
-          qualityMs: 900_000,
-          latencyMs: 300_000,
-          throughputMs: 120_000,
-          reliabilityMs: 600_000,
-          costMs: 1_800_000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: {
           enabled: true,
