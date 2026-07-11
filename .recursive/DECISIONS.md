@@ -2,6 +2,45 @@
 
 ## Recursive Run Index
 
+### Run `64-observed-data-decay-policy-recalibration`
+
+- Run folder: `/.recursive/run/64-observed-data-decay-policy-recalibration/`
+- Worktree: `.worktrees/64-observed-data-decay-policy-recalibration`
+- Branch: `recursive/64-observed-data-decay-policy-recalibration`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - replaced the old five-metric observed-data halflife contract with a canonical `metric_decay_percent_per_day` config surface for `latency` and `throughput` only; host-bridge config normalization still accepts legacy halflife keys for compatibility, but canonical render/readback now emits only the narrowed contract
+  - changed router-core freshness aging from minute-scale halflife math to a 10%-per-day retained-deviation loss curve for latency and throughput, using one owning decay path for both local and remote candidates
+  - removed ordinary time decay from benchmark or measured quality, measured reliability, and measured cost so those signals no longer drift toward neutral solely because their evidence is old
+  - extended effective-metric diagnostics so request-detail and routing receipts now distinguish time-decayed metrics from pass-through metrics with explicit freshness source, time-decay-applied, and decay-rate facts
+  - added RED-first regression coverage across host-bridge config truth, router-core scoring, and protocol-routing outcomes so the repaired policy is locked in at every owning layer
+- Why:
+  - the earlier run-64 implementation left the config surface, router scoring, and diagnostics semantically inconsistent with the locked requirements
+  - stale benchmark or cost evidence was still being neutralized by age, while the active config truth still implied five live halflife knobs even though the intended policy only ages latency and throughput
+  - operators and future contributors needed one durable ledger entry stating which observed metrics age, how quickly they age, and which metrics explicitly do not
+- How:
+  - repaired with strict TDD: added failing host-bridge, core, and protocol-routing tests before fixing the shared type, host-bridge config, router-core scoring, and diagnostic surfaces
+  - verified with focused observed-data suites, the broader router-owned verification floor (`schemas:validate`, host-bridge `tsc`, host-bridge observed-data plus config tests, core observed-data plus routing-intent tests, full protocol-routing tests, `runtime:validate-routing`, and host-bridge `test:router`), plus deterministic agent-operated Phase-5 proof for config truth and route outcomes
+  - reopened the invalid run artifacts, corrected the stale Phase 0 worktree receipt, rewrote the broken Phase 2-4 records, and closed the run through Phases 5-8 with the canonical recursive lock tooling
+- What was not done:
+  - no throughput-SLA redesign was introduced; its penalty and hard-deny behavior remain separate from the slower throughput decay curve
+  - no benchmark-quality precedence redesign was introduced beyond preventing freshness metadata from neutralizing benchmark-backed quality
+  - no context-window, cooldown, capability-eligibility, UI, or packaging behavior was changed in this run
+- Known issues / follow-ups:
+  - if future routing work wants reliability aging back, it should be a separate run with its own explicit contract and diagnostics rather than reviving hidden halflife knobs
+  - legacy `metric_halflives` input remains accepted for compatibility today; if runtime configs are later migrated cleanly, a future cleanup run can remove that compatibility path explicitly
+
 ### Run `63-router-backend-regression-and-telemetry-surface-hardening`
 
 - Run folder: `/.recursive/run/63-router-backend-regression-and-telemetry-surface-hardening/`

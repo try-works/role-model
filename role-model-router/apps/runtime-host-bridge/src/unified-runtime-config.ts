@@ -119,12 +119,9 @@ export interface UnifiedRuntimeObservedDataConfig {
       readonly minTokensPerSec: number;
     };
   };
-  readonly metricHalflives: {
-    readonly qualityMs: number;
-    readonly latencyMs: number;
-    readonly throughputMs: number;
-    readonly reliabilityMs: number;
-    readonly costMs: number;
+  readonly metricDecayPercentPerDay: {
+    readonly latency: number;
+    readonly throughput: number;
   };
   readonly throughputSla: {
     readonly enabled: boolean;
@@ -162,12 +159,9 @@ export const DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG: UnifiedRuntimeObserve
       minTokensPerSec: 22,
     },
   },
-  metricHalflives: {
-    qualityMs: 15 * 60_000,
-    latencyMs: 5 * 60_000,
-    throughputMs: 2 * 60_000,
-    reliabilityMs: 10 * 60_000,
-    costMs: 30 * 60_000,
+  metricDecayPercentPerDay: {
+    latency: 10,
+    throughput: 10,
   },
   throughputSla: {
     enabled: true,
@@ -285,6 +279,10 @@ interface RawUnifiedRuntimeConfig {
         readonly min_quality_score?: number;
         readonly min_tokens_per_sec?: number;
       };
+    };
+    readonly metric_decay_percent_per_day?: {
+      readonly latency?: number;
+      readonly throughput?: number;
     };
     readonly metric_halflives?: {
       readonly quality_ms?: number;
@@ -922,14 +920,18 @@ function normalizeObservedDataInput(
   if (aggregationSource !== undefined) {
     ensureObject(aggregationSource, `${prefix}.aggregation must be an object.`);
   }
-  const metricHalflivesSource =
-    "metricHalflives" in value
-      ? value.metricHalflives
-      : "metric_halflives" in value
-        ? value.metric_halflives
-        : undefined;
-  if (metricHalflivesSource !== undefined) {
-    ensureObject(metricHalflivesSource, `${prefix}.metric_halflives must be an object.`);
+  const metricDecaySource =
+    "metricDecayPercentPerDay" in value
+      ? value.metricDecayPercentPerDay
+      : "metric_decay_percent_per_day" in value
+        ? value.metric_decay_percent_per_day
+        : "metricHalflives" in value
+          ? value.metricHalflives
+          : "metric_halflives" in value
+            ? value.metric_halflives
+            : undefined;
+  if (metricDecaySource !== undefined) {
+    ensureObject(metricDecaySource, `${prefix}.metric_decay_percent_per_day must be an object.`);
   }
   const throughputSlaSource =
     "throughputSla" in value
@@ -1154,51 +1156,28 @@ function normalizeObservedDataInput(
         ),
       },
     },
-    metricHalflives: {
-      qualityMs: readRequiredPositiveNumber(
-        metricHalflivesSource && "qualityMs" in metricHalflivesSource
-          ? metricHalflivesSource.qualityMs
-          : metricHalflivesSource && "quality_ms" in metricHalflivesSource
-            ? metricHalflivesSource.quality_ms
-            : undefined,
-        `${prefix}.metric_halflives.quality_ms`,
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.qualityMs,
+    metricDecayPercentPerDay: {
+      latency: readRequiredPositiveNumber(
+        metricDecaySource && "latency" in metricDecaySource
+          ? metricDecaySource.latency
+          : metricDecaySource && "latencyMs" in metricDecaySource
+            ? metricDecaySource.latencyMs
+            : metricDecaySource && "latency_ms" in metricDecaySource
+              ? metricDecaySource.latency_ms
+              : undefined,
+        `${prefix}.metric_decay_percent_per_day.latency`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricDecayPercentPerDay.latency,
       ),
-      latencyMs: readRequiredPositiveNumber(
-        metricHalflivesSource && "latencyMs" in metricHalflivesSource
-          ? metricHalflivesSource.latencyMs
-          : metricHalflivesSource && "latency_ms" in metricHalflivesSource
-            ? metricHalflivesSource.latency_ms
-            : undefined,
-        `${prefix}.metric_halflives.latency_ms`,
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.latencyMs,
-      ),
-      throughputMs: readRequiredPositiveNumber(
-        metricHalflivesSource && "throughputMs" in metricHalflivesSource
-          ? metricHalflivesSource.throughputMs
-          : metricHalflivesSource && "throughput_ms" in metricHalflivesSource
-            ? metricHalflivesSource.throughput_ms
-            : undefined,
-        `${prefix}.metric_halflives.throughput_ms`,
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.throughputMs,
-      ),
-      reliabilityMs: readRequiredPositiveNumber(
-        metricHalflivesSource && "reliabilityMs" in metricHalflivesSource
-          ? metricHalflivesSource.reliabilityMs
-          : metricHalflivesSource && "reliability_ms" in metricHalflivesSource
-            ? metricHalflivesSource.reliability_ms
-            : undefined,
-        `${prefix}.metric_halflives.reliability_ms`,
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.reliabilityMs,
-      ),
-      costMs: readRequiredPositiveNumber(
-        metricHalflivesSource && "costMs" in metricHalflivesSource
-          ? metricHalflivesSource.costMs
-          : metricHalflivesSource && "cost_ms" in metricHalflivesSource
-            ? metricHalflivesSource.cost_ms
-            : undefined,
-        `${prefix}.metric_halflives.cost_ms`,
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.costMs,
+      throughput: readRequiredPositiveNumber(
+        metricDecaySource && "throughput" in metricDecaySource
+          ? metricDecaySource.throughput
+          : metricDecaySource && "throughputMs" in metricDecaySource
+            ? metricDecaySource.throughputMs
+            : metricDecaySource && "throughput_ms" in metricDecaySource
+              ? metricDecaySource.throughput_ms
+              : undefined,
+        `${prefix}.metric_decay_percent_per_day.throughput`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricDecayPercentPerDay.throughput,
       ),
     },
     throughputSla: {
@@ -1769,12 +1748,9 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
           min_tokens_per_sec: config.observedData.difficultyLearning.recommendation.minTokensPerSec,
         },
       },
-      metric_halflives: {
-        quality_ms: config.observedData.metricHalflives.qualityMs,
-        latency_ms: config.observedData.metricHalflives.latencyMs,
-        throughput_ms: config.observedData.metricHalflives.throughputMs,
-        reliability_ms: config.observedData.metricHalflives.reliabilityMs,
-        cost_ms: config.observedData.metricHalflives.costMs,
+      metric_decay_percent_per_day: {
+        latency: config.observedData.metricDecayPercentPerDay.latency,
+        throughput: config.observedData.metricDecayPercentPerDay.throughput,
       },
       throughput_sla: {
         enabled: config.observedData.throughputSla.enabled,

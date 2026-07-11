@@ -1,0 +1,19 @@
+{
+  "artifact": "07-state-update.md",
+  "artifact_hash": "d137499ca7b2e9856c14a0e56f36779765fc4916d5ee2c5b7b1baaeff3219044",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\64-observed-data-decay-policy-recalibration\\.recursive\\run\\64-observed-data-decay-policy-recalibration\\07-state-update.md",
+  "locked_at": "2026-07-11T22:50:32Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "d4361f9ee9b42dfce2efd50d5427c214537e9a9c90879926fb6b28f2c03b5540",
+    "00-worktree.md": "de05484ed3f8efe511a4a7417a61c4fc2cd427daa4711ca85380eea5dab68c3d",
+    "01-as-is.md": "7275220e6e77eb7e72cfe3590ee106cf9aa153d5b33d9405c9759e268582c4b3",
+    "02-to-be-plan.md": "c64b01c7a6dae1a2f8ba03bef75f95d23a11b1e2fbce1dd47b469a72288e8736",
+    "03-implementation-summary.md": "d778fdf45eb7de9df662e6a2f1f0b34fa1dcc12cd2db6f33f746a680afdf9f0d",
+    "03.5-code-review.md": "7b698b1bc03f9cf9a2e5b1bfbd3cfeb2748202345d9b0de180074a49e02b876a",
+    "04-test-summary.md": "cd7bd46b14aac48821f8a7d9b2772657d14dfc36bd5a20cbfa853a183bceab59",
+    "05-manual-qa.md": "f6d8fb00caa8d755f98d66cc869fc0616f77da9d8c7b52650d40258afb43d89b",
+    "06-decisions-update.md": "4d84d9ce8b9948ec7259de525bed28f3179ad053eda205b919d347e4ffb6edb3"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "08caf585c37bdcd57822b68d905dd6de686390d9b041e4d796e309ed6382eeb7"
+}

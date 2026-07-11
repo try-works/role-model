@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/64-observed-data-decay-policy-recalibration/role-model-router/packages/core
+
+ ✓ test/observed-data-decay-policy.test.ts (4 tests) 16ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  06:34:16
+   Duration  2.93s (transform 653ms, setup 0ms, collect 752ms, tests 16ms, environment 0ms, prepare 810ms)
+

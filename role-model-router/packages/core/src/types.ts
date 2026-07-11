@@ -64,12 +64,9 @@ export interface ObservedDataConfigRecord {
   aggregation: {
     minSamples: number;
   };
-  metricHalflives: {
-    qualityMs: number;
-    latencyMs: number;
-    throughputMs: number;
-    reliabilityMs: number;
-    costMs: number;
+  metricDecayPercentPerDay: {
+    latency: number;
+    throughput: number;
   };
   throughputSla: {
     enabled: boolean;

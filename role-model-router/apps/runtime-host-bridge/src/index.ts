@@ -4398,6 +4398,12 @@ function summarizeEffectiveMetricsFromDecision(
         typeof metric.raw?.measured_at_ms === "number" ? metric.raw.measured_at_ms : undefined,
       freshnessWeight:
         typeof metric.raw?.freshness_weight === "number" ? metric.raw.freshness_weight : undefined,
+      freshnessSource:
+        typeof metric.raw?.freshness_source === "string" ? metric.raw.freshness_source : undefined,
+      timeDecayApplied:
+        typeof metric.raw?.time_decay_applied === "boolean"
+          ? metric.raw.time_decay_applied
+          : undefined,
     };
   };
 

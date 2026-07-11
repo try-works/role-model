@@ -127,30 +127,40 @@ export interface RuntimeRoutingDiagnostics {
       readonly source: string;
       readonly measuredAtMs?: number;
       readonly freshnessWeight?: number;
+      readonly freshnessSource?: string;
+      readonly timeDecayApplied?: boolean;
     };
     readonly latency?: {
       readonly value: number;
       readonly source: string;
       readonly measuredAtMs?: number;
       readonly freshnessWeight?: number;
+      readonly freshnessSource?: string;
+      readonly timeDecayApplied?: boolean;
     };
     readonly throughput?: {
       readonly value: number;
       readonly source: string;
       readonly measuredAtMs?: number;
       readonly freshnessWeight?: number;
+      readonly freshnessSource?: string;
+      readonly timeDecayApplied?: boolean;
     };
     readonly reliability?: {
       readonly value: number;
       readonly source: string;
       readonly measuredAtMs?: number;
       readonly freshnessWeight?: number;
+      readonly freshnessSource?: string;
+      readonly timeDecayApplied?: boolean;
     };
     readonly cost?: {
       readonly value: number;
       readonly source: string;
       readonly measuredAtMs?: number;
       readonly freshnessWeight?: number;
+      readonly freshnessSource?: string;
+      readonly timeDecayApplied?: boolean;
     };
   };
   readonly selection?: {

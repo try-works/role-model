@@ -1,0 +1,16 @@
+RUN 64 RED EVIDENCE
+
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/observed-data-decay-policy.test.ts
+Result: FAIL
+- default decay controls expose only latency and throughput percent-per-day settings: Cannot convert undefined or null to object
+- rendered runtime config truth uses the new decay contract and omits legacy halflife keys: rendered output still contained metric_halflives
+
+Command: corepack pnpm --filter @role-model-router/core exec vitest run test/observed-data-decay-policy.test.ts
+Result: FAIL
+- latency/throughput tests crashed reading input.observedDataConfig.metricHalflives.latencyMs
+- benchmark quality test returned 0.521 instead of 0.92 because benchmark freshness metadata still neutralized quality
+- reliability/cost tests crashed on the stale metricHalflives access path
+
+Command: corepack pnpm --filter @role-model-router/protocol-routing exec vitest run test/observed-data-decay-policy.test.ts
+Result: FAIL
+- local/remote latency and benchmark-quality routing tests crashed reading input.observedDataConfig.metricHalflives.latencyMs
