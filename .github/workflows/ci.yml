@@ -39,6 +39,8 @@ jobs:
         run: pnpm run test
       - name: Runtime critical regression
         run: pnpm run runtime:test-critical
+      - name: Runtime router regression
+        run: pnpm run runtime:test-router
       - name: Test Rust
         run: pnpm run test:rust
       - name: Smoke

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
 import {
@@ -29,6 +29,12 @@ import type {
   RuntimeTelemetryAnalyticsResponse,
 } from "../lib/runtime-api";
 import { fetchTelemetryAnalytics, subscribeTelemetryStream } from "../lib/runtime-api";
+import {
+  buildQuerySnapshot,
+  createStaleChartDiagnostic,
+  flushStaleRefreshDiagnostics,
+  resolveTelemetryChartRefresh,
+} from "../lib/stale-refresh-diagnostics";
 import { telemetryBreakdownOptions } from "../lib/telemetry-chart-config";
 import type {
   TelemetryRouteChartDefinition,
@@ -120,9 +126,11 @@ export default function ObserveRoutingRoute() {
     });
   };
   const [charts, setCharts] = useState<readonly RoutingChartRecord[]>([]);
+  const chartsRef = useRef<readonly RoutingChartRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [staleCharts, setStaleCharts] = useState<readonly string[]>([]);
 
   const filters: RuntimeTelemetryAnalyticsFilters = useMemo(() => {
     const normalizedRequestedRoleId = normalizeOptionalId(requestedRoleId);
@@ -257,32 +265,24 @@ export default function ObserveRoutingRoute() {
         if (disposed) {
           return;
         }
-        setCharts((previousCharts) =>
-          definitions.map((definition, index) => {
-            const result = chartResults[index];
-            if (result?.status === "fulfilled") {
-              return {
-                definition,
-                response: result.value,
-              };
-            }
-
-            const previousChart = previousCharts.find(
-              (chart) => chart.definition.title === definition.title,
-            );
-            if (background && previousChart?.response) {
-              return {
-                definition,
-                response: previousChart.response,
-              };
-            }
-
-            return {
-              definition,
-              errorMessage: getChartLoadErrorMessage(definition.title, result?.reason),
-            };
-          }),
-        );
+        const resolvedCharts = resolveTelemetryChartRefresh({
+          background,
+          chartResults,
+          createDiagnostic: (definition, reason) =>
+            createStaleChartDiagnostic({
+              routeId: "observe-routing",
+              chartTitle: definition.title,
+              querySnapshot: buildQuerySnapshot(breakdown, timeRange),
+              error: reason,
+            }),
+          definitions,
+          getErrorMessage: getChartLoadErrorMessage,
+          previousCharts: chartsRef.current,
+        });
+        chartsRef.current = resolvedCharts.charts;
+        setCharts(resolvedCharts.charts);
+        setStaleCharts(resolvedCharts.staleChartTitles);
+        flushStaleRefreshDiagnostics();
         setError(null);
       } catch (value) {
         if (!disposed) {
@@ -313,6 +313,18 @@ export default function ObserveRoutingRoute() {
 
   return (
     <div className="space-y-6">
+      {staleCharts.length > 0 ? (
+        <div
+          className={`${mutedPanelClassName} flex items-center gap-2 border-l-4 border-[var(--rm-chart-warning)] p-3 text-sm`}
+        >
+          <span className={foregroundEmphasisClassName}>
+            Some charts may be using cached data from a previous refresh.
+          </span>
+          <span className="text-[var(--rm-secondary)]">
+            ({staleCharts.length} chart{staleCharts.length !== 1 ? "s" : ""})
+          </span>
+        </div>
+      ) : null}
       <SectionCard
         title="Routing analytics controls"
         description="Inspect routing mix, difficulty distribution, and avoided cost without leaving the Observe pillar."

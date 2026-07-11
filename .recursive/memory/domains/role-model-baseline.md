@@ -56,8 +56,9 @@ Source-Runs:
 - `50-openai-codex-subscription`
 - `53-runtime-telemetry-analytics-contract-hardening`
 - `60-runtime-ui-paper-linear-review-alignment`
+- `63-router-backend-regression-and-telemetry-surface-hardening`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-05T00:00:00Z`
+Last-Validated: `2026-07-11T00:00:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -89,7 +90,8 @@ This repository now has a real product baseline rather than only recursive scaff
 - Fixture-driven router conformance lives under `/packages/conformance/src/router-fixture-conformance.test.ts` and is backed by `/protocol/fixtures/router-golden/cases/`
 - The router now applies role/task/binding-aware eligibility, provider and endpoint policy filters, canonical compute-preference/strategy aliases, normalized weighted scoring, explicit exclusion codes, and explainable scored-candidate diagnostics
 - Observed-performance aggregation now uses deterministic multi-sample semantics with `measurement_window`, `endpoint_version`, benchmark/live-request source counts, failure/error-class rates, freshness/confidence, and mixed-version rejection
-- Trace and usage packages expose stable read/linkage helpers, and usage also exposes summary reducers by app, endpoint, model, and provider kind
+- Trace and usage packages expose stable read/linkage helpers, usage also exposes summary reducers by app, endpoint, model, and provider kind, and both packages now have package-level Vitest floors for deterministic round-trip plus negative-linkage coverage; trace readback tolerates a missing `trace-events.jsonl` when no events were emitted
+- The root runtime testing contract now includes `runtime:test-router` as the canonical router-focused backend regression lane. It runs the host-bridge `test:router` subset, `@role-model-router/trace` and `@role-model-router/usage` package tests, `runtime:validate-routing`, and `runtime:validate-observability`, and `/.github/workflows/ci.yml` runs it as a dedicated CI phase instead of hiding router coverage inside broader test steps
 - The smoke path exercises the hardened baseline end to end with a fixture-driven router case and validates emitted artifacts against schemas and linkage helpers before exit
 - The stable config export path emits normalized ACP, MCP, and CLI endpoint inventory rather than a CLI-only snapshot
 - The protocol docs now carry both the baseline role/task examples and the hardened M1-M3 contract details for profiles, traces, usage, benchmarks, and reason codes
@@ -178,6 +180,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - On Windows, CRLF-only worktree churn can make local status noisier than the real Linux CI content diff; use `git diff` to identify the actual files that need formatter commits
 - The repo-local runtime validation floor is the staged command family `runtime:validate-state`, `runtime:validate-registry`, `runtime:validate-routing`, `runtime:validate-adapter`, `runtime:validate-ui`, `runtime:validate-host`, `runtime:validate-vendors`, `runtime:validate-packaging`, `runtime:validate-observability`, `runtime:validate-operations`, `runtime:validate-tools`, plus `smoke`
 - For models.dev metadata work, prefer the explicit refresh/export entrypoints (`corepack pnpm run catalog:refresh` and `corepack pnpm run catalog:export`) plus the focused runtime-ui/runtime-host suites and `runtime:validate-host`/`runtime:validate-packaging` before claiming the metadata layer is fully integrated
+- For router-backend changes, start with `corepack pnpm run runtime:test-router`; escalate to `runtime:test-critical`, browser E2E, rebuilt-runtime QA, or packaging proof only when the touched paths broaden beyond the dedicated router lane
 - For Observe or other runtime-UI telemetry work that claims packaged-operator parity, prefer focused `runtime-ui` tests/builds plus the repository-root `corepack pnpm run runtime:package-sea`, then verify the rebuilt runtime in a browser on `http://127.0.0.1:3456` instead of relying on a dev-only preview. For chart primitives, verify both contract data and rendered geometry because legends can render while Recharts plots collapse without concrete dimensions.
 - When validating runtime work, treat the focused runtime validators and package tests as the run-owned baseline; broader root `build` now fails on the unrelated `provider-acp` / `provider-cli` `endpoint_kind` mismatch, broader root `test` can still fail on the workspace-level `process-supervisor` crash-callback case while the isolated package rerun passes, and vendored proxy or full Go tests on Windows still reproduce the upstream `sleep` PATH assumption
 

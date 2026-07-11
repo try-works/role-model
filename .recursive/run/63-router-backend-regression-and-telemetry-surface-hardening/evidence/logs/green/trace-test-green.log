@@ -1,0 +1,15 @@
+No projects matched the filters "D:\dev\role-model\.worktrees\63-router-backend-regression-and-telemetry-surface-hardening" in "D:\DEV\role-model\.worktrees\63-router-backend-regression-and-telemetry-surface-hardening"
+
+> @role-model-router/trace@0.0.0 test D:\DEV\role-model\.worktrees\63-router-backend-regression-and-telemetry-surface-hardening\role-model-router\packages\trace
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/63-router-backend-regression-and-telemetry-surface-hardening/role-model-router/packages/trace[39m
+
+ [32m✓[39m test/index.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m   Start at [22m 18:02:15
+[2m   Duration [22m 1.76s[2m (transform 112ms, setup 0ms, collect 121ms, tests 48ms, environment 0ms, prepare 481ms)[22m
+

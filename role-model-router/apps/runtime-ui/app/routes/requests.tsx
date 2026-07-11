@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
 import {
@@ -19,6 +19,7 @@ import {
   foregroundEmphasisClassName,
   listRowClassName,
   metaTextClassName,
+  mutedPanelClassName,
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
@@ -35,6 +36,12 @@ import {
   fetchTelemetryRequests,
   subscribeTelemetryStream,
 } from "../lib/runtime-api";
+import {
+  buildQuerySnapshot,
+  createStaleChartDiagnostic,
+  flushStaleRefreshDiagnostics,
+  resolveTelemetryChartRefresh,
+} from "../lib/stale-refresh-diagnostics";
 import {
   telemetryBreakdownOptions,
   telemetryMetricOptions,
@@ -221,9 +228,11 @@ export default function RequestsRoute() {
   const taxonomyToolClassIds = searchParams.get("taxTool") || "";
   const [requests, setRequests] = useState<readonly RuntimeTelemetryRequestRecord[]>([]);
   const [charts, setCharts] = useState<readonly RequestsChartRecord[]>([]);
+  const chartsRef = useRef<readonly RequestsChartRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [staleCharts, setStaleCharts] = useState<readonly string[]>([]);
 
   const updateParam = (key: string, value: string) => {
     setSearchParams((prev) => {
@@ -332,32 +341,24 @@ export default function RequestsRoute() {
           return;
         }
         setRequests(nextRequests);
-        setCharts((previousCharts) =>
-          definitions.map((definition, index) => {
-            const result = chartResults[index];
-            if (result?.status === "fulfilled") {
-              return {
-                definition,
-                response: result.value,
-              };
-            }
-
-            const previousChart = previousCharts.find(
-              (chart) => chart.definition.title === definition.title,
-            );
-            if (background && previousChart?.response) {
-              return {
-                definition,
-                response: previousChart.response,
-              };
-            }
-
-            return {
-              definition,
-              errorMessage: getChartLoadErrorMessage(definition.title, result?.reason),
-            };
-          }),
-        );
+        const resolvedCharts = resolveTelemetryChartRefresh({
+          background,
+          chartResults,
+          createDiagnostic: (definition, reason) =>
+            createStaleChartDiagnostic({
+              routeId: "requests",
+              chartTitle: definition.title,
+              querySnapshot: buildQuerySnapshot(breakdown, timeRange),
+              error: reason,
+            }),
+          definitions,
+          getErrorMessage: getChartLoadErrorMessage,
+          previousCharts: chartsRef.current,
+        });
+        chartsRef.current = resolvedCharts.charts;
+        setCharts(resolvedCharts.charts);
+        setStaleCharts(resolvedCharts.staleChartTitles);
+        flushStaleRefreshDiagnostics();
         setError(null);
       } catch (value) {
         if (!disposed) {
@@ -394,6 +395,18 @@ export default function RequestsRoute() {
 
   return (
     <div className="space-y-6">
+      {staleCharts.length > 0 ? (
+        <div
+          className={`${mutedPanelClassName} flex items-center gap-2 border-l-4 border-[var(--rm-chart-warning)] p-3 text-sm`}
+        >
+          <span className={foregroundEmphasisClassName}>
+            Some charts may be using cached data from a previous refresh.
+          </span>
+          <span className="text-[var(--rm-secondary)]">
+            ({staleCharts.length} chart{staleCharts.length !== 1 ? "s" : ""})
+          </span>
+        </div>
+      ) : null}
       <SectionCard
         title="Analytics controls"
         description="Scope the structured telemetry history and comparison target without leaving the canonical request ledger."

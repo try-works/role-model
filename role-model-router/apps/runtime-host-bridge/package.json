@@ -41,6 +41,7 @@
     "build": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:critical": "vitest run test/account-repair.test.ts test/unified-runtime-config.test.ts test/provider-overlap-metadata.test.ts test/benchmark-summary.test.ts test/validate-observability.test.ts test/validate-ui.test.ts",
+    "test:router": "vitest run test/controller-routing-contract.test.ts test/runtime-routing-model.test.ts test/request-capability-inference.test.ts test/alias-capability-routing.test.ts test/restart-rehydration.test.ts test/endpoint-rehydration.test.ts test/model-capability-resolver.test.ts test/session-readiness-api.test.ts test/downstream-openai-discovery.test.ts test/validate-restart-rehydration.test.ts test/validate-observability.test.ts",
     "package-sea": "tsx src/package-sea.ts",
     "validate-packaging": "corepack pnpm build && tsx src/validate-packaging.ts"
   }
