@@ -99,6 +99,7 @@ export interface RuntimeExecutionRequest {
   readonly stream?: boolean;
   readonly tools?: readonly RuntimeExecutionToolDefinition[];
   readonly toolChoice?: RuntimeExecutionToolChoice;
+  readonly parallelToolCalls?: boolean;
   readonly reasoning?: RuntimeExecutionReasoningRequest;
   readonly structuredOutput?: StructuredOutputRequest | null;
   readonly promptCache?: PromptCacheRequest;

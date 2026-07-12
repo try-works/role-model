@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/68-codex-subscription-tool-call-parity/role-model-router/apps/runtime-host-bridge
+
+(node:32964) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (201 tests | 200 skipped) 11ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 200 skipped (201)
+   Start at  00:25:52
+   Duration  4.22s (transform 2.28s, setup 0ms, collect 3.09s, tests 11ms, environment 0ms, prepare 366ms)
+

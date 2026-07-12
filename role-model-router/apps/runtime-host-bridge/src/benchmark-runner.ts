@@ -283,6 +283,25 @@ export interface BenchmarkRunnerDependencies {
     requestOptions?: BenchmarkExecutionRequestOptions,
   ) => Promise<BenchmarkChatCompletionsExecutionResult>;
 
+  readonly executeResponses?: (
+    body: {
+      model: string;
+      input: string | readonly Record<string, unknown>[];
+      tools?: readonly Record<string, unknown>[];
+      text?: {
+        format: {
+          type: "json_schema";
+          name: string;
+          schema: Record<string, unknown>;
+          strict: boolean;
+        };
+      };
+      temperature?: number;
+    },
+    requestId: string,
+    requestOptions?: BenchmarkExecutionRequestOptions,
+  ) => Promise<BenchmarkChatCompletionsExecutionResult>;
+
   readonly deriveEndpointVersion: (endpointId: string) => string;
 }
 
@@ -290,8 +309,23 @@ function isHealthyEndpoint(healthStatus: string): boolean {
   return healthStatus !== "policy-blocked" && healthStatus !== "offline";
 }
 
+const BENCHMARK_CODEX_ENDPOINT_ID_MARKERS = [
+  ".openai-codex-subscription.",
+  ".codex-subscription.",
+] as const;
+
 function resolveBenchmarkArtifactRoot(deps: BenchmarkRunnerDependencies): string {
   return deps.benchmarkArtifactRoot ?? path.join(path.dirname(deps.databasePath), "benchmark-runs");
+}
+
+function isCodexSubscriptionBenchmarkEndpoint(endpoint: {
+  readonly endpointId: string;
+  readonly modelId: string;
+}): boolean {
+  return (
+    endpoint.modelId.startsWith("chatgpt/") &&
+    BENCHMARK_CODEX_ENDPOINT_ID_MARKERS.some((marker) => endpoint.endpointId.includes(marker))
+  );
 }
 
 async function executeBenchmarkTurn(
@@ -310,7 +344,44 @@ async function executeBenchmarkTurn(
   const requestId = `bench-${caseItem.case_id}-${endpoint.endpointId}-${requestSuffix}-${randomUUID()}`;
 
   const omitTools = options?.omitTools === true;
-  const responseFormat = buildTextDeliverableResponseFormat(caseItem);
+  const responseFormat = buildTextDeliverableResponseFormat(caseItem) as
+    | {
+        readonly type: "json_schema";
+        readonly json_schema: {
+          readonly name: string;
+          readonly schema: Record<string, unknown>;
+          readonly strict?: boolean;
+        };
+      }
+    | undefined;
+  const usesResponsesExecution =
+    typeof deps.executeResponses === "function" &&
+    Boolean(caseItem.tools?.length) &&
+    isCodexSubscriptionBenchmarkEndpoint(endpoint);
+
+  if (usesResponsesExecution) {
+    return deps.executeResponses(
+      {
+        model: endpoint.modelId,
+        input: messages,
+        ...(caseItem.tools && !omitTools ? { tools: caseItem.tools } : {}),
+        ...(responseFormat
+          ? {
+              text: {
+                format: {
+                  type: "json_schema" as const,
+                  name: responseFormat.json_schema.name,
+                  schema: responseFormat.json_schema.schema,
+                  strict: responseFormat.json_schema.strict === true,
+                },
+              },
+            }
+          : {}),
+      },
+      requestId,
+      { endpointId: endpoint.endpointId },
+    );
+  }
 
   return deps.executeChatCompletions(
     {

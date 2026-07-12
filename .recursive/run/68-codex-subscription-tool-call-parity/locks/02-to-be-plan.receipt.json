@@ -1,0 +1,14 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "42d95a8b98910647da2d036f4d6db34d921c9bfc55ccdcd054c330c9ab885177",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\68-codex-subscription-tool-call-parity\\.recursive\\run\\68-codex-subscription-tool-call-parity\\02-to-be-plan.md",
+  "locked_at": "2026-07-12T14:49:25Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "3eafa40b178ed3142381dd5f0304c053e215ef7c56b8f77ab66d7fcfe62c2623",
+    "00-worktree.md": "309d78e7c26851b163a4d06deb31bb5ea4a123aaba740e916ae3ae0d285ef2f5",
+    "01-as-is.md": "390043dbb4eaa13c67d2b871a5e44608a8a30fbc1ca563a93e52622254a3974c",
+    "01.5-root-cause.md": "c762ae78ae4bd3e27f6f02fc4d021586f6ec21f3a0cd24c7744123b14b71c477"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "9a060ad4ceb8f4c78c0fb304c0058e5648d9243669a492ac0c1865ab7a977d7e"
+}

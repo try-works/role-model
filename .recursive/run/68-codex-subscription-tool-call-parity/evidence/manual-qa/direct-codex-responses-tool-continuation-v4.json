@@ -1,0 +1,30 @@
+{
+  "requestHeaderId": "run68-responses-codex-tool-continuation-v4",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "newRequestIds": [],
+  "response": {
+    "id": "chatcmpl_req-3c28554b-e398-455a-8761-b40ec7d065d7",
+    "object": "response",
+    "created_at": 1783875161,
+    "status": "completed",
+    "model": "chatgpt/gpt-5.4",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_chatcmpl_req-3c28554b-e398-455a-8761-b40ec7d065d7",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "Order 84 has been shipped and is expected to arrive in 2 days."
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 70,
+      "output_tokens": 20,
+      "total_tokens": 90
+    }
+  }
+}

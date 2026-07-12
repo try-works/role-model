@@ -1,0 +1,15 @@
+{
+  "artifact": "03-implementation-summary.md",
+  "artifact_hash": "050bcb1651f049794e9bd84b0aefd7c851793e6a18cf62b0af7ad9af8738ebe7",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\68-codex-subscription-tool-call-parity\\.recursive\\run\\68-codex-subscription-tool-call-parity\\03-implementation-summary.md",
+  "locked_at": "2026-07-12T17:07:35Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "3eafa40b178ed3142381dd5f0304c053e215ef7c56b8f77ab66d7fcfe62c2623",
+    "00-worktree.md": "309d78e7c26851b163a4d06deb31bb5ea4a123aaba740e916ae3ae0d285ef2f5",
+    "01-as-is.md": "390043dbb4eaa13c67d2b871a5e44608a8a30fbc1ca563a93e52622254a3974c",
+    "01.5-root-cause.md": "c762ae78ae4bd3e27f6f02fc4d021586f6ec21f3a0cd24c7744123b14b71c477",
+    "02-to-be-plan.md": "42d95a8b98910647da2d036f4d6db34d921c9bfc55ccdcd054c330c9ab885177"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "c6335cdd5a5a5708aacb5bed811871ff2faa878dc01ddbf40801c734ace97086"
+}

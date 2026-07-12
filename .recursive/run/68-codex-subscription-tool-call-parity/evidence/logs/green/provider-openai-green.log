@@ -1,0 +1,14 @@
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\68-codex-subscription-tool-call-parity\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/68-codex-subscription-tool-call-parity/role-model-router/packages/provider-openai
+
+ ✓ test/index.test.ts (23 tests) 38ms
+
+ Test Files  1 passed (1)
+      Tests  23 passed (23)
+   Start at  23:14:38
+   Duration  2.35s (transform 573ms, setup 0ms, collect 626ms, tests 38ms, environment 0ms, prepare 370ms)
+

@@ -437,6 +437,7 @@ interface OpenAIChatCompletionsBody {
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly tools?: readonly OpenAIChatCompletionsTool[];
   readonly tool_choice?: RuntimeExecutionToolChoice;
+  readonly parallel_tool_calls?: boolean;
   readonly prompt_cache_key?: string;
   readonly reasoning_effort?: string;
   readonly reasoning?: Record<string, unknown>;
@@ -453,13 +454,46 @@ interface OpenAIResponsesTool {
   readonly parameters?: Record<string, unknown>;
 }
 
-type OpenAIResponsesInput = string | readonly OpenAIChatCompletionsMessage[];
+interface OpenAIResponsesFunctionCallInputItem {
+  readonly type: "function_call";
+  readonly call_id: string;
+  readonly name: string;
+  readonly arguments?: string;
+}
+
+interface OpenAIResponsesFunctionCallOutputInputItem {
+  readonly type: "function_call_output";
+  readonly call_id: string;
+  readonly output?: unknown;
+}
+
+type OpenAIResponsesInputItem =
+  | OpenAIChatCompletionsMessage
+  | OpenAIResponsesFunctionCallInputItem
+  | OpenAIResponsesFunctionCallOutputInputItem;
+
+type OpenAIResponsesInput = string | readonly OpenAIResponsesInputItem[];
+
+type OpenAIChatCompletionsToolCall = {
+  id: string;
+  type: string;
+  function: {
+    name: string;
+    arguments: string;
+  };
+};
 
 interface OpenAIResponsesBody {
   readonly model: string;
   readonly input: OpenAIResponsesInput;
   readonly tools?: readonly OpenAIResponsesTool[];
-  readonly tool_choice?: RuntimeExecutionToolChoice;
+  readonly tool_choice?:
+    | RuntimeExecutionToolChoice
+    | {
+        readonly type: "function";
+        readonly name: string;
+      };
+  readonly parallel_tool_calls?: boolean;
   readonly reasoning_effort?: string;
   readonly reasoning?: Record<string, unknown>;
   readonly thinking?: Record<string, unknown>;
@@ -474,6 +508,34 @@ function asPlainRecord(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : undefined;
+}
+
+function isResponsesFunctionCallInputItem(
+  value: OpenAIResponsesInputItem,
+): value is OpenAIResponsesFunctionCallInputItem {
+  const record = asPlainRecord(value);
+  return (
+    record?.type === "function_call" &&
+    typeof record.call_id === "string" &&
+    typeof record.name === "string"
+  );
+}
+
+function isResponsesFunctionCallOutputInputItem(
+  value: OpenAIResponsesInputItem,
+): value is OpenAIResponsesFunctionCallOutputInputItem {
+  const record = asPlainRecord(value);
+  return record?.type === "function_call_output" && typeof record.call_id === "string";
+}
+
+function isOpenAIChatCompletionsMessage(
+  value: OpenAIResponsesInputItem,
+): value is OpenAIChatCompletionsMessage {
+  const record = asPlainRecord(value);
+  return (
+    typeof record?.role === "string" &&
+    (typeof record.content === "string" || record.content === null || Array.isArray(record.content))
+  );
 }
 
 function readOpenAIReasoningRequest(
@@ -521,6 +583,28 @@ function readOpenAIPromptCacheRequest(body: {
 
 const readResponsesPromptCacheRequest = readOpenAIPromptCacheRequest;
 const readChatCompletionsPromptCacheRequest = readOpenAIPromptCacheRequest;
+
+function readResponsesToolChoice(
+  toolChoice: OpenAIResponsesBody["tool_choice"],
+): RuntimeExecutionToolChoice | undefined {
+  if (toolChoice === undefined) {
+    return undefined;
+  }
+  const toolChoiceRecord = asPlainRecord(toolChoice);
+  if (
+    toolChoiceRecord?.type === "function" &&
+    typeof toolChoiceRecord.name === "string" &&
+    toolChoiceRecord.name.trim().length > 0
+  ) {
+    return {
+      type: "function",
+      function: {
+        name: toolChoiceRecord.name.trim(),
+      },
+    };
+  }
+  return toolChoice as RuntimeExecutionToolChoice;
+}
 
 function readResponsesContinuationRequest(
   body: OpenAIResponsesBody,
@@ -6712,22 +6796,63 @@ function toResponsesInputMessages(
     return [{ role: "user", content: input }];
   }
 
-  return input.map((message) => {
-    if (
-      typeof message !== "object" ||
-      message === null ||
-      typeof message.role !== "string" ||
-      (typeof message.content !== "string" && !Array.isArray(message.content))
-    ) {
+  const messages: OpenAIChatCompletionsMessage[] = [];
+  let pendingAssistantToolCalls: OpenAIChatCompletionsToolCall[] = [];
+
+  const flushPendingAssistantToolCalls = (): void => {
+    if (pendingAssistantToolCalls.length === 0) {
+      return;
+    }
+    messages.push({
+      role: "assistant",
+      content: "",
+      tool_calls: pendingAssistantToolCalls,
+    });
+    pendingAssistantToolCalls = [];
+  };
+
+  for (const message of input) {
+    if (isResponsesFunctionCallInputItem(message)) {
+      pendingAssistantToolCalls.push({
+        id: message.call_id,
+        type: "function",
+        function: {
+          name: message.name,
+          arguments: typeof message.arguments === "string" ? message.arguments : "",
+        },
+      });
+      continue;
+    }
+
+    if (isResponsesFunctionCallOutputInputItem(message)) {
+      flushPendingAssistantToolCalls();
+      messages.push({
+        role: "tool",
+        tool_call_id: message.call_id,
+        content:
+          typeof message.output === "string" ? message.output : JSON.stringify(message.output ?? null),
+      });
+      continue;
+    }
+
+    if (!isOpenAIChatCompletionsMessage(message)) {
       throw new Error(
         "responses input messages must include role and string or array content fields",
       );
     }
-    return {
+
+    flushPendingAssistantToolCalls();
+    messages.push({
       role: message.role,
       content: message.content,
-    };
-  });
+      ...(Array.isArray(message.tool_calls) ? { tool_calls: message.tool_calls } : {}),
+      ...(typeof message.tool_call_id === "string" ? { tool_call_id: message.tool_call_id } : {}),
+      ...(typeof message.name === "string" ? { name: message.name } : {}),
+    });
+  }
+
+  flushPendingAssistantToolCalls();
+  return messages;
 }
 
 function parseResponsesBody(body: Record<string, unknown>): OpenAIResponsesBody {
@@ -8040,6 +8165,9 @@ export function mapChatCompletionsRequest(
       ...(body.tool_choice !== undefined && rolePolicyExecution.executionRequest.tools?.length
         ? { toolChoice: body.tool_choice }
         : {}),
+      ...(typeof body.parallel_tool_calls === "boolean"
+        ? { parallelToolCalls: body.parallel_tool_calls }
+        : {}),
       ...(promptCache ? { promptCache } : {}),
       ...(sessionAffinity ? { sessionAffinity } : {}),
       ...(reasoning ? { reasoning } : {}),
@@ -8203,7 +8331,10 @@ export function mapResponsesRequest(
     executionRequest: {
       ...rolePolicyExecution.executionRequest,
       ...(body.tool_choice !== undefined && rolePolicyExecution.executionRequest.tools?.length
-        ? { toolChoice: body.tool_choice }
+        ? { toolChoice: readResponsesToolChoice(body.tool_choice) }
+        : {}),
+      ...(typeof body.parallel_tool_calls === "boolean"
+        ? { parallelToolCalls: body.parallel_tool_calls }
         : {}),
       ...(reasoning ? { reasoning } : {}),
       ...(promptCache ? { promptCache } : {}),
@@ -9823,6 +9954,14 @@ type CodexResponsesNormalizedTranscript = {
   readonly textDeltas: readonly string[];
   readonly reasoningDeltas: readonly string[];
   readonly finishReason: string;
+  readonly toolCalls: readonly {
+    readonly id: string;
+    readonly type: "function";
+    readonly function: {
+      readonly name: string;
+      readonly arguments: string;
+    };
+  }[];
   readonly usage: {
     readonly inputTokens: number;
     readonly outputTokens: number;
@@ -10002,6 +10141,14 @@ function normalizeCodexResponsesTranscript(
   let responseId = `resp_${sanitizeSegment(requestId)}`;
   const textDeltas: string[] = [];
   const reasoningDeltas: string[] = [];
+  const toolCallsByOutputIndex = new Map<
+    number,
+    {
+      readonly id: string;
+      readonly name: string;
+      readonly arguments: string;
+    }
+  >();
   let finalOutputText = "";
   let finalReasoningText = "";
   let finishReason = "stop";
@@ -10013,6 +10160,43 @@ function normalizeCodexResponsesTranscript(
     cacheReadSupported: false,
     cacheWriteSupported: false,
   };
+  const normalizeArguments = (value: unknown): string => {
+    if (typeof value === "string") {
+      return value;
+    }
+    if (value === undefined) {
+      return "";
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  };
+  const upsertToolCall = (
+    outputIndex: number,
+    update: {
+      readonly id?: string;
+      readonly name?: string;
+      readonly arguments?: string;
+    },
+    options?: {
+      readonly replaceArguments?: boolean;
+    },
+  ): void => {
+    const current = toolCallsByOutputIndex.get(outputIndex);
+    const nextArguments =
+      update.arguments === undefined
+        ? current?.arguments ?? ""
+        : options?.replaceArguments
+          ? update.arguments
+          : `${current?.arguments ?? ""}${update.arguments}`;
+    toolCallsByOutputIndex.set(outputIndex, {
+      id: update.id ?? current?.id ?? `call_${outputIndex}`,
+      name: update.name ?? current?.name ?? "unknown",
+      arguments: nextArguments,
+    });
+  };
 
   for (const payloadText of readSsePayloadTexts(transcript)) {
     let payload: Record<string, unknown>;
@@ -10022,6 +10206,12 @@ function normalizeCodexResponsesTranscript(
       continue;
     }
     const type = typeof payload.type === "string" ? payload.type : "";
+    const outputIndex =
+      typeof payload.output_index === "number"
+        ? payload.output_index
+        : typeof payload.item_index === "number"
+          ? payload.item_index
+          : 0;
     if (type === "response.output_text.delta" && typeof payload.delta === "string") {
       textDeltas.push(payload.delta);
       continue;
@@ -10032,6 +10222,41 @@ function normalizeCodexResponsesTranscript(
       typeof payload.delta === "string"
     ) {
       reasoningDeltas.push(payload.delta);
+      continue;
+    }
+    if (type === "response.output_item.added") {
+      const item = asPlainRecord(payload.item);
+      if (item?.type === "function_call") {
+        upsertToolCall(
+          outputIndex,
+          {
+            id:
+              typeof item.call_id === "string"
+                ? item.call_id
+                : typeof item.id === "string"
+                  ? item.id
+                  : undefined,
+            name: typeof item.name === "string" ? item.name : undefined,
+            arguments:
+              item.arguments !== undefined ? normalizeArguments(item.arguments) : undefined,
+          },
+          { replaceArguments: true },
+        );
+      }
+      continue;
+    }
+    if (type === "response.function_call_arguments.delta" && typeof payload.delta === "string") {
+      upsertToolCall(outputIndex, { arguments: payload.delta });
+      continue;
+    }
+    if (type === "response.function_call_arguments.done") {
+      upsertToolCall(
+        outputIndex,
+        {
+          arguments: normalizeArguments(payload.arguments),
+        },
+        { replaceArguments: true },
+      );
       continue;
     }
     if (type === "response.output_item.done") {
@@ -10066,6 +10291,22 @@ function normalizeCodexResponsesTranscript(
           : "";
         finalReasoningText = summaryText || contentText || finalReasoningText;
       }
+      if (item?.type === "function_call") {
+        upsertToolCall(
+          outputIndex,
+          {
+            id:
+              typeof item.call_id === "string"
+                ? item.call_id
+                : typeof item.id === "string"
+                  ? item.id
+                  : undefined,
+            name: typeof item.name === "string" ? item.name : undefined,
+            arguments: normalizeArguments(item.arguments),
+          },
+          { replaceArguments: true },
+        );
+      }
       continue;
     }
     if (
@@ -10078,7 +10319,11 @@ function normalizeCodexResponsesTranscript(
         responseId = response.id;
       }
       finishReason =
-        type === "response.incomplete" || response?.status === "incomplete" ? "length" : "stop";
+        type === "response.incomplete" || response?.status === "incomplete"
+          ? "length"
+          : toolCallsByOutputIndex.size > 0
+            ? "tool_calls"
+            : "stop";
       const responseUsage = asPlainRecord(response?.usage);
       const cacheUsage = readCodexUsageCacheFacts(responseUsage);
       usage.inputTokens =
@@ -10098,6 +10343,16 @@ function normalizeCodexResponsesTranscript(
 
   const outputText = textDeltas.length > 0 ? textDeltas.join("") : finalOutputText;
   const reasoningText = reasoningDeltas.length > 0 ? reasoningDeltas.join("") : finalReasoningText;
+  const toolCalls = [...toolCallsByOutputIndex.entries()]
+    .sort((left, right) => left[0] - right[0])
+    .map(([, toolCall]) => ({
+      id: toolCall.id,
+      type: "function" as const,
+      function: {
+        name: toolCall.name,
+        arguments: toolCall.arguments,
+      },
+    }));
 
   return {
     responseId,
@@ -10107,6 +10362,7 @@ function normalizeCodexResponsesTranscript(
     reasoningDeltas:
       reasoningDeltas.length > 0 ? reasoningDeltas : reasoningText ? [reasoningText] : [],
     finishReason,
+    toolCalls,
     usage,
   };
 }
@@ -10150,6 +10406,30 @@ function createChatCompletionsSseFromCodexResponsesTranscript(input: {
         {
           index: 0,
           delta: nextDelta({ content: delta }),
+          finish_reason: null,
+        },
+      ],
+    });
+  }
+  for (const [index, toolCall] of input.transcript.toolCalls.entries()) {
+    chunks.push({
+      ...baseChunk,
+      choices: [
+        {
+          index: 0,
+          delta: nextDelta({
+            tool_calls: [
+              {
+                index,
+                id: toolCall.id,
+                type: "function",
+                function: {
+                  name: toolCall.function.name,
+                  arguments: toolCall.function.arguments,
+                },
+              },
+            ],
+          }),
           finish_reason: null,
         },
       ],
@@ -10370,6 +10650,7 @@ function createChatCompletionsBodyFromCodexResponsesTranscript(input: {
   return {
     id: `chatcmpl_${sanitizeSegment(input.requestId)}`,
     object: "chat.completion",
+    created: Math.floor(Date.now() / 1000),
     model: input.requestedModel,
     choices: [
       {
@@ -10378,6 +10659,7 @@ function createChatCompletionsBodyFromCodexResponsesTranscript(input: {
         message: {
           role: "assistant",
           content: input.transcript.outputText,
+          ...(input.transcript.toolCalls.length > 0 ? { tool_calls: input.transcript.toolCalls } : {}),
           ...(input.transcript.reasoningText.length > 0
             ? { reasoning_content: input.transcript.reasoningText }
             : {}),
@@ -10395,6 +10677,9 @@ function createResponsesBodyFromCodexResponsesTranscript(input: {
 }): Record<string, unknown> {
   return {
     id: input.transcript.responseId || `resp_${sanitizeSegment(input.requestId)}`,
+    object: "response",
+    created_at: Math.floor(Date.now() / 1000),
+    status: input.transcript.finishReason === "stop" ? "completed" : "incomplete",
     model: input.requestedModel,
     output: [
       ...(input.transcript.reasoningText.length > 0
@@ -10407,12 +10692,20 @@ function createResponsesBodyFromCodexResponsesTranscript(input: {
         : []),
       {
         type: "message",
+        id: `msg_${input.transcript.responseId || `resp_${sanitizeSegment(input.requestId)}`}`,
         role: "assistant",
         content:
           input.transcript.outputText.length > 0
             ? [{ type: "output_text", text: input.transcript.outputText }]
             : [],
       },
+      ...input.transcript.toolCalls.map((toolCall) => ({
+        type: "function_call",
+        id: toolCall.id,
+        call_id: toolCall.id,
+        name: toolCall.function.name,
+        arguments: toolCall.function.arguments,
+      })),
     ],
     usage: createResponsesUsageFromCodexUsage(input.transcript.usage),
   };
@@ -10457,11 +10750,20 @@ function readCodexSubscriptionAccountId(authPayload: CodexAuthCacheSnapshot): st
   return claimAccountId;
 }
 
-function toCodexResponsesTextPart(text: string, role: "user" | "assistant"): unknown {
+type CodexResponsesInputRecord = Record<string, unknown>;
+type CodexResponsesContentPartRecord = Record<string, unknown>;
+
+function toCodexResponsesTextPart(
+  text: string,
+  role: "user" | "assistant",
+): CodexResponsesContentPartRecord {
   return { type: role === "assistant" ? "output_text" : "input_text", text };
 }
 
-function toCodexResponsesContentPart(content: unknown, role: "user" | "assistant"): unknown {
+function toCodexResponsesContentPart(
+  content: unknown,
+  role: "user" | "assistant",
+): CodexResponsesContentPartRecord {
   if (typeof content === "string") {
     return toCodexResponsesTextPart(content, role);
   }
@@ -10487,7 +10789,7 @@ function toCodexResponsesContentPart(content: unknown, role: "user" | "assistant
 
 function toCodexResponsesInputFromChatMessages(messages: unknown): {
   readonly instructions?: string;
-  readonly input: readonly Record<string, unknown>[];
+  readonly input: readonly CodexResponsesInputRecord[];
 } {
   if (!Array.isArray(messages)) {
     return { input: [] };
@@ -10500,35 +10802,87 @@ function toCodexResponsesInputFromChatMessages(messages: unknown): {
         : [];
     })
     .join("\n\n");
-  const input = messages.flatMap((message) => {
+  const input: CodexResponsesInputRecord[] = [];
+  for (const message of messages) {
     const record = asPlainRecord(message);
     if (!record || record.role === "system") {
-      return [];
+      continue;
+    }
+    if (record.role === "assistant" && Array.isArray(record.tool_calls) && record.tool_calls.length > 0) {
+      const assistantContent: CodexResponsesContentPartRecord[] =
+        record.content === null || record.content === undefined
+          ? []
+          : Array.isArray(record.content)
+            ? record.content.map((part) => toCodexResponsesContentPart(part, "assistant"))
+            : [toCodexResponsesContentPart(record.content, "assistant")];
+      const toolCalls = record.tool_calls.flatMap<CodexResponsesInputRecord>((rawToolCall) => {
+        const toolCall = asPlainRecord(rawToolCall);
+        const toolFunction = asPlainRecord(toolCall?.function);
+        if (typeof toolFunction?.name !== "string") {
+          return [];
+        }
+        return [
+          {
+            type: "function_call",
+            call_id:
+              typeof toolCall?.id === "string"
+                ? toolCall.id
+                : `call_${sanitizeSegment(toolFunction.name)}`,
+            name: toolFunction.name,
+            arguments:
+              typeof toolFunction.arguments === "string"
+                ? toolFunction.arguments
+                : serializeCodexToolOutput(toolFunction.arguments),
+            },
+          ];
+      });
+      if (assistantContent.length > 0) {
+        input.push({
+          role: "assistant",
+          content: assistantContent,
+        });
+      }
+      input.push(...toolCalls);
+      continue;
+    }
+    if (record.role === "tool" && typeof record.tool_call_id === "string") {
+      input.push({
+        type: "function_call_output",
+        call_id: record.tool_call_id,
+        output: serializeCodexToolOutput(record.content ?? ""),
+      });
+      continue;
     }
     const role =
       typeof record.role === "string" && record.role === "assistant" ? "assistant" : "user";
     const rawContent = record.content;
-    const content = Array.isArray(rawContent)
+    const content: CodexResponsesContentPartRecord[] = Array.isArray(rawContent)
       ? rawContent.map((part) => toCodexResponsesContentPart(part, role))
       : [toCodexResponsesContentPart(rawContent, role)];
-    return [
-      {
-        role,
-        content,
-      },
-    ];
-  });
+    input.push({
+      role,
+      content,
+    });
+  }
   return {
     ...(instructions.length > 0 ? { instructions } : {}),
     input,
   };
 }
 
-function toCodexResponsesInputFromResponsesInput(input: unknown): readonly unknown[] {
+function toCodexResponsesInputFromResponsesInput(
+  input: unknown,
+): readonly CodexResponsesInputRecord[] {
   if (typeof input === "string") {
     return [{ role: "user", content: [{ type: "input_text", text: input }] }];
   }
-  return Array.isArray(input) ? input : [];
+  if (!Array.isArray(input)) {
+    return [];
+  }
+  return input.flatMap<CodexResponsesInputRecord>((item) => {
+    const record = asPlainRecord(item);
+    return record ? [record] : [];
+  });
 }
 
 function toCodexResponsesTool(tool: unknown): unknown {
@@ -10672,6 +11026,25 @@ function buildCodexResponsesRequestBody(input: {
     requestBody,
     sourceSurface,
   });
+  const toolChoiceRecord = asPlainRecord(requestBody.tool_choice);
+  const toolChoice =
+    toolChoiceRecord?.type === "function"
+      ? (() => {
+          const functionRecord = asPlainRecord(toolChoiceRecord.function);
+          const functionName =
+            typeof functionRecord?.name === "string"
+              ? functionRecord.name.trim()
+              : typeof toolChoiceRecord.name === "string"
+                ? toolChoiceRecord.name.trim()
+                : "";
+          return functionName.length > 0
+            ? {
+                type: "function",
+                name: functionName,
+              }
+            : toolChoiceRecord;
+        })()
+      : requestBody.tool_choice;
 
   return {
     body: {
@@ -10683,8 +11056,10 @@ function buildCodexResponsesRequestBody(input: {
       ...(tools.length > 0
         ? {
             tools,
-            tool_choice: requestBody.tool_choice ?? "auto",
-            parallel_tool_calls: true,
+            tool_choice: toolChoice ?? "auto",
+            ...(typeof requestBody.parallel_tool_calls === "boolean"
+              ? { parallel_tool_calls: requestBody.parallel_tool_calls }
+              : {}),
           }
         : {}),
       ...(reasoning ? { reasoning } : {}),
