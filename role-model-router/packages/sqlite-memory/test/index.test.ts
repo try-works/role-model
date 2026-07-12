@@ -1072,6 +1072,163 @@ describe("initializeSqliteMemory", () => {
     });
   });
 
+  describe("listRecentRuntimeRequestIds", () => {
+    test("returns latest request ids in recency order without parsing observation_json", async () => {
+      expect(
+        typeof (
+          sqliteMemory as {
+            listRecentRuntimeRequestIds?: unknown;
+          }
+        ).listRecentRuntimeRequestIds,
+      ).toBe("function");
+
+      const listRecentRuntimeRequestIds = (
+        sqliteMemory as {
+          listRecentRuntimeRequestIds?: unknown;
+        }
+      ).listRecentRuntimeRequestIds;
+      if (typeof listRecentRuntimeRequestIds !== "function") {
+        return;
+      }
+
+      const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+      const initialized = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "workspace-dev-latest-request-ids",
+      });
+      const database = new DatabaseSync(initialized.databasePath);
+      const insertObservation = database.prepare(
+        "INSERT INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
+      );
+      insertObservation.run(
+        "req-001",
+        "decision-001",
+        "endpoint-001",
+        "conversation-001",
+        1000,
+        "{",
+      );
+      insertObservation.run(
+        "req-002",
+        "decision-002",
+        "endpoint-002",
+        "conversation-002",
+        2000,
+        '{"clientRequestId":"client-002"}',
+      );
+      insertObservation.run(
+        "req-003",
+        "decision-003",
+        "endpoint-003",
+        "conversation-003",
+        3000,
+        "not-json",
+      );
+      database.close();
+
+      expect(
+        (
+          listRecentRuntimeRequestIds as (input: {
+            databasePath: string;
+            limit?: number;
+          }) => readonly string[]
+        )({
+          databasePath: initialized.databasePath,
+          limit: 10,
+        }),
+      ).toEqual(["req-003", "req-002", "req-001"]);
+    });
+
+    test("enforces limit 10 for the lightweight latest-id query", async () => {
+      expect(
+        typeof (
+          sqliteMemory as {
+            listRecentRuntimeRequestIds?: unknown;
+          }
+        ).listRecentRuntimeRequestIds,
+      ).toBe("function");
+
+      const listRecentRuntimeRequestIds = (
+        sqliteMemory as {
+          listRecentRuntimeRequestIds?: unknown;
+        }
+      ).listRecentRuntimeRequestIds;
+      if (typeof listRecentRuntimeRequestIds !== "function") {
+        return;
+      }
+
+      const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+      const initialized = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "workspace-dev-latest-request-ids-limit",
+      });
+      const database = new DatabaseSync(initialized.databasePath);
+      const insertObservation = database.prepare(
+        "INSERT INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
+      );
+      for (let index = 1; index <= 12; index += 1) {
+        insertObservation.run(
+          `req-${index.toString().padStart(3, "0")}`,
+          `decision-${index.toString().padStart(3, "0")}`,
+          `endpoint-${index.toString().padStart(3, "0")}`,
+          `conversation-${index.toString().padStart(3, "0")}`,
+          index,
+          "{",
+        );
+      }
+      database.close();
+
+      expect(
+        (
+          listRecentRuntimeRequestIds as (input: {
+            databasePath: string;
+            limit?: number;
+          }) => readonly string[]
+        )({
+          databasePath: initialized.databasePath,
+          limit: 10,
+        }),
+      ).toHaveLength(10);
+    });
+
+    test("returns an empty array when no runtime observations exist", async () => {
+      expect(
+        typeof (
+          sqliteMemory as {
+            listRecentRuntimeRequestIds?: unknown;
+          }
+        ).listRecentRuntimeRequestIds,
+      ).toBe("function");
+
+      const listRecentRuntimeRequestIds = (
+        sqliteMemory as {
+          listRecentRuntimeRequestIds?: unknown;
+        }
+      ).listRecentRuntimeRequestIds;
+      if (typeof listRecentRuntimeRequestIds !== "function") {
+        return;
+      }
+
+      const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+      const initialized = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "workspace-dev-latest-request-ids-empty",
+      });
+
+      expect(
+        (
+          listRecentRuntimeRequestIds as (input: {
+            databasePath: string;
+            limit?: number;
+          }) => readonly string[]
+        )({
+          databasePath: initialized.databasePath,
+          limit: 10,
+        }),
+      ).toEqual([]);
+    });
+  });
+
   test("stores and reads conversation-level difficulty classification cache entries", async () => {
     expect(
       typeof (

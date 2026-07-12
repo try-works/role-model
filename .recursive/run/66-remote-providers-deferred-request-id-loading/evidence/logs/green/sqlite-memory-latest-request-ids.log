@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/66-remote-providers-deferred-request-id-loading/role-model-router/packages/sqlite-memory
+
+(node:33624) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (39 tests | 36 skipped) 402ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed | 36 skipped (39)
+   Start at  12:18:53
+   Duration  4.01s (transform 1.16s, setup 0ms, collect 1.45s, tests 402ms, environment 0ms, prepare 799ms)
+

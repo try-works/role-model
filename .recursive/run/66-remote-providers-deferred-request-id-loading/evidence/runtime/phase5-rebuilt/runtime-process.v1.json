@@ -1,0 +1,16 @@
+{
+  "baseUrl": "http://127.0.0.1:54884",
+  "host": "127.0.0.1",
+  "port": 54884,
+  "command": "C:\\Program Files\\nodejs\\node.exe --import tsx C:\\Users\\erikb\\AppData\\Local\\Temp\\run66-phase5-rebuilt-799f053dfa89431ca64e2fb529c7e225\\start-runtime-phase5.mjs D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading C:\\Users\\erikb\\AppData\\Local\\Temp\\run66-phase5-rebuilt-799f053dfa89431ca64e2fb529c7e225\\state",
+  "nodePath": "C:\\Program Files\\nodejs\\node.exe",
+  "pid": 25048,
+  "processStartTime": "2026-07-12T12:39:59.5312599+08:00",
+  "repoRoot": "D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading",
+  "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\run66-phase5-rebuilt-799f053dfa89431ca64e2fb529c7e225\\state",
+  "runtimeConfigPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\run66-phase5-rebuilt-799f053dfa89431ca64e2fb529c7e225\\state\\runtime-config.yaml",
+  "staticRoot": "D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading\\role-model-router\\apps\\runtime-ui\\build\\client",
+  "runtimeUiBuildLog": "D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading\\.recursive\\run\\66-remote-providers-deferred-request-id-loading\\evidence\\runtime\\phase5-rebuilt\\rebuild-runtime-ui.log",
+  "hostBridgeBuildLog": "D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading\\.recursive\\run\\66-remote-providers-deferred-request-id-loading\\evidence\\runtime\\phase5-rebuilt\\rebuild-host-bridge.log",
+  "runtimeProcessLog": "D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading\\.recursive\\run\\66-remote-providers-deferred-request-id-loading\\evidence\\runtime\\phase5-rebuilt\\runtime-process.log"
+}

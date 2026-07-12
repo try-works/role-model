@@ -3,6 +3,12 @@ import { expect, test } from "@playwright/test";
 test("shows seeded provider maintenance and session readiness over the rebuilt runtime", async ({
   page,
 }) => {
+  const latestIdsResponsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes("/api/role-model/requests/latest-ids?limit=10") &&
+      response.request().method() === "GET",
+  );
+
   await page.goto("/app/remote/providers");
 
   await expect(
@@ -20,6 +26,17 @@ test("shows seeded provider maintenance and session readiness over the rebuilt r
   ).toBeVisible();
   await expect(moonshotMaintenanceCard.getByText("Active endpoints: 1")).toBeVisible();
   await expect(moonshotMaintenanceCard.getByText("moonshot/kimi-k2.5")).toBeVisible();
+
+  const latestIdsResponse = await latestIdsResponsePromise;
+  expect(latestIdsResponse.status()).toBe(200);
+  const latestIds = await latestIdsResponse.json();
+  expect(Array.isArray(latestIds)).toBe(true);
+  expect(latestIds.length).toBeLessThanOrEqual(10);
+  expect(
+    latestIds.every(
+      (requestId: unknown) => typeof requestId === "string" && requestId.startsWith("req-"),
+    ),
+  ).toBe(true);
 
   await page.goto("/app/models");
 

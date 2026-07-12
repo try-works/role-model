@@ -60,6 +60,7 @@ Source-Runs:
 - `63-router-backend-regression-and-telemetry-surface-hardening`
 - `64-observed-data-decay-policy-recalibration`
 - `65-codex-subscription-prompt-cache-parity`
+- `66-remote-providers-deferred-request-id-loading`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-07-12`
 Tags:
@@ -159,6 +160,8 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - `runtime:validate-vendors` is the canonical deterministic Pi/Craft execution corpus anchor for this integration family. It emits a `200`-case machine-readable artifact with per-case execution family, routing result, payload-byte, and idempotency facts and should be kept green whenever routed execution semantics change.
 - For rebuilt-runtime direct-remote QA, provider accounts are SQLite-backed, local-file credential refs resolve from `<runtimeStateRoot>/<scopeId>/credentials/**`, env-backed remote accounts still traverse the LiteLLM vendor path, and post-activation inventory truth should come from `/api/role-model/endpoints` and `/v1/models` rather than `/healthz` bootstrap inventory.
 - The telemetry query path is backend-owned and powers Overview plus Observe analytics surfaces; setup and control pages should not regress into chart dashboards.
+- `/app/remote/providers` is not a first-render request-ledger surface. Its initial bootstrap should depend only on provider/account/model/runtime-readiness data. Recent request context for that page is a deferred follow-up through `GET /api/role-model/requests/latest-ids?limit=10`; that lightweight path must select and return request ids only, must not read or parse `runtime_observations.observation_json`, and must not replace the richer `/api/role-model/requests` or request-detail inspection surfaces.
+- `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts` is part of the owning verification surface for providers-page load-path work. It should forward `listRecentRequestIds` so the stock rebuilt-runtime Playwright harness exercises the live lightweight latest-ids route without a custom QA entrypoint.
 - Richer taxonomy telemetry dimensions now include original role/task hints, normalized role/task, group, variant, capability, modality, and tool-class data. Observe analytics and request-ledger enrichment should read those dimensions from persisted telemetry-ledger fields first; reparsing large raw `runtime_observations.observation_json` bundles is now a fallback path for request detail, not the normal analytics path.
 - The telemetry analytics contract now returns applied query metadata, slice metadata, metric support, and dimension support. Analytics aggregation is full-slice by default and must not silently inherit request-ledger pagination caps.
 - Request-ledger reads and telemetry analytics reads share overlapping filter semantics for operator-visible dimensions while preserving separate ledger pagination behavior.
@@ -175,6 +178,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - When claims depend on rebuilt operator truth, verify against the rebuilt runtime in-browser instead of relying only on fixture tests or stale local ports.
 - For telemetry chart changes, include both contract-level tests and browser/runtime verification that chart primitives render non-empty geometry when data is present.
 - For request-ledger or telemetry-analytics browser proof on the persistent QA runtime, seed unique per-run identifiers before asserting filters or drill-in behavior. Prove narrowing, query-param restoration after reload, and request-detail navigation through operator-visible controls instead of row-order or clean-ledger assumptions.
+- For providers-page load-path changes, verify the owning runtime-ui route and runtime-api suites, the owning host-bridge or sqlite-memory latest-id suites, `runtime:validate-ui`, the stock `runtime:test-browser` / `scripts/start-for-qa.ts` harness success path, and rebuilt-runtime providers-page proof that demonstrates both delayed latest-ids completion and failure isolation without clearing the loaded page.
 - For alias-matrix or controller behavior changes, confirm persisted config truth, live `/v1/models` exposure, and Pi-originated requests for every configured alias when Pi compatibility is in scope.
 - For downstream discovery changes, confirm both `/v1/models` compact metadata and the rich route against the current runtime config alias set, including empty-pool aliases where feasible, and validate the downstream OpenAI schema/fixtures.
 - For provider capability changes, verify exact-model and alias-path behavior separately where the transport boundary can differ.

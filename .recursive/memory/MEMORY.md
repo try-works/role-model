@@ -22,6 +22,7 @@ Control-plane docs are not memory docs:
 - If the optional `recursive-training` skill is installed, run `/.recursive/scripts/recursive-training-loader.py` after reading `MEMORY.md` and before planning or implementation whenever the task may benefit from experiential memory.
 - The optional `recursive-training-sync.py` helper is read-only; it prints startup guidance about what to read, but does not modify `MEMORY.md` or the memory plane.
 - If the task plans delegated review, subagent help, review bundles, smoke-harness portability work, or capability-sensitive execution, read `/.recursive/memory/skills/SKILLS.md` and then load the relevant skill-memory shards.
+- Recursive-mode skill package usage, subskill triggers, and file locations for this repo: `/.recursive/memory/skills/usage/recursive-mode-skill-and-subskills.md`
 - If Phase 8 will need to promote durable lessons, first capture run-local skill usage in the run artifact and only then promote generalized conclusions into skill-memory shards.
 - Runtime routing, provider capability metadata, alias-matrix behavior, Codex Subscription lifecycle semantics, and benchmark quality routing: `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`
 - Taxonomy V1 catalog, groups, roles, classification fields, versioning, deprecation, docs generation: `/.recursive/memory/domains/taxonomy-v1.md`

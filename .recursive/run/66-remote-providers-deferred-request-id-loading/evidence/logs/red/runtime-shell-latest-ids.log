@@ -1,0 +1,52 @@
+[WebServer] (node:59212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:39464) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:2844) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:63320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:30996) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:30996) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:30996) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+
+Running 1 test using 1 worker
+
+(node:47004) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x  1 e2e\runtime-shell.spec.ts:3:1 › shows seeded provider maintenance and session readiness over the rebuilt runtime (1.7s)
+
+
+  1) e2e\runtime-shell.spec.ts:3:1 › shows seeded provider maintenance and session readiness over the rebuilt runtime 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      29 |
+      30 |   const latestIdsResponse = await latestIdsResponsePromise;
+    > 31 |   expect(latestIdsResponse.status()).toBe(200);
+         |                                      ^
+      32 |   await expect
+      33 |     .poll(async () => await latestIdsResponse.json())
+      34 |     .toEqual([]);
+        at D:\DEV\role-model\.worktrees\66-remote-providers-deferred-request-id-loading\role-model-router\apps\runtime-ui\e2e\runtime-shell.spec.ts:31:38
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\runtime-shell-shows-seeded-92c38-ss-over-the-rebuilt-runtime\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\runtime-shell-shows-seeded-92c38-ss-over-the-rebuilt-runtime\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\runtime-shell-shows-seeded-92c38-ss-over-the-rebuilt-runtime\error-context.md
+
+  1 failed
+    e2e\runtime-shell.spec.ts:3:1 › shows seeded provider maintenance and session readiness over the rebuilt runtime 
+undefined
+D:\DEV\role-model\.worktrees\66-remote-providers-deferred-request-id-loading\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "playwright" not found

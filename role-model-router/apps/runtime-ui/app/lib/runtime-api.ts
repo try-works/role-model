@@ -860,6 +860,16 @@ export interface RuntimeSnapshot {
   readonly roles: readonly RuntimeRoleDefinition[];
 }
 
+export interface ProvidersSnapshot {
+  readonly summary: RuntimeSummary;
+  readonly providers: readonly RuntimeProvider[];
+  readonly accounts: readonly RuntimeAccount[];
+  readonly deviceAuthorizations: readonly RuntimeDeviceAuthorization[];
+  readonly endpoints: readonly RuntimeEndpoint[];
+  readonly models: readonly RuntimeModelRecord[];
+  readonly roles: readonly RuntimeRoleDefinition[];
+}
+
 export interface RuntimeShellSnapshot {
   readonly summary: RuntimeSummary;
   readonly controller: RuntimeControllerAssignment | null;
@@ -1249,6 +1259,15 @@ async function putJson<TValue>(
   });
 }
 
+async function fetchRuntimeModels(fetcher: RuntimeFetcher): Promise<readonly RuntimeModelRecord[]> {
+  try {
+    return await fetchJson<RuntimeModelRecord[]>("/api/role-model/models", fetcher);
+  } catch {
+    const modelsResponse = await fetchJson<{ data: RuntimeModelRecord[] }>("/v1/models", fetcher);
+    return modelsResponse.data;
+  }
+}
+
 export async function fetchRuntimeSnapshot(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeSnapshot> {
@@ -1261,17 +1280,7 @@ export async function fetchRuntimeSnapshot(
       fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher),
       fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher),
       fetchJson<RuntimeRequestListItem[]>("/api/role-model/requests", fetcher),
-      (async () => {
-        try {
-          return await fetchJson<RuntimeModelRecord[]>("/api/role-model/models", fetcher);
-        } catch {
-          const modelsResponse = await fetchJson<{ data: RuntimeModelRecord[] }>(
-            "/v1/models",
-            fetcher,
-          );
-          return modelsResponse.data;
-        }
-      })(),
+      fetchRuntimeModels(fetcher),
     ]);
 
   return {
@@ -1282,6 +1291,31 @@ export async function fetchRuntimeSnapshot(
     endpoints,
     roles,
     requests,
+    models,
+  };
+}
+
+export async function fetchProvidersSnapshot(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<ProvidersSnapshot> {
+  const [summary, providers, accounts, deviceAuthorizations, endpoints, roles, models] =
+    await Promise.all([
+      fetchRuntimeSummaryWithRetry(fetcher),
+      fetchJson<RuntimeProvider[]>("/api/role-model/providers", fetcher),
+      fetchJson<RuntimeAccount[]>("/api/role-model/accounts", fetcher),
+      fetchJson<RuntimeDeviceAuthorization[]>("/api/role-model/accounts/device", fetcher),
+      fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher),
+      fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher),
+      fetchRuntimeModels(fetcher),
+    ]);
+
+  return {
+    summary,
+    providers,
+    accounts,
+    deviceAuthorizations,
+    endpoints,
+    roles,
     models,
   };
 }
@@ -1316,6 +1350,16 @@ export async function fetchRuntimeDashboardSnapshot(
     endpoints,
     roles,
   };
+}
+
+export async function fetchRecentRequestIds(
+  limit = 10,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly string[]> {
+  return fetchJson<readonly string[]>(
+    `/api/role-model/requests/latest-ids?limit=${limit}`,
+    fetcher,
+  );
 }
 
 function buildTelemetryQueryString(input?: {

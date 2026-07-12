@@ -2,6 +2,41 @@
 
 ## Recursive Run Index
 
+### Run `66-remote-providers-deferred-request-id-loading`
+
+- Run folder: `/.recursive/run/66-remote-providers-deferred-request-id-loading/`
+- Worktree: `.worktrees/66-remote-providers-deferred-request-id-loading`
+- Branch: `recursive/66-remote-providers-deferred-request-id-loading`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - split the providers-page bootstrap away from the broad shared runtime snapshot so `/app/remote/providers` no longer waits on rich recent-request history during initial load
+  - added `GET /api/role-model/requests/latest-ids?limit=10` as the lightweight providers-page follow-up contract, backed by a new SQLite ids-only read path that selects only `request_id` and does not parse `observation_json`
+  - kept the existing rich `/api/role-model/requests` and request-detail surfaces unchanged for Observe and debugging flows
+  - wired `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts` to forward `listRecentRequestIds`, so the stock Playwright QA harness exercises the live lightweight latest-ids success path
+  - verified on the rebuilt runtime that the providers page becomes visible before the deferred latest-ids call completes and that a failed deferred latest-ids fetch does not clear the already-loaded page
+- Why:
+  - `/app/remote/providers` was blocked for more than a minute because initial load waited on `/api/role-model/requests`, which selected and parsed large `runtime_observations.observation_json` rows even though the page did not need rich request history to become usable
+  - the providers page needed a narrow recent-request seam that matched its actual requirement instead of inheriting the cost of the canonical inspection ledger
+- How:
+  - implemented with strict TDD across runtime-ui, runtime-host-bridge, and sqlite-memory
+  - verified with focused owning suites, the broader Phase 4 runtime validator and Playwright floor, reopened QA-helper success-path coverage through `start-for-qa.ts`, and rebuilt-runtime Phase 5 proof using delayed and failed latest-ids browser interception against the live worktree runtime
+- What was not done:
+  - no redesign of Observe request-ledger, request-detail, or telemetry analytics ownership
+  - no historical cleanup of existing large `runtime_observations.observation_json` rows
+  - no generic optimization of every `fetchRuntimeSnapshot()` consumer beyond the providers-page route split
+- Known issues / follow-ups: none
+
 ### Run `65-codex-subscription-prompt-cache-parity`
 
 - Run folder: `/.recursive/run/65-codex-subscription-prompt-cache-parity/`

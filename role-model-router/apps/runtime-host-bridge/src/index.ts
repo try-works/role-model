@@ -69,6 +69,7 @@ import {
   insertSwapEvent,
   listProviderAccounts,
   listRecentRuntimeObservations,
+  listRecentRuntimeRequestIds,
   listRuntimeEndpoints,
   listRuntimeTelemetryComparisonRows,
   listRuntimeTelemetryRecords,
@@ -2405,6 +2406,7 @@ export interface StartBridgeServerOptions {
   readonly listRouterCandidates?: () => Promise<readonly unknown[]>;
   readonly listRouterDecisions?: () => Promise<readonly unknown[]>;
   readonly readRouterDecision?: (requestId: string) => Promise<unknown>;
+  readonly listRecentRequestIds?: (limit?: number) => Promise<readonly string[]>;
   readonly listRecentRequestObservations?: () => Promise<readonly unknown[]>;
   readonly readTelemetrySummary?: (query?: BridgeTelemetryQuery) => Promise<unknown>;
   readonly listTelemetryComparisonRows?: (
@@ -2621,6 +2623,7 @@ export interface RuntimeBridgeBackend {
       status: string;
     }[]
   >;
+  listRecentRequestIds(limit?: number): Promise<readonly string[]>;
   listRecentRequestObservations(): Promise<
     readonly ReturnType<typeof listRecentRuntimeObservations>[number][]
   >;
@@ -14161,6 +14164,16 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/requests/latest-ids") {
+      if (!options.listRecentRequestIds) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      const limit = readOptionalPositiveInteger(url.searchParams, "limit") ?? 10;
+      writeJson(response, 200, await options.listRecentRequestIds(limit));
+      return;
+    }
+
     if (request.method === "GET" && url.pathname.startsWith("/api/role-model/requests/")) {
       if (!options.readRequestObservation) {
         writeJson(response, 404, { error: "not found" });
@@ -22412,6 +22425,12 @@ export async function createRuntimeBridgeBackend(
     > {
       return listRecentRuntimeObservations({
         databasePath: initialization.databasePath,
+      });
+    },
+    async listRecentRequestIds(limit = 10): Promise<readonly string[]> {
+      return listRecentRuntimeRequestIds({
+        databasePath: initialization.databasePath,
+        limit,
       });
     },
     async readEndpointProfile(endpointId: string): Promise<{

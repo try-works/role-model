@@ -1,8 +1,8 @@
 Run: `/.recursive/run/66-remote-providers-deferred-request-id-loading/`
 Phase: `00 Requirements`
 Status: `LOCKED`
-LockedAt: `2026-07-11T21:48:29Z`
-LockHash: `7ae47509453e3aad1e75cc58212837c5b9326a0a948b4f635c6ba2e2d74f4db7`
+LockedAt: `2026-07-12T03:30:32Z`
+LockHash: `32ae8e18a796da562d1abb87a9eaa7151221a93e5ace5a2a29c4b6ad8002c4b9`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - user guidance in chat on `2026-07-12`:
@@ -10,6 +10,10 @@ Inputs:
   - the page should load first
   - after the page is loaded, fetch only the latest `10` request ids
   - do not start implementation yet; create a new recursive run for the fix
+  - run 66 must use strict TDD
+  - run 66 must specify the concrete automated test surfaces for the fix
+  - run 66 must verify the final behavior against the rebuilt runtime
+  - the earlier requirements draft was not approved, so it should be updated directly rather than preserved through addenda
 - root-cause investigation from the current session:
   - `role-model-router/apps/runtime-ui/app/routes/providers.tsx`
   - `role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`
@@ -22,16 +26,22 @@ Inputs:
 - `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`
 - `/.recursive/run/45-observe-surface-realignment/00-requirements.md`
 - `/.recursive/run/50-openai-codex-subscription/00-requirements.md`
+- `/.recursive/run/51-runtime-testing-architecture-and-regression-matrix/00-requirements.md`
 - `/.recursive/run/60-runtime-ui-paper-linear-review-alignment/00-requirements.md`
 - `/.recursive/run/63-router-backend-regression-and-telemetry-surface-hardening/00-requirements.md`
 - `role-model-router/apps/runtime-ui/app/routes/providers.tsx`
 - `role-model-router/apps/runtime-ui/app/routes/providers.test.ts`
 - `role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`
 - `role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts`
+- `role-model-router/apps/runtime-ui/e2e/runtime-shell.spec.ts`
+- `role-model-router/apps/runtime-ui/e2e/shared-surface-regression.spec.ts`
 - `role-model-router/apps/runtime-host-bridge/src/index.ts`
 - `role-model-router/apps/runtime-host-bridge/test/index.test.ts`
 - `role-model-router/packages/sqlite-memory/src/index.ts`
 - `role-model-router/packages/sqlite-memory/test/index.test.ts`
+- `package.json`
+- `role-model-router/apps/runtime-ui/package.json`
+- `role-model-router/apps/runtime-host-bridge/package.json`
 Outputs:
 - `/.recursive/run/66-remote-providers-deferred-request-id-loading/00-requirements.md`
 Scope note: This run fixes the remote providers page so the initial `/app/remote/providers` experience no longer blocks on request-history loading. The approved direction is to render the page from the provider/account/model surfaces first, then issue a non-blocking follow-up that fetches only the latest `10` request ids through a lightweight backend path.
@@ -43,6 +53,7 @@ Scope note: This run fixes the remote providers page so the initial `/app/remote
 - [x] Keep the scope focused on providers-page load performance and lightweight recent-request id fetching
 - [x] Preserve existing richer request-ledger and request-detail surfaces as separate concerns
 - [x] Define deterministic verification expectations across runtime-ui and backend layers
+- [x] Capture strict TDD, concrete test surfaces, and rebuilt-runtime verification as explicit run requirements
 - [x] Complete Coverage Gate checklist
 - [x] Complete Approval Gate checklist
 
@@ -67,6 +78,7 @@ Scope note: This run fixes the remote providers page so the initial `/app/remote
 | --- | --- |
 | `45-observe-surface-realignment` | request-ledger and request-detail surfaces are already the canonical place for rich request history, so this run should not repurpose the providers page into a second rich request browser |
 | `50-openai-codex-subscription` | remote provider flows and truthful remote-provider state are already user-visible operator surfaces and must remain intact while load behavior changes |
+| `51-runtime-testing-architecture-and-regression-matrix` | the repo already has named runtime test lanes, a rebuilt-runtime browser harness, and providers-page Playwright coverage that this run should reuse instead of inventing ad hoc verification |
 | `60-runtime-ui-paper-linear-review-alignment` | the providers page is part of the current runtime-ui shell baseline, so the load fix must preserve the shipped route and interaction contract rather than redesigning the page |
 | `63-router-backend-regression-and-telemetry-surface-hardening` | recent runtime-ui and backend regression work already established stronger route and telemetry verification expectations that this run should extend rather than bypass |
 
@@ -88,6 +100,9 @@ The approved fix direction is narrower than a general request-history redesign. 
 6. This run may introduce a new backend path or a narrowly scoped request mode if needed, but it must not silently broaden into a generic telemetry or request-history redesign.
 7. If shared `fetchRuntimeSnapshot()` behavior changes, the change must be explicit and regression-safe for other routes that still rely on the current snapshot contract.
 8. Failure of the deferred recent-request-id fetch must not block the providers page from rendering or being usable.
+9. Phase 3 for this run must use `TDD Mode: strict`; failing RED evidence must exist before production-code changes in each owned behavior slice.
+10. The run must name and execute concrete runtime-ui plus backend/storage test surfaces rather than relying on vague "tests pass" statements.
+11. Final verification must include browser proof against a rebuilt runtime from the current worktree, not only unit tests or a stale prior runtime process.
 
 ## Requirements
 
@@ -144,11 +159,50 @@ Description:
 The fix must be protected by tests that prove the page no longer waits on request history and that the providers-page follow-up stays lightweight and bounded.
 
 Acceptance criteria:
+- runtime-ui coverage includes `role-model-router/apps/runtime-ui/app/routes/providers.test.ts` for providers-route behavior that this run changes
+- runtime-ui coverage includes `role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts` for any route-specific runtime API contract change used by the providers page
 - runtime-ui tests prove the providers-page initial load does not require `/api/role-model/requests`
 - runtime-ui tests prove the providers-page follow-up happens after initial load and is bounded to `10` request ids
+- backend coverage includes `role-model-router/apps/runtime-host-bridge/test/index.test.ts` and/or `role-model-router/packages/sqlite-memory/test/index.test.ts` for the lightweight recent-request-id path, including ordering, `limit = 10`, and empty-state behavior
 - backend or SQLite tests prove the lightweight recent-request-id path returns the latest ids in recency order without parsing `observation_json`
 - regression coverage preserves current rich request-ledger behavior where this run intentionally leaves it unchanged
-- Phase 4 verification for this run must include impacted runtime-ui tests and impacted backend or SQLite tests; packaging verification remains conditional on packaging-affecting file changes
+- Phase 4 verification for this run must record the actual targeted commands used, and that command set must include the owning runtime-ui tests plus the owning backend or SQLite tests
+
+### `R6` Implement the run under strict RED-GREEN-REFACTOR TDD
+
+Description:
+This run must use strict TDD so the providers-page performance fix is driven by failing tests before production code changes and by explicit GREEN evidence afterward.
+
+Acceptance criteria:
+- Phase 3 declares `TDD Mode: strict`
+- each changed behavior slice captures RED evidence before the corresponding production-code change is made
+- each changed behavior slice captures GREEN evidence that proves the same owned behavior after the implementation
+- RED and GREEN evidence must be distinct and must cite the runtime-ui and backend/storage test surfaces changed by this run
+- this run may not close on `TDD Mode: pragmatic` unless this requirements artifact is explicitly revised again first
+
+### `R7` Require concrete automated verification commands for the owned surfaces
+
+Description:
+The run must not stop at abstract coverage claims. Later phases must execute the owning test and validator commands that exercise the providers-page route, the route-specific runtime API seam, and the lightweight recent-request-id backend path.
+
+Acceptance criteria:
+- Phase 4 records `corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/providers.test.ts app/lib/runtime-api.test.ts`, or a broader owning runtime-ui command that explicitly includes both files
+- Phase 4 records `corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/index.test.ts` and/or `corepack pnpm --filter @role-model-router/sqlite-memory exec vitest run test/index.test.ts` according to the final ownership of the lightweight recent-request-id path
+- the recorded verification chain includes `corepack pnpm run runtime:validate-ui`
+- the recorded verification chain includes `corepack pnpm run runtime:test-browser` or an equivalent providers-page Playwright proof path
+- packaging verification remains conditional on packaging-affecting file changes
+
+### `R8` Verify the final behavior against the rebuilt runtime
+
+Description:
+The final verification for this run must include rebuilt-runtime browser proof for `/app/remote/providers`, not only file-level tests, validator output, or a stale prior runtime process.
+
+Acceptance criteria:
+- before final browser verification begins, the runtime under test is rebuilt from the current worktree state
+- Phase 5 verifies `/app/remote/providers` against the rebuilt runtime on the actual served URL or port recorded in evidence
+- the rebuilt-runtime proof shows that the providers page becomes visible and usable before the deferred recent-request-id follow-up completes
+- the rebuilt-runtime proof shows that the deferred latest-10 request-id fetch does not break the already-rendered page state
+- Playwright or other browser automation may support this proof, but automated browser coverage does not replace agent-operated rebuilt-runtime verification of the providers page
 
 ## Out of Scope
 
@@ -164,6 +218,7 @@ Acceptance criteria:
 - the lightweight recent-request-id path must stay deterministic and local-runtime-safe
 - no implementation in this run may depend on user refresh timing, manual warm-up, or out-of-band operator steps to achieve the load improvement
 - if a shared runtime-api helper gains a new mode or route-specific variant, the naming and tests must make the route-specific behavior explicit
+- the run must be verified against a rebuilt runtime from the current worktree rather than relying only on fixture tests or a previously launched runtime process
 
 ## Assumptions
 
@@ -182,22 +237,31 @@ Acceptance criteria:
   - `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`
   - `/.recursive/run/45-observe-surface-realignment/00-requirements.md`
   - `/.recursive/run/50-openai-codex-subscription/00-requirements.md`
+  - `/.recursive/run/51-runtime-testing-architecture-and-regression-matrix/00-requirements.md`
   - `/.recursive/run/60-runtime-ui-paper-linear-review-alignment/00-requirements.md`
   - `/.recursive/run/63-router-backend-regression-and-telemetry-surface-hardening/00-requirements.md`
   - `role-model-router/apps/runtime-ui/app/routes/providers.tsx`
   - `role-model-router/apps/runtime-ui/app/routes/providers.test.ts`
   - `role-model-router/apps/runtime-ui/app/lib/runtime-api.ts`
   - `role-model-router/apps/runtime-ui/app/lib/runtime-api.test.ts`
+  - `role-model-router/apps/runtime-ui/e2e/runtime-shell.spec.ts`
+  - `role-model-router/apps/runtime-ui/e2e/shared-surface-regression.spec.ts`
   - `role-model-router/apps/runtime-host-bridge/src/index.ts`
   - `role-model-router/apps/runtime-host-bridge/test/index.test.ts`
   - `role-model-router/packages/sqlite-memory/src/index.ts`
   - `role-model-router/packages/sqlite-memory/test/index.test.ts`
+  - `package.json`
+  - `role-model-router/apps/runtime-ui/package.json`
+  - `role-model-router/apps/runtime-host-bridge/package.json`
 - Requirement coverage check:
   - `R1`: covered in `## Requirements`
   - `R2`: covered in `## Requirements`
   - `R3`: covered in `## Requirements`
   - `R4`: covered in `## Requirements`
   - `R5`: covered in `## Requirements`
+  - `R6`: covered in `## Requirements`
+  - `R7`: covered in `## Requirements`
+  - `R8`: covered in `## Requirements`
 - Out-of-scope confirmation:
   - `OOS1`: unchanged
   - `OOS2`: unchanged
@@ -211,6 +275,7 @@ Coverage: PASS
 - [x] Scope is concrete enough for Phase 0 and Phase 1 handoff
 - [x] The approved fix direction is captured as explicit requirements
 - [x] Acceptance criteria are observable and testable
+- [x] Strict TDD, targeted test surfaces, and rebuilt-runtime verification are explicit
 - [x] Out-of-scope and constraint boundaries are explicit
 - [x] User approved creating the recursive run for this fix
 

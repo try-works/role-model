@@ -1,0 +1,31 @@
+{
+  "baseUrl": "http://127.0.0.1:54884",
+  "generatedAt": "2026-07-12T04:41:59.242Z",
+  "delayedSuccess": {
+    "scenarioId": "providers-delay-success",
+    "pagePath": "/app/remote/providers",
+    "latestIdsUrl": "http://127.0.0.1:54884/api/role-model/requests/latest-ids?limit=10",
+    "latestIdsStatus": 200,
+    "latestIdsStartedAt": 1783831320463,
+    "latestIdsResolvedAt": 1783831324473,
+    "headingVisibleAt": 1783831320660,
+    "providerCardVisibleAt": 1783831320664,
+    "saveProviderVisibleAt": 1783831320669,
+    "pageVisibleBeforeLatestIdsResolved": true,
+    "latestIdsUsesLimit10": true,
+    "providerCardStillVisibleAfterLatestIds": true,
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading\\.recursive\\run\\66-remote-providers-deferred-request-id-loading\\evidence\\runtime\\phase5-rebuilt\\providers-visible-before-latest-ids.png"
+  },
+  "failureIsolation": {
+    "scenarioId": "providers-latest-ids-failure-isolated",
+    "pagePath": "/app/remote/providers",
+    "latestIdsUrl": "http://127.0.0.1:54884/api/role-model/requests/latest-ids?limit=10",
+    "injectedStatus": 500,
+    "headingVisible": true,
+    "providerCardVisible": true,
+    "saveProviderVisible": true,
+    "pageErrorVisible": false,
+    "providerCardStillVisibleAfterFailure": true,
+    "screenshotPath": "D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading\\.recursive\\run\\66-remote-providers-deferred-request-id-loading\\evidence\\runtime\\phase5-rebuilt\\providers-state-survives-latest-ids-failure.png"
+  }
+}

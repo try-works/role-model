@@ -1,0 +1,57 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/66-remote-providers-deferred-request-id-loading/role-model-router/apps/runtime-ui
+
+ ❯ app/routes/providers.test.ts (7 tests | 2 failed | 5 skipped) 20ms
+   ↓ provider model role assignment helpers > defaults newly selected provider models to all available roles
+   ↓ provider model role assignment helpers > serializes all selected roles as explicit all assignment
+   ↓ provider model role assignment helpers > serializes explicit empty provider roles as include-empty assignment
+   ↓ provider model role assignment helpers > builds grouped provider role coverage summaries instead of dumping raw role chips
+   ↓ provider model role assignment helpers > falls back to compact selected-count copy when role groups are unavailable
+   × startDeferredProvidersBootstrap > waits for the initial providers load to settle before fetching the latest request ids 16ms
+     → expected undefined to be type of 'function'
+   × startDeferredProvidersBootstrap > preserves the loaded providers state when the deferred latest-id follow-up fails 1ms
+     → expected undefined to be type of 'function'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/routes/providers.test.ts > startDeferredProvidersBootstrap > waits for the initial providers load to settle before fetching the latest request ids
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ app/routes/providers.test.ts:141:45
+    139|       }
+    140|     ).startDeferredProvidersBootstrap;
+    141|     expect(startDeferredProvidersBootstrap).toBeTypeOf("function");
+       |                                             ^
+    142|     if (typeof startDeferredProvidersBootstrap !== "function") {
+    143|       return;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/routes/providers.test.ts > startDeferredProvidersBootstrap > preserves the loaded providers state when the deferred latest-id follow-up fails
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ app/routes/providers.test.ts:202:45
+    200|       }
+    201|     ).startDeferredProvidersBootstrap;
+    202|     expect(startDeferredProvidersBootstrap).toBeTypeOf("function");
+       |                                             ^
+    203|     if (typeof startDeferredProvidersBootstrap !== "function") {
+    204|       return;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 5 skipped (7)
+   Start at  12:08:54
+   Duration  2.49s (transform 614ms, setup 0ms, collect 968ms, tests 20ms, environment 0ms, prepare 345ms)
+
+undefined
+D:\DEV\role-model\.worktrees\66-remote-providers-deferred-request-id-loading\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/routes/providers.test.ts -t startDeferredProvidersBootstrap

@@ -64,6 +64,7 @@ type QaBridgeBackend = Pick<
   | "listRouterDecisions"
   | "readRouterDecision"
   | "listEndpoints"
+  | "listRecentRequestIds"
   | "listRecentRequestObservations"
   | "readRequestObservation"
   | "readEndpointProfile"
@@ -277,6 +278,7 @@ export function createQaServerOptions(
     listRouterDecisions: backend.listRouterDecisions,
     readRouterDecision: backend.readRouterDecision,
     listEndpoints: backend.listEndpoints,
+    listRecentRequestIds: backend.listRecentRequestIds,
     listRecentRequestObservations: backend.listRecentRequestObservations,
     readRequestObservation: backend.readRequestObservation,
     readEndpointProfile: backend.readEndpointProfile,

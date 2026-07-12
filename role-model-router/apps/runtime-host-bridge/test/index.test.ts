@@ -609,6 +609,7 @@ describe("runtime-host-bridge", () => {
       listRouterCandidates,
       listRouterDecisions,
       readRouterDecision,
+      listRecentRequestIds: async () => [],
       readRolePolicy,
       createRolePolicyRole,
       updateRolePolicyRole,
@@ -672,6 +673,7 @@ describe("runtime-host-bridge", () => {
     expect(options.listRouterCandidates).toBe(listRouterCandidates);
     expect(options.listRouterDecisions).toBe(listRouterDecisions);
     expect(options.readRouterDecision).toBe(readRouterDecision);
+    expect(options.listRecentRequestIds).toBe(backend.listRecentRequestIds);
     expect(options.readRolePolicy).toBe(readRolePolicy);
     expect(options.createRolePolicyRole).toBe(createRolePolicyRole);
     expect(options.updateRolePolicyRole).toBe(updateRolePolicyRole);
@@ -6540,6 +6542,70 @@ describe("runtime-host-bridge", () => {
           },
         ],
       });
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("serves lightweight latest request ids separately from the rich recent-request ledger", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    const listRecentRequestIds = vi.fn(async (limit = 10) => {
+      expect(limit).toBe(10);
+      return ["req-010", "req-009"];
+    });
+    const listRecentRequestObservations = vi.fn(async () => [
+      {
+        requestId: "req-010",
+        clientRequestId: "client-010",
+        endpointId: "test.capture.chat-v1",
+      },
+    ]);
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+          ) => Promise<unknown>;
+          listRecentRequestIds?: (limit?: number) => Promise<readonly string[]>;
+          listRecentRequestObservations?: () => Promise<readonly unknown[]>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      listRecentRequestIds,
+      listRecentRequestObservations,
+    });
+
+    try {
+      const latestIdsResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/requests/latest-ids?limit=10`,
+      );
+      expect(latestIdsResponse.status).toBe(200);
+      expect(await latestIdsResponse.json()).toEqual(["req-010", "req-009"]);
+      expect(listRecentRequestIds).toHaveBeenCalledWith(10);
+      expect(listRecentRequestObservations).not.toHaveBeenCalled();
+
+      const recentResponse = await fetch(`http://127.0.0.1:${server.port}/api/role-model/requests`);
+      expect(recentResponse.status).toBe(200);
+      expect(await recentResponse.json()).toEqual([
+        {
+          requestId: "req-010",
+          clientRequestId: "client-010",
+          endpointId: "test.capture.chat-v1",
+        },
+      ]);
+      expect(listRecentRequestObservations).toHaveBeenCalledTimes(1);
     } finally {
       await server.close();
     }

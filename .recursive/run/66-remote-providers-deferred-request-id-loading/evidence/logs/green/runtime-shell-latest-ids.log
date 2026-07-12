@@ -1,0 +1,30 @@
+
+> @role-model-router/runtime-ui@ test:browser D:\DEV\role-model\.worktrees\66-remote-providers-deferred-request-id-loading\role-model-router\apps\runtime-ui
+> playwright test "--" "e2e/runtime-shell.spec.ts" "-g" "shows seeded provider maintenance and session readiness over the rebuilt runtime"
+
+[WebServer] (node:25204) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:38040) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:53000) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21740) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:46560) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:46560) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:46560) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+
+Running 4 tests using 2 workers
+
+(node:6380) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55516) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 e2e\runtime-shell.spec.ts:3:1 › shows seeded provider maintenance and session readiness over the rebuilt runtime (3.4s)
+  ok 2 e2e\shared-surface-regression.spec.ts:23:1 › keeps shared typography and tokenized controls aligned on seeded QA routes (4.5s)
+  ok 3 e2e\shared-surface-regression.spec.ts:52:1 › supports filter changes, query-param restoration, and request-list narrowing on the request analytics surface (1.9s)
+  ok 4 e2e\shared-surface-regression.spec.ts:85:1 › supports request inspection drill-in from request analytics (1.6s)
+
+  4 passed (43.0s)

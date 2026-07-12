@@ -1,5 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 
+import * as runtimeApiModule from "./runtime-api";
+
 import {
   activateRuntimeEndpoint,
   clearAllBenchmarkData,
@@ -72,6 +74,17 @@ function responseWithStatus(status: number, body: unknown): Response {
       "content-type": "application/json",
     },
   });
+}
+
+function requestTarget(input: string | URL | Request): string {
+  if (typeof input === "string") {
+    return input;
+  }
+  if (input instanceof URL) {
+    return `${input.pathname}${input.search}`;
+  }
+  const url = new URL(input.url, "http://127.0.0.1");
+  return `${url.pathname}${url.search}`;
 }
 
 describe("fetchRuntimeSnapshot", () => {
@@ -231,6 +244,130 @@ describe("fetchRuntimeSnapshot", () => {
       ],
       roles: [{ roleId: "general.chat", label: "General chat" }],
     });
+  });
+});
+
+describe("fetchProvidersSnapshot", () => {
+  test("loads the providers-route bootstrap data without requesting recent request history", async () => {
+    const fetchProvidersSnapshot = (
+      runtimeApiModule as {
+        fetchProvidersSnapshot?: unknown;
+      }
+    ).fetchProvidersSnapshot;
+    expect(fetchProvidersSnapshot).toBeTypeOf("function");
+    if (typeof fetchProvidersSnapshot !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+
+      switch (target) {
+        case "/api/role-model/runtime/summary":
+          return jsonResponse({
+            providerCount: 2,
+            accountCount: 1,
+            endpointCount: 3,
+            readinessSummary: {
+              pendingDeviceAuthorizationCount: 0,
+              credentialsMissingAccountCount: 0,
+              connectedWithoutEndpointCount: 0,
+              readyAccountCount: 1,
+            },
+          });
+        case "/api/role-model/providers":
+          return jsonResponse([{ providerId: "moonshot" }]);
+        case "/api/role-model/accounts":
+          return jsonResponse([{ providerAccountId: "moonshot.personal.primary" }]);
+        case "/api/role-model/accounts/device":
+          return jsonResponse([]);
+        case "/api/role-model/endpoints":
+          return jsonResponse([{ endpointId: "moonshot.personal.primary.global.kimi-k2.5" }]);
+        case "/api/role-model/roles":
+          return jsonResponse([{ roleId: "general.chat", label: "General chat" }]);
+        case "/api/role-model/models":
+          return jsonResponse([
+            {
+              id: "moonshot/kimi-k2.5",
+              object: "model",
+              owned_by: "role-model",
+              providerId: "moonshot",
+              endpoint_ids: [],
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+            },
+          ]);
+        case "/api/role-model/requests":
+          throw new Error("providers snapshot should not request recent request history");
+        default:
+          throw new Error(`Unexpected request: ${target}`);
+      }
+    });
+
+    await expect(
+      (
+        fetchProvidersSnapshot as (
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<unknown>
+      )(fetcher),
+    ).resolves.toEqual({
+      summary: {
+        providerCount: 2,
+        accountCount: 1,
+        endpointCount: 3,
+        readinessSummary: {
+          pendingDeviceAuthorizationCount: 0,
+          credentialsMissingAccountCount: 0,
+          connectedWithoutEndpointCount: 0,
+          readyAccountCount: 1,
+        },
+      },
+      providers: [{ providerId: "moonshot" }],
+      accounts: [{ providerAccountId: "moonshot.personal.primary" }],
+      deviceAuthorizations: [],
+      endpoints: [{ endpointId: "moonshot.personal.primary.global.kimi-k2.5" }],
+      roles: [{ roleId: "general.chat", label: "General chat" }],
+      models: [
+        expect.objectContaining({
+          id: "moonshot/kimi-k2.5",
+          providerId: "moonshot",
+        }),
+      ],
+    });
+    expect(requestedTargets).not.toContain("/api/role-model/requests");
+  });
+});
+
+describe("fetchRecentRequestIds", () => {
+  test("requests the lightweight latest-ids route with an explicit limit of 10", async () => {
+    const fetchRecentRequestIds = (
+      runtimeApiModule as {
+        fetchRecentRequestIds?: unknown;
+      }
+    ).fetchRecentRequestIds;
+    expect(fetchRecentRequestIds).toBeTypeOf("function");
+    if (typeof fetchRecentRequestIds !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      return jsonResponse(["req-010", "req-009"]);
+    });
+
+    await expect(
+      (
+        fetchRecentRequestIds as (
+          limit: number,
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<readonly string[]>
+      )(10, fetcher),
+    ).resolves.toEqual(["req-010", "req-009"]);
+    expect(requestedTargets).toEqual(["/api/role-model/requests/latest-ids?limit=10"]);
   });
 });
 

@@ -1,5 +1,6 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
+import * as providersModule from "./providers";
 import {
   buildModelRoleBindings,
   buildModelRoleSelection,
@@ -127,5 +128,109 @@ describe("provider model role assignment helpers", () => {
       groupPreviewLabels: ["2 selected"],
       hiddenGroupCount: 0,
     });
+  });
+});
+
+describe("startDeferredProvidersBootstrap", () => {
+  test("waits for the initial providers load to settle before fetching the latest request ids", async () => {
+    const startDeferredProvidersBootstrap = (
+      providersModule as {
+        startDeferredProvidersBootstrap?: unknown;
+      }
+    ).startDeferredProvidersBootstrap;
+    expect(startDeferredProvidersBootstrap).toBeTypeOf("function");
+    if (typeof startDeferredProvidersBootstrap !== "function") {
+      return;
+    }
+
+    const events: string[] = [];
+    let resolveInitialLoad: VoidFunction | undefined;
+    startDeferredProvidersBootstrap({
+      loadInitial: async () => {
+        events.push("load:initial");
+        return await new Promise<string>((resolve) => {
+          resolveInitialLoad = () => {
+            events.push("load:initial:resolved");
+            resolve("providers-loaded");
+          };
+        });
+      },
+      onInitialData: (value: string) => {
+        events.push(`initial:${value}`);
+      },
+      onInitialError: (message: string) => {
+        events.push(`initial:error:${message}`);
+      },
+      loadRecentRequestIds: async () => {
+        events.push("load:recent-request-ids");
+        return ["req-010", "req-009"];
+      },
+      onRecentRequestIds: (requestIds: readonly string[]) => {
+        events.push(`recent:${requestIds.join(",")}`);
+      },
+      onRecentRequestIdsError: (message: string) => {
+        events.push(`recent:error:${message}`);
+      },
+    });
+
+    expect(events).toEqual(["load:initial"]);
+
+    expect(resolveInitialLoad).toBeTypeOf("function");
+    const settleInitialLoad = resolveInitialLoad;
+    if (!settleInitialLoad) {
+      throw new Error("Expected the initial providers load to be deferrable.");
+    }
+    settleInitialLoad();
+
+    await vi.waitFor(() => {
+      expect(events).toEqual([
+        "load:initial",
+        "load:initial:resolved",
+        "initial:providers-loaded",
+        "load:recent-request-ids",
+        "recent:req-010,req-009",
+      ]);
+    });
+  });
+
+  test("preserves the loaded providers state when the deferred latest-id follow-up fails", async () => {
+    const startDeferredProvidersBootstrap = (
+      providersModule as {
+        startDeferredProvidersBootstrap?: unknown;
+      }
+    ).startDeferredProvidersBootstrap;
+    expect(startDeferredProvidersBootstrap).toBeTypeOf("function");
+    if (typeof startDeferredProvidersBootstrap !== "function") {
+      return;
+    }
+
+    const initialStates: string[] = [];
+    const initialErrors: string[] = [];
+    const recentErrors: string[] = [];
+
+    startDeferredProvidersBootstrap({
+      loadInitial: async () => "providers-loaded",
+      onInitialData: (value: string) => {
+        initialStates.push(value);
+      },
+      onInitialError: (message: string) => {
+        initialErrors.push(message);
+      },
+      loadRecentRequestIds: async () => {
+        throw new Error("latest ids unavailable");
+      },
+      onRecentRequestIds: () => {
+        throw new Error("Expected the deferred follow-up to fail in this test.");
+      },
+      onRecentRequestIdsError: (message: string) => {
+        recentErrors.push(message);
+      },
+    });
+
+    await vi.waitFor(() => {
+      expect(initialStates).toEqual(["providers-loaded"]);
+      expect(recentErrors).toEqual(["latest ids unavailable"]);
+    });
+    expect(initialErrors).toEqual([]);
   });
 });

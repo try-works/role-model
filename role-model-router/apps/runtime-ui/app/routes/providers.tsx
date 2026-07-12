@@ -34,14 +34,15 @@ import {
 } from "../lib/device-authorization";
 import { resolveProviderAccountLifecycle } from "../lib/provider-account-state";
 import {
+  type ProvidersSnapshot,
   type RuntimeAccount,
   type RuntimeDeviceAuthorization,
   type RuntimeProvider,
   type RuntimeRolePolicy,
-  type RuntimeSnapshot,
   activateRuntimeEndpoint,
+  fetchProvidersSnapshot,
+  fetchRecentRequestIds,
   fetchRolePolicy,
-  fetchRuntimeSnapshot,
   openRuntimeExternalUrl,
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
@@ -68,6 +69,60 @@ type ProviderModelRoleCoverageSummary = {
   readonly groupPreviewLabels: readonly string[];
   readonly hiddenGroupCount: number;
 };
+
+type ProvidersInitialLoadResult = {
+  readonly snapshot: ProvidersSnapshot;
+  readonly rolePolicy: RuntimeRolePolicy;
+};
+
+export interface DeferredProvidersBootstrapOptions<TInitialData> {
+  readonly loadInitial: () => Promise<TInitialData>;
+  readonly onInitialData: (data: TInitialData) => void;
+  readonly onInitialError: (message: string) => void;
+  readonly loadRecentRequestIds: () => Promise<readonly string[]>;
+  readonly onRecentRequestIds: (requestIds: readonly string[]) => void;
+  readonly onRecentRequestIdsError?: (message: string) => void;
+}
+
+export function startDeferredProvidersBootstrap<TInitialData>(
+  options: DeferredProvidersBootstrapOptions<TInitialData>,
+): () => void {
+  let disposed = false;
+
+  void options
+    .loadInitial()
+    .then((data) => {
+      if (disposed) {
+        return;
+      }
+      options.onInitialData(data);
+      return options.loadRecentRequestIds().then(
+        (requestIds) => {
+          if (!disposed) {
+            options.onRecentRequestIds(requestIds);
+          }
+        },
+        (value: unknown) => {
+          if (disposed) {
+            return;
+          }
+          options.onRecentRequestIdsError?.(
+            value instanceof Error ? value.message : "Could not load recent request ids.",
+          );
+        },
+      );
+    })
+    .catch((value: unknown) => {
+      if (disposed) {
+        return;
+      }
+      options.onInitialError(value instanceof Error ? value.message : "Could not load providers.");
+    });
+
+  return () => {
+    disposed = true;
+  };
+}
 
 function defaultVariantId(provider?: RuntimeProvider): string {
   return provider?.variants?.[0]?.variantId ?? "";
@@ -211,7 +266,7 @@ export function buildProviderModelRoleCoverageSummary(input: {
 }
 
 function buildAvailableModels(input: {
-  readonly snapshot: RuntimeSnapshot;
+  readonly snapshot: ProvidersSnapshot;
   readonly provider: RuntimeProvider | undefined;
   readonly variantId: string | undefined;
 }): string[] {
@@ -256,7 +311,9 @@ export default function ProvidersRoute() {
   const initializedRef = useRef(false);
   const allowPersistedOauthRestoreRef = useRef(false);
   const shownDeviceAuthorizationModalKeyRef = useRef<string | null>(null);
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const recentRequestIdsRef = useRef<readonly string[]>([]);
+  const recentRequestIdsErrorRef = useRef<string | null>(null);
+  const [snapshot, setSnapshot] = useState<ProvidersSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [providerAccountId, setProviderAccountId] = useState("");
   const [providerId, setProviderId] = useState("");
@@ -280,7 +337,7 @@ export default function ProvidersRoute() {
 
   const applyProviderSelection = useCallback(
     (
-      nextSnapshot: RuntimeSnapshot,
+      nextSnapshot: ProvidersSnapshot,
       requestedProviderId?: string | null,
       requestedVariantId?: string | null,
       options?: {
@@ -323,12 +380,15 @@ export default function ProvidersRoute() {
     [],
   );
 
-  const load = useCallback(async () => {
-    try {
-      const [nextSnapshot, nextRolePolicy] = await Promise.all([
-        fetchRuntimeSnapshot(),
-        fetchRolePolicy(),
-      ]);
+  const applyLoadedProvidersData = useCallback(
+    (
+      loaded: ProvidersInitialLoadResult,
+      options?: {
+        readonly allowPersistedOauthRestore?: boolean;
+      },
+    ) => {
+      const nextSnapshot = loaded.snapshot;
+      const nextRolePolicy = loaded.rolePolicy;
       setSnapshot(nextSnapshot);
       setRolePolicy(nextRolePolicy);
       setError(null);
@@ -338,7 +398,9 @@ export default function ProvidersRoute() {
           nextSnapshot,
           searchParams.get("providerId"),
           searchParams.get("variantId"),
-          { allowPersistedOauthRestore: true },
+          {
+            allowPersistedOauthRestore: options?.allowPersistedOauthRestore ?? true,
+          },
         );
         initializedRef.current = true;
         return;
@@ -353,10 +415,32 @@ export default function ProvidersRoute() {
           allowPersistedOauthRestore: false,
         });
       }
-    } catch (value: unknown) {
-      setError(value instanceof Error ? value.message : "Could not load providers.");
-    }
-  }, [applyProviderSelection, providerId, searchParams]);
+    },
+    [applyProviderSelection, providerId, searchParams],
+  );
+
+  const loadInitialProvidersData = useCallback(async (): Promise<ProvidersInitialLoadResult> => {
+    const [nextSnapshot, nextRolePolicy] = await Promise.all([
+      fetchProvidersSnapshot(),
+      fetchRolePolicy(),
+    ]);
+    return {
+      snapshot: nextSnapshot,
+      rolePolicy: nextRolePolicy,
+    };
+  }, []);
+
+  const load = useCallback(
+    async (options?: { readonly allowPersistedOauthRestore?: boolean }) => {
+      try {
+        const loaded = await loadInitialProvidersData();
+        applyLoadedProvidersData(loaded, options);
+      } catch (value: unknown) {
+        setError(value instanceof Error ? value.message : "Could not load providers.");
+      }
+    },
+    [applyLoadedProvidersData, loadInitialProvidersData],
+  );
 
   const syncConnectedEndpoints = useCallback(
     async (session: RuntimeDeviceAuthorization) => {
@@ -435,8 +519,24 @@ export default function ProvidersRoute() {
   );
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    return startDeferredProvidersBootstrap({
+      loadInitial: loadInitialProvidersData,
+      onInitialData: (loaded) => {
+        applyLoadedProvidersData(loaded, { allowPersistedOauthRestore: true });
+      },
+      onInitialError: (message) => {
+        setError(message);
+      },
+      loadRecentRequestIds: () => fetchRecentRequestIds(10),
+      onRecentRequestIds: (requestIds) => {
+        recentRequestIdsRef.current = requestIds;
+        recentRequestIdsErrorRef.current = null;
+      },
+      onRecentRequestIdsError: (message) => {
+        recentRequestIdsErrorRef.current = message;
+      },
+    });
+  }, [applyLoadedProvidersData, loadInitialProvidersData]);
 
   useEffect(() => {
     if (!shouldAutoPollDeviceAuthorization(oauthState) || polling || !oauthState) {

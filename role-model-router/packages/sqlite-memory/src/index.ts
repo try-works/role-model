@@ -827,6 +827,11 @@ export interface ListRecentRuntimeObservationsInput {
   readonly limit?: number;
 }
 
+export interface ListRecentRuntimeRequestIdsInput {
+  readonly databasePath: string;
+  readonly limit?: number;
+}
+
 export interface RuntimeTelemetryRecord {
   readonly requestId: string;
   readonly routingDecisionId: string;
@@ -4010,6 +4015,21 @@ export function listRecentRuntimeObservations(
     endpointId: row.endpoint_id,
     createdAtMs: row.created_at_ms,
   }));
+}
+
+export function listRecentRuntimeRequestIds(
+  input: ListRecentRuntimeRequestIdsInput,
+): readonly string[] {
+  const database = openSqliteDatabase(input.databasePath);
+  const rows = database
+    .prepare(
+      "SELECT request_id FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
+    )
+    .all(input.limit ?? 10) as Array<{
+    request_id: string;
+  }>;
+  database.close();
+  return rows.map((row) => row.request_id);
 }
 
 export function listRuntimeTelemetryRecords(

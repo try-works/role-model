@@ -1,0 +1,103 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/66-remote-providers-deferred-request-id-loading/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/runtime-api.test.ts (53 tests | 2 failed) 146ms
+   ✓ fetchRuntimeSnapshot > loads the operator shell data from the runtime control-plane endpoints 18ms
+   × fetchProvidersSnapshot > loads the providers-route bootstrap data without requesting recent request history 22ms
+     → expected undefined to be type of 'function'
+   × fetchRecentRequestIds > requests the lightweight latest-ids route with an explicit limit of 10 2ms
+     → expected undefined to be type of 'function'
+   ✓ fetchRuntimeSummary > retries transient runtime summary failures before surfacing an error 9ms
+   ✓ fetchRuntimeShellSnapshot > loads only the runtime shell dependencies and skips heavyweight inventory endpoints 3ms
+   ✓ fetchRuntimeDashboardSnapshot > loads only endpoint inventory and role definitions for the overview route 2ms
+   ✓ fetchLocalModels > preserves local ownership and llama-swap config metadata from the runtime API 2ms
+   ✓ fetchDownstreamOpenAIProviderConfig > loads the downstream OpenAI-compatible provider contract for consumer apps 2ms
+   ✓ fetchRequestDetail > loads request detail and the linked endpoint profile for the inspector pane 2ms
+   ✓ fetchModelTelemetryRollup > aggregates richer taxonomy rollups for model detail telemetry 5ms
+   ✓ router APIs > loads the router summary, config, candidates, and decision ledger from router-specific endpoints 3ms
+   ✓ router APIs > loads router decision detail from the router decision endpoint 5ms
+   ✓ telemetry APIs > loads the canonical telemetry dashboard reads from the role-model telemetry endpoints 3ms
+   ✓ telemetry APIs > loads telemetry request rows with limit parameters 1ms
+   ✓ telemetry APIs > serializes taxonomy telemetry request filters into the request query string 2ms
+   ✓ telemetry APIs > posts the generic telemetry analytics query payload 2ms
+   ✓ telemetry APIs > subscribes to canonical telemetry SSE updates and closes the source on cleanup 3ms
+   ✓ observe APIs > loads vendor activity metrics for the observe activity page 1ms
+   ✓ observe APIs > loads a persisted request/response capture by id 1ms
+   ✓ observe APIs > returns null when an activity capture is not found 1ms
+   ✓ observe APIs > loads raw log text for observe log consoles 1ms
+   ✓ observe APIs > loads vendor version info for the runtime system surface 2ms
+   ✓ controller assignment APIs > loads the current global controller assignment 1ms
+   ✓ controller assignment APIs > loads a null controller assignment when no controller is configured yet 1ms
+   ✓ controller assignment APIs > patches the selected controller candidate 1ms
+   ✓ submitWorkbenchChat > posts a chat-completions payload to the runtime workbench path 2ms
+   ✓ submitWorkbenchChat > sends routing-mode override as a header instead of leaking it into the OpenAI-compatible body 1ms
+   ✓ submitWorkbenchChat > sends endpoint override as a header instead of leaking it into the OpenAI-compatible body 2ms
+   ✓ studio vendor API helpers > posts an OpenAI image-generation request 1ms
+   ✓ studio vendor API helpers > posts an SDAPI txt2img request 1ms
+   ✓ studio vendor API helpers > loads available speech voices for a selected model 1ms
+   ✓ studio vendor API helpers > reports a clear error when the voice inventory endpoint returns HTML instead of JSON 4ms
+   ✓ studio vendor API helpers > posts a speech-generation request and returns audio bytes as a blob 3ms
+   ✓ studio vendor API helpers > posts a multipart transcription request 3ms
+   ✓ studio vendor API helpers > posts a rerank request to the selected vendor path 1ms
+   ✓ studio vendor API helpers > posts a raw advanced API request to the selected endpoint family 1ms
+   ✓ startRuntimeDeviceAuthorization > posts the selected provider account payload to the runtime device-auth start path 2ms
+   ✓ reconnectRuntimeAccount > posts the saved account id to the explicit reconnect repair path 1ms
+   ✓ removeRuntimeAccountModel > deletes the configured model from the runtime account pool 1ms
+   ✓ pollRuntimeDeviceAuthorization > posts the auth request id to the runtime device-auth poll path 1ms
+   ✓ updateRuntimeAccountApiKey > posts the saved account id and replacement key to the explicit repair path 1ms
+   ✓ openRuntimeExternalUrl > posts the verification URL to the runtime system browser helper 1ms
+   ✓ activateRuntimeEndpoint > posts endpoint activation payload to the runtime endpoints mutation path 1ms
+   ✓ fetchRuntimeConfig > loads the normalized unified runtime config from the runtime control plane 2ms
+   ✓ updateRuntimeConfig > puts the normalized unified runtime config to the runtime control plane 1ms
+   ✓ role policy APIs > loads the full runtime-managed role policy from the control plane 1ms
+   ✓ role policy APIs > posts role creation, puts role updates, and puts task allowlists to the control plane 3ms
+   ✓ benchmark display endpoints > fetchBenchmarkSummariesByMode loads full and quick summaries 1ms
+   ✓ benchmark display endpoints > fetchBenchmarkRuns loads completed run history 1ms
+   ✓ benchmark display endpoints > clearAllBenchmarkData deletes global benchmark state 1ms
+   ✓ role assignment helpers > represent default all roles separately from explicit none 1ms
+   ✓ role assignment helpers > posts default-all assignment metadata for peer and llama-swap model registration 1ms
+   ✓ role assignment helpers > puts explicit empty include assignment metadata when saving no-role local bindings 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/runtime-api.test.ts > fetchProvidersSnapshot > loads the providers-route bootstrap data without requesting recent request history
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ app/lib/runtime-api.test.ts:257:36
+
+    255|       }
+    256|     ).fetchProvidersSnapshot;
+    257|     expect(fetchProvidersSnapshot).toBeTypeOf("function");
+       |                                    ^
+    258|     if (typeof fetchProvidersSnapshot !== "function") {
+    259|       return;
+ Test Files  1 failed (1)
+      Tests  2 failed | 51 passed (53)
+   Start at  12:09:03
+   Duration  1.78s (transform 204ms, setup 0ms, collect 246ms, tests 146ms, environment 0ms, prepare 362ms)
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/lib/runtime-api.test.ts > fetchRecentRequestIds > requests the lightweight latest-ids route with an explicit limit of 10
+AssertionError: expected undefined to be type of 'function'
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ app/lib/runtime-api.test.ts:348:35
+    346|       }
+    347|     ).fetchRecentRequestIds;
+    348|     expect(fetchRecentRequestIds).toBeTypeOf("function");
+       |                                   ^
+    349|     if (typeof fetchRecentRequestIds !== "function") {
+    350|       return;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+undefined
+D:\DEV\role-model\.worktrees\66-remote-providers-deferred-request-id-loading\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/runtime-api.test.ts
