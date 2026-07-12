@@ -1,0 +1,1212 @@
+{
+  "requestId": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+  "clientRequestId": "run65-alias-cache-v1",
+  "routingDecisionId": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+  "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+  "conversationId": "runtime-empty-conversation",
+  "decision": {
+    "routing_decision_id": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+    "request_id": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+    "app_id": "unknown-app",
+    "org_id": null,
+    "policy_snapshot": {
+      "policy_id": "quality-policy",
+      "strategy": "quality",
+      "compute_preference": "auto",
+      "prefer_local": false,
+      "budget_mode": "disabled",
+      "tie_break_order": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ],
+      "required_capabilities": [
+        "reasoning.effort_control",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "required_modalities": [
+        "text"
+      ],
+      "require_tools": true,
+      "deny_endpoints": [],
+      "allow_endpoints": [
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ],
+      "deny_provider_kinds": [],
+      "allow_provider_kinds": [],
+      "budget": {
+        "enabled": false,
+        "currency": "USD"
+      },
+      "privacy": {
+        "allow_remote": true
+      },
+      "targets": {
+        "latency_target_ms": 150,
+        "latency_max_ms": 300,
+        "throughput_target_tps": 40
+      }
+    },
+    "eligibility": [
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "eligible": true,
+        "exclusions": []
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "eligible": true,
+        "exclusions": []
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "AUTH_UNAVAILABLE",
+            "detail": "Endpoint authentication is unavailable for routing/execution."
+          },
+          {
+            "code": "POLICY_DENY_ENDPOINT",
+            "detail": "Endpoint is denied by routing policy."
+          }
+        ]
+      },
+      {
+        "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "POLICY_DENY_ENDPOINT",
+            "detail": "Endpoint is denied by routing policy."
+          }
+        ]
+      }
+    ],
+    "scored_candidates": [
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "total_score": 0.7711677922046776,
+        "metric_breakdown": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.00011644029561441727,
+            "source": "measured",
+            "raw": {
+              "latency_ms_p50": 908,
+              "latency_ms_p95": 1758.1499999999996,
+              "effective_latency_ms": 1120.5375,
+              "measured_at_ms": 1783821329108,
+              "freshness_weight": 0.9997671194087712,
+              "freshness_source": "time-decay",
+              "time_decay_applied": true,
+              "decay_percent_per_day": 10,
+              "neutral_value": 0.5,
+              "observed_value": 0,
+              "effective_value": 0.00011644029561441727
+            }
+          },
+          "throughput": {
+            "value": 0.9998835597043856,
+            "source": "measured",
+            "raw": {
+              "tokens_per_sec": 45,
+              "measured_at_ms": 1783821329108,
+              "freshness_weight": 0.9997671194087712,
+              "freshness_source": "time-decay",
+              "time_decay_applied": true,
+              "decay_percent_per_day": 10,
+              "neutral_value": 0.5,
+              "observed_value": 1,
+              "effective_value": 0.9998835597043856
+            }
+          },
+          "cost": {
+            "value": 0.9807807408755802,
+            "source": "catalog",
+            "raw": {
+              "cost_per_1k_tokens_est": 0.00019219259124419772,
+              "measured_at_ms": 1783821329108,
+              "freshness_weight": 1,
+              "freshness_source": "passthrough",
+              "time_decay_applied": false,
+              "neutral_value": 0.5,
+              "estimated_request_usd": 0.0021116200000000003,
+              "input_per_1m": 0.14,
+              "output_per_1m": 0.28,
+              "token_economics_source": "catalog",
+              "canonical_model_id": "deepseek/deepseek-v4-flash",
+              "target_cost_per_request": 0.01,
+              "observed_value": 0.9807807408755802,
+              "effective_value": 0.9807807408755802
+            }
+          },
+          "reliability": {
+            "value": 1,
+            "source": "measured",
+            "raw": {
+              "failure_rate": 0,
+              "measured_at_ms": 1783821329108,
+              "freshness_weight": 1,
+              "freshness_source": "passthrough",
+              "time_decay_applied": false,
+              "neutral_value": 0.7,
+              "observed_value": 1,
+              "effective_value": 1
+            }
+          },
+          "preference": {
+            "value": 0.75,
+            "source": "declared",
+            "raw": {
+              "preferred_capability_matches": 1,
+              "preferred_capability_delta": 0.25
+            }
+          }
+        },
+        "tie_break": {
+          "quality": 0.5,
+          "latency_ms": 1120.5375,
+          "reliability": 1,
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+        }
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "total_score": 0.6930566032583962,
+        "metric_breakdown": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "throughput": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "cost": {
+            "value": 0.9402830162919814,
+            "source": "catalog",
+            "raw": {
+              "cost_per_1k_tokens_est": 0.0005971698370801856,
+              "measured_at_ms": null,
+              "freshness_weight": 1,
+              "freshness_source": "passthrough",
+              "time_decay_applied": false,
+              "neutral_value": 0.5,
+              "estimated_request_usd": 0.006561104999999999,
+              "input_per_1m": 0.435,
+              "output_per_1m": 0.87,
+              "token_economics_source": "catalog",
+              "canonical_model_id": "deepseek/deepseek-v4-pro",
+              "target_cost_per_request": 0.01,
+              "observed_value": 0.9402830162919814,
+              "effective_value": 0.9402830162919814
+            }
+          },
+          "reliability": {
+            "value": 0.7,
+            "source": "default"
+          },
+          "preference": {
+            "value": 0.75,
+            "source": "declared",
+            "raw": {
+              "preferred_capability_matches": 1,
+              "preferred_capability_delta": 0.25
+            }
+          }
+        },
+        "tie_break": {
+          "quality": 0.5,
+          "latency_ms": 250,
+          "reliability": 0.7,
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+        }
+      }
+    ],
+    "chosen_endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "fallback_endpoint_ids": [
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+    ],
+    "selection_reasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "HIGH_QUALITY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ],
+    "used_measured": true,
+    "used_declared": true,
+    "scoring_version": "baseline-v2"
+  },
+  "normalizedIntent": {
+    "contractVersion": 1,
+    "taxonomyVersion": "1.0.0-alpha.1",
+    "contentRevision": "taxonomy-v1-alpha.1",
+    "classificationContractVersion": "role-model.classification.v1",
+    "source": "heuristic",
+    "originalRoleHintId": "coder",
+    "originalTaskType": "coder.edit",
+    "roleSource": "heuristic",
+    "taskSource": "heuristic",
+    "confidence": 0.38,
+    "taskConfidence": 0.38,
+    "taskAction": "edit",
+    "taskVariant": null,
+    "evidence": [
+      "Group-first classification: matched groups [communication, engineering], scored 11 candidate roles.",
+      "Selected coder (score 2, margin 0) from candidate groups.",
+      "Task guidance preferred coder.edit.",
+      "Confirmed taxonomy task coder.edit."
+    ],
+    "alternatives": [
+      {
+        "roleId": "architect",
+        "taskType": "architect.design"
+      },
+      {
+        "roleId": "security",
+        "taskType": "security.audit"
+      },
+      {
+        "roleId": "operator",
+        "taskType": "operator.debug.startup"
+      }
+    ],
+    "role": {
+      "id": "coder",
+      "hard": false
+    },
+    "task": {
+      "id": "coder.edit",
+      "hard": false
+    },
+    "capabilities": {
+      "preferred": [
+        "code.read",
+        "code.write",
+        "reasoning.multi_step"
+      ]
+    },
+    "modalities": {
+      "required": [
+        "text"
+      ]
+    },
+    "toolClasses": [
+      "filesystem.read",
+      "filesystem.write",
+      "shell.execute"
+    ]
+  },
+  "routingDiagnostics": {
+    "retrievalReceiptId": "runtime-empty-conversation-retrieval-receipt",
+    "routingModel": {
+      "enabled": false,
+      "endpointId": null,
+      "preferredEndpointIds": [],
+      "ignoredEndpointIds": []
+    },
+    "cacheContinuity": {
+      "enabled": true,
+      "scopeSource": "prompt_cache_key",
+      "activeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "advisoryWarmedEndpointIds": [],
+      "previousActiveEndpointId": null,
+      "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "selectedDomainState": "created",
+      "advisorySelectionApplied": false
+    },
+    "aliasResolution": {
+      "requestedModel": "difficulty.remote-only",
+      "aliasId": "difficulty.remote-only",
+      "resolvedModelIds": [
+        "chatgpt/gpt-5.4",
+        "deepseek/deepseek-v4-flash",
+        "deepseek/deepseek-v4-pro"
+      ],
+      "allowEndpoints": [
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ],
+      "driftWarnings": [
+        {
+          "aliasId": "difficulty.remote-only",
+          "hintModelId": "moonshot/kimi-k2.7-code",
+          "suggestedModelIds": [
+            "chatgpt/gpt-5.4",
+            "deepseek/deepseek-v4-flash",
+            "deepseek/deepseek-v4-pro"
+          ],
+          "message": "Alias difficulty.remote-only references hint model id moonshot/kimi-k2.7-code that is not in routable inventory."
+        }
+      ]
+    },
+    "routingMode": {
+      "source": "alias-default",
+      "aliasMode": "difficulty",
+      "effectiveMode": "difficulty"
+    },
+    "capabilityEligibility": {
+      "requiredInputModalities": [
+        "text"
+      ],
+      "requiredOutputModalities": [
+        "text"
+      ],
+      "requiredCapabilities": [
+        "reasoning.effort_control",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "advisoryCapabilities": [],
+      "includedEndpoints": [
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ],
+      "excludedTargets": []
+    },
+    "difficultyRouting": {
+      "difficulty": "hard",
+      "strategy": "quality",
+      "fallbackApplied": false,
+      "cacheInvalidated": true,
+      "cacheInvalidationReasons": [
+        "context-tokens-delta"
+      ],
+      "rubricSignals": {
+        "contextTokens": 6891,
+        "toolCount": 4,
+        "historyTurnCount": 2,
+        "instructionConstraintCount": 9,
+        "decompositionKeywordCount": 7,
+        "codeOrSchemaBurden": true
+      }
+    },
+    "rewrite": {
+      "requestedModel": "difficulty.remote-only",
+      "downstreamModelId": "deepseek/deepseek-v4-flash",
+      "applied": true,
+      "reason": "requested-model-rewritten-for-selected-endpoint"
+    },
+    "observedProfile": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "source": "runtime-state",
+      "readMode": "per-request",
+      "measuredAtMs": 1783821329108,
+      "difficultyBucket": "hard",
+      "bucketOverrideApplied": true
+    },
+    "catalogEconomics": {
+      "canonicalModelId": "deepseek/deepseek-v4-flash",
+      "tokenEconomicsSource": "catalog",
+      "inputPer1M": 0.14,
+      "outputPer1M": 0.28,
+      "estimatedRequestUsd": 0.0021116200000000003,
+      "cost_per_1k_tokens_est": 0.00019219259124419772
+    },
+    "effectiveMetrics": {
+      "quality": {
+        "value": 0.5,
+        "source": "default"
+      },
+      "latency": {
+        "value": 0.00011644029561441727,
+        "source": "measured",
+        "measuredAtMs": 1783821329108,
+        "freshnessWeight": 0.9997671194087712,
+        "freshnessSource": "time-decay",
+        "timeDecayApplied": true
+      },
+      "throughput": {
+        "value": 0.9998835597043856,
+        "source": "measured",
+        "measuredAtMs": 1783821329108,
+        "freshnessWeight": 0.9997671194087712,
+        "freshnessSource": "time-decay",
+        "timeDecayApplied": true
+      },
+      "reliability": {
+        "value": 1,
+        "source": "measured",
+        "measuredAtMs": 1783821329108,
+        "freshnessWeight": 1,
+        "freshnessSource": "passthrough",
+        "timeDecayApplied": false
+      },
+      "cost": {
+        "value": 0.9807807408755802,
+        "source": "catalog",
+        "measuredAtMs": 1783821329108,
+        "freshnessWeight": 1,
+        "freshnessSource": "passthrough",
+        "timeDecayApplied": false
+      }
+    },
+    "selection": {
+      "mode": "best-total-score",
+      "scoreTieEpsilon": 0.01,
+      "scoreDelta": 0.07811118894628133,
+      "winnerEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "winnerTotalScore": 0.7711677922046776,
+      "runnerUpEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "runnerUpTotalScore": 0.6930566032583962,
+      "tieBreakOrder": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ]
+    },
+    "throughputPenalty": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "active": false
+    }
+  },
+  "retrievalReceipt": {
+    "receiptId": "runtime-empty-conversation-retrieval-receipt",
+    "summary": {
+      "selectedTurns": 0,
+      "selectedArtifacts": 0,
+      "omittedTurns": 0,
+      "omittedArtifacts": 0,
+      "estimatedTokens": 0
+    }
+  },
+  "contextEnvelope": {
+    "conversationId": "runtime-empty-conversation",
+    "latestHandoffId": null,
+    "estimatedTokenCount": 0
+  },
+  "trace": {
+    "spans": [
+      {
+        "trace_id": "trace-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "span_id": "span-provider-load-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "request_id": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "routing_decision_id": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "span_type": "provider.load",
+        "started_at_ms": 1783821521945,
+        "ended_at_ms": 1783821521950,
+        "status": "ok",
+        "attributes": {
+          "adapter_family": "ai-sdk-openai-compatible",
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+        }
+      },
+      {
+        "trace_id": "trace-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "span_id": "span-provider-decode-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "parent_span_id": "span-provider-load-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "request_id": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "routing_decision_id": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "span_type": "provider.decode",
+        "started_at_ms": 1783821521950,
+        "ended_at_ms": 1783821522548,
+        "status": "ok",
+        "attributes": {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "text_delta_count": 39
+        }
+      }
+    ],
+    "events": [
+      {
+        "event_id": "event-provider-load-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "trace_id": "trace-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "span_id": "span-provider-load-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "request_id": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "routing_decision_id": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "timestamp_ms": 1783821521946,
+        "event_type": "trace.span.opened",
+        "payload": {
+          "adapter_family": "ai-sdk-openai-compatible",
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+        }
+      },
+      {
+        "event_id": "event-usage-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "trace_id": "trace-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "span_id": "span-provider-decode-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "request_id": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "routing_decision_id": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "timestamp_ms": 1783821522548,
+        "event_type": "usage.event.created",
+        "payload": {
+          "input_tokens": 7878,
+          "output_tokens": 40
+        }
+      }
+    ]
+  },
+  "usageEvent": {
+    "event_id": "usage-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+    "timestamp_ms": 1783821521945,
+    "app_id": "unknown-app",
+    "request_id": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+    "routing_decision_id": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+    "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "model_id": "deepseek/deepseek-v4-flash",
+    "package_id": "provider-deepseek",
+    "provider_kind": "remote_openai_compat",
+    "tokens_in": 7878,
+    "tokens_out": 40,
+    "latency_ms": 603,
+    "cost_estimate": 0.00019219259124419772,
+    "currency": "USD",
+    "sample_source": "live_request"
+  },
+  "observedPerformance": {
+    "endpointVersion": "run07-registry-v1:default",
+    "sample": {
+      "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "endpoint_version": "run07-registry-v1:default",
+      "source_type": "live_request",
+      "difficulty_bucket": "hard",
+      "timestamp_ms": 1783821521945,
+      "latency_ms": 603,
+      "latency_ms_p95": 603,
+      "tokens_per_sec": 66,
+      "cost_per_1k_tokens_est": 0.00019219259124419772,
+      "failure": false,
+      "request_id": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+      "routing_decision_id": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946"
+    },
+    "history": [
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1783820685630,
+        "latency_ms": 960,
+        "latency_ms_p95": 960,
+        "tokens_per_sec": 49,
+        "failure": false,
+        "request_id": "req-41db1f80-46d8-4b7d-ad3b-650474bfbb4c",
+        "routing_decision_id": "decision-req-41db1f80-46d8-4b7d-ad3b-650474bfbb4c"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1783820701149,
+        "latency_ms": 856,
+        "latency_ms_p95": 856,
+        "tokens_per_sec": 41,
+        "cost_per_1k_tokens_est": 0.00018570699824645308,
+        "failure": false,
+        "request_id": "req-0048b8e0-75b8-41b4-b484-d5c0317b2bf8",
+        "routing_decision_id": "decision-req-0048b8e0-75b8-41b4-b484-d5c0317b2bf8"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1783821328214,
+        "latency_ms": 516,
+        "latency_ms_p95": 516,
+        "tokens_per_sec": 107,
+        "cost_per_1k_tokens_est": 0.0002783449939686369,
+        "failure": false,
+        "request_id": "req-c73cf380-7dd8-4efd-b51f-5ec570ebcc17",
+        "routing_decision_id": "decision-req-c73cf380-7dd8-4efd-b51f-5ec570ebcc17"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1783821329108,
+        "latency_ms": 1899,
+        "latency_ms_p95": 1899,
+        "tokens_per_sec": 17,
+        "cost_per_1k_tokens_est": 0.0002796250304358413,
+        "failure": false,
+        "request_id": "req-c5ecc601-48ec-4aad-bed6-6346838c84a0",
+        "routing_decision_id": "decision-req-c5ecc601-48ec-4aad-bed6-6346838c84a0"
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1783821521945,
+        "latency_ms": 603,
+        "latency_ms_p95": 603,
+        "tokens_per_sec": 66,
+        "cost_per_1k_tokens_est": 0.00019219259124419772,
+        "failure": false,
+        "request_id": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+        "routing_decision_id": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946"
+      }
+    ],
+    "profile": {
+      "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "endpoint_version": "run07-registry-v1:default",
+      "measured_at_ms": 1783821521945,
+      "measurement_window": {
+        "started_at_ms": 1783820685630,
+        "ended_at_ms": 1783821521945
+      },
+      "sample_size": 5,
+      "sources": {
+        "live_request_samples": 5,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 856,
+      "latency_ms_p95": 1711.1999999999998,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.4557067470936043,
+      "tokens_per_sec": 49,
+      "cost_per_1k_tokens_est": 0.0002352687926064173,
+      "currency": "USD"
+    }
+  },
+  "diagnostics": {
+    "routing": [
+      {
+        "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+        "severity": "info",
+        "message": "Routing diagnostics link request req-b0975f3d-8da0-48db-948a-6ad24c9c7946 to retrieval receipt runtime-empty-conversation-retrieval-receipt."
+      }
+    ],
+    "execution": [],
+    "authAccount": [],
+    "memoryQuality": [],
+    "tooling": [],
+    "operator": [
+      {
+        "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+        "severity": "info",
+        "message": "Raw operator captures remain available through the preserved host capture surface."
+      }
+    ]
+  },
+  "capturePolicy": {
+    "environment": "local-dev",
+    "redactionLevel": "strict",
+    "retentionClass": "standard",
+    "structuredInspectionMode": "redacted",
+    "rawCaptureAvailable": true,
+    "structuredInspectionAvailable": true,
+    "redactedFields": [],
+    "suppressedFields": []
+  },
+  "executionTelemetry": {
+    "providerFamily": "deepseek",
+    "finishReason": "stop",
+    "stream": {
+      "requested": true,
+      "textDeltas": 39,
+      "toolCallDeltas": 0,
+      "toolArgumentDeltas": 0
+    },
+    "streamSupport": {
+      "text": "delta",
+      "toolCalls": "delta",
+      "toolArguments": "delta"
+    },
+    "promptCaching": {
+      "supported": true,
+      "mode": "implicit"
+    },
+    "usageSupport": {
+      "inputTokens": true,
+      "outputTokens": true,
+      "cacheReadTokens": true,
+      "cacheWriteTokens": true
+    },
+    "costProvenance": "estimated"
+  },
+  "executionSemantics": {
+    "sourceClient": "openai.chat.completions",
+    "executionFamily": "remote-service",
+    "adapterFamily": "ai-sdk-openai-compatible",
+    "payloadBytes": {
+      "ingress": 32499,
+      "translated": 31188,
+      "providerCanonical": 31217,
+      "providerWire": 31217,
+      "providerResponse": 13159
+    },
+    "retryCount": 0,
+    "rerouteCount": 0,
+    "cooldownDecision": "not_applied",
+    "idempotencyDecision": "not_needed",
+    "toolSideEffectState": "none",
+    "reasoning": {
+      "requested": true,
+      "controlForwarded": true,
+      "deltaCount": 29,
+      "streamSuppressed": false
+    }
+  },
+  "cacheObservability": {
+    "promptCacheRequested": true,
+    "promptCacheUsed": false,
+    "cacheReadTokens": 0,
+    "cacheWriteTokens": 0,
+    "routingCacheAffinity": false
+  },
+  "tooling": {
+    "toolCalls": [],
+    "executions": [],
+    "diagnostics": []
+  },
+  "telemetrySnapshot": {
+    "providerId": "deepseek",
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "sourceType": "remote",
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "region": "global",
+    "lifecycleStateAtRequest": "active",
+    "healthStatusAtRequest": "healthy",
+    "requestedModelId": "difficulty.remote-only",
+    "selectedModelId": "deepseek/deepseek-v4-flash",
+    "requestOperation": "chat",
+    "roleIds": [],
+    "toolingUsed": false,
+    "cacheState": "miss",
+    "eligibleEndpointIds": [
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+    ],
+    "eligibleModelIds": [
+      "deepseek/deepseek-v4-flash",
+      "deepseek/deepseek-v4-pro"
+    ],
+    "candidateCostSnapshot": {
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash": {
+        "modelId": "deepseek/deepseek-v4-flash",
+        "providerId": "deepseek",
+        "providerKind": "remote_openai_compat",
+        "sourceType": "remote",
+        "endpointKind": "remote_api",
+        "servingSource": "remote-service",
+        "region": "global",
+        "tokenEconomicsSource": "catalog",
+        "estimatedRequestUsd": 0.0021116200000000003,
+        "costPer1kTokensEst": 0.00019219259124419772,
+        "inputPer1M": 0.14,
+        "outputPer1M": 0.28
+      },
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro": {
+        "modelId": "deepseek/deepseek-v4-pro",
+        "providerId": null,
+        "providerKind": "remote_openai_compat",
+        "sourceType": "remote",
+        "endpointKind": "remote_api",
+        "servingSource": "remote-service",
+        "region": "global",
+        "tokenEconomicsSource": "catalog",
+        "estimatedRequestUsd": 0.006561104999999999,
+        "costPer1kTokensEst": 0.0005971698370801856,
+        "inputPer1M": 0.435,
+        "outputPer1M": 0.87
+      }
+    },
+    "selectedPricingSnapshot": {
+      "modelId": "deepseek/deepseek-v4-flash",
+      "providerId": "deepseek",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "sourceType": "remote",
+      "tokenEconomicsSource": "catalog",
+      "estimatedRequestUsd": 0.0021116200000000003,
+      "costPer1kTokensEst": 0.00019219259124419772,
+      "inputPer1M": 0.14,
+      "outputPer1M": 0.28
+    },
+    "selectedUncachedCostUsd": 0.0021116200000000003,
+    "baselineMaxEligibleCostUsd": 0.006561104999999999,
+    "routingCostSavingsUsd": 0.004449,
+    "cacheCostSavingsUsd": 0,
+    "totalAvoidedCostUsd": 0.004449,
+    "costBaselineSource": "eligible_candidate_max",
+    "costSavingsSupport": "full",
+    "dimensions": {
+      "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "candidateCount": 2
+    }
+  },
+  "taxonomyDimensions": {
+    "taxonomy_original_role_hint_id": "coder",
+    "taxonomy_original_task_type": "coder.edit",
+    "taxonomy_group_id": null,
+    "taxonomy_role_id": "coder",
+    "taxonomy_task_type": "coder.edit",
+    "taxonomy_task_action": "edit",
+    "taxonomy_task_variant": null,
+    "taxonomy_capability_ids": [
+      "code.read",
+      "code.write",
+      "reasoning.multi_step"
+    ],
+    "taxonomy_modality_ids": [
+      "text"
+    ],
+    "taxonomy_tool_class_ids": [
+      "filesystem.read",
+      "filesystem.write",
+      "shell.execute"
+    ],
+    "taxonomy_role_source": "heuristic",
+    "taxonomy_task_source": "heuristic",
+    "taxonomy_classification_source": "heuristic",
+    "taxonomy_confidence": 0.38,
+    "taxonomy_task_confidence": 0.38,
+    "taxonomy_alternative_count": 3,
+    "taxonomy_alternative_role_ids": [
+      "architect",
+      "operator",
+      "security"
+    ],
+    "taxonomy_alternative_task_types": [
+      "architect.design",
+      "operator.debug.startup",
+      "security.audit"
+    ],
+    "taxonomy_version": "1.0.0-alpha.1",
+    "taxonomy_content_revision": "taxonomy-v1-alpha.1",
+    "classification_contract_version": "role-model.classification.v1"
+  },
+  "privacyReceipt": {
+    "samplingRate": 1,
+    "retentionTtlHours": 720,
+    "retainUntil": 1786413521978
+  },
+  "inspection": {
+    "request": {
+      "requestId": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+      "clientRequestId": "run65-alias-cache-v1",
+      "routingDecisionId": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+      "requestCapture": {
+        "headers": {
+          "authorization": "Bearer api-key/deepseek/deepseek.personal.deepseek-api-key",
+          "session-id": "run65-alias-cache-v1",
+          "x-client-request-id": "run65-alias-cache-v1"
+        },
+        "body": {
+          "model": "deepseek-v4-flash",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an expert coding assistant operating inside pi, a coding agent harness. You help users by reading files, executing commands, editing code, and writing new files.\n\nAvailable tools:\n- read: Read file contents\n- bash: Execute bash commands (ls, grep, find, etc.)\n- edit: Make precise file edits with exact text replacement, including multiple disjoint edits in one call\n- write: Create or overwrite files\n\nIn addition to the tools above, you may have access to other custom tools depending on the project.\n\nGuidelines:\n- Use bash for file operations like ls, rg, find\n- Use read to examine files instead of cat or sed.\n- Use edit for precise changes (edits[].oldText must match exactly)\n- When changing multiple separate locations in one file, use one edit call with multiple entries in edits[] instead of multiple edit calls\n- Each edits[].oldText is matched against the original file, not after earlier edits are applied. Do not emit overlapping or nested edits. Merge nearby changes into one edit.\n- Keep edits[].oldText as small as possible while still being unique in the file. Do not pad with large unchanged regions.\n- Use write only for new files or complete rewrites.\n- Be concise in your responses\n- Show file paths clearly when working with files\n\nPi documentation (read only when the user asks about pi itself, its SDK, extensions, themes, skills, or TUI):\n- Main documentation: D:\\pi\\node_modules\\@earendil-works\\pi-coding-agent\\README.md\n- Additional docs: D:\\pi\\node_modules\\@earendil-works\\pi-coding-agent\\docs\n- Examples: D:\\pi\\node_modules\\@earendil-works\\pi-coding-agent\\examples (extensions, custom tools, SDK)\n- When reading pi docs or examples, resolve docs/... under Additional docs and examples/... under Examples, not the current working directory\n- When asked about: extensions (docs/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), pi packages (docs/packages.md)\n- When working on pi topics, read the docs and examples, and follow .md cross-references before implementing\n- Always read pi .md files completely and follow links to related docs (e.g., tui.md for TUI API details)\n\nThe following skills provide specialized instructions for specific tasks.\nUse the read tool to load a skill's file when the task matches its description.\nWhen a skill file references a relative path, resolve it against the skill directory (parent of SKILL.md / dirname of the path) and use that absolute path in tool commands.\n\n<available_skills>\n  <skill>\n    <name>agents-sdk</name>\n    <description>Build AI agents on Cloudflare Workers using the Agents SDK. Load when creating stateful agents, durable workflows, real-time WebSocket apps, scheduled tasks, MCP servers, chat applications, voice agents, or browser automation. Covers Agent class, state management, callable RPC, Workflows, durable execution, queues, retries, observability, and React hooks. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\agents-sdk\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>cloudflare</name>\n    <description>Comprehensive Cloudflare platform skill covering Workers, Pages, storage (KV, D1, R2), AI (Workers AI, Vectorize, Agents SDK), feature flags (Flagship), networking (Tunnel, Spectrum), security (WAF, DDoS), and infrastructure-as-code (Terraform, Pulumi). Use for any Cloudflare development task. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\cloudflare\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>cloudflare-email-service</name>\n    <description>Send and receive transactional emails with Cloudflare Email Service (Email Sending + Email Routing). Use when building email sending (Workers binding or REST API), email routing, Agents SDK email handling, or integrating email into any app — Workers, Node.js, Python, Go, etc. Also use for email deliverability, SPF/DKIM/DMARC, wrangler email setup, MCP email tools, or when a coding agent needs to send emails. Even for simple requests like &quot;add email to my Worker&quot; — this skill has critical config details.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\cloudflare-email-service\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>cloudflare-one</name>\n    <description>Guides Cloudflare One Zero Trust and SASE work across Access, Gateway, WARP, Tunnel, Cloudflare WAN, DLP, CASB, device posture, and identity. Use when designing, configuring, troubleshooting, or reviewing Cloudflare One deployments. Retrieval-first: use current Cloudflare docs/API schemas instead of embedded product docs.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\cloudflare-one\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>cloudflare-one-migrations</name>\n    <description>Plans migrations from Zscaler ZIA/ZPA, Palo Alto, legacy VPN, SWG, or SASE stacks to Cloudflare One. Use for migration assessments, policy mapping, rollout plans, and parity/gap analysis.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\cloudflare-one-migrations\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>code-review</name>\n    <description>Review the changed lines of a single file in a pull request for bugs, correctness, error handling, security, and maintainability, and return structured findings.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\code-review\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>contributing</name>\n    <description>Use when contributing to the Cloudflare Docs repository — writing or editing documentation pages, choosing content types or components, adding changelog entries, reviewing docs, or learning how to contribute.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\contributing\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>conventions-check</name>\n    <description>Review a pull request&apos;s title, description, and scope against the repository&apos;s PR conventions.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\conventions-check\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>dependabot-review</name>\n    <description>Analyzes a Dependabot PR to determine what actually changed in each bumped package and whether those changes affect this repo. Reports changed APIs/methods, which doc pages use them, and the realistic probability of any visible impact on the docs site.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\dependabot-review\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>durable-objects</name>\n    <description>Create and review Cloudflare Durable Objects. Use when building stateful coordination (chat rooms, multiplayer games, booking systems), implementing RPC methods, SQLite storage, alarms, WebSockets, or reviewing DO code for best practices. Covers Workers integration, wrangler config, and testing with Vitest. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\durable-objects\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>e2e-testing-patterns</name>\n    <description>Master end-to-end testing with Playwright and Cypress to build reliable test suites that catch bugs, improve confidence, and enable fast deployment. Use when implementing E2E tests, debugging flaky tests, or establishing testing standards.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\e2e-testing-patterns\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>eli5</name>\n    <description>Transform technical jargon into clear explanations using before/after comparisons, metaphors, and practical context</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\eli5\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>make-interfaces-feel-better</name>\n    <description>Design engineering principles for making interfaces feel polished. Use when building UI components, reviewing frontend code, implementing animations, hover states, shadows, borders, typography, micro-interactions, enter/exit animations, or any visual detail work. Triggers on UI polish, design details, &quot;make it feel better&quot;, &quot;feels off&quot;, stagger animations, border radius, optical alignment, font smoothing, tabular numbers, image outlines, box shadows.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\make-interfaces-feel-better\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>pr</name>\n    <description>Creates and updates GitHub pull requests for cloudflare-docs changes. Load when asked to open, create, submit, update, or edit a PR, or write a PR title or description. Covers title conventions, branch naming, PR body structure, and the documentation checklist template.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\pr\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>reconcile-code-review</name>\n    <description>Reconcile raw specialist findings against the previous bot review and human PR comments to produce a final classified finding list.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\reconcile-code-review\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>recursive-debugging</name>\n    <description>Use when a recursive-mode requirement involves debugging a bug, test failure, or unexpected behavior. Insert Phase 1.5 between Phase 1 and Phase 2 to perform systematic root cause analysis before attempting any fixes. Trigger phrases: &quot;debug&quot;, &quot;investigate&quot;, &quot;failing tests&quot;, &quot;crash&quot;, &quot;root cause&quot;.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\recursive-debugging\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>recursive-mode</name>\n    <description>Repository workflow orchestration skill for staged implementation, locked artifacts, late-phase receipts, and durable memory maintenance. Use when executing recursive-mode runs, resuming a run, locking a phase, or verifying locks.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\recursive-mode\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>recursive-review-bundle</name>\n    <description>Use when recursive-mode work needs a canonical delegated-review or audit handoff. Generates reproducible review bundles for Phase 3.5 code review, test review, or other delegated checks using the repo review-bundle scripts.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\recursive-review-bundle\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>recursive-subagent</name>\n    <description>Use when recursive-mode work may benefit from delegated audit, review, or bounded implementation support. This skill prioritizes phase-auditor, traceability-auditor, code-reviewer, memory-auditor, and test-reviewer roles, with mandatory self-audit fallback when subagents are unavailable.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\recursive-subagent\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>recursive-tdd</name>\n    <description>Use when implementing any code in recursive-mode Phase 3. Enforces strict RED-GREEN-REFACTOR discipline with The Iron Law - no production code without a failing test first. Trigger phrases: &quot;implement this&quot;, &quot;add feature&quot;, &quot;fix bug&quot;, &quot;write a failing test&quot;, &quot;TDD&quot;.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\recursive-tdd\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>recursive-worktree</name>\n    <description>Use when starting any recursive-mode requirement to set up an isolated git worktree. Required before implementation phases: create an isolated workspace, verify a clean baseline, and keep main/master clean.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\recursive-worktree\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>sandbox-2026-deprecation</name>\n    <description>Migrate Cloudflare Sandbox SDK codebases away from features deprecated in June 2026 (HTTP and WebSocket transports, desktop, exposePort, default sessions, and stream-specific file and command APIs).</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\sandbox-2026-deprecation\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>sandbox-sdk</name>\n    <description>Build sandboxed applications for secure code execution. Load when building AI code execution, code interpreters, CI/CD systems, interactive dev environments, or executing untrusted code. Covers Sandbox SDK lifecycle, commands, files, code interpreter, and preview URLs. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\sandbox-sdk\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>spam-and-off-topic-filter</name>\n    <description>Evaluate a GitHub issue or pull request and decide if it is spam or clearly off-topic for cloudflare/cloudflare-docs.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\spam-and-off-topic-filter\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>style-guide-review</name>\n    <description>Review changed MDX/docs files in a pull request against the Cloudflare docs style guide and return structured findings.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\style-guide-review\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>swiss-design</name>\n    <description>Apply a Swiss International Style design system using Tailwind CSS. Use when asked to style a webpage, clean up a UI, apply a design system, make something look great, or when the user references Swiss design, grotesque fonts, Helvetica, grid systems, modernist typography, or 1960s/1950s design aesthetics. Implements IBM Plex Sans typography, stone color palette, opacity-based hierarchy, generous whitespace, and structured grid layouts.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\swiss-design\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>turnstile-spin</name>\n    <description>Set up Cloudflare Turnstile end-to-end in a project — scan the codebase, create the widget via the Cloudflare API, deploy the managed siteverify Worker, write the frontend snippets, validate, and persist the skill. Load this when a user asks to add Turnstile, set up CAPTCHA, protect a form from bots, or fix a Turnstile integration. Mirrors developers.cloudflare.com/turnstile/spin.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\turnstile-spin\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>ui-design-system</name>\n    <description>React UI component systems with TailwindCSS + Radix + shadcn/ui. Stack: TailwindCSS (styling), Radix UI (primitives), shadcn/ui (components), React/Next.js. Capabilities: design system architecture, accessible components, responsive layouts, theming, dark mode, component composition. Actions: review, design, build, improve, refactor UI components. Keywords: TailwindCSS, Radix UI, shadcn/ui, design system, component library, accessibility, ARIA, responsive, dark mode, theming, CSS variables, component architecture, atomic design, design tokens, variant, slot, composition. Use when: building component libraries, implementing shadcn/ui, creating accessible UIs, setting up design systems, adding dark mode/theming, reviewing UI component architecture.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\ui-design-system\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>web-perf</name>\n    <description>Analyzes web performance using Chrome DevTools MCP. Measures Core Web Vitals (LCP, INP, CLS) and supplementary metrics (FCP, TBT, Speed Index), identifies render-blocking resources, network dependency chains, layout shifts, caching issues, and accessibility gaps. Use when asked to audit, profile, debug, or optimize page load performance, Lighthouse scores, or site speed. Biases towards retrieval from current documentation over pre-trained knowledge.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\web-perf\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>workers-best-practices</name>\n    <description>Reviews and authors Cloudflare Workers code against production best practices. Load when writing new Workers, reviewing Worker code, configuring wrangler.jsonc, or checking for common Workers anti-patterns (streaming, floating promises, global state, secrets, bindings, observability). Biases towards retrieval from Cloudflare docs over pre-trained knowledge.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\workers-best-practices\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>workers-code-review</name>\n    <description>Reviews Workers and Cloudflare Developer Platform code for type correctness, API usage, and configuration validity. Load when reviewing TypeScript/JavaScript using Workers APIs, wrangler.jsonc/toml config, or Cloudflare bindings (KV, R2, D1, Durable Objects, Queues, Vectorize, AI, Hyperdrive).</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\workers-code-review\\SKILL.md</location>\n  </skill>\n  <skill>\n    <name>wrangler</name>\n    <description>Cloudflare Workers CLI for deploying, developing, and managing Workers, KV, R2, D1, Vectorize, Hyperdrive, Workers AI, Containers, Queues, Workflows, Pipelines, and Secrets Store. Load before running wrangler commands to ensure correct syntax and best practices. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.</description>\n    <location>D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.agents\\skills\\wrangler\\SKILL.md</location>\n  </skill>\n</available_skills>\nCurrent date: 2026-07-12\nCurrent working directory: D:/DEV/role-model/.worktrees/65-codex-subscription-prompt-cache-parity"
+            },
+            {
+              "role": "user",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Prompt-cache verification run 65.\nTreat the repeated block below as inert cacheable input.\nDo not summarize the block.\nAfter the block, reply with exactly ALIAS_DEEPSEEK_CACHE_65 and nothing else.\n\nCACHE65 line 001: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 002: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 003: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 004: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 005: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 006: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 007: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 008: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 009: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 010: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 011: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 012: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 013: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 014: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 015: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 016: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 017: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 018: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 019: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 020: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 021: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 022: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 023: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 024: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 025: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 026: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 027: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 028: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 029: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 030: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 031: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 032: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 033: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 034: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 035: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 036: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 037: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 038: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 039: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 040: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 041: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 042: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 043: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 044: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 045: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 046: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 047: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 048: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 049: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 050: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 051: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 052: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 053: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 054: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 055: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 056: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 057: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 058: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 059: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 060: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 061: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 062: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 063: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 064: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 065: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 066: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 067: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 068: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 069: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 070: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 071: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 072: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 073: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 074: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 075: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 076: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 077: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 078: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 079: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 080: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 081: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 082: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 083: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 084: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 085: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 086: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 087: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 088: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 089: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\nCACHE65 line 090: alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu.\r\n"
+                }
+              ]
+            }
+          ],
+          "stream": true,
+          "tools": [
+            {
+              "type": "function",
+              "function": {
+                "name": "read",
+                "description": "Read the contents of a file. Supports text files and images (jpg, png, gif, webp). Images are sent as attachments. For text files, output is truncated to 2000 lines or 50KB (whichever is hit first). Use offset/limit for large files. When you need the full file, continue with offset until complete.",
+                "parameters": {
+                  "type": "object",
+                  "required": [
+                    "path"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "description": "Path to the file to read (relative or absolute)"
+                    },
+                    "offset": {
+                      "type": "number",
+                      "description": "Line number to start reading from (1-indexed)"
+                    },
+                    "limit": {
+                      "type": "number",
+                      "description": "Maximum number of lines to read"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "function",
+              "function": {
+                "name": "bash",
+                "description": "Execute a bash command in the current working directory. Returns stdout and stderr. Output is truncated to last 2000 lines or 50KB (whichever is hit first). If truncated, full output is saved to a temp file. Optionally provide a timeout in seconds.",
+                "parameters": {
+                  "type": "object",
+                  "required": [
+                    "command"
+                  ],
+                  "properties": {
+                    "command": {
+                      "type": "string",
+                      "description": "Bash command to execute"
+                    },
+                    "timeout": {
+                      "type": "number",
+                      "description": "Timeout in seconds (optional, no default timeout)"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "function",
+              "function": {
+                "name": "edit",
+                "description": "Edit a single file using exact text replacement. Every edits[].oldText must match a unique, non-overlapping region of the original file. If two changes affect the same block or nearby lines, merge them into one edit instead of emitting overlapping edits. Do not include large unchanged regions just to connect distant changes.",
+                "parameters": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "edits"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "description": "Path to the file to edit (relative or absolute)"
+                    },
+                    "edits": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "oldText",
+                          "newText"
+                        ],
+                        "properties": {
+                          "oldText": {
+                            "type": "string",
+                            "description": "Exact text for one targeted replacement. It must be unique in the original file and must not overlap with any other edits[].oldText in the same call."
+                          },
+                          "newText": {
+                            "type": "string",
+                            "description": "Replacement text for this targeted edit."
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "description": "One or more targeted replacements. Each edit is matched against the original file, not incrementally. Do not include overlapping or nested edits. If two changes touch the same block or nearby lines, merge them into one edit instead."
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            {
+              "type": "function",
+              "function": {
+                "name": "write",
+                "description": "Write content to a file. Creates the file if it doesn't exist, overwrites if it does. Automatically creates parent directories.",
+                "parameters": {
+                  "type": "object",
+                  "required": [
+                    "path",
+                    "content"
+                  ],
+                  "properties": {
+                    "path": {
+                      "type": "string",
+                      "description": "Path to the file to write (relative or absolute)"
+                    },
+                    "content": {
+                      "type": "string",
+                      "description": "Content to write to the file"
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "prompt_cache_key": "run65-alias-cache-v1",
+          "reasoning_effort": "medium"
+        }
+      },
+      "responseCapture": {
+        "statusCode": 200,
+        "body": "data: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":null,\"reasoning_content\":\"\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"The\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" user\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" wants\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" me\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" to\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" acknowledge\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" the\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" cache\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" block\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" as\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" inert\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" input\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" and\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" then\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" reply\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" with\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" exactly\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\" \\\"\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"AL\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"IAS\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"_D\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"EEP\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"SEE\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"K\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"_C\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"ACHE\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"_\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"65\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":null,\"reasoning_content\":\"\\\".\"},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"AL\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"IAS\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"_D\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"EEP\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"SEE\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"K\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"_C\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"ACHE\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"_\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"65\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":null}]}\n\ndata: {\"id\":\"d95e7ccf-9edf-41c5-a239-3ead36e9f5a7\",\"object\":\"chat.completion.chunk\",\"created\":1783821520,\"model\":\"deepseek-v4-flash\",\"system_fingerprint\":\"fp_8b330d02d0_prod0820_fp8_kvcache_20260402\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"reasoning_content\":null},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":7878,\"completion_tokens\":40,\"total_tokens\":7918,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":29},\"prompt_cache_hit_tokens\":0,\"prompt_cache_miss_tokens\":7878}}\n\ndata: [DONE]\n\n"
+      },
+      "diagnostics": {
+        "routing": [
+          {
+            "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+            "severity": "info",
+            "message": "Routing diagnostics link request req-b0975f3d-8da0-48db-948a-6ad24c9c7946 to retrieval receipt runtime-empty-conversation-retrieval-receipt."
+          }
+        ],
+        "execution": [],
+        "authAccount": [],
+        "memoryQuality": [],
+        "tooling": [],
+        "operator": [
+          {
+            "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+            "severity": "info",
+            "message": "Raw operator captures remain available through the preserved host capture surface."
+          }
+        ]
+      },
+      "capturePolicy": {
+        "environment": "local-dev",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "redacted",
+        "rawCaptureAvailable": true,
+        "structuredInspectionAvailable": true,
+        "redactedFields": [],
+        "suppressedFields": []
+      }
+    },
+    "endpoint": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "endpointVersion": "run07-registry-v1:default",
+      "latestProfile": {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:default",
+        "measured_at_ms": 1783821521945,
+        "measurement_window": {
+          "started_at_ms": 1783820685630,
+          "ended_at_ms": 1783821521945
+        },
+        "sample_size": 5,
+        "sources": {
+          "live_request_samples": 5,
+          "benchmark_samples": 0
+        },
+        "latency_ms_p50": 856,
+        "latency_ms_p95": 1711.1999999999998,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.4557067470936043,
+        "tokens_per_sec": 49,
+        "cost_per_1k_tokens_est": 0.0002352687926064173,
+        "currency": "USD"
+      },
+      "recentSamples": [
+        {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "endpoint_version": "run07-registry-v1:default",
+          "source_type": "live_request",
+          "difficulty_bucket": "hard",
+          "timestamp_ms": 1783820685630,
+          "latency_ms": 960,
+          "latency_ms_p95": 960,
+          "tokens_per_sec": 49,
+          "failure": false,
+          "request_id": "req-41db1f80-46d8-4b7d-ad3b-650474bfbb4c",
+          "routing_decision_id": "decision-req-41db1f80-46d8-4b7d-ad3b-650474bfbb4c"
+        },
+        {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "endpoint_version": "run07-registry-v1:default",
+          "source_type": "live_request",
+          "difficulty_bucket": "hard",
+          "timestamp_ms": 1783820701149,
+          "latency_ms": 856,
+          "latency_ms_p95": 856,
+          "tokens_per_sec": 41,
+          "cost_per_1k_tokens_est": 0.00018570699824645308,
+          "failure": false,
+          "request_id": "req-0048b8e0-75b8-41b4-b484-d5c0317b2bf8",
+          "routing_decision_id": "decision-req-0048b8e0-75b8-41b4-b484-d5c0317b2bf8"
+        },
+        {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "endpoint_version": "run07-registry-v1:default",
+          "source_type": "live_request",
+          "difficulty_bucket": "easy",
+          "timestamp_ms": 1783821328214,
+          "latency_ms": 516,
+          "latency_ms_p95": 516,
+          "tokens_per_sec": 107,
+          "cost_per_1k_tokens_est": 0.0002783449939686369,
+          "failure": false,
+          "request_id": "req-c73cf380-7dd8-4efd-b51f-5ec570ebcc17",
+          "routing_decision_id": "decision-req-c73cf380-7dd8-4efd-b51f-5ec570ebcc17"
+        },
+        {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "endpoint_version": "run07-registry-v1:default",
+          "source_type": "live_request",
+          "difficulty_bucket": "easy",
+          "timestamp_ms": 1783821329108,
+          "latency_ms": 1899,
+          "latency_ms_p95": 1899,
+          "tokens_per_sec": 17,
+          "cost_per_1k_tokens_est": 0.0002796250304358413,
+          "failure": false,
+          "request_id": "req-c5ecc601-48ec-4aad-bed6-6346838c84a0",
+          "routing_decision_id": "decision-req-c5ecc601-48ec-4aad-bed6-6346838c84a0"
+        },
+        {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "endpoint_version": "run07-registry-v1:default",
+          "source_type": "live_request",
+          "difficulty_bucket": "hard",
+          "timestamp_ms": 1783821521945,
+          "latency_ms": 603,
+          "latency_ms_p95": 603,
+          "tokens_per_sec": 66,
+          "cost_per_1k_tokens_est": 0.00019219259124419772,
+          "failure": false,
+          "request_id": "req-b0975f3d-8da0-48db-948a-6ad24c9c7946",
+          "routing_decision_id": "decision-req-b0975f3d-8da0-48db-948a-6ad24c9c7946"
+        }
+      ]
+    }
+  },
+  "sourceType": "remote",
+  "providerId": "deepseek",
+  "endpointKind": "remote_api",
+  "servingSource": "remote-service",
+  "healthStatus": "healthy",
+  "status": "active",
+  "roleIds": [
+    "analyst",
+    "coder",
+    "data",
+    "operator",
+    "translator",
+    "writer"
+  ],
+  "observationAvailability": {
+    "source": "raw-observation",
+    "rawObservationAvailable": true,
+    "structuredInspectionAvailable": true,
+    "reason": "Request detail is backed by the preserved runtime observation bundle plus telemetry ledger supplements."
+  },
+  "effectiveCostUsd": 0.00019219259124419772,
+  "costCalculationBasis": "estimated_vendor_cost",
+  "costCalculationVersion": "run49.v1",
+  "selectedUncachedCostUsd": 0.0021116200000000003,
+  "baselineMaxEligibleCostUsd": 0.006561104999999999,
+  "routingCostSavingsUsd": 0.004449,
+  "cacheCostSavingsUsd": 0,
+  "totalAvoidedCostUsd": 0.004449,
+  "costBaselineSource": "eligible_candidate_max",
+  "costSavingsSupport": "full"
+}

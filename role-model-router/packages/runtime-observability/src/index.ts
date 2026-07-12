@@ -196,6 +196,17 @@ export interface RuntimeRoutingDiagnostics {
     readonly preferredEndpointIds?: readonly string[];
     readonly ignoredEndpointIds?: readonly string[];
   };
+  readonly cacheContinuity?: {
+    readonly enabled?: boolean;
+    readonly scopeSource?: "session_affinity" | "prompt_cache_key";
+    readonly activeEndpointId?: string | null;
+    readonly warmedEndpointIds?: readonly string[];
+    readonly advisoryWarmedEndpointIds?: readonly string[];
+    readonly previousActiveEndpointId?: string | null;
+    readonly selectedEndpointId?: string;
+    readonly selectedDomainState?: "created" | "restored";
+    readonly advisorySelectionApplied?: boolean;
+  };
 }
 
 export interface RuntimeRetrievalReceiptSummary {
@@ -1051,9 +1062,9 @@ export function createRuntimeObservationBundle(
       promptCacheUsed: input.execution.normalized.promptCache.used,
       cacheReadTokens: input.execution.normalized.promptCache.readTokens,
       cacheWriteTokens: input.execution.normalized.promptCache.writeTokens,
-      routingCacheAffinity:
-        input.execution.normalized.promptCache.requested &&
-        Boolean(input.routingDiagnostics?.routingModel?.enabled),
+      routingCacheAffinity: Boolean(
+        input.routingDiagnostics?.cacheContinuity?.advisorySelectionApplied,
+      ),
     },
     tooling,
     ...(input.telemetrySnapshot ? { telemetrySnapshot: input.telemetrySnapshot } : {}),

@@ -252,6 +252,84 @@ describe("OpenAI provider adapter", () => {
     });
   });
 
+  test("preserves cached-token detail fields from a streamed OpenAI responses transcript", () => {
+    const target = {
+      endpointId: "openai.personal.primary.us-east-1.fast",
+      modelId: "chatgpt/gpt-5.4",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.responses",
+        bodyKeys: ["temperature", "max_output_tokens", "prompt_cache_key"],
+        headerKeys: ["OpenAI-Beta"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.us-east-1.fast",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Reply with Warm response." }],
+      stream: true,
+      promptCache: {
+        mode: "prefer",
+        key: "codex-cache-key-stream",
+      },
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      responseCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        body: [
+          'data: {"type":"response.created","response":{"id":"resp_cache_stream","created_at":1,"model":"chatgpt/gpt-5.4"}}',
+          'data: {"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg_1"}}',
+          'data: {"type":"response.output_text.delta","item_id":"msg_1","delta":"Warm "}',
+          'data: {"type":"response.output_text.delta","item_id":"msg_1","delta":"response"}',
+          'data: {"type":"response.completed","response":{"usage":{"input_tokens":1400,"output_tokens":41,"input_tokens_details":{"cached_tokens":1111,"cache_write_tokens":222}}}}',
+        ].join("\n\n"),
+      },
+      capabilities,
+    });
+
+    expect(normalized.promptCache).toEqual({
+      requested: true,
+      used: true,
+      readTokens: 1111,
+      writeTokens: 222,
+    });
+    expect(normalized.usage).toEqual({
+      inputTokens: 1400,
+      outputTokens: 41,
+      cacheReadTokens: 1111,
+      cacheWriteTokens: 222,
+    });
+  });
+
   test("preserves hosted OpenAI responses tools instead of coercing them into function tools", () => {
     const target = {
       endpointId: "openai.personal.primary.us-east-1.fast",
@@ -812,6 +890,356 @@ describe("OpenAI provider adapter", () => {
       toolCallDeltas: 0,
       toolArgumentDeltas: 0,
     });
+  });
+
+  test("preserves cached-token detail fields from a streamed chat-completions transcript", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
+      modelId: "moonshot/kimi-k2.5",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "prompt_cache_key"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.5",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Reply with cached ready." }],
+      stream: true,
+      promptCache: {
+        mode: "prefer",
+        key: "kimi-cache-key-stream",
+      },
+    };
+
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      responseCapture: {
+        providerFamily: "ai-sdk-openai-compatible",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        body: [
+          'data: {"id":"chatcmpl-kimi-cache-1","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
+          'data: {"id":"chatcmpl-kimi-cache-1","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"content":"cached ready"},"finish_reason":null}]}',
+          'data: {"id":"chatcmpl-kimi-cache-1","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":1200,"completion_tokens":7,"prompt_tokens_details":{"cached_tokens":875}}}',
+          "data: [DONE]",
+        ].join("\n\n"),
+      },
+      capabilities,
+    });
+
+    expect(normalized.promptCache).toEqual({
+      requested: true,
+      used: true,
+      readTokens: 875,
+      writeTokens: 0,
+    });
+    expect(normalized.usage).toEqual({
+      inputTokens: 1200,
+      outputTokens: 7,
+      cacheReadTokens: 875,
+      cacheWriteTokens: 0,
+    });
+  });
+
+  test("advertises implicit prompt caching support for OpenAI-family providers", () => {
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({
+      target: {
+        endpointId: "openai.personal.primary.global.gpt-5.4",
+        modelId: "chatgpt/gpt-5.4",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        providerAccountId: "openai.personal.primary",
+        adapterFamily: "ai-sdk-openai",
+        authFamily: "api-key",
+        apiBase: "https://api.openai.test/v1",
+        requestShapeHints: {
+          providerShape: "openai.responses",
+          bodyKeys: ["model", "input"],
+          headerKeys: ["Authorization"],
+        },
+        candidate: {
+          identity: {
+            endpoint_id: "openai.personal.primary.global.gpt-5.4",
+            provider_kind: "remote_openai_compat",
+          },
+        },
+        account: {
+          credentialRef: {
+            backend: "env",
+            ref: "OPENAI_API_KEY",
+          },
+        },
+      },
+      executionRequest: {
+        messages: [{ role: "user", content: "Explain prompt caching." }],
+        promptCache: {
+          mode: "prefer",
+          key: "session-cache-key",
+        },
+      },
+    });
+
+    expect(capabilities.promptCaching).toEqual({
+      supported: true,
+      mode: "implicit",
+    });
+    expect(capabilities.usage.cacheReadTokens).toBe(true);
+    expect(capabilities.usage.cacheWriteTokens).toBe(true);
+  });
+
+  test("normalizes OpenAI Responses cached-token detail fields without rewriting totals", () => {
+    const target = {
+      endpointId: "openai.personal.primary.global.gpt-5.4",
+      modelId: "chatgpt/gpt-5.4",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.responses",
+        bodyKeys: ["model", "input", "prompt_cache_key"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.global.gpt-5.4",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Summarize the warmed prefix." }],
+      promptCache: {
+        mode: "prefer",
+        key: "cache-key-001",
+      },
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      responseCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        body: {
+          id: "resp_cache_hit_01",
+          output: [
+            {
+              type: "message",
+              role: "assistant",
+              content: [
+                {
+                  type: "output_text",
+                  text: "Warm response",
+                },
+              ],
+            },
+          ],
+          usage: {
+            input_tokens: 1400,
+            output_tokens: 41,
+            input_tokens_details: {
+              cached_tokens: 1111,
+              cache_write_tokens: 222,
+            },
+          },
+        },
+      },
+      capabilities,
+    });
+
+    expect(normalized.promptCache).toEqual({
+      requested: true,
+      used: true,
+      readTokens: 1111,
+      writeTokens: 222,
+    });
+    expect(normalized.usage).toEqual({
+      inputTokens: 1400,
+      outputTokens: 41,
+      cacheReadTokens: 1111,
+      cacheWriteTokens: 222,
+    });
+  });
+
+  test("normalizes Kimi chat-completions cached tokens from top-level usage", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
+      modelId: "moonshot/kimi-k2.5",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "prompt_cache_key"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.5",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Reply with cached ok." }],
+      promptCache: {
+        mode: "prefer",
+        key: "kimi-cache-key",
+      },
+    };
+
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      responseCapture: {
+        providerFamily: "ai-sdk-openai-compatible",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        body: {
+          choices: [
+            {
+              finish_reason: "stop",
+              message: {
+                content: "cached ok",
+              },
+            },
+          ],
+          usage: {
+            prompt_tokens: 1200,
+            completion_tokens: 7,
+            cached_tokens: 875,
+          },
+        },
+      },
+      capabilities,
+    });
+
+    expect(normalized.promptCache).toEqual({
+      requested: true,
+      used: true,
+      readTokens: 875,
+      writeTokens: 0,
+    });
+    expect(normalized.usage).toEqual({
+      inputTokens: 1200,
+      outputTokens: 7,
+      cacheReadTokens: 875,
+      cacheWriteTokens: 0,
+    });
+  });
+
+  test("forwards chat-completions prompt_cache_key when prompt caching is enabled", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
+      modelId: "moonshot/kimi-k2.5",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "prompt_cache_key"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.5",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Keep the cache key stable." }],
+      promptCache: {
+        mode: "prefer",
+        key: "kimi-chat-cache-key",
+      },
+    };
+
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.body.prompt_cache_key).toBe("kimi-chat-cache-key");
   });
 
   test("normalizes reasoning-only chat-completions bodies into assistant output text", () => {

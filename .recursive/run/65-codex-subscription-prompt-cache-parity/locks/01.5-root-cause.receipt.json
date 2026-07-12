@@ -1,0 +1,13 @@
+{
+  "artifact": "01.5-root-cause.md",
+  "artifact_hash": "4e32e7fa87fe8e22aecdf860c22be6409468aa3f7ed9a13799ca0aee1cbc0f4a",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.recursive\\run\\65-codex-subscription-prompt-cache-parity\\01.5-root-cause.md",
+  "locked_at": "2026-07-11T23:59:14Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "dc61e8d2fb46fde8b90c5bd57d8d149bea861292f520f3bd70b4230a2fd8e9b9",
+    "00-worktree.md": "df89e77c02b2ad72b35a1574b871ccb09d332f3fe9c16fd11647df5279a276b4",
+    "01-as-is.md": "a666c99ac517c33a3c39381bb73f3ab70c1bec57da4a3afe937772dcfcff4590"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "753869a74e413e78f8ec72dcfeed29cd36125ce67b3bb0db26d0a65a17577ed0"
+}

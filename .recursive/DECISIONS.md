@@ -2,6 +2,46 @@
 
 ## Recursive Run Index
 
+### Run `65-codex-subscription-prompt-cache-parity`
+
+- Run folder: `/.recursive/run/65-codex-subscription-prompt-cache-parity/`
+- Worktree: `.worktrees/65-codex-subscription-prompt-cache-parity`
+- Branch: `recursive/65-codex-subscription-prompt-cache-parity`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/03-implementation-summary.upstream-gap.00-requirements.addendum-01.md`, `addenda/03-implementation-summary.upstream-gap.02-to-be-plan.addendum-01.md`
+- What changed:
+  - repaired `provider-openai` so OpenAI-family prompt caching is advertised as implicit support, nested OpenAI cache detail fields are preserved, Kimi top-level `usage.cached_tokens` is normalized, and chat-completions `prompt_cache_key` forwarding is truthful
+  - repaired native Codex Subscription bridge shaping so both streamed and non-streamed downstream OpenAI-compatible responses preserve supported-zero and hit cache facts instead of collapsing into permanent `0%` or unsupported semantics
+  - replaced the old generic cache-affinity heuristic with per-domain continuity state that preserves endpoint-local restore semantics and keeps warmed-domain routing preference advisory rather than inventing a synthetic shared cache
+  - extended downstream Pi compatibility so runtime discovery preserves prompt-cache plus session-affinity hints, and the Pi package now honors `ROLE_MODEL_ENDPOINT` for runtime request and inspection commands
+  - verified rebuilt-runtime exact-model Codex, exact-model DeepSeek, and alias-backed `difficulty.remote-only` `A -> B -> A` continuity through live Pi evidence, request-detail receipts, telemetry query proof, and Observe screenshot proof
+- Why:
+  - Pi showed permanent `0%` cache on the Codex Subscription path even when upstream cache hits were occurring, while DeepSeek already proved the downstream cache display could work
+  - the router needed truthful per-domain cache continuity for alias-backed return-to-`A` behavior without claiming cross-provider shared cache reuse
+  - later user clarification required explicit live alias proof, official provider-doc crosswalk evidence, and an explicit Kimi blocker record rather than implicit notes
+- How:
+  - implemented with strict TDD across provider-openai, host-bridge, protocol-routing, runtime-observability, Pi package, and runtime-ui telemetry contract tests
+  - verified with focused package suites, rebuilt-runtime Pi receipts, canonical request-detail and telemetry API cross-checks, and an Observe requests screenshot
+  - grounded the final proof against official OpenAI, LiteLLM, DeepSeek, and Kimi documentation captured in the run-65 provider-doc crosswalk
+- What was not done:
+  - LiteLLM execution ownership was not replaced or forked; the shared OpenAI-family builder remained the owning execution path
+  - no cross-provider shared cache, LiteLLM proxy-cache emulation, or separate cache-only dashboard was introduced
+  - Kimi was not made routing-eligible in the rebuilt QA runtime because it still had zero benchmark samples and therefore no eligible target
+- Known issues / follow-ups:
+  - if future work wants live Kimi cache proof, it must first make Kimi routing-eligible in the active runtime and record the exact benchmark-data or policy change that enabled it
+  - when alias continuity proof includes an image-bearing turn, reusing the same local Pi session file can carry image modality forward and keep the alias on Codex; future proofs should reuse the logical session id but refresh local session storage on the return leg
+
 ### Run `64-observed-data-decay-policy-recalibration`
 
 - Run folder: `/.recursive/run/64-observed-data-decay-policy-recalibration/`

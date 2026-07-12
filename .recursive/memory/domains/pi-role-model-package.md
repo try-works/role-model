@@ -9,12 +9,13 @@ Source-Runs:
 - `57-role-model-taxonomy-v1-phase-1-4`
 - `59-observe-taxonomy-analytics-completion`
 - `62-litellm-pi-craft-codex-execution-hardening`
+- `65-codex-subscription-prompt-cache-parity`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-10`
+Last-Validated: `2026-07-12`
 Tags: `pi`, `runtime-integration`, `taxonomy`, `request-intent`, `inspection`
 Created: `2026-06-24`
-Last Validated: `2026-06-28`
-Validated By: `run-59`
+Last Validated: `2026-07-12`
+Validated By: `run-65`
 
 ## Package Identity
 
@@ -89,8 +90,12 @@ Two-tier progressive classifier in `classify-with-progressive-disclosure.ts`:
 ## Durable Behavior Added After Run 57
 
 - `extension.ts` must refresh effective taxonomy on startup, `/role-model setup`, and `/role-model alias refresh`; otherwise runtime and package taxonomy can drift after runtime-side updates.
+- `extension.ts` must honor `options.endpoint ?? process.env.ROLE_MODEL_ENDPOINT ?? DEFAULT_ROLE_MODEL_ENDPOINT` for runtime request commands, so rebuilt-runtime verification can target an isolated Role-Model host without mutating package state.
 - `runtime-inspection.ts` must honor `options.endpoint ?? process.env.ROLE_MODEL_ENDPOINT ?? DEFAULT_ROLE_MODEL_ENDPOINT` so operator diagnostics can target rebuilt runtimes without mutating package state.
 - Pi inspection remains read-only: request lists, request detail, and latest explanation come from Role-Model runtime APIs and Pi must not synthesize routing reasons on its own.
+- downstream discovery mapping must preserve `piMapping.compat.promptCache` and `piMapping.compat.sessionAffinity` so Pi keeps runtime-derived cache and continuity behavior when selecting an alias-backed provider config.
 - Rebuilt-runtime alias proof for Pi must use the actual extension-prepared payload path against canonical runtime aliases such as `difficulty.remote-only`; provider truth should still come from `providerId`, while additive `vendorId`, `executionFamily`, and `adapterFamily` may be consumed as separate execution facts rather than collapsed into provider identity.
+- Live prompt-cache QA for Pi should compare the CLI footer cache percentage against canonical request-detail or telemetry receipts; CLI output alone is not sufficient proof.
 - Multi-turn Pi verification must reuse a real Pi session when testing Codex Subscription history conversion. Single-turn or `--no-session` probes can miss assistant-history replay bugs, such as invalid Responses `input_text` content parts for previous assistant output.
+- When an alias proof includes an image-bearing pivot turn, reuse the logical Pi `session-id` but refresh local Pi session storage before the return-to-`A` leg if the image turn carries image modality into later alias requests.
 - If noninteractive Pi CLI verification hangs while Role-Model telemetry shows successful requests, treat the runtime request rows as useful reachability evidence but do not claim a clean Pi CLI pass. Clean Pi verification requires both a real Pi request and a terminating Pi command transcript.

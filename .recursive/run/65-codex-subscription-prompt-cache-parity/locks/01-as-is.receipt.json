@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "a666c99ac517c33a3c39381bb73f3ab70c1bec57da4a3afe937772dcfcff4590",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.recursive\\run\\65-codex-subscription-prompt-cache-parity\\01-as-is.md",
+  "locked_at": "2026-07-11T23:58:20Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "dc61e8d2fb46fde8b90c5bd57d8d149bea861292f520f3bd70b4230a2fd8e9b9",
+    "00-worktree.md": "df89e77c02b2ad72b35a1574b871ccb09d332f3fe9c16fd11647df5279a276b4"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "af4498ce35cd91af34374678a1b48829678e19f8c3b5ce00582b53a5735a6a81"
+}

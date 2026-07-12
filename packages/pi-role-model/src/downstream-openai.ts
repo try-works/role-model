@@ -82,6 +82,20 @@ function isReasoningSupported(model: DownstreamOpenAIModelRecord): boolean {
   return false;
 }
 
+function readPiCompat(
+  model: DownstreamOpenAIModelRecord,
+): Required<NonNullable<PiModelSelection["compat"]>> {
+  const compat =
+    typeof model.piMapping.compat === "object" && model.piMapping.compat !== null
+      ? model.piMapping.compat
+      : undefined;
+  return {
+    supportsDeveloperRole: compat?.supportsDeveloperRole ?? false,
+    sendSessionAffinityHeaders: compat?.sendSessionAffinityHeaders ?? false,
+    supportsLongCacheRetention: compat?.supportsLongCacheRetention ?? false,
+  };
+}
+
 function resolveLimit(
   model: DownstreamOpenAIModelRecord,
   kind: "contextWindow" | "maxTokens",
@@ -127,7 +141,7 @@ export function createPiModelSelection(
     maxTokens,
     reasoning: isReasoningSupported(model),
     api: "openai-completions",
-    compat: { supportsDeveloperRole: false },
+    compat: readPiCompat(model),
   };
 }
 
@@ -161,7 +175,7 @@ export function mapDiscoveryToProviderConfig(
           contextWindow: contextWindow.value,
           maxTokens: maxTokens.value,
           reasoning: isReasoningSupported(model),
-          compat: { supportsDeveloperRole: false },
+          compat: readPiCompat(model),
         };
       }),
     },

@@ -102,7 +102,12 @@
       },
       "piMapping": {
         "contextWindow": 262144,
-        "maxTokens": 128000
+        "maxTokens": 128000,
+        "compat": {
+          "supportsDeveloperRole": false,
+          "sendSessionAffinityHeaders": true,
+          "supportsLongCacheRetention": true
+        }
       },
       "sources": [
         "catalog:deepseek/deepseek-v4-flash",
@@ -162,7 +167,12 @@
       },
       "piMapping": {
         "contextWindow": 1050000,
-        "maxTokens": 128000
+        "maxTokens": 128000,
+        "compat": {
+          "supportsDeveloperRole": false,
+          "sendSessionAffinityHeaders": true,
+          "supportsLongCacheRetention": true
+        }
       },
       "sources": ["catalog:openai/gpt-5.4"]
     }

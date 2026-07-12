@@ -1,0 +1,1 @@
+Inspect the attached image and reply with exactly ALIAS_IMAGE_OK.

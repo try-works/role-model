@@ -1,6 +1,8 @@
 Run: `/.recursive/run/65-codex-subscription-prompt-cache-parity/`
 Phase: `00 Requirements`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-07-11T23:42:04Z`
+LockHash: `dc61e8d2fb46fde8b90c5bd57d8d149bea861292f520f3bd70b4230a2fd8e9b9`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/RECURSIVE.md`
@@ -47,7 +49,7 @@ Inputs:
   - requested outcome is Codex Subscription cache support inside role-model
 Outputs:
 - `/.recursive/run/65-codex-subscription-prompt-cache-parity/00-requirements.md`
-Scope note: This run repairs the prompt-cache accounting and downstream response contract for OpenAI Codex Subscription execution and for routed cache-affinity continuity across OpenAI-compatible execution surfaces so repeated GPT-5.4 requests can surface real cache usage to any downstream OpenAI-compatible application and to role-model telemetry instead of a permanent `0%` cache display while direct LiteLLM-backed providers already report hits correctly. The run does not assume a shared cache across providers; it requires stable cache-affinity hints so each endpoint can preserve and later reuse its own upstream cache when routing returns to it.
+Scope note: This run repairs the prompt-cache accounting and downstream response contract for OpenAI Codex Subscription execution and for routed cache-affinity continuity across OpenAI-compatible execution surfaces so repeated GPT-5.4 requests can surface real cache usage to downstream OpenAI-compatible consumers, to role-model telemetry, and specifically to the Pi runtime CLI cache-percentage display instead of a permanent `0%` cache display while direct LiteLLM-backed providers already report hits correctly. The run does not assume a shared cache across providers; it requires stable cache-affinity hints so each endpoint can preserve and later reuse its own upstream cache when routing returns to it.
 
 ## TODO
 
@@ -73,7 +75,7 @@ Scope note: This run repairs the prompt-cache accounting and downstream response
   - `role-model-router/packages/sqlite-memory/**`
   - `role-model-router/apps/runtime-ui/**`
 - User-visible outcome:
-  - repeated GPT-5.4 Codex Subscription requests expose truthful cached-token usage through downstream OpenAI-compatible responses, canonical runtime telemetry, and the existing runtime overview plus Observe analytics graphs, and routed sessions preserve stable cache-affinity hints so downstream applications no longer show `0%` cache when upstream cache hits are actually occurring and previously warmed endpoints can still regain their own cache benefit when routing returns to them
+  - repeated GPT-5.4 Codex Subscription requests expose truthful cached-token usage through downstream OpenAI-compatible responses, canonical runtime telemetry, the Pi runtime CLI cache-percentage display, and the existing runtime overview plus Observe analytics graphs, and routed sessions preserve stable cache-affinity hints so downstream applications no longer show `0%` cache when upstream cache hits are actually occurring and previously warmed endpoints can still regain their own cache benefit when routing returns to them
 - Main risk theme:
   - a shallow fix could fabricate cache support, silently keep Codex Subscription rows excluded from telemetry analytics, regress the already-correct LiteLLM/DeepSeek cache path, or mutate cache-affinity hints during reroutes so warmed endpoints lose future reuse opportunities
 
@@ -250,38 +252,62 @@ Acceptance criteria:
 ### `R7` Add deterministic RED and GREEN coverage for cache parity
 
 Description:
-The run must be test-driven so future changes cannot silently return Codex Subscription cache reporting to `0%`.
+The run must be test-driven so future changes cannot silently return Codex Subscription cache reporting to `0%`. Every deterministic behavior changed under `R1` through `R6` must have an explicit automated RED-first case and a GREEN pass condition; generic "broad regression coverage" wording is not enough.
 
 Acceptance criteria:
-- failing automated tests are added before production changes for the missing Codex and OpenAI cache facts
-- provider-openai tests cover Responses and Chat Completions normalization with both cache-hit payloads and documented supported-zero payloads
-- provider-openai tests cover Kimi-style chat-completions payloads with top-level `usage.cached_tokens`
-- host-bridge tests cover native Codex transcript normalization or synthetic response serialization with cache-hit usage and supported-zero usage
-- host-bridge tests cover `prompt_cache_key` propagation on both Responses and Chat Completions ingress
-- host-bridge or provider tests cover LiteLLM-compatible affinity propagation using the LiteLLM-documented session continuity surface rather than only repo-local session headers
-- host-bridge or adapter tests cover routed continuity where cache-affinity hints survive an `A -> B -> A` endpoint sequence without mutating the logical session key
-- host-bridge or routing tests cover per-domain continuity persistence so a logical session can hold distinct resumable cache state for at least two different warmed endpoints at once
-- tests prove that downstream OpenAI-compatible `input_tokens` / `prompt_tokens` remain standard totals and are not pre-subtracted before downstream applications consume them
-- telemetry analytics tests prove cache-hit-token-rate behavior for supported Codex Subscription rows
-- runtime-ui analytics or chart-definition tests prove the overview and Observe graph/query contracts continue to surface cache metrics for supported Codex Subscription rows while preserving supported-zero and unsupported state semantics
-- regression coverage keeps the existing LiteLLM cache path green
+- failing automated tests are added before production changes for every deterministic behavior changed under `R1` through `R6`; no production code for an in-scope surface lands without a corresponding RED case first
+- the Phase 3 TDD matrix names a concrete owning automated test path for every case below; one automated test may satisfy multiple case IDs only when the case-to-test mapping is explicit in the artifact
+- `T1`: `provider-openai` Responses normalization preserves non-zero `usage.input_tokens_details.cached_tokens`
+- `T2`: `provider-openai` Responses normalization preserves documented supported-zero semantics for a miss or sub-`1024` request rather than treating the surface as unsupported
+- `T3`: `provider-openai` Chat Completions normalization preserves non-zero `usage.prompt_tokens_details.cached_tokens`
+- `T4`: `provider-openai` Chat Completions normalization preserves documented supported-zero semantics for a miss or sub-`1024` request
+- `T5`: `provider-openai` normalizes current Kimi chat-completions payloads with top-level `usage.cached_tokens`
+- `T6`: cache-write token counts are preserved when present and remain absent or zero truthfully when the upstream omits them
+- `T7`: additive vendor cache metadata survives normalization without being overwritten by zero defaults
+- `T8`: native Codex transcript normalization or bridge-owned synthetic Responses serialization preserves cache-hit facts
+- `T9`: native Codex transcript normalization or bridge-owned synthetic Responses serialization preserves supported-zero cache facts
+- `T10`: streamed and non-streamed Codex/OpenAI-compatible response synthesis uses one consistent cache-fact source and remains structurally consistent
+- `T11`: Responses ingress forwards `prompt_cache_key` into the shared execution request and downstream provider payload
+- `T12`: Chat Completions ingress forwards `prompt_cache_key` into the shared execution request and downstream provider payload
+- `T13`: LiteLLM-backed continuity propagation uses LiteLLM-documented affinity inputs such as `metadata.session_id`, `x-litellm-session-id`, or `x-litellm-trace-id`, rather than only repo-local session headers
+- `T14`: the continuity ledger persists at least two warmed upstream cache domains for one logical session without collapsing them into one shared slot
+- `T15`: an `A -> B -> A` route sequence preserves endpoint `A`'s cache-affinity identity and restores `A`'s continuity state when routing returns to `A`
+- `T16`: continuity state records whether execution restored an existing domain record or created a fresh one, and keeps advisory warmed-domain preference distinct from hard continuity constraints
+- `T17`: downstream OpenAI-compatible `usage.input_tokens` and `usage.prompt_tokens` remain standard totals and are not pre-subtracted before downstream consumers parse `cached_tokens`
+- `T18`: canonical request-detail and telemetry persistence retain truthful cache-support flags plus cache read and write token counts for Codex Subscription rows
+- `T19`: telemetry analytics retain truthful cache-hit-rate, cache-hit-token-rate, cache-backed-request, and cache-avoided-cost behavior for supported Codex Subscription rows
+- `T20`: runtime overview plus Observe analytics/chart-definition coverage preserves hit, supported-zero, and unsupported state semantics for Codex Subscription rows
+- `T21`: existing LiteLLM or DeepSeek cache normalization and telemetry behavior remain green as a regression control
+- `T22`: direct non-Codex OpenAI-compatible API-key execution remains green as a regression control for generic OpenAI-family logic
+- `T23`: current Kimi coding OAuth / Kimi for Coding chat-completions behavior remains green as a regression control for `prompt_cache_key` and `usage.cached_tokens`
+- `T24`: non-cache-supporting providers or models continue to report unsupported or zero cache facts truthfully instead of inheriting fake Codex-specific behavior
+- every listed case above is executed in RED before the relevant production change and in GREEN after the change; if multiple case IDs are satisfied by one automated test, the artifact records that merge explicitly instead of silently omitting case coverage
 
 ### `R8` Verify the downstream-visible scenario end to end
 
 Description:
-Final verification must prove the actual user symptom is repaired: repeated GPT-5.4 Codex Subscription traffic no longer looks permanently uncached to downstream consumers.
+Final verification against the rebuilt runtime must prove the actual user symptom is repaired in the downstream client that exhibited it: repeated GPT-5.4 Codex Subscription traffic no longer looks permanently uncached in the Pi runtime CLI, and the CLI's displayed cache percentage agrees with the runtime's canonical cache facts.
 
 Acceptance criteria:
-- verification includes at least one repeated Codex Subscription request pair with a cacheable repeated prefix at or above `1024` input tokens, where the downstream response or canonical receipt shows zero cached tokens on the initial request and non-zero cached tokens on a later cache hit, or records a provider-side reason that a live hit could not be produced
-- verification proves the repaired cache facts are visible on the downstream surface consumers use, not only inside internal logs
-- verification records whether `prompt_cache_key` was used for the live proof and which request surface carried it
-- verification confirms the downstream payload shape stays compatible with Responses-family parsers that expect total input plus cache-detail subfield, not pre-normalized non-cached input
-- verification includes one runtime dashboard proof from the existing overview or Observe analytics surfaces showing the same repaired cache facts and state semantics that the canonical request/response receipts report
-- verification includes one LiteLLM-backed proof aligned with LiteLLM's documented affinity mechanism and one Kimi-shaped chat-completions proof aligned with Kimi's documented `prompt_cache_key` and `usage.cached_tokens` behavior, or records the exact upstream limitation that blocked live proof
-- verification includes either a live or deterministic proof that an `A -> B -> A` routed sequence preserves endpoint `A`'s cache-affinity identity, so returning to `A` can still realize partial or full cache benefit from `A`'s previously warmed upstream cache when the prefix remains eligible, or records the exact provider-side limitation blocking live proof
-- verification records whether warmed-domain preference influenced candidate choice and whether the final request restored an existing continuity record or started a fresh one
-- verification includes a parity control showing the existing LiteLLM or DeepSeek cache path remains correct
-- final evidence names the exact model family and request surface used for verification
+- verification runs against the rebuilt role-model runtime from the run's implementation commit, not only against mocked payloads or isolated unit-test fixtures
+- the Phase 5 verification matrix names a concrete evidence path for every case below; a single evidence artifact may satisfy multiple case IDs only when the case-to-evidence mapping is explicit in the artifact
+- `V1`: live Pi runtime CLI execution on the exact Codex Subscription path that previously showed permanent `0%`, using a cache-eligible repeated prefix at or above `1024` input tokens against the rebuilt runtime
+- `V2`: the first live Pi runtime CLI Codex Subscription request records the CLI output, downstream payload or canonical receipt, and displayed cache percentage for the cold or supported-zero request
+- `V3`: the repeated live Pi runtime CLI Codex Subscription request records the CLI output, downstream payload or canonical receipt, and displayed cache percentage for the warmed request, with non-zero cached tokens when a live hit is produced
+- `V4`: Pi runtime CLI displayed cache percentage is cross-checked against the rebuilt runtime's canonical cached-token facts for the same request pair, and any rounding or presentation differences are explained explicitly rather than hand-waved
+- `V5`: verification proves Pi runtime CLI no longer displays a permanently stuck `0%` cache value for the repeated eligible Codex Subscription request when the runtime reports a hit
+- `V6`: verification records whether `prompt_cache_key` was used for the live Pi proof, which request surface carried it, and whether the session restored an existing continuity record or started a fresh one
+- `V7`: verification confirms the downstream payload shape consumed by Pi remains compatible with Responses-family parsers that expect total input plus cache-detail subfield, not pre-normalized non-cached input
+- `V8`: verification includes one runtime request-detail or canonical receipt proof showing the same Codex cache facts and continuity state that the Pi runtime CLI display reflected
+- `V9`: verification includes one runtime dashboard proof from the existing overview or Observe analytics surfaces showing the same Codex cache facts and supported-zero or hit state semantics reported by the canonical receipts
+- `V10`: verification includes a supported-zero control showing that a truthful miss, cold request, or sub-`1024` request is represented as `0` rather than as an unsupported or omitted cache surface
+- `V11`: verification includes either a live or deterministic proof that an `A -> B -> A` routed sequence preserves endpoint `A`'s cache-affinity identity so returning to `A` can still realize endpoint `A`'s own warmed-cache benefit when eligible, or records the exact provider-side limitation blocking live proof
+- `V12`: verification records whether warmed-domain preference influenced candidate choice and whether the final request restored an existing continuity record or started a fresh one
+- `V13`: verification includes a live Pi runtime CLI LiteLLM or DeepSeek parity control aligned with the documented affinity mechanism, and confirms the CLI still displays a truthful non-zero cache percentage when the warmed request hits cache
+- `V14`: verification includes a Kimi-shaped chat-completions proof aligned with documented `prompt_cache_key` and `usage.cached_tokens` behavior, or records the exact upstream limitation that blocked live proof
+- `V15`: verification includes a direct non-Codex OpenAI-compatible control, live where feasible and otherwise deterministic, proving the generic OpenAI-family path still serializes cache facts truthfully after the fix
+- `V16`: final evidence names the exact rebuilt runtime commit, startup command, Pi runtime CLI command, model family, request surface, session or continuity inputs, and evidence paths used for every verification case
+- if a live verification case cannot be completed because of upstream, credential, quota, rate-limit, or routing-environment constraints, the artifact records the exact blocking reason, the exact commands attempted, and the deterministic substitute proof; a generic note that live proof was unavailable is not sufficient
 
 ## Out of Scope
 
@@ -313,6 +339,7 @@ Future follow-up note:
 - supported OpenAI-family misses and sub-threshold requests must serialize `cached_tokens: 0` in the documented usage-detail field rather than omitting that field
 - current Kimi coding docs expose `usage.cached_tokens` at the top level of chat-completions usage, so normalization must not assume only OpenAI's nested cache-detail objects exist on every OpenAI-compatible upstream
 - final cache-hit QA must use a repeated prompt prefix that meets the current documented `1024`-token eligibility floor
+- final downstream-visible QA must include live Pi runtime CLI requests against the rebuilt runtime and must cross-check the CLI's displayed cache percentage against canonical runtime cache facts
 - downstream OpenAI-compatible usage totals must stay OpenAI-native because downstream applications may perform their own cached-token subtraction when converting Responses-family usage into internal usage models
 - existing LiteLLM cache reporting is the regression floor and must remain green
 - reroutes must preserve stable cache-affinity hints for eligible OpenAI-compatible surfaces instead of generating a fresh logical cache identity per turn

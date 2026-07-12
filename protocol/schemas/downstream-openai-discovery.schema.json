@@ -234,7 +234,16 @@
           "required": ["contextWindow", "maxTokens"],
           "properties": {
             "contextWindow": { "$ref": "#/$defs/NullableNonNegativeInteger" },
-            "maxTokens": { "$ref": "#/$defs/NullableNonNegativeInteger" }
+            "maxTokens": { "$ref": "#/$defs/NullableNonNegativeInteger" },
+            "compat": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "supportsDeveloperRole": { "type": "boolean" },
+                "sendSessionAffinityHeaders": { "type": "boolean" },
+                "supportsLongCacheRetention": { "type": "boolean" }
+              }
+            }
           }
         },
         "sources": { "$ref": "#/$defs/StringList" }

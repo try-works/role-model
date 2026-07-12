@@ -36,6 +36,11 @@ export interface DownstreamOpenAIModelRecord {
   piMapping: {
     contextWindow: number | null;
     maxTokens: number | null;
+    compat?: {
+      supportsDeveloperRole?: boolean;
+      sendSessionAffinityHeaders?: boolean;
+      supportsLongCacheRetention?: boolean;
+    };
   };
   sources?: string[];
 }
@@ -79,6 +84,8 @@ export interface PiProviderModelConfig {
   api?: "openai-completions";
   compat?: {
     supportsDeveloperRole?: boolean;
+    sendSessionAffinityHeaders?: boolean;
+    supportsLongCacheRetention?: boolean;
   };
 }
 

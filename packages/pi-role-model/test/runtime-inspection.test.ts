@@ -10,6 +10,28 @@ function jsonResponse(payload: unknown, status = 200) {
 }
 
 describe("runtime inspection helpers", () => {
+  test("uses ROLE_MODEL_ENDPOINT when no explicit endpoint override is provided", async () => {
+    const calls: string[] = [];
+    const originalEndpoint = process.env.ROLE_MODEL_ENDPOINT;
+    process.env.ROLE_MODEL_ENDPOINT = "http://127.0.0.1:4567/";
+    try {
+      await listRecentRequests({
+        fetch: async (input) => {
+          calls.push(String(input));
+          return jsonResponse([]);
+        },
+      });
+    } finally {
+      if (originalEndpoint === undefined) {
+        delete process.env.ROLE_MODEL_ENDPOINT;
+      } else {
+        process.env.ROLE_MODEL_ENDPOINT = originalEndpoint;
+      }
+    }
+
+    expect(calls).toEqual(["http://127.0.0.1:4567/api/role-model/requests"]);
+  });
+
   test("lists recent structured runtime requests", async () => {
     const requests = await listRecentRequests({
       fetch: async () =>

@@ -1,4 +1,4 @@
-import { DEFAULT_ROLE_MODEL_ENDPOINT, normalizeEndpoint } from "./config.js";
+import { createRoleModelConfig } from "./config.js";
 
 export interface RoleModelRecentRequest {
   readonly requestId: string;
@@ -159,7 +159,9 @@ function parseRouterDecision(value: unknown): RoleModelRouterDecisionInspection 
 
 function resolveInspectionConfig(input: RuntimeInspectionInput) {
   return {
-    endpoint: normalizeEndpoint(input.endpoint ?? DEFAULT_ROLE_MODEL_ENDPOINT),
+    endpoint: createRoleModelConfig({
+      ...(input.endpoint === undefined ? {} : { endpoint: input.endpoint }),
+    }).endpoint,
     fetchImpl: input.fetch ?? fetch,
     timeoutMs: input.requestTimeoutMs ?? 2500,
   };

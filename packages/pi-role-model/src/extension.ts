@@ -1,6 +1,6 @@
 import { createFileAliasStore } from "./alias-store.js";
 import { type RoleModelCommandDependencies, createRoleModelCommandHandler } from "./commands.js";
-import { DEFAULT_ROLE_MODEL_ENDPOINT, normalizeEndpoint } from "./config.js";
+import { createRoleModelConfig } from "./config.js";
 import { registerRoleModelProvider } from "./provider-registration.js";
 import { injectRoleModelIntentIntoPayloadWithRuntimeTasks } from "./request-intent.js";
 import { discoverRoleModelRuntime } from "./runtime-discovery.js";
@@ -26,7 +26,9 @@ export interface RoleModelExtensionOptions extends Partial<RoleModelCommandDepen
 
 export function createRoleModelExtension(options: RoleModelExtensionOptions = {}) {
   return async function roleModelExtension(pi: PiExtensionAPI): Promise<void> {
-    const runtimeEndpoint = normalizeEndpoint(options.endpoint ?? DEFAULT_ROLE_MODEL_ENDPOINT);
+    const runtimeEndpoint = createRoleModelConfig({
+      ...(options.endpoint === undefined ? {} : { endpoint: options.endpoint }),
+    }).endpoint;
     const roleModelModelIds = new Set<string>();
     let effectiveTaxonomy: CompactTaxonomy | undefined;
     const rememberRoleModelModels = (discovery: DownstreamOpenAIDiscovery) => {

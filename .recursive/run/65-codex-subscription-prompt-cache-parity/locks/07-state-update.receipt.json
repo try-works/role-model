@@ -1,0 +1,19 @@
+{
+  "artifact": "07-state-update.md",
+  "artifact_hash": "cbd6676bcdc6c9bb2cbf6c4b66ae26d91efced9740bcb44cb603ea4d5792af9c",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.recursive\\run\\65-codex-subscription-prompt-cache-parity\\07-state-update.md",
+  "locked_at": "2026-07-12T03:01:34Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "dc61e8d2fb46fde8b90c5bd57d8d149bea861292f520f3bd70b4230a2fd8e9b9",
+    "00-worktree.md": "df89e77c02b2ad72b35a1574b871ccb09d332f3fe9c16fd11647df5279a276b4",
+    "01-as-is.md": "a666c99ac517c33a3c39381bb73f3ab70c1bec57da4a3afe937772dcfcff4590",
+    "01.5-root-cause.md": "4e32e7fa87fe8e22aecdf860c22be6409468aa3f7ed9a13799ca0aee1cbc0f4a",
+    "02-to-be-plan.md": "856b345cb25384f28b945cc3a9a59e55031f20a1d369213b49f58a16004aae11",
+    "03-implementation-summary.md": "9c611c4efb2632c473af75f5ef6420de3a834fe2bfa1b8ea1ceb0495806937e9",
+    "04-test-summary.md": "ed99f994b2eb42b8f0fcdc7a7d155a73be3e0fc69e2a27b0fe1c840cd2d88897",
+    "05-manual-qa.md": "8b7875e056666ae81b952128fb1402a129ec7b8e97eba9ac9ac9f9358a5cc065",
+    "06-decisions-update.md": "b56f37b43e5b2c85d70583df886eee85204146c6afeffd9e79260ad121851076"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "3f26378e3016748c82b67915a388a1008d16ba170e7ff70b06731a04a0acd659"
+}

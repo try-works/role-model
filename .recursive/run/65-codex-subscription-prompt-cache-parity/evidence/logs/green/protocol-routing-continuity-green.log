@@ -1,0 +1,18 @@
+
+> @role-model-router/protocol-routing@0.0.0 test D:\DEV\role-model\.worktrees\65-codex-subscription-prompt-cache-parity\role-model-router\packages\protocol-routing
+> vitest run test
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/65-codex-subscription-prompt-cache-parity/role-model-router/packages/protocol-routing
+
+ ✓ test/observed-data-decay-policy.test.ts (2 tests) 15ms
+ ✓ test/catalog-economics-routing.test.ts (3 tests) 237ms
+(node:28432) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (11 tests) 291ms
+
+ Test Files  3 passed (3)
+      Tests  16 passed (16)
+   Start at  10:16:55
+   Duration  5.08s (transform 3.27s, setup 0ms, collect 3.90s, tests 543ms, environment 1ms, prepare 4.49s)
+

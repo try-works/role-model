@@ -79,6 +79,11 @@ export interface DownstreamOpenAIModelRecord {
   readonly piMapping: {
     readonly contextWindow: number | null;
     readonly maxTokens: number | null;
+    readonly compat?: {
+      readonly supportsDeveloperRole?: boolean;
+      readonly sendSessionAffinityHeaders?: boolean;
+      readonly supportsLongCacheRetention?: boolean;
+    };
   };
   readonly sources: readonly string[];
 }
@@ -197,6 +202,19 @@ function buildConditionalSupport(input: {
   return conditional;
 }
 
+const PI_PROMPT_CACHE_PROVIDER_IDS = new Set(["deepseek", "moonshot", "openai"]);
+
+function supportsPiPromptCacheContinuity(input: {
+  readonly rows: readonly {
+    readonly profile: ModelCapabilityProfile;
+  }[];
+}): boolean {
+  return (
+    input.rows.length > 0 &&
+    input.rows.every((row) => PI_PROMPT_CACHE_PROVIDER_IDS.has(row.profile.providerId))
+  );
+}
+
 function aggregateModelRecord(input: {
   readonly id: string;
   readonly type: "model" | "alias";
@@ -224,6 +242,7 @@ function aggregateModelRecord(input: {
     maxContextWindow: maxNumber(input.rows.map((row) => row.profile.limits.contextWindow)),
     maxOutputTokens: maxNumber(input.rows.map((row) => row.profile.limits.maxOutputTokens)),
   };
+  const supportsPiCompat = supportsPiPromptCacheContinuity({ rows: input.rows });
 
   const endpointIds = uniqueSorted(input.endpointIds.map(toPublicEndpointId));
   return {
@@ -290,6 +309,11 @@ function aggregateModelRecord(input: {
     piMapping: {
       contextWindow: limits.safeContextWindow,
       maxTokens: limits.safeMaxOutputTokens,
+      compat: {
+        supportsDeveloperRole: false,
+        sendSessionAffinityHeaders: supportsPiCompat,
+        supportsLongCacheRetention: supportsPiCompat,
+      },
     },
     sources: uniqueSorted(
       input.rows.flatMap((row) =>

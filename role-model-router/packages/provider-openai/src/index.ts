@@ -32,14 +32,14 @@ function getOpenAICapabilities(hasStructuredOutput: boolean): ProviderCapability
       toolArguments: "delta",
     },
     promptCaching: {
-      supported: false,
-      mode: "unsupported",
+      supported: true,
+      mode: "implicit",
     },
     usage: {
       inputTokens: true,
       outputTokens: true,
-      cacheReadTokens: false,
-      cacheWriteTokens: false,
+      cacheReadTokens: true,
+      cacheWriteTokens: true,
     },
   };
 }
@@ -111,13 +111,24 @@ function hasOnlyKimiBuiltinHostedTools(
 }
 
 function buildOpenAIHeaders(input: ProviderAdapterExecutionContext): Record<string, string> {
+  const sessionId =
+    typeof input.executionRequest.sessionAffinity?.sessionId === "string"
+      ? input.executionRequest.sessionAffinity.sessionId
+      : undefined;
+  const clientRequestId =
+    typeof input.executionRequest.sessionAffinity?.clientRequestId === "string"
+      ? input.executionRequest.sessionAffinity.clientRequestId
+      : undefined;
+  const usesLiteLLMContinuityHeaders =
+    input.target.adapterFamily === "litellm-proxy" ||
+    input.target.candidate.identity.serving_source === "vendor-litellm";
   return {
     authorization: `Bearer ${input.target.account?.credentialRef.ref ?? "OPENAI_API_KEY"}`,
-    ...(typeof input.executionRequest.sessionAffinity?.sessionId === "string"
-      ? { "session-id": input.executionRequest.sessionAffinity.sessionId }
-      : {}),
-    ...(typeof input.executionRequest.sessionAffinity?.clientRequestId === "string"
-      ? { "x-client-request-id": input.executionRequest.sessionAffinity.clientRequestId }
+    ...(sessionId ? { "session-id": sessionId } : {}),
+    ...(clientRequestId ? { "x-client-request-id": clientRequestId } : {}),
+    ...(usesLiteLLMContinuityHeaders && sessionId ? { "x-litellm-session-id": sessionId } : {}),
+    ...(usesLiteLLMContinuityHeaders && (clientRequestId ?? sessionId)
+      ? { "x-litellm-trace-id": clientRequestId ?? sessionId ?? "" }
       : {}),
   };
 }
@@ -219,6 +230,61 @@ function readLatencyMs(input: {
   readonly responseCapture: ProviderAdapterNormalizeContext["responseCapture"];
 }): number {
   return input.responseCapture.vendorMetadata?.latencyMs ?? 120;
+}
+
+type OpenAICacheFacts = {
+  readonly readTokens: number;
+  readonly writeTokens: number;
+  readonly used: boolean;
+  readonly readSupported: boolean;
+  readonly writeSupported: boolean;
+};
+
+function readNumericField(value: unknown, key: string): number | undefined {
+  if (!value || typeof value !== "object" || !(key in value)) {
+    return undefined;
+  }
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "number" ? field : undefined;
+}
+
+function readOpenAIUsageCacheFacts(
+  usage: unknown,
+  vendorMetadata?: ProviderAdapterNormalizeContext["responseCapture"]["vendorMetadata"],
+): OpenAICacheFacts {
+  const promptDetails =
+    usage && typeof usage === "object" && "prompt_tokens_details" in usage
+      ? (usage as Record<string, unknown>).prompt_tokens_details
+      : undefined;
+  const inputDetails =
+    usage && typeof usage === "object" && "input_tokens_details" in usage
+      ? (usage as Record<string, unknown>).input_tokens_details
+      : undefined;
+  const readTokensFromBody =
+    readNumericField(inputDetails, "cached_tokens") ??
+    readNumericField(promptDetails, "cached_tokens") ??
+    readNumericField(usage, "cached_tokens");
+  const writeTokensFromBody =
+    readNumericField(inputDetails, "cache_write_tokens") ??
+    readNumericField(promptDetails, "cache_write_tokens") ??
+    readNumericField(usage, "cache_write_tokens");
+  const readSupported =
+    typeof readTokensFromBody === "number" ||
+    typeof vendorMetadata?.cacheReadTokens === "number" ||
+    typeof vendorMetadata?.cacheUsed === "boolean";
+  const writeSupported =
+    typeof writeTokensFromBody === "number" || typeof vendorMetadata?.cacheWriteTokens === "number";
+  const readTokens = readTokensFromBody ?? vendorMetadata?.cacheReadTokens ?? 0;
+  const writeTokens = writeTokensFromBody ?? vendorMetadata?.cacheWriteTokens ?? 0;
+  const used = vendorMetadata?.cacheUsed ?? readTokens > 0;
+
+  return {
+    readTokens,
+    writeTokens,
+    used,
+    readSupported,
+    writeSupported,
+  };
 }
 
 function readAssistantContent(
@@ -702,6 +768,11 @@ export function buildOpenAIRequest(
         ...(input.executionRequest.toolChoice !== undefined
           ? { tool_choice: input.executionRequest.toolChoice }
           : {}),
+        ...(input.executionRequest.promptCache &&
+        input.executionRequest.promptCache.mode !== "disabled" &&
+        typeof input.executionRequest.promptCache.key === "string"
+          ? { prompt_cache_key: input.executionRequest.promptCache.key }
+          : {}),
         ...(reasoning ?? {}),
         ...(usesKimiBuiltinHostedWebSearch
           ? {
@@ -809,9 +880,17 @@ export function normalizeOpenAIResponse(
       usage?: {
         prompt_tokens?: number;
         completion_tokens?: number;
+        prompt_tokens_details?: {
+          cached_tokens?: number;
+          cache_write_tokens?: number;
+        };
+        cached_tokens?: number;
+        cache_write_tokens?: number;
       };
     };
     const firstChoice = body.choices?.[0];
+    const cacheFacts = readOpenAIUsageCacheFacts(body.usage, input.responseCapture.vendorMetadata);
+    const vendorMetadata = input.responseCapture.vendorMetadata;
     const outputText = readAssistantContent(firstChoice?.message);
     const reasoningText = readAssistantReasoning(firstChoice?.message);
     const toolCalls = (firstChoice?.message?.tool_calls ?? [])
@@ -847,41 +926,39 @@ export function normalizeOpenAIResponse(
       },
       promptCache: {
         requested: Boolean(input.executionRequest?.promptCache),
-        used: false,
-        readTokens: 0,
-        writeTokens: 0,
+        used: cacheFacts.used,
+        readTokens: cacheFacts.readTokens,
+        writeTokens: cacheFacts.writeTokens,
       },
       usage: {
         inputTokens: body.usage?.prompt_tokens ?? 0,
         outputTokens: body.usage?.completion_tokens ?? 0,
-        cacheReadTokens: 0,
-        cacheWriteTokens: 0,
+        cacheReadTokens: cacheFacts.readTokens,
+        cacheWriteTokens: cacheFacts.writeTokens,
       },
       errorClass: null,
       latencyMs: readLatencyMs(input),
       diagnostics: [],
-      ...(input.responseCapture.vendorMetadata
+      ...(input.responseCapture.vendorMetadata ||
+      cacheFacts.readSupported ||
+      cacheFacts.writeSupported
         ? {
             vendorMetadata: {
-              vendorId: input.responseCapture.vendorMetadata.vendorId,
-              ...(typeof input.responseCapture.vendorMetadata.latencyMs === "number"
-                ? { latencyMs: input.responseCapture.vendorMetadata.latencyMs }
+              vendorId: vendorMetadata?.vendorId,
+              ...(typeof vendorMetadata?.latencyMs === "number"
+                ? { latencyMs: vendorMetadata.latencyMs }
                 : {}),
-              ...(typeof input.responseCapture.vendorMetadata.costUsd === "number"
-                ? { costUsd: input.responseCapture.vendorMetadata.costUsd }
+              ...(typeof vendorMetadata?.costUsd === "number"
+                ? { costUsd: vendorMetadata.costUsd }
                 : {}),
-              ...(typeof input.responseCapture.vendorMetadata.cacheStatus === "string"
-                ? { cacheStatus: input.responseCapture.vendorMetadata.cacheStatus }
+              ...(typeof vendorMetadata?.cacheStatus === "string"
+                ? { cacheStatus: vendorMetadata.cacheStatus }
                 : {}),
-              ...(typeof input.responseCapture.vendorMetadata.cacheUsed === "boolean"
-                ? { cacheUsed: input.responseCapture.vendorMetadata.cacheUsed }
+              ...(typeof vendorMetadata?.cacheUsed === "boolean" || cacheFacts.readSupported
+                ? { cacheUsed: cacheFacts.used }
                 : {}),
-              ...(typeof input.responseCapture.vendorMetadata.cacheReadTokens === "number"
-                ? { cacheReadTokens: input.responseCapture.vendorMetadata.cacheReadTokens }
-                : {}),
-              ...(typeof input.responseCapture.vendorMetadata.cacheWriteTokens === "number"
-                ? { cacheWriteTokens: input.responseCapture.vendorMetadata.cacheWriteTokens }
-                : {}),
+              ...(cacheFacts.readSupported ? { cacheReadTokens: cacheFacts.readTokens } : {}),
+              ...(cacheFacts.writeSupported ? { cacheWriteTokens: cacheFacts.writeTokens } : {}),
             },
           }
         : {}),
@@ -905,8 +982,16 @@ export function normalizeOpenAIResponse(
     usage?: {
       input_tokens?: number;
       output_tokens?: number;
+      input_tokens_details?: {
+        cached_tokens?: number;
+        cache_write_tokens?: number;
+      };
+      cached_tokens?: number;
+      cache_write_tokens?: number;
     };
   };
+  const cacheFacts = readOpenAIUsageCacheFacts(body.usage, input.responseCapture.vendorMetadata);
+  const vendorMetadata = input.responseCapture.vendorMetadata;
 
   const outputText = (body.output ?? [])
     .flatMap((entry) =>
@@ -946,41 +1031,39 @@ export function normalizeOpenAIResponse(
     },
     promptCache: {
       requested: Boolean(input.executionRequest?.promptCache),
-      used: false,
-      readTokens: 0,
-      writeTokens: 0,
+      used: cacheFacts.used,
+      readTokens: cacheFacts.readTokens,
+      writeTokens: cacheFacts.writeTokens,
     },
     usage: {
       inputTokens: body.usage?.input_tokens ?? 0,
       outputTokens: body.usage?.output_tokens ?? 0,
-      cacheReadTokens: 0,
-      cacheWriteTokens: 0,
+      cacheReadTokens: cacheFacts.readTokens,
+      cacheWriteTokens: cacheFacts.writeTokens,
     },
     errorClass: null,
     latencyMs: readLatencyMs(input),
     diagnostics: [],
-    ...(input.responseCapture.vendorMetadata
+    ...(input.responseCapture.vendorMetadata ||
+    cacheFacts.readSupported ||
+    cacheFacts.writeSupported
       ? {
           vendorMetadata: {
-            vendorId: input.responseCapture.vendorMetadata.vendorId,
-            ...(typeof input.responseCapture.vendorMetadata.latencyMs === "number"
-              ? { latencyMs: input.responseCapture.vendorMetadata.latencyMs }
+            vendorId: vendorMetadata?.vendorId,
+            ...(typeof vendorMetadata?.latencyMs === "number"
+              ? { latencyMs: vendorMetadata.latencyMs }
               : {}),
-            ...(typeof input.responseCapture.vendorMetadata.costUsd === "number"
-              ? { costUsd: input.responseCapture.vendorMetadata.costUsd }
+            ...(typeof vendorMetadata?.costUsd === "number"
+              ? { costUsd: vendorMetadata.costUsd }
               : {}),
-            ...(typeof input.responseCapture.vendorMetadata.cacheStatus === "string"
-              ? { cacheStatus: input.responseCapture.vendorMetadata.cacheStatus }
+            ...(typeof vendorMetadata?.cacheStatus === "string"
+              ? { cacheStatus: vendorMetadata.cacheStatus }
               : {}),
-            ...(typeof input.responseCapture.vendorMetadata.cacheUsed === "boolean"
-              ? { cacheUsed: input.responseCapture.vendorMetadata.cacheUsed }
+            ...(typeof vendorMetadata?.cacheUsed === "boolean" || cacheFacts.readSupported
+              ? { cacheUsed: cacheFacts.used }
               : {}),
-            ...(typeof input.responseCapture.vendorMetadata.cacheReadTokens === "number"
-              ? { cacheReadTokens: input.responseCapture.vendorMetadata.cacheReadTokens }
-              : {}),
-            ...(typeof input.responseCapture.vendorMetadata.cacheWriteTokens === "number"
-              ? { cacheWriteTokens: input.responseCapture.vendorMetadata.cacheWriteTokens }
-              : {}),
+            ...(cacheFacts.readSupported ? { cacheReadTokens: cacheFacts.readTokens } : {}),
+            ...(cacheFacts.writeSupported ? { cacheWriteTokens: cacheFacts.writeTokens } : {}),
           },
         }
       : {}),

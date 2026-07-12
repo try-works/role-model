@@ -1,0 +1,25 @@
+{
+  "exitCode": 0,
+  "sessionId": "run65-alias-cache-v1",
+  "model": "difficulty.remote-only",
+  "responseId": "d199d983-d72a-4c41-b349-5be379509ea1",
+  "responseModel": "deepseek-v4-flash",
+  "usage": {
+    "input": 70,
+    "output": 37,
+    "cacheRead": 7808,
+    "cacheWrite": 0,
+    "totalTokens": 7915,
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0
+    }
+  },
+  "footerPromptTokens": 7878.0,
+  "footerCacheHitRatePercent": 99.1114,
+  "expectedFooterText": null,
+  "assistantText": "ALIAS_DEEPSEEK_CACHE_65"
+}

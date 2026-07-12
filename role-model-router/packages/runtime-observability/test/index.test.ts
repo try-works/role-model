@@ -179,9 +179,11 @@ describe("runtime-observability", () => {
       expect((bundle.diagnostics as { routing: Array<{ code: string }> }).routing).toEqual(
         expect.arrayContaining([expect.objectContaining({ code: "ROUTING_MODEL_ENABLED" })]),
       );
-      expect((bundle.diagnostics as { execution: Array<{ code: string }> }).execution).toEqual(
-        expect.arrayContaining([expect.objectContaining({ code: "PROMPT_CACHE_UNAVAILABLE" })]),
-      );
+      expect(
+        (bundle.diagnostics as { execution: Array<{ code: string }> }).execution.map(
+          (diagnostic) => diagnostic.code,
+        ),
+      ).not.toContain("PROMPT_CACHE_UNAVAILABLE");
       expect((bundle.diagnostics as { authAccount: Array<{ code: string }> }).authAccount).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ code: "AUTH_ACCOUNT_PROVIDER_AUTH_ERROR" }),
@@ -545,6 +547,71 @@ describe("runtime-observability", () => {
           }
         ).executionSemantics.payloadBytes.providerResponse,
       ).toBe(444);
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("derives routing cache affinity from continuity diagnostics instead of generic routing-model state", async () => {
+    const moduleImport = import(pathToFileURL(path.join(__dirname, "..", "src", "index.js")).href);
+    await expect(moduleImport).resolves.toHaveProperty("createRuntimeObservationBundle");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-runtime-observability-cache-affinity-"),
+    );
+
+    try {
+      const runtimeObservability = (await moduleImport) as {
+        createRuntimeObservationBundle(input: Record<string, unknown>): {
+          cacheObservability: {
+            routingCacheAffinity: boolean;
+          };
+        };
+      };
+      const validation = await runRuntimeAdapterValidation({
+        repoRoot,
+        fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+        runtimeStateRoot,
+        scopeId: "runtime-observability-cache-affinity-test",
+      });
+
+      const withoutWarmPreference = runtimeObservability.createRuntimeObservationBundle({
+        decision: validation.decision,
+        routingDiagnostics: {
+          retrievalReceiptId: validation.retrievalReceipt.receiptId,
+          routingModel: {
+            enabled: true,
+            endpointId: validation.decision.chosen_endpoint_id,
+            preferredEndpointIds: [validation.decision.chosen_endpoint_id],
+            ignoredEndpointIds: [],
+          },
+        },
+        retrievalReceipt: validation.retrievalReceipt,
+        contextEnvelope: validation.contextEnvelope,
+        execution: validation.execution,
+      });
+
+      const withWarmPreference = runtimeObservability.createRuntimeObservationBundle({
+        decision: validation.decision,
+        routingDiagnostics: {
+          retrievalReceiptId: validation.retrievalReceipt.receiptId,
+          cacheContinuity: {
+            enabled: true,
+            scopeSource: "session_affinity",
+            activeEndpointId: validation.decision.chosen_endpoint_id,
+            advisoryWarmedEndpointIds: [validation.decision.chosen_endpoint_id],
+            selectedEndpointId: validation.decision.chosen_endpoint_id,
+            selectedDomainState: "restored",
+            advisorySelectionApplied: true,
+          },
+        },
+        retrievalReceipt: validation.retrievalReceipt,
+        contextEnvelope: validation.contextEnvelope,
+        execution: validation.execution,
+      });
+
+      expect(withoutWarmPreference.cacheObservability.routingCacheAffinity).toBe(false);
+      expect(withWarmPreference.cacheObservability.routingCacheAffinity).toBe(true);
     } finally {
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }

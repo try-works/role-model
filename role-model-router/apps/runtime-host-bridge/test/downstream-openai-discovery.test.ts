@@ -282,4 +282,45 @@ describe("createDownstreamOpenAIDiscovery", () => {
     );
     expect(JSON.stringify(discovery)).not.toMatch(/credentialRef|C:\\\\|D:\\\\/i);
   });
+
+  test("adds Pi compat hints for prompt-cache continuity on supported remote aliases", () => {
+    const discovery = createDownstreamOpenAIDiscovery({
+      baseUrl: "http://127.0.0.1:3456",
+      catalog,
+      registry,
+      inventory: buildRoutableInventory(registry, sources),
+      modelAliases: [
+        {
+          aliasId: "difficulty.remote-only",
+          mode: "difficulty",
+          modelIds: [
+            "chatgpt/gpt-5.4",
+            "deepseek/deepseek-v4-flash",
+            "deepseek/deepseek-v4-pro",
+            "moonshot/kimi-k2.7-code",
+          ],
+        },
+      ],
+    });
+
+    for (const modelId of [
+      "chatgpt/gpt-5.4",
+      "deepseek/deepseek-v4-flash",
+      "moonshot/kimi-k2.7-code",
+      "difficulty.remote-only",
+    ]) {
+      expect(
+        (
+          discovery.models.find((entry) => entry.id === modelId)?.piMapping as Record<
+            string,
+            unknown
+          >
+        )?.compat,
+      ).toEqual({
+        supportsDeveloperRole: false,
+        sendSessionAffinityHeaders: true,
+        supportsLongCacheRetention: true,
+      });
+    }
+  });
 });

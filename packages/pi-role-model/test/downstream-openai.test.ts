@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  createPiModelSelection,
   mapDiscoveryToProviderConfig,
   validateDownstreamOpenAIDiscovery,
 } from "../src/downstream-openai.js";
@@ -96,6 +97,54 @@ describe("downstream OpenAI discovery mapping", () => {
         maxTokens: 8000,
         compat: expect.objectContaining({
           supportsDeveloperRole: false,
+        }),
+      }),
+    );
+  });
+
+  test("forwards Pi prompt-cache and session-affinity compat hints from discovery", () => {
+    const discoveryWithCompat = createDiscovery();
+    const model = discoveryWithCompat.models[0];
+    model.piMapping = {
+      ...model.piMapping,
+      compat: {
+        supportsDeveloperRole: false,
+        sendSessionAffinityHeaders: true,
+        supportsLongCacheRetention: true,
+      },
+    };
+
+    const provider = mapDiscoveryToProviderConfig(discoveryWithCompat);
+
+    expect(provider.config.models[0]).toEqual(
+      expect.objectContaining({
+        compat: expect.objectContaining({
+          supportsDeveloperRole: false,
+          sendSessionAffinityHeaders: true,
+          supportsLongCacheRetention: true,
+        }),
+      }),
+    );
+  });
+
+  test("preserves Pi compat hints when choosing an active Role-Model alias", () => {
+    const discoveryWithCompat = createDiscovery();
+    const model = discoveryWithCompat.models[0];
+    model.piMapping = {
+      ...model.piMapping,
+      compat: {
+        supportsDeveloperRole: false,
+        sendSessionAffinityHeaders: true,
+        supportsLongCacheRetention: true,
+      },
+    };
+
+    expect(createPiModelSelection(discoveryWithCompat, "role-model/auto")).toEqual(
+      expect.objectContaining({
+        compat: expect.objectContaining({
+          supportsDeveloperRole: false,
+          sendSessionAffinityHeaders: true,
+          supportsLongCacheRetention: true,
         }),
       }),
     );

@@ -3415,6 +3415,9 @@ describe("runtime-host-bridge", () => {
             input_tokens: 5,
             output_tokens: 3,
             total_tokens: 8,
+            input_tokens_details: {
+              cached_tokens: 4,
+            },
             output_tokens_details: { reasoning_tokens: 1 },
           },
         },
@@ -3549,6 +3552,99 @@ describe("runtime-host-bridge", () => {
         (payload.choices ?? []).map((choice) => choice.finish_reason).filter(Boolean),
       ),
     ).toEqual(["stop"]);
+    expect(payloads.at(-1)).toEqual(
+      expect.objectContaining({
+        usage: {
+          prompt_tokens: 5,
+          completion_tokens: 3,
+          prompt_tokens_details: {
+            cached_tokens: 4,
+          },
+        },
+      }),
+    );
+  });
+
+  test("Codex Subscription execution preserves supported-zero cache detail on non-streamed Responses replies", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        `data: ${JSON.stringify({
+          type: "response.completed",
+          response: {
+            id: "resp_codex_supported_zero",
+            status: "completed",
+            output_text: "cold response",
+            usage: {
+              input_tokens: 900,
+              output_tokens: 12,
+              input_tokens_details: {
+                cached_tokens: 0,
+              },
+            },
+          },
+        })}\n\n`,
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      );
+    });
+
+    const adapter = (
+      bridge as {
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{
+            statusCode: number;
+            body: unknown;
+          }>;
+        };
+      }
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
+
+    const result = await adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-responses-cache-tests",
+      requestId: "req-codex-responses-cache-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/responses",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: false,
+          input: "Return a cold response.",
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
+      },
+    });
+
+    expect(result.statusCode).toBe(200);
+    expect(result.body).toEqual(
+      expect.objectContaining({
+        id: "resp_codex_supported_zero",
+        usage: {
+          input_tokens: 900,
+          output_tokens: 12,
+          input_tokens_details: {
+            cached_tokens: 0,
+          },
+        },
+      }),
+    );
   });
 
   test("Codex Subscription execution writes chat-completions deltas before upstream completion", async () => {
@@ -5604,6 +5700,169 @@ describe("runtime-host-bridge", () => {
       clientRequestId: "client-chat-001",
     });
     expect(result.executionRequest.transportPreference).toBe("sse");
+  });
+
+  test("maps chat-completions prompt_cache_key into the execution request", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          executionRequest: Record<string, unknown>;
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Route this with a stable cache key." }],
+        prompt_cache_key: "chat-cache-key-001",
+      },
+      "chat-prompt-cache-001",
+    );
+
+    expect(result.executionRequest.promptCache).toEqual({
+      mode: "prefer",
+      key: "chat-cache-key-001",
+    });
+  });
+
+  test("tracks cache continuity per session across A -> B -> A and records create versus restore state", async () => {
+    expect(
+      typeof (bridge as { readCacheContinuityRouteHints?: unknown }).readCacheContinuityRouteHints,
+    ).toBe("function");
+    expect(
+      typeof (bridge as { persistCacheContinuityOutcome?: unknown }).persistCacheContinuityOutcome,
+    ).toBe("function");
+
+    const runtimeStateRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-cache-continuity-ledger-"),
+    );
+
+    try {
+      const { databasePath } = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "cache-continuity-test",
+      });
+      const hostBridge = bridge as {
+        readCacheContinuityRouteHints: (input: {
+          readonly databasePath: string;
+          readonly executionRequest: Record<string, unknown>;
+        }) => Record<string, unknown> | null;
+        persistCacheContinuityOutcome: (input: {
+          readonly databasePath: string;
+          readonly executionRequest: Record<string, unknown>;
+          readonly endpointId: string;
+          readonly promptCachingSupported: boolean;
+          readonly inputTokens: number;
+          readonly requestSurface: string;
+        }) => Record<string, unknown> | null;
+      };
+      const executionRequest = {
+        messages: [{ role: "user", content: "Keep this session stable." }],
+        sessionAffinity: {
+          sessionId: "pi-session-001",
+          clientRequestId: "pi-client-001",
+        },
+      };
+
+      expect(
+        hostBridge.readCacheContinuityRouteHints({
+          databasePath,
+          executionRequest,
+        }),
+      ).toEqual({
+        enabled: true,
+        scopeSource: "session_affinity",
+        activeEndpointId: null,
+        warmedEndpointIds: [],
+      });
+
+      expect(
+        hostBridge.persistCacheContinuityOutcome({
+          databasePath,
+          executionRequest,
+          endpointId: "endpoint-a",
+          promptCachingSupported: true,
+          inputTokens: 1600,
+          requestSurface: "openai.chat.completions",
+        }),
+      ).toEqual({
+        enabled: true,
+        scopeSource: "session_affinity",
+        previousActiveEndpointId: null,
+        advisoryWarmedEndpointIds: [],
+        selectedEndpointId: "endpoint-a",
+        selectedDomainState: "created",
+        advisorySelectionApplied: false,
+      });
+
+      expect(
+        hostBridge.readCacheContinuityRouteHints({
+          databasePath,
+          executionRequest,
+        }),
+      ).toEqual({
+        enabled: true,
+        scopeSource: "session_affinity",
+        activeEndpointId: "endpoint-a",
+        warmedEndpointIds: ["endpoint-a"],
+      });
+
+      expect(
+        hostBridge.persistCacheContinuityOutcome({
+          databasePath,
+          executionRequest,
+          endpointId: "endpoint-b",
+          promptCachingSupported: true,
+          inputTokens: 1700,
+          requestSurface: "openai.responses",
+        }),
+      ).toEqual({
+        enabled: true,
+        scopeSource: "session_affinity",
+        previousActiveEndpointId: "endpoint-a",
+        advisoryWarmedEndpointIds: ["endpoint-a"],
+        selectedEndpointId: "endpoint-b",
+        selectedDomainState: "created",
+        advisorySelectionApplied: false,
+      });
+
+      expect(
+        hostBridge.readCacheContinuityRouteHints({
+          databasePath,
+          executionRequest,
+        }),
+      ).toEqual({
+        enabled: true,
+        scopeSource: "session_affinity",
+        activeEndpointId: "endpoint-b",
+        warmedEndpointIds: ["endpoint-a", "endpoint-b"],
+      });
+
+      expect(
+        hostBridge.persistCacheContinuityOutcome({
+          databasePath,
+          executionRequest,
+          endpointId: "endpoint-a",
+          promptCachingSupported: true,
+          inputTokens: 1800,
+          requestSurface: "openai.chat.completions",
+        }),
+      ).toEqual({
+        enabled: true,
+        scopeSource: "session_affinity",
+        previousActiveEndpointId: "endpoint-b",
+        advisoryWarmedEndpointIds: ["endpoint-a", "endpoint-b"],
+        selectedEndpointId: "endpoint-a",
+        selectedDomainState: "restored",
+        advisorySelectionApplied: true,
+      });
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
   });
 
   test("maps chat-completions reasoning effort into the execution request", () => {
@@ -8899,6 +9158,95 @@ describe("runtime-host-bridge", () => {
         clientRequestId: "client-chat-header-001",
         sessionId: "session-chat-header-001",
         transportPreference: "websocket",
+      });
+      expect(requestOptions?.abortSignal).toBeDefined();
+      expect(requestOptions?.abortSignal?.aborted).toBe(false);
+    } finally {
+      await server.close();
+    }
+  });
+
+  test("accepts Pi session-affinity header aliases on chat-completions ingress", async () => {
+    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+    let requestOptions:
+      | {
+          sessionId?: string;
+          clientRequestId?: string;
+          transportPreference?: string;
+          abortSignal?: AbortSignal;
+        }
+      | undefined;
+
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
+            requestOptions?: {
+              sessionId?: string;
+              clientRequestId?: string;
+              transportPreference?: string;
+              abortSignal?: AbortSignal;
+            },
+          ) => Promise<{
+            model: string;
+            endpointId: string;
+            adapterFamily: string;
+            outputText: string;
+            finishReason: string;
+            usage: {
+              inputTokens: number;
+              outputTokens: number;
+            };
+          }>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async (_body, _requestId, _streamWriter, value) => {
+        requestOptions = value;
+        return {
+          model: "moonshot/kimi-k2.5",
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          adapterFamily: "ai-sdk-openai-compatible",
+          routingDecisionId: "decision-chat-ingress-affinity-pi-123",
+          outputText: "ok",
+          finishReason: "stop",
+          usage: {
+            inputTokens: 1,
+            outputTokens: 1,
+          },
+        };
+      },
+    });
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-client-request-id": "pi-client-header-001",
+          session_id: "pi-session-header-001",
+          "x-session-affinity": "pi-session-header-001",
+        },
+        body: JSON.stringify({
+          model: "moonshot/kimi-k2.5",
+          messages: [{ role: "user", content: "Accept Pi session headers." }],
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      expect(requestOptions).toMatchObject({
+        clientRequestId: "pi-client-header-001",
+        sessionId: "pi-session-header-001",
       });
       expect(requestOptions?.abortSignal).toBeDefined();
       expect(requestOptions?.abortSignal?.aborted).toBe(false);
@@ -18631,7 +18979,7 @@ describe("runtime-host-bridge", () => {
             sourceType: "remote",
             providerId: "deepseek",
             providerFamily: "deepseek",
-            promptCacheSupported: false,
+            promptCacheSupported: true,
             requestCount: 1,
           }),
         ]),
@@ -18647,7 +18995,7 @@ describe("runtime-host-bridge", () => {
             providerId: "deepseek",
             providerFamily: "deepseek",
             finishReason: "tool_calls",
-            promptCacheSupported: false,
+            promptCacheSupported: true,
             streamTextDeltaCount: 1,
             streamToolCallDeltaCount: 1,
             streamToolArgumentDeltaCount: 1,

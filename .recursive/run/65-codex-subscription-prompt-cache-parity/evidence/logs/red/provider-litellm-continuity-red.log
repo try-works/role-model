@@ -1,0 +1,74 @@
+
+> @role-model-router/provider-litellm@0.0.0 test D:\DEV\role-model\.worktrees\65-codex-subscription-prompt-cache-parity\role-model-router\packages\provider-litellm
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/65-codex-subscription-prompt-cache-parity/role-model-router/packages/provider-litellm
+
+ ❯ test/index.test.ts (3 tests | 2 failed) 66ms
+   ✓ provider-litellm > defaults the adapter family to litellm-proxy 5ms
+   × provider-litellm > reuses the shared responses propagation for reasoning, continuation, and affinity hints 40ms
+     → expected { …(4) } to match object { 'session-id': 'session-123', …(4) }
+(1 matching property omitted from actual)
+   × provider-litellm > advertises implicit prompt caching and normalizes LiteLLM cache plus cost metadata 14ms
+     → expected { vendorId: undefined, …(3) } to deeply equal { costUsd: 0.0042, cacheUsed: true }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > provider-litellm > reuses the shared responses propagation for reasoning, continuation, and affinity hints
+AssertionError: expected { …(4) } to match object { 'session-id': 'session-123', …(4) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "OpenAI-Beta": "responses=v1",
+    "session-id": "session-123",
+    "x-client-request-id": "client-123",
+-   "x-litellm-session-id": "session-123",
+-   "x-litellm-trace-id": "client-123",
+  }
+
+ ❯ test/index.test.ts:200:36
+    198| 
+    199|     expect(requestCapture.url).toBe("http://127.0.0.1:4000/v1/response…
+    200|     expect(requestCapture.headers).toMatchObject({
+       |                                    ^
+    201|       "session-id": "session-123",
+    202|       "x-client-request-id": "client-123",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/index.test.ts > provider-litellm > advertises implicit prompt caching and normalizes LiteLLM cache plus cost metadata
+AssertionError: expected { vendorId: undefined, …(3) } to deeply equal { costUsd: 0.0042, cacheUsed: true }
+
+- Expected
++ Received
+
+  {
++   "cacheReadTokens": 9,
+    "cacheUsed": true,
+    "costUsd": 0.0042,
++   "vendorId": undefined,
+  }
+
+ ❯ test/index.test.ts:490:39
+    488|       writeTokens: 0,
+    489|     });
+    490|     expect(normalized.vendorMetadata).toEqual({
+       |                                       ^
+    491|       costUsd: 0.0042,
+    492|       cacheUsed: true,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed (3)
+   Start at  08:30:16
+   Duration  3.50s (transform 1.45s, setup 0ms, collect 1.50s, tests 66ms, environment 0ms, prepare 496ms)
+
+D:\DEV\role-model\.worktrees\65-codex-subscription-prompt-cache-parity\role-model-router\packages\provider-litellm:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/provider-litellm@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

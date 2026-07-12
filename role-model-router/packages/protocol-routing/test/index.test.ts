@@ -212,6 +212,164 @@ describe("projectRuntimeRouteInput", () => {
       ignoredEndpointIds: [],
     });
   });
+
+  test("separates active continuity restore from advisory warmed-cache preference", () => {
+    const projected = projectRuntimeRouteInput({
+      request: {
+        requestId: "req-runtime-cache-continuity-1",
+        appId: "app-runtime",
+        orgId: "org-runtime",
+        requestedRoleId: "developer",
+        taskType: "code.edit",
+        requiredCapabilities: ["code.edit"],
+        preferredCapabilities: ["reasoning.multi_step"],
+        requiredModalities: ["text"],
+        contextTokens: 180,
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+      },
+      catalog: TEST_CATALOG,
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "cache.warm.a",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run07-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "cache.warm.a",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+          {
+            identity: {
+              endpoint_id: "cache.active.b",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run07-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "cache.active.b",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+          {
+            identity: {
+              endpoint_id: "cache.cold.c",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run07-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "cache.cold.c",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 3,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      observedProfilesByEndpointId: {},
+      envelope: {
+        sessionId: "session-cache",
+        conversationId: "conversation-cache",
+        selectedTurns: [],
+        selectedArtifacts: [],
+        latestHandoff: null,
+        estimatedTokenCount: 180,
+        diagnostics: [],
+      },
+      retrievalReceipt: {
+        receiptId: "receipt-cache-1",
+        conversationId: "conversation-cache",
+        summary: {
+          selectedTurns: 0,
+          selectedArtifacts: 0,
+          omittedTurns: 0,
+          omittedArtifacts: 0,
+          estimatedTokens: 180,
+        },
+        entries: [],
+      },
+      roleDefinitions: [],
+      taskDefinitions: [],
+      roleBindings: [],
+      cacheContinuity: {
+        activeEndpointId: "cache.active.b",
+        warmedEndpointIds: ["cache.warm.a", "cache.active.b"],
+      },
+      // biome-ignore lint/suspicious/noExplicitAny: RED test for run-65 continuity input
+    } as any);
+
+    expect(projected.routeInput.candidates[0]).toMatchObject({
+      identity: { endpoint_id: "cache.warm.a" },
+      routingSignals: {
+        continuityAffinity: false,
+        cacheAffinity: true,
+      },
+    });
+    expect(projected.routeInput.candidates[1]).toMatchObject({
+      identity: { endpoint_id: "cache.active.b" },
+      routingSignals: {
+        continuityAffinity: true,
+        cacheAffinity: true,
+      },
+    });
+    expect(projected.routeInput.candidates[2]).toMatchObject({
+      identity: { endpoint_id: "cache.cold.c" },
+      routingSignals: {
+        continuityAffinity: false,
+        cacheAffinity: false,
+      },
+    });
+    expect((projected.routingDiagnostics as Record<string, unknown>).cacheContinuity).toEqual({
+      activeEndpointId: "cache.active.b",
+      warmedEndpointIds: ["cache.warm.a", "cache.active.b"],
+    });
+  });
 });
 
 describe("routeRuntimeRequest", () => {

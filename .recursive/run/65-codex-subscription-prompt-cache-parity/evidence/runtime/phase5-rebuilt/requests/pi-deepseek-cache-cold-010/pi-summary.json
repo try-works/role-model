@@ -1,0 +1,25 @@
+{
+  "exitCode": 0,
+  "sessionId": "run65-deepseek-cache-v1",
+  "model": "deepseek/deepseek-v4-flash",
+  "responseId": "68380b71-1f3e-4765-90f5-6faaf1225341",
+  "responseModel": "deepseek-v4-flash",
+  "usage": {
+    "input": 7350,
+    "output": 47,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "totalTokens": 7397,
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0
+    }
+  },
+  "footerPromptTokens": 7350.0,
+  "footerCacheHitRatePercent": 0.0,
+  "expectedFooterText": null,
+  "assistantText": "DEEPSEEK_CACHE_65"
+}

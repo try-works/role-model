@@ -33,6 +33,7 @@ import {
   resolveRoutingBenchmarkQuality,
 } from "@role-model-router/profile-aggregator";
 import {
+  type CacheContinuityRoutingHints,
   type RouteRuntimeRequestResult,
   type RoutingModelSelection,
   routeRuntimeRequest,
@@ -435,6 +436,7 @@ interface OpenAIChatCompletionsBody {
   readonly messages: readonly OpenAIChatCompletionsMessage[];
   readonly tools?: readonly OpenAIChatCompletionsTool[];
   readonly tool_choice?: RuntimeExecutionToolChoice;
+  readonly prompt_cache_key?: string;
   readonly reasoning_effort?: string;
   readonly reasoning?: Record<string, unknown>;
   readonly thinking?: Record<string, unknown>;
@@ -504,9 +506,9 @@ function readOpenAIReasoningRequest(
 const readResponsesReasoningRequest = readOpenAIReasoningRequest;
 const readChatCompletionsReasoningRequest = readOpenAIReasoningRequest;
 
-function readResponsesPromptCacheRequest(
-  body: OpenAIResponsesBody,
-): RuntimeExecutionRequest["promptCache"] | undefined {
+function readOpenAIPromptCacheRequest(body: {
+  readonly prompt_cache_key?: string | null;
+}): RuntimeExecutionRequest["promptCache"] | undefined {
   if (typeof body.prompt_cache_key !== "string" || body.prompt_cache_key.trim().length === 0) {
     return undefined;
   }
@@ -515,6 +517,9 @@ function readResponsesPromptCacheRequest(
     key: body.prompt_cache_key.trim(),
   };
 }
+
+const readResponsesPromptCacheRequest = readOpenAIPromptCacheRequest;
+const readChatCompletionsPromptCacheRequest = readOpenAIPromptCacheRequest;
 
 function readResponsesContinuationRequest(
   body: OpenAIResponsesBody,
@@ -3088,6 +3093,8 @@ function hasRuntimeTelemetryPersisted(error: unknown): boolean {
 }
 
 const EXECUTION_FAILURE_COOLDOWN_MAINTENANCE_KEY = "routing.execution-failure-cooldowns.v1";
+const CACHE_CONTINUITY_MAINTENANCE_KEY = "routing.cache-continuity.v1";
+const PROMPT_CACHE_WARM_INPUT_TOKEN_THRESHOLD = 1024;
 const EXECUTION_FAILURE_COOLDOWN_SCHEDULE_MS = [
   10 * 60 * 1000,
   30 * 60 * 1000,
@@ -3117,6 +3124,33 @@ interface ExecutionFailureCooldownRecord {
 }
 
 type ExecutionFailureCooldownState = Record<string, ExecutionFailureCooldownRecord>;
+type CacheContinuityScopeSource = "prompt_cache_key" | "session_affinity";
+
+interface CacheContinuityScopeRecord {
+  readonly scopeSource: CacheContinuityScopeSource;
+  readonly scopeKey: string;
+  readonly activeEndpointId: string | null;
+  readonly warmedEndpointIds: readonly string[];
+  readonly updatedAtMs: number;
+  readonly lastRequestSurface?: string;
+}
+
+type CacheContinuityLedgerState = Record<string, CacheContinuityScopeRecord>;
+
+export interface BridgeCacheContinuityRouteHints extends CacheContinuityRoutingHints {
+  readonly enabled: true;
+  readonly scopeSource: CacheContinuityScopeSource;
+}
+
+export interface BridgeCacheContinuityOutcome {
+  readonly enabled: true;
+  readonly scopeSource: CacheContinuityScopeSource;
+  readonly previousActiveEndpointId: string | null;
+  readonly advisoryWarmedEndpointIds: readonly string[];
+  readonly selectedEndpointId: string;
+  readonly selectedDomainState?: "created" | "restored";
+  readonly advisorySelectionApplied: boolean;
+}
 
 function runtimeTelemetryErrorClassFor(error: unknown): string {
   if (error instanceof UpstreamExecutionError) {
@@ -3140,6 +3174,218 @@ function runtimeTelemetryErrorClassFor(error: unknown): string {
     return bodyError;
   }
   return "execution_failed";
+}
+
+function normalizeCacheContinuityKeyValue(value: string | undefined): string | undefined {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function toCacheContinuityScopeDescriptor(executionRequest: RuntimeExecutionRequest): {
+  readonly scopeSource: CacheContinuityScopeSource;
+  readonly scopeKey: string;
+  readonly scopeId: string;
+} | null {
+  const promptCacheKey = normalizeCacheContinuityKeyValue(executionRequest.promptCache?.key);
+  if (promptCacheKey) {
+    return {
+      scopeSource: "prompt_cache_key",
+      scopeKey: promptCacheKey,
+      scopeId: `prompt_cache_key:${promptCacheKey}`,
+    };
+  }
+  const sessionId = normalizeCacheContinuityKeyValue(executionRequest.sessionAffinity?.sessionId);
+  if (sessionId) {
+    return {
+      scopeSource: "session_affinity",
+      scopeKey: sessionId,
+      scopeId: `session_affinity:${sessionId}`,
+    };
+  }
+  return null;
+}
+
+function normalizeCacheContinuityEndpointIds(value: unknown): readonly string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return [
+    ...new Set(
+      value.flatMap((entry) =>
+        typeof entry === "string" && entry.trim().length > 0 ? [entry.trim()] : [],
+      ),
+    ),
+  ];
+}
+
+function parseCacheContinuityLedgerState(rawValue: string | undefined): CacheContinuityLedgerState {
+  if (typeof rawValue !== "string" || rawValue.trim().length === 0) {
+    return {};
+  }
+  try {
+    const parsed = JSON.parse(rawValue) as {
+      scopes?: Record<string, unknown>;
+    };
+    const scopes =
+      typeof parsed === "object" &&
+      parsed !== null &&
+      parsed.scopes &&
+      typeof parsed.scopes === "object"
+        ? parsed.scopes
+        : {};
+    return Object.fromEntries(
+      Object.entries(scopes).flatMap(([scopeId, value]) => {
+        if (typeof value !== "object" || value === null) {
+          return [];
+        }
+        const record = value as Record<string, unknown>;
+        const scopeSource = record.scopeSource;
+        const scopeKey = record.scopeKey;
+        const activeEndpointId = record.activeEndpointId;
+        const updatedAtMs = record.updatedAtMs;
+        if (
+          (scopeSource !== "prompt_cache_key" && scopeSource !== "session_affinity") ||
+          typeof scopeKey !== "string" ||
+          typeof updatedAtMs !== "number"
+        ) {
+          return [];
+        }
+        return [
+          [
+            scopeId,
+            {
+              scopeSource,
+              scopeKey,
+              activeEndpointId:
+                typeof activeEndpointId === "string" && activeEndpointId.trim().length > 0
+                  ? activeEndpointId.trim()
+                  : null,
+              warmedEndpointIds: normalizeCacheContinuityEndpointIds(record.warmedEndpointIds),
+              updatedAtMs,
+              ...(typeof record.lastRequestSurface === "string" &&
+              record.lastRequestSurface.trim().length > 0
+                ? { lastRequestSurface: record.lastRequestSurface.trim() }
+                : {}),
+            } satisfies CacheContinuityScopeRecord,
+          ],
+        ];
+      }),
+    );
+  } catch {
+    return {};
+  }
+}
+
+function readCacheContinuityLedgerState(databasePath: string): CacheContinuityLedgerState {
+  const maintenancePolicy = readRuntimeMaintenancePolicy({ databasePath });
+  return parseCacheContinuityLedgerState(maintenancePolicy[CACHE_CONTINUITY_MAINTENANCE_KEY]);
+}
+
+function writeCacheContinuityLedgerState(
+  databasePath: string,
+  state: CacheContinuityLedgerState,
+): void {
+  upsertRuntimeMaintenanceValue({
+    databasePath,
+    key: CACHE_CONTINUITY_MAINTENANCE_KEY,
+    value: JSON.stringify({
+      version: 1,
+      scopes: state,
+    }),
+  });
+}
+
+export function readCacheContinuityRouteHints(input: {
+  readonly databasePath: string;
+  readonly executionRequest: RuntimeExecutionRequest;
+}): BridgeCacheContinuityRouteHints | null {
+  const scope = toCacheContinuityScopeDescriptor(input.executionRequest);
+  if (!scope) {
+    return null;
+  }
+  const record = readCacheContinuityLedgerState(input.databasePath)[scope.scopeId];
+  return {
+    enabled: true,
+    scopeSource: scope.scopeSource,
+    activeEndpointId: record?.activeEndpointId ?? null,
+    warmedEndpointIds: record?.warmedEndpointIds ?? [],
+  };
+}
+
+export function persistCacheContinuityOutcome(input: {
+  readonly databasePath: string;
+  readonly executionRequest: RuntimeExecutionRequest;
+  readonly endpointId: string;
+  readonly promptCachingSupported: boolean;
+  readonly inputTokens: number;
+  readonly requestSurface: string;
+}): BridgeCacheContinuityOutcome | null {
+  const scope = toCacheContinuityScopeDescriptor(input.executionRequest);
+  if (!scope) {
+    return null;
+  }
+  const state = readCacheContinuityLedgerState(input.databasePath);
+  const current = state[scope.scopeId];
+  const previousActiveEndpointId = current?.activeEndpointId ?? null;
+  const advisoryWarmedEndpointIds = current?.warmedEndpointIds ?? [];
+  const warmedAlready = advisoryWarmedEndpointIds.includes(input.endpointId);
+  const cacheEligible =
+    input.promptCachingSupported && input.inputTokens >= PROMPT_CACHE_WARM_INPUT_TOKEN_THRESHOLD;
+  state[scope.scopeId] = {
+    scopeSource: scope.scopeSource,
+    scopeKey: scope.scopeKey,
+    activeEndpointId: input.endpointId,
+    warmedEndpointIds:
+      cacheEligible && !warmedAlready
+        ? [...advisoryWarmedEndpointIds, input.endpointId]
+        : advisoryWarmedEndpointIds,
+    updatedAtMs: Date.now(),
+    ...(input.requestSurface.trim().length > 0 ? { lastRequestSurface: input.requestSurface } : {}),
+  };
+  writeCacheContinuityLedgerState(input.databasePath, state);
+  return {
+    enabled: true,
+    scopeSource: scope.scopeSource,
+    previousActiveEndpointId,
+    advisoryWarmedEndpointIds,
+    selectedEndpointId: input.endpointId,
+    ...(cacheEligible ? { selectedDomainState: warmedAlready ? "restored" : "created" } : {}),
+    advisorySelectionApplied: warmedAlready && previousActiveEndpointId !== input.endpointId,
+  };
+}
+
+function summarizeCacheContinuityDiagnostics(input: {
+  readonly routeHints: BridgeCacheContinuityRouteHints | null;
+  readonly selectedEndpointId: string;
+  readonly outcome?: BridgeCacheContinuityOutcome | null;
+}): RuntimeRoutingDiagnostics["cacheContinuity"] | undefined {
+  if (input.outcome) {
+    return {
+      enabled: true,
+      scopeSource: input.outcome.scopeSource,
+      activeEndpointId: input.outcome.selectedEndpointId,
+      advisoryWarmedEndpointIds: input.outcome.advisoryWarmedEndpointIds,
+      previousActiveEndpointId: input.outcome.previousActiveEndpointId,
+      selectedEndpointId: input.outcome.selectedEndpointId,
+      ...(input.outcome.selectedDomainState
+        ? { selectedDomainState: input.outcome.selectedDomainState }
+        : {}),
+      advisorySelectionApplied: input.outcome.advisorySelectionApplied,
+    };
+  }
+  if (!input.routeHints) {
+    return undefined;
+  }
+  const restored = input.routeHints.warmedEndpointIds.includes(input.selectedEndpointId);
+  return {
+    enabled: true,
+    scopeSource: input.routeHints.scopeSource,
+    activeEndpointId: input.routeHints.activeEndpointId,
+    advisoryWarmedEndpointIds: input.routeHints.warmedEndpointIds,
+    selectedEndpointId: input.selectedEndpointId,
+    ...(restored ? { selectedDomainState: "restored" as const } : {}),
+    advisorySelectionApplied:
+      restored && input.routeHints.activeEndpointId !== input.selectedEndpointId,
+  };
 }
 
 function readNestedProviderErrorField(body: unknown, field: string): string | null {
@@ -4096,7 +4342,9 @@ function readBridgeExecutionRequestOptions(
     request.headers["x-role-model-request-id"]?.toString().trim();
   const sessionId =
     request.headers["session-id"]?.toString().trim() ||
-    request.headers["x-session-id"]?.toString().trim();
+    request.headers["x-session-id"]?.toString().trim() ||
+    request.headers.session_id?.toString().trim() ||
+    request.headers["x-session-affinity"]?.toString().trim();
   const transportPreferenceHeader = request.headers["x-role-model-transport-preference"]
     ?.toString()
     .trim();
@@ -7778,6 +8026,7 @@ export function mapChatCompletionsRequest(
     taskDefinitions,
     requestOptions,
   });
+  const promptCache = readChatCompletionsPromptCacheRequest(body);
   const sessionAffinity = buildBridgeExecutionSessionAffinity(requestOptions);
   const reasoning = readChatCompletionsReasoningRequest(body);
 
@@ -7788,6 +8037,7 @@ export function mapChatCompletionsRequest(
       ...(body.tool_choice !== undefined && rolePolicyExecution.executionRequest.tools?.length
         ? { toolChoice: body.tool_choice }
         : {}),
+      ...(promptCache ? { promptCache } : {}),
       ...(sessionAffinity ? { sessionAffinity } : {}),
       ...(reasoning ? { reasoning } : {}),
       ...(requestOptions?.transportPreference
@@ -9573,8 +9823,85 @@ type CodexResponsesNormalizedTranscript = {
   readonly usage: {
     readonly inputTokens: number;
     readonly outputTokens: number;
+    readonly cacheReadTokens: number;
+    readonly cacheWriteTokens: number;
+    readonly cacheReadSupported: boolean;
+    readonly cacheWriteSupported: boolean;
   };
 };
+
+function readCodexUsageCacheFacts(usage: Record<string, unknown> | undefined): {
+  readonly cacheReadTokens: number;
+  readonly cacheWriteTokens: number;
+  readonly cacheReadSupported: boolean;
+  readonly cacheWriteSupported: boolean;
+} {
+  const inputDetails = asPlainRecord(usage?.input_tokens_details);
+  const promptDetails = asPlainRecord(usage?.prompt_tokens_details);
+  const cacheReadTokens =
+    (typeof inputDetails?.cached_tokens === "number" ? inputDetails.cached_tokens : undefined) ??
+    (typeof promptDetails?.cached_tokens === "number" ? promptDetails.cached_tokens : undefined) ??
+    (typeof usage?.cached_tokens === "number" ? usage.cached_tokens : undefined);
+  const cacheWriteTokens =
+    (typeof inputDetails?.cache_write_tokens === "number"
+      ? inputDetails.cache_write_tokens
+      : undefined) ??
+    (typeof promptDetails?.cache_write_tokens === "number"
+      ? promptDetails.cache_write_tokens
+      : undefined) ??
+    (typeof usage?.cache_write_tokens === "number" ? usage.cache_write_tokens : undefined);
+
+  return {
+    cacheReadTokens: cacheReadTokens ?? 0,
+    cacheWriteTokens: cacheWriteTokens ?? 0,
+    cacheReadSupported: typeof cacheReadTokens === "number",
+    cacheWriteSupported: typeof cacheWriteTokens === "number",
+  };
+}
+
+function createChatCompletionsUsageFromCodexUsage(input: {
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cacheReadTokens: number;
+  readonly cacheWriteTokens: number;
+  readonly cacheReadSupported: boolean;
+  readonly cacheWriteSupported: boolean;
+}): Record<string, unknown> {
+  return {
+    prompt_tokens: input.inputTokens,
+    completion_tokens: input.outputTokens,
+    ...(input.cacheReadSupported || input.cacheWriteSupported
+      ? {
+          prompt_tokens_details: {
+            ...(input.cacheReadSupported ? { cached_tokens: input.cacheReadTokens } : {}),
+            ...(input.cacheWriteSupported ? { cache_write_tokens: input.cacheWriteTokens } : {}),
+          },
+        }
+      : {}),
+  };
+}
+
+function createResponsesUsageFromCodexUsage(input: {
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cacheReadTokens: number;
+  readonly cacheWriteTokens: number;
+  readonly cacheReadSupported: boolean;
+  readonly cacheWriteSupported: boolean;
+}): Record<string, unknown> {
+  return {
+    input_tokens: input.inputTokens,
+    output_tokens: input.outputTokens,
+    ...(input.cacheReadSupported || input.cacheWriteSupported
+      ? {
+          input_tokens_details: {
+            ...(input.cacheReadSupported ? { cached_tokens: input.cacheReadTokens } : {}),
+            ...(input.cacheWriteSupported ? { cache_write_tokens: input.cacheWriteTokens } : {}),
+          },
+        }
+      : {}),
+  };
+}
 
 function readSsePayloadTexts(transcript: string): readonly string[] {
   return transcript.split(/\r?\n\r?\n/u).flatMap((block) =>
@@ -9678,6 +10005,10 @@ function normalizeCodexResponsesTranscript(
   const usage = {
     inputTokens: 0,
     outputTokens: 0,
+    cacheReadTokens: 0,
+    cacheWriteTokens: 0,
+    cacheReadSupported: false,
+    cacheWriteSupported: false,
   };
 
   for (const payloadText of readSsePayloadTexts(transcript)) {
@@ -9746,6 +10077,7 @@ function normalizeCodexResponsesTranscript(
       finishReason =
         type === "response.incomplete" || response?.status === "incomplete" ? "length" : "stop";
       const responseUsage = asPlainRecord(response?.usage);
+      const cacheUsage = readCodexUsageCacheFacts(responseUsage);
       usage.inputTokens =
         typeof responseUsage?.input_tokens === "number"
           ? responseUsage.input_tokens
@@ -9754,6 +10086,10 @@ function normalizeCodexResponsesTranscript(
         typeof responseUsage?.output_tokens === "number"
           ? responseUsage.output_tokens
           : usage.outputTokens;
+      usage.cacheReadTokens = cacheUsage.cacheReadTokens;
+      usage.cacheWriteTokens = cacheUsage.cacheWriteTokens;
+      usage.cacheReadSupported = cacheUsage.cacheReadSupported;
+      usage.cacheWriteSupported = cacheUsage.cacheWriteSupported;
     }
   }
 
@@ -9825,10 +10161,7 @@ function createChatCompletionsSseFromCodexResponsesTranscript(input: {
         finish_reason: input.transcript.finishReason,
       },
     ],
-    usage: {
-      prompt_tokens: input.transcript.usage.inputTokens,
-      completion_tokens: input.transcript.usage.outputTokens,
-    },
+    usage: createChatCompletionsUsageFromCodexUsage(input.transcript.usage),
   });
 
   return chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join("");
@@ -9914,10 +10247,11 @@ function createCodexResponsesChatCompletionsStreamMapper(input: {
       ],
       ...(usage
         ? {
-            usage: {
-              prompt_tokens: typeof usage.input_tokens === "number" ? usage.input_tokens : 0,
-              completion_tokens: typeof usage.output_tokens === "number" ? usage.output_tokens : 0,
-            },
+            usage: createChatCompletionsUsageFromCodexUsage({
+              inputTokens: typeof usage.input_tokens === "number" ? usage.input_tokens : 0,
+              outputTokens: typeof usage.output_tokens === "number" ? usage.output_tokens : 0,
+              ...readCodexUsageCacheFacts(usage),
+            }),
           }
         : {}),
     });
@@ -10047,10 +10381,7 @@ function createChatCompletionsBodyFromCodexResponsesTranscript(input: {
         },
       },
     ],
-    usage: {
-      prompt_tokens: input.transcript.usage.inputTokens,
-      completion_tokens: input.transcript.usage.outputTokens,
-    },
+    usage: createChatCompletionsUsageFromCodexUsage(input.transcript.usage),
   };
 }
 
@@ -10080,10 +10411,7 @@ function createResponsesBodyFromCodexResponsesTranscript(input: {
             : [],
       },
     ],
-    usage: {
-      input_tokens: input.transcript.usage.inputTokens,
-      output_tokens: input.transcript.usage.outputTokens,
-    },
+    usage: createResponsesUsageFromCodexUsage(input.transcript.usage),
   };
 }
 
@@ -18083,6 +18411,10 @@ export async function createRuntimeBridgeBackend(
       readonly routed: ReturnType<typeof routeRuntimeRequest>;
     } => {
       const mergedDenyEndpoints = readMergedDeniedExecutionEndpoints(denyEndpoints);
+      const cacheContinuityRouteHints = readCacheContinuityRouteHints({
+        databasePath: initialization.databasePath,
+        executionRequest: plan.executionRequest,
+      });
       return {
         deniedEndpointIds: mergedDenyEndpoints,
         routed: routeRuntimeRequest({
@@ -18108,6 +18440,14 @@ export async function createRuntimeBridgeBackend(
           taskDefinitions: executionSnapshot.taskDefinitions,
           roleBindings,
           routingModel: plan.routingModel ?? executionSnapshot.routingModel ?? undefined,
+          ...(cacheContinuityRouteHints
+            ? {
+                cacheContinuity: {
+                  activeEndpointId: cacheContinuityRouteHints.activeEndpointId,
+                  warmedEndpointIds: cacheContinuityRouteHints.warmedEndpointIds,
+                },
+              }
+            : {}),
         }),
       };
     };
@@ -19258,6 +19598,26 @@ export async function createRuntimeBridgeBackend(
         source: "none",
         readMode: "per-request",
       } as const);
+    const requestSurface =
+      executionOptions?.requestOperation === "responses"
+        ? "openai.responses"
+        : "openai.chat.completions";
+    const cacheContinuityOutcome = persistCacheContinuityOutcome({
+      databasePath: initialization.databasePath,
+      executionRequest: currentExecutionRequest,
+      endpointId: execution.target.endpointId,
+      promptCachingSupported: execution.capabilities.promptCaching.supported,
+      inputTokens: execution.normalized.usage.inputTokens,
+      requestSurface,
+    });
+    const cacheContinuityDiagnostics = summarizeCacheContinuityDiagnostics({
+      routeHints: readCacheContinuityRouteHints({
+        databasePath: initialization.databasePath,
+        executionRequest: currentExecutionRequest,
+      }),
+      selectedEndpointId: execution.target.endpointId,
+      outcome: cacheContinuityOutcome,
+    });
     if (executionOptions?.persistObservation !== false) {
       const requestRoutingMode = summarizeRequestRoutingModeDiagnostics(
         executionOptions?.requestOptions,
@@ -19322,6 +19682,11 @@ export async function createRuntimeBridgeBackend(
           effectiveMetrics: summarizeEffectiveMetricsFromDecision(routed.decision),
           selection: summarizeSelectionDiagnosticsFromDecision(routed.decision),
           throughputPenalty: summarizeThroughputPenaltyFromDecision(routed.decision),
+          ...(cacheContinuityDiagnostics
+            ? {
+                cacheContinuity: cacheContinuityDiagnostics,
+              }
+            : {}),
         },
         retrievalReceipt: {
           receiptId: retrievalReceipt.receiptId,

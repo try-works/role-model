@@ -9,6 +9,56 @@ type RegisteredCommandConfig = {
 };
 
 describe("Pi extension registration", () => {
+  test("uses ROLE_MODEL_ENDPOINT for runtime request commands when no explicit endpoint is passed", async () => {
+    const commands: Array<{ name: string; config: RegisteredCommandConfig }> = [];
+    const fetchCalls: string[] = [];
+    const originalEndpoint = process.env.ROLE_MODEL_ENDPOINT;
+    const originalFetch = globalThis.fetch;
+    process.env.ROLE_MODEL_ENDPOINT = "http://127.0.0.1:4567/";
+    globalThis.fetch = async (input) => {
+      fetchCalls.push(String(input));
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    };
+
+    try {
+      const extension = createRoleModelExtension({
+        discover: async () => ({
+          discovery: createDiscovery(),
+          state: "ready",
+          warnings: [],
+          modelDiagnostics: [],
+        }),
+      });
+
+      await extension({
+        registerProvider() {
+          // registered during startup discovery
+        },
+        registerCommand(name: string, config: RegisteredCommandConfig) {
+          commands.push({ name, config });
+        },
+      });
+
+      await commands[0]?.config.handler("requests 1", {
+        ui: { notify: () => undefined },
+        isProjectTrusted: () => true,
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+      if (originalEndpoint === undefined) {
+        delete process.env.ROLE_MODEL_ENDPOINT;
+      } else {
+        process.env.ROLE_MODEL_ENDPOINT = originalEndpoint;
+      }
+    }
+
+    expect(fetchCalls).toContain("http://127.0.0.1:4567/api/role-model/requests");
+    expect(fetchCalls.every((call) => call.startsWith("http://127.0.0.1:4567/"))).toBe(true);
+  });
+
   test("registers the role-model provider and one role-model command", async () => {
     const providers: Array<{ name: string; config: unknown }> = [];
     const commands: Array<{ name: string; config: unknown }> = [];

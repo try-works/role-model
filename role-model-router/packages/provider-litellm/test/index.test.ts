@@ -200,6 +200,8 @@ describe("provider-litellm", () => {
     expect(requestCapture.headers).toMatchObject({
       "session-id": "session-123",
       "x-client-request-id": "client-123",
+      "x-litellm-session-id": "session-123",
+      "x-litellm-trace-id": "client-123",
       "OpenAI-Beta": "responses=v1",
     });
     expect(requestCapture.body).toMatchObject({
@@ -485,9 +487,10 @@ describe("provider-litellm", () => {
       readTokens: 9,
       writeTokens: 0,
     });
-    expect(normalized.vendorMetadata).toEqual({
+    expect(normalized.vendorMetadata).toMatchObject({
       costUsd: 0.0042,
       cacheUsed: true,
+      cacheReadTokens: 9,
     });
   });
 });

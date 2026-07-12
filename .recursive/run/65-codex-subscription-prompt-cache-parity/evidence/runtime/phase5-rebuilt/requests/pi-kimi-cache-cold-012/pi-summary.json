@@ -1,0 +1,27 @@
+{
+  "exitCode": 0,
+  "sessionId": "run65-kimi-cache-v1",
+  "model": "moonshot/kimi-k2.7-code",
+  "responseId": null,
+  "responseModel": null,
+  "usage": {
+    "input": 0,
+    "output": 0,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "totalTokens": 0,
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0
+    }
+  },
+  "footerPromptTokens": 0.0,
+  "footerCacheHitRatePercent": 0.0,
+  "expectedFooterText": null,
+  "assistantText": "",
+  "stopReason": "error",
+  "errorMessage": "400 No execution target is currently eligible for model moonshot/kimi-k2.7-code."
+}

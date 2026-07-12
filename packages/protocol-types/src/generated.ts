@@ -148,6 +148,11 @@ export interface DownstreamOpenAIModelRecord {
   piMapping: {
     contextWindow: NullableNonNegativeInteger;
     maxTokens: NullableNonNegativeInteger;
+    compat?: {
+      supportsDeveloperRole?: boolean;
+      sendSessionAffinityHeaders?: boolean;
+      supportsLongCacheRetention?: boolean;
+    };
   };
   sources: StringList;
 }
