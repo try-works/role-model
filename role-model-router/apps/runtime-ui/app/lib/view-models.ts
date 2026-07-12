@@ -1521,7 +1521,7 @@ export function buildConfiguredModelCards(input: {
   readonly models: readonly RuntimeModelRecord[];
   readonly endpoints: readonly RuntimeEndpoint[];
   readonly accounts: readonly RuntimeAccount[];
-  readonly requests: readonly RuntimeRequestListItem[];
+  readonly requests?: readonly RuntimeRequestListItem[] | null;
   readonly controller?:
     | (Pick<RuntimeControllerAssignment, "endpointId" | "modelId"> &
         Partial<Pick<RuntimeControllerAssignment, "scope">>)
@@ -1537,7 +1537,7 @@ export function buildConfiguredModelCards(input: {
   sourceSummary: string;
   endpointCount: number;
   endpointIds: string[];
-  requestCount: number;
+  requestCount: number | null;
   status: string;
   roleIds: string[];
   toolCallingSupported: boolean;
@@ -1570,9 +1570,9 @@ export function buildConfiguredModelCards(input: {
           ),
         ),
       ].sort((left, right) => left.localeCompare(right, "en"));
-      const requestCount = input.requests.filter((request) =>
-        endpointIds.includes(request.endpointId ?? ""),
-      ).length;
+      const requestCount = Array.isArray(input.requests)
+        ? input.requests.filter((request) => endpointIds.includes(request.endpointId ?? "")).length
+        : null;
       const controllerState: "active" | "eligible" | "inactive" =
         input.controller &&
         input.controller.modelId === model.id &&

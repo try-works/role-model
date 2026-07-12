@@ -19,18 +19,14 @@ import {
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
-import {
-  type RuntimeSnapshot,
-  fetchRuntimeSnapshot,
-  submitRerankRequest,
-} from "../lib/runtime-api";
+import { type RuntimeSnapshot, fetchRuntimeModels, submitRerankRequest } from "../lib/runtime-api";
 import { usePageActions } from "../lib/shell-header-context";
 import { buildWorkbenchModelOptions } from "../lib/view-models";
 
 const formFieldLabelClassName = utilityLabelClassName;
 
 export default function StudioRerankRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [model, setModel] = useState("");
   const [query, setQuery] = useState("Which option best summarizes the runtime?");
@@ -45,10 +41,10 @@ export default function StudioRerankRoute() {
   } | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then((value) => {
-        setSnapshot(value);
-        setModel((current) => current || value.models[0]?.id || "");
+    void fetchRuntimeModels()
+      .then((models) => {
+        setSnapshot({ models });
+        setModel((current) => current || models[0]?.id || "");
       })
       .catch((value: unknown) =>
         setError(

@@ -47,6 +47,11 @@ test("keeps shared typography and tokenized controls aligned on seeded QA routes
   await expect(page.getByText("Runtime roles", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Save bindings" }).first()).toBeVisible();
   await capture(page, "qa-shared-models-role-bindings.png", true);
+
+  await page.goto("/app/connect");
+  await expect(page.getByText("Runtime connections", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "View alias posture → Router" })).toBeVisible();
+  await capture(page, "qa-shared-connect-runtime-connections.png", true);
 });
 
 test("supports filter changes, query-param restoration, and request-list narrowing on the request analytics surface", async ({

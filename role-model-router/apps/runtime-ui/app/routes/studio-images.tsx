@@ -18,7 +18,7 @@ import {
 } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
-  fetchRuntimeSnapshot,
+  fetchRuntimeModels,
   submitImageGeneration,
   submitSdApiTxt2Img,
 } from "../lib/runtime-api";
@@ -40,7 +40,7 @@ type ImageResult =
 const formFieldLabelClassName = utilityLabelClassName;
 
 export default function StudioImagesRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"openai" | "sdapi">("openai");
   const [model, setModel] = useState("");
@@ -52,10 +52,10 @@ export default function StudioImagesRoute() {
   const [result, setResult] = useState<ImageResult | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then((value) => {
-        setSnapshot(value);
-        setModel((current) => current || value.models[0]?.id || "");
+    void fetchRuntimeModels()
+      .then((models) => {
+        setSnapshot({ models });
+        setModel((current) => current || models[0]?.id || "");
       })
       .catch((value: unknown) =>
         setError(

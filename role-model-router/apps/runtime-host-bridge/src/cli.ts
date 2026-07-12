@@ -51,6 +51,7 @@ type CliBackend = Pick<
   | "listRouterDecisions"
   | "readRouterDecision"
   | "listEndpoints"
+  | "listRecentRequestIds"
   | "listRecentRequestObservations"
   | "readRequestObservation"
   | "readEndpointProfile"
@@ -320,6 +321,9 @@ export function createCliServerOptions(
       "readRouterDecision",
     ) as StartBridgeServerOptions["readRouterDecision"],
     listEndpoints: bindBackendMethod("listEndpoints") as StartBridgeServerOptions["listEndpoints"],
+    listRecentRequestIds: bindBackendMethod(
+      "listRecentRequestIds",
+    ) as StartBridgeServerOptions["listRecentRequestIds"],
     listRecentRequestObservations: bindBackendMethod(
       "listRecentRequestObservations",
     ) as StartBridgeServerOptions["listRecentRequestObservations"],

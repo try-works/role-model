@@ -701,6 +701,42 @@ describe("buildConfiguredModelCards", () => {
       }),
     ]);
   });
+
+  test("keeps request counts unset when request evidence is still deferred", () => {
+    expect(
+      buildConfiguredModelCards({
+        models: [
+          {
+            id: "moonshot/kimi-k2.5",
+            endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
+            displayName: "Kimi K2.5",
+          },
+        ],
+        endpoints: [
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
+            roleIds: ["general.chat"],
+            status: "active",
+            servingSource: "remote-service",
+          },
+        ],
+        accounts: [
+          {
+            providerAccountId: "moonshot.personal.primary",
+            providerId: "moonshot",
+          },
+        ],
+        controller: null,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        modelId: "moonshot/kimi-k2.5",
+        requestCount: null,
+      }),
+    ]);
+  });
 });
 
 describe("buildConfiguredModelMetadataRows", () => {

@@ -61,6 +61,7 @@ Source-Runs:
 - `64-observed-data-decay-policy-recalibration`
 - `65-codex-subscription-prompt-cache-parity`
 - `66-remote-providers-deferred-request-id-loading`
+- `67-runtime-ui-route-startup-performance-hardening`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-07-12`
 Tags:
@@ -75,6 +76,17 @@ Tags:
 # Runtime Routing And Provider Capabilities
 
 This shard owns the detailed runtime truth for how role-model routes requests, exposes provider and endpoint state, and surfaces those decisions to operators and downstream consumers.
+
+## Startup Bootstrap Discipline
+
+- `fetchRuntimeSnapshot()` is now a legacy broad bootstrap helper. First-paint operator routes should use explicit route-owned fetch groups unless rich request-ledger data is truly primary content for that route.
+- `/app/models` is the canonical example for deferred request evidence:
+  - initial render uses accounts, endpoints, models, controller, role-policy, and router candidates only
+  - request evidence loads afterward
+  - deferred failure degrades to truthful `Unavailable` state instead of a fabricated zero-value metric
+- production-style startup parity matters as much as the UI split:
+  - non-QA startup paths must expose `listRecentRequestIds`
+  - packaged validation must wait for `/api/role-model/runtime/summary` before assuming the control plane is ready after `/healthz`
 
 ## What This Domain Owns
 

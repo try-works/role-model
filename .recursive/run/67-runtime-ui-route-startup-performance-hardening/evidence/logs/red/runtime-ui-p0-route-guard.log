@@ -1,0 +1,14 @@
+Name: `runtime-ui-p0-route-guard`
+Phase: `RED`
+Run: `67-runtime-ui-route-startup-performance-hardening`
+Timestamp: `2026-07-12`
+Command:
+
+- `corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/startup-bootstrap-regression.test.ts`
+
+Observed failure before production edits:
+
+- the source-based regression guard failed because the targeted `P0` route files still contained `fetchRuntimeSnapshot(`
+- the failure named the still-broad startup surfaces directly, which made the route-family remediation scope concrete before any production edits
+
+RED verified: `PASS`

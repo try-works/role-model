@@ -26,6 +26,8 @@ const EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS = [
   "chatgpt/gpt-5.3-chat-latest",
 ] as const;
 
+const OPENAI_CODEX_SUBSCRIPTION_CODER_PATCH_TIMEOUT_MS = 30_000;
+
 describe("OpenAI Codex Subscription model matrix", () => {
   test("defines only the supported OpenAI GPT-5.3+ subscription rows", () => {
     expect(OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS).toEqual(
@@ -493,216 +495,220 @@ describe("OpenAI Codex Subscription model matrix", () => {
     ]);
   });
 
-  test("keeps every supported OpenAI GPT-5.3+ subscription model coder.patch routable", async () => {
-    const runtimeStateRoot = path.join(os.tmpdir(), `openai-provider-coder-role-${Date.now()}`);
-    const codexExecutionRequests: Array<{
-      modelId: string;
-      requestId: string;
-      url: string;
-      body: Record<string, unknown>;
-    }> = [];
+  test(
+    "keeps every supported OpenAI GPT-5.3+ subscription model coder.patch routable",
+    async () => {
+      const runtimeStateRoot = path.join(os.tmpdir(), `openai-provider-coder-role-${Date.now()}`);
+      const codexExecutionRequests: Array<{
+        modelId: string;
+        requestId: string;
+        url: string;
+        body: Record<string, unknown>;
+      }> = [];
 
-    const backend = await createRuntimeBridgeBackend({
-      repoRoot,
-      fixtureRoot: testFixtureRoot,
-      runtimeStateRoot,
-      scopeId: "openai-provider-coder-role-tests",
-      codexAuthAdapter: {
-        startDeviceCodeLogin: async () => ({
-          loginId: "login-codex-coder-role-001",
-          verificationUrl: "https://auth.openai.com/codex/device",
-          userCode: "CODE-R0001",
-          wsUrl: "ws://127.0.0.1:4593",
-          pid: 4593,
-        }),
-        readAccount: async ({ codexHome }) => {
-          await mkdir(codexHome, { recursive: true });
-          await writeFile(
-            path.join(codexHome, "auth.json"),
-            JSON.stringify(
-              {
-                auth_mode: "chatgpt",
-                tokens: {
-                  access_token: "codex-access-coder-role-001",
-                  refresh_token: "codex-refresh-coder-role-001",
-                  account_id: "codex-account-coder-role-001",
+      const backend = await createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "openai-provider-coder-role-tests",
+        codexAuthAdapter: {
+          startDeviceCodeLogin: async () => ({
+            loginId: "login-codex-coder-role-001",
+            verificationUrl: "https://auth.openai.com/codex/device",
+            userCode: "CODE-R0001",
+            wsUrl: "ws://127.0.0.1:4593",
+            pid: 4593,
+          }),
+          readAccount: async ({ codexHome }) => {
+            await mkdir(codexHome, { recursive: true });
+            await writeFile(
+              path.join(codexHome, "auth.json"),
+              JSON.stringify(
+                {
+                  auth_mode: "chatgpt",
+                  tokens: {
+                    access_token: "codex-access-coder-role-001",
+                    refresh_token: "codex-refresh-coder-role-001",
+                    account_id: "codex-account-coder-role-001",
+                  },
+                  last_refresh: "2026-06-19T08:00:00.000Z",
                 },
-                last_refresh: "2026-06-19T08:00:00.000Z",
+                null,
+                2,
+              ),
+              "utf8",
+            );
+            return {
+              account: {
+                type: "chatgpt",
+                email: "coder-role@example.com",
+                planType: "pro",
               },
-              null,
-              2,
-            ),
-            "utf8",
-          );
-          return {
-            account: {
-              type: "chatgpt",
-              email: "coder-role@example.com",
-              planType: "pro",
-            },
-            requiresOpenaiAuth: true,
-          };
+              requiresOpenaiAuth: true,
+            };
+          },
         },
-      },
-      codexExecutionAdapter: {
-        executeRequest: async ({ requestId, modelId, requestCapture }) => {
-          codexExecutionRequests.push({
-            modelId,
-            requestId,
-            url: requestCapture.url,
-            body: requestCapture.body,
-          });
-          return {
-            statusCode: 200,
-            body: requestCapture.url.endsWith("/chat/completions")
-              ? {
-                  id: `chatcmpl-${requestId}`,
-                  choices: [
-                    {
-                      index: 0,
-                      finish_reason: "stop",
-                      message: {
-                        role: "assistant",
-                        content: `Coder patch response for ${modelId}`,
-                      },
-                    },
-                  ],
-                  usage: {
-                    prompt_tokens: 55,
-                    completion_tokens: 13,
-                  },
-                }
-              : {
-                  id: `resp-${requestId}`,
-                  output: [
-                    {
-                      type: "message",
-                      role: "assistant",
-                      content: [
-                        {
-                          type: "output_text",
-                          text: `Coder patch response for ${modelId}`,
+        codexExecutionAdapter: {
+          executeRequest: async ({ requestId, modelId, requestCapture }) => {
+            codexExecutionRequests.push({
+              modelId,
+              requestId,
+              url: requestCapture.url,
+              body: requestCapture.body,
+            });
+            return {
+              statusCode: 200,
+              body: requestCapture.url.endsWith("/chat/completions")
+                ? {
+                    id: `chatcmpl-${requestId}`,
+                    choices: [
+                      {
+                        index: 0,
+                        finish_reason: "stop",
+                        message: {
+                          role: "assistant",
+                          content: `Coder patch response for ${modelId}`,
                         },
-                      ],
+                      },
+                    ],
+                    usage: {
+                      prompt_tokens: 55,
+                      completion_tokens: 13,
                     },
-                  ],
-                  usage: {
-                    input_tokens: 55,
-                    output_tokens: 13,
+                  }
+                : {
+                    id: `resp-${requestId}`,
+                    output: [
+                      {
+                        type: "message",
+                        role: "assistant",
+                        content: [
+                          {
+                            type: "output_text",
+                            text: `Coder patch response for ${modelId}`,
+                          },
+                        ],
+                      },
+                    ],
+                    usage: {
+                      input_tokens: 55,
+                      output_tokens: 13,
+                    },
                   },
-                },
-            vendorMetadata: {
-              vendorId: "chatgpt-codex-responses",
-              latencyMs: 12,
-            },
-          };
+              vendorMetadata: {
+                vendorId: "chatgpt-codex-responses",
+                latencyMs: 12,
+              },
+            };
+          },
         },
-      },
-    });
-
-    try {
-      const pending = await backend.startProviderDeviceAuthorization({
-        providerAccountId: "openai.personal.codex-subscription",
-        providerId: "openai",
-        providerKind: "provider-openai",
-        variantId: "openai-codex-subscription",
-        orgScope: "personal",
-        accountScope: "workspace-default",
-        allowedModels: [...EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS],
-        deniedModels: [],
-        entitlementTags: ["chat"],
-        budgetPolicyRef: "budget.default",
-        quotaPolicyRef: "quota.default",
       });
 
-      expect(pending.status).toBe("pending");
-
-      await expect(
-        backend.pollProviderDeviceAuthorization({
-          authRequestId: pending.authRequestId,
-        }),
-      ).resolves.toEqual(
-        expect.objectContaining({
-          status: "connected",
+      try {
+        const pending = await backend.startProviderDeviceAuthorization({
           providerAccountId: "openai.personal.codex-subscription",
-        }),
-      );
-
-      for (const modelId of EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS) {
-        const transportModelId = modelId.replace("chatgpt/", "");
-        await backend.activateEndpoint({
-          providerAccountId: "openai.personal.codex-subscription",
-          modelId,
-          region: "global",
+          providerId: "openai",
+          providerKind: "provider-openai",
+          variantId: "openai-codex-subscription",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          allowedModels: [...EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
         });
-      }
 
-      const candidates = (await backend.listRouterCandidates()) as Array<{
-        endpointId: string;
-        modelId: string;
-        roleBindings: readonly string[];
-        capabilities: readonly string[];
-      }>;
+        expect(pending.status).toBe("pending");
 
-      expect(
-        candidates
-          .filter((candidate) =>
-            EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS.includes(
-              // biome-ignore lint/suspicious/noExplicitAny: test model id cast
-              candidate.modelId as any,
-            ),
-          )
-          .sort((left, right) => left.modelId.localeCompare(right.modelId))
-          .map((candidate) => ({
-            modelId: candidate.modelId,
-            capabilities: [...candidate.capabilities].sort(),
-          })),
-      ).toEqual(
-        [...EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS]
-          .sort((left, right) => left.localeCompare(right))
-          .map((modelId) => ({
-            modelId,
-            capabilities: expect.arrayContaining([
-              "code.edit",
-              "text.chat",
-              "tools.function_calling",
-            ]),
-          })),
-      );
-
-      for (const modelId of EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS) {
-        const requestSlug = modelId.replace(/^chatgpt\//, "").replace(/[^a-z0-9]+/gi, "-");
         await expect(
-          backend.executeChatCompletions(
-            {
-              model: modelId,
-              messages: [
-                {
-                  role: "user",
-                  content: "Write a concise patch plan and preserve contract compatibility.",
-                },
-              ],
-            },
-            `req-coder-${requestSlug}`,
-            undefined,
-            {
-              requestedRoleId: "coder.patch",
-            },
-          ),
+          backend.pollProviderDeviceAuthorization({
+            authRequestId: pending.authRequestId,
+          }),
         ).resolves.toEqual(
           expect.objectContaining({
-            model: modelId,
-            outputText: `Coder patch response for ${modelId}`,
+            status: "connected",
+            providerAccountId: "openai.personal.codex-subscription",
           }),
         );
-      }
 
-      expect(codexExecutionRequests.map((request) => request.modelId)).toEqual(
-        EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS,
-      );
-    } finally {
-      await backend.shutdown();
-      await rm(runtimeStateRoot, { recursive: true, force: true });
-    }
-  }, 15_000);
+        for (const modelId of EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS) {
+          const transportModelId = modelId.replace("chatgpt/", "");
+          await backend.activateEndpoint({
+            providerAccountId: "openai.personal.codex-subscription",
+            modelId,
+            region: "global",
+          });
+        }
+
+        const candidates = (await backend.listRouterCandidates()) as Array<{
+          endpointId: string;
+          modelId: string;
+          roleBindings: readonly string[];
+          capabilities: readonly string[];
+        }>;
+
+        expect(
+          candidates
+            .filter((candidate) =>
+              EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS.includes(
+                // biome-ignore lint/suspicious/noExplicitAny: test model id cast
+                candidate.modelId as any,
+              ),
+            )
+            .sort((left, right) => left.modelId.localeCompare(right.modelId))
+            .map((candidate) => ({
+              modelId: candidate.modelId,
+              capabilities: [...candidate.capabilities].sort(),
+            })),
+        ).toEqual(
+          [...EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS]
+            .sort((left, right) => left.localeCompare(right))
+            .map((modelId) => ({
+              modelId,
+              capabilities: expect.arrayContaining([
+                "code.edit",
+                "text.chat",
+                "tools.function_calling",
+              ]),
+            })),
+        );
+
+        for (const modelId of EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS) {
+          const requestSlug = modelId.replace(/^chatgpt\//, "").replace(/[^a-z0-9]+/gi, "-");
+          await expect(
+            backend.executeChatCompletions(
+              {
+                model: modelId,
+                messages: [
+                  {
+                    role: "user",
+                    content: "Write a concise patch plan and preserve contract compatibility.",
+                  },
+                ],
+              },
+              `req-coder-${requestSlug}`,
+              undefined,
+              {
+                requestedRoleId: "coder.patch",
+              },
+            ),
+          ).resolves.toEqual(
+            expect.objectContaining({
+              model: modelId,
+              outputText: `Coder patch response for ${modelId}`,
+            }),
+          );
+        }
+
+        expect(codexExecutionRequests.map((request) => request.modelId)).toEqual(
+          EXPECTED_OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS,
+        );
+      } finally {
+        await backend.shutdown();
+        await rm(runtimeStateRoot, { recursive: true, force: true });
+      }
+    },
+    OPENAI_CODEX_SUBSCRIPTION_CODER_PATCH_TIMEOUT_MS,
+  );
 });

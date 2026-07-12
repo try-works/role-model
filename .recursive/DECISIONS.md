@@ -2,6 +2,40 @@
 
 ## Recursive Run Index
 
+### Run `67-runtime-ui-route-startup-performance-hardening`
+
+- Run folder: `/.recursive/run/67-runtime-ui-route-startup-performance-hardening/`
+- Worktree: `.worktrees/67-runtime-ui-route-startup-performance-hardening`
+- Branch: `recursive/67-runtime-ui-route-startup-performance-hardening`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - `/app/models` now boots from a route-owned narrow fetch set, defers request evidence, and reports deferred request counts truthfully as `null` / `Unavailable` instead of fabricating zero-value startup metrics
+  - `/app/router`, `/app/router/controller`, `/app/connect`, `/app/connect/upstream`, `/app/system/peers`, and the Studio startup routes no longer boot through `fetchRuntimeSnapshot()`, with a new source-based `P0` regression guard plus a seeded browser regression for `/app/connect`
+  - non-QA runtime startup paths now expose `GET /api/role-model/requests/latest-ids?limit=10`, and packaging validation waits for `/api/role-model/runtime/summary` before account and endpoint checks while also asserting the latest-ids seam
+- Why:
+  - run 66 fixed the providers page only, but many other operator routes still inherited the same rich request-ledger startup cost through the broad shared snapshot helper
+  - rebuilt-runtime parity still lagged the QA helper because non-QA startup omitted `listRecentRequestIds`, and packaged validation could still fail on a control-plane readiness race after `/healthz`
+- How:
+  - implemented with strict TDD across runtime-ui and runtime-host-bridge using focused RED/GREEN proof, broader owning suites, `runtime:validate-ui`, `runtime:test-browser`, `runtime:validate-packaging`, and rebuilt packaged-runtime persisted-state proof
+  - preserved the existing rich `/api/role-model/requests` contract and the run-66 providers baseline while moving first paint onto route-owned narrower startup contracts
+- What was not done:
+  - no rich request-ledger or telemetry product redesign beyond startup-latency hardening
+  - no widening of already-narrow `P1` routes back onto the broad snapshot helper
+  - no durable vendor-binary changes from packaging byproducts
+- Known issues / follow-ups:
+  - the persisted standalone runtime state used for Phase 5 on `2026-07-12` had zero configured accounts/endpoints and `latestRequestIds = [null]`; rebuilt-runtime QA therefore used `/app/router/controller` as the extra live `P0` checkpoint while the seeded browser floor continued to cover `/app/connect`
+
 ### Run `66-remote-providers-deferred-request-id-loading`
 
 - Run folder: `/.recursive/run/66-remote-providers-deferred-request-id-loading/`

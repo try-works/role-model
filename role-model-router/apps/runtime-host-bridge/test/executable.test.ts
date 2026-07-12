@@ -326,7 +326,45 @@ describe("runtime-host-bridge executable packaging", () => {
 
     expect(cliText).toContain('"listProviderDeviceAuthorizations"');
     expect(cliText).toContain('"listModels"');
+    expect(cliText).toContain('"listRecentRequestIds"');
     expect(cliText).toContain('"readVersionInfo"');
+  });
+
+  test("wires latest-request-id startup parity into every non-QA runtime launch path", async () => {
+    const cliPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "src",
+      "cli.ts",
+    );
+    const startScriptPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "scripts",
+      "start.ts",
+    );
+    const prodLauncherPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "apps",
+      "runtime-host-bridge",
+      "scripts",
+      "prod-launcher.ts",
+    );
+
+    const [cliText, startText, prodLauncherText] = await Promise.all([
+      readFile(cliPath, "utf8"),
+      readFile(startScriptPath, "utf8"),
+      readFile(prodLauncherPath, "utf8"),
+    ]);
+
+    expect(cliText).toContain('"listRecentRequestIds"');
+    expect(startText).toContain("listRecentRequestIds");
+    expect(prodLauncherText).toContain("listRecentRequestIds");
   });
 
   test("packaged runtime validation exercises account activation and routed request flows", async () => {
@@ -343,6 +381,8 @@ describe("runtime-host-bridge executable packaging", () => {
     expect(validatePackagingText).toContain("/api/role-model/accounts");
     expect(validatePackagingText).toContain("/api/role-model/endpoints");
     expect(validatePackagingText).toContain("/api/role-model/role-policy");
+    expect(validatePackagingText).toContain("/api/role-model/runtime/summary");
+    expect(validatePackagingText).toContain("/api/role-model/requests/latest-ids?limit=10");
     expect(validatePackagingText).toContain("/v1/chat/completions");
     expect(validatePackagingText).toContain("/v1/responses");
     expect(validatePackagingText).toContain("--fixture-root");

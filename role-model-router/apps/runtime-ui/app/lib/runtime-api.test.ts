@@ -340,6 +340,90 @@ describe("fetchProvidersSnapshot", () => {
   });
 });
 
+describe("fetchRuntimeModels", () => {
+  test("loads the runtime model catalog directly from the runtime inventory endpoint", async () => {
+    const fetchRuntimeModels = (
+      runtimeApiModule as {
+        fetchRuntimeModels?: unknown;
+      }
+    ).fetchRuntimeModels;
+    expect(fetchRuntimeModels).toBeTypeOf("function");
+    if (typeof fetchRuntimeModels !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      switch (target) {
+        case "/api/role-model/models":
+          return jsonResponse([
+            {
+              id: "moonshot/kimi-k2.5",
+              object: "model",
+              owned_by: "role-model",
+              providerId: "moonshot",
+              endpoint_ids: [],
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+            },
+          ]);
+        case "/v1/models":
+          throw new Error(
+            "runtime model catalog should not fall back when the runtime endpoint succeeds",
+          );
+        default:
+          throw new Error(`Unexpected request: ${target}`);
+      }
+    });
+
+    await expect(
+      (
+        fetchRuntimeModels as (
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<unknown>
+      )(fetcher),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        id: "moonshot/kimi-k2.5",
+        providerId: "moonshot",
+      }),
+    ]);
+    expect(requestedTargets).toEqual(["/api/role-model/models"]);
+  });
+});
+
+describe("fetchRuntimeRequests", () => {
+  test("keeps the heavyweight request ledger behind an explicit runtime request-history read", async () => {
+    const fetchRuntimeRequests = (
+      runtimeApiModule as {
+        fetchRuntimeRequests?: unknown;
+      }
+    ).fetchRuntimeRequests;
+    expect(fetchRuntimeRequests).toBeTypeOf("function");
+    if (typeof fetchRuntimeRequests !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      return jsonResponse([{ requestId: "req-001", endpointId: "moonshot.personal.primary.kimi" }]);
+    });
+
+    await expect(
+      (
+        fetchRuntimeRequests as (
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<readonly unknown[]>
+      )(fetcher),
+    ).resolves.toEqual([{ requestId: "req-001", endpointId: "moonshot.personal.primary.kimi" }]);
+    expect(requestedTargets).toEqual(["/api/role-model/requests"]);
+  });
+});
+
 describe("fetchRecentRequestIds", () => {
   test("requests the lightweight latest-ids route with an explicit limit of 10", async () => {
     const fetchRecentRequestIds = (

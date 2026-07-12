@@ -1,0 +1,20 @@
+Name: runtime-ui-targeted
+WorkDir: D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening\role-model-router\apps\runtime-ui
+Command: Set-Location 'D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening\role-model-router\apps\runtime-ui'; & 'D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening\node_modules\.bin\vitest.cmd' run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/routes/control-models.test.ts app/routes/startup-bootstrap-regression.test.ts
+ExitCode: 0
+TimestampUtc: 2026-07-12T12:15:44.1995819Z
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/67-runtime-ui-route-startup-performance-hardening/role-model-router/apps/runtime-ui
+
+ ✓ app/routes/startup-bootstrap-regression.test.ts (11 tests) 15ms
+ ✓ app/lib/view-models.test.ts (36 tests) 101ms
+ ✓ app/lib/runtime-api.test.ts (55 tests) 114ms
+ ✓ app/routes/control-models.test.ts (15 tests) 159ms
+
+ Test Files  4 passed (4)
+      Tests  117 passed (117)
+   Start at  20:15:41
+   Duration  2.21s (transform 1.64s, setup 0ms, collect 2.72s, tests 389ms, environment 2ms, prepare 1.66s)
+
+

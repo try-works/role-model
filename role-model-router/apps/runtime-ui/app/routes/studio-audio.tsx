@@ -25,7 +25,7 @@ import {
   type RuntimeAudioVoiceRecord,
   type RuntimeSnapshot,
   fetchAudioVoices,
-  fetchRuntimeSnapshot,
+  fetchRuntimeModels,
   submitAudioTranscription,
   submitSpeechGeneration,
 } from "../lib/runtime-api";
@@ -63,7 +63,7 @@ export function isVoiceInventoryUnavailableError(message: string | null): boolea
 }
 
 export default function StudioAudioRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
   const [voices, setVoices] = useState<readonly RuntimeAudioVoiceRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -79,10 +79,10 @@ export default function StudioAudioRoute() {
   const [result, setResult] = useState<AudioResult | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then((value) => {
-        setSnapshot(value);
-        setModel((current) => current || value.models[0]?.id || "");
+    void fetchRuntimeModels()
+      .then((models) => {
+        setSnapshot({ models });
+        setModel((current) => current || models[0]?.id || "");
       })
       .catch((value: unknown) =>
         setError(

@@ -73,4 +73,41 @@ describe("cli startup readiness", () => {
       await rm(staticRoot, { recursive: true, force: true });
     }
   });
+
+  test("exposes lightweight latest-request-id reads from the non-QA cli startup wiring", async () => {
+    const server = await bridge.startBridgeServer(
+      cli.createCliServerOptions(
+        {
+          host: "127.0.0.1",
+          port: 0,
+        },
+        {
+          getBackend: () =>
+            ({
+              effectiveRegistry: {
+                endpoints: [],
+                diagnostics: [],
+                lifecycleSummary: {
+                  active: 0,
+                  degraded: 0,
+                  offline: 0,
+                },
+              },
+              listRecentRequestIds: async (limit = 10) =>
+                ["req-010", "req-009", "req-008"].slice(0, limit),
+            }) as Parameters<typeof cli.createCliServerOptions>[1],
+        },
+      ),
+    );
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/requests/latest-ids?limit=2`,
+      );
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toEqual(["req-010", "req-009"]);
+    } finally {
+      await server.close();
+    }
+  });
 });

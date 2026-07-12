@@ -19,9 +19,8 @@ import {
 import {
   type RuntimeControllerAssignment,
   type RuntimeEndpoint,
-  type RuntimeSnapshot,
   fetchControllerAssignment,
-  fetchRuntimeSnapshot,
+  fetchRuntimeEndpoints,
   updateControllerAssignment,
 } from "../lib/runtime-api";
 
@@ -52,16 +51,16 @@ function summarizeRoleCoverage(roleIds: readonly string[] | undefined): {
 }
 
 export default function ControlControllerRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [endpoints, setEndpoints] = useState<readonly RuntimeEndpoint[] | null>(null);
   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
   const [controllerLoaded, setControllerLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingEndpointId, setPendingEndpointId] = useState<string | null>(null);
 
   useEffect(() => {
-    void Promise.all([fetchRuntimeSnapshot(), fetchControllerAssignment()])
-      .then(([nextSnapshot, nextController]) => {
-        setSnapshot(nextSnapshot);
+    void Promise.all([fetchRuntimeEndpoints(), fetchControllerAssignment()])
+      .then(([nextEndpoints, nextController]) => {
+        setEndpoints(nextEndpoints);
         setController(nextController);
         setControllerLoaded(true);
         setError(null);
@@ -72,11 +71,11 @@ export default function ControlControllerRoute() {
   }, []);
 
   const candidates = useMemo(() => {
-    if (!snapshot) {
+    if (!endpoints) {
       return [];
     }
 
-    return [...snapshot.endpoints]
+    return [...endpoints]
       .sort((left, right) => {
         const activeWeight = (endpoint: RuntimeEndpoint) =>
           controller?.endpointId === endpoint.endpointId ? 0 : endpoint.status === "active" ? 1 : 2;
@@ -90,7 +89,7 @@ export default function ControlControllerRoute() {
         ...endpoint,
         isActiveController: controller?.endpointId === endpoint.endpointId,
       }));
-  }, [controller?.endpointId, snapshot]);
+  }, [controller?.endpointId, endpoints]);
 
   const candidatePosture = useMemo(() => {
     return candidates.reduce(
@@ -113,7 +112,7 @@ export default function ControlControllerRoute() {
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!snapshot || !controllerLoaded) {
+  if (!endpoints || !controllerLoaded) {
     return <LoadingState label="Loading controller surface…" />;
   }
 

@@ -26,7 +26,10 @@ import {
 import {
   type RuntimeSnapshot,
   type WorkbenchChatInput,
-  fetchRuntimeSnapshot,
+  fetchRuntimeAccounts,
+  fetchRuntimeEndpoints,
+  fetchRuntimeModels,
+  fetchRuntimeSummary,
   submitWorkbenchChat,
 } from "../lib/runtime-api";
 import {
@@ -81,7 +84,10 @@ export default function WorkbenchRoute() {
       ? (location.state as { routingModeOverride?: unknown }).routingModeOverride
       : undefined,
   );
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<
+    RuntimeSnapshot,
+    "summary" | "accounts" | "endpoints" | "models"
+  > | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [model, setModel] = useState("");
@@ -94,9 +100,19 @@ export default function WorkbenchRoute() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then((data) => {
-        setSnapshot(data);
+    void Promise.all([
+      fetchRuntimeSummary(),
+      fetchRuntimeAccounts(),
+      fetchRuntimeEndpoints(),
+      fetchRuntimeModels(),
+    ])
+      .then(([summary, accounts, endpoints, models]) => {
+        setSnapshot({
+          summary,
+          accounts,
+          endpoints,
+          models,
+        });
       })
       .catch((value: unknown) =>
         setLoadError(value instanceof Error ? value.message : "Could not load workbench."),

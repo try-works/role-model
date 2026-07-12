@@ -1,6 +1,7 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
 import type { RuntimeAccount } from "../lib/runtime-api";
+import * as controlModelsModule from "./control-models";
 import {
   buildConfiguredModelInventoryPills,
   buildModelRoleAssignmentForSelection,
@@ -196,5 +197,148 @@ describe("control model role assignment helpers", () => {
       modelId: "openai/gpt-4o-mini",
       endpointIds: ["openai.personal.default/gpt-4o-mini", "openai.personal.fallback/gpt-4o-mini"],
     });
+  });
+});
+
+describe("startDeferredConfiguredModelsBootstrap", () => {
+  test("waits for the initial configured model inventory to settle before fetching deferred request evidence", async () => {
+    const startDeferredConfiguredModelsBootstrap = (
+      controlModelsModule as {
+        startDeferredConfiguredModelsBootstrap?: unknown;
+      }
+    ).startDeferredConfiguredModelsBootstrap;
+    expect(startDeferredConfiguredModelsBootstrap).toBeTypeOf("function");
+    if (typeof startDeferredConfiguredModelsBootstrap !== "function") {
+      return;
+    }
+
+    const events: string[] = [];
+    let resolveInitialLoad: VoidFunction | undefined;
+    startDeferredConfiguredModelsBootstrap({
+      loadInitial: async () => {
+        events.push("load:initial");
+        return await new Promise<string>((resolve) => {
+          resolveInitialLoad = () => {
+            events.push("load:initial:resolved");
+            resolve("models-ready");
+          };
+        });
+      },
+      onInitialData: (value: string) => {
+        events.push(`initial:${value}`);
+      },
+      onInitialError: (message: string) => {
+        events.push(`initial:error:${message}`);
+      },
+      loadObservedRequests: async () => {
+        events.push("load:requests");
+        return [{ requestId: "req-010" }];
+      },
+      onObservedRequests: (requests: readonly { requestId: string }[]) => {
+        events.push(`requests:${requests.map((request) => request.requestId).join(",")}`);
+      },
+      onObservedRequestsError: (message: string) => {
+        events.push(`requests:error:${message}`);
+      },
+    });
+
+    expect(events).toEqual(["load:initial"]);
+
+    expect(resolveInitialLoad).toBeTypeOf("function");
+    const settleInitialLoad = resolveInitialLoad;
+    if (!settleInitialLoad) {
+      throw new Error("Expected configured model bootstrap to defer request evidence.");
+    }
+    settleInitialLoad();
+
+    await vi.waitFor(() => {
+      expect(events).toEqual([
+        "load:initial",
+        "load:initial:resolved",
+        "initial:models-ready",
+        "load:requests",
+        "requests:req-010",
+      ]);
+    });
+  });
+
+  test("preserves the visible model inventory when deferred request evidence fails", async () => {
+    const startDeferredConfiguredModelsBootstrap = (
+      controlModelsModule as {
+        startDeferredConfiguredModelsBootstrap?: unknown;
+      }
+    ).startDeferredConfiguredModelsBootstrap;
+    expect(startDeferredConfiguredModelsBootstrap).toBeTypeOf("function");
+    if (typeof startDeferredConfiguredModelsBootstrap !== "function") {
+      return;
+    }
+
+    const initialStates: string[] = [];
+    const initialErrors: string[] = [];
+    const requestErrors: string[] = [];
+
+    startDeferredConfiguredModelsBootstrap({
+      loadInitial: async () => "models-ready",
+      onInitialData: (value: string) => {
+        initialStates.push(value);
+      },
+      onInitialError: (message: string) => {
+        initialErrors.push(message);
+      },
+      loadObservedRequests: async () => {
+        throw new Error("request evidence unavailable");
+      },
+      onObservedRequests: () => {
+        throw new Error("Expected deferred request evidence to fail in this test.");
+      },
+      onObservedRequestsError: (message: string) => {
+        requestErrors.push(message);
+      },
+    });
+
+    await vi.waitFor(() => {
+      expect(initialStates).toEqual(["models-ready"]);
+      expect(requestErrors).toEqual(["request evidence unavailable"]);
+    });
+    expect(initialErrors).toEqual([]);
+  });
+});
+
+describe("describeConfiguredModelRequestEvidence", () => {
+  test("keeps request-evidence copy truthful while deferred request history is pending or unavailable", () => {
+    const describeConfiguredModelRequestEvidence = (
+      controlModelsModule as {
+        describeConfiguredModelRequestEvidence?: unknown;
+      }
+    ).describeConfiguredModelRequestEvidence;
+    expect(describeConfiguredModelRequestEvidence).toBeTypeOf("function");
+    if (typeof describeConfiguredModelRequestEvidence !== "function") {
+      return;
+    }
+
+    expect(
+      (
+        describeConfiguredModelRequestEvidence as (
+          requestCount: number | null,
+          status: "loading" | "ready" | "unavailable",
+        ) => string
+      )(null, "loading"),
+    ).toBe("Request evidence loading");
+    expect(
+      (
+        describeConfiguredModelRequestEvidence as (
+          requestCount: number | null,
+          status: "loading" | "ready" | "unavailable",
+        ) => string
+      )(null, "unavailable"),
+    ).toBe("Request evidence unavailable");
+    expect(
+      (
+        describeConfiguredModelRequestEvidence as (
+          requestCount: number | null,
+          status: "loading" | "ready" | "unavailable",
+        ) => string
+      )(7, "ready"),
+    ).toBe("7 requests");
   });
 });

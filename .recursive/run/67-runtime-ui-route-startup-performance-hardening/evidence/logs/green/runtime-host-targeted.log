@@ -1,0 +1,20 @@
+Name: runtime-host-targeted
+WorkDir: D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening\role-model-router\apps\runtime-host-bridge
+Command: Set-Location 'D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening\role-model-router\apps\runtime-host-bridge'; & 'D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening\node_modules\.bin\vitest.cmd' run test/cli-startup-readiness.test.ts test/executable.test.ts
+ExitCode: 0
+TimestampUtc: 2026-07-12T12:15:49.6630471Z
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/67-runtime-ui-route-startup-performance-hardening/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/executable.test.ts (19 tests) 129ms
+(node:42064) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/cli-startup-readiness.test.ts (2 tests) 118ms
+
+ Test Files  2 passed (2)
+      Tests  21 passed (21)
+   Start at  20:15:45
+   Duration  3.37s (transform 1.76s, setup 0ms, collect 2.41s, tests 247ms, environment 1ms, prepare 919ms)
+
+

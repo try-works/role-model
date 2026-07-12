@@ -16,7 +16,13 @@ import {
   secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
-import { type RuntimeSnapshot, fetchRuntimeConfig, fetchRuntimeSnapshot } from "../lib/runtime-api";
+import {
+  type RuntimeSnapshot,
+  fetchRuntimeAccounts,
+  fetchRuntimeDeviceAuthorizations,
+  fetchRuntimeEndpoints,
+  fetchRuntimeSummary,
+} from "../lib/runtime-api";
 import {
   buildConfiguredProviderRows,
   buildCredentialReadinessRows,
@@ -135,13 +141,26 @@ function buildRuntimeConnectionRows(input: {
 }
 
 export default function EndpointsRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<
+    RuntimeSnapshot,
+    "summary" | "accounts" | "deviceAuthorizations" | "endpoints"
+  > | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void Promise.all([fetchRuntimeSnapshot(), fetchRuntimeConfig()])
-      .then(([nextSnapshot]) => {
-        setSnapshot(nextSnapshot);
+    void Promise.all([
+      fetchRuntimeSummary(),
+      fetchRuntimeAccounts(),
+      fetchRuntimeDeviceAuthorizations(),
+      fetchRuntimeEndpoints(),
+    ])
+      .then(([summary, accounts, deviceAuthorizations, endpoints]) => {
+        setSnapshot({
+          summary,
+          accounts,
+          deviceAuthorizations,
+          endpoints,
+        });
         setError(null);
       })
       .catch((value: unknown) =>

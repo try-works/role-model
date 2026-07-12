@@ -1,0 +1,29 @@
+Name: sqlite-memory-full
+WorkDir: D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening\role-model-router\packages\sqlite-memory
+Command: Set-Location 'D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening\role-model-router\packages\sqlite-memory'; & 'D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening\node_modules\.bin\vitest.cmd' run test/index.test.ts
+ExitCode: 0
+TimestampUtc: 2026-07-12T12:17:53.7121511Z
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/67-runtime-ui-route-startup-performance-hardening/role-model-router/packages/sqlite-memory
+
+(node:52788) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (39 tests) 10310ms
+   ✓ initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads  322ms
+   ✓ initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows  567ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting benchmark samples  529ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles  649ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading difficulty classification cache  533ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting difficulty classification cache  522ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading advisory max difficulty recommendations  482ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records  731ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns  694ms
+   ✓ runRuntimeStateValidation > validates provider accounts and initializes SQLite through the local validation path  334ms
+
+ Test Files  1 passed (1)
+      Tests  39 passed (39)
+   Start at  20:17:40
+   Duration  12.49s (transform 778ms, setup 0ms, collect 990ms, tests 10.31s, environment 0ms, prepare 428ms)
+
+

@@ -19,18 +19,18 @@ import {
   type RouterCandidate,
   type RouterSummary,
   type RuntimeConfigRecord,
-  type RuntimeSnapshot,
+  type RuntimeEndpoint,
   fetchRouterCandidates,
   fetchRouterSummary,
   fetchRuntimeConfig,
-  fetchRuntimeSnapshot,
+  fetchRuntimeEndpoints,
 } from "../lib/runtime-api";
 import { buildAliasReadinessRows } from "../lib/view-models";
 
 export default function RouterOverviewRoute() {
   const [summary, setSummary] = useState<RouterSummary | null>(null);
   const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [endpoints, setEndpoints] = useState<readonly RuntimeEndpoint[] | null>(null);
   const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,13 +38,13 @@ export default function RouterOverviewRoute() {
     void Promise.all([
       fetchRouterSummary(),
       fetchRouterCandidates(),
-      fetchRuntimeSnapshot(),
+      fetchRuntimeEndpoints(),
       fetchRuntimeConfig(),
     ])
-      .then(([nextSummary, nextCandidates, nextSnapshot, nextConfigRecord]) => {
+      .then(([nextSummary, nextCandidates, nextEndpoints, nextConfigRecord]) => {
         setSummary(nextSummary);
         setCandidates(nextCandidates);
-        setSnapshot(nextSnapshot);
+        setEndpoints(nextEndpoints);
         setConfigRecord(nextConfigRecord);
         setError(null);
       })
@@ -56,7 +56,7 @@ export default function RouterOverviewRoute() {
   const configuredAliasRows = useMemo(() => {
     const runtimeAliasRows = buildAliasReadinessRows(
       configRecord?.config?.modelAliases ?? configRecord?.config?.model_aliases ?? [],
-      snapshot?.endpoints ?? [],
+      endpoints ?? [],
     );
     const runtimeAliasRowsById = new Map(runtimeAliasRows.map((alias) => [alias.aliasId, alias]));
     const summaryAliasRowsById = new Map(
@@ -106,11 +106,11 @@ export default function RouterOverviewRoute() {
         driftWarnings: summaryAlias?.driftWarnings ?? [],
       };
     });
-  }, [configRecord, snapshot, summary]);
+  }, [configRecord, endpoints, summary]);
   if (error) {
     return <ErrorState label={error} />;
   }
-  if (!summary || !snapshot || !configRecord) {
+  if (!summary || !endpoints || !configRecord) {
     return <LoadingState label="Loading router overview…" />;
   }
   const config = configRecord.config;

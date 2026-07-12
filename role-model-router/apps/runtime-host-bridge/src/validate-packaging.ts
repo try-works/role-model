@@ -278,6 +278,7 @@ async function exercisePackagedExecutionValidation(input: {
   readonly credentialRef: string;
 }): Promise<{
   readonly endpointId: string;
+  readonly latestRequestIds: readonly string[];
   readonly modelCount: number;
   readonly roleDefinitionCount: number;
   readonly chatOutputText: string;
@@ -340,6 +341,9 @@ async function exercisePackagedExecutionValidation(input: {
     taskDefinitions: unknown[];
   }>(`${input.baseUrl}/api/role-model/role-policy`);
   const models = await fetchJson<{ data: unknown[] }>(`${input.baseUrl}/v1/models`);
+  const latestRequestIds = await fetchJson<readonly string[]>(
+    `${input.baseUrl}/api/role-model/requests/latest-ids?limit=10`,
+  );
   const chatResponse = await fetchJson(`${input.baseUrl}/v1/chat/completions`, {
     method: "POST",
     headers: {
@@ -363,6 +367,7 @@ async function exercisePackagedExecutionValidation(input: {
 
   return {
     endpointId: activatedEndpoint.endpointId,
+    latestRequestIds,
     modelCount: models.data.length,
     roleDefinitionCount: rolePolicy.roleDefinitions.length,
     chatOutputText: extractChatOutputText(chatResponse),
@@ -500,6 +505,7 @@ async function exercisePackagedTaxonomyValidation(input: {
 export async function runRuntimePackagingValidation(): Promise<{
   readonly packagedExecutable: string;
   readonly healthStatus: string;
+  readonly latestRequestIds: readonly string[];
   readonly modelCount: number;
   readonly roleDefinitionCount: number;
   readonly taxonomyVersion: string;
@@ -558,6 +564,7 @@ export async function runRuntimePackagingValidation(): Promise<{
     | {
         readonly packagedExecutable: string;
         readonly healthStatus: string;
+        readonly latestRequestIds: readonly string[];
         readonly modelCount: number;
         readonly roleDefinitionCount: number;
         readonly taxonomyVersion: string;
@@ -573,6 +580,7 @@ export async function runRuntimePackagingValidation(): Promise<{
   try {
     const health = await waitForOk(`http://127.0.0.1:${port}/healthz`, 20000);
     const healthJson = (await health.json()) as { status: string };
+    await waitForOk(`http://127.0.0.1:${port}/api/role-model/runtime/summary`, 20000);
     const packagedExecution = await exercisePackagedExecutionValidation({
       baseUrl: `http://127.0.0.1:${port}`,
       apiBaseUrl: `${mockUpstream.baseUrl}/v1`,
@@ -584,6 +592,7 @@ export async function runRuntimePackagingValidation(): Promise<{
     return {
       packagedExecutable: packaged.outputPath,
       healthStatus: healthJson.status,
+      latestRequestIds: packagedExecution.latestRequestIds,
       modelCount: packagedExecution.modelCount,
       roleDefinitionCount: packagedExecution.roleDefinitionCount,
       taxonomyVersion: packagedTaxonomy.taxonomyVersion,

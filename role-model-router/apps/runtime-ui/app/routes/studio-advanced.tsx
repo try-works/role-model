@@ -19,7 +19,8 @@ import {
 } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
-  fetchRuntimeSnapshot,
+  fetchRuntimeModels,
+  fetchRuntimeSummary,
   submitAdvancedRequest,
 } from "../lib/runtime-api";
 import { usePageActions } from "../lib/shell-header-context";
@@ -100,7 +101,9 @@ function buildDefaultPayload(path: AdvancedPath, model: string): Record<string, 
 }
 
 export default function StudioAdvancedRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "summary" | "models"> | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [model, setModel] = useState("");
   const [path, setPath] = useState<AdvancedPath>("/v1/responses");
@@ -109,10 +112,13 @@ export default function StudioAdvancedRoute() {
   const [responsePayload, setResponsePayload] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then((value) => {
-        setSnapshot(value);
-        const defaultModel = value.models[0]?.id || "";
+    void Promise.all([fetchRuntimeSummary(), fetchRuntimeModels()])
+      .then(([summary, models]) => {
+        setSnapshot({
+          summary,
+          models,
+        });
+        const defaultModel = models[0]?.id || "";
         setModel((current) => current || defaultModel);
       })
       .catch((value: unknown) =>

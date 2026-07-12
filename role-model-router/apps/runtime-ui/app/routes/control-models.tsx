@@ -33,13 +33,17 @@ import {
   type RuntimeAccount,
   type RuntimeControllerAssignment,
   type RuntimeModelRoleAssignment,
+  type RuntimeRequestListItem,
   type RuntimeRolePolicy,
   type RuntimeSnapshot,
   fetchControllerAssignment,
   fetchModelTelemetryRollup,
   fetchRolePolicy,
   fetchRouterCandidates,
-  fetchRuntimeSnapshot,
+  fetchRuntimeAccounts,
+  fetchRuntimeEndpoints,
+  fetchRuntimeModels,
+  fetchRuntimeRequests,
   removeRuntimeAccountModel,
   unloadLocalModel,
   unloadPeerModel,
@@ -84,6 +88,103 @@ type EvidencePillInput = {
     readonly lowCoverage: boolean;
   }[];
 };
+
+type ConfiguredModelsSnapshot = Pick<RuntimeSnapshot, "accounts" | "endpoints" | "models">;
+type RequestEvidenceStatus = "loading" | "ready" | "unavailable";
+
+type ConfiguredModelsInitialLoadResult = {
+  readonly snapshot: ConfiguredModelsSnapshot;
+  readonly controller: RuntimeControllerAssignment | null;
+  readonly rolePolicy: RuntimeRolePolicy;
+  readonly candidates: readonly RouterCandidate[];
+};
+
+export interface DeferredConfiguredModelsBootstrapOptions<TInitialData> {
+  readonly loadInitial: () => Promise<TInitialData>;
+  readonly onInitialData: (data: TInitialData) => void;
+  readonly onInitialError: (message: string) => void;
+  readonly loadObservedRequests: () => Promise<readonly RuntimeRequestListItem[]>;
+  readonly onObservedRequests: (requests: readonly RuntimeRequestListItem[]) => void;
+  readonly onObservedRequestsError?: (message: string) => void;
+}
+
+export function startDeferredConfiguredModelsBootstrap<TInitialData>(
+  options: DeferredConfiguredModelsBootstrapOptions<TInitialData>,
+): () => void {
+  let disposed = false;
+
+  void options
+    .loadInitial()
+    .then((data) => {
+      if (disposed) {
+        return;
+      }
+      options.onInitialData(data);
+      return options.loadObservedRequests().then(
+        (requests) => {
+          if (!disposed) {
+            options.onObservedRequests(requests);
+          }
+        },
+        (value: unknown) => {
+          if (disposed) {
+            return;
+          }
+          options.onObservedRequestsError?.(
+            value instanceof Error ? value.message : "Could not load request evidence.",
+          );
+        },
+      );
+    })
+    .catch((value: unknown) => {
+      if (disposed) {
+        return;
+      }
+      options.onInitialError(
+        value instanceof Error ? value.message : "Could not load configured models.",
+      );
+    });
+
+  return () => {
+    disposed = true;
+  };
+}
+
+export function describeConfiguredModelRequestEvidence(
+  requestCount: number | null,
+  status: RequestEvidenceStatus,
+): string {
+  if (status === "loading") {
+    return "Request evidence loading";
+  }
+  if (status === "unavailable") {
+    return "Request evidence unavailable";
+  }
+  return `${requestCount ?? 0} request${requestCount === 1 ? "" : "s"}`;
+}
+
+function buildObservedRequestFact(input: {
+  readonly requests: readonly RuntimeRequestListItem[];
+  readonly status: RequestEvidenceStatus;
+}): { value: string; detail: string } {
+  if (input.status === "loading") {
+    return {
+      value: "Loading…",
+      detail: "The model inventory is visible. Request evidence is loading in the background now.",
+    };
+  }
+  if (input.status === "unavailable") {
+    return {
+      value: "Unavailable",
+      detail:
+        "Deferred request evidence is unavailable, but the model inventory remains visible and usable.",
+    };
+  }
+  return {
+    value: input.requests.length.toLocaleString("en-US"),
+    detail: "Request count available as deferred runtime context.",
+  };
+}
 
 export function resolveConfiguredModelStatusTone(
   controllerState: ConfiguredModelCardLike["controllerState"],
@@ -278,7 +379,10 @@ export function createAccountMutationPayload(
 }
 
 export default function ControlModelsRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<ConfiguredModelsSnapshot | null>(null);
+  const [requests, setRequests] = useState<readonly RuntimeRequestListItem[]>([]);
+  const [requestEvidenceStatus, setRequestEvidenceStatus] =
+    useState<RequestEvidenceStatus>("loading");
   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
   const [rolePolicy, setRolePolicy] = useState<RuntimeRolePolicy | null>(null);
   const [controllerLoaded, setControllerLoaded] = useState(false);
@@ -292,22 +396,51 @@ export default function ControlModelsRoute() {
   const [telemetryRollup, setTelemetryRollup] = useState<ModelTelemetryRollup | null>(null);
 
   useEffect(() => {
-    void Promise.all([
-      fetchRuntimeSnapshot(),
-      fetchControllerAssignment(),
-      fetchRolePolicy(),
-      fetchRouterCandidates(),
-    ])
-      .then(([nextSnapshot, nextController, nextRolePolicy, nextCandidates]) => {
-        setSnapshot(nextSnapshot);
-        setController(nextController);
-        setRolePolicy(nextRolePolicy);
-        setCandidates(nextCandidates);
+    return startDeferredConfiguredModelsBootstrap({
+      loadInitial: async (): Promise<ConfiguredModelsInitialLoadResult> => {
+        const [accounts, endpoints, models, nextController, nextRolePolicy, nextCandidates] =
+          await Promise.all([
+            fetchRuntimeAccounts(),
+            fetchRuntimeEndpoints(),
+            fetchRuntimeModels(),
+            fetchControllerAssignment(),
+            fetchRolePolicy(),
+            fetchRouterCandidates(),
+          ]);
+        return {
+          snapshot: {
+            accounts,
+            endpoints,
+            models,
+          },
+          controller: nextController,
+          rolePolicy: nextRolePolicy,
+          candidates: nextCandidates,
+        };
+      },
+      onInitialData: (loaded) => {
+        setSnapshot(loaded.snapshot);
+        setController(loaded.controller);
+        setRolePolicy(loaded.rolePolicy);
+        setCandidates(loaded.candidates);
+        setRequests([]);
+        setRequestEvidenceStatus("loading");
         setControllerLoaded(true);
-      })
-      .catch((value: unknown) =>
-        setError(value instanceof Error ? value.message : "Could not load configured models."),
-      );
+        setError(null);
+      },
+      onInitialError: (message) => {
+        setError(message);
+      },
+      loadObservedRequests: () => fetchRuntimeRequests(),
+      onObservedRequests: (loadedRequests) => {
+        setRequests([...loadedRequests]);
+        setRequestEvidenceStatus("ready");
+      },
+      onObservedRequestsError: () => {
+        setRequests([]);
+        setRequestEvidenceStatus("unavailable");
+      },
+    });
   }, []);
 
   const cards = useMemo(
@@ -317,11 +450,11 @@ export default function ControlModelsRoute() {
             models: snapshot.models,
             endpoints: snapshot.endpoints,
             accounts: snapshot.accounts,
-            requests: snapshot.requests,
+            requests: requestEvidenceStatus === "ready" ? requests : null,
             controller,
           })
         : [],
-    [controller, snapshot],
+    [controller, requestEvidenceStatus, requests, snapshot],
   );
 
   const selectedCard = cards.find((card) => card.modelId === selectedModelId) ?? null;
@@ -409,6 +542,50 @@ export default function ControlModelsRoute() {
     );
   }, [allRuntimeRoleIds, selectedCard, selectedModelAccounts]);
 
+  const loadConfiguredModelsInitialData = async (): Promise<ConfiguredModelsInitialLoadResult> => {
+    const [accounts, endpoints, models, nextController, nextRolePolicy, nextCandidates] =
+      await Promise.all([
+        fetchRuntimeAccounts(),
+        fetchRuntimeEndpoints(),
+        fetchRuntimeModels(),
+        fetchControllerAssignment(),
+        fetchRolePolicy(),
+        fetchRouterCandidates(),
+      ]);
+    return {
+      snapshot: {
+        accounts,
+        endpoints,
+        models,
+      },
+      controller: nextController,
+      rolePolicy: nextRolePolicy,
+      candidates: nextCandidates,
+    };
+  };
+
+  const applyConfiguredModelsInitialData = (loaded: ConfiguredModelsInitialLoadResult): void => {
+    setSnapshot(loaded.snapshot);
+    setController(loaded.controller);
+    setRolePolicy(loaded.rolePolicy);
+    setCandidates(loaded.candidates);
+    setRequests([]);
+    setRequestEvidenceStatus("loading");
+    setControllerLoaded(true);
+    setError(null);
+  };
+
+  const refreshObservedRequestEvidence = async (): Promise<void> => {
+    try {
+      const loadedRequests = await fetchRuntimeRequests();
+      setRequests([...loadedRequests]);
+      setRequestEvidenceStatus("ready");
+    } catch {
+      setRequests([]);
+      setRequestEvidenceStatus("unavailable");
+    }
+  };
+
   const saveAccountRoles = async (account: RuntimeAccount) => {
     if (!selectedCard) {
       return;
@@ -424,13 +601,9 @@ export default function ControlModelsRoute() {
           allRuntimeRoleIds,
         ),
       );
-      const [nextSnapshot, nextRolePolicy] = await Promise.all([
-        fetchRuntimeSnapshot(),
-        fetchRolePolicy(),
-      ]);
-      setSnapshot(nextSnapshot);
-      setRolePolicy(nextRolePolicy);
-      setError(null);
+      const loaded = await loadConfiguredModelsInitialData();
+      applyConfiguredModelsInitialData(loaded);
+      await refreshObservedRequestEvidence();
       setStatusMessage(`Updated roles for ${account.providerAccountId}.`);
     } catch (value) {
       setError(value instanceof Error ? value.message : "Could not update model roles.");
@@ -440,16 +613,9 @@ export default function ControlModelsRoute() {
   };
 
   const refreshModelState = async () => {
-    const [nextSnapshot, nextController, nextRolePolicy, nextCandidates] = await Promise.all([
-      fetchRuntimeSnapshot(),
-      fetchControllerAssignment(),
-      fetchRolePolicy(),
-      fetchRouterCandidates(),
-    ]);
-    setSnapshot(nextSnapshot);
-    setController(nextController);
-    setRolePolicy(nextRolePolicy);
-    setCandidates(nextCandidates);
+    const loaded = await loadConfiguredModelsInitialData();
+    applyConfiguredModelsInitialData(loaded);
+    await refreshObservedRequestEvidence();
   };
 
   const removeConfiguredModel = async (account: RuntimeAccount) => {
@@ -515,6 +681,10 @@ export default function ControlModelsRoute() {
 
   const toolCapableCount = cards.filter((card) => card.toolCallingSupported).length;
   const activeModelCount = cards.filter((card) => card.status === "active").length;
+  const observedRequestsFact = buildObservedRequestFact({
+    requests,
+    status: requestEvidenceStatus,
+  });
 
   const capabilityByModelId = new Map<string, number>();
   const benchmarkCapabilityByModelId = new Map<
@@ -627,8 +797,8 @@ export default function ControlModelsRoute() {
         />
         <FactCard
           label="Observed requests"
-          value={snapshot.requests.length.toLocaleString("en-US")}
-          detail="Request count available as runtime context."
+          value={observedRequestsFact.value}
+          detail={observedRequestsFact.detail}
         />
       </div>
 
@@ -826,9 +996,12 @@ export default function ControlModelsRoute() {
               <section className={`${cardClassName} p-4`}>
                 <p className={supportingTextClassName}>
                   Capabilities: {selectedCapabilities.join(", ") || "none"} • Metrics:{" "}
-                  {selectedCard.requestCount} requests, {selectedCard.endpointCount} endpoints,{" "}
-                  {selectedCard.sourceSummary} • Tooling / MCP:{" "}
-                  {selectedCard.toolCallingSupported ? "enabled" : "unavailable"}
+                  {describeConfiguredModelRequestEvidence(
+                    selectedCard.requestCount,
+                    requestEvidenceStatus,
+                  )}
+                  , {selectedCard.endpointCount} endpoints, {selectedCard.sourceSummary} • Tooling /
+                  MCP: {selectedCard.toolCallingSupported ? "enabled" : "unavailable"}
                   {selectedCapabilityScore !== null
                     ? ` • Benchmark: ${Math.round(selectedCapabilityScore * 100)}%`
                     : ""}
@@ -988,7 +1161,10 @@ export default function ControlModelsRoute() {
                     <div className={`mt-3 grid gap-3 md:grid-cols-2 ${supportingTextClassName}`}>
                       <p>
                         <span className={foregroundEmphasisClassName}>Requests observed:</span>{" "}
-                        {selectedCard.requestCount}
+                        {describeConfiguredModelRequestEvidence(
+                          selectedCard.requestCount,
+                          requestEvidenceStatus,
+                        )}
                       </p>
                       <p>
                         <span className={foregroundEmphasisClassName}>Configured endpoints:</span>{" "}

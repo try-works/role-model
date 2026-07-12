@@ -18,18 +18,18 @@ import {
   type PeerConfig,
   type RuntimeSnapshot,
   fetchPeers,
-  fetchRuntimeSnapshot,
+  fetchRuntimeModels,
 } from "../lib/runtime-api";
 
 export default function SystemPeersRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
   const [peers, setPeers] = useState<readonly PeerConfig[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void Promise.all([fetchRuntimeSnapshot(), fetchPeers()])
-      .then(([nextSnapshot, nextPeers]) => {
-        setSnapshot(nextSnapshot);
+    void Promise.all([fetchRuntimeModels(), fetchPeers()])
+      .then(([models, nextPeers]) => {
+        setSnapshot({ models });
         setPeers(nextPeers);
       })
       .catch((value: unknown) =>

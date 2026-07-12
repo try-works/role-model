@@ -13,16 +13,30 @@ import {
   mutedPanelClassName,
   supportingTextClassName,
 } from "../lib/design-system";
-import { type RuntimeSnapshot, fetchRuntimeSnapshot } from "../lib/runtime-api";
+import {
+  type RuntimeSnapshot,
+  fetchRuntimeAccounts,
+  fetchRuntimeModels,
+  fetchRuntimeProviders,
+} from "../lib/runtime-api";
 import { buildProviderCards } from "../lib/view-models";
 
 export default function IntegrationsUpstreamRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<
+    RuntimeSnapshot,
+    "providers" | "accounts" | "models"
+  > | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then(setSnapshot)
+    void Promise.all([fetchRuntimeProviders(), fetchRuntimeAccounts(), fetchRuntimeModels()])
+      .then(([providers, accounts, models]) =>
+        setSnapshot({
+          providers,
+          accounts,
+          models,
+        }),
+      )
       .catch((value: unknown) =>
         setError(
           value instanceof Error ? value.message : "Could not load upstream integration details.",

@@ -59,6 +59,7 @@ const server = await startBridgeServer({
   listRouterDecisions: backend.listRouterDecisions,
   readRouterDecision: backend.readRouterDecision,
   listEndpoints: backend.listEndpoints,
+  listRecentRequestIds: backend.listRecentRequestIds,
   listRecentRequestObservations: backend.listRecentRequestObservations,
   readRequestObservation: backend.readRequestObservation,
   readEndpointProfile: backend.readEndpointProfile,

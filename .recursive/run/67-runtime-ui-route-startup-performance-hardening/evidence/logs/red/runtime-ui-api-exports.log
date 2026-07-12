@@ -1,0 +1,14 @@
+Name: `runtime-ui-api-exports`
+Phase: `RED`
+Run: `67-runtime-ui-route-startup-performance-hardening`
+Timestamp: `2026-07-12`
+Command:
+
+- `corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/runtime-api.test.ts`
+
+Observed failure before production edits:
+
+- the new tests for exported narrow helpers failed because `fetchRuntimeModels` and `fetchRuntimeRequests` were not exported from `app/lib/runtime-api.ts`
+- that failure proved the pre-fix runtime-ui bootstrap layer did not yet expose the narrow fetch primitives required for the route-family split
+
+RED verified: `PASS`
