@@ -1,8 +1,8 @@
 {
   "artifact": "08-memory-impact.md",
-  "artifact_hash": "00dcfe117a76f3ee09436eb013fc38b7d90f9fe0813b9ffc39774ea9df18e25a",
+  "artifact_hash": "17f5fe34afc7806984331e2b8bd804bad0675c78278ca9f66751428ada2e923e",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\68-codex-subscription-tool-call-parity\\.recursive\\run\\68-codex-subscription-tool-call-parity\\08-memory-impact.md",
-  "locked_at": "2026-07-12T17:10:23Z",
+  "locked_at": "2026-07-12T23:54:35Z",
   "prerequisite_hashes": {
     "00-requirements.md": "3eafa40b178ed3142381dd5f0304c053e215ef7c56b8f77ab66d7fcfe62c2623",
     "00-worktree.md": "309d78e7c26851b163a4d06deb31bb5ea4a123aaba740e916ae3ae0d285ef2f5",
@@ -13,8 +13,8 @@
     "04-test-summary.md": "6d28d79ad2de5ffc04bfb42f32e2d204e60d904141f07d611772ad79505b3885",
     "05-manual-qa.md": "67498c4ec56bd4a00e1f65ae70fcfc3f70b98aa001d74e23a9a79f5c77f3bfbf",
     "06-decisions-update.md": "8cac2e8487dd353c870d1b7ce08a63d0ebf2ebd3e554f2b0c6a565644bacef1c",
-    "07-state-update.md": "ccba9400cfa0b74e703546fac1d2f11b5674624dead5a0279d8afbb40ac0ebf0"
+    "07-state-update.md": "1d9c6674c31da88ac6fabd698b446a080075ee8228ae0d63004464e446695358"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "96f9ee3485f461791275b3a14bdab005f8c13011f766b688dbecd63103128ede"
+  "receipt_hash": "ca767e820d962cd7d07dda2306e827e4e134110169bf9a2828e473aee8a42de6"
 }

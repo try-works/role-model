@@ -1,8 +1,8 @@
 Run: `/.recursive/run/68-codex-subscription-tool-call-parity/`
 Phase: `08 Memory Impact`
 Status: `LOCKED`
-LockedAt: `2026-07-12T17:10:23Z`
-LockHash: `00dcfe117a76f3ee09436eb013fc38b7d90f9fe0813b9ffc39774ea9df18e25a`
+LockedAt: `2026-07-12T23:54:35Z`
+LockHash: `17f5fe34afc7806984331e2b8bd804bad0675c78278ca9f66751428ada2e923e`
 Inputs:
 - `/.recursive/run/68-codex-subscription-tool-call-parity/00-requirements.md`
 - `/.recursive/run/68-codex-subscription-tool-call-parity/00-worktree.md`
@@ -15,6 +15,8 @@ Inputs:
 - `/.recursive/run/68-codex-subscription-tool-call-parity/06-decisions-update.md`
 - `/.recursive/run/68-codex-subscription-tool-call-parity/07-state-update.md`
 - `/.recursive/memory/MEMORY.md`
+- `/docs/architecture/09-runtime-routing-strategy-interactions.md`
+- `/docs/architecture/14-routed-execution-semantics-and-receipts.md`
 - `/.recursive/memory/skills/SKILLS.md`
 Outputs:
 - `/.recursive/run/68-codex-subscription-tool-call-parity/08-memory-impact.md`
@@ -45,12 +47,16 @@ Scope note: Records the durable memory impact of run 68 on runtime-routing/provi
 
 ## Affected Memory Docs
 
+- `/.recursive/memory/MEMORY.md`
 - `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`
 - `/.recursive/memory/domains/pi-role-model-package.md`
 
-Memory router files not changed:
+Memory router files changed:
 
 - `/.recursive/memory/MEMORY.md`
+
+Memory router files not changed:
+
 - `/.recursive/memory/skills/SKILLS.md`
 
 ## Run-Local Skill Usage Capture
@@ -80,11 +86,13 @@ None.
 
 - refreshed the runtime-routing/provider-capability domain shard with cross-provider tool-call rendering truth, `parallel_tool_calls` tri-state ownership, exact-versus-alias Pi proof expectations, and the Windows relaunch caveat
 - refreshed the Pi integration domain shard with `--mode json` tool-call receipt guidance and the distinction between `--no-session` single-turn proof and real-session continuation proof
-- left `MEMORY.md` and `skills/SKILLS.md` unchanged because the owning domain shards already cover the affected behavior and no new skill-memory shard was required
+- refreshed `MEMORY.md` so future retrieval for route-switch rendering or tool-loop parity loads the runtime-routing shard together with `/docs/architecture/09-runtime-routing-strategy-interactions.md` and `/docs/architecture/14-routed-execution-semantics-and-receipts.md`
+- left `skills/SKILLS.md` unchanged because no new skill-memory shard was required
 
 ## Final Status Summary
 
-- memory freshness is restored for the two affected domain shards
+- memory freshness is restored for the affected memory router entry plus the two affected domain shards
+- the memory router now points future route-switch or tool-loop parity retrieval at the owning runtime-routing shard plus the canonical architecture matrix docs
 - no uncovered path follow-up is required
 - no durable skill-memory promotion was necessary beyond the domain-shard updates
 
@@ -104,7 +112,7 @@ None.
 ## Coverage Gate
 
 - [x] All affected CURRENT memory docs were reviewed
-- [x] The two owning domain shards were updated
+- [x] The memory router entry and the two owning domain shards were updated
 - [x] No uncovered path remains
 - [x] Skill-memory promotion was considered and explicitly declined with rationale
 
@@ -134,15 +142,15 @@ Audit Inputs Provided:
 ## Earlier Phase Reconciliation
 
 - earlier phase receipts established the repaired product and verification truth
-- this phase updated only the owning memory shards and left the router or index files alone because no new memory-router path was required
+- this phase now refreshes the memory router as well, because the architecture matrix became an owned retrieval target that future route-switch work should load deliberately rather than rediscover ad hoc
 
 ## Subagent Contribution Verification
 
 - Reviewed Action Records: none
-- Main-Agent Verification Performed: direct review of the changed product paths, direct reread of the completed run artifacts, and direct review of the two updated memory shards
+- Main-Agent Verification Performed: direct review of the changed product paths, direct reread of the completed run artifacts, and direct review of the updated memory router plus the two updated domain shards
 - Acceptance Decision: `accepted`
 - Refresh Handling: `not applicable`
-- Repair Performed After Verification: updated the two owning domain shards only
+- Repair Performed After Verification: updated the memory router retrieval guidance plus the owning domain-shard references
 
 ## Worktree Diff Audit
 
@@ -155,8 +163,11 @@ Audit Inputs Provided:
 - Planned or claimed changed files:
   - `/.recursive/DECISIONS.md`
   - `/.recursive/STATE.md`
+  - `/.recursive/memory/MEMORY.md`
   - `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`
   - `/.recursive/memory/domains/pi-role-model-package.md`
+  - `/docs/architecture/09-runtime-routing-strategy-interactions.md`
+  - `/docs/architecture/14-routed-execution-semantics-and-receipts.md`
   - `/role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts`
   - `/role-model-router/apps/runtime-host-bridge/src/index.ts`
   - `/role-model-router/apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts`
@@ -169,8 +180,11 @@ Audit Inputs Provided:
 - Actual changed files reviewed:
   - `/.recursive/DECISIONS.md`
   - `/.recursive/STATE.md`
+  - `/.recursive/memory/MEMORY.md`
   - `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`
   - `/.recursive/memory/domains/pi-role-model-package.md`
+  - `/docs/architecture/09-runtime-routing-strategy-interactions.md`
+  - `/docs/architecture/14-routed-execution-semantics-and-receipts.md`
   - `/role-model-router/apps/runtime-host-bridge/src/benchmark-runner.ts`
   - `/role-model-router/apps/runtime-host-bridge/src/index.ts`
   - `/role-model-router/apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts`
@@ -184,10 +198,11 @@ Audit Inputs Provided:
 
 ## Gaps Found
 
-None.
+None remaining. Resolved during this phase: the memory router did not yet point future route-switch or tool-loop parity work at the new architecture matrix, even though the owning runtime-routing shard and architecture docs had already been refreshed.
 
 ## Repair Work Performed
 
+- updated `/.recursive/memory/MEMORY.md`
 - updated `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`
 - updated `/.recursive/memory/domains/pi-role-model-package.md`
 
@@ -206,7 +221,7 @@ None.
 
 ## Audit Verdict
 
-- Summary: the affected durable memory shards are refreshed and no further memory-plane follow-up is required for run 68.
+- Summary: the affected durable memory router and domain shards are refreshed and no further memory-plane follow-up is required for run 68.
 Audit: PASS
 
 ## Prior Recursive Evidence Reviewed

@@ -9,6 +9,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { readBenchmarkRunProgress } from "../src/benchmark-progress.js";
 import { readJudgeGradingText, readJudgeResponseText } from "../src/benchmark-reasoning.js";
 import {
+  type BenchmarkRunnerDependencies,
   orderEndpointsForGrading,
   probeJudgeEndpoint,
   resetBenchmarkJudgeRuntimeForTests,
@@ -382,7 +383,7 @@ describe("benchmark-runner judge remediation", () => {
 
     const subjectBodies: Array<Record<string, unknown>> = [];
 
-    const deps = {
+    const deps: BenchmarkRunnerDependencies = {
       databasePath,
       benchmarkArtifactRoot: artifactRoot,
       listConfiguredEndpoints: async () => [endpoint],
@@ -475,7 +476,7 @@ describe("benchmark-runner judge remediation", () => {
       },
     };
 
-    await runRoutingCapabilityBenchmark(deps as any, {
+    await runRoutingCapabilityBenchmark(deps, {
       endpointIds: [endpoint.endpointId],
       mode: "quick",
       caseIds: ["h04-tool-read-router"],

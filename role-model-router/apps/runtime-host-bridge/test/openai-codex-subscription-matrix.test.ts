@@ -2,8 +2,11 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import {
+  buildOpenAIRequest,
+  createOpenAIProviderAdapter,
+} from "@role-model-router/provider-openai";
 import { describe, expect, test } from "vitest";
-import { buildOpenAIRequest, createOpenAIProviderAdapter } from "@role-model-router/provider-openai";
 
 import {
   OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS,

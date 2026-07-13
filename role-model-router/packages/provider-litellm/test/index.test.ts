@@ -207,9 +207,7 @@ describe("provider-litellm", () => {
     expect(requestCapture.body).toMatchObject({
       tool_choice: {
         type: "function",
-        function: {
-          name: "apply_patch",
-        },
+        name: "apply_patch",
       },
       reasoning: {
         effort: "medium",

@@ -108,7 +108,8 @@ function hasResponsesToolReplayHistory(
   messages: ProviderAdapterExecutionContext["executionRequest"]["messages"],
 ): boolean {
   return messages.some(
-    (message) => (message.role === "assistant" && message.tool_calls?.length) || message.role === "tool",
+    (message) =>
+      (message.role === "assistant" && message.tool_calls?.length) || message.role === "tool",
   );
 }
 
@@ -123,9 +124,7 @@ function toOpenAIResponsesInput(
       );
       if (
         assistantContent !== null &&
-        !(
-          typeof assistantContent === "string" && assistantContent.length === 0
-        ) &&
+        !(typeof assistantContent === "string" && assistantContent.length === 0) &&
         !(Array.isArray(assistantContent) && assistantContent.length === 0)
       ) {
         input.push({

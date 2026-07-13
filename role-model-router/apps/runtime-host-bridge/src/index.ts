@@ -6830,7 +6830,9 @@ function toResponsesInputMessages(
         role: "tool",
         tool_call_id: message.call_id,
         content:
-          typeof message.output === "string" ? message.output : JSON.stringify(message.output ?? null),
+          typeof message.output === "string"
+            ? message.output
+            : JSON.stringify(message.output ?? null),
       });
       continue;
     }
@@ -10187,7 +10189,7 @@ function normalizeCodexResponsesTranscript(
     const current = toolCallsByOutputIndex.get(outputIndex);
     const nextArguments =
       update.arguments === undefined
-        ? current?.arguments ?? ""
+        ? (current?.arguments ?? "")
         : options?.replaceArguments
           ? update.arguments
           : `${current?.arguments ?? ""}${update.arguments}`;
@@ -10659,7 +10661,9 @@ function createChatCompletionsBodyFromCodexResponsesTranscript(input: {
         message: {
           role: "assistant",
           content: input.transcript.outputText,
-          ...(input.transcript.toolCalls.length > 0 ? { tool_calls: input.transcript.toolCalls } : {}),
+          ...(input.transcript.toolCalls.length > 0
+            ? { tool_calls: input.transcript.toolCalls }
+            : {}),
           ...(input.transcript.reasoningText.length > 0
             ? { reasoning_content: input.transcript.reasoningText }
             : {}),
@@ -10808,7 +10812,11 @@ function toCodexResponsesInputFromChatMessages(messages: unknown): {
     if (!record || record.role === "system") {
       continue;
     }
-    if (record.role === "assistant" && Array.isArray(record.tool_calls) && record.tool_calls.length > 0) {
+    if (
+      record.role === "assistant" &&
+      Array.isArray(record.tool_calls) &&
+      record.tool_calls.length > 0
+    ) {
       const assistantContent: CodexResponsesContentPartRecord[] =
         record.content === null || record.content === undefined
           ? []
@@ -10833,8 +10841,8 @@ function toCodexResponsesInputFromChatMessages(messages: unknown): {
               typeof toolFunction.arguments === "string"
                 ? toolFunction.arguments
                 : serializeCodexToolOutput(toolFunction.arguments),
-            },
-          ];
+          },
+        ];
       });
       if (assistantContent.length > 0) {
         input.push({

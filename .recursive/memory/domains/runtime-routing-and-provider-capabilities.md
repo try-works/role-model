@@ -64,7 +64,7 @@ Source-Runs:
 - `67-runtime-ui-route-startup-performance-hardening`
 - `68-codex-subscription-tool-call-parity`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-12`
+Last-Validated: `2026-07-13`
 Tags:
 - `runtime`
 - `routing`
@@ -96,6 +96,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - Catalog and provider metadata that shape routing and tool-capability decisions
 - Protocol and conformance artifacts tied to routing decisions and alias behavior
 - The operator-facing routing-interaction architecture doc
+- The routed-execution architecture doc that owns the cross-provider route-switch and multi-tool-call matrices
 
 ## Durable Truths
 
@@ -131,6 +132,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - Observed-data time decay now applies only to latency and throughput, on a 10%-per-day retained-deviation loss curve. Fresh samples reset the age calculation. Benchmark or measured quality, measured reliability, and measured cost remain age-invariant during route scoring unless a future run explicitly introduces a new policy.
 - Effective-metric diagnostics must say whether time decay actually applied. Request-detail and routing receipts should distinguish pass-through metrics from time-decayed metrics through explicit freshness source, time-decay-applied, measured-at, and decay-rate facts rather than implying decay from generic freshness fields alone.
 - The operator-facing routing interaction reference is `/docs/architecture/09-runtime-routing-strategy-interactions.md`; when routing semantics change, that doc must stay aligned with runtime truth.
+- The canonical cross-provider route-switch and multi-tool or `parallel_tool_calls` policy matrices live in `/docs/architecture/14-routed-execution-semantics-and-receipts.md`; `/docs/architecture/09-runtime-routing-strategy-interactions.md` should cross-reference that matrix when route-switch rendering behavior matters instead of drifting into a separate compatibility table.
 - Operator-facing OpenAI inventory collapses to one `OpenAI` provider surface with `API Key` plus `Codex Subscription`; raw `chatgpt/*` provider rows are not an operator-facing provider baseline.
 - `Codex Subscription` is a truthful auth-boundary path, not an API-key equivalent:
   - device authorization can complete from the local Codex auth cache

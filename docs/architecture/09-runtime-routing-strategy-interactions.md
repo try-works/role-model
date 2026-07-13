@@ -206,6 +206,22 @@ This filter also rewrites alias diagnostics, so:
 
 reflect the post-filter hosted-tool pool rather than the broader pre-filter alias slice.
 
+## Cross-provider continuation rendering
+
+Routing and continuation rendering are separate decisions. After the bridge resolves the
+next endpoint, the adapter must render the portable history to the selected surface
+instead of blindly replaying the ingress surface.
+
+The current runtime classifies the selected route as:
+
+- native Responses upstream
+- native Chat Completions upstream
+- Responses ingress -> Chat Completions upstream bridge
+
+That classification, plus the route-switch and multi-tool-call support matrices for
+Codex, Kimi, DeepSeek, and generic LiteLLM-backed providers, is documented in
+`docs/architecture/14-routed-execution-semantics-and-receipts.md`.
+
 ## Request flow through the bridge
 
 For chat or responses requests, the current bridge flow is:

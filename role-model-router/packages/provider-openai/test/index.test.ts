@@ -1,3 +1,4 @@
+import type { RuntimeExecutionRequest } from "@role-model-router/adapter-execution";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -848,7 +849,7 @@ describe("OpenAI provider adapter", () => {
       },
     };
 
-    const executionRequest = {
+    const executionRequest: RuntimeExecutionRequest = {
       messages: [{ role: "user", content: "Use every needed tool in one turn." }],
       tools: [
         {
@@ -862,9 +863,8 @@ describe("OpenAI provider adapter", () => {
           },
         },
       ],
-      // biome-ignore lint/suspicious/noExplicitAny: additive contract field under test
       parallelToolCalls: true,
-    } as any;
+    };
 
     const adapter = createOpenAIProviderAdapter();
     const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
@@ -906,7 +906,7 @@ describe("OpenAI provider adapter", () => {
       },
     };
 
-    const executionRequest = {
+    const executionRequest: RuntimeExecutionRequest = {
       messages: [{ role: "user", content: "Use at most one tool in this turn." }],
       tools: [
         {
@@ -920,9 +920,8 @@ describe("OpenAI provider adapter", () => {
           },
         },
       ],
-      // biome-ignore lint/suspicious/noExplicitAny: additive contract field under test
       parallelToolCalls: false,
-    } as any;
+    };
 
     const adapter = createOpenAIProviderAdapter();
     const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
