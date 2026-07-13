@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "t03-tools-agent-plan",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The model emitted the required API tool calls (read_file, validate_schema, apply_patch) and included the required JSON keys (plan, patch_summary, strategy_improvements). The apply_patch diff has valid ---/+++ headers and an @@ hunk marker with real content, not placeholders. The plan addresses all milestones coherently. No refusals or malformed patches. All MUST criteria satisfied.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/t03-tools-agent-plan.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/t03-tools-agent-plan/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935083518
+}

@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h10-agent-read-grep-patch",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h10-agent-read-grep-patch-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -156,1 +156,1 @@\\n-// evaluateEligibility helper\\n+// evaluateEligibility helper - determines endpoint eligibility\"\n      }\n    }\n  ]\n}",
+  "rawResponse": "```diff\n--- a/src/router.ts\n+++ b/src/router.ts\n@@ -156,1 +156,1 @@\n-// evaluateEligibility helper\n+// evaluateEligibility helper - determines endpoint eligibility\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -156,1 +156,1 @@\\n-// evaluateEligibility helper\\n+// evaluateEligibility helper - determines endpoint eligibility\"\n      }\n    }\n  ]\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 25156,
+  "failure": false,
+  "recordedAtMs": 1783931666040
+}

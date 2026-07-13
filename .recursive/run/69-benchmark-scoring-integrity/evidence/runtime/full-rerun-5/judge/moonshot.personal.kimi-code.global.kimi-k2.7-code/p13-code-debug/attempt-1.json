@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p13-code-debug",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p13-code-debug-a1-b2095da3-ee13-45d9-916c-d234a3c34b2d",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p13-code-debug\n\n## Original question\n[user]\nDebug this TypeScript error: Chosen endpoint is not present in the registry result. The chosen_endpoint_id is empty. What eligibility checks should I inspect?\n\n## Example expected answer\ninspect eligibility, throughput SLA, allowEndpoints, chosen_endpoint_id\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Lists eligibility checks for empty chosen_endpoint_id.\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: eligib, endpoint, registry|allow\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nLists eligibility checks for empty chosen_endpoint_id.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"This error usually means the endpoint-selection step ran before any endpoint satisfied the eligibility filter, so `chosen_endpoint_id` was never assigned. Inspect the following checks in your registry/selector code:\\n\\n1. Registry population / freshness\\n   - Verify the registry query actually returned endpoints (not an empty array).\\n   - Confirm the endpoint is registered with the exact ID you expect (case-sensitive, no extra whitespace, matching key/namespace).\\n   - Check for stale cache / race conditions: the endpoint might not be in the registry yet when selection runs.\\n\\n2. Endpoint status / availability\\n   - Is the endpoint marked `active`/`enabled`?\\n   - Is the health check passing? (An `unhealthy`/`degraded` endpoint is often filtered out.)\\n   - Is the endpoint in a `draining`/`offline` state that excludes it from selection?\\n\\n3. Model / capability compatibility\\n   - Does the endpoint support the requested model ID / model version?\\n   - Does it have the required features (e.g., streaming, function calling, vision, embeddings)?\\n   - Check any routing rules that map model -> allowed endpoints.\\n\\n4. Region / locality / affinity\\n   - Is the endpoint in an allowed region for this request?\\n   - Are there data-residency / location constraints that filtered it out?\\n   - Is sticky-session or affinity routing requiring a previous endpoint that is now missing?\\n\\n5. Quota / capacity / rate-limit\\n   - Does the endpoint still have capacity (concurrency, token, or request quota)?\\n   - Is a rate-limit or circuit-breaker excluding it?\\n   - Check token-bucket / per-tenant / per-key limits that can zero out eligible endpoints.\\n\\n6. Access control / entitlement\\n   - Is the endpoint restricted to certain tenants, API keys, orgs, or subscription tiers?\\n   - Is there an allowlist/denylist that excludes the current caller?\\n   - Are feature flags enabled for both the caller and the endpoint?\\n\\n7. Cost / priority / budget policy\\n   - Does a cost-policy or priority filter reject the cheapest/most expensive endpoint?\\n   - Is a budget cap preventing assignment of the otherwise valid endpoint?\\n\\n8. Selector logic in TypeScript\\n   - Ensure `chosen_endpoint_id` is initialized before the eligibility loop and not accidentally shadowed.\\n   - Check that the selection loop doesn't early-return on the first empty eligible set without assigning a fallback.\\n   - Verify the type is `string` at the point of use (not `string | undefined`); if the type says it can be empty, add a guard such as `if (!chosenEndpointId) { throw new EndpointSelectionError(...) }`.\\n   - Log the intermediate `eligibleEndpoints` array and the final chosen ID so you can see exactly which filter removed all candidates.\\n\\nStart by adding a log line right before the error: print the requested model/region, the full registry result, and the filtered eligible endpoints. That will tell you which eligibility gate is removing the endpoint.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"Lists eligibility checks (registry population, endpoint status, model compatibility, region, quota, access control, cost, selector logic) with keywords 'eligibility', 'endpoint', 'registry', matching checklist perfectly. JSON format correct.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Lists eligibility checks (registry population, endpoint status, model compatibility, region, quota, access control, cost, selector logic) with keywords 'eligibility', 'endpoint', 'registry', matching checklist perfectly. JSON format correct.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p13-code-debug.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nDebug this TypeScript error: Chosen endpoint is not present in the registry result. The chosen_endpoint_id is empty. What eligibility checks should I inspect?",
+    "exemplarAnswer": "inspect eligibility, throughput SLA, allowEndpoints, chosen_endpoint_id\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Lists eligibility checks for empty chosen_endpoint_id.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: eligib, endpoint, registry|allow"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 269,
+    "reasoningLength": 2074
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783934961025
+}

@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "h09-agent-metrics-chain",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h09-agent-metrics-chain-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"The remote endpoint’s p95 latency is 245 ms versus 62 ms for the local endpoint, so the remote is 183 ms slower.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"The remote endpoint’s p95 latency is 245 ms versus 62 ms for the local endpoint, so the remote is 183 ms slower.\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"The remote endpoint’s p95 latency is 245 ms versus 62 ms for the local endpoint, so the remote is 183 ms slower.\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 8825,
+  "failure": false,
+  "recordedAtMs": 1783931781409
+}

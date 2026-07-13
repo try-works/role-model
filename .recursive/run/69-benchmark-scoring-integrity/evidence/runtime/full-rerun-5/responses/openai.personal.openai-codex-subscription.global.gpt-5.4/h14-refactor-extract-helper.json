@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "h14-refactor-extract-helper",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-h14-refactor-extract-helper-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "```typescript\n// Before\nconst fallbacks = pool.filter(id => id !== gradedId && id !== judgeId);\nreturn fallbacks[0] ?? null;\n\n// After\nfunction pickFallbackJudge(\n  gradedId: string,\n  judgeId: string,\n  pool: string[]\n): string | null {\n  const fallbacks = pool.filter(id => id !== gradedId && id !== judgeId);\n  return fallbacks[0] ?? null;\n}\n```",
+  "rawResponse": "```typescript\n// Before\nconst fallbacks = pool.filter(id => id !== gradedId && id !== judgeId);\nreturn fallbacks[0] ?? null;\n\n// After\nfunction pickFallbackJudge(\n  gradedId: string,\n  judgeId: string,\n  pool: string[]\n): string | null {\n  const fallbacks = pool.filter(id => id !== gradedId && id !== judgeId);\n  return fallbacks[0] ?? null;\n}\n```",
+  "formattedDeliverable": "```typescript\n// Before\nconst fallbacks = pool.filter(id => id !== gradedId && id !== judgeId);\nreturn fallbacks[0] ?? null;\n\n// After\nfunction pickFallbackJudge(\n  gradedId: string,\n  judgeId: string,\n  pool: string[]\n): string | null {\n  const fallbacks = pool.filter(id => id !== gradedId && id !== judgeId);\n  return fallbacks[0] ?? null;\n}\n```",
+  "extractionMethod": "code_fence",
+  "latencyMs": 4244,
+  "failure": false,
+  "recordedAtMs": 1783934754810
+}

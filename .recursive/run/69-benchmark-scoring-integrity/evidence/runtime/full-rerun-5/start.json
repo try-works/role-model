@@ -1,0 +1,10 @@
+{
+  "endpointIds": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "mode": "full",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "useJudge": true,
+  "preflightProbe": true
+}

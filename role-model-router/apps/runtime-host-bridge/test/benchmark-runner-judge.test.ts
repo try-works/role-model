@@ -266,6 +266,7 @@ describe("benchmark-runner judge remediation", () => {
       expect(body.max_tokens).toBeUndefined();
       expect(body.temperature).toBe(0);
     }
+    expect(JSON.stringify(judgeBodies)).not.toContain("STRICT SELF-GRADE");
 
     expect(result.endpointGrades[0]?.caseResults[0]?.score).toBe(1);
     expect(result.endpointGrades[0]?.caseResults[0]?.rationale).toContain("read_file");
@@ -695,13 +696,130 @@ describe("benchmark-runner judge remediation", () => {
       extractionMethod: string;
       formattedDeliverable: string;
     };
-    const deliverable = JSON.parse(responseRecord.formattedDeliverable) as {
-      code: string;
-    };
 
     expect(responseRecord.extractionMethod).toBe("code_fence");
-    expect(deliverable.code).toContain("export function allowSoleCandidateFallback");
-    expect(deliverable.code).not.toContain("I should think through the constraints first.");
+    expect(responseRecord.formattedDeliverable).toContain("```typescript");
+    expect(responseRecord.formattedDeliverable).toContain(
+      "export function allowSoleCandidateFallback",
+    );
+    expect(responseRecord.formattedDeliverable).not.toContain(
+      "I should think through the constraints first.",
+    );
+  });
+
+  test("marks benchmark subject, judge, and compare executions to bypass cooldown poisoning", async () => {
+    artifactRoot = await mkdtemp(path.join(os.tmpdir(), "bench-runner-cooldown-bypass-"));
+    const databasePath = path.join(artifactRoot, "state", "memory.db");
+    await mkdir(path.dirname(databasePath), { recursive: true });
+    initBenchmarkDatabase(databasePath);
+
+    const codexEndpoint = {
+      endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      modelId: "chatgpt/gpt-5.4",
+      sourceType: "remote" as const,
+      healthStatus: "healthy",
+    };
+    const localEndpoint = {
+      endpointId: "local.lfm",
+      modelId: "lfm2.5-1.2b-instruct",
+      sourceType: "local" as const,
+      healthStatus: "healthy",
+    };
+    const judgeEndpoint = {
+      endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      modelId: "deepseek/deepseek-v4-flash",
+      sourceType: "remote" as const,
+      healthStatus: "healthy",
+    };
+
+    const chatRequestOptionsSeen: Array<{
+      requestId: string;
+      requestOptions?: {
+        endpointId?: string;
+        ignoreExecutionFailureCooldowns?: boolean;
+      };
+    }> = [];
+    const responsesRequestOptionsSeen: Array<{
+      requestId: string;
+      requestOptions?: {
+        endpointId?: string;
+        ignoreExecutionFailureCooldowns?: boolean;
+      };
+    }> = [];
+
+    const deps: BenchmarkRunnerDependencies = {
+      databasePath,
+      benchmarkArtifactRoot: artifactRoot,
+      listConfiguredEndpoints: async () => [codexEndpoint, localEndpoint, judgeEndpoint],
+      deriveEndpointVersion: () => "v1",
+      executeChatCompletions: async (_body, requestId, requestOptions) => {
+        chatRequestOptionsSeen.push({ requestId, requestOptions });
+        if (requestId.startsWith("bench-judge-compare-")) {
+          return {
+            contentText:
+              '{"relativeRanking":["openai.personal.openai-codex-subscription.global.gpt-5.4","local.lfm"],"rationale":"Codex answer is stronger."}',
+          };
+        }
+        if (requestId.startsWith("bench-judge-")) {
+          return {
+            contentText:
+              '{"score":1,"rationale":"Deliverable includes the required routing answer and tool usage."}',
+          };
+        }
+        if (requestOptions?.endpointId === localEndpoint.endpointId) {
+          return { contentText: '{"answer":"local"}' };
+        }
+        return { contentText: '{"answer":"unexpected"}' };
+      },
+      executeResponses: async (_body, requestId, requestOptions) => {
+        responsesRequestOptionsSeen.push({ requestId, requestOptions });
+        return {
+          contentText: '{"answer":"codex"}',
+        };
+      },
+    };
+
+    await runRoutingCapabilityBenchmark(deps, {
+      endpointIds: [codexEndpoint.endpointId, localEndpoint.endpointId],
+      judgeEndpointId: judgeEndpoint.endpointId,
+      mode: "quick",
+      caseIds: ["h04-tool-read-router"],
+      useJudge: true,
+    });
+
+    expect(responsesRequestOptionsSeen.length).toBeGreaterThan(0);
+    for (const call of responsesRequestOptionsSeen) {
+      expect(call.requestId).toMatch(
+        /^bench-h04-tool-read-router-openai\.personal\.openai-codex-subscription\.global\.gpt-5\.4-/,
+      );
+      expect(call.requestOptions).toEqual({
+        endpointId: codexEndpoint.endpointId,
+        ignoreExecutionFailureCooldowns: true,
+      });
+    }
+
+    const nonJudgeChatCalls = chatRequestOptionsSeen.filter(
+      ({ requestId }) => !requestId.startsWith("bench-judge-"),
+    );
+    expect(nonJudgeChatCalls.length).toBeGreaterThan(0);
+    for (const call of nonJudgeChatCalls) {
+      expect(call.requestId).toMatch(/^bench-h04-tool-read-router-local\.lfm-/);
+      expect(call.requestOptions).toEqual({
+        endpointId: localEndpoint.endpointId,
+        ignoreExecutionFailureCooldowns: true,
+      });
+    }
+
+    const judgeCalls = chatRequestOptionsSeen.filter(({ requestId }) =>
+      requestId.startsWith("bench-judge-"),
+    );
+    expect(judgeCalls.length).toBeGreaterThan(0);
+    for (const call of judgeCalls) {
+      expect(call.requestOptions).toEqual({
+        endpointId: judgeEndpoint.endpointId,
+        ignoreExecutionFailureCooldowns: true,
+      });
+    }
   });
 
   test("persists cross-model compare artifacts for multi-endpoint runs", async () => {
@@ -782,5 +900,79 @@ describe("benchmark-runner judge remediation", () => {
       await readFile(path.join(artifactRoot, result.runId, "manifest.json"), "utf8"),
     ) as { compareArtifactCount: number };
     expect(manifest.compareArtifactCount).toBe(1);
+  });
+
+  test("compare rankings stay diagnostic and do not rewrite endpoint scores", async () => {
+    artifactRoot = await mkdtemp(path.join(os.tmpdir(), "bench-runner-compare-diagnostic-"));
+    const databasePath = path.join(artifactRoot, "state", "memory.db");
+    await mkdir(path.dirname(databasePath), { recursive: true });
+    initBenchmarkDatabase(databasePath);
+
+    const localEndpoint = {
+      endpointId: "local.lfm",
+      modelId: "lfm2.5-1.2b-instruct",
+      sourceType: "local" as const,
+      healthStatus: "healthy",
+    };
+    const remoteEndpoint = {
+      endpointId: "moonshot.kimi",
+      modelId: "moonshot/kimi-k2.6",
+      sourceType: "remote" as const,
+      healthStatus: "healthy",
+    };
+
+    const deps = {
+      databasePath,
+      benchmarkArtifactRoot: artifactRoot,
+      listConfiguredEndpoints: async () => [localEndpoint, remoteEndpoint],
+      deriveEndpointVersion: () => "v1",
+      executeChatCompletions: async (
+        body: Record<string, unknown>,
+        requestId: string,
+        requestOptions?: { endpointId?: string },
+      ) => {
+        if (requestId.startsWith("bench-judge-compare-")) {
+          return {
+            contentText:
+              '{"relativeRanking":["moonshot.kimi","local.lfm"],"rationale":"Remote answer is stronger."}',
+          };
+        }
+        if (requestId.startsWith("bench-judge-")) {
+          const gradedLocal = JSON.stringify(body.messages ?? []).includes(
+            "Subject deliverable to grade\\n4",
+          );
+          return {
+            contentText: gradedLocal
+              ? '{"score":1,"rationale":"Local answer satisfies the exact-answer checklist."}'
+              : '{"score":0,"rationale":"Remote answer does not match the expected exact answer."}',
+          };
+        }
+        if (requestOptions?.endpointId === localEndpoint.endpointId) {
+          return { contentText: "4" };
+        }
+        if (requestOptions?.endpointId === remoteEndpoint.endpointId) {
+          return { contentText: "5" };
+        }
+        return { contentText: "unexpected" };
+      },
+    };
+
+    const result = await runRoutingCapabilityBenchmark(deps, {
+      endpointIds: [localEndpoint.endpointId, remoteEndpoint.endpointId],
+      judgeEndpointId: remoteEndpoint.endpointId,
+      mode: "full",
+      caseIds: ["p02-easy-math"],
+      useJudge: true,
+    });
+
+    const localGrade = result.endpointGrades.find(
+      (grade) => grade.endpointId === localEndpoint.endpointId,
+    );
+    const remoteGrade = result.endpointGrades.find(
+      (grade) => grade.endpointId === remoteEndpoint.endpointId,
+    );
+
+    expect(localGrade?.overallScore).toBe(1);
+    expect(remoteGrade?.overallScore).toBe(0);
   });
 });

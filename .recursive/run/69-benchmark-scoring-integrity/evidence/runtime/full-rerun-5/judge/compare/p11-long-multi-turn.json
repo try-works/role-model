@@ -1,0 +1,50 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p11-long-multi-turn",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"# Packaged Runtime Consumption Validation Checklist\\n\\n## Health & Connectivity\\n- [ ] Verify local peer health status (processes running, ports open, no restarts)\\n- [ ] Verify remote OAuth account is active and tokens are v",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"- Verify local peer health.\\n- Verify remote OAuth account.\\n- Call the models listing endpoint and confirm expected packaged-runtime entries are visible.\\n- Validate package install/resolve succeeds in a clean environment.\\n",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both answers extend the initial checklist with logs, telemetry, and Strategy C alias tests, providing relevant technical detail. The moonshot response is organized into clear sections (Health & Connectivity, Logs Validation, Telemetry Validation, Strategy C Alias Tests) with bullet points under each, making it more structured and easier to follow. The openai response is a flat list that covers al…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both answers extend the initial checklist with logs, telemetry, and Strategy C alias tests, providing relevant technical detail. The moonshot response is organized into clear sections (Health & Connectivity, Logs Validation, Telemetry Validation, Strategy C Alias Tests) with bullet points under each, making it more structured and easier to follow. The openai response is a flat list that covers all required areas but lacks the same level of organization. Both are substantively correct, but the moonshot response's clarity and systematic grouping give it a minor edge.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nI need a checklist for validating packaged runtime consumption.\n\n[assistant]\n1. Verify local peer health. 2. Verify remote OAuth account. 3. Curl /v1/models.\n\n[user]\nExtend that checklist with logs, telemetry, and Strategy C alias tests.",
+    "exemplarAnswer": "Accurate explanatory answer to the user question.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Answers the question with relevant technical detail.",
+      "[MUST] Include JSON keys: answer"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 740,
+    "reasoningLength": 2297
+  },
+  "recordedAtMs": 1783936065586
+}

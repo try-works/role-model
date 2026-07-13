@@ -1,0 +1,14 @@
+
+> @role-model-router/bench-judge@0.0.0 test D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity\role-model-router\packages\bench-judge
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity/role-model-router/packages/bench-judge
+
+ ✓ src/index.test.ts (6 tests) 15ms
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  10:16:08
+   Duration  2.51s (transform 206ms, setup 0ms, collect 215ms, tests 15ms, environment 0ms, prepare 836ms)
+

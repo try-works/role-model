@@ -1,0 +1,53 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h05-tool-grep-eligibility",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"evaluateEligibility appears in src/router.ts with a call on line 42 and a reference ",
+      "perCaseScore": 0
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Eligibility is determined by the evaluateEligibility helper in src/router.ts, which ",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "Both endpoints correctly called grep_search with the required pattern. However, the openai response provided bullets that summarized the eligibility logic and mentioned eligibility checks, aligning with the exemplar and checklist. The kimi response bullet points only listed file locations without a meaningful summary of the eligibility checks, making it less correct substantively.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\"\n  ],\n  \"rationale\": \"Both endpoints correctly called grep_search with the required pattern. However, the openai response provided bullets that summarized the eligibility logic and mentioned eligibility checks, aligning with the exemplar and checklist. The kimi response bullet points only listed file locations without a meaningful summary of the eligibility checks, making it less correct substantively.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nPhase 1 only: API grep_search pattern evaluateEligibility\n\n[assistant]\ngrep_search emitted.\n\n[user]\nPhase 2 only: ```json {\"bullets\":[\"<check A>\",\"<check B>\"]} with 2 real bullets",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"eligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Candidate passes allow-list and freshness checks.\",\n    \"Throughput SLA hard-deny would block sole remaining candidate.\"\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must call grep_search with evaluateEligibility pattern",
+      "[MUST] summary mentions eligibility checks.",
+      "[MUST] Emit API tool calls: grep_search",
+      "[MUST] Include JSON keys: bullets",
+      "[SHOULD] Match clues: evaluateEligibility|eligib"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 552,
+    "reasoningLength": 3830
+  },
+  "recordedAtMs": 1783936720572
+}

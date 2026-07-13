@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "p02-easy-math",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p02-easy-math-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "```json\n{\"answer\":\"4\"}\n```",
+  "rawResponse": "```json\n{\"answer\":\"4\"}\n```",
+  "formattedDeliverable": "",
+  "extractionMethod": "missing",
+  "latencyMs": 13638,
+  "failure": false,
+  "recordedAtMs": 1783934168429
+}

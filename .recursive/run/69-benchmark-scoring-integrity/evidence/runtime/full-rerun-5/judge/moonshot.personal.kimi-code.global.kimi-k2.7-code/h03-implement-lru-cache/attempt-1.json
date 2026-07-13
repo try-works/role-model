@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h03-implement-lru-cache",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-h03-implement-lru-cache-a1-c10995cc-a2a8-43d9-8670-e7222786af88",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: h03-implement-lru-cache\n\n## Original question\n[user]\nImplement a TypeScript class LRUCache with constructor(capacity: number), get(key: number): number, and put(key: number, value: number): void. Use Map insertion order or explicit doubly-linked list. Output code only.\n\n## Example expected answer\nLRUCache class with get/put and eviction at capacity\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Defines LRUCache class with get and put, evicts least-recently-used when capacity exceeded.\n[SHOULD] Match clues: class\\s+LRUCache, get\\(, put\\(, capacity\n[MUST] Provide complete working TypeScript — no placeholders or partial helpers only\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYou may reason first. Your final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders.\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nDefines LRUCache class with get and put, evicts least-recently-used when capacity exceeded.\n\n## Subject deliverable to grade\n```typescript\nclass LRUCache {\n  private capacity: number;\n  private cache: Map<number, number>;\n\n  constructor(capacity: number) {\n    this.capacity = capacity;\n    this.cache = new Map();\n  }\n\n  get(key: number): number {\n    if (!this.cache.has(key)) {\n      return -1;\n    }\n    const value = this.cache.get(key)!;\n    this.cache.delete(key);\n    this.cache.set(key, value);\n    return value;\n  }\n\n  put(key: number, value: number): void {\n    if (this.cache.has(key)) {\n      this.cache.delete(key);\n    }\n    this.cache.set(key, value);\n    if (this.cache.size > this.capacity) {\n      const oldestKey = this.cache.keys().next().value;\n      this.cache.delete(oldestKey);\n    }\n  }\n}\n```"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The TypeScript code defines class LRUCache with get() and put(), uses a Map to track insertion order, evicts the least-recently-used key when capacity is exceeded. It is complete working code with no placeholders, fully meeting the benchmark deliverable.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The TypeScript code defines class LRUCache with get() and put(), uses a Map to track insertion order, evicts the least-recently-used key when capacity is exceeded. It is complete working code with no placeholders, fully meeting the benchmark deliverable.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h03-implement-lru-cache.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nImplement a TypeScript class LRUCache with constructor(capacity: number), get(key: number): number, and put(key: number, value: number): void. Use Map insertion order or explicit doubly-linked list. Output code only.",
+    "exemplarAnswer": "LRUCache class with get/put and eviction at capacity",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Defines LRUCache class with get and put, evicts least-recently-used when capacity exceeded.",
+      "[SHOULD] Match clues: class\\s+LRUCache, get\\(, put\\(, capacity",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 282,
+    "reasoningLength": 1565
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935168544
+}

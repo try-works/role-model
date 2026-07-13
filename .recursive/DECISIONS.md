@@ -2,6 +2,43 @@
 
 ## Recursive Run Index
 
+### Run `69-benchmark-scoring-integrity`
+
+- Run folder: `/.recursive/run/69-benchmark-scoring-integrity/`
+- Worktree: `.worktrees/69-benchmark-scoring-integrity`
+- Branch: `recursive/69-benchmark-scoring-integrity`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - repaired benchmark scoring integrity without banning judge-subject overlap: overlap remains allowed, but the judge path no longer applies overlap-only strictness
+  - restored authored deliverable truth for benchmark grading by preserving literal `code_fence` outputs, deriving structured-summary scaffolds from the authoritative per-case schema, validating suite-contract coherence fail-closed, and aligning contradictory case data such as `h15-max-signal-v3` and `p17-tools-multi-hard`
+  - made benchmark grading treat recorded API `tool_calls` as authoritative benchmark metadata so a valid tool-required case is not zeroed only because the extracted deliverable repeats `tool_calls`
+  - added the narrow runtime closeout unblockers required for final verification receipts: preserved scaffold tool-call ids, repaired stale bridge-local Kimi OAuth from fresher standalone-runtime tokens on restart, and allowed benchmark-owned subject or judge or compare or judge-probe executions to bypass ordinary execution-failure cooldown deny lists
+  - closed the run with fresh `VALID` quick and full runtime reruns on `2026-07-13` that included both `moonshot/kimi-k2.7-code` and `chatgpt/gpt-5.4`
+- Why:
+  - the user needed benchmark scores to reflect model behavior rather than benchmark-owned serialization, suite-contract, or grading asymmetry defects
+  - final verification had to include GPT and Kimi in both quick and full runtime benchmark runs, so the runtime closeout path also had to recover Kimi availability and prevent benchmark-internal cooldown poisoning
+- How:
+  - implemented with strict TDD across `bench-routing`, `bench-judge`, and the runtime-host-bridge benchmark seams
+  - verified first with focused RED or GREEN regressions and broader benchmark-owned suites, then with fresh live runtime quick and full reruns plus direct Kimi endpoint proof
+- What was not done:
+  - no provider-ranking tweak or prompt hack was added to inflate a specific model score
+  - no judge-subject overlap prohibition was introduced
+  - no broad benchmark redesign beyond the owned scoring, suite-integrity, and verification unblockers landed
+- Known issues / follow-ups:
+  - remaining low scores in the final quick and full reruns are still possible and should be treated as model-output misses unless a later `VALID` rerun plus judge-artifact inspection proves a new benchmark defect
+  - benchmark validation should be run against a live run id or a full runtime artifact root; copied result-only folders miss compare and grading-brief gates and can misclassify a rerun
+
 ### Run `68-codex-subscription-tool-call-parity`
 
 - Run folder: `/.recursive/run/68-codex-subscription-tool-call-parity/`

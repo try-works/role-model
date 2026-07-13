@@ -1,0 +1,324 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity[39m
+
+(node:42840) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31m❯[39m role-model-router/apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts [2m([22m[2m16 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m15 skipped[39m[2m)[22m[32m 197[2mms[22m[39m
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mprobeJudgeEndpoint reports failure when judge returns empty response
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mcreates run progress before async endpoint discovery resolves
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mreadJudgeResponseText merges reasoning and content channels
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22morderEndpointsForGrading grades judge-as-subject before other endpoints by default
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22morderEndpointsForGrading grades non-judge subjects first when overlap risk is flagged
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mreadJudgeGradingText prefers content channel over reasoning preambles
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22momits judge max_tokens and persists judge artifacts
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mcounts executed dynamic tools when the endpoint does not echo assistant tool_calls
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22msends structured response_format for subject json deliverables
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mroutes Codex tool-bearing benchmark subject turns through executeResponses
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mpreserves repeated same-name tool calls in benchmark artifacts
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mforces a post-tool follow-up before accepting tool-grounded deliverables
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mcode-fence extraction ignores reasoning text from subject turns
+[31m   [31m×[31m benchmark-runner judge remediation[2m > [22mmarks benchmark subject, judge, and compare executions to bypass cooldown poisoning[39m[32m 193[2mms[22m[39m
+[31m     → expected [ { …(2) }, { …(2) }, { …(2) }, …(3) ] to deeply equal [ { …(2) } ][39m
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mpersists cross-model compare artifacts for multi-endpoint runs
+   [2m[90m↓[39m[22m benchmark-runner judge remediation[2m > [22mcompare rankings stay diagnostic and do not rewrite endpoint scores
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts > benchmark-runner judge remediation > marks benchmark subject, judge, and compare executions to bypass cooldown poisoning
+AssertionError: expected [ { …(2) }, { …(2) }, { …(2) }, …(3) ] to deeply equal [ { …(2) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "requestId": StringMatching /^bench-h04-tool-read-router-openai\.personal\.openai-codex-subscription\.global\.gpt-5\.4-/,
+      "requestOptions": {
+        "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+-       "ignoreExecutionFailureCooldowns": true,
++     },
++   },
++   {
++     "requestId": "bench-h04-tool-read-router-openai.personal.openai-codex-subscription.global.gpt-5.4-turn2-df5f8d1a-a6fe-43c7-8869-2654db4d5ff8",
++     "requestOptions": {
++       "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
++     },
++   },
++   {
++     "requestId": "bench-h04-tool-read-router-openai.personal.openai-codex-subscription.global.gpt-5.4-turn3-5e97a431-de66-4482-85b5-63b7042cd981",
++     "requestOptions": {
++       "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
++     },
++   },
++   {
++     "requestId": "bench-h04-tool-read-router-openai.personal.openai-codex-subscription.global.gpt-5.4-turn4-91f6f202-bf42-46b9-8a5e-16d52ebef96c",
++     "requestOptions": {
++       "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
++     },
++   },
++   {
++     "requestId": "bench-h04-tool-read-router-openai.personal.openai-codex-subscription.global.gpt-5.4-turn5-fae73691-bcfa-4cd3-9b13-ebcc766337a0",
++     "requestOptions": {
++       "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
++     },
++   },
++   {
++     "requestId": "bench-h04-tool-read-router-openai.personal.openai-codex-subscription.global.gpt-5.4-turn6-17cc6983-9c40-4564-9e1b-2cd8f66bb8d5",
++     "requestOptions": {
++       "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      },
+    },
+  ]
+
+ ❯ role-model-router/apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts:790:41
+    788|     });
+    789| 
+    790|     expect(responsesRequestOptionsSeen).toEqual([
+       |                                         ^
+    791|       {
+    792|         requestId: expect.stringMatching(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m15 skipped[39m[90m (16)[39m
+[2m   Start at [22m 16:18:55
+[2m   Duration [22m 2.10s[2m (transform 637ms, setup 0ms, collect 855ms, tests 197ms, environment 0ms, prepare 391ms)[22m
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity[39m
+
+(node:66140) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31m❯[39m role-model-router/apps/runtime-host-bridge/test/index.test.ts [2m([22m[2m201 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m200 skipped[39m[2m)[22m[33m 1643[2mms[22m[39m
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22msummarizes selection diagnostics when a tie-break chooses the winner inside the score epsilon
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreates a stable model-list response grouped by model id
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreates alias entries in the model-list response alongside real models
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22madds compact Pi-compatible capability metadata to v1 model-list records
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mbuilds request-time routing telemetry snapshots from live routing candidates
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mbuilds QA bootstrap options with router surfaces and complete fixtures
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mbuilds QA backend options that start managed mock vendors for end-to-end Pi QA
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mseeds QA runtime config with executable local and remote mock backend commands
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mseeds QA runtime config with canonical task capabilities for role-routed backend QA
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mbinds managed QA backends to canonical taxonomy roles for classified request QA
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mdoes not bootstrap placeholder remote control-plane endpoints by default
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mbootstraps QA control-plane state for mixed local+remote routing proof
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mbuilds packaged CLI options with static UI, router surfaces, and fixture-root defaults
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpasses the optional shutdown hook into CLI server options
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22msuppresses placeholder provider accounts when using the packaged CLI defaults
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpurges stale runtime-config LiteLLM endpoints when startup has no runtime config
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mloads placeholder accounts only when fixture-root is explicitly provided
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps a chat-completions request into role-model routing and execution inputs
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps request role_model intent metadata into the routing request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps stable proposal-shaped chat role_model intent metadata into the routing request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mnormalizes stable advisory role_model intent with ignored-field diagnostics
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mapplies valid role_model intent as runtime role and task policy
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mkeeps stable Pi role_model metadata advisory for exact-model routing
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps chat-completions tool-turn history with null assistant content without crashing
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps hosted OpenAI responses tools without rejecting them as function-only tools
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps mixed-provider responses web_search alias pools to runtime tool calling without excluding function-calling providers
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps exact non-OpenAI responses web-search requests to consumer-managed web_search tools
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps exact Kimi responses web-search requests to the hosted builtin_function contract
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps chat-completions continuation requests with Kimi hosted builtin_function tools
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mdescribes endpoint web-search support by active runtime transport
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexports Codex dynamic-tool extraction for request-scoped function tools
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexports createRequestScopedToolRegistry for request-scoped function tool registry
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreateRequestScopedToolRegistry produces explicit failures for unimplemented bridged tool names
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mseedManagedCodexWorkspaceFixture stages benchmark files for Codex tool-heavy cases
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreateRequestScopedToolRegistry executes read/list/write tools and apply_patch against a staged workspace
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreateRequestScopedToolRegistry fails explicitly for unsupported bridged tools
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreateRequestScopedToolRegistry tells Codex to use shell tools for external file paths
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mbuildCodexDynamicTools output is compatible with createRequestScopedToolRegistry
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription sanitizes unsupported Chat Completions optional parameters
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription sanitizes unsupported Responses optional parameters
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription preserves explicit parallel_tool_calls=false on Responses requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription transforms forced chat tool_choice into Responses named-tool form
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription leaves parallel_tool_calls unset when the caller omitted it
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription applies the same parameter policy after alias routing
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription execution uses ChatGPT Codex Responses SSE and preserves downstream chat deltas
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription execution preserves supported-zero cache detail on non-streamed Responses replies
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription execution surfaces sibling tool calls on non-stream chat-completions replies
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription execution surfaces sibling tool calls on non-stream Responses replies
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription execution writes chat-completions deltas before upstream completion
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription request conversion preserves assistant history as output_text
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription runtime source no longer contains app-server execution code
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreateRequestScopedToolRegistry does not require repoRoot or file system access
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mnon-tool Codex behavior: buildCodexDynamicTools returns empty array when no function tools present
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mloadMcpConnectorConfigs throws ENOENT when testdata file is absent (reproduces original packaged-runtime crash)
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex tool path surfaces explicit failures for unimplemented request-scoped tool names in packaged-runtime-like environments
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreateRequestScopedToolRegistry signature has no repoRoot parameter (architecture-level guard against testdata reads)
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps an alias chat-completions request into a pooled endpoint allow-list and alias diagnostics
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mkeeps exact-model routing unchanged when aliases are configured
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mnarrows exact-model chat routing to an explicitly requested endpoint
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps validated controller guidance into an intelligent alias routing plan
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22muses a baseline override to bypass intelligent alias controller routing
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mapplies a directly requested role to chat routing and execution policy
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mrecords explicit hybrid arbitration when controller guidance alters the difficulty plan
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps a difficulty-mode alias chat request into a gated allow-list and difficulty diagnostics
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mescalates a high-risk single-turn code-change ask to hard difficulty and quality routing
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mescalates tool-bearing workspace file requests to hard difficulty instead of the cost lane
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mkeeps ordinary tool code aliases provider agnostic
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mdoes not contain provider-specific routing pin helpers
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mkeeps operator-configured Codex subscription exact endpoints eligible even when the model id is newer than the static matrix
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22muses a baseline override to bypass difficulty alias gating
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22muses the persisted Strategy B mode as the default routing mode when no alias mode or request override is set
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps an alias responses request into a pooled endpoint allow-list and alias diagnostics
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps responses role_model intent metadata into the routing request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps stable proposal-shaped responses role_model intent metadata into the routing request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps responses tool choice, reasoning, prompt cache, affinity, and previous response id into the execution request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps responses parallel_tool_calls into the execution request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps typed responses function-call replay items into execution messages
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps chat-completions session affinity and transport preference into the execution request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps chat-completions prompt_cache_key into the execution request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps chat-completions parallel_tool_calls into the execution request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mtracks cache continuity per session across A -> B -> A and records create versus restore state
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps chat-completions reasoning effort into the execution request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps chat-completions thinking controls into the execution request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mtreats unknown stable role_model task metadata as advisory before routing
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mtreats unknown stable role_model requested role metadata as advisory before routing
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mrejects explicit hard role_model task metadata before routing
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps a difficulty-mode responses request into an easy strategy and keeps eligible endpoints
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mapplies requested role execution policy to responses requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mprefers a configured alias in downstream OpenAI provider config
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mprefers the alias derived from the live runtime routing config in downstream OpenAI provider config
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mfallback downstream OpenAI provider config remains compatible with pi-role-model
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves health and model-list endpoints
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves lightweight latest request ids separately from the rich recent-request ledger
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22maccepts a local shutdown request when a shutdown hook is configured
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves alias entries in model-list and downstream provider config from runtime config
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves preserved host observability and vendor-facing utility endpoints
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mreturns JSON for /logs/stream before static root catch-all
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves the runtime UI shell from root and app routes when static root exists
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpreserves x-role-model-request-id as client correlation metadata while generating a canonical request id
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mdoes not attempt to write a fallback error after the response is already committed
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mgenerates a unique canonical request id for each request when headers omit request ids
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves runtime control-plane summary, provider, account, and endpoint routes
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves canonical telemetry summary, comparison, and recent request routes
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves the generic telemetry analytics query route
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves downstream OpenAI-compatible provider metadata for consumer apps
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves chat-completions responses with role-model execution metadata
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves OpenAI-compatible SSE events for streaming responses requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22msurfaces tool calls on chat-completions responses when the backend returns them
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mnormalizes chat-completions provider SSE into Responses events on streamed /v1/responses
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mstreams provider deltas through the bridge as they arrive
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22memits reasoning_content before visible content for synthetic chat-completions streams
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mforwards x-role-model-routing-mode to chat-completions execution
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mforwards ingress session, client correlation, and transport headers to chat-completions execution
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22maccepts Pi session-affinity header aliases on chat-completions ingress
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mrejects an invalid x-role-model-routing-mode header
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpersists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpersists applied role policy diagnostics and injected system instructions for runtime-backed chat requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mdoes not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mupsertProviderAccount replaces existing model role assignments for the same model
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpersists alias-resolution diagnostics for runtime-backed chat requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexecutes every canonical remote alias through the runtime-backed chat path
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mfilters router summary aliases and candidates by explicit remote-only execution mode
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mmaps the full canonical alias matrix to non-empty candidate pools when matching inventory exists
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mroutes execution-facing planning through the effective execution-mode registry
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpersists difficulty-routing diagnostics for runtime-backed chat requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mallows an observed max-difficulty override when bucketed performance supports a harder request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mroutes hard requests using bucketed observed profiles and records the selected difficulty bucket
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22minfers a hard observed-profile bucket from controller quality strategy when difficulty routing is absent
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mkeeps fresh endpoint-wide metrics when stale hard-bucket quality is present under benchmark-driven routing
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22muses the configured remote classifier result for difficulty-mode runtime-backed chat requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22muses the configured remote controller result for intelligent runtime-backed chat requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22muses the default controller timeout budget for realistic remote controller latency
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mrecords sanitized controller guidance through the live HTTP bridge for intelligent aliases
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpreserves accepted controller directives for known compatibility strategy aliases
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mgives controller routing enough output budget to avoid empty truncated guidance
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mbackfills coding role and capability hints into minimal controller strategy guidance
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mdoes not infer coding guidance solely from consumer-declared default tools
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mretries controller routing once with a compact prompt when the first controller response is empty
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mfalls back to heuristic controller guidance when the live controller returns prose instead of JSON
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mkeeps controller.remote-only routing inside the remote-only alias slice even when the available inventory is hybrid
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves coherent live role and task policy over the HTTP control plane
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mignores unsupported controller task and capability directives while keeping valid preferred endpoint subsets for coding-role requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mresolves explicit non-controller coder.review requests onto a role-compatible task
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mdrops controller preferred endpoints when they merely restate the full allowed pool
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mrehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpersists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mfalls back deterministically when the configured classifier times out
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mreuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mreports cache invalidation reasons before reclassifying a repeated request
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpersists runtime-managed role policy and task allowlists across backend restart
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexecutes env-backed api-key accounts through the live provider path when the env credential resolves
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mretries transient API timeouts once and falls back to a secondary endpoint after quota exhaustion
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpersists routed provider execution failures with selected endpoint inspection context
+[31m   [31m×[31m runtime-host-bridge[2m > [22mpreserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints[39m[33m 1639[2mms[22m[39m
+[31m     → expected [Function] to throw error matching /could not reach the ai service|timed…/i but got 'All eligible endpoints for model chat…'[39m
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexecutes direct exact-model chat requests through the Codex subscription endpoint
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mCodex Subscription request detail preserves Responses-ingress parameter policy
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexact Codex execution repairs stale bridge auth from standalone runtime and clears auth cooldowns
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22msuppresses already-executed Codex dynamic tool calls from the final chat response and de-duplicates executions
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mclassifies subscription quota exhaustion as fallback-eligible without retrying the same endpoint
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mclassifies provider insufficient balance failures as quota exhaustion
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22muses an escalating execution-failure cooldown schedule
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mdoes not place Codex subscription endpoints on cooldown for invalid_request failures
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mkeeps Kimi Code and DeepSeek coding endpoints coder-eligible from the tracked catalog
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mregisters configured local OpenAI-compatible peers as execution-ready model endpoints
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexecutes non-controller requested coder review task requests without empty chosen-endpoint failures
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexposes llama-swap ownership and config metadata on local model and endpoint readback
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mrejects local model activation when no configured local endpoint exposes the requested model
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mrehydrates connected OAuth accounts from stored token files on backend restart
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mrestores pending OAuth device-authorizations from SQLite after backend restart
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexecutes exact Kimi hosted web-search requests through to a final assistant answer
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22msurfaces exact deepseek/deepseek-v4-flash web-search requests as consumer-managed tool calls
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22msurfaces exact deepseek/deepseek-v4-pro web-search requests as consumer-managed tool calls
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mnormalizes DeepSeek DSML web_search markup into consumer-visible tool calls
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mnormalizes DeepSeek DSML web_open markup into consumer-visible tool calls
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mnormalizes DeepSeek DSML web_browse markup into consumer-visible tool calls
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mcreates a runtime backend that executes responses through the real routing and adapter path
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpersists applied role policy diagnostics and injected policy messages for runtime-backed responses requests
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22maggregates generic telemetry analytics from persisted request-time routing and cost facts
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22maggregates telemetry analytics over the full requested slice with contract metadata and aligned ledger filters
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mstartup retention cleanup removes expired raw observations while preserving telemetry ledger evidence
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mkeeps duplicate caller request ids as separate canonical telemetry rows
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mrecords caller correlation and live request classification for failed chat completions
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mreads bucketed endpoint profiles with an advisory max-difficulty recommendation
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22maborts streamed chat execution when the downstream client disconnects
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexecutes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mexecutes chat-completions through an api-key-static provider via environment credential
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mpropagates downstream stream-writer failures during direct provider streaming
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mforwards reasoning-only upstream SSE chunks when chat-completions opted into reasoning
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22msuppresses reasoning-only upstream SSE chunks until downstream-safe content is available when reasoning is not requested
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22maccepts legacy credentialized endpoint ids when pinning a requested endpoint
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mresolves bridge server options from explicit values and defaults
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mkeeps repoRoot-derived static paths stable when runtimeStateRoot uses a different path dialect
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mresolves packaged bridge server options from executable path defaults
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mprefers repoRoot frontend assets over packaged assets when repoRoot is explicit
+   [2m[90m↓[39m[22m runtime-host-bridge[2m > [22mresolves packaged bridge server options from POSIX executable path defaults
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-host-bridge/test/index.test.ts > runtime-host-bridge > preserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints
+AssertionError: expected [Function] to throw error matching /could not reach the ai service|timed…/i but got 'All eligible endpoints for model chat…'
+
+- Expected: 
+/could not reach the ai service|timed out/i
+
++ Received: 
+"All eligible endpoints for model chatgpt/gpt-5.4 are temporarily unavailable after recent execution failures."
+
+ ❯ role-model-router/apps/runtime-host-bridge/test/index.test.ts:15784:7
+    15782|       );
+    15783|       expect(executeAttempts).toBe(2);
+    15784|       await expect(
+       |       ^
+    15785|         backend.executeChatCompletions(
+    15786|           {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m200 skipped[39m[90m (201)[39m
+[2m   Start at [22m 16:18:59
+[2m   Duration [22m 5.47s[2m (transform 1.92s, setup 0ms, collect 2.62s, tests 1.64s, environment 0ms, prepare 419ms)[22m
+

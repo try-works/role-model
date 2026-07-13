@@ -1,0 +1,15 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "h04-tool-read-router",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Deliverable includes correct tool_calls for read_file with path src/router.ts and answer 'createRouter', a valid function name, meeting all MUST criteria.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h04-tool-read-router.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/h04-tool-read-router/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783931879402
+}

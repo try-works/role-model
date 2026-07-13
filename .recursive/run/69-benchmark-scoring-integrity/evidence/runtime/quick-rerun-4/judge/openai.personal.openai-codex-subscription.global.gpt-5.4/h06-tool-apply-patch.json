@@ -1,0 +1,15 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "h06-tool-apply-patch",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The apply_patch call contains a valid diff with ---/+++ headers and correctly changes 'baseline' to 'difficulty' in src/config.ts, satisfying all grading criteria.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h06-tool-apply-patch.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/h06-tool-apply-patch/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783932019795
+}

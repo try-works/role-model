@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "c02-ts-generics",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"Fixed the generic inference bug by changing the parameter types from `EndpointCandidate` to `T` so that TypeScript infers `T` from the actual `candidates` array and the `predicate` receives the inferred subtype, instead of wi",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"diff --git a/src/evaluateEligibility.ts b/src/evaluateEligibility.ts\\nindex 2f3a1ab..7c9d4ef 100644\\n--- a/src/evaluateEligibility.ts\\n+++ b/src/evaluateEligibility.ts\\n@@ -1,24 +1,34 @@\\n export interface EndpointCandidate {",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "The first answer (kimi-code) directly fixes the generic inference bug by changing the `candidates` parameter type from `EndpointCandidate[]` to `T[]` and the predicate parameter accordingly. This allows TypeScript to infer the concrete subtype from the array, exactly addressing the described issue. The unit tests demonstrate correct subtype inference. The second answer (gpt-5.4) introduces a `con…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"The first answer (kimi-code) directly fixes the generic inference bug by changing the `candidates` parameter type from `EndpointCandidate[]` to `T[]` and the predicate parameter accordingly. This allows TypeScript to infer the concrete subtype from the array, exactly addressing the described issue. The unit tests demonstrate correct subtype inference. The second answer (gpt-5.4) introduces a `const` modifier and couples `enabledKinds` to `T['kind']`, altering the function signature significantly and not clearly fixing the original predicate-widening problem. Its changes are more complex and less focused on the stated inference bug.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nFix this TypeScript generic inference bug in evaluateEligibility<T extends EndpointCandidate> and show the patch hunk plus unit test updates.",
+    "exemplarAnswer": "Technical analysis referencing code, patch, schema, or tests.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Engages with code-edit or debugging request substantively.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: code|patch|schema|test|typescript|router"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 808,
+    "reasoningLength": 14379
+  },
+  "recordedAtMs": 1783936312171
+}

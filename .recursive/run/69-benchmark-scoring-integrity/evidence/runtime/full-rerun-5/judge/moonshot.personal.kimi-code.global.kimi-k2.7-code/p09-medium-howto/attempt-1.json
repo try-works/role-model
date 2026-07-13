@@ -1,0 +1,50 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p09-medium-howto",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p09-medium-howto-a1-671829be-4cf1-4b10-bc8c-436ee19b7614",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p09-medium-howto\n\n## Original question\n[user]\nHow do I configure an OpenAI-compatible client to point at a local runtime on port 3456?\n\n## Example expected answer\nAccurate explanatory answer to the user question.\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Answers the question with relevant technical detail.\n[MUST] Include JSON keys: answer\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nAnswers the question with relevant technical detail.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"Point the client at `http://localhost:3456/v1` and use a dummy API key (most local runtimes don't validate it).\\n\\nPython (OpenAI SDK):\\n```python\\nfrom openai import OpenAI\\nclient = OpenAI(\\n    base_url=\\\"http://localhost:3456/v1\\\",\\n    api_key=\\\"not-needed\\\"\\n)\\n```\\n\\nJavaScript/TypeScript:\\n```js\\nimport OpenAI from \\\"openai\\\";\\nconst client = new OpenAI({\\n  baseURL: \\\"http://localhost:3456/v1\\\",\\n  apiKey: \\\"not-needed\\\",\\n});\\n```\\n\\ncurl:\\n```bash\\ncurl http://localhost:3456/v1/chat/completions \\\\\\n  -H \\\"Authorization: Bearer not-needed\\\" \\\\\\n  -H \\\"Content-Type: application/json\\\" \\\\\\n  -d '{\\\"model\\\": \\\"your-local-model\\\", \\\"messages\\\": [{\\\"role\\\": \\\"user\\\", \\\"content\\\": \\\"hi\\\"}]}'\\n```\\n\\nNotes:\\n- Use `/v1` only if the local runtime exposes an OpenAI-compatible prefix; some tools use `/v1/chat/completions` directly and need `base_url` without the trailing path.\\n- If your runtime requires a specific API key, use that instead of `not-needed`.\\n- Set the `model` name to whatever the local runtime expects (e.g., the model filename or alias).\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The deliverable directly answers the routing question with clear technical instructions, including base_url configuration for Python, JavaScript, and curl examples, plus helpful notes. It contains the required 'answer' key and no placeholders or malformed content.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The deliverable directly answers the routing question with clear technical instructions, including base_url configuration for Python, JavaScript, and curl examples, plus helpful notes. It contains the required 'answer' key and no placeholders or malformed content.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p09-medium-howto.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nHow do I configure an OpenAI-compatible client to point at a local runtime on port 3456?",
+    "exemplarAnswer": "Accurate explanatory answer to the user question.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Answers the question with relevant technical detail.",
+      "[MUST] Include JSON keys: answer"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 292,
+    "reasoningLength": 1122
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783934889571
+}

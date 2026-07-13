@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p13-code-debug",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p13-code-debug-a1-9a5f862e-b018-4c22-8ac5-dc965fb07fae",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p13-code-debug\n\n## Original question\n[user]\nDebug this TypeScript error: Chosen endpoint is not present in the registry result. The chosen_endpoint_id is empty. What eligibility checks should I inspect?\n\n## Example expected answer\ninspect eligibility, throughput SLA, allowEndpoints, chosen_endpoint_id\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Lists eligibility checks for empty chosen_endpoint_id.\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: eligib, endpoint, registry|allow\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nLists eligibility checks for empty chosen_endpoint_id.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"Inspect the eligibility path that produces both `chosen_endpoint_id` and the registry query result. If `chosen_endpoint_id` is empty, the failure is usually earlier than the registry lookup. Check these areas:\\n\\n1. Endpoint selection prerequisites\\n- Is endpoint selection actually running, or being skipped by a feature flag / early return?\\n- Are candidate endpoints loaded before selection?\\n- Is there a fallback/default endpoint configured if no preferred endpoint qualifies?\\n- Is the selected value being overwritten with `''`, `null`, or `undefined` after selection?\\n\\n2. Candidate filtering / eligibility checks\\n- Environment match: prod/staging/dev mismatches.\\n- Region / geography restrictions.\\n- Tenant / account / organization allowlist rules.\\n- User / role / permission checks.\\n- Plan / subscription / SKU gating.\\n- Feature flags / experiment enrollment.\\n- Endpoint enabled/disabled status.\\n- Health / readiness / maintenance mode filters.\\n- Version / API compatibility checks.\\n- Model/capability requirements if selection depends on capabilities.\\n- Quota / rate-limit / capacity checks.\\n- Authentication requirements, scopes, or policy constraints.\\n\\n3. Registry consistency checks\\n- The endpoint exists in the registry under the exact same ID format.\\n- No ID normalization mismatch: case sensitivity, whitespace, prefixes, UUID/string conversion.\\n- The registry result is for the same environment/region/tenant as the selector used.\\n- Stale cache issue: selector sees newer data than registry lookup, or vice versa.\\n\\n4. Common coding bugs\\n- Async race: reading `chosen_endpoint_id` before selection completes.\\n- Destructuring wrong field name, e.g. `chosenEndpointId` vs `chosen_endpoint_id`.\\n- Empty-string default in code like `value || ''` masking the real problem.\\n- Filtering all candidates out due to a too-strict predicate.\\n- Using `find(...)?.id ?? ''` and never logging why `find` returned nothing.\\n\\n5. Best places to add logs/assertions\\nLog immediately before and after each step:\\n- Input candidate endpoints.\\n- For each candidate, why it was excluded.\\n- Final eligible candidate list.\\n- The exact selected endpoint ID.\\n- The exact registry lookup key.\\n- The registry result IDs returned.\\n\\n6. Fast diagnosis questions\\n- Was there ever at least one eligible endpoint?\\n- If none were eligible, which check eliminated the last candidate?\\n- If one was selected, does its ID exactly match a registry entry?\\n- Is the empty `chosen_endpoint_id` due to selection failure, mapping failure, or later overwrite?\\n\\nIf you share the selection function and registry lookup code, the most important checks are usually: feature-flag gating, region/tenant filters, enabled status, health/readiness, capability/version compatibility, and any code path that defaults `chosen_endpoint_id` to an empty string.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The answer provides a detailed list of eligibility checks covering endpoint selection prerequisites, candidate filtering (environment, region, tenant, permissions, feature flags, health, etc.), registry consistency, and common coding bugs, fulfilling the requirement to list eligibility checks for empty chosen_endpoint_id.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer provides a detailed list of eligibility checks covering endpoint selection prerequisites, candidate filtering (environment, region, tenant, permissions, feature flags, health, etc.), registry consistency, and common coding bugs, fulfilling the requirement to list eligibility checks for empty chosen_endpoint_id.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/p13-code-debug.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nDebug this TypeScript error: Chosen endpoint is not present in the registry result. The chosen_endpoint_id is empty. What eligibility checks should I inspect?",
+    "exemplarAnswer": "inspect eligibility, throughput SLA, allowEndpoints, chosen_endpoint_id\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Lists eligibility checks for empty chosen_endpoint_id.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: eligib, endpoint, registry|allow"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 351,
+    "reasoningLength": 1437
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935493900
+}

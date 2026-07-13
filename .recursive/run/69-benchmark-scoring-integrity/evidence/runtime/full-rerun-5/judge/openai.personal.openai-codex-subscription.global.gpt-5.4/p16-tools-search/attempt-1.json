@@ -1,0 +1,52 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p16-tools-search",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p16-tools-search-a1-4acc6d93-b0e8-462a-b5a9-060009520629",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\nRequired API tool calls: grep_search.\nActual structured tool calls from API: grep_search.\nFake tool syntax in prose (e.g. TOOL_CALL name=...) does not count unless criteria explicitly allow it.\n\nCase: p16-tools-search\n\n## Original question\n[user]\nSearch the codebase for throughputSla and summarize where hard-deny happens.\n\n## Example expected answer\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ],\n  \"answer\": \"Hard-deny happens in the zero-eligible fast-fail branch and when a candidate is marked `hardDeniedBySla` because its throughput is below the threshold.\"\n}\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Must call grep_search and summarize where throughputSla hard-deny happens from the provided grep results.\n[MUST] Emit API tool calls: grep_search\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: read|search|list|patch|tool|plan\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nStep 1: emit the required grep_search tool call. Step 2: after tools succeed, output ONLY a ```json fence: {\"answer\":\"<summary of where hard-deny happens>\"}.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 8\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMust call grep_search and summarize where throughputSla hard-deny happens from the provided grep results.\n\n## Subject deliverable to grade\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ],\n  \"answer\": \"Hard-deny tied to throughputSla happens in src/router.ts: line 44 marks candidates hardDenied when input.throughputSlaHardDeny is true and candidate.tokensPerSecond < 24; line 16 then returns deny('throughput_sla') if throughputSlaHardDeny is true and no eligible candidates remain.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The response includes a grep_search tool call and an answer that accurately summarizes where hard-deny happens (lines 44 and 16 in src/router.ts), meeting all must-have deliverables.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The response includes a grep_search tool call and an answer that accurately summarizes where hard-deny happens (lines 44 and 16 in src/router.ts), meeting all must-have deliverables.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/p16-tools-search.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nSearch the codebase for throughputSla and summarize where hard-deny happens.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ],\n  \"answer\": \"Hard-deny happens in the zero-eligible fast-fail branch and when a candidate is marked `hardDeniedBySla` because its throughput is below the threshold.\"\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must call grep_search and summarize where throughputSla hard-deny happens from the provided grep results.",
+      "[MUST] Emit API tool calls: grep_search",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: read|search|list|patch|tool|plan"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 210,
+    "reasoningLength": 3921
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935550118
+}

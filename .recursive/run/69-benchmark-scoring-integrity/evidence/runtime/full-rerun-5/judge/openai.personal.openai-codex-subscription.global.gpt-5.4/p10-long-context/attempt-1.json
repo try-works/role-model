@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p10-long-context",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p10-long-context-a1-d4bd4d33-dd3d-459e-823d-343ff7336baf",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p10-long-context\n\n## Original question\n[user]\nYou are reviewing a long incident report. Context: At 09:12 the runtime began returning HTTP 400 with empty chosen_endpoint_id for exact remote model requests after a partial config PUT. Telemetry showed unknown.endpoint and execution_failed. Later investigation found default throughput SLA hard-denied sub-24 tps remote endpoints when they were the only allow-listed candidate. Strategy C alias routing still worked because local remained eligible. Operators restored routing.strategy via merge-preserving config updates. Question: what were the two root causes and the fixes? Answer in structured bullets.\n\n## Example expected answer\nthroughput SLA hard-deny; partial config PUT dropped routing.strategy\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Names both root causes and merge-preserving fix.\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: throughput, routing\\.strategy, merge\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nNames both root causes and merge-preserving fix.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"- Root cause 1: Partial config PUT overwrote/cleared routing.strategy state, leaving exact remote model resolution without a valid chosen_endpoint_id and producing HTTP 400 with unknown.endpoint / execution_failed.\\n  - Fix: Restore routing.strategy and use merge-preserving config updates so unspecified fields are not dropped on PUT.\\n- Root cause 2: Default throughput SLA policy incorrectly hard-denied remote endpoints below 24 TPS even when the exact remote endpoint was the only allow-listed candidate.\\n  - Fix: Change SLA/eligibility logic so exact/sole allow-listed remote endpoints are not rejected by the default sub-24-TPS gate, or explicitly configure an override/threshold for those endpoints.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The answer correctly names both root causes (partial config PUT dropping routing.strategy; throughput SLA hard-denying remote endpoints) and specifies the merge-preserving fix along with SLA logic change, matching all required criteria.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer correctly names both root causes (partial config PUT dropping routing.strategy; throughput SLA hard-denying remote endpoints) and specifies the merge-preserving fix along with SLA logic change, matching all required criteria.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/p10-long-context.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nYou are reviewing a long incident report. Context: At 09:12 the runtime began returning HTTP 400 with empty chosen_endpoint_id for exact remote model requests after a partial config PUT. Telemetry showed unknown.endpoint and execution_failed. Later investigation found default throughput SLA hard-denied sub-24 tps remote endpoints when they were the only allow-listed candidate. Strategy C alias routing still worked because local remained eligible. Operators restored routing.strategy via merge-preserving config updates. Question: what were the two root causes and the fixes? Answer in structured bullets.",
+    "exemplarAnswer": "throughput SLA hard-deny; partial config PUT dropped routing.strategy\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Names both root causes and merge-preserving fix.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: throughput, routing\\.strategy, merge"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 264,
+    "reasoningLength": 2657
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935443085
+}

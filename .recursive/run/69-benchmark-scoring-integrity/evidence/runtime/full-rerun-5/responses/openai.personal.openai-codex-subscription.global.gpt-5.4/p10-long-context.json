@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "p10-long-context",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p10-long-context-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"answer\": \"- Root cause 1: Partial config PUT overwrote/cleared routing.strategy state, leaving exact remote model resolution without a valid chosen_endpoint_id and producing HTTP 400 with unknown.endpoint / execution_failed.\\n  - Fix: Restore routing.strategy and use merge-preserving config updates so unspecified fields are not dropped on PUT.\\n- Root cause 2: Default throughput SLA policy incorrectly hard-denied remote endpoints below 24 TPS even when the exact remote endpoint was the only allow-listed candidate.\\n  - Fix: Change SLA/eligibility logic so exact/sole allow-listed remote endpoints are not rejected by the default sub-24-TPS gate, or explicitly configure an override/threshold for those endpoints.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"- Root cause 1: Partial config PUT overwrote/cleared routing.strategy state, leaving exact remote model resolution without a valid chosen_endpoint_id and producing HTTP 400 with unknown.endpoint / execution_failed.\\n  - Fix: Restore routing.strategy and use merge-preserving config updates so unspecified fields are not dropped on PUT.\\n- Root cause 2: Default throughput SLA policy incorrectly hard-denied remote endpoints below 24 TPS even when the exact remote endpoint was the only allow-listed candidate.\\n  - Fix: Change SLA/eligibility logic so exact/sole allow-listed remote endpoints are not rejected by the default sub-24-TPS gate, or explicitly configure an override/threshold for those endpoints.\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"- Root cause 1: Partial config PUT overwrote/cleared routing.strategy state, leaving exact remote model resolution without a valid chosen_endpoint_id and producing HTTP 400 with unknown.endpoint / execution_failed.\\n  - Fix: Restore routing.strategy and use merge-preserving config updates so unspecified fields are not dropped on PUT.\\n- Root cause 2: Default throughput SLA policy incorrectly hard-denied remote endpoints below 24 TPS even when the exact remote endpoint was the only allow-listed candidate.\\n  - Fix: Change SLA/eligibility logic so exact/sole allow-listed remote endpoints are not rejected by the default sub-24-TPS gate, or explicitly configure an override/threshold for those endpoints.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 4708,
+  "failure": false,
+  "recordedAtMs": 1783934211009
+}

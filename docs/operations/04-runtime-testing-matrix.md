@@ -43,6 +43,23 @@ Rebuilt-runtime browser verification is required when:
 2. Any file under `role-model-router/apps/runtime-host-bridge/src/index.ts` changes the HTTP API contract consumed by the UI.
 3. Any change affects the runtime shell boot path, session bootstrap, or provider/readiness rendering.
 
+## Cross-Lifecycle Verification Gap
+
+Some changes require a broader system proof even though the repo does not yet ship a dedicated `runtime:test-system-e2e` command family. Treat the following as cross-lifecycle proof surfaces:
+
+1. Pi or Craft ingress correlation, request IDs, or persisted routing receipts.
+2. SQLite persistence, retention, compaction, or prune eligibility.
+3. replay-to-evaluation, evaluation-to-profile, or artifact projection handoffs.
+4. hold acquisition, renewal, release, expiry, or blocked-prune diagnostics.
+5. upload or import state, signed bundle lifecycle, or post-prune survivability.
+
+Until a dedicated lane exists, changes that touch those surfaces must record a run-specific verification plan that combines the owning package tests with the relevant broader checks:
+
+- `runtime:test-router` when routing, receipts, or persistence read paths are involved.
+- `runtime:test-critical` when the same change also affects ordinary runtime-host or runtime-ui critical behavior.
+- rebuilt-runtime QA when operator-visible diagnostics, receipts, or flows change.
+- `runtime:validate-packaging` when packaged-runtime composition or packaged behavior could regress.
+
 ## When Packaged-Runtime Verification Is Required
 
 Packaged-runtime verification is required when:
@@ -68,6 +85,7 @@ Packaged-runtime verification is required when:
 ### Heavier verification (manual dispatch or change-triggered)
 
 - `runtime:test-browser` - Run locally or in a dedicated workflow when UI or operator-facing changes are present.
+- Cross-lifecycle proof surfaces - No named root command exists yet; use a run-specific verification plan grounded in the owning tests plus `runtime:test-router`, `runtime:test-critical`, rebuilt-runtime QA, and `runtime:validate-packaging` as applicable.
 - `runtime:validate-packaging` - Run when packaging-affecting files change.
 - `build-binaries.yml` - Runs on `main` pushes and tags; verifies packaging hygiene.
 

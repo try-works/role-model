@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "l02-many-constraints",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-l02-many-constraints-a1-f1771e18-dcaa-4daf-990f-cb8f1eca5053",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: l02-many-constraints\n\n## Original question\n[user]\nFollow these constraints exactly: (1) use bullet points only, (2) max 6 bullets, (3) mention local and remote endpoints, (4) mention cache invalidation reasons, (5) mention rubric signals, (6) do not use the word 'however', (7) keep under 120 words, (8) end with a one-line recommendation. Task: explain when Strategy C should pick remote over local.\n\n## Example expected answer\nbullet list with recommendation line\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Bullet-only, <=6 bullets, mentions local/remote/cache/rubric, no 'however', recommendation line.\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: local, remote, recommend\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nBullet-only, <=6 bullets, mentions local/remote/cache/rubric, no 'however', recommendation line.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"- Strategy C should pick the remote endpoint when the local endpoint lacks the needed data, is stale, or cannot satisfy freshness, authorization, or completeness requirements.\\n- Prefer the local endpoint for low-latency reads when cached data is valid and the request fits known local capabilities.\\n- Choose the remote endpoint after cache invalidation triggered by TTL expiry, upstream writes, schema/version drift, permission changes, or detected inconsistency.\\n- Remote is also favored for source-of-truth checks, cross-user/global state, large joins, or operations requiring server-side computation.\\n- Rubric signals: freshness priority, correctness over speed, cache state, endpoint capability match, error rates, and confidence in local metadata.\\n- Recommendation: default local, escalate to remote on invalidation, uncertainty, or unmet request guarantees.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The answer fully meets constraints: bullet-only, 6 bullets, mentions local/remote/cache invalidation/rubric signals, no 'however', under 120 words, ends with recommendation line, and is correctly formatted as JSON with required key.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer fully meets constraints: bullet-only, 6 bullets, mentions local/remote/cache invalidation/rubric signals, no 'however', under 120 words, ends with recommendation line, and is correctly formatted as JSON with required key.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/l02-many-constraints.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nFollow these constraints exactly: (1) use bullet points only, (2) max 6 bullets, (3) mention local and remote endpoints, (4) mention cache invalidation reasons, (5) mention rubric signals, (6) do not use the word 'however', (7) keep under 120 words, (8) end with a one-line recommendation. Task: explain when Strategy C should pick remote over local.",
+    "exemplarAnswer": "bullet list with recommendation line\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Bullet-only, <=6 bullets, mentions local/remote/cache/rubric, no 'however', recommendation line.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: local, remote, recommend"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 260,
+    "reasoningLength": 6538
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935477109
+}

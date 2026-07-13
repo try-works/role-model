@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h05-tool-grep-eligibility",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h05-tool-grep-eligibility-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Ensure evaluateEligibility is called before the endpoint is served in src/router.ts (line 42).\",\n    \"Confirm the evaluateEligibility helper at line 156 is used consistently and not bypassed by the direct reference at line 89.\"\n  ]\n}",
+  "rawResponse": "```json\n{\"bullets\":[\n  \"Ensure evaluateEligibility is called before the endpoint is served in src/router.ts (line 42).\",\n  \"Confirm the evaluateEligibility helper at line 156 is used consistently and not bypassed by the direct reference at line 89.\"\n]}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Ensure evaluateEligibility is called before the endpoint is served in src/router.ts (line 42).\",\n    \"Confirm the evaluateEligibility helper at line 156 is used consistently and not bypassed by the direct reference at line 89.\"\n  ]\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 37803,
+  "failure": false,
+  "recordedAtMs": 1783931595299
+}

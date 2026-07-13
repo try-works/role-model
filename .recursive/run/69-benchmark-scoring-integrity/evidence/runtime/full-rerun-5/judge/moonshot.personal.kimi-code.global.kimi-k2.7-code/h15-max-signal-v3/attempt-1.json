@@ -1,0 +1,54 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h15-max-signal-v3",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-h15-max-signal-v3-a1-af37f09f-bf95-4116-9081-f30adf182f78",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\nRequired API tool calls: read_file, grep_search, apply_patch.\nActual structured tool calls from API: read_file, grep_search, apply_patch.\nFake tool syntax in prose (e.g. TOOL_CALL name=...) does not count unless criteria explicitly allow it.\n\nCase: h15-max-signal-v3\n\n## Original question\n[user]\nWorkflow: (1) API read_file src/router.ts (2) grep_search throughputSla (3) apply_patch adding sole-candidate fallback comment (4) JSON plan with milestones, patch_summary, test_snippet.\n\n## Example expected answer\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -20,3 +20,4 @@\\n+// throughput SLA guard\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Inspect router\",\n    \"Patch SLA guard\",\n    \"Validate with test snippet\"\n  ],\n  \"patch_summary\": \"Added throughput SLA guard comment and regression hook.\",\n  \"test_snippet\": \"expect(guardSoleCandidateThroughputDeny(...)).toBe(true);\"\n}\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Must emit read_file, grep_search, and apply_patch tool calls\n[MUST] final JSON includes plan, patch_summary, and test_snippet.\n[MUST] Emit API tool calls: read_file, grep_search, apply_patch\n[MUST] Include JSON keys: plan, patch_summary, test_snippet\n[SHOULD] Match clues: milestone|plan, read_file|grep_search|apply_patch, test|expect|assert\n[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nStep 1: emit read_file, grep_search, apply_patch via API. Step 2: output ONLY ```json {\"plan\":[\"milestone 1\"],\"patch_summary\":\"what changed\",\"test_snippet\":\"short test idea\"}.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"plan\",\n    \"patch_summary\",\n    \"test_snippet\"\n  ],\n  \"properties\": {\n    \"plan\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"patch_summary\": {\n      \"type\": \"string\"\n    },\n    \"test_snippet\": {\n      \"type\": \"string\"\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMust emit read_file, grep_search, and apply_patch tool calls; final JSON includes plan, patch_summary, and test_snippet.\n\n## Subject deliverable to grade\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,2 +1,3 @@\\n export function createRouter(config: RouterConfig): Router {\\n+  // sole-candidate fallback: when only one endpoint is eligible, route to it directly\\n   return new RouterImpl(config);\\n }\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"read src/router.ts to understand existing structure\",\n    \"grep for throughputSla usage context\",\n    \"apply patch adding sole-candidate fallback comment\",\n    \"output deliverable JSON\"\n  ],\n  \"patch_summary\": \"Added an inline comment in src/router.ts's createRouter explaining the sole-candidate fallback behavior when only one eligible endpoint remains.\",\n  \"test_snippet\": \"Unit test: create a router with two endpoints, make all but one fail eligibility, and assert traffic is routed to the remaining sole candidate.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"Response includes all required API tool calls (read_file, grep_search, apply_patch) with correct arguments; apply_patch diff contains proper ---/+++ headers and a @@ hunk marker with real comment change; final JSON provides plan, patch_summary, and test_snippet as specified.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Response includes all required API tool calls (read_file, grep_search, apply_patch) with correct arguments; apply_patch diff contains proper ---/+++ headers and a @@ hunk marker with real comment change; final JSON provides plan, patch_summary, and test_snippet as specified.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h15-max-signal-v3.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nWorkflow: (1) API read_file src/router.ts (2) grep_search throughputSla (3) apply_patch adding sole-candidate fallback comment (4) JSON plan with milestones, patch_summary, test_snippet.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -20,3 +20,4 @@\\n+// throughput SLA guard\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Inspect router\",\n    \"Patch SLA guard\",\n    \"Validate with test snippet\"\n  ],\n  \"patch_summary\": \"Added throughput SLA guard comment and regression hook.\",\n  \"test_snippet\": \"expect(guardSoleCandidateThroughputDeny(...)).toBe(true);\"\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must emit read_file, grep_search, and apply_patch tool calls",
+      "[MUST] final JSON includes plan, patch_summary, and test_snippet.",
+      "[MUST] Emit API tool calls: read_file, grep_search, apply_patch",
+      "[MUST] Include JSON keys: plan, patch_summary, test_snippet",
+      "[SHOULD] Match clues: milestone|plan, read_file|grep_search|apply_patch, test|expect|assert",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 303,
+    "reasoningLength": 2470
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935330397
+}

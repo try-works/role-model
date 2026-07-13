@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "h03-implement-lru-cache",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-h03-implement-lru-cache-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "```typescript\nclass LRUCache {\n  private capacity: number;\n  private map: Map<number, number>;\n\n  constructor(capacity: number) {\n    this.capacity = capacity;\n    this.map = new Map<number, number>();\n  }\n\n  get(key: number): number {\n    if (!this.map.has(key)) return -1;\n    const value = this.map.get(key)!;\n    this.map.delete(key);\n    this.map.set(key, value);\n    return value;\n  }\n\n  put(key: number, value: number): void {\n    if (this.map.has(key)) {\n      this.map.delete(key);\n    } else if (this.map.size >= this.capacity) {\n      const lruKey = this.map.keys().next().value as number;\n      this.map.delete(lruKey);\n    }\n    this.map.set(key, value);\n  }\n}\n```",
+  "rawResponse": "```typescript\nclass LRUCache {\n  private capacity: number;\n  private map: Map<number, number>;\n\n  constructor(capacity: number) {\n    this.capacity = capacity;\n    this.map = new Map<number, number>();\n  }\n\n  get(key: number): number {\n    if (!this.map.has(key)) return -1;\n    const value = this.map.get(key)!;\n    this.map.delete(key);\n    this.map.set(key, value);\n    return value;\n  }\n\n  put(key: number, value: number): void {\n    if (this.map.has(key)) {\n      this.map.delete(key);\n    } else if (this.map.size >= this.capacity) {\n      const lruKey = this.map.keys().next().value as number;\n      this.map.delete(lruKey);\n    }\n    this.map.set(key, value);\n  }\n}\n```",
+  "formattedDeliverable": "```typescript\nclass LRUCache {\n  private capacity: number;\n  private map: Map<number, number>;\n\n  constructor(capacity: number) {\n    this.capacity = capacity;\n    this.map = new Map<number, number>();\n  }\n\n  get(key: number): number {\n    if (!this.map.has(key)) return -1;\n    const value = this.map.get(key)!;\n    this.map.delete(key);\n    this.map.set(key, value);\n    return value;\n  }\n\n  put(key: number, value: number): void {\n    if (this.map.has(key)) {\n      this.map.delete(key);\n    } else if (this.map.size >= this.capacity) {\n      const lruKey = this.map.keys().next().value as number;\n      this.map.delete(lruKey);\n    }\n    this.map.set(key, value);\n  }\n}\n```",
+  "extractionMethod": "code_fence",
+  "latencyMs": 5164,
+  "failure": false,
+  "recordedAtMs": 1783934680158
+}

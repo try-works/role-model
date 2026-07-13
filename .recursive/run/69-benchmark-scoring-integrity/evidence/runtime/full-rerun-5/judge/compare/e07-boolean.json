@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "e07-boolean",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"True\"\n}",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"True\"\n}",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both responses correctly convey the boolean truth value for HTTP default port 80 and include the required 'answer' key. The slight variation in capitalization ('True' vs. expected 'true') does not affect correctness as the schema demands a string, and 'True' clearly represents the true value. The responses are substantively identical, so they are tied and listed in the order they were supplied.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both responses correctly convey the boolean truth value for HTTP default port 80 and include the required 'answer' key. The slight variation in capitalization ('True' vs. expected 'true') does not affect correctness as the schema demands a string, and 'True' clearly represents the true value. The responses are substantively identical, so they are tied and listed in the order they were supplied.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nTrue or false: HTTP uses port 80 by default.",
+    "exemplarAnswer": "true\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Correct boolean for HTTP port 80.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: exact value true, exact value false"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 566,
+    "reasoningLength": 2257
+  },
+  "recordedAtMs": 1783935882078
+}

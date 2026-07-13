@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "p08-medium-summarize",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p08-medium-summarize-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"answer\": \"Difficulty-based routing for mixed local and remote model pools matches each query to the most appropriate model, balancing cost, latency, and quality. Easy or common queries are routed to lightweight local models, reducing remote API usage, lowering costs, and improving privacy while minimizing network latency. Harder or ambiguous queries are escalated to more capable remote models, preserving high response quality when needed. This approach optimizes hardware and infrastructure usage, reduces dependency on remote services, and can dynamically adapt to model availability, load, or performance metrics. Overall, it provides a cost-efficient, scalable, and responsive system that maintains strong output quality across diverse workloads.\"\n}",
+  "rawResponse": "```json\n{\n  \"answer\": \"Difficulty-based routing for mixed local and remote model pools matches each query to the most appropriate model, balancing cost, latency, and quality. Easy or common queries are routed to lightweight local models, reducing remote API usage, lowering costs, and improving privacy while minimizing network latency. Harder or ambiguous queries are escalated to more capable remote models, preserving high response quality when needed. This approach optimizes hardware and infrastructure usage, reduces dependency on remote services, and can dynamically adapt to model availability, load, or performance metrics. Overall, it provides a cost-efficient, scalable, and responsive system that maintains strong output quality across diverse workloads.\"\n}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"Difficulty-based routing for mixed local and remote model pools matches each query to the most appropriate model, balancing cost, latency, and quality. Easy or common queries are routed to lightweight local models, reducing remote API usage, lowering costs, and improving privacy while minimizing network latency. Harder or ambiguous queries are escalated to more capable remote models, preserving high response quality when needed. This approach optimizes hardware and infrastructure usage, reduces dependency on remote services, and can dynamically adapt to model availability, load, or performance metrics. Overall, it provides a cost-efficient, scalable, and responsive system that maintains strong output quality across diverse workloads.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 5166,
+  "failure": false,
+  "recordedAtMs": 1783932796115
+}

@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "l02-many-constraints",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-l02-many-constraints-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"answer\": \"- Strategy C should pick the remote endpoint when the local endpoint lacks the needed data, is stale, or cannot satisfy freshness, authorization, or completeness requirements.\\n- Prefer the local endpoint for low-latency reads when cached data is valid and the request fits known local capabilities.\\n- Choose the remote endpoint after cache invalidation triggered by TTL expiry, upstream writes, schema/version drift, permission changes, or detected inconsistency.\\n- Remote is also favored for source-of-truth checks, cross-user/global state, large joins, or operations requiring server-side computation.\\n- Rubric signals: freshness priority, correctness over speed, cache state, endpoint capability match, error rates, and confidence in local metadata.\\n- Recommendation: default local, escalate to remote on invalidation, uncertainty, or unmet request guarantees.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"- Strategy C should pick the remote endpoint when the local endpoint lacks the needed data, is stale, or cannot satisfy freshness, authorization, or completeness requirements.\\n- Prefer the local endpoint for low-latency reads when cached data is valid and the request fits known local capabilities.\\n- Choose the remote endpoint after cache invalidation triggered by TTL expiry, upstream writes, schema/version drift, permission changes, or detected inconsistency.\\n- Remote is also favored for source-of-truth checks, cross-user/global state, large joins, or operations requiring server-side computation.\\n- Rubric signals: freshness priority, correctness over speed, cache state, endpoint capability match, error rates, and confidence in local metadata.\\n- Recommendation: default local, escalate to remote on invalidation, uncertainty, or unmet request guarantees.\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"- Strategy C should pick the remote endpoint when the local endpoint lacks the needed data, is stale, or cannot satisfy freshness, authorization, or completeness requirements.\\n- Prefer the local endpoint for low-latency reads when cached data is valid and the request fits known local capabilities.\\n- Choose the remote endpoint after cache invalidation triggered by TTL expiry, upstream writes, schema/version drift, permission changes, or detected inconsistency.\\n- Remote is also favored for source-of-truth checks, cross-user/global state, large joins, or operations requiring server-side computation.\\n- Rubric signals: freshness priority, correctness over speed, cache state, endpoint capability match, error rates, and confidence in local metadata.\\n- Recommendation: default local, escalate to remote on invalidation, uncertainty, or unmet request guarantees.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 6498,
+  "failure": false,
+  "recordedAtMs": 1783934228233
+}

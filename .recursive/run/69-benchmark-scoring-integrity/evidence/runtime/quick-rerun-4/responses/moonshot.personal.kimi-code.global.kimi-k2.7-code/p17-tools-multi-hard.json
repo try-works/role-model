@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "p17-tools-multi-hard",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-p17-tools-multi-hard-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- src/router.ts\\n+++ src/router.ts\\n@@ -1,2 +1,3 @@\\n+// router factory\\n export function createRouter(config: RouterConfig): Router {\\n   return new RouterImpl(config);\\n\"\n      }\n    }\n  ],\n  \"answer\": \"Validated JSON object type, required 'answer' string field, and minLength 8 constraint.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Validated JSON object type, required 'answer' string field, and minLength 8 constraint.\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- src/router.ts\\n+++ src/router.ts\\n@@ -1,2 +1,3 @@\\n+// router factory\\n export function createRouter(config: RouterConfig): Router {\\n   return new RouterImpl(config);\\n\"\n      }\n    }\n  ],\n  \"answer\": \"Validated JSON object type, required 'answer' string field, and minLength 8 constraint.\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 111198,
+  "failure": false,
+  "recordedAtMs": 1783931444272
+}

@@ -92,6 +92,25 @@ Default CI and local development must remain deterministic and offline-safe. Liv
 | `runtime:test-full` | Full runtime regression | Yes (local) | Critical regression plus browser E2E |
 | `runtime:validate-packaging` | Packaged-runtime | Yes (mock) | Build SEA, launch, and verify packaged runtime behavior |
 
+## Cross-Lifecycle System Proof Gap
+
+Some runtime changes cut across ingress, persistence, retention, replay, and artifact-lifecycle seams that are broader than the current named root commands. Examples include:
+
+- Pi or Craft ingress correlation, durable request IDs, and persisted routing receipts
+- SQLite persistence, retention, compaction, and prune eligibility
+- replay-to-evaluation, evaluation-to-profile, and artifact projection handoffs
+- hold acquisition, renewal, release, expiry, and blocked-prune diagnostics
+- upload or import state, signed bundle lifecycle, and post-prune survivability
+
+The repository does not yet provide a named `runtime:test-system-e2e` lane for that surface. Until such a lane exists, runs that touch those seams must record an explicit verification plan using the existing owning package tests plus whichever of these broader checks apply:
+
+- `corepack pnpm run runtime:test-router`
+- `corepack pnpm run runtime:test-critical`
+- `corepack pnpm run runtime:validate-packaging`
+- rebuilt-runtime QA when operator-visible diagnostics or receipts change
+
+Future work may promote this surface into dedicated root commands, but the docs must not advertise those commands until they are actually implemented.
+
 ## TDD Discipline
 
 All production and testing-infrastructure code changes must follow TDD:

@@ -55,6 +55,12 @@ export function buildJudgeGradingPrompt(input: JudgeGradingInput): string {
     toolLines.push(
       "Fake tool syntax in prose (e.g. TOOL_CALL name=...) does not count unless criteria explicitly allow it.",
     );
+    toolLines.push(
+      "Treat the recorded API tool-call list above as authoritative benchmark metadata for whether the model executed the required tools.",
+    );
+    toolLines.push(
+      "Do not penalize the deliverable for also containing a tool_calls field when the required API tool calls are already recorded above.",
+    );
   }
 
   const preamble = [

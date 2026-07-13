@@ -1,69 +1,105 @@
 Run: `/.recursive/run/69-benchmark-scoring-integrity/`
 Phase: `00 Worktree`
-Status: `DRAFT`
+Status: `LOCKED`
+LockedAt: `2026-07-13T01:37:43Z`
+LockHash: `ba8934f8aa07fbfdb315ac2046e8b03c1a775bee73e421f7df1d2c1bd10e62db`
 Inputs:
 - `/.recursive/run/69-benchmark-scoring-integrity/00-requirements.md`
-- current git state observed from `D:\DEV\role-model\.worktrees\68-codex-subscription-tool-call-parity`
+- current git state observed from `D:\DEV\role-model` on local branch `main`
 Outputs:
 - `/.recursive/run/69-benchmark-scoring-integrity/00-worktree.md`
-Scope note: This standalone run 69 must create its own isolated implementation worktree, but the source baseline for that worktree is run 68 rather than root `main`. This artifact records that requirement so Phase 0 does not silently branch from the wrong baseline.
+Scope note: This standalone run 69 uses its own isolated implementation worktree forked from the current local `main` baseline. This artifact records the actual Phase 0 worktree command, setup, clean benchmark-owned baseline, and reusable diff basis for later audited phases.
 
 ## TODO
 
 - [x] Record that run 69 is a standalone run with its own Phase 0 artifact
-- [x] Record run 68 as the required source baseline for implementation
+- [x] Record local `main` as the required source baseline for implementation
 - [x] Record the current observed source branch and source worktree path
-- [ ] Record the actual run 69 worktree creation command during Phase 0 execution
-- [ ] Record the actual run 69 baseline commit or snapshot during Phase 0 execution
-- [ ] Confirm the clean baseline command results in the new run 69 worktree
+- [x] Record the actual run 69 worktree creation command during Phase 0 execution
+- [x] Record the actual run 69 baseline commit or snapshot during Phase 0 execution
+- [x] Confirm the clean baseline commands and results in the new run 69 worktree
 
 ## Directory Selection
 
-- Repository root for the source baseline: `D:\DEV\role-model\.worktrees\68-codex-subscription-tool-call-parity`
+- Repository root for the source baseline: `D:\DEV\role-model`
 - Preferred new run worktree location: `D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity`
-- This run is standalone from run 68 at the artifact level, but it must fork from run 68's implementation state rather than from root `main`.
+- Actual selected worktree path: `D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity`
+- Isolation approach: dedicated project-local git worktree on feature branch `recursive/69-benchmark-scoring-integrity`
+- Subsequent recursive phases for run 69 execute from `D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity`
 
 ## Safety Verification
 
-- Source baseline branch observed on `2026-07-13`: `recursive/68-codex-subscription-tool-call-parity`
-- Source baseline HEAD observed on `2026-07-13` after the run 68 implementation commit: `4b1928cfff5d194599a3125e95f7e9c88cb81f3c`
-- The run 68 implementation baseline now exists as a concrete commit and is the preferred fork point for run 69.
-- The source baseline worktree is still not clean because it contains local rebuild residue under `role-model-router/vendor/llama-swap/dist-assets/win32-x64/` plus this new run 69 draft tree.
-- Phase 0 for run 69 should branch from commit `4b1928cfff5d194599a3125e95f7e9c88cb81f3c` or from a clean snapshot derived from it rather than from the current dirty worktree.
+- Original branch / repo state observed at init time: `main`
+- Git-ignore verification: `git check-ignore -v .worktrees` -> `.gitignore:1:.worktrees/`
+- Worktree-local router policy file exists at `/.recursive/config/recursive-router.json`
+- Worktree-local router discovery inventory is absent at `/.recursive/config/recursive-router-discovered.json`; audited phases therefore start from controller-local self-audit unless later routing setup refreshes that inventory
 
 ## Worktree Creation
 
-- Intended source branch: `recursive/68-codex-subscription-tool-call-parity`
-- Intended standalone run branch: `recursive/69-benchmark-scoring-integrity`
-- Record the exact creation command and resulting worktree path when Phase 0 is executed.
+- Worktree creation command: `git worktree add .worktrees/69-benchmark-scoring-integrity -b recursive/69-benchmark-scoring-integrity`
+- Worktree creation result: created `D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity` from local `main` HEAD `c8215896a60b6a6aea64dd8d945d37f720da4605`
+- Current worktree branch: `recursive/69-benchmark-scoring-integrity`
+- The run-69 draft artifacts already existed on local `main`, so no artifact-copy step from another worktree was required
 
 ## Main Branch Protection
 
-- Run 69 must not branch from `D:\DEV\role-model` on `main`.
-- If Phase 0 needs a clean snapshot beyond commit `4b1928cfff5d194599a3125e95f7e9c88cb81f3c`, record that snapshot step here rather than silently mixing the two runs.
+- Base branch source of truth at init time: `main`
+- All run-69 implementation work will occur on `recursive/69-benchmark-scoring-integrity`
+- The source repo on `main` was left untouched; run-owned work proceeds only in the isolated worktree
+
+## Project Setup
+
+- Setup command: `corepack pnpm install --frozen-lockfile`
+- Setup result: PASS
+- Setup notes:
+  - `pnpm` installed workspace dependencies for all `44` projects in the worktree
+  - the lockfile was already current
+  - `pnpm` warned that some dependency build scripts remain unapproved (`@biomejs/biome`, `esbuild`, `sharp`, `workerd`), but the install completed successfully and the baseline suites below passed without additional setup changes
+  - verified toolchain in the worktree:
+    - `node -v` -> `v24.11.0`
+    - `corepack pnpm -v` -> `10.6.5`
+
+## Test Baseline Verification
+
+- Baseline command: `corepack pnpm --filter @role-model-router/bench-routing test`
+  - Result: PASS (`54/54` tests across `8` files)
+- Baseline command: `corepack pnpm --filter @role-model-router/bench-judge test`
+  - Result: PASS (`6/6` tests across `1` file)
+- Baseline command: `corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/benchmark-artifacts.test.ts test/benchmark-candidates-routing-quality.test.ts test/benchmark-data-clear.test.ts test/benchmark-judge-runtime.test.ts test/benchmark-progress.test.ts test/benchmark-runner-compare.test.ts test/benchmark-runner-judge.test.ts test/benchmark-start-guards.test.ts test/benchmark-summary.test.ts test/benchmark-validation-metrics.test.ts`
+  - Result: PASS (`46/46` tests across `10` files)
+- Baseline summary: the benchmark-owned routing, judging, and runtime-host-bridge surfaces are green on the `main`-based worktree before any run-69 product edits
+
+## Worktree Context
+
+- Base branch: `main`
+- Worktree branch: `recursive/69-benchmark-scoring-integrity`
+- Base commit: `c8215896a60b6a6aea64dd8d945d37f720da4605`
 
 ## Diff Basis For Later Audits
 
-- Baseline type: `TBD during Phase 0 execution`
-- Baseline reference: `must resolve to commit 4b1928cfff5d194599a3125e95f7e9c88cb81f3c or to a clean snapshot derived from it, not root main`
+- Baseline type: `local commit`
+- Baseline reference: `c8215896a60b6a6aea64dd8d945d37f720da4605`
 - Comparison reference: `working-tree`
-- Normalized diff command: `TBD during Phase 0 execution`
+- Normalized baseline: `c8215896a60b6a6aea64dd8d945d37f720da4605`
+- Normalized comparison: `working-tree`
+- Normalized diff command: `git diff --name-only c8215896a60b6a6aea64dd8d945d37f720da4605`
+- Diff basis notes: `Phase 0 was completed from the isolated worktree immediately after branch creation. The baseline is the branch-creation commit from local main HEAD, and later audited phases must reuse this exact diff command while explaining any drift against it.`
 
 ## Traceability
 
-- `R1` in `00-requirements.md` requires run 69 to implement from the run 68 baseline rather than from `main`.
+- `R1` in `00-requirements.md` requires run 69 to implement from the captured local `main` baseline rather than from the outdated run-68 note.
 
 ## Coverage Gate
 
 Coverage: PASS
 
-- This artifact makes run 69 standalone while still binding its implementation baseline to run 68.
-- The remaining unchecked TODO items are Phase 0 execution tasks, not missing proposal decisions.
+- This artifact records the actual isolated worktree creation, setup, and reusable diff basis for a `main`-based run 69.
+- The benchmark-owned baseline commands and passing results are recorded concretely for later audit reuse.
 
 ## Approval Gate
 
 Approval: PASS
 
 - The standalone-run requirement is explicit.
-- The implementation-baseline requirement is explicit.
-- The remaining work is the normal Phase 0 execution detail, not unresolved scoping.
+- The implementation-baseline requirement is explicit and now matches the current user instruction to fork from local `main`.
+- The Phase 0 worktree context, setup, and clean benchmark baseline are ready for downstream audited phases.

@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h13-parse-nested-json",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-h13-parse-nested-json-a1-dd13b77b-1343-4432-9047-1f07143ad73d",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: h13-parse-nested-json\n\n## Original question\n[user]\nWrite TypeScript function `parseRoutingDiagnostics(raw: string): { difficulty: string; chosenEndpointId: string | null }` that safely parses JSON and returns defaults on invalid input. Code block only.\n\n## Example expected answer\nparseRoutingDiagnostics with try/catch JSON parse and typed return\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Defines parseRoutingDiagnostics, handles invalid JSON, returns difficulty and chosenEndpointId.\n[SHOULD] Match clues: parseRoutingDiagnostics, JSON\\.parse|try, chosenEndpointId|difficulty\n[MUST] Provide complete working TypeScript — no placeholders or partial helpers only\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYou may reason first. Your final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders.\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nDefines parseRoutingDiagnostics, handles invalid JSON, returns difficulty and chosenEndpointId.\n\n## Subject deliverable to grade\n```typescript\nfunction parseRoutingDiagnostics(raw: string): { difficulty: string; chosenEndpointId: string | null } {\n  const defaults = {\n    difficulty: \"unknown\",\n    chosenEndpointId: null as string | null,\n  };\n\n  if (typeof raw !== \"string\") {\n    return defaults;\n  }\n\n  try {\n    const parsed: unknown = JSON.parse(raw);\n\n    if (parsed === null || typeof parsed !== \"object\" || Array.isArray(parsed)) {\n      return defaults;\n    }\n\n    const obj = parsed as Record<string, unknown>;\n\n    const difficulty =\n      typeof obj.difficulty === \"string\" && obj.difficulty.trim() !== \"\"\n        ? obj.difficulty\n        : defaults.difficulty;\n\n    const chosenEndpointId =\n      typeof obj.chosenEndpointId === \"string\"\n        ? obj.chosenEndpointId\n        : obj.chosenEndpointId === null\n        ? null\n        : defaults.chosenEndpointId;\n\n    return { difficulty, chosenEndpointId };\n  } catch {\n    return defaults;\n  }\n}\n```"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The function correctly defines parseRoutingDiagnostics, safely parses JSON with try/catch, handles invalid JSON and edge cases (non-string, null, arrays, missing fields, wrong types), and returns the required typed object with difficulty and chosenEndpointId.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The function correctly defines parseRoutingDiagnostics, safely parses JSON with try/catch, handles invalid JSON and edge cases (non-string, null, arrays, missing fields, wrong types), and returns the required typed object with difficulty and chosenEndpointId.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h13-parse-nested-json.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nWrite TypeScript function `parseRoutingDiagnostics(raw: string): { difficulty: string; chosenEndpointId: string | null }` that safely parses JSON and returns defaults on invalid input. Code block only.",
+    "exemplarAnswer": "parseRoutingDiagnostics with try/catch JSON parse and typed return",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Defines parseRoutingDiagnostics, handles invalid JSON, returns difficulty and chosenEndpointId.",
+      "[SHOULD] Match clues: parseRoutingDiagnostics, JSON\\.parse|try, chosenEndpointId|difficulty",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 287,
+    "reasoningLength": 779
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935796463
+}

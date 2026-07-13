@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "x02-max-context-tools",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer fully addresses the incident context, covers all provided checklist items (empty endpoint, partial config, cache invalidation, overrides, remote reasoning), and gives a concrete recommendation for routing hard prompts remote based on a utility score. It includes the required JSON key 'answer' and contains no placeholders, prose-only tool calls, or malformed patches. The content matches the grading criteria exactly.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/x02-max-context-tools.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/x02-max-context-tools/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935133409
+}

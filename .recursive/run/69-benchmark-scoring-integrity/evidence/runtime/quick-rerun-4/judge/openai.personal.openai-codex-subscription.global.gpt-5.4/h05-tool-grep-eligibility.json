@@ -1,0 +1,15 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "h05-tool-grep-eligibility",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The response includes a grep_search tool call with pattern 'evaluateEligibility', and the bullets mention eligibility checks, meeting all MUST requirements.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h05-tool-grep-eligibility.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/h05-tool-grep-eligibility/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783932012225
+}

@@ -1,0 +1,52 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h14-refactor-extract-helper",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "```typescript\n// BEFORE\n// const fallbacks = pool.filter(id => id !== gradedId && id !== judgeId);\n// return fallbacks[0] ?? null;\n\n// AFTER\nfunction pickFallbackJudge(gradedId: string, judgeId: string, pool: string[]): string | null {\n  co",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "```typescript\n// Before\nconst fallbacks = pool.filter(id => id !== gradedId && id !== judgeId);\nreturn fallbacks[0] ?? null;\n\n// After\nfunction pickFallbackJudge(\n  gradedId: string,\n  judgeId: string,\n  pool: string[]\n): string | null {\n  ",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both extract pickFallbackJudge and show before/after. However, the OpenAI deliverable includes invalid top-level return statements making the code block non-functional TypeScript, whereas the Moonshot version comments out the before code, yielding a valid function definition. Therefore, Moonshot better meets the requirement for complete working code.",
+  "rawResponse": "{\"relativeRanking\":[\"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\"openai.personal.openai-codex-subscription.global.gpt-5.4\"],\"rationale\":\"Both extract pickFallbackJudge and show before/after. However, the OpenAI deliverable includes invalid top-level return statements making the code block non-functional TypeScript, whereas the Moonshot version comments out the before code, yielding a valid function definition. Therefore, Moonshot better meets the requirement for complete working code.\"}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nRefactor this inline logic into `function pickFallbackJudge(gradedId: string, judgeId: string, pool: string[]): string | null` and show before/after in two code blocks:\n```ts\nconst fallbacks = pool.filter(id => id !== gradedId && id !== judgeId);\nreturn fallbacks[0] ?? null;\n```",
+    "exemplarAnswer": "pickFallbackJudge helper with before/after code blocks",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Extracts pickFallbackJudge function",
+      "[MUST] shows before and after blocks.",
+      "[SHOULD] Match clues: pickFallbackJudge, before|after|fallback",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 499,
+    "reasoningLength": 6600
+  },
+  "recordedAtMs": 1783937025950
+}

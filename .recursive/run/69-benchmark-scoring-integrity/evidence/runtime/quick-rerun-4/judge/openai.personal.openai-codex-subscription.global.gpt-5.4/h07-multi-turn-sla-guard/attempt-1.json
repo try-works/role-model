@@ -1,0 +1,52 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "caseId": "h07-multi-turn-sla-guard",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-h07-multi-turn-sla-guard-a1-f02179c0-c2ef-4bc2-857a-63eeec13d4a0",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: h07-multi-turn-sla-guard\n\n## Original question\n[user]\nRemote-only alias requests return HTTP 400 with empty chosen_endpoint_id when throughput SLA hard-denies the sole candidate.\n\n[assistant]\nThroughput SLA hard-deny on the only allow-listed endpoint leaves zero eligible candidates.\n\n[user]\nWrite a TypeScript guard function that allows sole-candidate fallback when every allow-listed endpoint is hard-denied only by throughput SLA. Output only one ```typescript code fence with the full function.\n\n## Example expected answer\n```typescript\nexport function guardSoleCandidateThroughputDeny(input: {\n  readonly candidates: readonly { id: string; hardDeniedBySla: boolean }[];\n  readonly throughputSlaHardDeny: boolean;\n}): boolean {\n  const allowListed = input.candidates.filter((c) => !c.hardDeniedBySla);\n  if (allowListed.length !== 1) return false;\n  if (!input.throughputSlaHardDeny) return false;\n  return true;\n}\n```\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Multi-turn context used\n[MUST] code references throughput SLA, sole candidate, and fallback allow.\n[SHOULD] Match clues: throughput|sla|sole|candidate|fallback|allow\n[MUST] Provide complete working TypeScript — no placeholders or partial helpers only\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nReasoning allowed. Final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders.\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMulti-turn context used; code references throughput SLA, sole candidate, and fallback allow.\n\n## Subject deliverable to grade\n```typescript\nexport type DenyReason =\n  | \"THROUGHPUT_SLA_HARD_DENY\"\n  | \"CAPACITY\"\n  | \"HEALTH\"\n  | \"AUTH\"\n  | \"REGION\"\n  | \"POLICY\"\n  | \"OTHER\";\n\nexport interface EndpointCandidate {\n  id: string;\n  allowListed: boolean;\n}\n\nexport interface EndpointEvaluation {\n  endpointId: string;\n  hardDenied: boolean;\n  denyReasons: DenyReason[];\n}\n\nexport function allowSoleCandidateFallbackOnThroughputSlaOnly(\n  candidates: ReadonlyArray<EndpointCandidate>,\n  evaluations: ReadonlyArray<EndpointEvaluation>\n): string | null {\n  const allowListed = candidates.filter((c) => c.allowListed);\n  if (allowListed.length !== 1) return null;\n\n  const sole = allowListed[0];\n  const evaluation = evaluations.find((e) => e.endpointId === sole.id);\n  if (!evaluation || !evaluation.hardDenied) return null;\n  if (evaluation.denyReasons.length === 0) return null;\n\n  const throughputOnly = evaluation.denyReasons.every(\n    (reason) => reason === \"THROUGHPUT_SLA_HARD_DENY\"\n  );\n\n  return throughputOnly ? sole.id : null;\n}\n```"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The function implements the required logic: it checks for a single allow‑listed candidate, verifies that it is hard denied and that all deny reasons are THROUGHPUT_SLA_HARD_DENY, then returns the candidate ID to allow fallback. It references throughput SLA, sole candidate, and fallback allow, matching the multi‑turn context and all key deliverables. No placeholders, diffs, or prose‑only output; the TypeScript is complete and working.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The function implements the required logic: it checks for a single allow‑listed candidate, verifies that it is hard denied and that all deny reasons are THROUGHPUT_SLA_HARD_DENY, then returns the candidate ID to allow fallback. It references throughput SLA, sole candidate, and fallback allow, matching the multi‑turn context and all key deliverables. No placeholders, diffs, or prose‑only output; the TypeScript is complete and working.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h07-multi-turn-sla-guard.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nRemote-only alias requests return HTTP 400 with empty chosen_endpoint_id when throughput SLA hard-denies the sole candidate.\n\n[assistant]\nThroughput SLA hard-deny on the only allow-listed endpoint leaves zero eligible candidates.\n\n[user]\nWrite a TypeScript guard function that allows sole-candidate fallback when every allow-listed endpoint is hard-denied only by throughput SLA. Output only one ```typescript code fence with the full function.",
+    "exemplarAnswer": "```typescript\nexport function guardSoleCandidateThroughputDeny(input: {\n  readonly candidates: readonly { id: string; hardDeniedBySla: boolean }[];\n  readonly throughputSlaHardDeny: boolean;\n}): boolean {\n  const allowListed = input.candidates.filter((c) => !c.hardDeniedBySla);\n  if (allowListed.length !== 1) return false;\n  if (!input.throughputSlaHardDeny) return false;\n  return true;\n}\n```",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Multi-turn context used",
+      "[MUST] code references throughput SLA, sole candidate, and fallback allow.",
+      "[SHOULD] Match clues: throughput|sla|sole|candidate|fallback|allow",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 465,
+    "reasoningLength": 2201
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783932030884
+}

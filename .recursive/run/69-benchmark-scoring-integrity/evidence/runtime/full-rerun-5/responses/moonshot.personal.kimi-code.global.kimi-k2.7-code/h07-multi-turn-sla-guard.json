@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h07-multi-turn-sla-guard",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-h07-multi-turn-sla-guard-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "```typescript\ntype DenialReason = \"THROUGHPUT_SLA\" | string;\n\ninterface AllowListedEndpoint {\n  endpointId: string;\n  hardDenials?: DenialReason[];\n}\n\n/**\n * Returns true when the sole allow-listed endpoint is hard-denied only by\n * throughput SLA, allowing a fallback selection instead of returning an error.\n */\nfunction allowSoleThroughputSlaFallback(\n  allowListedCandidates: AllowListedEndpoint[]\n): boolean {\n  if (allowListedCandidates.length !== 1) {\n    return false;\n  }\n\n  const [soleCandidate] = allowListedCandidates;\n  const denials = soleCandidate.hardDenials ?? [];\n\n  if (denials.length === 0) {\n    return false;\n  }\n\n  return denials.every((reason) => reason === \"THROUGHPUT_SLA\");\n}\n```",
+  "rawResponse": "```typescript\ntype DenialReason = \"THROUGHPUT_SLA\" | string;\n\ninterface AllowListedEndpoint {\n  endpointId: string;\n  hardDenials?: DenialReason[];\n}\n\n/**\n * Returns true when the sole allow-listed endpoint is hard-denied only by\n * throughput SLA, allowing a fallback selection instead of returning an error.\n */\nfunction allowSoleThroughputSlaFallback(\n  allowListedCandidates: AllowListedEndpoint[]\n): boolean {\n  if (allowListedCandidates.length !== 1) {\n    return false;\n  }\n\n  const [soleCandidate] = allowListedCandidates;\n  const denials = soleCandidate.hardDenials ?? [];\n\n  if (denials.length === 0) {\n    return false;\n  }\n\n  return denials.every((reason) => reason === \"THROUGHPUT_SLA\");\n}\n```",
+  "formattedDeliverable": "```typescript\ntype DenialReason = \"THROUGHPUT_SLA\" | string;\n\ninterface AllowListedEndpoint {\n  endpointId: string;\n  hardDenials?: DenialReason[];\n}\n\n/**\n * Returns true when the sole allow-listed endpoint is hard-denied only by\n * throughput SLA, allowing a fallback selection instead of returning an error.\n */\nfunction allowSoleThroughputSlaFallback(\n  allowListedCandidates: AllowListedEndpoint[]\n): boolean {\n  if (allowListedCandidates.length !== 1) {\n    return false;\n  }\n\n  const [soleCandidate] = allowListedCandidates;\n  const denials = soleCandidate.hardDenials ?? [];\n\n  if (denials.length === 0) {\n    return false;\n  }\n\n  return denials.every((reason) => reason === \"THROUGHPUT_SLA\");\n}\n```",
+  "extractionMethod": "code_fence",
+  "latencyMs": 48575,
+  "failure": false,
+  "recordedAtMs": 1783933969758
+}

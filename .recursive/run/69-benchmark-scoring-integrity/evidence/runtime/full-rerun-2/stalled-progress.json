@@ -1,0 +1,21 @@
+{
+  "runId": "c9af1ce1-91fe-47db-9bdc-4ef76bb18966",
+  "status": "running",
+  "mode": "full",
+  "startedAtMs": 1783918957867,
+  "updatedAtMs": 1783920085748,
+  "totalSteps": 385,
+  "completedSteps": 117,
+  "endpointIndex": 3,
+  "endpointCount": 3,
+  "currentEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "currentEndpointModelId": "chatgpt/gpt-5.4",
+  "caseIndex": 8,
+  "caseCount": 55,
+  "currentCaseId": "e08-format-json",
+  "currentPhase": "execute",
+  "runPhase": "execution",
+  "judgeEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "activeJudgeEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "artifactRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\state\\runtime-host-bridge\\memory\\benchmark-runs"
+}

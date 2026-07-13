@@ -1,0 +1,15 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "h07-multi-turn-sla-guard",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The function implements the required logic: it checks for a single allow‑listed candidate, verifies that it is hard denied and that all deny reasons are THROUGHPUT_SLA_HARD_DENY, then returns the candidate ID to allow fallback. It references throughput SLA, sole candidate, and fallback allow, matching the multi‑turn context and all key deliverables. No placeholders, diffs, or prose‑only output; the TypeScript is complete and working.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h07-multi-turn-sla-guard.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/h07-multi-turn-sla-guard/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783932030885
+}

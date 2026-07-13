@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "p01-easy-greet",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p01-easy-greet-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"answer\": \"Hello, it's nice to meet you.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Hello, it's nice to meet you.\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"Hello, it's nice to meet you.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 6553,
+  "failure": false,
+  "recordedAtMs": 1783932742948
+}

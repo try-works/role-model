@@ -86,6 +86,16 @@ export type { BenchmarkChatCompletionsExecutionResult };
 
 export interface BenchmarkExecutionRequestOptions {
   readonly endpointId?: string;
+  readonly ignoreExecutionFailureCooldowns?: boolean;
+}
+
+function buildBenchmarkExecutionRequestOptions(
+  endpointId: string,
+): BenchmarkExecutionRequestOptions {
+  return {
+    endpointId,
+    ignoreExecutionFailureCooldowns: true,
+  };
 }
 
 function formatBenchmarkRawResponse(result: BenchmarkChatCompletionsExecutionResult): string {
@@ -379,7 +389,7 @@ async function executeBenchmarkTurn(
           : {}),
       },
       requestId,
-      { endpointId: endpoint.endpointId },
+      buildBenchmarkExecutionRequestOptions(endpoint.endpointId),
     );
   }
 
@@ -395,7 +405,7 @@ async function executeBenchmarkTurn(
 
     requestId,
 
-    { endpointId: endpoint.endpointId },
+    buildBenchmarkExecutionRequestOptions(endpoint.endpointId),
   );
 }
 
@@ -680,9 +690,11 @@ async function executeJudgeRequest(
       ...(structuredOutput ? { response_format: JUDGE_RESPONSE_FORMAT } : {}),
     };
 
-    const result = await deps.executeChatCompletions(requestBody, requestId, {
-      endpointId: judgeEndpoint.endpointId,
-    });
+    const result = await deps.executeChatCompletions(
+      requestBody,
+      requestId,
+      buildBenchmarkExecutionRequestOptions(judgeEndpoint.endpointId),
+    );
 
     const latencyMs = Date.now() - startedAtMs;
 
@@ -775,17 +787,12 @@ async function gradeWithJudge(input: {
 
   const gradingBrief = buildJudgeGradingBrief(input.caseItem);
 
-  const judgeSelfGrade =
-    input.gradedEndpointId === input.judgeEndpoint.endpointId && isJudgeSubjectOverlapMode();
-
   const baseMessages = buildJudgeRequestMessages(
     input.caseItem,
 
     deliverable,
 
     input.structuredToolNames,
-
-    { strictSelfGrade: judgeSelfGrade },
   );
 
   const persistedBrief = {
@@ -1341,7 +1348,7 @@ async function gradeCompareAcrossModels(input: {
 
         requestId,
 
-        { endpointId: input.judgeEndpoint.endpointId },
+        buildBenchmarkExecutionRequestOptions(input.judgeEndpoint.endpointId),
       );
 
       const latencyMs = Date.now() - startedAtMs;

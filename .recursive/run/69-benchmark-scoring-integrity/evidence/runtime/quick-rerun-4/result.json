@@ -1,0 +1,1941 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "suiteVersion": "3.4",
+  "mode": "quick",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "startedAtMs": 1783931330281,
+  "completedAtMs": 1783932405876,
+  "endpointGrades": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "modelId": "moonshot/kimi-k2.7-code",
+      "sourceType": "remote",
+      "overallScore": 0.8333333333333334,
+      "byDifficulty": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 0,
+          "score": 0
+        },
+        "hard": {
+          "cases": 12,
+          "score": 0.8333333333333334
+        }
+      },
+      "caseResults": [
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "latencyMs": 111198,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 36922,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 5746,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 22239,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 48299,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 37803,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 7067,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 19576,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "latencyMs": 5884,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 13048,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 25156,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 34241,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        }
+      ],
+      "caseTaxonomyTags": {
+        "e01-yes-no": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e02-single-word": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e03-count": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e04-capitalize": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e05-emoji": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e06-timezone": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e07-boolean": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e08-format-json": {
+          "roleId": "data",
+          "taskType": "data.transform",
+          "requiredCapabilities": [
+            "text.chat",
+            "data.schema"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ]
+        },
+        "p01-easy-greet": {
+          "roleId": "support",
+          "taskType": "support.ticket.reply",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p02-easy-math": {
+          "roleId": "mathematician",
+          "taskType": "mathematician.proof.verify",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p03-easy-define": {
+          "roleId": "knowledge",
+          "taskType": "knowledge.explain.concept",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p04-easy-translate": {
+          "roleId": "translator",
+          "taskType": "translator.localize.text",
+          "requiredCapabilities": [
+            "text.chat",
+            "translation.text"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p05-easy-list": {
+          "roleId": "knowledge",
+          "taskType": "knowledge.explain.concept",
+          "requiredCapabilities": [
+            "text.chat"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p06-medium-explain": {
+          "roleId": "educator",
+          "taskType": "educator.lesson.plan",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p07-medium-compare": {
+          "roleId": "researcher",
+          "taskType": "researcher.compare_sources",
+          "requiredCapabilities": [
+            "text.chat"
+          ],
+          "preferredCapabilities": [
+            "citation.synthesis"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": []
+        },
+        "p08-medium-summarize": {
+          "roleId": "analyst",
+          "taskType": "analyst.metrics.define",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p09-medium-howto": {
+          "roleId": "support",
+          "taskType": "support.knowledge_base.suggest",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p10-long-context": {
+          "roleId": "researcher",
+          "taskType": "researcher.literature_review",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p11-long-multi-turn": {
+          "roleId": "coordinator",
+          "taskType": "coordinator.project.track",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "l01-verbose-incident": {
+          "roleId": "support",
+          "taskType": "support.ticket.reply",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": []
+        },
+        "l02-many-constraints": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p12-code-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "p13-code-debug": {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "p14-schema-validate": {
+          "roleId": "data",
+          "taskType": "data.schema.review",
+          "requiredCapabilities": [
+            "data.schema"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ],
+          "toolClasses": []
+        },
+        "c01-full-refactor": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "c02-ts-generics": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p15-tools-read-one": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "p16-tools-search": {
+          "roleId": "researcher",
+          "taskType": "researcher.web_research",
+          "requiredCapabilities": [
+            "text.chat",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "t01-tools-list-dir": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "p17-tools-multi-hard": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "tools.function_calling"
+          ],
+          "preferredCapabilities": [
+            "tools.command_execution"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "p18-tools-agent": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "t02-tools-triple": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "t03-tools-agent-plan": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "p19-decompose-plan": {
+          "roleId": "planner",
+          "taskType": "planner.roadmap.create",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p20-decompose-arch": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "d01-milestones-heavy": {
+          "roleId": "planner",
+          "taskType": "planner.roadmap.create",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "x01-max-signal": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "x02-max-context-tools": {
+          "roleId": "architect",
+          "taskType": "architect.tradeoff.analyze",
+          "requiredCapabilities": [
+            "tools.function_calling",
+            "code_generation",
+            "planning"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "p24-exact-local": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p25-exact-remote": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p26-cache-easy-a": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p27-cache-easy-b": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p28-cache-hard-a": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p29-cache-hard-b": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p30-cache-invalidate": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p31-cache-strategy-switch": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "h01-implement-two-sum": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h02-fix-async-counter": {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h03-implement-lru-cache": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h04-tool-read-router": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "code.read"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h05-tool-grep-eligibility": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "code.read"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h06-tool-apply-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h07-multi-turn-sla-guard": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "h08-multi-turn-tool-refine": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h09-agent-metrics-chain": {
+          "roleId": "analyst",
+          "taskType": "analyst.metrics.define",
+          "requiredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "data.query"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h10-agent-read-grep-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "h11-decompose-code-verify": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "planning",
+            "code_generation",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "h12-four-turn-architecture": {
+          "roleId": "architect",
+          "taskType": "architect.tradeoff.analyze",
+          "requiredCapabilities": [
+            "planning",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "h13-parse-nested-json": {
+          "roleId": "data",
+          "taskType": "data.transform",
+          "requiredCapabilities": [
+            "data.schema",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ]
+        },
+        "h14-refactor-extract-helper": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h15-max-signal-v3": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        }
+      }
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "modelId": "chatgpt/gpt-5.4",
+      "sourceType": "remote",
+      "overallScore": 0.9166666666666666,
+      "byDifficulty": {
+        "easy": {
+          "cases": 0,
+          "score": 0
+        },
+        "medium": {
+          "cases": 0,
+          "score": 0
+        },
+        "hard": {
+          "cases": 12,
+          "score": 0.9166666666666666
+        }
+      },
+      "caseResults": [
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "latencyMs": 13533,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 10380,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 3878,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 6571,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 6171,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 8443,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 12930,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 6410,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 3961,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 8825,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 11485,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 14816,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        }
+      ],
+      "caseTaxonomyTags": {
+        "e01-yes-no": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e02-single-word": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e03-count": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e04-capitalize": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e05-emoji": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e06-timezone": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e07-boolean": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e08-format-json": {
+          "roleId": "data",
+          "taskType": "data.transform",
+          "requiredCapabilities": [
+            "text.chat",
+            "data.schema"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ]
+        },
+        "p01-easy-greet": {
+          "roleId": "support",
+          "taskType": "support.ticket.reply",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p02-easy-math": {
+          "roleId": "mathematician",
+          "taskType": "mathematician.proof.verify",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p03-easy-define": {
+          "roleId": "knowledge",
+          "taskType": "knowledge.explain.concept",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p04-easy-translate": {
+          "roleId": "translator",
+          "taskType": "translator.localize.text",
+          "requiredCapabilities": [
+            "text.chat",
+            "translation.text"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p05-easy-list": {
+          "roleId": "knowledge",
+          "taskType": "knowledge.explain.concept",
+          "requiredCapabilities": [
+            "text.chat"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p06-medium-explain": {
+          "roleId": "educator",
+          "taskType": "educator.lesson.plan",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p07-medium-compare": {
+          "roleId": "researcher",
+          "taskType": "researcher.compare_sources",
+          "requiredCapabilities": [
+            "text.chat"
+          ],
+          "preferredCapabilities": [
+            "citation.synthesis"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": []
+        },
+        "p08-medium-summarize": {
+          "roleId": "analyst",
+          "taskType": "analyst.metrics.define",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p09-medium-howto": {
+          "roleId": "support",
+          "taskType": "support.knowledge_base.suggest",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p10-long-context": {
+          "roleId": "researcher",
+          "taskType": "researcher.literature_review",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p11-long-multi-turn": {
+          "roleId": "coordinator",
+          "taskType": "coordinator.project.track",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "l01-verbose-incident": {
+          "roleId": "support",
+          "taskType": "support.ticket.reply",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": []
+        },
+        "l02-many-constraints": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p12-code-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "p13-code-debug": {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "p14-schema-validate": {
+          "roleId": "data",
+          "taskType": "data.schema.review",
+          "requiredCapabilities": [
+            "data.schema"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ],
+          "toolClasses": []
+        },
+        "c01-full-refactor": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "c02-ts-generics": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p15-tools-read-one": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "p16-tools-search": {
+          "roleId": "researcher",
+          "taskType": "researcher.web_research",
+          "requiredCapabilities": [
+            "text.chat",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "t01-tools-list-dir": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "p17-tools-multi-hard": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "tools.function_calling"
+          ],
+          "preferredCapabilities": [
+            "tools.command_execution"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "p18-tools-agent": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "t02-tools-triple": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "t03-tools-agent-plan": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "p19-decompose-plan": {
+          "roleId": "planner",
+          "taskType": "planner.roadmap.create",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p20-decompose-arch": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "d01-milestones-heavy": {
+          "roleId": "planner",
+          "taskType": "planner.roadmap.create",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "x01-max-signal": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "x02-max-context-tools": {
+          "roleId": "architect",
+          "taskType": "architect.tradeoff.analyze",
+          "requiredCapabilities": [
+            "tools.function_calling",
+            "code_generation",
+            "planning"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "p24-exact-local": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p25-exact-remote": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p26-cache-easy-a": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p27-cache-easy-b": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p28-cache-hard-a": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p29-cache-hard-b": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p30-cache-invalidate": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p31-cache-strategy-switch": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "h01-implement-two-sum": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h02-fix-async-counter": {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h03-implement-lru-cache": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h04-tool-read-router": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "code.read"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h05-tool-grep-eligibility": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "code.read"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h06-tool-apply-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h07-multi-turn-sla-guard": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "h08-multi-turn-tool-refine": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h09-agent-metrics-chain": {
+          "roleId": "analyst",
+          "taskType": "analyst.metrics.define",
+          "requiredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "data.query"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h10-agent-read-grep-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "h11-decompose-code-verify": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "planning",
+            "code_generation",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "h12-four-turn-architecture": {
+          "roleId": "architect",
+          "taskType": "architect.tradeoff.analyze",
+          "requiredCapabilities": [
+            "planning",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "h13-parse-nested-json": {
+          "roleId": "data",
+          "taskType": "data.transform",
+          "requiredCapabilities": [
+            "data.schema",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ]
+        },
+        "h14-refactor-extract-helper": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h15-max-signal-v3": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "t01-tools-list-dir",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-t01-tools-list-dir-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_dir\",\n      \"arguments\": {\n        \"path\": \"config\"\n      }\n    }\n  ],\n  \"answer\": \"Routing-related config files: router.yaml and routing-policy.json.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Routing-related config files: router.yaml and routing-policy.json.\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_dir\",\n      \"arguments\": {\n        \"path\": \"config\"\n      }\n    }\n  ],\n  \"answer\": \"Routing-related config files: router.yaml and routing-policy.json.\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 5812,
+  "failure": false,
+  "recordedAtMs": 1783933229556
+}

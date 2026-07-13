@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "d01-milestones-heavy",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"# Multi-Phase Improvement Plan: Classifier Thresholds, Controller Arbitration, and Hybrid Routing Overrides\\n\\n## 1. Difficulty Classifier Thresholds\\n\\n### Phase 1: Baseline and Measurement\\n- **Milestones**\\n  - Instrument ",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"1) Difficulty classifier thresholds\\nPhase 1: Baseline and instrumentation. Milestones: inventory current features, thresholds, labels, and traffic slices; add logging for score distributions, confidence, downstream outcome, ",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "Both answers provide thorough, structured decomposition with phases, milestones, verification, rollback, and extension points for each subsystem, meeting all MUST and SHOULD checks. The openai answer additionally includes a suggested timeline and program exit criteria, making it marginally more actionable and complete.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\"\n  ],\n  \"rationale\": \"Both answers provide thorough, structured decomposition with phases, milestones, verification, rollback, and extension points for each subsystem, meeting all MUST and SHOULD checks. The openai answer additionally includes a suggested timeline and program exit criteria, making it marginally more actionable and complete.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nBreak down a multi-phase plan to improve difficulty classifier thresholds, controller arbitration, and hybrid routing overrides. Provide milestones, verification criteria, rollback steps, and extension points for each subsystem.",
+    "exemplarAnswer": "Step-by-step plan with milestones and verification criteria.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Provides structured decomposition with phases or milestones.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: step|phase|milestone|verif"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 489,
+    "reasoningLength": 8105
+  },
+  "recordedAtMs": 1783936501420
+}

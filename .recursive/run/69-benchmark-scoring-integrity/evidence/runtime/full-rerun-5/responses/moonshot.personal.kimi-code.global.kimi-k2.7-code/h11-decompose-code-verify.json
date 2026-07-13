@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h11-decompose-code-verify",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-h11-decompose-code-verify-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"run_tests\",\n      \"arguments\": {\n        \"command\": \"pnpm test benchmark-progress\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"The interface BenchmarkRunProgress should have runId, status, completedSteps, and totalSteps as required fields.\",\n    \"Tests can be run using the run_tests tool with command 'pnpm test benchmark-progress'.\"\n  ]\n}",
+  "rawResponse": "{\"bullets\":[\"The interface BenchmarkRunProgress should have runId, status, completedSteps, and totalSteps as required fields.\",\"Tests can be run using the run_tests tool with command 'pnpm test benchmark-progress'.\"]}",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"run_tests\",\n      \"arguments\": {\n        \"command\": \"pnpm test benchmark-progress\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"The interface BenchmarkRunProgress should have runId, status, completedSteps, and totalSteps as required fields.\",\n    \"Tests can be run using the run_tests tool with command 'pnpm test benchmark-progress'.\"\n  ]\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 11883,
+  "failure": false,
+  "recordedAtMs": 1783934045395
+}

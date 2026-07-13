@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "p09-medium-howto",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p09-medium-howto-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"answer\": \"Set the client’s base URL to your local server, e.g. `http://localhost:3456/v1`.\\n\\nPython:\\n```python\\nfrom openai import OpenAI\\nclient = OpenAI(base_url=\\\"http://localhost:3456/v1\\\", api_key=\\\"dummy\\\")\\n```\\n\\nJavaScript:\\n```js\\nimport OpenAI from \\\"openai\\\";\\nconst client = new OpenAI({\\n  baseURL: \\\"http://localhost:3456/v1\\\",\\n  apiKey: \\\"dummy\\\",\\n});\\n```\\n\\nIf your local runtime doesn’t require auth, many clients still require some non-empty `api_key`/`apiKey` value.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Set the client’s base URL to your local server, e.g. `http://localhost:3456/v1`.\\n\\nPython:\\n```python\\nfrom openai import OpenAI\\nclient = OpenAI(base_url=\\\"http://localhost:3456/v1\\\", api_key=\\\"dummy\\\")\\n```\\n\\nJavaScript:\\n```js\\nimport OpenAI from \\\"openai\\\";\\nconst client = new OpenAI({\\n  baseURL: \\\"http://localhost:3456/v1\\\",\\n  apiKey: \\\"dummy\\\",\\n});\\n```\\n\\nIf your local runtime doesn’t require auth, many clients still require some non-empty `api_key`/`apiKey` value.\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"Set the client’s base URL to your local server, e.g. `http://localhost:3456/v1`.\\n\\nPython:\\n```python\\nfrom openai import OpenAI\\nclient = OpenAI(base_url=\\\"http://localhost:3456/v1\\\", api_key=\\\"dummy\\\")\\n```\\n\\nJavaScript:\\n```js\\nimport OpenAI from \\\"openai\\\";\\nconst client = new OpenAI({\\n  baseURL: \\\"http://localhost:3456/v1\\\",\\n  apiKey: \\\"dummy\\\",\\n});\\n```\\n\\nIf your local runtime doesn’t require auth, many clients still require some non-empty `api_key`/`apiKey` value.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 4689,
+  "failure": false,
+  "recordedAtMs": 1783934206299
+}

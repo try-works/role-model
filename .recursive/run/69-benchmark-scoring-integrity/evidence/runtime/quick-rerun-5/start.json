@@ -1,0 +1,17 @@
+{
+  "request": {
+    "useJudge": true,
+    "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "preflightProbe": true,
+    "mode": "quick",
+    "endpointIds": [
+      "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ]
+  },
+  "response": {
+    "runId": "3210dbd4-ecae-4c3a-ae3e-24d5ce671a77",
+    "status": "running",
+    "judgeSubjectOverlap": false
+  }
+}

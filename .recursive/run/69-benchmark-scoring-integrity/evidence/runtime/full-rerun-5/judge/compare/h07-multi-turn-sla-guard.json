@@ -1,0 +1,52 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h07-multi-turn-sla-guard",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "```typescript\ntype DenialReason = \"THROUGHPUT_SLA\" | string;\n\ninterface AllowListedEndpoint {\n  endpointId: string;\n  hardDenials?: DenialReason[];\n}\n\n/**\n * Returns true when the sole allow-listed endpoint is hard-denied only by\n * through",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "```typescript\nexport type AliasGuardDenialReason =\n  | \"throughput_sla_hard_deny\"\n  | \"capacity_hard_deny\"\n  | \"region_hard_deny\"\n  | \"health_hard_deny\"\n  | \"compliance_hard_deny\"\n  | \"policy_hard_deny\"\n  | \"unknown\";\n\nexport interface Alia",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "Both models satisfy the checklist requirements (multi-turn context, references to throughput SLA, sole candidate, fallback). However, the openai function better approximates the exemplar's structure: it filters candidates by an attribute (allowListed) before evaluating the sole candidate, and it returns a decision object that aligns with the HTTP response scenario (chosenEndpointId). The moonshot…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\"\n  ],\n  \"rationale\": \"Both models satisfy the checklist requirements (multi-turn context, references to throughput SLA, sole candidate, fallback). However, the openai function better approximates the exemplar's structure: it filters candidates by an attribute (allowListed) before evaluating the sole candidate, and it returns a decision object that aligns with the HTTP response scenario (chosenEndpointId). The moonshot function assumes pre‑filtered input and tests that the sole candidate *has* hard denials all of type THROUGHPUT_SLA, which inverts the exemplar's filter on candidates not hard denied by SLA. Therefore openai's deliverable is substantively closer to the exemplar.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nRemote-only alias requests return HTTP 400 with empty chosen_endpoint_id when throughput SLA hard-denies the sole candidate.\n\n[assistant]\nThroughput SLA hard-deny on the only allow-listed endpoint leaves zero eligible candidates.\n\n[user]\nWrite a TypeScript guard function that allows sole-candidate fallback when every allow-listed endpoint is hard-denied only by throughput SLA. Output only one ```typescript code fence with the full function.",
+    "exemplarAnswer": "```typescript\nexport function guardSoleCandidateThroughputDeny(input: {\n  readonly candidates: readonly { id: string; hardDeniedBySla: boolean }[];\n  readonly throughputSlaHardDeny: boolean;\n}): boolean {\n  const allowListed = input.candidates.filter((c) => !c.hardDeniedBySla);\n  if (allowListed.length !== 1) return false;\n  if (!input.throughputSlaHardDeny) return false;\n  return true;\n}\n```",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Multi-turn context used",
+      "[MUST] code references throughput SLA, sole candidate, and fallback allow.",
+      "[SHOULD] Match clues: throughput|sla|sole|candidate|fallback|allow",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 831,
+    "reasoningLength": 18076
+  },
+  "recordedAtMs": 1783936829887
+}

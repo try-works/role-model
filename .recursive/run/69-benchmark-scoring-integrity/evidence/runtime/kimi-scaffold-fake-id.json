@@ -1,0 +1,31 @@
+{
+  "id": "chatcmpl-role-model",
+  "object": "chat.completion",
+  "created": 1783927540,
+  "model": "moonshot/kimi-k2.7-code",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "tool_EwMd6FKkiL1mYLjtFjFrFVGc",
+            "type": "function",
+            "function": {
+              "name": "apply_patch",
+              "arguments": "{\"diff\":\"--- src/router.ts\\n+++ src/router.ts\\n@@ -1 +1,6 @@\\n-export function createRouter() { return true; }\\n+export function createRouter() {\\n+  return {\\n+    routes: [],\\n+    push: () => {},\\n+  };\\n+}\\n\"}"
+            }
+          }
+        ]
+      },
+      "finish_reason": "tool_calls"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 164,
+    "completion_tokens": 2164,
+    "total_tokens": 2328
+  }
+}

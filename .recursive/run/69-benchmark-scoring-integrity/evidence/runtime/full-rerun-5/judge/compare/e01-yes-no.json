@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "e01-yes-no",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"yes\"\n}",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"Yes\"\n}",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both responses satisfy the 'yes or no only' requirement and include the required JSON key. However, the exemplar expected answer is lowercase 'yes'. The moonshot response uses 'yes' exactly, matching the SHOULD clause for exact value, while the openai response uses 'Yes' which deviates in capitalization. Therefore, moonshot is ranked higher for greater adherence to the exemplar.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both responses satisfy the 'yes or no only' requirement and include the required JSON key. However, the exemplar expected answer is lowercase 'yes'. The moonshot response uses 'yes' exactly, matching the SHOULD clause for exact value, while the openai response uses 'Yes' which deviates in capitalization. Therefore, moonshot is ranked higher for greater adherence to the exemplar.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nIs water wet? Answer yes or no only.",
+    "exemplarAnswer": "yes\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Must answer yes or no only.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: exact value yes, exact value no"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 550,
+    "reasoningLength": 1899
+  },
+  "recordedAtMs": 1783935824191
+}

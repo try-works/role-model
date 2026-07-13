@@ -1,0 +1,53 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "caseId": "h06-tool-apply-patch",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- src/config.ts\\n+++ src/config.ts\\n@@ -1 +1 @@\\n-const MODE = 'baseline'\\n+const MODE = 'difficulty'\"\n      }\n    }\n  ]\n}",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/config.ts\\n+++ b/src/config.ts\\n@@\\n-const MODE = 'baseline'\\n+const MODE = 'difficulty'\\n\"\n      }\n    }\n  ]\n}",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "Both responses correctly call apply_patch and change MODE to 'difficulty'. However, openai's diff uses the standard a/ and b/ header prefixes as shown in the exemplar, while moonshot's diff omits them. Although both are valid, the openai version better matches the expected format, so it is ranked higher.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\"\n  ],\n  \"rationale\": \"Both responses correctly call apply_patch and change MODE to 'difficulty'. However, openai's diff uses the standard a/ and b/ header prefixes as shown in the exemplar, while moonshot's diff omits them. Although both are valid, the openai version better matches the expected format, so it is ranked higher.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nAPI apply_patch only. Unified diff for src/config.ts changing const MODE = 'baseline' to const MODE = 'difficulty'. Must include --- and +++ file headers.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must call apply_patch",
+      "[MUST] diff includes ---/+++ headers and changes MODE to difficulty.",
+      "[MUST] Emit API tool calls: apply_patch",
+      "[SHOULD] Match clues: apply_patch|MODE|difficulty|\\+\\+\\+|---",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 474,
+    "reasoningLength": 4794
+  },
+  "recordedAtMs": 1783932252633
+}

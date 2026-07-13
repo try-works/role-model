@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p20-decompose-arch",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"# Routing Pipeline Decomposition\\n\\n## 1. Alias Resolution\\n- **Purpose**: Normalize raw input; resolve aliases, synonyms, abbreviations, and entity references into canonical values.\\n- **Inputs**: Raw request, user context, ",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"Routing pipeline decomposition:\\n\\n1. Alias resolution\\n- Purpose: normalize user/org/project-specific names into canonical route targets, intents, entities, and policy scopes.\\n- Inputs: raw request, tenant context, user pro",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "Both responses satisfy the MUST requirement (structured decomposition with phases) and provide detailed extension points. However, the OpenAI response additionally includes explicit stage contracts and interfaces that serve as verification criteria, which aligns better with the exemplar's 'verification criteria' clue. This gives it a marginal edge, though both are substantively correct and score…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\"\n  ],\n  \"rationale\": \"Both responses satisfy the MUST requirement (structured decomposition with phases) and provide detailed extension points. However, the OpenAI response additionally includes explicit stage contracts and interfaces that serve as verification criteria, which aligns better with the exemplar's 'verification criteria' clue. This gives it a marginal edge, though both are substantively correct and score 1.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nDesign a decomposition of the routing pipeline: alias resolution, rubric classification, controller arbitration, eligibility, scoring, execution. Identify extension points.",
+    "exemplarAnswer": "Step-by-step plan with milestones and verification criteria.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Provides structured decomposition with phases or milestones.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: step|phase|milestone|verif"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 570,
+    "reasoningLength": 8424
+  },
+  "recordedAtMs": 1783936467371
+}

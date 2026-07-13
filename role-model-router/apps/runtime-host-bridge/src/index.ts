@@ -3074,6 +3074,7 @@ export interface BridgeExecutionRequestOptions {
   readonly sessionId?: string;
   readonly clientRequestId?: string;
   readonly transportPreference?: RuntimeExecutionRequest["transportPreference"];
+  readonly ignoreExecutionFailureCooldowns?: boolean;
   readonly abortSignal?: AbortSignal;
 }
 
@@ -8475,6 +8476,12 @@ function mergeBridgeRequestAbortSignal(
   };
 }
 
+function shouldIgnoreExecutionFailureCooldowns(
+  requestOptions?: BridgeExecutionRequestOptions,
+): boolean {
+  return requestOptions?.ignoreExecutionFailureCooldowns === true;
+}
+
 async function writeSseChunk(
   response: ServerResponse,
   serializedChunk: string,
@@ -11280,6 +11287,16 @@ function readStoredCodexAuthFreshnessMs(payload: StoredOauthTokenPayload | null)
     : 0;
 }
 
+function readStoredOauthTokenFreshnessMs(payload: StoredOauthTokenPayload | null): number {
+  const codexFreshnessMs = readStoredCodexAuthFreshnessMs(payload);
+  if (codexFreshnessMs > 0) {
+    return codexFreshnessMs;
+  }
+  return typeof payload?.saved_at_ms === "number" && Number.isFinite(payload.saved_at_ms)
+    ? payload.saved_at_ms
+    : 0;
+}
+
 function hasStoredCodexAuthTokens(payload: StoredOauthTokenPayload | null): boolean {
   const authPayload = readStoredCodexAuthSnapshot(payload);
   if (!authPayload) {
@@ -11296,7 +11313,14 @@ function hasStoredCodexAuthTokens(payload: StoredOauthTokenPayload | null): bool
   return accessToken.length > 0 || refreshToken.length > 0;
 }
 
-function readFreshestStoredCodexOauthTokenFileSync(input: {
+function hasStoredOauthTokens(payload: StoredOauthTokenPayload | null): boolean {
+  if (hasStoredCodexAuthTokens(payload)) {
+    return true;
+  }
+  return readStoredAccessToken(payload).length > 0 || readStoredRefreshToken(payload).length > 0;
+}
+
+function readFreshestStoredOauthTokenFileSync(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly credentialRef: string;
@@ -11313,31 +11337,24 @@ function readFreshestStoredCodexOauthTokenFileSync(input: {
     input.runtimeStateRoot,
     input.credentialRef,
   );
-  const bridgeHasCodexTokens = hasStoredCodexAuthTokens(bridgePayload);
-  const standaloneHasCodexTokens = hasStoredCodexAuthTokens(standalonePayload);
-  if (!standaloneHasCodexTokens) {
+  const bridgeHasTokens = hasStoredOauthTokens(bridgePayload);
+  const standaloneHasTokens = hasStoredOauthTokens(standalonePayload);
+  if (!standaloneHasTokens || !standalonePayload) {
     return {
-      payload: bridgeHasCodexTokens ? bridgePayload : bridgePayload,
+      payload: bridgePayload,
       repairedBridgeCredential: false,
     };
   }
-  const freshestStandalonePayload = standalonePayload;
-  if (!freshestStandalonePayload) {
-    return {
-      payload: bridgeHasCodexTokens ? bridgePayload : bridgePayload,
-      repairedBridgeCredential: false,
-    };
-  }
-  const bridgeFreshnessMs = readStoredCodexAuthFreshnessMs(bridgePayload);
-  const standaloneFreshnessMs = readStoredCodexAuthFreshnessMs(freshestStandalonePayload);
+  const bridgeFreshnessMs = readStoredOauthTokenFreshnessMs(bridgePayload);
+  const standaloneFreshnessMs = readStoredOauthTokenFreshnessMs(standalonePayload);
   const shouldRepairBridge =
-    !bridgeHasCodexTokens ||
+    !bridgeHasTokens ||
     standaloneFreshnessMs > bridgeFreshnessMs ||
     (standaloneFreshnessMs === bridgeFreshnessMs &&
-      JSON.stringify(freshestStandalonePayload) !== JSON.stringify(bridgePayload));
+      JSON.stringify(standalonePayload) !== JSON.stringify(bridgePayload));
   if (!shouldRepairBridge) {
     return {
-      payload: bridgeHasCodexTokens ? bridgePayload : freshestStandalonePayload,
+      payload: bridgeHasTokens ? bridgePayload : standalonePayload,
       repairedBridgeCredential: false,
     };
   }
@@ -11346,15 +11363,36 @@ function readFreshestStoredCodexOauthTokenFileSync(input: {
       input.runtimeStateRoot,
       input.scopeId,
       input.credentialRef,
-      freshestStandalonePayload,
+      standalonePayload,
     );
   } catch {
     // Best effort: still use the fresher standalone payload for the current request.
   }
   return {
-    payload: freshestStandalonePayload,
+    payload: standalonePayload,
     repairedBridgeCredential: true,
   };
+}
+
+function readFreshestStoredCodexOauthTokenFileSync(input: {
+  readonly runtimeStateRoot: string;
+  readonly scopeId: string;
+  readonly credentialRef: string;
+}): {
+  readonly payload: StoredOauthTokenPayload | null;
+  readonly repairedBridgeCredential: boolean;
+} {
+  const repairedAuth = readFreshestStoredOauthTokenFileSync(input);
+  return hasStoredCodexAuthTokens(repairedAuth.payload)
+    ? repairedAuth
+    : {
+        payload: readStoredOauthTokenFileSync(
+          input.runtimeStateRoot,
+          input.scopeId,
+          input.credentialRef,
+        ),
+        repairedBridgeCredential: false,
+      };
 }
 
 function filterRecoveredCodexCooldownDeniedEndpoints(input: {
@@ -11461,7 +11499,11 @@ function hydrateOauthProviderAccounts(
         account.providerAccountId,
         account.credentialRef,
       ) ?? account.credentialRef;
-    const payload = readStoredOauthTokenFileSync(runtimeStateRoot, scopeId, resolvedCredential.ref);
+    const payload = readFreshestStoredOauthTokenFileSync({
+      runtimeStateRoot,
+      scopeId,
+      credentialRef: resolvedCredential.ref,
+    }).payload;
     const preserveRefreshFailure =
       tokenNeedsRefresh(payload) &&
       account.rotationState === "failed" &&
@@ -11699,11 +11741,11 @@ async function refreshOauthAccessToken(
     throw new Error(`Endpoint ${target.endpointId} does not support OAuth token refresh.`);
   }
 
-  const existingPayload = (await readOauthTokenFile(
+  const existingPayload = readFreshestStoredOauthTokenFileSync({
     runtimeStateRoot,
     scopeId,
-    credentialRef.ref,
-  )) as StoredOauthTokenPayload | null;
+    credentialRef: credentialRef.ref,
+  }).payload;
   const refreshToken = readStoredRefreshToken(existingPayload);
   if (refreshToken.length === 0) {
     throw new Error(
@@ -11790,11 +11832,11 @@ async function resolveCredentialValue(
   }
 
   if (credentialRef.backend === "local-file" || credentialRef.backend === "local-encrypted-file") {
-    const tokenPayload = (await readOauthTokenFile(
+    const tokenPayload = readFreshestStoredOauthTokenFileSync({
       runtimeStateRoot,
       scopeId,
-      credentialRef.ref,
-    )) as StoredOauthTokenPayload | null;
+      credentialRef: credentialRef.ref,
+    }).payload;
     if (
       tokenNeedsRefresh(tokenPayload) &&
       providerPresets &&
@@ -18787,6 +18829,9 @@ export async function createRuntimeBridgeBackend(
     const readMergedDeniedExecutionEndpoints = (
       denyEndpoints: readonly string[],
     ): readonly string[] => {
+      if (shouldIgnoreExecutionFailureCooldowns(executionOptions?.requestOptions)) {
+        return [...new Set(denyEndpoints)];
+      }
       const cooldownDeniedEndpoints = filterRecoveredCodexCooldownDeniedEndpoints({
         databasePath: initialization.databasePath,
         runtimeStateRoot: options.runtimeStateRoot,
@@ -23470,11 +23515,11 @@ export async function createRuntimeBridgeBackend(
           if (isCodexSubscriptionAccount(account)) {
             continue;
           }
-          const tokenPayload = readStoredOauthTokenFileSync(
-            options.runtimeStateRoot,
-            options.scopeId,
-            account.credentialRef.ref,
-          );
+          const tokenPayload = readFreshestStoredOauthTokenFileSync({
+            runtimeStateRoot: options.runtimeStateRoot,
+            scopeId: options.scopeId,
+            credentialRef: account.credentialRef.ref,
+          }).payload;
           if (!tokenNeedsRefresh(tokenPayload)) {
             continue;
           }

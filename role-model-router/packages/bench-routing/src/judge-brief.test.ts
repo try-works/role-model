@@ -55,7 +55,35 @@ describe("judge-brief", () => {
     }
     const brief = buildJudgeGradingBrief(caseItem);
     expect(brief.exemplarQuality).toBe("authored");
+    expect(brief.exemplarAnswer).toContain("```typescript");
     expect(brief.exemplarAnswer).toContain("withLock");
+  });
+
+  test("rejects contradictory authored exemplars for code-fence benchmark cases", () => {
+    expect(() =>
+      buildJudgeGradingBrief({
+        case_id: "h01-implement-two-sum",
+        category: "code-implementation",
+        messages: [{ role: "user", content: "return one fenced code block" }],
+        expected_response: "function twoSum",
+        grading_criteria: "Must define twoSum",
+        example_deliverable: '{\n  "code": "function twoSum() {}"\n}',
+      }),
+    ).toThrow(/code_fence|example_deliverable|contradict/i);
+  });
+
+  test("h15 uses one coherent structured-json deliverable contract", () => {
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "h15-max-signal-v3",
+    );
+    expect(caseItem).toBeTruthy();
+    if (!caseItem) {
+      throw new Error("Expected benchmark case h15-max-signal-v3.");
+    }
+    const brief = buildJudgeGradingBrief(caseItem);
+    expect(brief.deliverablesChecklist.some((line) => line.includes("A/B/C/D"))).toBe(false);
+    expect(brief.exemplarAnswer).toContain('"patch_summary"');
+    expect(brief.exemplarAnswer).toContain('"test_snippet"');
   });
 
   test("omits trivial regex accept patterns from judge checklist prose", () => {

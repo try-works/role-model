@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "p03-easy-define",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p03-easy-define-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"answer\": \"An API (Application Programming Interface) is a set of rules, protocols, and tools that enables different software applications to communicate and exchange data with each other.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"An API (Application Programming Interface) is a set of rules, protocols, and tools that enables different software applications to communicate and exchange data with each other.\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"An API (Application Programming Interface) is a set of rules, protocols, and tools that enables different software applications to communicate and exchange data with each other.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 4826,
+  "failure": false,
+  "recordedAtMs": 1783932763273
+}
