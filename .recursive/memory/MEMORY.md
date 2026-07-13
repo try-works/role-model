@@ -25,6 +25,7 @@ Control-plane docs are not memory docs:
 - Recursive-mode skill package usage, subskill triggers, and file locations for this repo: `/.recursive/memory/skills/usage/recursive-mode-skill-and-subskills.md`
 - If Phase 8 will need to promote durable lessons, first capture run-local skill usage in the run artifact and only then promote generalized conclusions into skill-memory shards.
 - Runtime routing, provider capability metadata, alias-matrix behavior, Codex Subscription lifecycle semantics, cross-provider continuation matrices, and benchmark quality routing: `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`. When route-switch rendering or tool-loop parity is in scope, load that shard together with `/docs/architecture/09-runtime-routing-strategy-interactions.md` and `/docs/architecture/14-routed-execution-semantics-and-receipts.md`.
+- Benchmark scoring, suite-contract coherence, deliverable extraction rules, judge tool-call authority, and runtime benchmark closeout expectations: `/.recursive/memory/domains/benchmark-scoring-and-grading-contracts.md`
 - Taxonomy V1 catalog, groups, roles, classification fields, versioning, deprecation, docs generation: `/.recursive/memory/domains/taxonomy-v1.md`
 - Pi package classifier, metadata injection flow, context signals, runtime override, safety boundaries: `/.recursive/memory/domains/pi-role-model-package.md`
 - Benchmark routing display and env credential lessons: `/.recursive/memory/episodes/run-43-benchmark-routing-display.md`

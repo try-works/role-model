@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h06-tool-apply-patch",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h06-tool-apply-patch-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- src/config.ts\\n+++ src/config.ts\\n@@ -1 +1 @@\\n-const MODE = 'baseline'\\n+const MODE = 'difficulty'\"\n      }\n    }\n  ]\n}",
+  "rawResponse": "Patch applied successfully. 1 file changed, 2 insertions(+), 1 deletion(-).",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- src/config.ts\\n+++ src/config.ts\\n@@ -1 +1 @@\\n-const MODE = 'baseline'\\n+const MODE = 'difficulty'\"\n      }\n    }\n  ]\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 7067,
+  "failure": false,
+  "recordedAtMs": 1783931602368
+}

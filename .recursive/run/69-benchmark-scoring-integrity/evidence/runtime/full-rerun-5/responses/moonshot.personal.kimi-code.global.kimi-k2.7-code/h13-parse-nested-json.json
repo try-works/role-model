@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h13-parse-nested-json",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-h13-parse-nested-json-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "```typescript\nexport function parseRoutingDiagnostics(\n  raw: string\n): { difficulty: string; chosenEndpointId: string | null } {\n  const defaultResult = {\n    difficulty: 'unknown',\n    chosenEndpointId: null as string | null,\n  };\n\n  try {\n    const parsed = JSON.parse(raw);\n\n    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {\n      return defaultResult;\n    }\n\n    const result = { ...defaultResult };\n\n    if (typeof parsed.difficulty === 'string') {\n      result.difficulty = parsed.difficulty;\n    }\n\n    if (parsed.chosenEndpointId === null) {\n      result.chosenEndpointId = null;\n    } else if (typeof parsed.chosenEndpointId === 'string') {\n      result.chosenEndpointId = parsed.chosenEndpointId;\n    }\n\n    return result;\n  } catch {\n    return defaultResult;\n  }\n}\n```",
+  "rawResponse": "```typescript\nexport function parseRoutingDiagnostics(\n  raw: string\n): { difficulty: string; chosenEndpointId: string | null } {\n  const defaultResult = {\n    difficulty: 'unknown',\n    chosenEndpointId: null as string | null,\n  };\n\n  try {\n    const parsed = JSON.parse(raw);\n\n    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {\n      return defaultResult;\n    }\n\n    const result = { ...defaultResult };\n\n    if (typeof parsed.difficulty === 'string') {\n      result.difficulty = parsed.difficulty;\n    }\n\n    if (parsed.chosenEndpointId === null) {\n      result.chosenEndpointId = null;\n    } else if (typeof parsed.chosenEndpointId === 'string') {\n      result.chosenEndpointId = parsed.chosenEndpointId;\n    }\n\n    return result;\n  } catch {\n    return defaultResult;\n  }\n}\n```",
+  "formattedDeliverable": "```typescript\nexport function parseRoutingDiagnostics(\n  raw: string\n): { difficulty: string; chosenEndpointId: string | null } {\n  const defaultResult = {\n    difficulty: 'unknown',\n    chosenEndpointId: null as string | null,\n  };\n\n  try {\n    const parsed = JSON.parse(raw);\n\n    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {\n      return defaultResult;\n    }\n\n    const result = { ...defaultResult };\n\n    if (typeof parsed.difficulty === 'string') {\n      result.difficulty = parsed.difficulty;\n    }\n\n    if (parsed.chosenEndpointId === null) {\n      result.chosenEndpointId = null;\n    } else if (typeof parsed.chosenEndpointId === 'string') {\n      result.chosenEndpointId = parsed.chosenEndpointId;\n    }\n\n    return result;\n  } catch {\n    return defaultResult;\n  }\n}\n```",
+  "extractionMethod": "code_fence",
+  "latencyMs": 6647,
+  "failure": false,
+  "recordedAtMs": 1783934063389
+}

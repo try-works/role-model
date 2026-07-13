@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity/role-model-router/apps/runtime-host-bridge
+
+(node:35772) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/benchmark-runner-judge.test.ts (15 tests) 1002ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  10:10:44
+   Duration  4.26s (transform 1.07s, setup 0ms, collect 1.34s, tests 1.00s, environment 0ms, prepare 756ms)
+

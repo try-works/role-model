@@ -856,6 +856,195 @@ describe("restart rehydration", () => {
     }
   });
 
+  test("repairs stale bridge Kimi OAuth credentials from fresher standalone runtime tokens on restart", async () => {
+    const runtimeContainerRoot = path.join(
+      os.tmpdir(),
+      `restart-standalone-oauth-repair-${Date.now()}`,
+    );
+    const runtimeStateRoot = path.join(runtimeContainerRoot, "state");
+    const scopeId = "restart-standalone-oauth-repair-tests";
+    const bridgeCredentialPath = path.join(
+      runtimeStateRoot,
+      scopeId,
+      "credentials",
+      "oauth",
+      "moonshot",
+      "moonshot.personal.kimi-code.json",
+    );
+    const standaloneCredentialPath = path.join(
+      runtimeContainerRoot,
+      "standalone-runtime",
+      "credentials",
+      "oauth",
+      "moonshot",
+      "moonshot.personal.kimi-code.json",
+    );
+
+    const firstBackend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      networkFetcher: async (input, init) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
+          expect(init?.method ?? "POST").toBe("POST");
+          return new Response(
+            JSON.stringify({
+              user_code: "ABCD-EFGH",
+              device_code: "device-001",
+              verification_uri: "https://auth.kimi.com/device",
+              verification_uri_complete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+              expires_in: 900,
+              interval: 5,
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        if (url === "https://auth.kimi.com/api/oauth/token") {
+          expect(init?.method ?? "POST").toBe("POST");
+          return new Response(
+            JSON.stringify({
+              access_token: "access-001",
+              refresh_token: "refresh-001",
+              expires_in: 3600,
+              scope: "openid profile",
+              token_type: "Bearer",
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    try {
+      const pending = await firstBackend.startProviderDeviceAuthorization({
+        providerAccountId: "moonshot.personal.kimi-code",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        variantId: "kimi-code",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+      await firstBackend.pollProviderDeviceAuthorization({
+        authRequestId: pending.authRequestId,
+      });
+      await firstBackend.activateEndpoint({
+        providerAccountId: "moonshot.personal.kimi-code",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      });
+      await firstBackend.shutdown();
+
+      const bridgePayload = JSON.parse(await readFile(bridgeCredentialPath, "utf8")) as {
+        access_token?: string;
+        refresh_token?: string;
+        expires_in?: number;
+        saved_at_ms?: number;
+      };
+      await mkdir(path.dirname(standaloneCredentialPath), { recursive: true });
+      await writeFile(
+        standaloneCredentialPath,
+        JSON.stringify(
+          {
+            ...bridgePayload,
+            access_token: "access-standalone-fresh",
+            refresh_token: "refresh-standalone-fresh",
+            expires_in: 3600,
+            saved_at_ms: Date.now(),
+          },
+          null,
+          2,
+        ),
+        "utf8",
+      );
+      await writeFile(
+        bridgeCredentialPath,
+        JSON.stringify(
+          {
+            ...bridgePayload,
+            access_token: "access-bridge-stale",
+            refresh_token: "refresh-bridge-stale",
+            expires_in: 3600,
+            saved_at_ms: Date.now() - 7_200_000,
+          },
+          null,
+          2,
+        ),
+        "utf8",
+      );
+
+      const secondBackend = await createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          throw new Error(`Unexpected network request after restart: ${url}`);
+        },
+      });
+
+      try {
+        let health = await secondBackend.readHealthStatus();
+        for (
+          let attempt = 0;
+          attempt < 20 && health.sessionBootstrap.status === "running";
+          attempt += 1
+        ) {
+          await delay(50);
+          health = await secondBackend.readHealthStatus();
+        }
+
+        const summary = await secondBackend.readRuntimeSummary();
+        const credentialsStage = summary.sessionBootstrap.stages.find(
+          (stage) => stage.stageId === "credentials",
+        );
+        expect(credentialsStage).toEqual(
+          expect.objectContaining({
+            status: "ready",
+            details: expect.objectContaining({
+              refreshAttempted: 0,
+              refreshSucceeded: 0,
+              refreshFailed: 0,
+            }),
+          }),
+        );
+        expect(summary.readinessSummary.readyAccountCount).toBe(1);
+        expect(summary.credentialLifecycle.counts.executionReady).toBe(1);
+        expect(summary.credentialLifecycle.counts.expiredAuth).toBe(0);
+        expect(summary.credentialLifecycle.accounts).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              providerAccountId: "moonshot.personal.kimi-code",
+              lifecycleState: "execution-ready",
+            }),
+          ]),
+        );
+
+        const repairedBridgePayload = JSON.parse(await readFile(bridgeCredentialPath, "utf8")) as {
+          access_token?: string;
+          refresh_token?: string;
+        };
+        expect(repairedBridgePayload.access_token).toBe("access-standalone-fresh");
+        expect(repairedBridgePayload.refresh_token).toBe("refresh-standalone-fresh");
+      } finally {
+        await secondBackend.shutdown();
+      }
+    } finally {
+      await rm(runtimeContainerRoot, { recursive: true, force: true });
+    }
+  });
+
   test("polls the earliest-expiring pending authorizations first and surfaces deferred count", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `restart-pending-priority-${Date.now()}`);
     const scopeId = "restart-pending-priority-tests";

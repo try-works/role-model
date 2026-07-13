@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "e08-format-json",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-e08-format-json-a1-38d812ff-0fd5-49e6-b8ec-fb8c8e375a35",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: e08-format-json\n\n## Original question\n[user]\nReturn valid JSON with keys name and value only.\n\n## Example expected answer\n{\"name\":\"\",\"value\":\"\"}\nRequired fields: name, value\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Valid JSON with name and value keys only.\n[MUST] Include JSON keys: name, value\n[SHOULD] Match clues: \"name\", \"value\"\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nReturn ONLY a ```json fence: {\"name\":\"...\",\"value\":\"...\"}. Do not wrap it in an `answer` field.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"name\",\n    \"value\"\n  ],\n  \"properties\": {\n    \"name\": {\n      \"type\": \"string\"\n    },\n    \"value\": {\n      \"type\": \"string\"\n    }\n  },\n  \"additionalProperties\": false\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nValid JSON with name and value keys only.\n\n## Subject deliverable to grade\n{\n  \"name\": \"name\",\n  \"value\": \"value\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"Deliverable is valid JSON containing exactly the required keys 'name' and 'value' with no additional properties, satisfying all MUST criteria.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Deliverable is valid JSON containing exactly the required keys 'name' and 'value' with no additional properties, satisfying all MUST criteria.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/e08-format-json.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nReturn valid JSON with keys name and value only.",
+    "exemplarAnswer": "{\"name\":\"\",\"value\":\"\"}\nRequired fields: name, value",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Valid JSON with name and value keys only.",
+      "[MUST] Include JSON keys: name, value",
+      "[SHOULD] Match clues: \"name\", \"value\""
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 170,
+    "reasoningLength": 696
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935383072
+}

@@ -1,0 +1,43 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "mode": "full",
+  "workflowVerdict": "VALID",
+  "controlCheck": "UNKNOWN",
+  "scores": {
+    "moonshot/kimi-k2.7-code": 0.9818181818181818,
+    "chatgpt/gpt-5.4": 0.9454545454545454
+  },
+  "metrics": {
+    "case_grades": 110,
+    "judge_parse_success": "110/110",
+    "judge_parse_rate": 1.0,
+    "heuristic_fallback": "0/110",
+    "heuristic_fallback_rate": 0.0,
+    "non_trivial_rationale": "110/110",
+    "non_trivial_rationale_rate": 1.0,
+    "artifact_stats": {
+      "attempts": 110,
+      "empty_raw": 0,
+      "grading_brief": 110,
+      "compare": 55
+    },
+    "scores_by_model": {
+      "moonshot/kimi-k2.7-code": 0.9818181818181818,
+      "chatgpt/gpt-5.4": 0.9454545454545454
+    },
+    "progress": {
+      "completedSteps": 275,
+      "totalSteps": 275,
+      "runPhase": "complete"
+    },
+    "compareArtifactCount": 55
+  },
+  "accuracyGates": {
+    "judge_parse_gte75_pct": "PASS",
+    "empty_raw_lt20_pct": "PASS",
+    "grading_brief_100_pct": "PASS",
+    "heuristic_fallback_lte25_pct": "PASS",
+    "non_trivial_rationale_gte80_pct": "PASS"
+  },
+  "failedGates": []
+}

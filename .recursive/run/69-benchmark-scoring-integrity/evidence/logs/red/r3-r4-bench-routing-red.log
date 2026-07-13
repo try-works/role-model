@@ -1,0 +1,134 @@
+
+> @role-model-router/bench-routing@0.0.0 test D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity\role-model-router\packages\bench-routing
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity/role-model-router/packages/bench-routing
+
+ ✓ src/reasoning-extraction.test.ts (2 tests) 19ms
+ ✓ test/answer-format.test.ts (4 tests) 15ms
+ ❯ src/answer-format.test.ts (6 tests | 1 failed) 51ms
+   ✓ answer-format > uses system message and code fence format for implementation cases 5ms
+   × answer-format > extracts typescript fence deliverable and rejects placeholders 30ms
+     → expected '{\n  "code": "function twoSum(nums: n…' to be '```typescript\nfunction twoSum(nums: …' // Object.is equality
+   ✓ answer-format > finds answer json from earlier turn when later turn is empty 2ms
+   ✓ answer-format > merges api tools with answer json for tool+text cases 1ms
+   ✓ answer-format > extracts json fences even when a json string contains nested markdown fences 1ms
+   ✓ answer-format > continues requesting repeated same-name tools until duplicate expectations are satisfied 8ms
+ ✓ src/diff-validator.test.ts (4 tests) 11ms
+ ❯ src/judge-brief.test.ts (7 tests | 3 failed) 77ms
+   ✓ judge-brief > formatQuestionTranscript includes full messages without truncation 4ms
+   ✓ judge-brief > p17 checklist includes unified diff or Codex patch requirement for apply_patch 3ms
+   ✓ judge-brief > quick suite cases expose authored example_deliverable at suite 3.4 1ms
+   × judge-brief > buildJudgeGradingBrief marks exemplar quality authored when suite field present 25ms
+     → expected '{\n  "code": "let count = 0;\nlet cha…' to contain '```typescript'
+   × judge-brief > rejects contradictory authored exemplars for code-fence benchmark cases 35ms
+     → expected [Function] to throw an error
+   × judge-brief > h15 uses one coherent structured-json deliverable contract 5ms
+     → expected true to be false // Object.is equality
+   ✓ judge-brief > omits trivial regex accept patterns from judge checklist prose 1ms
+ ✓ test/subject-prompt.test.ts (1 test) 10ms
+ ✓ test/judge-brief.test.ts (5 tests) 24ms
+ ✓ src/index.test.ts (27 tests) 35ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/answer-format.test.ts > answer-format > extracts typescript fence deliverable and rejects placeholders
+AssertionError: expected '{\n  "code": "function twoSum(nums: n…' to be '```typescript\nfunction twoSum(nums: …' // Object.is equality
+
+- Expected
++ Received
+
+- ```typescript
+- function twoSum(nums: number[], target: number): [number, number] {
+-   const map = new Map<number, number>();
+-   for (let i = 0; i < nums.length; i++) {
+-     const c = target - nums[i];
+-     if (map.has(c)) return [map.get(c)!, i];
+-     map.set(nums[i], i);
+-   }
+-   throw new Error('none');
+- }
+- ```
++ {
++   "code": "function twoSum(nums: number[], target: number): [number, number] {\n  const map = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const c = target - nums[i];\n    if (map.has(c)) return [map.get(c)!, i];\n    map.set(nums[i], i);\n  }\n  throw new Error('none');\n}"
++ }
+
+ ❯ src/answer-format.test.ts:58:34
+     56|     });
+     57|     expect(extracted.extractionMethod).toBe("code_fence");
+     58|     expect(extracted.serialized).toBe(
+       |                                  ^
+     59|       [
+     60|         "```typescript",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/judge-brief.test.ts > judge-brief > buildJudgeGradingBrief marks exemplar quality authored when suite field present
+AssertionError: expected '{\n  "code": "let count = 0;\nlet cha…' to contain '```typescript'
+
+- Expected
++ Received
+
+- ```typescript
++ {
++   "code": "let count = 0;\nlet chain = Promise.resolve();\nfunction withLock<T>(fn: () => Promise<T>): Promise<T> {\n  const run = chain.then(fn);\n  chain = run.catch(() => undefined);\n  return run;\n}\nasync function increment() {\n  await withLock(async () => {\n    const current = count;\n    await Promise.resolve();\n    count = current + 1;\n  });\n}\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count);"
++ }
+
+ ❯ src/judge-brief.test.ts:58:34
+     56|     const brief = buildJudgeGradingBrief(caseItem);
+     57|     expect(brief.exemplarQuality).toBe("authored");
+     58|     expect(brief.exemplarAnswer).toContain("```typescript");
+       |                                  ^
+     59|     expect(brief.exemplarAnswer).toContain("withLock");
+     60|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/judge-brief.test.ts > judge-brief > rejects contradictory authored exemplars for code-fence benchmark cases
+AssertionError: expected [Function] to throw an error
+
+- Expected: 
+null
+
++ Received: 
+undefined
+
+ ❯ src/judge-brief.test.ts:72:7
+     70|         example_deliverable: '{\n  "code": "function twoSum() {}"\n}',
+     71|       }),
+     72|     ).toThrow(/code_fence|example_deliverable|contradict/i);
+       |       ^
+     73|   });
+     74| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/judge-brief.test.ts > judge-brief > h15 uses one coherent structured-json deliverable contract
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/judge-brief.test.ts:82:82
+     80|     }
+     81|     const brief = buildJudgeGradingBrief(caseItem);
+     82|     expect(brief.deliverablesChecklist.some((line) => line.includes("A…
+       |                                                                                  ^
+     83|     expect(brief.exemplarAnswer).toContain('"patch_summary"');
+     84|     expect(brief.exemplarAnswer).toContain('"test_snippet"');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed | 6 passed (8)
+      Tests  4 failed | 52 passed (56)
+   Start at  10:00:35
+   Duration  2.62s (transform 1.22s, setup 0ms, collect 2.57s, tests 242ms, environment 4ms, prepare 5.36s)
+
+D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity\role-model-router\packages\bench-routing:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/bench-routing@0.0.0 test: `vitest run`
+Exit status 1

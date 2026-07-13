@@ -1,0 +1,16 @@
+{
+  "artifact": "04-test-summary.md",
+  "artifact_hash": "b0fc77d39127ba780b606d5f53f5f9297e05d5f06409a6399d2326310a452424",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\69-benchmark-scoring-integrity\\.recursive\\run\\69-benchmark-scoring-integrity\\04-test-summary.md",
+  "locked_at": "2026-07-13T11:37:20Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "43ac366614d768d291a15325a1091d210bfbdd413cbfb37a1c4040b418dd2785",
+    "00-worktree.md": "ba8934f8aa07fbfdb315ac2046e8b03c1a775bee73e421f7df1d2c1bd10e62db",
+    "01-as-is.md": "db41d71a61c4858d7b07c4971944b775656819f524897f02c24d65200f49cfef",
+    "01.5-root-cause.md": "5b223359d687bf0b3104891c06a0e8f2fcd9c81db45a8f5ec8e84f0f1cc68f7d",
+    "02-to-be-plan.md": "175c4d665e582ab983103efde5ea0dd7c1c9a8bab0d44e71b4a17e74e772f448",
+    "03-implementation-summary.md": "902bcda6bf228fb82552f42b84191bea8fbe41b8c10ce0d879d5ab062536eeff"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "3abfa375732278be879fe1a77e5547f0cd4afa0dbf42cef89ae6def390a2ce2a"
+}

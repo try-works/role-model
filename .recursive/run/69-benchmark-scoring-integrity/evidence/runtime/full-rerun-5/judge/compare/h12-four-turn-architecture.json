@@ -1,0 +1,54 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h12-four-turn-architecture",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"1. Define alias pool registry and classifier buckets — map local/remote pools to difficulty tiers using latency/capacity profiles. Verification: all pools registered and tier mappings pass unit tests.\\n\\n2. Implement classifi",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"1. Define routing schema: request features, difficulty score, local/remote pool descriptors, rubric API. Verification: schema validates sample requests and supports custom rubric registration.\\n2. Build classifier pipeline: b",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both plans meet the core requirements: numbered five steps, verification per step, under 180 words, and use prior turns. Moonshot's plan directly incorporates all specified elements from the assistant's earlier responses—explicitly defining an alias pool registry and classifier buckets, mirroring the given cache invalidation triggers (tool-count delta, model change, strategy change), and placing…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both plans meet the core requirements: numbered five steps, verification per step, under 180 words, and use prior turns. Moonshot's plan directly incorporates all specified elements from the assistant's earlier responses—explicitly defining an alias pool registry and classifier buckets, mirroring the given cache invalidation triggers (tool-count delta, model change, strategy change), and placing rubric hooks post-classifier. Openai's plan is well-structured but does not mention alias pool, opting for a more generic routing schema; while still functionally correct, it ties less tightly to the prior conversation. This slight advantage in substantive alignment gives moonshot the top rank.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nDesign difficulty routing for mixed local-remote pools.\n\n[assistant]\nUse alias pool, classifier buckets, observed profiles, and controller arbitration.\n\n[user]\nAdd cache invalidation triggers and extension points for custom rubrics.\n\n[assistant]\nInvalidate on tool-count delta, model change, strategy change; rubric hooks after classifier.\n\n[user]\nNow produce a numbered 5-step implementation plan with verification criteria per step. Max 180 words.",
+    "exemplarAnswer": "5-step numbered plan with verification per step under 180 words\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Uses prior turns",
+      "[MUST] numbered plan with 5 steps",
+      "[MUST] each step has verification",
+      "[MUST] <=180 words.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: 1[.)\\s], verif|verify|criteria, cache|rubric|classifier"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 863,
+    "reasoningLength": 16307
+  },
+  "recordedAtMs": 1783936982011
+}

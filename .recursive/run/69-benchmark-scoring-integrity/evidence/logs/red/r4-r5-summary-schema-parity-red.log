@@ -1,0 +1,112 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity/role-model-router/packages/bench-routing[39m
+
+ [31m❯[39m src/answer-format.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 61[2mms[22m[39m
+   [32m✓[39m answer-format[2m > [22muses system message and code fence format for implementation cases[32m 5[2mms[22m[39m
+   [32m✓[39m answer-format[2m > [22mextracts typescript fence deliverable and rejects placeholders[32m 8[2mms[22m[39m
+   [32m✓[39m answer-format[2m > [22mfinds answer json from earlier turn when later turn is empty[32m 1[2mms[22m[39m
+   [32m✓[39m answer-format[2m > [22mmerges api tools with answer json for tool+text cases[32m 1[2mms[22m[39m
+   [32m✓[39m answer-format[2m > [22mextracts json fences even when a json string contains nested markdown fences[32m 1[2mms[22m[39m
+[31m   [31m×[31m answer-format[2m > [22muses schema-derived follow-up keys for structured tool summaries[39m[32m 26[2mms[22m[39m
+[31m     → expected 'Tools received. Reply with ONLY ```js…' to contain '"strategy_improvements"'[39m
+[31m   [31m×[31m answer-format[2m > [22mrejects structured tool summaries that miss schema minItems and minLength constraints[39m[32m 11[2mms[22m[39m
+[31m     → expected true to be false // Object.is equality[39m
+   [32m✓[39m answer-format[2m > [22mcontinues requesting repeated same-name tools until duplicate expectations are satisfied[32m 3[2mms[22m[39m
+   [32m✓[39m answer-format[2m > [22mpreserves original tool call ids in scaffold follow-up history[32m 1[2mms[22m[39m
+ [31m❯[39m src/index.test.ts [2m([22m[2m28 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 74[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mselects quick benchmark cases only in quick mode[32m 6[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mrequires judge grade when requireJudge is enabled[32m 2[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mcaps partial heuristic credit when judge is unavailable[32m 2[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mfalls back to heuristic when judge is unavailable[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mnormalizes binary exact answers when judge rejects casing only[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mallows judge endpoint to overlap benchmark subjects without guard errors[32m 5[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mbuildHeuristicCompareRanking orders endpoints by per-case score[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mgrades exact expected responses with heuristic score 1[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mtool workflow benchmark cases declare explicit tool requirements and answer formats[32m 2[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mp15 names the grounded runtime config path directly in the prompt[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mp18 encodes repeated get_metrics calls in its expected tool contract[32m 0[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22me08 declares the top-level json schema it already grades against[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mt03 declares explicit tool and structured summary requirements[32m 1[2mms[22m[39m
+[31m   [31m×[31m bench-routing[2m > [22mp17 explicitly asks the final validation note to mention MODE and throughput SLA clues[39m[32m 33[2mms[22m[39m
+[31m     → expected 'API workflow: read_file src/router.ts…' to contain 'MODE'[39m
+   [32m✓[39m bench-routing[2m > [22munder-specified code-edit benchmark prompts include inline source context[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mh08 scaffold follow-up returns runtime-config content aligned to routing.strategy prompt[32m 5[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mcaps grounded tool-case score when p15 uses the wrong path and answer[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mdoes not cap p15 when any repeated read_file call hits the grounded path[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mdoes not cap p15 when the grounded runtime config path is absolute[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mcaps grounded tool-case score when t01 invents filenames not present in the scaffold listing[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mdoes not cap t01 when any repeated list_dir call inspects config[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mdoes not cap t01 when list_dir inspects an absolute config path[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mcaps p18 when routing advice cites comparison data without fetching both metric sets[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mdoes not cap p18 when both metric calls are present[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mcaps h09 when the answer does not compare local and remote latency[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mcaps h09 when one side of the latency comparison was never fetched[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mdoes not cap h09 when both endpoint metrics support the grounded comparison[32m 1[2mms[22m[39m
+   [32m✓[39m bench-routing[2m > [22mh09 encodes both compared get_metrics calls in its contract[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/answer-format.test.ts > answer-format > uses schema-derived follow-up keys for structured tool summaries
+AssertionError: expected 'Tools received. Reply with ONLY ```js…' to contain '"strategy_improvements"'
+
+Expected: ""strategy_improvements""
+Received: "Tools received. Reply with ONLY ```json {"plan":["<step>"],"patch_summary":"<what changed>","test_snippet":"<test idea>"} using real content."
+
+ ❯ src/answer-format.test.ts:249:25
+    247| 
+    248|     const finalPrompt = String(followUp.at(-1)?.content ?? "");
+    249|     expect(finalPrompt).toContain('"strategy_improvements"');
+       |                         ^
+    250|     expect(finalPrompt).not.toContain("test_snippet");
+    251|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/answer-format.test.ts > answer-format > rejects structured tool summaries that miss schema minItems and minLength constraints
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/answer-format.test.ts:315:7
+    313|         structuredToolNames: ["read_file", "validate_schema", "apply_p…
+    314|       }),
+    315|     ).toBe(false);
+       |       ^
+    316|   });
+    317| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/index.test.ts > bench-routing > p17 explicitly asks the final validation note to mention MODE and throughput SLA clues
+AssertionError: expected 'API workflow: read_file src/router.ts…' to contain 'MODE'
+
+- Expected
++ Received
+
+- MODE
++ API workflow: read_file src/router.ts, apply_patch minimal diff (---/+++), then JSON {"answer":"what schema fields and tests you validated"}.
++ Step 1: API read_file src/router.ts and apply_patch with minimal unified diff. Step 2: ```json {"answer":"brief schema/test validation note"}
+
+ ❯ src/index.test.ts:327:33
+    325|     ].join("\n");
+    326| 
+    327|     expect(combinedInstruction).toContain("MODE");
+       |                                 ^
+    328|     expect(combinedInstruction).toContain("throughput SLA");
+    329|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m34 passed[39m[22m[90m (37)[39m
+[2m   Start at [22m 19:08:47
+[2m   Duration [22m 2.51s[2m (transform 480ms, setup 0ms, collect 597ms, tests 135ms, environment 1ms, prepare 1.66s)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity\role-model-router\packages\bench-routing:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/answer-format.test.ts src/index.test.ts

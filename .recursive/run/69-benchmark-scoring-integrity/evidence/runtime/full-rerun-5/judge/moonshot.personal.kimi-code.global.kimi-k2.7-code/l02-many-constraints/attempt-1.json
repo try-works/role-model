@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "l02-many-constraints",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-l02-many-constraints-a1-f93dc6c1-2a07-4534-8f55-b5049ebb92af",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: l02-many-constraints\n\n## Original question\n[user]\nFollow these constraints exactly: (1) use bullet points only, (2) max 6 bullets, (3) mention local and remote endpoints, (4) mention cache invalidation reasons, (5) mention rubric signals, (6) do not use the word 'however', (7) keep under 120 words, (8) end with a one-line recommendation. Task: explain when Strategy C should pick remote over local.\n\n## Example expected answer\nbullet list with recommendation line\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Bullet-only, <=6 bullets, mentions local/remote/cache/rubric, no 'however', recommendation line.\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: local, remote, recommend\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nBullet-only, <=6 bullets, mentions local/remote/cache/rubric, no 'however', recommendation line.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"- Prefer remote when the local cache entry is missing or invalidated (TTL expiry, version mismatch, dependency update).\\n- Choose remote if the rubric signals higher authority, fresher source, or an explicit remote-first flag.\\n- Choose remote when the local endpoint latency or error rate exceeds acceptable thresholds.\\n- Select remote for mutable or rapidly changing data that cache invalidation cannot reliably serve.\\n- Favor remote when the remote endpoint holds authoritative state and the local cache could serve stale results.\\n- Recommendation: Route Strategy C to the remote endpoint whenever freshness, rubric priority, or invalidation status favors live data.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The answer is composed of 6 bullet points only, includes local/remote endpoints, cache invalidation reasons (TTL expiry, version mismatch, dependency update), rubric signals (higher authority, explicit flag), no 'however', under 120 words, and ends with a recommendation bullet. All MUST and SHOULD deliverables satisfied.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer is composed of 6 bullet points only, includes local/remote endpoints, cache invalidation reasons (TTL expiry, version mismatch, dependency update), rubric signals (higher authority, explicit flag), no 'however', under 120 words, and ends with a recommendation bullet. All MUST and SHOULD deliverables satisfied.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/l02-many-constraints.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nFollow these constraints exactly: (1) use bullet points only, (2) max 6 bullets, (3) mention local and remote endpoints, (4) mention cache invalidation reasons, (5) mention rubric signals, (6) do not use the word 'however', (7) keep under 120 words, (8) end with a one-line recommendation. Task: explain when Strategy C should pick remote over local.",
+    "exemplarAnswer": "bullet list with recommendation line\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Bullet-only, <=6 bullets, mentions local/remote/cache/rubric, no 'however', recommendation line.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: local, remote, recommend"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 350,
+    "reasoningLength": 10380
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783934946757
+}

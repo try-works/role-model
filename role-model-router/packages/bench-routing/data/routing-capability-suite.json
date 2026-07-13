@@ -953,13 +953,13 @@
       "messages": [
         {
           "role": "user",
-          "content": "API workflow: read_file src/router.ts, apply_patch minimal diff (---/+++), then JSON {\"answer\":\"what schema fields and tests you validated\"}."
+          "content": "API workflow: read_file src/router.ts, apply_patch minimal diff (---/+++), then JSON {\"answer\":\"what MODE and throughput SLA schema fields and tests you validated\"}."
         }
       ],
       "max_tokens": 1024,
-      "expected_response": "read_file and apply_patch tool calls plus validation plan",
-      "grading_criteria": "Must call read_file and apply_patch; acknowledges schema/test validation steps.",
-      "accept_patterns": ["read", "patch", "schema|test"],
+      "expected_response": "read_file and apply_patch tool calls plus a MODE and throughput SLA validation note",
+      "grading_criteria": "Must call read_file and apply_patch; acknowledges MODE and throughput SLA schema/test validation steps.",
+      "accept_patterns": ["MODE.*throughput SLA|throughput SLA.*MODE"],
       "quick_benchmark": true,
       "tools": [
         {
@@ -999,7 +999,7 @@
       "expected_tool_names": ["read_file", "apply_patch"],
       "answer_format": {
         "kind": "tool_calls_with_answer",
-        "instruction": "Step 1: API read_file src/router.ts and apply_patch with minimal unified diff. Step 2: ```json {\"answer\":\"brief schema/test validation note\"}",
+        "instruction": "Step 1: API read_file src/router.ts and apply_patch with minimal unified diff. Step 2: ```json {\"answer\":\"brief note naming the MODE and throughput SLA schema/test checks you validated\"}",
         "schema": {
           "type": "object",
           "required": ["answer"],
@@ -1842,7 +1842,7 @@
         "language": "typescript",
         "instruction": "Reasoning allowed. Final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders."
       },
-      "example_deliverable": "{\n  \"code\": \"function twoSum(nums: number[], target: number): [number, number] {\\n  const map = new Map<number, number>();\\n  for (let i = 0; i < nums.length; i++) {\\n    const need = target - nums[i];\\n    if (map.has(need)) return [map.get(need)!, i];\\n    map.set(nums[i], i);\\n  }\\n  throw new Error('no pair');\\n}\"\n}",
+      "example_deliverable": "```typescript\nfunction twoSum(nums: number[], target: number): [number, number] {\n  const map = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const need = target - nums[i];\n    if (map.has(need)) return [map.get(need)!, i];\n    map.set(nums[i], i);\n  }\n  throw new Error('no pair');\n}\n```",
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.edit",
@@ -1874,7 +1874,7 @@
         "language": "typescript",
         "instruction": "Reasoning allowed. Final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders."
       },
-      "example_deliverable": "{\n  \"code\": \"let count = 0;\\nlet chain = Promise.resolve();\\nfunction withLock<T>(fn: () => Promise<T>): Promise<T> {\\n  const run = chain.then(fn);\\n  chain = run.catch(() => undefined);\\n  return run;\\n}\\nasync function increment() {\\n  await withLock(async () => {\\n    const current = count;\\n    await Promise.resolve();\\n    count = current + 1;\\n  });\\n}\\nawait Promise.all([increment(), increment(), increment()]);\\nconsole.log(count);\"\n}",
+      "example_deliverable": "```typescript\nlet count = 0;\nlet chain = Promise.resolve();\nfunction withLock<T>(fn: () => Promise<T>): Promise<T> {\n  const run = chain.then(fn);\n  chain = run.catch(() => undefined);\n  return run;\n}\nasync function increment() {\n  await withLock(async () => {\n    const current = count;\n    await Promise.resolve();\n    count = current + 1;\n  });\n}\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count);\n```",
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.debug.root_cause",
@@ -2131,7 +2131,7 @@
         "language": "typescript",
         "instruction": "Reasoning allowed. Final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders."
       },
-      "example_deliverable": "{\n  \"code\": \"export function guardSoleCandidateThroughputDeny(input: {\\n  readonly candidates: readonly { id: string; hardDeniedBySla: boolean }[];\\n  readonly throughputSlaHardDeny: boolean;\\n}): boolean {\\n  const allowListed = input.candidates.filter((c) => !c.hardDeniedBySla);\\n  if (allowListed.length !== 1) return false;\\n  if (!input.throughputSlaHardDeny) return false;\\n  return true;\\n}\"\n}",
+      "example_deliverable": "```typescript\nexport function guardSoleCandidateThroughputDeny(input: {\n  readonly candidates: readonly { id: string; hardDeniedBySla: boolean }[];\n  readonly throughputSlaHardDeny: boolean;\n}): boolean {\n  const allowListed = input.candidates.filter((c) => !c.hardDeniedBySla);\n  if (allowListed.length !== 1) return false;\n  if (!input.throughputSlaHardDeny) return false;\n  return true;\n}\n```",
       "taxonomy_tags": {
         "roleId": "operator",
         "taskType": "operator.debug.startup",
@@ -2540,10 +2540,10 @@
         }
       ],
       "max_tokens": 1024,
-      "expected_response": "Sections A-D with milestones, tool calls, patch, and test snippet",
-      "grading_criteria": "Has A/B/C/D sections; read_file and grep_search and apply_patch tool calls; includes test snippet.",
+      "expected_response": "Structured JSON plan with milestones, patch_summary, and test_snippet after the required tool calls",
+      "grading_criteria": "Must emit read_file, grep_search, and apply_patch tool calls; final JSON includes plan, patch_summary, and test_snippet.",
       "accept_patterns": [
-        "^A[)|:]|milestone",
+        "milestone|plan",
         "read_file|grep_search|apply_patch",
         "test|expect|assert"
       ],
@@ -2605,7 +2605,7 @@
         "instruction": "Step 1: emit read_file, grep_search, apply_patch via API. Step 2: output ONLY ```json {\"plan\":[\"milestone 1\"],\"patch_summary\":\"what changed\",\"test_snippet\":\"short test idea\"}.",
         "schema": {
           "type": "object",
-          "required": ["plan", "patch_summary"],
+          "required": ["plan", "patch_summary", "test_snippet"],
           "properties": {
             "plan": {
               "type": "array",
@@ -2622,7 +2622,7 @@
           }
         }
       },
-      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"SLA\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"patch\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -20,3 +20,4 @@\\n+// throughput SLA guard\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Inspect router\",\n    \"Patch SLA guard\",\n    \"Validate with test snippet\"\n  ],\n  \"patch_summary\": \"Added throughput SLA guard comment and regression hook.\",\n  \"test_snippet\": \"expect(guardSoleCandidateThroughputDeny(...)).toBe(true);\"\n}",
+      "example_deliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -20,3 +20,4 @@\\n+// throughput SLA guard\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Inspect router\",\n    \"Patch SLA guard\",\n    \"Validate with test snippet\"\n  ],\n  \"patch_summary\": \"Added throughput SLA guard comment and regression hook.\",\n  \"test_snippet\": \"expect(guardSoleCandidateThroughputDeny(...)).toBe(true);\"\n}",
       "taxonomy_tags": {
         "roleId": "coder",
         "taskType": "coder.edit",

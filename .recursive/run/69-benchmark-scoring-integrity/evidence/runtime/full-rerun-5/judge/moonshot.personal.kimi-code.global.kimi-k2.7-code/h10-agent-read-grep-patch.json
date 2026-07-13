@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "h10-agent-read-grep-patch",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The response includes all three required API tool calls: read_file with path 'src/router.ts', grep_search with pattern 'evaluateEligibility', and apply_patch with a valid diff (---/+++ headers, @@ hunk marker, and real change content adding a one-line comment). No placeholders, prose-only calls, or malformed patches are present. Meets all MUST and SHOULD criteria.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h10-agent-read-grep-patch.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/h10-agent-read-grep-patch/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935257216
+}

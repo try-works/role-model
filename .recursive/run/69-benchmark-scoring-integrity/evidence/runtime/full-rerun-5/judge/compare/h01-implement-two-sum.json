@@ -1,0 +1,52 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h01-implement-two-sum",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "```typescript\nfunction twoSum(nums: number[], target: number): [number, number] {\n  const seen = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (seen.has(complement)) {\n ",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "```typescript\nfunction twoSum(nums: number[], target: number): [number, number] {\n  const seen = new Map<number, number>();\n\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (seen.has(complement)) {\n",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both models produce complete, correct TypeScript solutions: they define twoSum, use a single Map pass (O(n) complexity), return the two indices as a tuple, throw on no pair, and contain no nested loops or placeholders. The deliverables are functionally equivalent and meet all MUST and SHOULD criteria.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both models produce complete, correct TypeScript solutions: they define twoSum, use a single Map pass (O(n) complexity), return the two indices as a tuple, throw on no pair, and contain no nested loops or placeholders. The deliverables are functionally equivalent and meet all MUST and SHOULD criteria.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nImplement twoSum(nums: number[], target: number): [number, number] in TypeScript. Use one Map pass, O(n). Return the two indices.",
+    "exemplarAnswer": "```typescript\nfunction twoSum(nums: number[], target: number): [number, number] {\n  const map = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const need = target - nums[i];\n    if (map.has(need)) return [map.get(need)!, i];\n    map.set(nums[i], i);\n  }\n  throw new Error('no pair');\n}\n```",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must define twoSum, use Map or hash map, iterate nums once, return two numeric indices",
+      "[MUST] No nested O(n^2) double loop.",
+      "[SHOULD] Match clues: function\\s+twoSum, Map|new Map, nums, target, return",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 471,
+    "reasoningLength": 1363
+  },
+  "recordedAtMs": 1783936602056
+}

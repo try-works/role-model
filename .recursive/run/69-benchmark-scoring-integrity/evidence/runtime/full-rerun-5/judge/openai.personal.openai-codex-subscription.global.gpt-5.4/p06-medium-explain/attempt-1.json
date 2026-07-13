@@ -1,0 +1,50 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p06-medium-explain",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p06-medium-explain-a1-e987c3e6-47a5-4809-9a9f-99aa00e33cec",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p06-medium-explain\n\n## Original question\n[user]\nExplain what a reverse proxy does and when you would put one in front of an LLM runtime.\n\n## Example expected answer\nAccurate explanatory answer to the user question.\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Answers the question with relevant technical detail.\n[MUST] Include JSON keys: answer\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nAnswers the question with relevant technical detail.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"A reverse proxy is a server that sits in front of one or more backend services, receives client requests, and forwards them to the appropriate backend. To the client, it appears to be the server; to the backend, it appears to be the client.\\n\\nWhat it typically does:\\n- Routes requests to the right upstream service\\n- Terminates TLS/HTTPS\\n- Hides internal network topology and addresses\\n- Load balances across multiple backend instances\\n- Enforces authentication, IP allow/deny rules, and rate limits\\n- Adds logging, metrics, tracing, and request IDs\\n- Buffers/normalizes requests and responses\\n- Caches responses when appropriate\\n- Handles retries, timeouts, and basic failover\\n\\nWhy put one in front of an LLM runtime:\\n- Security: keep the model server off the public internet, centralize auth, API keys, WAF rules, and TLS\\n- Scalability: distribute traffic across multiple model replicas or different model pools\\n- Reliability: enforce timeouts, circuit breaking, health checks, and graceful failover\\n- Multi-tenancy: apply per-user or per-tenant quotas, rate limits, and routing policies\\n- Observability: capture access logs, latency, token usage metadata, and trace IDs in one place\\n- Request shaping: reject oversized prompts, cap upload sizes, normalize headers, and inject context headers\\n- Cost/control: route small requests to cheaper models, large requests to larger ones, or send traffic by policy\\n- Streaming support: manage SSE/WebSocket/gRPC behavior consistently for token streaming\\n- Compliance/networking: expose one stable endpoint while keeping backends on private subnets or inside a cluster\\n\\nCommon situations where it makes sense:\\n- You have multiple LLM instances and need load balancing\\n- You expose an internal inference server to external clients\\n- You need centralized auth, rate limiting, or audit logging\\n- You want blue/green or canary deployments for new model versions\\n- You run Kubernetes and want ingress-style routing to model services\\n- You need one API endpoint that can route to different models/providers\\n\\nWhen it may be unnecessary:\\n- Single-user local development\\n- A small internal tool with one runtime and no public exposure\\n- Cases where the application server already handles all needed auth, routing, and limits\\n\\nIn short: a reverse proxy is the control layer in front of an LLM runtime. You use it when you need secure exposure, traffic management, observability, and operational control beyond what the model server itself provides.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\": 1.0, \"rationale\": \"Provides a thorough and accurate explanation of reverse proxy functions and detailed, technically sound reasons for placing one in front of an LLM runtime, meeting the 'relevant technical detail' criterion perfectly.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Provides a thorough and accurate explanation of reverse proxy functions and detailed, technically sound reasons for placing one in front of an LLM runtime, meeting the 'relevant technical detail' criterion perfectly.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/p06-medium-explain.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nExplain what a reverse proxy does and when you would put one in front of an LLM runtime.",
+    "exemplarAnswer": "Accurate explanatory answer to the user question.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Answers the question with relevant technical detail.",
+      "[MUST] Include JSON keys: answer"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 247,
+    "reasoningLength": 903
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935415840
+}

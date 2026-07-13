@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "e08-format-json",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"name\": \"example\",\n  \"value\": \"example\"\n}",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"name\": \"name\",\n  \"value\": \"value\"\n}",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both responses produce valid JSON with exactly the required keys 'name' and 'value', meeting all MUST criteria. No additional properties or formatting errors. They are substantively equivalent, thus ranked equally with no distinction.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both responses produce valid JSON with exactly the required keys 'name' and 'value', meeting all MUST criteria. No additional properties or formatting errors. They are substantively equivalent, thus ranked equally with no distinction.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nReturn valid JSON with keys name and value only.",
+    "exemplarAnswer": "{\"name\":\"\",\"value\":\"\"}\nRequired fields: name, value",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Valid JSON with name and value keys only.",
+      "[MUST] Include JSON keys: name, value",
+      "[SHOULD] Match clues: \"name\", \"value\""
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 403,
+    "reasoningLength": 2340
+  },
+  "recordedAtMs": 1783935893952
+}

@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "c02-ts-generics",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-c02-ts-generics-a1-da60c883-3742-4bd1-83fa-910d6369dc4c",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: c02-ts-generics\n\n## Original question\n[user]\nFix this TypeScript generic inference bug in evaluateEligibility<T extends EndpointCandidate> and show the patch hunk plus unit test updates.\n\n## Example expected answer\nTechnical analysis referencing code, patch, schema, or tests.\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Engages with code-edit or debugging request substantively.\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: code|patch|schema|test|typescript|router\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nEngages with code-edit or debugging request substantively.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"diff --git a/src/evaluateEligibility.ts b/src/evaluateEligibility.ts\\nindex 2f3a1ab..7c9d4ef 100644\\n--- a/src/evaluateEligibility.ts\\n+++ b/src/evaluateEligibility.ts\\n@@ -1,24 +1,34 @@\\n export interface EndpointCandidate {\\n   id: string;\\n   kind: 'http' | 'grpc';\\n }\\n \\n export interface EligibleResult<T extends EndpointCandidate> {\\n   eligible: true;\\n   candidate: T;\\n }\\n \\n export interface IneligibleResult {\\n   eligible: false;\\n   reason: string;\\n }\\n \\n export type EligibilityResult<T extends EndpointCandidate> =\\n   | EligibleResult<T>\\n   | IneligibleResult;\\n \\n-export function evaluateEligibility<T extends EndpointCandidate>(\\n-  candidate: T,\\n-  enabledKinds: EndpointCandidate['kind'][]\\n-): EligibilityResult<T> {\\n+export function evaluateEligibility<const T extends EndpointCandidate>(\\n+  candidate: T,\\n+  enabledKinds: ReadonlyArray<T['kind']>\\n+): EligibilityResult<T> {\\n   if (!enabledKinds.includes(candidate.kind)) {\\n     return {\\n       eligible: false,\\n       reason: `Kind ${candidate.kind} is not enabled`,\\n     };\\n   }\\n \\n   return {\\n     eligible: true,\\n     candidate,\\n   };\\n }\\ndiff --git a/test/evaluateEligibility.test.ts b/test/evaluateEligibility.test.ts\\nindex 1a2b3c4..5d6e7f8 100644\\n--- a/test/evaluateEligibility.test.ts\\n+++ b/test/evaluateEligibility.test.ts\\n@@ -1,16 +1,44 @@\\n import { evaluateEligibility } from '../src/evaluateEligibility';\\n \\n describe('evaluateEligibility', () => {\\n   it('returns eligible candidate when enabled', () => {\\n-    const candidate = { id: '1', kind: 'http' };\\n+    const candidate = { id: '1', kind: 'http' } as const;\\n     const result = evaluateEligibility(candidate, ['http']);\\n \\n     expect(result.eligible).toBe(true);\\n     if (result.eligible) {\\n       expect(result.candidate).toBe(candidate);\\n     }\\n   });\\n \\n   it('returns ineligible when kind is disabled', () => {\\n-    const candidate = { id: '2', kind: 'grpc' };\\n+    const candidate = { id: '2', kind: 'grpc' } as const;\\n     const result = evaluateEligibility(candidate, ['http']);\\n \\n     expect(result).toEqual({\\n       eligible: false,\\n       reason: 'Kind grpc is not enabled',\\n     });\\n   });\\n+\\n+  it('preserves literal candidate type in the eligible branch', () => {\\n+    const candidate = {\\n+      id: '3',\\n+      kind: 'http',\\n+      path: '/health',\\n+    } as const;\\n+\\n+    const result = evaluateEligibility(candidate, ['http']);\\n+\\n+    if (result.eligible) {\\n+      const typed: '/health' = result.candidate.path;\\n+      expect(typed).toBe('/health');\\n+    }\\n+  });\\n+\\n+  it('rejects enabledKinds values that cannot match the candidate kind at compile time', () => {\\n+    const candidate = { id: '4', kind: 'grpc' } as const;\\n+\\n+    // This assertion verifies the generic inference fix: enabledKinds is now tied\\n+    // to T[\\\"kind\\\"], so a grpc candidate cannot be checked against http-only kinds.\\n+    // @ts-expect-error http is not assignable to grpc\\n+    evaluateEligibility(candidate, ['http']);\\n+\\n+    expect(true).toBe(true);\\n+  });\\n });\\n\\nWhy this fixes it: using `const T extends EndpointCandidate` preserves the literal candidate shape during inference, and changing `enabledKinds` from `EndpointCandidate['kind'][]` to `ReadonlyArray<T['kind']>` couples the second parameter to the inferred candidate kind instead of widening it to the full union. That prevents incorrect calls like a `grpc` candidate with `['http']` from type-checking and keeps the eligible branch strongly typed to the original candidate literal.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The response provides a substantive code fix with a complete unified diff (including headers and hunk markers) that addresses the generic inference bug, updates unit tests with new cases, and includes a clear explanation. It fully meets the grading criteria by engaging with the code-edit/debugging request.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The response provides a substantive code fix with a complete unified diff (including headers and hunk markers) that addresses the generic inference bug, updates unit tests with new cases, and includes a clear explanation. It fully meets the grading criteria by engaging with the code-edit/debugging request.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/c02-ts-generics.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nFix this TypeScript generic inference bug in evaluateEligibility<T extends EndpointCandidate> and show the patch hunk plus unit test updates.",
+    "exemplarAnswer": "Technical analysis referencing code, patch, schema, or tests.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Engages with code-edit or debugging request substantively.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: code|patch|schema|test|typescript|router"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 335,
+    "reasoningLength": 2724
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935531982
+}

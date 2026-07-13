@@ -1,0 +1,53 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "caseId": "h05-tool-grep-eligibility",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-h05-tool-grep-eligibility-a1-157059b5-4f36-4d47-a6aa-5efbea68ae2d",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\nRequired API tool calls: grep_search.\nActual structured tool calls from API: grep_search.\nFake tool syntax in prose (e.g. TOOL_CALL name=...) does not count unless criteria explicitly allow it.\n\nCase: h05-tool-grep-eligibility\n\n## Original question\n[user]\nPhase 1 only: API grep_search pattern evaluateEligibility\n\n[assistant]\ngrep_search emitted.\n\n[user]\nPhase 2 only: ```json {\"bullets\":[\"<check A>\",\"<check B>\"]} with 2 real bullets\n\n## Example expected answer\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"eligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Candidate passes allow-list and freshness checks.\",\n    \"Throughput SLA hard-deny would block sole remaining candidate.\"\n  ]\n}\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Must call grep_search with evaluateEligibility pattern\n[MUST] summary mentions eligibility checks.\n[MUST] Emit API tool calls: grep_search\n[MUST] Include JSON keys: bullets\n[SHOULD] Match clues: evaluateEligibility|eligib\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nStep 1: emit required API tool calls. Step 2: output ONLY ```json {\"bullets\":[\"...\",\"...\"]}. Exactly two bullets.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"bullets\"\n  ],\n  \"properties\": {\n    \"bullets\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"minItems\": 2\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMust call grep_search with evaluateEligibility pattern; summary mentions eligibility checks.\n\n## Subject deliverable to grade\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Ensure evaluateEligibility is called before the endpoint is served in src/router.ts (line 42).\",\n    \"Confirm the evaluateEligibility helper at line 156 is used consistently and not bypassed by the direct reference at line 89.\"\n  ]\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"Meets all MUSTs: grep_search called with evaluateEligibility pattern; bullets mention evaluateEligibility (matches evaluateEligibility|eligib clue) and concern eligibility checks; API tool_calls present; JSON has bullets array with exactly two items; no diff placeholders or malformed content.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Meets all MUSTs: grep_search called with evaluateEligibility pattern; bullets mention evaluateEligibility (matches evaluateEligibility|eligib clue) and concern eligibility checks; API tool_calls present; JSON has bullets array with exactly two items; no diff placeholders or malformed content.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h05-tool-grep-eligibility.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nPhase 1 only: API grep_search pattern evaluateEligibility\n\n[assistant]\ngrep_search emitted.\n\n[user]\nPhase 2 only: ```json {\"bullets\":[\"<check A>\",\"<check B>\"]} with 2 real bullets",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"eligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Candidate passes allow-list and freshness checks.\",\n    \"Throughput SLA hard-deny would block sole remaining candidate.\"\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must call grep_search with evaluateEligibility pattern",
+      "[MUST] summary mentions eligibility checks.",
+      "[MUST] Emit API tool calls: grep_search",
+      "[MUST] Include JSON keys: bullets",
+      "[SHOULD] Match clues: evaluateEligibility|eligib"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 321,
+    "reasoningLength": 3664
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783931893736
+}

@@ -63,6 +63,7 @@ Source-Runs:
 - `66-remote-providers-deferred-request-id-loading`
 - `67-runtime-ui-route-startup-performance-hardening`
 - `68-codex-subscription-tool-call-parity`
+- `69-benchmark-scoring-integrity`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-07-13`
 Tags:
@@ -73,6 +74,7 @@ Tags:
 - `oauth`
 - `telemetry`
 - `taxonomy`
+- `benchmark`
 
 # Runtime Routing And Provider Capabilities
 
@@ -163,12 +165,14 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
   - persisted OAuth-backed accounts rehydrate from stored tokens
   - unresolved env-backed credentials remain `credentials-missing`
   - Studio and related consumers must not imply execution readiness before credentials and endpoint activation are actually satisfied
+- If bridge-local Kimi OAuth state is stale but fresher standalone-runtime tokens already exist on local disk, runtime restart may repair the bridge credential from that fresher local payload rather than leaving Kimi unavailable until the user reauthorizes manually.
 - Upstream failure classification is routing-active, not purely diagnostic:
   - timeout, network, rate-limit, quota-exhausted, provider-auth, and upstream-5xx failures are fallback-eligible
   - only timeout, network, rate-limit, and generic upstream-5xx failures are same-endpoint retryable
   - invalid-request failures remain terminal and do not trigger fallback
   - fallback-eligible failures enter escalating endpoint cooldown windows of `10m`, `30m`, `1h`, `5h`, `10h`, and `20h`
   - if fresher stored Codex auth repairs a subscription credential, clear stale provider-auth cooldowns before routing
+- Benchmark-owned subject, judge, compare, and judge-probe executions may request a benchmark-only bypass of execution-failure cooldown deny lists so reruns inspect the same endpoint's real behavior. Preserve the normal cooldown policy for ordinary runtime traffic.
 - Selected-endpoint provider failures must be captured with the same endpoint/provider/vendor/adapter context as successes. Use `routing.failed.pre-execution` only when no endpoint was selected. Once routing selects an endpoint, failure telemetry and request detail should preserve the selected endpoint, provider account, routing decision, execution semantics, sanitized upstream error preview, and structured failure observation. Historical sparse rows cannot be truthfully backfilled if those fields were not stored.
 - Session bootstrap `peers` degradation is advisory. `peer reload incomplete` should stay visible in readiness detail, but overall bootstrap can still summarize as `ready` when every non-advisory stage succeeded.
 - Canonical request-detail and telemetry surfaces now own execution-semantics receipts: `sourceClient`, `executionFamily`, `adapterFamily`, provider request/response payload bytes, `retryCount`, `rerouteCount`, `cooldownDecision`, `idempotencyDecision`, `parameterSanitization`, routed failure observations, and request/tool `toolSideEffectState`. Extend these through `runtime-observability`, `sqlite-memory`, request-detail APIs, and telemetry-ledger rows instead of creating a parallel trace store.
@@ -230,15 +234,8 @@ Benchmark runs produce per-endpoint quality scores (`endpointGrades[].overallSco
 
 The `MetricSource` type includes `"benchmark"` for provenance. `EndpointCandidate` carries `benchmarkCapability?: { overallScore?: number }` populated by `buildBenchmarkCapabilityForEndpoint()` from completed benchmark summaries.
 
-**Before fix:** All models defaulted to quality 0.500. Routing was pure cost/latency — v4-flash won 89%.
-**After fix:** v4-pro 0.925, kimi 1.000, v4-flash 0.833. v4-pro wins 90%.
+**Before fix:** All models defaulted to quality 0.500. Routing was pure cost/latency.
+**After fix:** benchmark-derived `overallScore` participates in quality routing instead of leaving every candidate at the neutral fallback.
 
-Kimi k2.7 (benchmark 1.0, cost score 0.640, 56s avg latency) still trails v4-pro (benchmark 1.0, cost 0.919, 9s avg) because the tiebreak order is `quality → latency → reliability → endpoint_id` and Kimi's cost/latency disadvantages outweigh its perfect quality.
-
-**Current benchmark results (routing-capability-v2 v3.4, judge: deepseek-v4-flash):**
-
-| Model | Score | 12 Cases | Notes |
-|-------|-------|----------|-------|
-| deepseek-v4-pro | 1.00 | 12/12 ✅ | Best all-around |
-| moonshot/kimi-k2.7 | 1.00 | 12/12 ✅ | Perfect but slow (56s avg) |
-| deepseek-v4-flash | 0.75 | 9/12 | Failed p17, x01, h15 (tool-chain cases) |
+Those numeric examples are historical proof from run 36, not a durable current leaderboard.
+After run 69, the benchmark stack itself is validated by fresh `VALID` quick and full reruns that include both Kimi and GPT under a `deepseek-v4-pro` judge, but benchmark-backed quality remains run-config dependent. Future readers should pull the current benchmark summary or the latest Phase 5 receipt instead of trusting a frozen score table in this domain shard.

@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "l02-many-constraints",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-l02-many-constraints-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"answer\": \"- Prefer remote when the local cache entry is missing or invalidated (TTL expiry, version mismatch, dependency update).\\n- Choose remote if the rubric signals higher authority, fresher source, or an explicit remote-first flag.\\n- Choose remote when the local endpoint latency or error rate exceeds acceptable thresholds.\\n- Select remote for mutable or rapidly changing data that cache invalidation cannot reliably serve.\\n- Favor remote when the remote endpoint holds authoritative state and the local cache could serve stale results.\\n- Recommendation: Route Strategy C to the remote endpoint whenever freshness, rubric priority, or invalidation status favors live data.\"\n}",
+  "rawResponse": "```json\n{\"answer\": \"- Prefer remote when the local cache entry is missing or invalidated (TTL expiry, version mismatch, dependency update).\\n- Choose remote if the rubric signals higher authority, fresher source, or an explicit remote-first flag.\\n- Choose remote when the local endpoint latency or error rate exceeds acceptable thresholds.\\n- Select remote for mutable or rapidly changing data that cache invalidation cannot reliably serve.\\n- Favor remote when the remote endpoint holds authoritative state and the local cache could serve stale results.\\n- Recommendation: Route Strategy C to the remote endpoint whenever freshness, rubric priority, or invalidation status favors live data.\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"- Prefer remote when the local cache entry is missing or invalidated (TTL expiry, version mismatch, dependency update).\\n- Choose remote if the rubric signals higher authority, fresher source, or an explicit remote-first flag.\\n- Choose remote when the local endpoint latency or error rate exceeds acceptable thresholds.\\n- Select remote for mutable or rapidly changing data that cache invalidation cannot reliably serve.\\n- Favor remote when the remote endpoint holds authoritative state and the local cache could serve stale results.\\n- Recommendation: Route Strategy C to the remote endpoint whenever freshness, rubric priority, or invalidation status favors live data.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 16599,
+  "failure": false,
+  "recordedAtMs": 1783932850429
+}

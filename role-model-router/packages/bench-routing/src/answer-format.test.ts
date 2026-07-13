@@ -34,7 +34,7 @@ describe("answer-format", () => {
       messages: [{ role: "user", content: "code block only" }],
       grading_criteria: "twoSum",
     };
-    const raw = [
+    const deliverable = [
       "thinking...",
       "```typescript",
       "function twoSum(nums: number[], target: number): [number, number] {",
@@ -48,12 +48,28 @@ describe("answer-format", () => {
       "}",
       "```",
     ].join("\n");
+    const raw = deliverable;
     const extracted = extractFormattedAnswer({
       caseItem,
       rawContent: raw,
       structuredToolNames: [],
     });
     expect(extracted.extractionMethod).toBe("code_fence");
+    expect(extracted.serialized).toBe(
+      [
+        "```typescript",
+        "function twoSum(nums: number[], target: number): [number, number] {",
+        "  const map = new Map<number, number>();",
+        "  for (let i = 0; i < nums.length; i++) {",
+        "    const c = target - nums[i];",
+        "    if (map.has(c)) return [map.get(c)!, i];",
+        "    map.set(nums[i], i);",
+        "  }",
+        "  throw new Error('none');",
+        "}",
+        "```",
+      ].join("\n"),
+    );
     expect(isValidDeliverable({ caseItem, extracted, structuredToolNames: [] })).toBe(true);
   });
 
@@ -164,6 +180,143 @@ describe("answer-format", () => {
     expect(extracted.serialized).toContain("--- a/src/router.ts");
   });
 
+  test("uses schema-derived follow-up keys for structured tool summaries", () => {
+    const caseItem = {
+      case_id: "t03-tools-agent-plan",
+      category: "tools-heavy",
+      messages: [{ role: "user", content: "read, validate, patch, then summarize" }],
+      required_tool_call: true,
+      expected_tool_names: ["read_file", "validate_schema", "apply_patch"],
+      answer_format: {
+        kind: "tool_calls_with_summary" as const,
+        instruction:
+          'Step 1: emit the required API tool calls. Step 2: after tools, output ONLY a ```json fence: {"plan":["..."],"patch_summary":"...","strategy_improvements":["..."]}.',
+        schema: {
+          type: "object",
+          required: ["plan", "patch_summary", "strategy_improvements"],
+          properties: {
+            plan: { type: "array", items: { type: "string" }, minItems: 3 },
+            patch_summary: { type: "string", minLength: 12 },
+            strategy_improvements: {
+              type: "array",
+              items: { type: "string" },
+              minItems: 2,
+            },
+          },
+          additionalProperties: false,
+        },
+      },
+      grading_criteria: "emit tools and structured summary",
+    };
+
+    const toolCalls = [
+      {
+        function: {
+          name: "read_file",
+          arguments: '{"path":"router.ts"}',
+        },
+      },
+      {
+        function: {
+          name: "validate_schema",
+          arguments: '{"document":"{}"}',
+        },
+      },
+      {
+        function: {
+          name: "apply_patch",
+          arguments:
+            '{"diff":"*** Begin Patch\\n*** Update File: router.ts\\n@@\\n+const x = 1;\\n*** End Patch"}',
+        },
+      },
+    ] as const;
+
+    const followUp = buildScaffoldFollowUp(
+      caseItem,
+      caseItem.messages as Record<string, unknown>[],
+      "",
+      ["read_file", "validate_schema", "apply_patch"],
+      extractFormattedAnswer({
+        caseItem,
+        rawContent: "",
+        structuredToolNames: ["read_file", "validate_schema", "apply_patch"],
+        toolCalls,
+      }),
+      toolCalls,
+      toolCalls,
+    );
+
+    const finalPrompt = String(followUp.at(-1)?.content ?? "");
+    expect(finalPrompt).toContain('"strategy_improvements"');
+    expect(finalPrompt).not.toContain("test_snippet");
+  });
+
+  test("rejects structured tool summaries that miss schema minItems and minLength constraints", () => {
+    const caseItem = {
+      case_id: "t03-tools-agent-plan",
+      category: "tools-heavy",
+      messages: [{ role: "user", content: "summarize the tool workflow" }],
+      required_tool_call: true,
+      expected_tool_names: ["read_file", "validate_schema", "apply_patch"],
+      answer_format: {
+        kind: "tool_calls_with_summary" as const,
+        instruction:
+          'Step 1: emit the required API tool calls. Step 2: after tools, output ONLY a ```json fence: {"plan":["..."],"patch_summary":"...","strategy_improvements":["..."]}.',
+        schema: {
+          type: "object",
+          required: ["plan", "patch_summary", "strategy_improvements"],
+          properties: {
+            plan: { type: "array", items: { type: "string" }, minItems: 3 },
+            patch_summary: { type: "string", minLength: 12 },
+            strategy_improvements: {
+              type: "array",
+              items: { type: "string" },
+              minItems: 2,
+            },
+          },
+          additionalProperties: false,
+        },
+      },
+      grading_criteria: "emit tools and structured summary",
+    };
+
+    const extracted = extractFormattedAnswer({
+      caseItem,
+      rawContent:
+        '```json\n{"plan":["inspect router"],"patch_summary":"short fix","strategy_improvements":["prefer local first"]}\n```',
+      structuredToolNames: ["read_file", "validate_schema", "apply_patch"],
+      toolCalls: [
+        {
+          function: {
+            name: "read_file",
+            arguments: '{"path":"router.ts"}',
+          },
+        },
+        {
+          function: {
+            name: "validate_schema",
+            arguments: '{"document":"{}"}',
+          },
+        },
+        {
+          function: {
+            name: "apply_patch",
+            arguments:
+              '{"diff":"*** Begin Patch\\n*** Update File: router.ts\\n@@\\n+const x = 1;\\n*** End Patch"}',
+          },
+        },
+      ],
+    });
+
+    expect(
+      isValidDeliverable({
+        caseItem,
+        extracted,
+        structuredToolNames: ["read_file", "validate_schema", "apply_patch"],
+      }),
+    ).toBe(false);
+  });
+
   test("continues requesting repeated same-name tools until duplicate expectations are satisfied", () => {
     const caseItem = {
       case_id: "p18-tools-agent",
@@ -242,6 +395,82 @@ describe("answer-format", () => {
     expect(followUp.at(-1)).toMatchObject({
       role: "user",
       content: "Emit exactly one API tool call now (no prose): get_metrics",
+    });
+  });
+
+  test("preserves original tool call ids in scaffold follow-up history", () => {
+    const caseItem = {
+      case_id: "p17-tools-multi-hard",
+      category: "tools-heavy",
+      messages: [{ role: "user", content: "read then patch then answer" }],
+      required_tool_call: true,
+      expected_tool_names: ["read_file", "apply_patch"],
+      answer_format: {
+        kind: "tool_calls_with_answer" as const,
+        instruction: "tools then answer",
+        schema: {
+          type: "object",
+          required: ["answer"],
+          properties: { answer: { type: "string", minLength: 1 } },
+        },
+      },
+      grading_criteria: "emit both tools and answer",
+    };
+
+    const followUp = buildScaffoldFollowUp(
+      caseItem,
+      caseItem.messages as Record<string, unknown>[],
+      "",
+      ["read_file"],
+      extractFormattedAnswer({
+        caseItem,
+        rawContent: "",
+        structuredToolNames: ["read_file"],
+        toolCalls: [
+          {
+            id: "tool_kimi_123",
+            function: {
+              name: "read_file",
+              arguments: '{"path":"src/router.ts"}',
+            },
+          },
+        ],
+      }),
+      [
+        {
+          id: "tool_kimi_123",
+          function: {
+            name: "read_file",
+            arguments: '{"path":"src/router.ts"}',
+          },
+        },
+      ],
+      [
+        {
+          id: "tool_kimi_123",
+          function: {
+            name: "read_file",
+            arguments: '{"path":"src/router.ts"}',
+          },
+        },
+      ],
+    );
+
+    expect(followUp[1]).toMatchObject({
+      role: "assistant",
+      tool_calls: [
+        {
+          id: "tool_kimi_123",
+          function: {
+            name: "read_file",
+            arguments: '{"path":"src/router.ts"}',
+          },
+        },
+      ],
+    });
+    expect(followUp[2]).toMatchObject({
+      role: "tool",
+      tool_call_id: "tool_kimi_123",
     });
   });
 });

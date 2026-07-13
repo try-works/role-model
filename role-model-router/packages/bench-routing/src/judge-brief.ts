@@ -81,6 +81,53 @@ function summarizeAcceptPatternsForJudge(patterns: readonly string[]): string[] 
   ];
 }
 
+function parseRequiredKeys(format: BenchmarkAnswerFormat): string[] {
+  return Array.isArray(format.schema?.required) ? (format.schema.required as string[]) : [];
+}
+
+function hasExactCodeFence(answer: string, language?: string): boolean {
+  const trimmed = answer.trim();
+  const languageTag = (language ?? "").trim();
+  const prefix = languageTag ? `\`\`\`${languageTag}` : "```";
+  return trimmed.startsWith(prefix) && trimmed.endsWith("```");
+}
+
+function hasABCDSections(answer: string): boolean {
+  return ["A", "B", "C", "D"].every((label) =>
+    new RegExp(`(?:^|\\n)\\s*${label}[):]`, "m").test(answer),
+  );
+}
+
+export function validateJudgeCaseContract(caseItem: JudgeBriefCaseRef): void {
+  const format = resolveAnswerFormat(caseItem);
+  const authored =
+    caseItem.example_deliverable?.trim() ||
+    caseItem.judge_guidance?.exemplar?.deliverable?.trim() ||
+    "";
+  if (!authored) {
+    return;
+  }
+
+  if (format.kind === "code_fence" && !hasExactCodeFence(authored, format.language)) {
+    throw new Error(
+      `Contradictory code_fence example_deliverable for ${caseItem.case_id}: expected a fenced ${format.language ?? "code"} block.`,
+    );
+  }
+
+  const requiredKeys = parseRequiredKeys(format);
+  const requiresABCD = /A\/B\/C\/D sections/i.test(caseItem.grading_criteria);
+  const structuredJsonFormat =
+    format.kind === "json" ||
+    format.kind === "tool_calls_with_answer" ||
+    format.kind === "tool_calls_with_summary";
+  const schemaCarriesABCD = requiredKeys.some((key) => /^(section_)?[abcd]$/i.test(key));
+  if (requiresABCD && structuredJsonFormat && !schemaCarriesABCD && !hasABCDSections(authored)) {
+    throw new Error(
+      `Contradictory deliverable contract for ${caseItem.case_id}: grading_criteria require A/B/C/D sections but the structured answer format and authored exemplar do not carry them.`,
+    );
+  }
+}
+
 export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): string[] {
   const checklist: string[] = [];
 
@@ -93,9 +140,7 @@ export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): st
   }
 
   const format = resolveAnswerFormat(caseItem);
-  const required = Array.isArray(format.schema?.required)
-    ? (format.schema.required as string[])
-    : [];
+  const required = parseRequiredKeys(format);
   if (required.length > 0) {
     checklist.push(`[MUST] Include JSON keys: ${required.join(", ")}`);
   }
@@ -124,9 +169,7 @@ export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): st
 
 function deriveExemplarAnswer(caseItem: JudgeBriefCaseRef): string {
   const format = resolveAnswerFormat(caseItem);
-  const required = Array.isArray(format.schema?.required)
-    ? (format.schema.required as string[])
-    : [];
+  const required = parseRequiredKeys(format);
   const toolNames = caseItem.expected_tool_names ?? [];
   const parts: string[] = [caseItem.expected_response];
 
@@ -164,6 +207,7 @@ export function resolveExemplarAnswer(caseItem: JudgeBriefCaseRef): {
 }
 
 export function buildJudgeGradingBrief(caseItem: JudgeBriefCaseRef): JudgeGradingBrief {
+  validateJudgeCaseContract(caseItem);
   const exemplar = resolveExemplarAnswer(caseItem);
   return {
     questionTranscript: formatQuestionTranscript(caseItem),

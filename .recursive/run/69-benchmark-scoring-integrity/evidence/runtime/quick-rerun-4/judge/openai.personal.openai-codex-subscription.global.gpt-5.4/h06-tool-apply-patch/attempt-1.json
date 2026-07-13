@@ -1,0 +1,53 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "caseId": "h06-tool-apply-patch",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-h06-tool-apply-patch-a1-66103eea-8182-45d2-b9a3-921f24f4a7a3",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\nRequired API tool calls: apply_patch.\nActual structured tool calls from API: apply_patch.\nFake tool syntax in prose (e.g. TOOL_CALL name=...) does not count unless criteria explicitly allow it.\n\nCase: h06-tool-apply-patch\n\n## Original question\n[user]\nAPI apply_patch only. Unified diff for src/config.ts changing const MODE = 'baseline' to const MODE = 'difficulty'. Must include --- and +++ file headers.\n\n## Example expected answer\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Must call apply_patch\n[MUST] diff includes ---/+++ headers and changes MODE to difficulty.\n[MUST] Emit API tool calls: apply_patch\n[SHOULD] Match clues: apply_patch|MODE|difficulty|\\+\\+\\+|---\n[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nEmit all required tool calls through the API in as few turns as needed. Do not write fake TOOL_CALL text. No final prose unless asked in a follow-up.\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMust call apply_patch; diff includes ---/+++ headers and changes MODE to difficulty.\n\n## Subject deliverable to grade\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/config.ts\\n+++ b/src/config.ts\\n@@\\n-const MODE = 'baseline'\\n+const MODE = 'difficulty'\\n\"\n      }\n    }\n  ]\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The apply_patch call contains a valid diff with ---/+++ headers and correctly changes 'baseline' to 'difficulty' in src/config.ts, satisfying all grading criteria.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The apply_patch call contains a valid diff with ---/+++ headers and correctly changes 'baseline' to 'difficulty' in src/config.ts, satisfying all grading criteria.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h06-tool-apply-patch.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nAPI apply_patch only. Unified diff for src/config.ts changing const MODE = 'baseline' to const MODE = 'difficulty'. Must include --- and +++ file headers.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must call apply_patch",
+      "[MUST] diff includes ---/+++ headers and changes MODE to difficulty.",
+      "[MUST] Emit API tool calls: apply_patch",
+      "[SHOULD] Match clues: apply_patch|MODE|difficulty|\\+\\+\\+|---",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 191,
+    "reasoningLength": 1566
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783932019794
+}

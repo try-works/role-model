@@ -15,6 +15,7 @@ import {
   buildJudgeGradingBrief,
   formatQuestionTranscript,
   resolveExemplarAnswer,
+  validateJudgeCaseContract,
 } from "./judge-brief.js";
 
 import {
@@ -115,7 +116,11 @@ export function mapCategoryToDifficultyBucket(category: string): BenchmarkDiffic
 }
 
 export function loadRoutingCapabilitySuite(): RoutingCapabilityBenchmarkSuite {
-  return routingCapabilitySuite as RoutingCapabilityBenchmarkSuite;
+  const suite = routingCapabilitySuite as RoutingCapabilityBenchmarkSuite;
+  for (const caseItem of suite.cases) {
+    validateJudgeCaseContract(caseItem);
+  }
+  return suite;
 }
 
 export function selectBenchmarkCases(
@@ -688,6 +693,7 @@ export {
   buildJudgeGradingBrief,
   formatQuestionTranscript,
   resolveExemplarAnswer,
+  validateJudgeCaseContract,
   type JudgeGradingBrief,
   type JudgeBriefCaseRef,
 } from "./judge-brief.js";

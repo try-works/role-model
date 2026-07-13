@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p14-schema-validate",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p14-schema-validate-a1-1c1973e4-6018-4320-9ad9-98fa9e784599",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p14-schema-validate\n\n## Original question\n[user]\nCurrent schema and test excerpt:\n```json\n{\n  \"$id\": \"routingDiagnostics.difficultyRouting\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"difficultyBucket\": { \"type\": \"string\" },\n    \"chosenEndpointId\": { \"type\": \"string\" }\n  },\n  \"required\": [\"difficultyBucket\", \"chosenEndpointId\"],\n  \"additionalProperties\": false\n}\n```\n```ts\ntest('includes requestedRoleId when routing is controller-guided', () => {\n  expect(result.routingDiagnostics.difficultyRouting.requestedRoleId).toBe('coder.patch');\n});\n```\nValidate the schema contract for routing diagnostics and refactor the test suite if fields are missing. Return ONLY JSON with `analysis`, `missing_fields`, and `test_updates`.\n\n## Example expected answer\n{\n  \"analysis\": \"The schema omits `requestedRoleId`, so controller-guided routing diagnostics cannot satisfy the existing test expectation.\",\n  \"missing_fields\": [\n    \"requestedRoleId\"\n  ],\n  \"test_updates\": [\n    \"Add `requestedRoleId` to the schema properties and required list when controller-guided routing is emitted.\",\n    \"Keep the test assertion and extend fixtures to include `requestedRoleId: \\\"coder.patch\\\"`.\"\n  ]\n}\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Must identify that `requestedRoleId` is missing from the schema and propose concrete test updates.\n[MUST] Include JSON keys: analysis, missing_fields, test_updates\n[SHOULD] Match clues: requestedRoleId|schema|test\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nReturn ONLY a ```json fence: {\"analysis\":\"...\",\"missing_fields\":[\"...\"],\"test_updates\":[\"...\"]}.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"analysis\",\n    \"missing_fields\",\n    \"test_updates\"\n  ],\n  \"properties\": {\n    \"analysis\": {\n      \"type\": \"string\",\n      \"minLength\": 16\n    },\n    \"missing_fields\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"minItems\": 1\n    },\n    \"test_updates\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"minItems\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMust identify that `requestedRoleId` is missing from the schema and propose concrete test updates.\n\n## Subject deliverable to grade\n{\n  \"analysis\": \"The test references routingDiagnostics.difficultyRouting.requestedRoleId, but the schema defines only difficultyBucket and chosenEndpointId and forbids extra keys with additionalProperties: false. This is a contract violation between implementation tests and the declared schema. The missing field should be added to the schema, likely as an optional string if it is emitted only for controller-guided routing, and the tests should validate presence conditionally by routing mode.\",\n  \"missing_fields\": [\n    \"requestedRoleId\"\n  ],\n  \"test_updates\": [\n    \"Add requestedRoleId as a string property on routingDiagnostics.difficultyRouting in the schema.\",\n    \"Keep requestedRoleId optional unless every difficultyRouting payload is guaranteed to include it.\",\n    \"Refactor the existing test to assert requestedRoleId only in controller-guided routing scenarios.\",\n    \"Add a non-controller-guided routing test asserting requestedRoleId is absent or undefined.\",\n    \"Add schema validation tests confirming objects with requestedRoleId pass and unknown undeclared properties still fail under additionalProperties: false.\"\n  ]\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"Identifies requestedRoleId as missing from the schema and proposes concrete test updates (adding to schema properties, refactoring for conditional assertions, adding missing-field test and schema validation tests), fulfilling all grading criteria and deliverable checklist.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Identifies requestedRoleId as missing from the schema and proposes concrete test updates (adding to schema properties, refactoring for conditional assertions, adding missing-field test and schema validation tests), fulfilling all grading criteria and deliverable checklist.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/p14-schema-validate.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nCurrent schema and test excerpt:\n```json\n{\n  \"$id\": \"routingDiagnostics.difficultyRouting\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"difficultyBucket\": { \"type\": \"string\" },\n    \"chosenEndpointId\": { \"type\": \"string\" }\n  },\n  \"required\": [\"difficultyBucket\", \"chosenEndpointId\"],\n  \"additionalProperties\": false\n}\n```\n```ts\ntest('includes requestedRoleId when routing is controller-guided', () => {\n  expect(result.routingDiagnostics.difficultyRouting.requestedRoleId).toBe('coder.patch');\n});\n```\nValidate the schema contract for routing diagnostics and refactor the test suite if fields are missing. Return ONLY JSON with `analysis`, `missing_fields`, and `test_updates`.",
+    "exemplarAnswer": "{\n  \"analysis\": \"The schema omits `requestedRoleId`, so controller-guided routing diagnostics cannot satisfy the existing test expectation.\",\n  \"missing_fields\": [\n    \"requestedRoleId\"\n  ],\n  \"test_updates\": [\n    \"Add `requestedRoleId` to the schema properties and required list when controller-guided routing is emitted.\",\n    \"Keep the test assertion and extend fixtures to include `requestedRoleId: \\\"coder.patch\\\"`.\"\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must identify that `requestedRoleId` is missing from the schema and propose concrete test updates.",
+      "[MUST] Include JSON keys: analysis, missing_fields, test_updates",
+      "[SHOULD] Match clues: requestedRoleId|schema|test"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 301,
+    "reasoningLength": 3437
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935505344
+}

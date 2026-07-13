@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "x02-max-context-tools",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"## Code-edit workflow analysis\\n- Empty chosen_endpoint_id: throughput SLA hard-deny removed all candidates; missing fallback caused an empty chosen endpoint id.\\n- Partial config PUT: shallow merge dropped routing.strategy; ",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"1) Root-cause analysis of the workflow and incident:\\n- Empty chosen_endpoint_id under throughput SLA hard-deny indicates the router allowed a terminal deny path without assigning a fallback endpoint or emitting a structured ",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "OpenAI's response provides a more thorough and structured analysis, addressing all incident aspects with detailed root cause, explicit patch recommendations in prose, architectural decomposition, and rollout plan. Moonshot's response is correct but less detailed and includes a diff block that could be seen as violating the directive against diff placeholders, making OpenAI's submission more subst…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\"\n  ],\n  \"rationale\": \"OpenAI's response provides a more thorough and structured analysis, addressing all incident aspects with detailed root cause, explicit patch recommendations in prose, architectural decomposition, and rollout plan. Moonshot's response is correct but less detailed and includes a diff block that could be seen as violating the directive against diff placeholders, making OpenAI's submission more substantive and aligned with the exemplar.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nIncident context: routing returned empty chosen_endpoint_id under throughput SLA hard-deny; partial config PUT dropped routing.strategy; difficulty cache invalidated on tool-count-delta and code-or-schema-change; hybrid and controller overrides behaved differently; remote Kimi returned reasoning_content. Task: analyze code-edit workflow, apply patch, validate schema, refactor tests, decompose architecture extension points, and recommend when to route hard prompts to remote despite local tps advantage.",
+    "exemplarAnswer": "analysis of workflow with routing recommendation for hard prompts\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Addresses incident context and when to route hard prompts remote.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: remote, routing, patch|schema"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 605,
+    "reasoningLength": 5375
+  },
+  "recordedAtMs": 1783936577540
+}

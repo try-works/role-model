@@ -1,0 +1,53 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "t03-tools-agent-plan",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"router.ts\"\n      }\n    },\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"r",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"router.ts\"\n      }\n    },\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"difficultyRouting.schema.json\"\n      }\n    },\n    {\n",
+      "perCaseScore": 0
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Moonshot's response meets all key deliverables: it emits the required tool calls (read_file, validate_schema, apply_patch) with a properly formatted unified diff patch including ---/+++ headers and an @@ hunk marker with real content, and after the tools it outputs a valid JSON fence containing the mandatory keys plan, patch_summary, and strategy_improvements. OpenAI's response, while emitting to…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Moonshot's response meets all key deliverables: it emits the required tool calls (read_file, validate_schema, apply_patch) with a properly formatted unified diff patch including ---/+++ headers and an @@ hunk marker with real content, and after the tools it outputs a valid JSON fence containing the mandatory keys plan, patch_summary, and strategy_improvements. OpenAI's response, while emitting tool calls, omits the required post-tool JSON deliverable entirely and uses a non-standard patch format (missing ---/+++ headers and a bare @@ without line numbers) that constitutes a malformed apply_patch argument. Therefore Moonshot is the only substantially correct response.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nDecompose and execute an agent plan with milestones: inspect router decisions API, compare local vs remote latency profiles, validate schema for difficultyRouting, apply patch to router.ts, and recommend routing strategy improvements.",
+    "exemplarAnswer": "Coherent plan or summary addressing the tool-using task.\nTool calls: read_file, validate_schema, apply_patch with ---/+++ headers plus @@ hunk marker (line numbers optional) or Codex patch envelope\nRequired fields: plan, patch_summary, strategy_improvements",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Attempts the requested tool workflow without refusing outright.",
+      "[MUST] Emit API tool calls: read_file, validate_schema, apply_patch",
+      "[MUST] Include JSON keys: plan, patch_summary, strategy_improvements",
+      "[SHOULD] Match clues: read|search|list|patch|tool|plan",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 844,
+    "reasoningLength": 3126
+  },
+  "recordedAtMs": 1783936417578
+}

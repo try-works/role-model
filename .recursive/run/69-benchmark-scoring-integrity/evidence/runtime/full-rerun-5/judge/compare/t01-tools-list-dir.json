@@ -1,0 +1,52 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "t01-tools-list-dir",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_dir\",\n      \"arguments\": {\n        \"path\": \"config\"\n      }\n    }\n  ],\n  \"answer\": \"Routing-related config files: router.yaml and routing-policy.json.\"\n}",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_dir\",\n      \"arguments\": {\n        \"path\": \"config\"\n      }\n    }\n  ],\n  \"answer\": \"Routing-related files in config are router.yaml and routing-policy.json.\"\n}",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both responses correctly call list_dir with path 'config' and provide a valid summary of routing-related filenames (router.yaml and routing-policy.json). They adhere to the required format, emit the required tool_calls and answer key, avoid prohibited patterns, and are substantively identical in correctness. The ranking order is arbitrary; both are equally compliant.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both responses correctly call list_dir with path 'config' and provide a valid summary of routing-related filenames (router.yaml and routing-policy.json). They adhere to the required format, emit the required tool_calls and answer key, avoid prohibited patterns, and are substantively identical in correctness. The ranking order is arbitrary; both are equally compliant.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nList files in the config directory and summarize routing-related filenames.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_dir\",\n      \"arguments\": {\n        \"path\": \"config\"\n      }\n    }\n  ],\n  \"answer\": \"The routing-related files are `router.yaml` and `routing-policy.json`; the other files are unrelated config assets.\"\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must call list_dir and summarize routing-related filenames from the provided directory listing.",
+      "[MUST] Emit API tool calls: list_dir",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: read|search|list|patch|tool|plan"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 538,
+    "reasoningLength": 2298
+  },
+  "recordedAtMs": 1783936351049
+}

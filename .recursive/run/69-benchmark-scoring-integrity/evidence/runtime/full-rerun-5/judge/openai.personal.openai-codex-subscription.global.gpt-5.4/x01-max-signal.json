@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "x01-max-signal",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Deliverable meets all MUST requirements: structured plan with milestones, three API tool_calls (read_file, grep_search, apply_patch) with correct attributes, test_snippet present, patch_summary provided. The apply_patch uses a valid Codex patch envelope with '*** Begin Patch', '*** Update File', a bare '@@' hunk marker, real comment addition, and '*** End Patch', satisfying the diff formatting rule. No placeholders, no malformed envelopes, no prose-only tool lines.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/x01-max-signal.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/x01-max-signal/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935632767
+}

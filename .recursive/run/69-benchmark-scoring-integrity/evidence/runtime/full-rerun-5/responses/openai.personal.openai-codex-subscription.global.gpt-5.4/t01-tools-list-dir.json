@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "t01-tools-list-dir",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-t01-tools-list-dir-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_dir\",\n      \"arguments\": {\n        \"path\": \"config\"\n      }\n    }\n  ],\n  \"answer\": \"Routing-related files in config are router.yaml and routing-policy.json.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Routing-related files in config are router.yaml and routing-policy.json.\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_dir\",\n      \"arguments\": {\n        \"path\": \"config\"\n      }\n    }\n  ],\n  \"answer\": \"Routing-related files in config are router.yaml and routing-policy.json.\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 5636,
+  "failure": false,
+  "recordedAtMs": 1783934437697
+}

@@ -308,6 +308,26 @@ describe("bench-routing", () => {
     });
   });
 
+  test("p17 explicitly asks the final validation note to mention MODE and throughput SLA clues", () => {
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "p17-tools-multi-hard",
+    );
+    expect(caseItem).toBeTruthy();
+    if (!caseItem) {
+      throw new Error("Expected benchmark case p17-tools-multi-hard.");
+    }
+
+    const combinedInstruction = [
+      ...(caseItem.messages ?? []).map((message) =>
+        typeof message.content === "string" ? message.content : "",
+      ),
+      caseItem.answer_format?.instruction ?? "",
+    ].join("\n");
+
+    expect(combinedInstruction).toContain("MODE");
+    expect(combinedInstruction).toContain("throughput SLA");
+  });
+
   test("under-specified code-edit benchmark prompts include inline source context", () => {
     for (const caseId of ["p12-code-patch", "p14-schema-validate", "c01-full-refactor"]) {
       const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === caseId);

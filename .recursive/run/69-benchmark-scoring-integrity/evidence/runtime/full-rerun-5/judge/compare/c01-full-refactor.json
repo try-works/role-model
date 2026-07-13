@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "c01-full-refactor",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,15 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  const normali",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,7 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return normali",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "The openai diff correctly renames the function and returns the normalized strategy string, matching the requirement to only modify the router as asked. The moonshot diff erroneously transforms the return into a nested routingDiagnostics object, introducing unintended functionality. Both models correctly identify the missing 'requestedRoleId' and propose appropriate test updates, but the openai be…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\"\n  ],\n  \"rationale\": \"The openai diff correctly renames the function and returns the normalized strategy string, matching the requirement to only modify the router as asked. The moonshot diff erroneously transforms the return into a nested routingDiagnostics object, introducing unintended functionality. Both models correctly identify the missing 'requestedRoleId' and propose appropriate test updates, but the openai before/after explanations remain focused on the required changes, whereas moonshot describes an unintended structural change.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nYou are a senior engineer. Current `src/router.ts`:\n```ts\nexport function route(input: { strategy: string }) {\n  return input.strategy;\n}\n```\nCurrent schema:\n```json\n{\n  \"$id\": \"routingDiagnostics.difficultyRouting\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"difficultyBucket\": { \"type\": \"string\" },\n    \"chosenEndpointId\": { \"type\": \"string\" }\n  },\n  \"required\": [\"difficultyBucket\", \"chosenEndpointId\"],\n  \"additionalProperties\": false\n}\n```\nCurrent test excerpt:\n```ts\ntest('includes requestedRoleId when routing is controller-guided', () => {\n  expect(result.routingDiagnostics.difficultyRouting.requestedRoleId).toBe('coder.patch');\n});\n```\nProduce a unified diff patch for `src/router.ts` that renames `route` to `routeRuntimeRequest` and normalizes `strategy` with `trim().toLowerCase()`. Validate the schema contract, identify any missing field, refactor the conformance test, and explain each change with before/after examples. Return ONLY JSON with `diff`, `schema_findings`, `test_updates`, and `before_after`.",
+    "exemplarAnswer": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,4 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"schema_findings\": [\n    \"`requestedRoleId` is missing from `routingDiagnostics.difficultyRouting` even though controller-guided tests expect it.\"\n  ],\n  \"test_updates\": [\n    \"Extend the schema fixture with `requestedRoleId`.\",\n    \"Keep the controller-guided conformance assertion and update fixture snapshots accordingly.\"\n  ],\n  \"before_after\": [\n    \"Before: `route` returned the raw strategy string. After: `routeRuntimeRequest` normalizes whitespace and casing.\",\n    \"Before: schema omitted `requestedRoleId`. After: controller-guided fixtures include it so tests and schema agree.\"\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must include a unified diff for router.ts, identify the missing `requestedRoleId` schema field, propose test updates, and include before/after explanations.",
+      "[MUST] Include JSON keys: diff, schema_findings, test_updates, before_after",
+      "[SHOULD] Match clues: requestedRoleId|schema|test|router|diff"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 691,
+    "reasoningLength": 6027
+  },
+  "recordedAtMs": 1783936245899
+}

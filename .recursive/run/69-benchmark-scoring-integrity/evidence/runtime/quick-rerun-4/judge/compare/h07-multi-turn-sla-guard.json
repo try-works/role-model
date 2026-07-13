@@ -1,0 +1,52 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "caseId": "h07-multi-turn-sla-guard",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "```typescript\ntype DenialReason =\n  | { type: \"throughput_sla\" }\n  | { type: string };\n\ninterface EndpointCandidate {\n  id: string;\n  allowListed: boolean;\n  hardDenied: boolean;\n  hardDenialReasons?: DenialReason[];\n}\n\ninterface RoutingReq",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "```typescript\nexport type DenyReason =\n  | \"THROUGHPUT_SLA_HARD_DENY\"\n  | \"CAPACITY\"\n  | \"HEALTH\"\n  | \"AUTH\"\n  | \"REGION\"\n  | \"POLICY\"\n  | \"OTHER\";\n\nexport interface EndpointCandidate {\n  id: string;\n  allowListed: boolean;\n}\n\nexport interf",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Model 1 better incorporates multi-turn context with remote-only check, returns a boolean guard function as requested, and validates that denial reasons are exclusively throughput_sla. Model 2 is correct but lacks remote-only context and returns string|null rather than a boolean guard, making it slightly less aligned.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Model 1 better incorporates multi-turn context with remote-only check, returns a boolean guard function as requested, and validates that denial reasons are exclusively throughput_sla. Model 2 is correct but lacks remote-only context and returns string|null rather than a boolean guard, making it slightly less aligned.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nRemote-only alias requests return HTTP 400 with empty chosen_endpoint_id when throughput SLA hard-denies the sole candidate.\n\n[assistant]\nThroughput SLA hard-deny on the only allow-listed endpoint leaves zero eligible candidates.\n\n[user]\nWrite a TypeScript guard function that allows sole-candidate fallback when every allow-listed endpoint is hard-denied only by throughput SLA. Output only one ```typescript code fence with the full function.",
+    "exemplarAnswer": "```typescript\nexport function guardSoleCandidateThroughputDeny(input: {\n  readonly candidates: readonly { id: string; hardDeniedBySla: boolean }[];\n  readonly throughputSlaHardDeny: boolean;\n}): boolean {\n  const allowListed = input.candidates.filter((c) => !c.hardDeniedBySla);\n  if (allowListed.length !== 1) return false;\n  if (!input.throughputSlaHardDeny) return false;\n  return true;\n}\n```",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Multi-turn context used",
+      "[MUST] code references throughput SLA, sole candidate, and fallback allow.",
+      "[SHOULD] Match clues: throughput|sla|sole|candidate|fallback|allow",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 487,
+    "reasoningLength": 20615
+  },
+  "recordedAtMs": 1783932326035
+}

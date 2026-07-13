@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p12-code-patch",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p12-code-patch-a1-d827ee22-188f-4411-ad2f-a0d8ae25b040",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p12-code-patch\n\n## Original question\n[user]\nCurrent `src/router.ts`:\n```ts\nexport function route(input: { strategy: string }) {\n  return input.strategy;\n}\n```\nRefactor it by renaming `route` to `routeRuntimeRequest` and normalizing `strategy` with `trim().toLowerCase()` before returning it. Return ONLY JSON with `diff` and `rationale`.\n\n## Example expected answer\n{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,4 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"rationale\": \"Renamed the entrypoint for clarity and normalized strategy values to avoid whitespace and casing bugs.\"\n}\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Must include unified diff with ---/+++ hunks for router.ts and brief refactor rationale covering the rename and strategy normalization.\n[MUST] Include JSON keys: diff, rationale\n[SHOULD] Match clues: ---|\\+\\+\\+|@@, router, diff|patch\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nReturn ONLY a ```json fence: {\"diff\":\"<unified diff>\",\"rationale\":\"<brief rationale>\"}.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"diff\",\n    \"rationale\"\n  ],\n  \"properties\": {\n    \"diff\": {\n      \"type\": \"string\",\n      \"minLength\": 20\n    },\n    \"rationale\": {\n      \"type\": \"string\",\n      \"minLength\": 12\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMust include unified diff with ---/+++ hunks for router.ts and brief refactor rationale covering the rename and strategy normalization.\n\n## Subject deliverable to grade\n{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\",\n  \"rationale\": \"Renames the function for clarity and normalizes the strategy string to avoid mismatches due to whitespace or casing.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\": 1.0, \"rationale\": \"Deliverable contains a proper unified diff with ---/+++ headers and an @@ hunk that correctly renames the function and adds trim().toLowerCase(). The rationale concisely covers both the rename and normalization goals.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Deliverable contains a proper unified diff with ---/+++ headers and an @@ hunk that correctly renames the function and adds trim().toLowerCase(). The rationale concisely covers both the rename and normalization goals.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p12-code-patch.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nCurrent `src/router.ts`:\n```ts\nexport function route(input: { strategy: string }) {\n  return input.strategy;\n}\n```\nRefactor it by renaming `route` to `routeRuntimeRequest` and normalizing `strategy` with `trim().toLowerCase()` before returning it. Return ONLY JSON with `diff` and `rationale`.",
+    "exemplarAnswer": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,4 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"rationale\": \"Renamed the entrypoint for clarity and normalized strategy values to avoid whitespace and casing bugs.\"\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must include unified diff with ---/+++ hunks for router.ts and brief refactor rationale covering the rename and strategy normalization.",
+      "[MUST] Include JSON keys: diff, rationale",
+      "[SHOULD] Match clues: ---|\\+\\+\\+|@@, router, diff|patch"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 248,
+    "reasoningLength": 860
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783934952629
+}

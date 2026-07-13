@@ -1,0 +1,15 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "h15-max-signal-v3",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "All required API tool calls (read_file, grep_search, apply_patch) are present and apply_patch uses a valid Codex patch envelope with real change content. The final JSON object includes the required keys: plan, patch_summary, and test_snippet, each with substantive, non‑placeholder strings. No MUST‑NOT violations found.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h15-max-signal-v3.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/h15-max-signal-v3/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783932067519
+}

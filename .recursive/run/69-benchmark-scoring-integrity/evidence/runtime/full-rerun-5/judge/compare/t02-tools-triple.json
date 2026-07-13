@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "t02-tools-triple",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"The code-edit workflow is a five-step quality-assurance pipeline: (1) Read affected files to establish the baseline context and locate the target source modules. (2) Grep for eligibility checks to identify conditional guards,",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"Workflow: 1) Read affected files to understand current behavior and interfaces. 2) Grep for eligibility checks to find all related conditionals, validators, and tests. 3) Apply a unified diff patch with the minimal consistent",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both responses fully satisfy all checklist requirements: they provide a coherent plan addressing the tool workflow, include the required JSON key 'answer', and match tool-related clues (read, grep, patch, validate, refactor). Neither violates any MUST NOT rule. The answers are substantively equivalent, so ranking is arbitrary.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both responses fully satisfy all checklist requirements: they provide a coherent plan addressing the tool workflow, include the required JSON key 'answer', and match tool-related clues (read, grep, patch, validate, refactor). Neither violates any MUST NOT rule. The answers are substantively equivalent, so ranking is arbitrary.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nAnalyze this code-edit workflow: read affected files, grep for eligibility checks, apply a unified diff patch, validate JSON schema contract, and refactor the test suite.",
+    "exemplarAnswer": "Coherent plan or summary addressing the tool-using task.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Attempts the requested tool workflow without refusing outright.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: read|search|list|patch|tool|plan"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 497,
+    "reasoningLength": 1632
+  },
+  "recordedAtMs": 1783936399425
+}

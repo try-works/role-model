@@ -1,0 +1,52 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "caseId": "h01-implement-two-sum",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-h01-implement-two-sum-a1-64689f43-ea1d-443a-8327-37366c71eadb",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: h01-implement-two-sum\n\n## Original question\n[user]\nImplement twoSum(nums: number[], target: number): [number, number] in TypeScript. Use one Map pass, O(n). Return the two indices.\n\n## Example expected answer\n```typescript\nfunction twoSum(nums: number[], target: number): [number, number] {\n  const map = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const need = target - nums[i];\n    if (map.has(need)) return [map.get(need)!, i];\n    map.set(nums[i], i);\n  }\n  throw new Error('no pair');\n}\n```\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Must define twoSum, use Map or hash map, iterate nums once, return two numeric indices\n[MUST] No nested O(n^2) double loop.\n[SHOULD] Match clues: function\\s+twoSum, Map|new Map, nums, target, return\n[MUST] Provide complete working TypeScript — no placeholders or partial helpers only\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nReasoning allowed. Final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders.\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMust define twoSum, use Map or hash map, iterate nums once, return two numeric indices. No nested O(n^2) double loop.\n\n## Subject deliverable to grade\n```typescript\nfunction twoSum(nums: number[], target: number): [number, number] {\n  const seen = new Map<number, number>();\n\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (seen.has(complement)) {\n      return [seen.get(complement)!, i];\n    }\n    seen.set(nums[i], i);\n  }\n\n  throw new Error(\"No two sum solution exists\");\n}\n```"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The code defines twoSum, uses a Map for O(n) lookup, iterates once, returns two indices, no nested loops. Fully meets requirements.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The code defines twoSum, uses a Map for O(n) lookup, iterates once, returns two indices, no nested loops. Fully meets requirements.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h01-implement-two-sum.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nImplement twoSum(nums: number[], target: number): [number, number] in TypeScript. Use one Map pass, O(n). Return the two indices.",
+    "exemplarAnswer": "```typescript\nfunction twoSum(nums: number[], target: number): [number, number] {\n  const map = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const need = target - nums[i];\n    if (map.has(need)) return [map.get(need)!, i];\n    map.set(nums[i], i);\n  }\n  throw new Error('no pair');\n}\n```",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must define twoSum, use Map or hash map, iterate nums once, return two numeric indices",
+      "[MUST] No nested O(n^2) double loop.",
+      "[SHOULD] Match clues: function\\s+twoSum, Map|new Map, nums, target, return",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 159,
+    "reasoningLength": 1062
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783931854527
+}

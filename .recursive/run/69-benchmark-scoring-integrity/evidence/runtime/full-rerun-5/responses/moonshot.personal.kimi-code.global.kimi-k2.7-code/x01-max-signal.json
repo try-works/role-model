@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "x01-max-signal",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-x01-max-signal-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"diff --git a/src/router.ts b/src/router.ts\\n--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -156,3 +156,4 @@\\n // evaluateEligibility helper\\n+// sole-candidate fallback comment\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"read src/router.ts and grep throughputSla\",\n    \"apply sole-candidate fallback comment patch\",\n    \"emit structured deliverable\"\n  ],\n  \"patch_summary\": \"Added a sole-candidate fallback comment in src/router.ts near the evaluateEligibility helper marker.\",\n  \"test_snippet\": \"Run grep 'sole-candidate fallback comment' src/router.ts and confirm it appears exactly once with no syntax errors when compiling the router module.\"\n}",
+  "rawResponse": "```json\n{\"plan\":[\"read src/router.ts and grep throughputSla\",\"apply sole-candidate fallback comment patch\",\"emit structured deliverable\"],\"patch_summary\":\"Added a sole-candidate fallback comment in src/router.ts near the evaluateEligibility helper marker.\",\"test_snippet\":\"Run grep 'sole-candidate fallback comment' src/router.ts and confirm it appears exactly once with no syntax errors when compiling the router module.\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"diff --git a/src/router.ts b/src/router.ts\\n--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -156,3 +156,4 @@\\n // evaluateEligibility helper\\n+// sole-candidate fallback comment\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"read src/router.ts and grep throughputSla\",\n    \"apply sole-candidate fallback comment patch\",\n    \"emit structured deliverable\"\n  ],\n  \"patch_summary\": \"Added a sole-candidate fallback comment in src/router.ts near the evaluateEligibility helper marker.\",\n  \"test_snippet\": \"Run grep 'sole-candidate fallback comment' src/router.ts and confirm it appears exactly once with no syntax errors when compiling the router module.\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 10264,
+  "failure": false,
+  "recordedAtMs": 1783933610039
+}

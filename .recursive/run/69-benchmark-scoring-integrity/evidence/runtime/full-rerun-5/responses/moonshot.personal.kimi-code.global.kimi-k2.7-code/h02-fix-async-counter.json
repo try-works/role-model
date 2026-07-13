@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h02-fix-async-counter",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-h02-fix-async-counter-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "```typescript\nclass AsyncLock {\n  private locked = false;\n  private queue: Array<() => void> = [];\n\n  async acquire(): Promise<() => void> {\n    return new Promise((resolve) => {\n      const release = () => {\n        const next = this.queue.shift();\n        if (next) next();\n        else this.locked = false;\n      };\n\n      if (!this.locked) {\n        this.locked = true;\n        resolve(release);\n      } else {\n        this.queue.push(() => resolve(release));\n      }\n    });\n  }\n}\n\nasync function main() {\n  const lock = new AsyncLock();\n  let count = 0;\n\n  async function increment() {\n    const release = await lock.acquire();\n    try {\n      const current = count;\n      await Promise.resolve();\n      count = current + 1;\n    } finally {\n      release();\n    }\n  }\n\n  await Promise.all([increment(), increment(), increment()]);\n  console.log(count);\n}\n\nmain();\n```",
+  "rawResponse": "```typescript\nclass AsyncLock {\n  private locked = false;\n  private queue: Array<() => void> = [];\n\n  async acquire(): Promise<() => void> {\n    return new Promise((resolve) => {\n      const release = () => {\n        const next = this.queue.shift();\n        if (next) next();\n        else this.locked = false;\n      };\n\n      if (!this.locked) {\n        this.locked = true;\n        resolve(release);\n      } else {\n        this.queue.push(() => resolve(release));\n      }\n    });\n  }\n}\n\nasync function main() {\n  const lock = new AsyncLock();\n  let count = 0;\n\n  async function increment() {\n    const release = await lock.acquire();\n    try {\n      const current = count;\n      await Promise.resolve();\n      count = current + 1;\n    } finally {\n      release();\n    }\n  }\n\n  await Promise.all([increment(), increment(), increment()]);\n  console.log(count);\n}\n\nmain();\n```",
+  "formattedDeliverable": "```typescript\nclass AsyncLock {\n  private locked = false;\n  private queue: Array<() => void> = [];\n\n  async acquire(): Promise<() => void> {\n    return new Promise((resolve) => {\n      const release = () => {\n        const next = this.queue.shift();\n        if (next) next();\n        else this.locked = false;\n      };\n\n      if (!this.locked) {\n        this.locked = true;\n        resolve(release);\n      } else {\n        this.queue.push(() => resolve(release));\n      }\n    });\n  }\n}\n\nasync function main() {\n  const lock = new AsyncLock();\n  let count = 0;\n\n  async function increment() {\n    const release = await lock.acquire();\n    try {\n      const current = count;\n      await Promise.resolve();\n      count = current + 1;\n    } finally {\n      release();\n    }\n  }\n\n  await Promise.all([increment(), increment(), increment()]);\n  console.log(count);\n}\n\nmain();\n```",
+  "extractionMethod": "code_fence",
+  "latencyMs": 24437,
+  "failure": false,
+  "recordedAtMs": 1783933868758
+}

@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p14-schema-validate",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"analysis\": \"The current schema only allows `difficultyBucket` and `chosenEndpointId` and sets `additionalProperties: false`. The test asserts that `routingDiagnostics.difficultyRouting.requestedRoleId` equals `'coder.patch'`, but `requ",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"analysis\": \"The test references routingDiagnostics.difficultyRouting.requestedRoleId, but the schema defines only difficultyBucket and chosenEndpointId and forbids extra keys with additionalProperties: false. This is a contract violati",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "Both correctly identify missing requestedRoleId and propose test updates. However, the second model’s suggestion to keep the field optional in the schema and conditionally assert it only in controller-guided scenarios is more accurate and less restrictive than the first model’s proposal to unconditionally add it to required, which would break non-controller-guided routings. Thus, the second deliv…",
+  "rawResponse": "{\"relativeRanking\":[\"openai.personal.openai-codex-subscription.global.gpt-5.4\",\"moonshot.personal.kimi-code.global.kimi-k2.7-code\"],\"rationale\":\"Both correctly identify missing requestedRoleId and propose test updates. However, the second model’s suggestion to keep the field optional in the schema and conditionally assert it only in controller-guided scenarios is more accurate and less restrictive than the first model’s proposal to unconditionally add it to required, which would break non-controller-guided routings. Thus, the second deliverable is substantively superior.\"}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nCurrent schema and test excerpt:\n```json\n{\n  \"$id\": \"routingDiagnostics.difficultyRouting\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"difficultyBucket\": { \"type\": \"string\" },\n    \"chosenEndpointId\": { \"type\": \"string\" }\n  },\n  \"required\": [\"difficultyBucket\", \"chosenEndpointId\"],\n  \"additionalProperties\": false\n}\n```\n```ts\ntest('includes requestedRoleId when routing is controller-guided', () => {\n  expect(result.routingDiagnostics.difficultyRouting.requestedRoleId).toBe('coder.patch');\n});\n```\nValidate the schema contract for routing diagnostics and refactor the test suite if fields are missing. Return ONLY JSON with `analysis`, `missing_fields`, and `test_updates`.",
+    "exemplarAnswer": "{\n  \"analysis\": \"The schema omits `requestedRoleId`, so controller-guided routing diagnostics cannot satisfy the existing test expectation.\",\n  \"missing_fields\": [\n    \"requestedRoleId\"\n  ],\n  \"test_updates\": [\n    \"Add `requestedRoleId` to the schema properties and required list when controller-guided routing is emitted.\",\n    \"Keep the test assertion and extend fixtures to include `requestedRoleId: \\\"coder.patch\\\"`.\"\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must identify that `requestedRoleId` is missing from the schema and propose concrete test updates.",
+      "[MUST] Include JSON keys: analysis, missing_fields, test_updates",
+      "[SHOULD] Match clues: requestedRoleId|schema|test"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 579,
+    "reasoningLength": 4827
+  },
+  "recordedAtMs": 1783936219672
+}

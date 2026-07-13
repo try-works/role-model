@@ -1,0 +1,25 @@
+{
+  "id": "chatcmpl-5yFa91ewtKGG5l09OaxXAgcC",
+  "object": "response",
+  "created_at": 1783942702,
+  "status": "completed",
+  "model": "moonshot/kimi-k2.7-code",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_chatcmpl-5yFa91ewtKGG5l09OaxXAgcC",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "OK"
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 13,
+    "output_tokens": 26,
+    "total_tokens": 39
+  }
+}

@@ -1,0 +1,21 @@
+
+> @role-model-router/bench-routing@0.0.0 test D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity\role-model-router\packages\bench-routing
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity/role-model-router/packages/bench-routing
+
+ ✓ src/diff-validator.test.ts (4 tests) 12ms
+ ✓ src/judge-brief.test.ts (7 tests) 18ms
+ ✓ src/answer-format.test.ts (6 tests) 25ms
+ ✓ src/reasoning-extraction.test.ts (2 tests) 20ms
+ ✓ test/answer-format.test.ts (4 tests) 14ms
+ ✓ test/subject-prompt.test.ts (1 test) 7ms
+ ✓ test/judge-brief.test.ts (5 tests) 26ms
+ ✓ src/index.test.ts (27 tests) 39ms
+
+ Test Files  8 passed (8)
+      Tests  56 passed (56)
+   Start at  10:10:44
+   Duration  2.64s (transform 837ms, setup 0ms, collect 2.06s, tests 162ms, environment 4ms, prepare 5.40s)
+

@@ -1,0 +1,2801 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "suiteVersion": "3.4",
+  "mode": "full",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "startedAtMs": 1783932685646,
+  "completedAtMs": 1783937051027,
+  "endpointGrades": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "modelId": "moonshot/kimi-k2.7-code",
+      "sourceType": "remote",
+      "overallScore": 0.9818181818181818,
+      "byDifficulty": {
+        "easy": {
+          "cases": 15,
+          "score": 1
+        },
+        "medium": {
+          "cases": 19,
+          "score": 1
+        },
+        "hard": {
+          "cases": 21,
+          "score": 0.9523809523809523
+        }
+      },
+      "caseResults": [
+        {
+          "caseId": "e01-yes-no",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 4250,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e02-single-word",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2174,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e03-count",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2487,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e04-capitalize",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2685,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e05-emoji",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 3780,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e06-timezone",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2956,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e07-boolean",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2660,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e08-format-json",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 22933,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p01-easy-greet",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 6553,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p02-easy-math",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 15495,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p03-easy-define",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 4826,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p04-easy-translate",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 3066,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p05-easy-list",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 4283,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p06-medium-explain",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 11424,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p07-medium-compare",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 8893,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p08-medium-summarize",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 5166,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p09-medium-howto",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 8077,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p10-long-context",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 14024,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p11-long-multi-turn",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 10570,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "l01-verbose-incident",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 5034,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "l02-many-constraints",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 16599,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p12-code-patch",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 54237,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p13-code-debug",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 20151,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p14-schema-validate",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 43516,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "c01-full-refactor",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 119542,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "c02-ts-generics",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 125323,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p15-tools-read-one",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 4828,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p16-tools-search",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 5703,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "t01-tools-list-dir",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 5812,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 122337,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p18-tools-agent",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 23730,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "t02-tools-triple",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 11128,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "t03-tools-agent-plan",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 61976,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p19-decompose-plan",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 46159,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p20-decompose-arch",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 43719,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "d01-milestones-heavy",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 61155,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 10264,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "x02-max-context-tools",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 223993,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p24-exact-local",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2842,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p25-exact-remote",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2920,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 4518,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 24437,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h03-implement-lru-cache",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 14469,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 7421,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "latencyMs": 15539,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 14982,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 48575,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 9821,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 11106,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 42819,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h11-decompose-code-verify",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 11883,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h12-four-turn-architecture",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 11340,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h13-parse-nested-json",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 6647,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h14-refactor-extract-helper",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 26960,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 32156,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        }
+      ],
+      "caseTaxonomyTags": {
+        "e01-yes-no": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e02-single-word": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e03-count": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e04-capitalize": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e05-emoji": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e06-timezone": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e07-boolean": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e08-format-json": {
+          "roleId": "data",
+          "taskType": "data.transform",
+          "requiredCapabilities": [
+            "text.chat",
+            "data.schema"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ]
+        },
+        "p01-easy-greet": {
+          "roleId": "support",
+          "taskType": "support.ticket.reply",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p02-easy-math": {
+          "roleId": "mathematician",
+          "taskType": "mathematician.proof.verify",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p03-easy-define": {
+          "roleId": "knowledge",
+          "taskType": "knowledge.explain.concept",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p04-easy-translate": {
+          "roleId": "translator",
+          "taskType": "translator.localize.text",
+          "requiredCapabilities": [
+            "text.chat",
+            "translation.text"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p05-easy-list": {
+          "roleId": "knowledge",
+          "taskType": "knowledge.explain.concept",
+          "requiredCapabilities": [
+            "text.chat"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p06-medium-explain": {
+          "roleId": "educator",
+          "taskType": "educator.lesson.plan",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p07-medium-compare": {
+          "roleId": "researcher",
+          "taskType": "researcher.compare_sources",
+          "requiredCapabilities": [
+            "text.chat"
+          ],
+          "preferredCapabilities": [
+            "citation.synthesis"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": []
+        },
+        "p08-medium-summarize": {
+          "roleId": "analyst",
+          "taskType": "analyst.metrics.define",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p09-medium-howto": {
+          "roleId": "support",
+          "taskType": "support.knowledge_base.suggest",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p10-long-context": {
+          "roleId": "researcher",
+          "taskType": "researcher.literature_review",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p11-long-multi-turn": {
+          "roleId": "coordinator",
+          "taskType": "coordinator.project.track",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "l01-verbose-incident": {
+          "roleId": "support",
+          "taskType": "support.ticket.reply",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": []
+        },
+        "l02-many-constraints": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p12-code-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "p13-code-debug": {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "p14-schema-validate": {
+          "roleId": "data",
+          "taskType": "data.schema.review",
+          "requiredCapabilities": [
+            "data.schema"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ],
+          "toolClasses": []
+        },
+        "c01-full-refactor": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "c02-ts-generics": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p15-tools-read-one": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "p16-tools-search": {
+          "roleId": "researcher",
+          "taskType": "researcher.web_research",
+          "requiredCapabilities": [
+            "text.chat",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "t01-tools-list-dir": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "p17-tools-multi-hard": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "tools.function_calling"
+          ],
+          "preferredCapabilities": [
+            "tools.command_execution"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "p18-tools-agent": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "t02-tools-triple": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "t03-tools-agent-plan": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "p19-decompose-plan": {
+          "roleId": "planner",
+          "taskType": "planner.roadmap.create",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p20-decompose-arch": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "d01-milestones-heavy": {
+          "roleId": "planner",
+          "taskType": "planner.roadmap.create",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "x01-max-signal": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "x02-max-context-tools": {
+          "roleId": "architect",
+          "taskType": "architect.tradeoff.analyze",
+          "requiredCapabilities": [
+            "tools.function_calling",
+            "code_generation",
+            "planning"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "p24-exact-local": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p25-exact-remote": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p26-cache-easy-a": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p27-cache-easy-b": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p28-cache-hard-a": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p29-cache-hard-b": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p30-cache-invalidate": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p31-cache-strategy-switch": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "h01-implement-two-sum": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h02-fix-async-counter": {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h03-implement-lru-cache": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h04-tool-read-router": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "code.read"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h05-tool-grep-eligibility": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "code.read"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h06-tool-apply-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h07-multi-turn-sla-guard": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "h08-multi-turn-tool-refine": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h09-agent-metrics-chain": {
+          "roleId": "analyst",
+          "taskType": "analyst.metrics.define",
+          "requiredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "data.query"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h10-agent-read-grep-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "h11-decompose-code-verify": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "planning",
+            "code_generation",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "h12-four-turn-architecture": {
+          "roleId": "architect",
+          "taskType": "architect.tradeoff.analyze",
+          "requiredCapabilities": [
+            "planning",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "h13-parse-nested-json": {
+          "roleId": "data",
+          "taskType": "data.transform",
+          "requiredCapabilities": [
+            "data.schema",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ]
+        },
+        "h14-refactor-extract-helper": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h15-max-signal-v3": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        }
+      }
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "modelId": "chatgpt/gpt-5.4",
+      "sourceType": "remote",
+      "overallScore": 0.9454545454545454,
+      "byDifficulty": {
+        "easy": {
+          "cases": 15,
+          "score": 0.9333333333333333
+        },
+        "medium": {
+          "cases": 19,
+          "score": 1
+        },
+        "hard": {
+          "cases": 21,
+          "score": 0.9047619047619048
+        }
+      },
+      "caseResults": [
+        {
+          "caseId": "e01-yes-no",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 3195,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e02-single-word",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2177,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e03-count",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2142,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e04-capitalize",
+          "difficultyBucket": "easy",
+          "score": 0,
+          "latencyMs": 2212,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e05-emoji",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2457,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e06-timezone",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2353,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e07-boolean",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2338,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "e08-format-json",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 13531,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p01-easy-greet",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 1853,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p02-easy-math",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 13638,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p03-easy-define",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2615,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p04-easy-translate",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 1632,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p05-easy-list",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 2398,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p06-medium-explain",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 12648,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p07-medium-compare",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 9119,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p08-medium-summarize",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 4757,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p09-medium-howto",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 4689,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p10-long-context",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 4708,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p11-long-multi-turn",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 8071,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "l01-verbose-incident",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 2648,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "l02-many-constraints",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 6498,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p12-code-patch",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 30434,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p13-code-debug",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 14745,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p14-schema-validate",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 38335,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "c01-full-refactor",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 73788,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "c02-ts-generics",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 20444,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p15-tools-read-one",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 18820,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p16-tools-search",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 7247,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "t01-tools-list-dir",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 5636,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p17-tools-multi-hard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 7848,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p18-tools-agent",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 8570,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "t02-tools-triple",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 4224,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "t03-tools-agent-plan",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "latencyMs": 28828,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p19-decompose-plan",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 36165,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p20-decompose-arch",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 26631,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "d01-milestones-heavy",
+          "difficultyBucket": "medium",
+          "score": 1,
+          "latencyMs": 45397,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "x01-max-signal",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 10653,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "x02-max-context-tools",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 55621,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p24-exact-local",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 1908,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "p25-exact-remote",
+          "difficultyBucket": "easy",
+          "score": 1,
+          "latencyMs": 1866,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h01-implement-two-sum",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 3383,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h02-fix-async-counter",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 6167,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h03-implement-lru-cache",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 5164,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h04-tool-read-router",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 3983,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h05-tool-grep-eligibility",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 8087,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h06-tool-apply-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 8997,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h07-multi-turn-sla-guard",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 8309,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h08-multi-turn-tool-refine",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 4562,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h09-agent-metrics-chain",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 7365,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h10-agent-read-grep-patch",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 8706,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h11-decompose-code-verify",
+          "difficultyBucket": "hard",
+          "score": 0,
+          "latencyMs": 6352,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h12-four-turn-architecture",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 7459,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h13-parse-nested-json",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 6569,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h14-refactor-extract-helper",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 4244,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        },
+        {
+          "caseId": "h15-max-signal-v3",
+          "difficultyBucket": "hard",
+          "score": 1,
+          "latencyMs": 12631,
+          "parseSuccess": true,
+          "judgeError": null,
+          "judgeUnavailable": false,
+          "cappedByValidator": false
+        }
+      ],
+      "caseTaxonomyTags": {
+        "e01-yes-no": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e02-single-word": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e03-count": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e04-capitalize": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e05-emoji": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e06-timezone": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e07-boolean": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "e08-format-json": {
+          "roleId": "data",
+          "taskType": "data.transform",
+          "requiredCapabilities": [
+            "text.chat",
+            "data.schema"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ]
+        },
+        "p01-easy-greet": {
+          "roleId": "support",
+          "taskType": "support.ticket.reply",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p02-easy-math": {
+          "roleId": "mathematician",
+          "taskType": "mathematician.proof.verify",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p03-easy-define": {
+          "roleId": "knowledge",
+          "taskType": "knowledge.explain.concept",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p04-easy-translate": {
+          "roleId": "translator",
+          "taskType": "translator.localize.text",
+          "requiredCapabilities": [
+            "text.chat",
+            "translation.text"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p05-easy-list": {
+          "roleId": "knowledge",
+          "taskType": "knowledge.explain.concept",
+          "requiredCapabilities": [
+            "text.chat"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p06-medium-explain": {
+          "roleId": "educator",
+          "taskType": "educator.lesson.plan",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p07-medium-compare": {
+          "roleId": "researcher",
+          "taskType": "researcher.compare_sources",
+          "requiredCapabilities": [
+            "text.chat"
+          ],
+          "preferredCapabilities": [
+            "citation.synthesis"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": []
+        },
+        "p08-medium-summarize": {
+          "roleId": "analyst",
+          "taskType": "analyst.metrics.define",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p09-medium-howto": {
+          "roleId": "support",
+          "taskType": "support.knowledge_base.suggest",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p10-long-context": {
+          "roleId": "researcher",
+          "taskType": "researcher.literature_review",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p11-long-multi-turn": {
+          "roleId": "coordinator",
+          "taskType": "coordinator.project.track",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "l01-verbose-incident": {
+          "roleId": "support",
+          "taskType": "support.ticket.reply",
+          "requiredCapabilities": [
+            "text.chat",
+            "communication.user_facing"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": []
+        },
+        "l02-many-constraints": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p12-code-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "p13-code-debug": {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "p14-schema-validate": {
+          "roleId": "data",
+          "taskType": "data.schema.review",
+          "requiredCapabilities": [
+            "data.schema"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ],
+          "toolClasses": []
+        },
+        "c01-full-refactor": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "c02-ts-generics": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p15-tools-read-one": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "p16-tools-search": {
+          "roleId": "researcher",
+          "taskType": "researcher.web_research",
+          "requiredCapabilities": [
+            "text.chat",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "t01-tools-list-dir": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "p17-tools-multi-hard": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "tools.function_calling"
+          ],
+          "preferredCapabilities": [
+            "tools.command_execution"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "p18-tools-agent": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "t02-tools-triple": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "t03-tools-agent-plan": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "tools.function_calling",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "p19-decompose-plan": {
+          "roleId": "planner",
+          "taskType": "planner.roadmap.create",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p20-decompose-arch": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "d01-milestones-heavy": {
+          "roleId": "planner",
+          "taskType": "planner.roadmap.create",
+          "requiredCapabilities": [
+            "text.chat",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "x01-max-signal": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "x02-max-context-tools": {
+          "roleId": "architect",
+          "taskType": "architect.tradeoff.analyze",
+          "requiredCapabilities": [
+            "tools.function_calling",
+            "code_generation",
+            "planning"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "p24-exact-local": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p25-exact-remote": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p26-cache-easy-a": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p27-cache-easy-b": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p28-cache-hard-a": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p29-cache-hard-b": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p30-cache-invalidate": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "p31-cache-strategy-switch": {
+          "roleId": "operator",
+          "taskType": "operator.monitor.setup",
+          "requiredCapabilities": [
+            "text.chat",
+            "instruction_following"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "h01-implement-two-sum": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h02-fix-async-counter": {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h03-implement-lru-cache": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h04-tool-read-router": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "code.read"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h05-tool-grep-eligibility": {
+          "roleId": "coder",
+          "taskType": "coder.review",
+          "requiredCapabilities": [
+            "code.read"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h06-tool-apply-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h07-multi-turn-sla-guard": {
+          "roleId": "operator",
+          "taskType": "operator.debug.startup",
+          "requiredCapabilities": [
+            "code.read",
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "h08-multi-turn-tool-refine": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h09-agent-metrics-chain": {
+          "roleId": "analyst",
+          "taskType": "analyst.metrics.define",
+          "requiredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "preferredCapabilities": [
+            "data.query"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read"
+          ]
+        },
+        "h10-agent-read-grep-patch": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ]
+        },
+        "h11-decompose-code-verify": {
+          "roleId": "architect",
+          "taskType": "architect.system.design",
+          "requiredCapabilities": [
+            "planning",
+            "code_generation",
+            "tools.function_calling"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "shell.execute"
+          ]
+        },
+        "h12-four-turn-architecture": {
+          "roleId": "architect",
+          "taskType": "architect.tradeoff.analyze",
+          "requiredCapabilities": [
+            "planning",
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ]
+        },
+        "h13-parse-nested-json": {
+          "roleId": "data",
+          "taskType": "data.transform",
+          "requiredCapabilities": [
+            "data.schema",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text",
+            "structured_json"
+          ]
+        },
+        "h14-refactor-extract-helper": {
+          "roleId": "coder",
+          "taskType": "coder.refactor",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        },
+        "h15-max-signal-v3": {
+          "roleId": "coder",
+          "taskType": "coder.edit",
+          "requiredCapabilities": [
+            "code.read",
+            "code.write"
+          ],
+          "preferredCapabilities": [
+            "reasoning.multi_step"
+          ],
+          "requiredModalities": [
+            "text"
+          ],
+          "toolClasses": [
+            "filesystem.read",
+            "filesystem.write"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -53,6 +53,51 @@ describe("bench-judge grading prompts", () => {
     expect(prompt).not.toContain("Prompt summary:");
   });
 
+  test("buildJudgeGradingPrompt treats recorded API tool calls as authoritative even when deliverable repeats tool_calls", () => {
+    const deliverable = JSON.stringify(
+      {
+        tool_calls: [{ name: "run_tests", arguments: { command: "pnpm test benchmark-progress" } }],
+        bullets: [
+          "BenchmarkRunProgress includes runId, status, completedSteps, and totalSteps.",
+          "run_tests was executed with pnpm test benchmark-progress.",
+        ],
+      },
+      null,
+      2,
+    );
+
+    const prompt = buildJudgeGradingPrompt({
+      caseId: "h11-decompose-code-verify",
+      expectedResponse: "Milestone bullets, BenchmarkRunProgress interface, run_tests tool call",
+      gradingCriteria:
+        "Structured phases; includes BenchmarkRunProgress interface fields; run_tests tool emitted.",
+      actualResponse: deliverable,
+      formattedDeliverable: deliverable,
+      answerFormatInstruction:
+        'BENCHMARK DELIVERABLE RULES:\nStep 1: emit required API tool calls. Step 2: after tools, output ONLY a ```json fence: {"bullets":["...","..."]}.',
+      requiredToolNames: ["run_tests"],
+      structuredToolNames: ["run_tests"],
+      briefing: {
+        questionTranscript:
+          "[user]\nPhase 1: bullet milestones. Phase 2: write BenchmarkRunProgress. Phase 3: call run_tests.",
+        exemplarAnswer: "Milestone bullets, BenchmarkRunProgress interface, run_tests tool call",
+        exemplarQuality: "derived",
+        deliverablesChecklist: [
+          "[MUST] Structured phases",
+          "[MUST] includes BenchmarkRunProgress interface fields",
+          "[MUST] run_tests tool emitted.",
+        ],
+        antiPatterns: ["MUST NOT emit prose-only TOOL_CALL lines without API tool_calls"],
+      },
+    });
+
+    expect(prompt).toContain("Actual structured tool calls from API: run_tests.");
+    expect(prompt).toContain("Treat the recorded API tool-call list above as authoritative");
+    expect(prompt).toContain(
+      "Do not penalize the deliverable for also containing a tool_calls field",
+    );
+  });
+
   test("buildCompareGradingPrompt shares briefing sections with per-case judge", () => {
     const prompt = buildCompareGradingPrompt({
       caseId: "p17-tools-multi-hard",

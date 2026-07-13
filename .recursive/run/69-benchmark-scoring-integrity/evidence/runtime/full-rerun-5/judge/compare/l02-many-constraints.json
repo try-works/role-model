@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "l02-many-constraints",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"- Prefer remote when the local cache entry is missing or invalidated (TTL expiry, version mismatch, dependency update).\\n- Choose remote if the rubric signals higher authority, fresher source, or an explicit remote-first flag",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"- Strategy C should pick the remote endpoint when the local endpoint lacks the needed data, is stale, or cannot satisfy freshness, authorization, or completeness requirements.\\n- Prefer the local endpoint for low-latency read",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "Both satisfy all MUST constraints (bullet-only, ≤6 bullets, mention local/remote/cache/rubric, no 'however', recommendation line). Endpoint 2 offers more granular cache invalidation reasons and a dedicated rubric-signal bullet, with a concrete default-local/escalate recommendation, making it slightly more comprehensive and actionable.",
+  "rawResponse": "{\"relativeRanking\":[\"openai.personal.openai-codex-subscription.global.gpt-5.4\",\"moonshot.personal.kimi-code.global.kimi-k2.7-code\"],\"rationale\":\"Both satisfy all MUST constraints (bullet-only, ≤6 bullets, mention local/remote/cache/rubric, no 'however', recommendation line). Endpoint 2 offers more granular cache invalidation reasons and a dedicated rubric-signal bullet, with a concrete default-local/escalate recommendation, making it slightly more comprehensive and actionable.\"}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nFollow these constraints exactly: (1) use bullet points only, (2) max 6 bullets, (3) mention local and remote endpoints, (4) mention cache invalidation reasons, (5) mention rubric signals, (6) do not use the word 'however', (7) keep under 120 words, (8) end with a one-line recommendation. Task: explain when Strategy C should pick remote over local.",
+    "exemplarAnswer": "bullet list with recommendation line\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Bullet-only, <=6 bullets, mentions local/remote/cache/rubric, no 'however', recommendation line.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: local, remote, recommend"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 483,
+    "reasoningLength": 17167
+  },
+  "recordedAtMs": 1783936142047
+}

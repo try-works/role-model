@@ -15591,6 +15591,11 @@ describe("runtime-host-bridge", () => {
           executeChatCompletions: (
             body: Record<string, unknown>,
             requestId: string,
+            streamWriter?: unknown,
+            requestOptions?: {
+              endpointId?: string;
+              ignoreExecutionFailureCooldowns?: boolean;
+            },
           ) => Promise<unknown>;
           executeResponses: (body: Record<string, unknown>, requestId: string) => Promise<unknown>;
           listTelemetryRequests?: () => Promise<unknown>;
@@ -15776,6 +15781,26 @@ describe("runtime-host-bridge", () => {
         /temporarily unavailable|recent execution failures/i,
       );
       expect(executeAttempts).toBe(2);
+      await expect(
+        backend.executeChatCompletions(
+          {
+            model: "chatgpt/gpt-5.4",
+            messages: [
+              {
+                role: "user",
+                content: "Benchmark this exact endpoint even if a cooldown receipt exists.",
+              },
+            ],
+          },
+          "req-runtime-bridge-codex-timeout-benchmark-001",
+          undefined,
+          {
+            endpointId: endpoint.endpointId,
+            ignoreExecutionFailureCooldowns: true,
+          },
+        ),
+      ).rejects.toThrow(/could not reach the ai service|timed out/i);
+      expect(executeAttempts).toBe(4);
 
       const server = await (
         bridge as {
@@ -15834,14 +15859,14 @@ describe("runtime-host-bridge", () => {
                 expect.objectContaining({
                   endpointId: endpoint.endpointId,
                   active: true,
-                  failureCount: 1,
+                  failureCount: 2,
                   lastErrorClass: "upstream_timeout",
                 }),
               ],
             }),
           }),
         );
-        expect(executeAttempts).toBe(2);
+        expect(executeAttempts).toBe(4);
 
         const telemetryResponse = await fetch(
           `http://127.0.0.1:${server.port}/api/role-model/telemetry/requests`,
@@ -15887,7 +15912,7 @@ describe("runtime-host-bridge", () => {
                     expect.objectContaining({
                       endpointId: endpoint.endpointId,
                       active: true,
-                      failureCount: 1,
+                      failureCount: 2,
                       lastErrorClass: "upstream_timeout",
                     }),
                   ],
@@ -15925,7 +15950,7 @@ describe("runtime-host-bridge", () => {
           expect.objectContaining({
             [endpoint.endpointId]: expect.objectContaining({
               endpointId: endpoint.endpointId,
-              failureCount: 1,
+              failureCount: 2,
               lastErrorClass: "upstream_timeout",
             }),
           }),
@@ -15969,7 +15994,7 @@ describe("runtime-host-bridge", () => {
             endpointId: endpoint.endpointId,
             executionCooldown: expect.objectContaining({
               active: true,
-              failureCount: 1,
+              failureCount: 2,
               lastErrorClass: "upstream_timeout",
             }),
           }),
@@ -18598,250 +18623,261 @@ describe("runtime-host-bridge", () => {
       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
     ).toBe("function");
 
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      "role-model-runtime-host-kimi-hosted-web-search-tests",
+    );
     let kimiRequestCount = 0;
     const kimiRequestBodies: Record<string, unknown>[] = [];
+    await rm(runtimeStateRoot, { recursive: true, force: true });
 
-    const backend = await (
-      bridge as {
-        createRuntimeBridgeBackend: (options: {
-          repoRoot: string;
-          runtimeStateRoot: string;
-          scopeId: string;
-          fixtureRoot?: string;
-          networkFetcher?: typeof fetch;
-        }) => Promise<{
-          executeResponses: (
-            body: Record<string, unknown>,
-            requestId: string,
-          ) => Promise<{
-            model: string;
-            endpointId: string;
-            adapterFamily: string;
-            outputText: string;
-            finishReason: string;
-            toolCalls?: readonly {
-              id: string;
-              type: "function";
-              function: {
-                name: string;
-                arguments: string;
+    try {
+      const backend = await (
+        bridge as {
+          createRuntimeBridgeBackend: (options: {
+            repoRoot: string;
+            runtimeStateRoot: string;
+            scopeId: string;
+            fixtureRoot?: string;
+            networkFetcher?: typeof fetch;
+          }) => Promise<{
+            executeResponses: (
+              body: Record<string, unknown>,
+              requestId: string,
+            ) => Promise<{
+              model: string;
+              endpointId: string;
+              adapterFamily: string;
+              outputText: string;
+              finishReason: string;
+              toolCalls?: readonly {
+                id: string;
+                type: "function";
+                function: {
+                  name: string;
+                  arguments: string;
+                };
+              }[];
+              toolExecutions?: readonly {
+                toolCallId: string;
+                toolName: string;
+                connectorId: string;
+                connectorKind: string;
+                status: string;
+                output: unknown;
+              }[];
+              usage: {
+                inputTokens: number;
+                outputTokens: number;
               };
-            }[];
-            toolExecutions?: readonly {
-              toolCallId: string;
-              toolName: string;
-              connectorId: string;
-              connectorKind: string;
-              status: string;
-              output: unknown;
-            }[];
-            usage: {
-              inputTokens: number;
-              outputTokens: number;
-            };
+            }>;
+            startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+            pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
+            activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
+            shutdown?: () => Promise<void>;
           }>;
-          startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
-          pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
-          activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
-        }>;
-      }
-    ).createRuntimeBridgeBackend({
-      repoRoot,
-      fixtureRoot: testFixtureRoot,
-      runtimeStateRoot: path.join(
-        os.tmpdir(),
-        "role-model-runtime-host-kimi-hosted-web-search-tests",
-      ),
-      scopeId: "runtime-host-kimi-hosted-web-search-tests",
-      networkFetcher: async (input, init) => {
-        const url =
-          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
-        if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
-          return new Response(
-            JSON.stringify({
-              user_code: "ABCD-EFGH",
-              device_code: "device-002",
-              verification_uri: "https://auth.kimi.com/device",
-              verification_uri_complete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
-              expires_in: 900,
-              interval: 5,
-            }),
-            { status: 200, headers: { "content-type": "application/json" } },
-          );
         }
-        if (url === "https://auth.kimi.com/api/oauth/token") {
-          return new Response(
-            JSON.stringify({
-              access_token: "access-002",
-              refresh_token: "refresh-002",
-              expires_in: 3600,
-              scope: "openid profile",
-              token_type: "Bearer",
-            }),
-            { status: 200, headers: { "content-type": "application/json" } },
-          );
-        }
-        if (url === "https://api.kimi.com/coding/v1/chat/completions") {
-          kimiRequestCount += 1;
-          expect(init?.method ?? "POST").toBe("POST");
-          expect(init?.headers).toEqual(
-            expect.objectContaining({
-              authorization: "Bearer access-002",
-            }),
-          );
-          const requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
-          kimiRequestBodies.push(requestBody);
-          if (kimiRequestCount === 1) {
+      ).createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "runtime-host-kimi-hosted-web-search-tests",
+        networkFetcher: async (input, init) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
+            return new Response(
+              JSON.stringify({
+                user_code: "ABCD-EFGH",
+                device_code: "device-002",
+                verification_uri: "https://auth.kimi.com/device",
+                verification_uri_complete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+                expires_in: 900,
+                interval: 5,
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+          if (url === "https://auth.kimi.com/api/oauth/token") {
+            return new Response(
+              JSON.stringify({
+                access_token: "access-002",
+                refresh_token: "refresh-002",
+                expires_in: 3600,
+                scope: "openid profile",
+                token_type: "Bearer",
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+          if (url === "https://api.kimi.com/coding/v1/chat/completions") {
+            kimiRequestCount += 1;
+            expect(init?.method ?? "POST").toBe("POST");
+            expect(init?.headers).toEqual(
+              expect.objectContaining({
+                authorization: "Bearer access-002",
+              }),
+            );
+            const requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+            kimiRequestBodies.push(requestBody);
+            if (kimiRequestCount === 1) {
+              expect(requestBody).toEqual(
+                expect.objectContaining({
+                  model: "kimi-k2.7-code",
+                  thinking: {
+                    type: "disabled",
+                  },
+                  tools: [
+                    {
+                      type: "builtin_function",
+                      function: {
+                        name: "$web_search",
+                      },
+                    },
+                  ],
+                }),
+              );
+              return new Response(
+                JSON.stringify({
+                  choices: [
+                    {
+                      finish_reason: "tool_calls",
+                      message: {
+                        content: null,
+                        tool_calls: [
+                          {
+                            id: "call_1",
+                            type: "function",
+                            function: {
+                              name: "$web_search",
+                              arguments: '{"query":"Cloudflare stock price","total_tokens":1234}',
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                  usage: {
+                    prompt_tokens: 77,
+                    completion_tokens: 9,
+                  },
+                }),
+                { status: 200, headers: { "content-type": "application/json" } },
+              );
+            }
+
             expect(requestBody).toEqual(
               expect.objectContaining({
                 model: "kimi-k2.7-code",
-                thinking: {
-                  type: "disabled",
-                },
-                tools: [
-                  {
-                    type: "builtin_function",
-                    function: {
-                      name: "$web_search",
-                    },
-                  },
-                ],
               }),
             );
+
             return new Response(
               JSON.stringify({
                 choices: [
                   {
-                    finish_reason: "tool_calls",
+                    finish_reason: "stop",
                     message: {
-                      content: null,
-                      tool_calls: [
-                        {
-                          id: "call_1",
-                          type: "function",
-                          function: {
-                            name: "$web_search",
-                            arguments: '{"query":"Cloudflare stock price","total_tokens":1234}',
-                          },
-                        },
-                      ],
+                      role: "assistant",
+                      content: "Cloudflare (NYSE: NET) closed at $224.06 according to MarketWatch.",
                     },
                   },
                 ],
                 usage: {
-                  prompt_tokens: 77,
-                  completion_tokens: 9,
+                  prompt_tokens: 41,
+                  completion_tokens: 17,
                 },
               }),
               { status: 200, headers: { "content-type": "application/json" } },
             );
           }
 
-          expect(requestBody).toEqual(
-            expect.objectContaining({
-              model: "kimi-k2.7-code",
-            }),
-          );
-
-          return new Response(
-            JSON.stringify({
-              choices: [
-                {
-                  finish_reason: "stop",
-                  message: {
-                    role: "assistant",
-                    content: "Cloudflare (NYSE: NET) closed at $224.06 according to MarketWatch.",
-                  },
-                },
-              ],
-              usage: {
-                prompt_tokens: 41,
-                completion_tokens: 17,
-              },
-            }),
-            { status: 200, headers: { "content-type": "application/json" } },
-          );
-        }
-
-        throw new Error(`Unexpected network request: ${url}`);
-      },
-    });
-
-    const pending = await backend.startProviderDeviceAuthorization?.({
-      providerAccountId: "moonshot.personal.kimi-code",
-      providerId: "moonshot",
-      providerKind: "provider-openai",
-      variantId: "kimi-code",
-      orgScope: "personal",
-      accountScope: "workspace-default",
-      allowedModels: ["moonshot/kimi-k2.7-code"],
-      deniedModels: [],
-      entitlementTags: ["chat"],
-      budgetPolicyRef: "budget.default",
-      quotaPolicyRef: "quota.default",
-    });
-    await backend.pollProviderDeviceAuthorization?.({
-      authRequestId: (pending as { authRequestId: string }).authRequestId,
-    });
-    await backend.activateEndpoint?.({
-      providerAccountId: "moonshot.personal.kimi-code",
-      modelId: "moonshot/kimi-k2.7-code",
-      region: "global",
-    });
-
-    const result = await backend.executeResponses(
-      {
-        model: "moonshot/kimi-k2.7-code",
-        input: "Find the current Cloudflare stock price and cite the source.",
-        tools: [
-          {
-            type: "web_search",
-          },
-        ],
-      },
-      "req-runtime-bridge-kimi-hosted-web-search-001",
-    );
-
-    expect(result.model).toBe("moonshot/kimi-k2.7-code");
-    expect(result.endpointId).toBe("moonshot.personal.kimi-code.global.kimi-k2.7-code");
-    expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
-    expect(result.finishReason).toBe("stop");
-    expect(result.outputText).toContain("Cloudflare (NYSE: NET) closed at $224.06");
-    expect(result.toolCalls).toBeUndefined();
-    expect(result.toolExecutions).toEqual([
-      {
-        toolCallId: "call_1",
-        toolName: "$web_search",
-        connectorId: "runtime.builtin",
-        connectorKind: "builtin",
-        status: "succeeded",
-        output: {
-          query: "Cloudflare stock price",
-          total_tokens: 1234,
+          throw new Error(`Unexpected network request: ${url}`);
         },
-        diagnostics: [],
-      },
-    ]);
-    expect(kimiRequestCount).toBe(2);
-    expect(kimiRequestBodies[1]?.messages).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          role: "assistant",
-          tool_calls: [
+      });
+
+      try {
+        const pending = await backend.startProviderDeviceAuthorization?.({
+          providerAccountId: "moonshot.personal.kimi-code",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          variantId: "kimi-code",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          allowedModels: ["moonshot/kimi-k2.7-code"],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+        });
+        await backend.pollProviderDeviceAuthorization?.({
+          authRequestId: (pending as { authRequestId: string }).authRequestId,
+        });
+        await backend.activateEndpoint?.({
+          providerAccountId: "moonshot.personal.kimi-code",
+          modelId: "moonshot/kimi-k2.7-code",
+          region: "global",
+        });
+
+        const result = await backend.executeResponses(
+          {
+            model: "moonshot/kimi-k2.7-code",
+            input: "Find the current Cloudflare stock price and cite the source.",
+            tools: [
+              {
+                type: "web_search",
+              },
+            ],
+          },
+          "req-runtime-bridge-kimi-hosted-web-search-001",
+        );
+
+        expect(result.model).toBe("moonshot/kimi-k2.7-code");
+        expect(result.endpointId).toBe("moonshot.personal.kimi-code.global.kimi-k2.7-code");
+        expect(result.adapterFamily).toBe("ai-sdk-openai-compatible");
+        expect(result.finishReason).toBe("stop");
+        expect(result.outputText).toContain("Cloudflare (NYSE: NET) closed at $224.06");
+        expect(result.toolCalls).toBeUndefined();
+        expect(result.toolExecutions).toEqual([
+          {
+            toolCallId: "call_1",
+            toolName: "$web_search",
+            connectorId: "runtime.builtin",
+            connectorKind: "builtin",
+            status: "succeeded",
+            output: {
+              query: "Cloudflare stock price",
+              total_tokens: 1234,
+            },
+            diagnostics: [],
+          },
+        ]);
+        expect(kimiRequestCount).toBe(2);
+        expect(kimiRequestBodies[1]?.messages).toEqual(
+          expect.arrayContaining([
             expect.objectContaining({
-              function: expect.objectContaining({
-                name: "$web_search",
-              }),
+              role: "assistant",
+              tool_calls: [
+                expect.objectContaining({
+                  function: expect.objectContaining({
+                    name: "$web_search",
+                  }),
+                }),
+              ],
             }),
-          ],
-        }),
-        expect.objectContaining({
-          role: "tool",
-          tool_call_id: "call_1",
-          content: '{"query":"Cloudflare stock price","total_tokens":1234}',
-        }),
-      ]),
-    );
+            expect.objectContaining({
+              role: "tool",
+              tool_call_id: "call_1",
+              content: '{"query":"Cloudflare stock price","total_tokens":1234}',
+            }),
+          ]),
+        );
+      } finally {
+        await backend.shutdown?.();
+      }
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
   });
 
   for (const deepseekModelId of [

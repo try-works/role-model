@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "l01-verbose-incident",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"Difficulty-based routing is a request-routing strategy that classifies each incoming request by estimated complexity and sends it to the most appropriate model or endpoint, balancing cost, quality, and latency.\"\n}",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"Difficulty-based routing is a strategy that classifies each request by complexity and sends it to the most appropriate model or service tier to balance quality, latency, and cost.\"\n}",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both responses provide correct one-sentence definitions of difficulty-based routing that align with the exemplar and checklist. They include the required answer key, mention difficulty and routing, and describe selection of an appropriate model/service based on complexity. The differences are negligible; both are equally substantively correct.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both responses provide correct one-sentence definitions of difficulty-based routing that align with the exemplar and checklist. They include the required answer key, mention difficulty and routing, and describe selection of an appropriate model/service based on complexity. The differences are negligible; both are equally substantively correct.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nBackground notes (ignore for scoring, answer final question only): Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Repeat: routing telemetry cache invalidation throughput SLA eligibility scoring controller hybrid baseline difficulty classifier rubric signals decomposition keywords schema contract unified diff patch refactor test suite milestones verification criteria extension points arbitration observed profiles penalty factor hard deny sole candidate merge preserving config PUT runtime host bridge OpenAI compatible peer Kimi moonshot local LFM decision only vendors inactive logs stream JSON 503 request id alias measured latency reasoning content execution failed unknown endpoint registry result chosen endpoint id empty HTTP 400 consumer contract Strategy C alias mixed local remote model ids mode difficulty cost balanced quality learning cache hit invalidated tool count delta code schema burden history turn count instruction constraint count context tokens. Final question: In one sentence, what is difficulty-based routing?",
+    "exemplarAnswer": "difficulty-based routing selects models by request difficulty within an alias pool\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] One-sentence definition despite long filler context.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: difficulty, routing"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 514,
+    "reasoningLength": 4078
+  },
+  "recordedAtMs": 1783936084318
+}

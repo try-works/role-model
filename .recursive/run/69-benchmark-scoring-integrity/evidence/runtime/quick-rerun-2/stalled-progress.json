@@ -1,0 +1,21 @@
+{
+  "runId": "bc4f0d16-fd9f-4618-a518-4dd0496cedbe",
+  "status": "running",
+  "mode": "quick",
+  "startedAtMs": 1783926795249,
+  "updatedAtMs": 1783927497946,
+  "totalSteps": 84,
+  "completedSteps": 38,
+  "endpointIndex": 1,
+  "endpointCount": 3,
+  "currentEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+  "currentEndpointModelId": "deepseek/deepseek-v4-flash",
+  "caseIndex": 3,
+  "caseCount": 12,
+  "currentCaseId": "h01-implement-two-sum",
+  "currentPhase": "judge",
+  "runPhase": "grading",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "activeJudgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "artifactRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\state\\runtime-host-bridge\\memory\\benchmark-runs"
+}

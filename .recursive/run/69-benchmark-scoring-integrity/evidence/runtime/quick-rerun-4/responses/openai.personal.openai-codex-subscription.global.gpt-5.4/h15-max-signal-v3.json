@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "h15-max-signal-v3",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h15-max-signal-v3-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"*** Begin Patch\\n*** Update File: src/router.ts\\n@@\\n-export function createRouter(config: RouterConfig): Router {\\n+// sole-candidate fallback comment\\n+export function createRouter(config: RouterConfig): Router {\\n   return new RouterImpl(config);\\n }\\n*** End Patch\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Inspect router implementation and throughputSla references\",\n    \"Add a sole-candidate fallback comment in src/router.ts\",\n    \"Validate with a focused router fallback test\"\n  ],\n  \"patch_summary\": \"Added a sole-candidate fallback comment above createRouter in src/router.ts.\",\n  \"test_snippet\": \"Create a router config with one eligible endpoint and assert routing still selects it when throughputSla filtering would otherwise eliminate alternatives.\"\n}",
+  "rawResponse": "```json\n{\"plan\":[\"Inspect router implementation and throughputSla references\",\"Add a sole-candidate fallback comment in src/router.ts\",\"Validate with a focused router fallback test\"],\"patch_summary\":\"Added a sole-candidate fallback comment above createRouter in src/router.ts.\",\"test_snippet\":\"Create a router config with one eligible endpoint and assert routing still selects it when throughputSla filtering would otherwise eliminate alternatives.\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"*** Begin Patch\\n*** Update File: src/router.ts\\n@@\\n-export function createRouter(config: RouterConfig): Router {\\n+// sole-candidate fallback comment\\n+export function createRouter(config: RouterConfig): Router {\\n   return new RouterImpl(config);\\n }\\n*** End Patch\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Inspect router implementation and throughputSla references\",\n    \"Add a sole-candidate fallback comment in src/router.ts\",\n    \"Validate with a focused router fallback test\"\n  ],\n  \"patch_summary\": \"Added a sole-candidate fallback comment above createRouter in src/router.ts.\",\n  \"test_snippet\": \"Create a router config with one eligible endpoint and assert routing still selects it when throughputSla filtering would otherwise eliminate alternatives.\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 14816,
+  "failure": false,
+  "recordedAtMs": 1783931807713
+}

@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p20-decompose-arch",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p20-decompose-arch-a1-c9a72fea-393c-42c1-b5d2-2e6996eded3e",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p20-decompose-arch\n\n## Original question\n[user]\nDesign a decomposition of the routing pipeline: alias resolution, rubric classification, controller arbitration, eligibility, scoring, execution. Identify extension points.\n\n## Example expected answer\nStep-by-step plan with milestones and verification criteria.\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Provides structured decomposition with phases or milestones.\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: step|phase|milestone|verif\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nProvides structured decomposition with phases or milestones.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"# Routing Pipeline Decomposition\\n\\n## 1. Alias Resolution\\n- **Purpose**: Normalize raw input; resolve aliases, synonyms, abbreviations, and entity references into canonical values.\\n- **Inputs**: Raw request, user context, alias dictionaries.\\n- **Outputs**: Canonicalized request, resolved entities, alias trace.\\n- **Extension points**:\\n  - `AliasResolver` interface with `resolve(input, context)`.\\n  - Pluggable resolver registry (dictionary, regex, embedding-based, LLM-based).\\n  - Resolver chain/ordering and fallback rules.\\n\\n## 2. Rubric Classification\\n- **Purpose**: Classify the normalized request against rubric categories and criteria tags.\\n- **Inputs**: Canonical request, taxonomy/rubric catalog.\\n- **Outputs**: Class labels, confidence scores, matching rubric tags.\\n- **Extension points**:\\n  - `Classifier` strategy (rule engine, ML model, zero-shot LLM, ensemble).\\n  - `RubricRegistry` for dynamic rubric definitions.\\n  - `FeatureExtractor` hooks for custom features.\\n\\n## 3. Controller Arbitration\\n- **Purpose**: Map classified intent to one or more candidate controllers and resolve conflicts.\\n- **Inputs**: Class labels, candidate controllers, context, priorities.\\n- **Outputs**: Ordered candidate controller list with arbitration rationale.\\n- **Extension points**:\\n  - `Arbiter` policy (highest confidence, multi-controller vote, cost-aware, safety-first).\\n  - `ControllerRegistry` with capability metadata and constraints.\\n  - `ConflictResolver` for overlapping controllers.\\n\\n## 4. Eligibility\\n- **Purpose**: Verify preconditions, guardrails, entitlements, quotas, safety, and compliance before execution.\\n- **Inputs**: Candidate route, user/session context, policy set.\\n- **Outputs**: Eligibility verdict(s), blocked reasons, adjusted route.\\n- **Extension points**:\\n  - `EligibilityRule` engine (DRL, boolean expression, policy-as-code).\\n  - `GuardrailPlugin` hooks (safety, rate limits, data residency, budget).\\n  - Async eligibility check support.\\n\\n## 5. Scoring\\n- **Purpose**: Rank eligible routes/plans using multi-objective scoring.\\n- **Inputs**: Eligible routes, quality/cost/latency/risk predictors.\\n- **Outputs**: Ranked scores, score breakdown, recommended route.\\n- **Extension points**:\\n  - `ScoreFunction` per dimension (accuracy, latency, cost, risk, user preference).\\n  - Ensemble scoring and weight-tuning via `ScoringPolicy`.\\n  - Pareto frontier / multi-objective optimizer.\\n\\n## 6. Execution\\n- **Purpose**: Dispatch the selected route to the controller, apply middleware, handle failures and telemetry.\\n- **Inputs**: Selected route, execution plan, runtime context.\\n- **Outputs**: Response, telemetry, fallback record.\\n- **Extension points**:\\n  - `ExecutionAdapter` interface for controller-specific invocation.\\n  - Middleware chain (logging, tracing, retries, circuit breaker, caching).\\n  - `FallbackHandler` and `CompletionHook` for post-processing.\\n\\n## Cross-Cutting Components\\n- **Routing Context**: immutable request-scoped container carrying metadata and stage traces.\\n- **Event Bus**: emits stage transitions for observability, audit, and feedback loops.\\n- **Configuration Registry**: stage-specific policies, feature flags, and thresholds.\\n\\n## Data Flow\\n1. Raw request → Alias Resolution → canonical request.\\n2. Canonical request → Rubric Classification → class/tags.\\n3. Class/tags → Controller Arbitration → candidate controllers.\\n4. Candidate controllers → Eligibility → eligible routes.\\n5. Eligible routes → Scoring → ranked route.\\n6. Top route → Execution → response + telemetry.\\n\\n## Summary of Extension Points\\n| Stage | Extension Hook | How to Extend |\\n|-------|----------------|---------------|\\n| Alias Resolution | `AliasResolver` | Add new resolver implementations and registry entries |\\n| Rubric Classification | `Classifier` / `RubricRegistry` | Plug in new models or rubric definitions |\\n| Controller Arbitration | `Arbiter` / `ConflictResolver` | Add policies and conflict rules |\\n| Eligibility | `EligibilityRule` / `GuardrailPlugin` | Add policy rules and guardrails |\\n| Scoring | `ScoreFunction` / `ScoringPolicy` | Add metrics and adjust weights |\\n| Execution | `ExecutionAdapter` / middleware | Add adapters and cross-cutting behavior |\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The 'answer' field contains a structured decomposition with distinct phases (Alias Resolution, Rubric Classification, Controller Arbitration, Eligibility, Scoring, Execution), each with purpose, inputs, outputs, extension points, and a data flow, fully meeting the requirement for a phased decomposition.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The 'answer' field contains a structured decomposition with distinct phases (Alias Resolution, Rubric Classification, Controller Arbitration, Eligibility, Scoring, Execution), each with purpose, inputs, outputs, extension points, and a data flow, fully meeting the requirement for a phased decomposition.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p20-decompose-arch.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nDesign a decomposition of the routing pipeline: alias resolution, rubric classification, controller arbitration, eligibility, scoring, execution. Identify extension points.",
+    "exemplarAnswer": "Step-by-step plan with milestones and verification criteria.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Provides structured decomposition with phases or milestones.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: step|phase|milestone|verif"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 332,
+    "reasoningLength": 1588
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935098742
+}

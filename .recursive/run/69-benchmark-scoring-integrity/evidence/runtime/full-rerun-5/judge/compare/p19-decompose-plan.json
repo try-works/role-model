@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p19-decompose-plan",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"# Implementation Plan: Difficulty Learning Cache Invalidation\\n\\n## Phase 1: Discovery & Audit\\n**Goal:** Understand the current caching landscape and identify invalidation triggers.\\n\\n### Milestones\\n- **M1.1:** Inventory a",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"1. Define scope and success criteria\\n- Clarify what “difficulty learning cache” stores, where it is used, and what invalidation means in business terms.\\n- Identify cache keys, value shape, TTL behavior, dependencies, and ev",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both responses provide structured decomposition with clear phases/milestones and verification criteria, fully meeting the benchmark requirements. They are substantively equal in correctness and comprehensiveness, with no clear differentiation in quality. Ranking is therefore arbitrary.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both responses provide structured decomposition with clear phases/milestones and verification criteria, fully meeting the benchmark requirements. They are substantively equal in correctness and comprehensiveness, with no clear differentiation in quality. Ranking is therefore arbitrary.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nBreak down the work to implement difficulty learning cache invalidation, step by step, with milestones and verification criteria for each phase.",
+    "exemplarAnswer": "Step-by-step plan with milestones and verification criteria.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Provides structured decomposition with phases or milestones.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: step|phase|milestone|verif"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 455,
+    "reasoningLength": 2813
+  },
+  "recordedAtMs": 1783936431492
+}

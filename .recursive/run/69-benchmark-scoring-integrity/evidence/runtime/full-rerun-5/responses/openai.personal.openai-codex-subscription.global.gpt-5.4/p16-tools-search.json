@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "p16-tools-search",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p16-tools-search-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ],\n  \"answer\": \"Hard-deny tied to throughputSla happens in src/router.ts: line 44 marks candidates hardDenied when input.throughputSlaHardDeny is true and candidate.tokensPerSecond < 24; line 16 then returns deny('throughput_sla') if throughputSlaHardDeny is true and no eligible candidates remain.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Hard-deny tied to throughputSla happens in src/router.ts: line 44 marks candidates hardDenied when input.throughputSlaHardDeny is true and candidate.tokensPerSecond < 24; line 16 then returns deny('throughput_sla') if throughputSlaHardDeny is true and no eligible candidates remain.\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ],\n  \"answer\": \"Hard-deny tied to throughputSla happens in src/router.ts: line 44 marks candidates hardDenied when input.throughputSlaHardDeny is true and candidate.tokensPerSecond < 24; line 16 then returns deny('throughput_sla') if throughputSlaHardDeny is true and no eligible candidates remain.\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 7247,
+  "failure": false,
+  "recordedAtMs": 1783934432059
+}

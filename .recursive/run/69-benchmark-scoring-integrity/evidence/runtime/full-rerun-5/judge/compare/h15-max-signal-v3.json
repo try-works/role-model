@@ -1,0 +1,54 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h15-max-signal-v3",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Moonshot's deliverable used a standard unified diff format with ---/+++ headers, exactly as in the exemplar, making it more technically precise; openai used a non-standard patch envelope. Both satisfied the core checklist requirements.",
+  "rawResponse": "{\"relativeRanking\":[\"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\"openai.personal.openai-codex-subscription.global.gpt-5.4\"],\"rationale\":\"Moonshot's deliverable used a standard unified diff format with ---/+++ headers, exactly as in the exemplar, making it more technically precise; openai used a non-standard patch envelope. Both satisfied the core checklist requirements.\"}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nWorkflow: (1) API read_file src/router.ts (2) grep_search throughputSla (3) apply_patch adding sole-candidate fallback comment (4) JSON plan with milestones, patch_summary, test_snippet.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -20,3 +20,4 @@\\n+// throughput SLA guard\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Inspect router\",\n    \"Patch SLA guard\",\n    \"Validate with test snippet\"\n  ],\n  \"patch_summary\": \"Added throughput SLA guard comment and regression hook.\",\n  \"test_snippet\": \"expect(guardSoleCandidateThroughputDeny(...)).toBe(true);\"\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must emit read_file, grep_search, and apply_patch tool calls",
+      "[MUST] final JSON includes plan, patch_summary, and test_snippet.",
+      "[MUST] Emit API tool calls: read_file, grep_search, apply_patch",
+      "[MUST] Include JSON keys: plan, patch_summary, test_snippet",
+      "[SHOULD] Match clues: milestone|plan, read_file|grep_search|apply_patch, test|expect|assert",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 382,
+    "reasoningLength": 6174
+  },
+  "recordedAtMs": 1783937051026
+}

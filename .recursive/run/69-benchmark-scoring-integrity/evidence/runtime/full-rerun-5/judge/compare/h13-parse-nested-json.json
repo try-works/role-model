@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h13-parse-nested-json",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "```typescript\nexport function parseRoutingDiagnostics(\n  raw: string\n): { difficulty: string; chosenEndpointId: string | null } {\n  const defaultResult = {\n    difficulty: 'unknown',\n    chosenEndpointId: null as string | null,\n  };\n\n  try ",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "```typescript\nfunction parseRoutingDiagnostics(raw: string): { difficulty: string; chosenEndpointId: string | null } {\n  const defaults = {\n    difficulty: \"unknown\",\n    chosenEndpointId: null as string | null,\n  };\n\n  if (typeof raw !== \"",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "Both solutions correctly implement parseRoutingDiagnostics with try/catch JSON parsing, returning defaults on invalid input. The OpenAI solution adds an extra runtime check for non-string input, making it slightly more robust against misuse, while the Moonshot solution is equally correct but lacks this guard.",
+  "rawResponse": "{\"relativeRanking\":[\"openai.personal.openai-codex-subscription.global.gpt-5.4\",\"moonshot.personal.kimi-code.global.kimi-k2.7-code\"],\"rationale\":\"Both solutions correctly implement parseRoutingDiagnostics with try/catch JSON parsing, returning defaults on invalid input. The OpenAI solution adds an extra runtime check for non-string input, making it slightly more robust against misuse, while the Moonshot solution is equally correct but lacks this guard.\"}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nWrite TypeScript function `parseRoutingDiagnostics(raw: string): { difficulty: string; chosenEndpointId: string | null }` that safely parses JSON and returns defaults on invalid input. Code block only.",
+    "exemplarAnswer": "parseRoutingDiagnostics with try/catch JSON parse and typed return",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Defines parseRoutingDiagnostics, handles invalid JSON, returns difficulty and chosenEndpointId.",
+      "[SHOULD] Match clues: parseRoutingDiagnostics, JSON\\.parse|try, chosenEndpointId|difficulty",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 457,
+    "reasoningLength": 4231
+  },
+  "recordedAtMs": 1783937001431
+}

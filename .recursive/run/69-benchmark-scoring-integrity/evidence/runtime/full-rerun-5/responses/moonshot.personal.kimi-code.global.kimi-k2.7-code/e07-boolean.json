@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "e07-boolean",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-e07-boolean-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"answer\": \"True\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"True\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"True\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 2660,
+  "failure": false,
+  "recordedAtMs": 1783932713459
+}

@@ -1,0 +1,25 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity[39m
+
+(node:27164) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m role-model-router/apps/runtime-host-bridge/test/benchmark-runner-judge.test.ts [2m([22m[2m16 tests[22m[2m | [22m[33m15 skipped[39m[2m)[22m[32m 151[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[2m | [22m[33m15 skipped[39m[90m (16)[39m
+[2m   Start at [22m 16:25:03
+[2m   Duration [22m 1.88s[2m (transform 522ms, setup 0ms, collect 708ms, tests 151ms, environment 0ms, prepare 333ms)[22m
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity[39m
+
+(node:55516) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m role-model-router/apps/runtime-host-bridge/test/index.test.ts [2m([22m[2m201 tests[22m[2m | [22m[33m200 skipped[39m[2m)[22m[33m 2128[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpreserves the original Codex timeout when exact-model fallback exhausts all eligible endpoints [33m 2124[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[2m | [22m[33m200 skipped[39m[90m (201)[39m
+[2m   Start at [22m 16:25:07
+[2m   Duration [22m 5.77s[2m (transform 1.81s, setup 0ms, collect 2.52s, tests 2.13s, environment 0ms, prepare 313ms)[22m
+

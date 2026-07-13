@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "x02-max-context-tools",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The response fully meets all MUST criteria: it provides an in-depth analysis addressing the incident context and clearly recommends when to route hard prompts to remote. It is properly formatted as a JSON object with the required 'answer' key containing a non-empty string, and no forbidden elements (placeholders, tool calls, or malformed patches) are present. The deliverable aligns with the exemplar by covering root causes, workflow, schema, and routing guidance.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/x02-max-context-tools.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/x02-max-context-tools/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935642557
+}
