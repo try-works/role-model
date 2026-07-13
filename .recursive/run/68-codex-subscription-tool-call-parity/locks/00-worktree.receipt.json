@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "309d78e7c26851b163a4d06deb31bb5ea4a123aaba740e916ae3ae0d285ef2f5",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\68-codex-subscription-tool-call-parity\\.recursive\\run\\68-codex-subscription-tool-call-parity\\00-worktree.md",
+  "locked_at": "2026-07-12T14:23:30Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "3eafa40b178ed3142381dd5f0304c053e215ef7c56b8f77ab66d7fcfe62c2623"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "54b1b0b83ee0b423ca22cabf996c38bc9f26b699bc525d1c8f4dc50c1cbc8a1a"
+}

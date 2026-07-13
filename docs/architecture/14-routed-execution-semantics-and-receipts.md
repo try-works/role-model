@@ -1,17 +1,20 @@
 # Routed Execution Semantics And Receipts
 
-This document records the implemented execution-contract and observability changes
-landed for the LiteLLM, Pi, and Craft execution-hardening run.
+This document records the implemented execution-contract, cross-provider continuation,
+and observability changes landed for the routed execution hardening foundation and the
+later Codex Subscription tool-call parity work.
 
 It is the concrete follow-on to
 `docs/architecture/13-litellm-pi-role-model-integration-proposal.md`.
 
 ## Goals
 
-The run hardens the routed runtime in five places:
+The run hardens the routed runtime in six places:
 
 - preserve richer downstream request semantics in the shared execution contract
 - forward those semantics through the OpenAI and LiteLLM-backed adapter paths
+- preserve portable tool-loop history across route switches between Responses-native
+  and chat-completions-native providers
 - keep Codex Subscription compatibility owned by endpoint metadata markers instead of
   scattered hardcoded selection checks
 - persist execution-family, payload-size, retry, and idempotency facts in the
@@ -39,6 +42,7 @@ to reconstruct dropped state later.
 Responses ingress semantics when building the shared execution request:
 
 - `tool_choice`
+- `parallel_tool_calls`
 - `reasoning_effort`
 - `reasoning`
 - `thinking`
@@ -55,6 +59,7 @@ request-detail receipts instead of limiting them to capability inference only.
 `role-model-router/packages/provider-openai/src/index.ts` now forwards:
 
 - responses `tool_choice`
+- `parallel_tool_calls`
 - reasoning payloads
 - `previous_response_id`
 - prompt-cache key
@@ -74,6 +79,58 @@ additive LiteLLM config blocks:
 
 That keeps the repo-owned runtime config aligned with upstream LiteLLM router/module
 controls without hardcoding a second enum of LiteLLM keys.
+
+## Cross-Provider Continuation Contract
+
+Route switches use one portable conversation history inside role-model, but upstream
+serialization stays surface-specific. Before rendering the next turn, the adapter must
+classify the selected route as one of:
+
+- native Responses upstream
+- native Chat Completions upstream
+- Responses ingress -> Chat Completions upstream bridge
+
+A proxy exposing `POST /v1/responses` is not enough to classify the upstream as native
+Responses. Current LiteLLM-backed DeepSeek routes still default to the bridge class
+unless live evidence proves a richer upstream contract for the exact selected target.
+
+Portable continuity comes from replayable history:
+
+- assistant text
+- sibling tool-call sets with stable ids and ordering
+- tool outputs
+- truthful finish-reason state
+- explicit caller tool policy such as `parallel_tool_calls: true`,
+  `parallel_tool_calls: false`, or omission, but only when the selected target
+  truthfully supports that policy
+
+Provider-native chain state is not portable across route switches:
+
+- `previous_response_id`
+- encrypted reasoning items
+- provider-specific opaque response handles
+- proxy-local affinity or deployment hints that are not proven portable across the
+  selected provider and request-shape change
+
+### Route-Switch Matrix
+
+| Route switch | Source shape | Target shape | Preserve | Drop as nonportable | Required target rendering |
+| --- | --- | --- | --- | --- | --- |
+| `codex -> kimi` | native OpenAI Responses | current direct Kimi code endpoints use Chat Completions tool loops | assistant text, sibling tool calls, tool outputs, finish reason, truthful explicit parallel policy | `previous_response_id`, encrypted reasoning items, Codex-only opaque chain state | render assistant tool calls as `message.tool_calls`, render tool outputs as `role:"tool"` messages, preserve sibling-call ordering and ids, and only forward explicit parallel policy when the direct Kimi contract proves it |
+| `codex -> deepseek` | native OpenAI Responses | current LiteLLM-backed DeepSeek routes default to `Responses ingress -> Chat Completions upstream bridge` | assistant text, sibling tool calls, tool outputs, finish reason, portable reasoning context only if the target accepts it, truthful explicit parallel policy | `previous_response_id`, encrypted reasoning items, Codex-only opaque chain state | replay the portable history as Chat Completions messages plus `role:"tool"` results, preserve sibling-call ordering and ids, and never fake Responses-native chain state on the DeepSeek side |
+| `kimi -> codex` | current direct Kimi code endpoints use Chat Completions tool loops | native OpenAI Responses | assistant text, `message.tool_calls`, tool outputs, finish reason, truthful explicit parallel policy | Kimi-side message-format assumptions, synthesized `previous_response_id`, provider-opaque state absent from portable history | render assistant tool calls into Responses `function_call` items, render tool outputs into `function_call_output` items with matching `call_id`, preserve sibling-call ordering and ids, and omit `previous_response_id` on the route switch |
+| `deepseek -> codex` | current LiteLLM-backed DeepSeek routes default to `Responses ingress -> Chat Completions upstream bridge` | native OpenAI Responses | assistant text, `message.tool_calls`, tool outputs, finish reason, truthful explicit parallel policy | DeepSeek-side message-format assumptions, synthesized `previous_response_id`, provider-opaque state absent from portable history | convert the portable Chat Completions history into Responses `function_call` and `function_call_output` items before the Codex turn while preserving sibling-call ordering and ids |
+| `codex -> generic LiteLLM-backed provider` | native OpenAI Responses | classify the exact LiteLLM route first as native Responses upstream, native Chat Completions upstream, or bridge | assistant text, sibling tool calls, tool outputs, finish reason, portable reasoning only when the verified target accepts it, truthful explicit parallel policy | `previous_response_id`, encrypted reasoning items, Codex-only opaque chain state, LiteLLM-local hints that are not proven portable | classify first, then render to the verified upstream shape: Responses-native only for verified native Responses targets, otherwise Chat Completions plus tool messages |
+| `generic LiteLLM-backed provider -> codex` | classify the exact LiteLLM route first as native Responses upstream, native Chat Completions upstream, or bridge | native OpenAI Responses | assistant text, tool calls, tool outputs, finish reason, portable reasoning only when it can be truthfully replayed, truthful explicit parallel policy | synthesized `previous_response_id`, provider-opaque state absent from portable history, LiteLLM-local proxy metadata | classify first, then render the portable history as Responses `function_call` and `function_call_output` items for Codex while preserving sibling-call ordering and ids |
+
+### Multi-Tool And Parallel Policy Matrix
+
+| Target family | Multiple sibling function calls in one turn | Request-side `parallel_tool_calls` handling |
+| --- | --- | --- |
+| Codex / OpenAI Responses function tools | documented | documented for function tools; built-in tools do not share that guarantee |
+| Current direct Kimi code endpoints | documented to return multiple `tool_calls` that callers must all continue | preserve only when direct target proof exists; otherwise emit explicit unsupported-target diagnostics |
+| Current LiteLLM-backed DeepSeek routes | preserve the sibling tool-call set through the Chat Completions bridge when the upstream function-tool contract supports it | preserve only when the verified upstream contract supports it; otherwise emit explicit unsupported-target diagnostics |
+| Generic LiteLLM-backed providers | depends on the verified upstream, never on LiteLLM `/responses` ingress alone | depends on the verified upstream, never on LiteLLM `/responses` ingress alone |
 
 ## Codex Compatibility Ownership
 
@@ -120,11 +177,12 @@ execution layers as if they were providers.
 - `providerId` and `providerFamily` identify the actual routed provider, such as
   `openai` or `deepseek`
 - `vendorId` identifies an optional intermediary execution vendor, such as
-  `litellm` or `codex-app-server`
+  `litellm` or `chatgpt-codex-responses`
 - `executionFamily` identifies the high-level routed execution path, such as
   `vendor-litellm` or `remote-service`
 - `adapterFamily` identifies the concrete adapter implementation, such as
-  `litellm-proxy`, `ai-sdk-openai`, or `ai-sdk-openai-compatible`
+  `litellm-proxy`, `codex-subscription-responses`, or
+  `ai-sdk-openai-compatible`
 
 This keeps three common cases distinct:
 
@@ -132,8 +190,8 @@ This keeps three common cases distinct:
   `vendorId = litellm`, `executionFamily = vendor-litellm`,
   `adapterFamily = litellm-proxy`
 - a native Codex Subscription request should read `providerFamily = openai`,
-  `vendorId = codex-app-server`, `executionFamily = remote-service`,
-  `adapterFamily = ai-sdk-openai`
+  `vendorId = chatgpt-codex-responses`, `executionFamily = remote-service`,
+  `adapterFamily = codex-subscription-responses`
 - a direct OpenAI-compatible request to another provider should keep the actual
   provider identity, for example `providerFamily = deepseek`, even when
   `adapterFamily = ai-sdk-openai-compatible`

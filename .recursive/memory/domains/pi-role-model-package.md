@@ -10,12 +10,13 @@ Source-Runs:
 - `59-observe-taxonomy-analytics-completion`
 - `62-litellm-pi-craft-codex-execution-hardening`
 - `65-codex-subscription-prompt-cache-parity`
+- `68-codex-subscription-tool-call-parity`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-07-12`
 Tags: `pi`, `runtime-integration`, `taxonomy`, `request-intent`, `inspection`
 Created: `2026-06-24`
 Last Validated: `2026-07-12`
-Validated By: `run-65`
+Validated By: `run-68`
 
 ## Package Identity
 
@@ -96,6 +97,8 @@ Two-tier progressive classifier in `classify-with-progressive-disclosure.ts`:
 - downstream discovery mapping must preserve `piMapping.compat.promptCache` and `piMapping.compat.sessionAffinity` so Pi keeps runtime-derived cache and continuity behavior when selecting an alias-backed provider config.
 - Rebuilt-runtime alias proof for Pi must use the actual extension-prepared payload path against canonical runtime aliases such as `difficulty.remote-only`; provider truth should still come from `providerId`, while additive `vendorId`, `executionFamily`, and `adapterFamily` may be consumed as separate execution facts rather than collapsed into provider identity.
 - Live prompt-cache QA for Pi should compare the CLI footer cache percentage against canonical request-detail or telemetry receipts; CLI output alone is not sufficient proof.
+- Pi `--mode json` is the stable tool-call parity receipt because it captures `toolcall_start`, `tool_execution_start`, `tool_execution_end`, `toolResults`, `responseId`, and `responseModel`. Use it together with runtime request-detail rows to prove both tool execution and the selected provider path.
+- Exact-model tool-call proof can use `--no-session` when the target bug is single-turn tool execution. History-conversion defects still require a real Pi session.
 - Multi-turn Pi verification must reuse a real Pi session when testing Codex Subscription history conversion. Single-turn or `--no-session` probes can miss assistant-history replay bugs, such as invalid Responses `input_text` content parts for previous assistant output.
 - When an alias proof includes an image-bearing pivot turn, reuse the logical Pi `session-id` but refresh local Pi session storage before the return-to-`A` leg if the image turn carries image modality into later alias requests.
 - If noninteractive Pi CLI verification hangs while Role-Model telemetry shows successful requests, treat the runtime request rows as useful reachability evidence but do not claim a clean Pi CLI pass. Clean Pi verification requires both a real Pi request and a terminating Pi command transcript.

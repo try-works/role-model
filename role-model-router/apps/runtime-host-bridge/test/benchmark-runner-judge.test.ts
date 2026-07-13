@@ -9,6 +9,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { readBenchmarkRunProgress } from "../src/benchmark-progress.js";
 import { readJudgeGradingText, readJudgeResponseText } from "../src/benchmark-reasoning.js";
 import {
+  type BenchmarkRunnerDependencies,
   orderEndpointsForGrading,
   probeJudgeEndpoint,
   resetBenchmarkJudgeRuntimeForTests,
@@ -382,7 +383,7 @@ describe("benchmark-runner judge remediation", () => {
 
     const subjectBodies: Array<Record<string, unknown>> = [];
 
-    const deps = {
+    const deps: BenchmarkRunnerDependencies = {
       databasePath,
       benchmarkArtifactRoot: artifactRoot,
       listConfiguredEndpoints: async () => [endpoint],
@@ -430,8 +431,8 @@ describe("benchmark-runner judge remediation", () => {
     }
   });
 
-  test("preserves repeated same-name tool calls in benchmark artifacts", async () => {
-    artifactRoot = await mkdtemp(path.join(os.tmpdir(), "bench-runner-multi-tool-calls-"));
+  test("routes Codex tool-bearing benchmark subject turns through executeResponses", async () => {
+    artifactRoot = await mkdtemp(path.join(os.tmpdir(), "bench-runner-codex-responses-"));
     const databasePath = path.join(artifactRoot, "state", "memory.db");
     await mkdir(path.dirname(databasePath), { recursive: true });
     initBenchmarkDatabase(databasePath);
@@ -439,6 +440,65 @@ describe("benchmark-runner judge remediation", () => {
     const endpoint = {
       endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
       modelId: "chatgpt/gpt-5.4",
+      sourceType: "remote" as const,
+      healthStatus: "healthy",
+    };
+
+    const responsesBodies: Array<Record<string, unknown>> = [];
+    let chatCalls = 0;
+    let responsesCalls = 0;
+
+    const deps = {
+      databasePath,
+      benchmarkArtifactRoot: artifactRoot,
+      listConfiguredEndpoints: async () => [endpoint],
+      deriveEndpointVersion: () => "v1",
+      executeChatCompletions: async () => {
+        chatCalls += 1;
+        return {
+          contentText: '{"answer":"chat-path"}',
+        };
+      },
+      executeResponses: async (body: Record<string, unknown>) => {
+        responsesCalls += 1;
+        responsesBodies.push(body);
+        return {
+          contentText: '{"answer":"controller"}',
+          toolCalls: [
+            {
+              function: {
+                name: "read_file",
+                arguments: '{"path":"state/runtime-config.yaml"}',
+              },
+            },
+          ],
+        };
+      },
+    };
+
+    await runRoutingCapabilityBenchmark(deps, {
+      endpointIds: [endpoint.endpointId],
+      mode: "quick",
+      caseIds: ["h04-tool-read-router"],
+      useJudge: false,
+    });
+
+    expect(responsesCalls).toBeGreaterThan(0);
+    expect(chatCalls).toBe(0);
+    expect(responsesBodies[0]?.tools).toBeTruthy();
+    expect(responsesBodies[0]).toHaveProperty("input");
+    expect(responsesBodies[0]).not.toHaveProperty("messages");
+  });
+
+  test("preserves repeated same-name tool calls in benchmark artifacts", async () => {
+    artifactRoot = await mkdtemp(path.join(os.tmpdir(), "bench-runner-multi-tool-calls-"));
+    const databasePath = path.join(artifactRoot, "state", "memory.db");
+    await mkdir(path.dirname(databasePath), { recursive: true });
+    initBenchmarkDatabase(databasePath);
+
+    const endpoint = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      modelId: "moonshot/kimi-k2.7-code",
       sourceType: "remote" as const,
       healthStatus: "healthy",
     };

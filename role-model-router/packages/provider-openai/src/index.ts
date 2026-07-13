@@ -75,6 +75,91 @@ function toOpenAIInput(
   });
 }
 
+function toOpenAIResponseToolOutput(
+  content: ProviderAdapterExecutionContext["executionRequest"]["messages"][number]["content"],
+): string {
+  if (typeof content === "string") {
+    return content;
+  }
+  if (content === null || content === undefined) {
+    return "";
+  }
+  return content
+    .map((part) => (typeof part?.text === "string" ? part.text : ""))
+    .filter((part) => part.length > 0)
+    .join("");
+}
+
+function toOpenAIResponseToolArguments(argumentsValue: unknown): string {
+  if (typeof argumentsValue === "string") {
+    return argumentsValue;
+  }
+  if (argumentsValue === undefined) {
+    return "";
+  }
+  try {
+    return JSON.stringify(argumentsValue);
+  } catch {
+    return String(argumentsValue);
+  }
+}
+
+function hasResponsesToolReplayHistory(
+  messages: ProviderAdapterExecutionContext["executionRequest"]["messages"],
+): boolean {
+  return messages.some(
+    (message) =>
+      (message.role === "assistant" && message.tool_calls?.length) || message.role === "tool",
+  );
+}
+
+function toOpenAIResponsesInput(
+  messages: ProviderAdapterExecutionContext["executionRequest"]["messages"],
+): Array<Record<string, unknown>> {
+  const input: Array<Record<string, unknown>> = [];
+  for (const message of messages) {
+    if (message.role === "assistant" && message.tool_calls?.length) {
+      const assistantContent = toOpenAIProviderMessageContent(
+        message.content === undefined ? null : message.content,
+      );
+      if (
+        assistantContent !== null &&
+        !(typeof assistantContent === "string" && assistantContent.length === 0) &&
+        !(Array.isArray(assistantContent) && assistantContent.length === 0)
+      ) {
+        input.push({
+          role: "assistant",
+          content: assistantContent,
+        });
+      }
+      for (const toolCall of message.tool_calls) {
+        input.push({
+          type: "function_call",
+          call_id: toolCall.id,
+          name: toolCall.function.name,
+          arguments: toOpenAIResponseToolArguments(toolCall.function.arguments),
+        });
+      }
+      continue;
+    }
+    if (message.role === "tool" && typeof message.tool_call_id === "string") {
+      input.push({
+        type: "function_call_output",
+        call_id: message.tool_call_id,
+        output: toOpenAIResponseToolOutput(message.content),
+      });
+      continue;
+    }
+    input.push(
+      toOpenAIInput([message])[0] ?? {
+        role: message.role,
+        content: null,
+      },
+    );
+  }
+  return input;
+}
+
 function toOpenAITools(
   tools: NonNullable<ProviderAdapterExecutionContext["executionRequest"]["tools"]>,
 ): Array<Record<string, unknown>> {
@@ -199,6 +284,27 @@ function toOpenAIChatTools(
           },
         },
   );
+}
+
+function toOpenAIResponsesToolChoice(
+  toolChoice: ProviderAdapterExecutionContext["executionRequest"]["toolChoice"],
+): ProviderAdapterExecutionContext["executionRequest"]["toolChoice"] | Record<string, unknown> {
+  if (
+    typeof toolChoice === "object" &&
+    toolChoice !== null &&
+    !Array.isArray(toolChoice) &&
+    toolChoice.type === "function"
+  ) {
+    const functionName =
+      typeof toolChoice.function?.name === "string" ? toolChoice.function.name.trim() : "";
+    if (functionName.length > 0) {
+      return {
+        type: "function",
+        name: functionName,
+      };
+    }
+  }
+  return toolChoice;
 }
 
 function asFunctionToolDefinition(
@@ -768,6 +874,9 @@ export function buildOpenAIRequest(
         ...(input.executionRequest.toolChoice !== undefined
           ? { tool_choice: input.executionRequest.toolChoice }
           : {}),
+        ...(typeof input.executionRequest.parallelToolCalls === "boolean"
+          ? { parallel_tool_calls: input.executionRequest.parallelToolCalls }
+          : {}),
         ...(input.executionRequest.promptCache &&
         input.executionRequest.promptCache.mode !== "disabled" &&
         typeof input.executionRequest.promptCache.key === "string"
@@ -811,7 +920,9 @@ export function buildOpenAIRequest(
       model: input.target.modelId.includes("/")
         ? input.target.modelId.split("/").slice(1).join("/")
         : input.target.modelId,
-      input: toOpenAIInput(input.executionRequest.messages),
+      input: hasResponsesToolReplayHistory(input.executionRequest.messages)
+        ? toOpenAIResponsesInput(input.executionRequest.messages)
+        : toOpenAIInput(input.executionRequest.messages),
       ...(typeof input.executionRequest.temperature === "number"
         ? { temperature: input.executionRequest.temperature }
         : {}),
@@ -823,7 +934,10 @@ export function buildOpenAIRequest(
         ? { tools: toOpenAITools(input.executionRequest.tools ?? []) }
         : {}),
       ...(input.executionRequest.toolChoice !== undefined
-        ? { tool_choice: input.executionRequest.toolChoice }
+        ? { tool_choice: toOpenAIResponsesToolChoice(input.executionRequest.toolChoice) }
+        : {}),
+      ...(typeof input.executionRequest.parallelToolCalls === "boolean"
+        ? { parallel_tool_calls: input.executionRequest.parallelToolCalls }
         : {}),
       ...(reasoning ? { [reasoning.key]: reasoning.value } : {}),
       ...(typeof input.executionRequest.continuation?.previousResponseId === "string"

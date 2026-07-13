@@ -3290,6 +3290,241 @@ describe("runtime-host-bridge", () => {
     ]);
   });
 
+  test("Codex Subscription preserves explicit parallel_tool_calls=false on Responses requests", async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+    const fetchMock = vi.fn(async (_url: string | URL, init?: RequestInit) => {
+      capturedBody = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+      return new Response(
+        `data: ${JSON.stringify({
+          type: "response.completed",
+          response: {
+            id: "resp_codex_parallel_false",
+            status: "completed",
+            output_text: "ok",
+            usage: { input_tokens: 3, output_tokens: 1 },
+          },
+        })}\n\n`,
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      );
+    });
+    const adapter = (
+      bridge as {
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{ statusCode: number }>;
+        };
+      }
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
+
+    await adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-parallel-tool-false-tests",
+      requestId: "req-codex-parallel-false-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/responses",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: false,
+          input: "Use at most one tool.",
+          tools: [
+            {
+              type: "function",
+              name: "lookupRegistry",
+              parameters: {
+                type: "object",
+                properties: {
+                  endpointId: { type: "string" },
+                },
+              },
+            },
+          ],
+          parallel_tool_calls: false,
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
+      },
+    });
+
+    expect(capturedBody?.parallel_tool_calls).toBe(false);
+  });
+
+  test("Codex Subscription transforms forced chat tool_choice into Responses named-tool form", async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+    const fetchMock = vi.fn(async (_url: string | URL, init?: RequestInit) => {
+      capturedBody = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+      return new Response(
+        `data: ${JSON.stringify({
+          type: "response.completed",
+          response: {
+            id: "resp_codex_tool_choice_named",
+            status: "completed",
+            output_text: "ok",
+            usage: { input_tokens: 3, output_tokens: 1 },
+          },
+        })}\n\n`,
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      );
+    });
+    const adapter = (
+      bridge as {
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{ statusCode: number }>;
+        };
+      }
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
+
+    await adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-tool-choice-tests",
+      requestId: "req-codex-tool-choice-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/chat/completions",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: false,
+          messages: [{ role: "user", content: "Use the read_file tool." }],
+          tools: [
+            {
+              type: "function",
+              function: {
+                name: "read_file",
+                parameters: {
+                  type: "object",
+                  properties: {
+                    path: { type: "string" },
+                  },
+                  required: ["path"],
+                },
+              },
+            },
+          ],
+          tool_choice: {
+            type: "function",
+            function: {
+              name: "read_file",
+            },
+          },
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
+      },
+    });
+
+    expect(capturedBody?.tool_choice).toEqual({
+      type: "function",
+      name: "read_file",
+    });
+  });
+
+  test("Codex Subscription leaves parallel_tool_calls unset when the caller omitted it", async () => {
+    let capturedBody: Record<string, unknown> | null = null;
+    const fetchMock = vi.fn(async (_url: string | URL, init?: RequestInit) => {
+      capturedBody = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+      return new Response(
+        `data: ${JSON.stringify({
+          type: "response.completed",
+          response: {
+            id: "resp_codex_parallel_unset",
+            status: "completed",
+            output_text: "ok",
+            usage: { input_tokens: 3, output_tokens: 1 },
+          },
+        })}\n\n`,
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      );
+    });
+    const adapter = (
+      bridge as {
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{ statusCode: number }>;
+        };
+      }
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
+
+    await adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-parallel-tool-unset-tests",
+      requestId: "req-codex-parallel-unset-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/responses",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: false,
+          input: "Use tools if needed.",
+          tools: [
+            {
+              type: "function",
+              name: "lookupRegistry",
+              parameters: {
+                type: "object",
+                properties: {
+                  endpointId: { type: "string" },
+                },
+              },
+            },
+          ],
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
+      },
+    });
+
+    expect(capturedBody).not.toHaveProperty("parallel_tool_calls");
+  });
+
   test("Codex Subscription applies the same parameter policy after alias routing", async () => {
     const capturedBodies: Record<string, unknown>[] = [];
     const fetchMock = vi.fn(async (_url: string | URL, init?: RequestInit) => {
@@ -3647,6 +3882,259 @@ describe("runtime-host-bridge", () => {
         },
       }),
     );
+  });
+
+  test("Codex Subscription execution surfaces sibling tool calls on non-stream chat-completions replies", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        [
+          {
+            type: "response.output_item.done",
+            output_index: 0,
+            item: {
+              type: "function_call",
+              id: "fc_1",
+              call_id: "call_1",
+              name: "lookupRegistry",
+              arguments: '{"endpointId":"moonshot.personal.primary.global.kimi-k2.5"}',
+            },
+          },
+          {
+            type: "response.output_item.done",
+            output_index: 1,
+            item: {
+              type: "function_call",
+              id: "fc_2",
+              call_id: "call_2",
+              name: "lookupRegistry",
+              arguments: '{"endpointId":"deepseek.personal.primary.global.deepseek-v4-flash"}',
+            },
+          },
+          {
+            type: "response.completed",
+            response: {
+              id: "resp_codex_multi_tool_chat",
+              status: "completed",
+              usage: {
+                input_tokens: 22,
+                output_tokens: 7,
+              },
+            },
+          },
+        ]
+          .map((event) => `data: ${JSON.stringify(event)}\n\n`)
+          .join(""),
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      );
+    });
+
+    const adapter = (
+      bridge as {
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{
+            statusCode: number;
+            body: Record<string, unknown>;
+          }>;
+        };
+      }
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
+
+    const result = await adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-nonstream-chat-tool-tests",
+      requestId: "req-codex-nonstream-chat-tools-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/chat/completions",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: false,
+          messages: [{ role: "user", content: "Use the registry tool twice." }],
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
+      },
+    });
+
+    expect(result.body).toEqual({
+      id: "chatcmpl_req-codex-nonstream-chat-tools-001",
+      object: "chat.completion",
+      created: expect.any(Number),
+      model: "chatgpt/gpt-5.4",
+      choices: [
+        {
+          index: 0,
+          finish_reason: "tool_calls",
+          message: {
+            role: "assistant",
+            content: "",
+            tool_calls: [
+              {
+                id: "call_1",
+                type: "function",
+                function: {
+                  name: "lookupRegistry",
+                  arguments: '{"endpointId":"moonshot.personal.primary.global.kimi-k2.5"}',
+                },
+              },
+              {
+                id: "call_2",
+                type: "function",
+                function: {
+                  name: "lookupRegistry",
+                  arguments: '{"endpointId":"deepseek.personal.primary.global.deepseek-v4-flash"}',
+                },
+              },
+            ],
+          },
+        },
+      ],
+      usage: {
+        prompt_tokens: 22,
+        completion_tokens: 7,
+      },
+    });
+  });
+
+  test("Codex Subscription execution surfaces sibling tool calls on non-stream Responses replies", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        [
+          {
+            type: "response.output_item.done",
+            output_index: 0,
+            item: {
+              type: "function_call",
+              id: "fc_1",
+              call_id: "call_1",
+              name: "lookupRegistry",
+              arguments: '{"endpointId":"moonshot.personal.primary.global.kimi-k2.5"}',
+            },
+          },
+          {
+            type: "response.output_item.done",
+            output_index: 1,
+            item: {
+              type: "function_call",
+              id: "fc_2",
+              call_id: "call_2",
+              name: "lookupRegistry",
+              arguments: '{"endpointId":"deepseek.personal.primary.global.deepseek-v4-flash"}',
+            },
+          },
+          {
+            type: "response.completed",
+            response: {
+              id: "resp_codex_multi_tool_responses",
+              status: "completed",
+              usage: {
+                input_tokens: 22,
+                output_tokens: 7,
+              },
+            },
+          },
+        ]
+          .map((event) => `data: ${JSON.stringify(event)}\n\n`)
+          .join(""),
+        {
+          status: 200,
+          headers: { "content-type": "text/event-stream" },
+        },
+      );
+    });
+
+    const adapter = (
+      bridge as {
+        createCodexSubscriptionResponsesExecutionAdapter: (options: {
+          networkFetcher: typeof fetch;
+        }) => {
+          executeRequest: (input: Record<string, unknown>) => Promise<{
+            statusCode: number;
+            body: Record<string, unknown>;
+          }>;
+        };
+      }
+    ).createCodexSubscriptionResponsesExecutionAdapter({
+      networkFetcher: fetchMock as typeof fetch,
+    });
+
+    const result = await adapter.executeRequest({
+      runtimeStateRoot: os.tmpdir(),
+      scopeId: "codex-nonstream-responses-tool-tests",
+      requestId: "req-codex-nonstream-responses-tools-001",
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "gpt-5.4",
+      requestCapture: {
+        providerFamily: "ai-sdk-openai",
+        endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+        url: "https://api.openai.com/v1/responses",
+        headers: {},
+        body: {
+          model: "chatgpt/gpt-5.4",
+          stream: false,
+          input: "Use the registry tool twice.",
+        },
+      },
+      authPayload: {
+        auth_mode: "chatgpt",
+        tokens: {
+          access_token: "codex-access-test",
+          refresh_token: "codex-refresh-test",
+          account_id: "acct_codex_test",
+        },
+      },
+    });
+
+    expect(result.body).toEqual({
+      id: "resp_codex_multi_tool_responses",
+      object: "response",
+      created_at: expect.any(Number),
+      status: "incomplete",
+      model: "chatgpt/gpt-5.4",
+      output: [
+        {
+          type: "message",
+          id: "msg_resp_codex_multi_tool_responses",
+          role: "assistant",
+          content: [],
+        },
+        {
+          type: "function_call",
+          id: "call_1",
+          call_id: "call_1",
+          name: "lookupRegistry",
+          arguments: '{"endpointId":"moonshot.personal.primary.global.kimi-k2.5"}',
+        },
+        {
+          type: "function_call",
+          id: "call_2",
+          call_id: "call_2",
+          name: "lookupRegistry",
+          arguments: '{"endpointId":"deepseek.personal.primary.global.deepseek-v4-flash"}',
+        },
+      ],
+      usage: {
+        input_tokens: 22,
+        output_tokens: 7,
+      },
+    });
   });
 
   test("Codex Subscription execution writes chat-completions deltas before upstream completion", async () => {
@@ -5619,9 +6107,7 @@ describe("runtime-host-bridge", () => {
         ],
         tool_choice: {
           type: "function",
-          function: {
-            name: "lookupRegistry",
-          },
+          name: "lookupRegistry",
         },
         reasoning_effort: "high",
         previous_response_id: "resp_prev_001",
@@ -5659,6 +6145,140 @@ describe("runtime-host-bridge", () => {
       clientRequestId: "client-req-001",
     });
     expect(result.executionRequest.transportPreference).toBe("websocket");
+  });
+
+  test("maps responses parallel_tool_calls into the execution request", () => {
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          executionRequest: Record<string, unknown>;
+        };
+      }
+    ).mapResponsesRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        input: "Use at most one tool in this turn.",
+        parallel_tool_calls: false,
+      },
+      "resp-parallel-tool-calls-001",
+    );
+
+    expect(result.executionRequest.parallelToolCalls).toBe(false);
+  });
+
+  test("maps typed responses function-call replay items into execution messages", () => {
+    const openaiRegistry: EndpointRegistryResult = {
+      endpoints: [
+        {
+          identity: {
+            endpoint_id: "openai.personal.codex-subscription.global.gpt-5.4",
+            endpoint_kind: "remote_api",
+            provider_kind: "provider-openai",
+            serving_source: "remote-service",
+            model_id: "chatgpt/gpt-5.4",
+            runtime_version: "test-registry-v1",
+            region: "global",
+          },
+          declared: {
+            endpoint_id: "openai.personal.codex-subscription.global.gpt-5.4",
+            capabilities: ["text.chat", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 200000,
+            tool_calling: {
+              supported: true,
+              style: "openai",
+            },
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          status: "active",
+        },
+      ],
+      diagnostics: [],
+      lifecycleSummary: {
+        active: 1,
+        degraded: 0,
+        offline: 0,
+      },
+    };
+
+    const result = (
+      bridge as {
+        mapResponsesRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          executionRequest: {
+            messages: readonly Record<string, unknown>[];
+          };
+        };
+      }
+    ).mapResponsesRequest(
+      openaiRegistry,
+      {
+        model: "chatgpt/gpt-5.4",
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: "Use the lookupRegistry tool and then continue.",
+              },
+            ],
+          },
+          {
+            type: "function_call",
+            call_id: "call_lookup_001",
+            name: "lookupRegistry",
+            arguments: '{"endpointId":"openai.personal.primary.us-east-1.fast"}',
+          },
+          {
+            type: "function_call_output",
+            call_id: "call_lookup_001",
+            output: '{"endpointId":"openai.personal.primary.us-east-1.fast","status":"healthy"}',
+          },
+        ],
+      },
+      "resp-typed-replay-001",
+    );
+
+    expect(result.executionRequest.messages).toEqual([
+      {
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: "Use the lookupRegistry tool and then continue.",
+          },
+        ],
+      },
+      {
+        role: "assistant",
+        content: "",
+        tool_calls: [
+          {
+            id: "call_lookup_001",
+            type: "function",
+            function: {
+              name: "lookupRegistry",
+              arguments: '{"endpointId":"openai.personal.primary.us-east-1.fast"}',
+            },
+          },
+        ],
+      },
+      {
+        role: "tool",
+        tool_call_id: "call_lookup_001",
+        content: '{"endpointId":"openai.personal.primary.us-east-1.fast","status":"healthy"}',
+      },
+    ]);
   });
 
   test("maps chat-completions session affinity and transport preference into the execution request", () => {
@@ -5729,6 +6349,30 @@ describe("runtime-host-bridge", () => {
       mode: "prefer",
       key: "chat-cache-key-001",
     });
+  });
+
+  test("maps chat-completions parallel_tool_calls into the execution request", () => {
+    const result = (
+      bridge as {
+        mapChatCompletionsRequest: (
+          value: EndpointRegistryResult,
+          body: Record<string, unknown>,
+          requestId: string,
+        ) => {
+          executionRequest: Record<string, unknown>;
+        };
+      }
+    ).mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.5",
+        messages: [{ role: "user", content: "Use every needed tool in one turn." }],
+        parallel_tool_calls: true,
+      },
+      "chat-parallel-tool-calls-001",
+    );
+
+    expect(result.executionRequest.parallelToolCalls).toBe(true);
   });
 
   test("tracks cache continuity per session across A -> B -> A and records create versus restore state", async () => {

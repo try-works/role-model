@@ -1,0 +1,45 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/68-codex-subscription-tool-call-parity/role-model-router/apps/runtime-host-bridge
+
+(node:34920) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/benchmark-runner-judge.test.ts (14 tests | 1 failed | 13 skipped) 114ms
+   ↓ benchmark-runner judge remediation > probeJudgeEndpoint reports failure when judge returns empty response
+   ↓ benchmark-runner judge remediation > creates run progress before async endpoint discovery resolves
+   ↓ benchmark-runner judge remediation > readJudgeResponseText merges reasoning and content channels
+   ↓ benchmark-runner judge remediation > orderEndpointsForGrading grades judge-as-subject before other endpoints by default
+   ↓ benchmark-runner judge remediation > orderEndpointsForGrading grades non-judge subjects first when overlap risk is flagged
+   ↓ benchmark-runner judge remediation > readJudgeGradingText prefers content channel over reasoning preambles
+   ↓ benchmark-runner judge remediation > omits judge max_tokens and persists judge artifacts
+   ↓ benchmark-runner judge remediation > counts executed dynamic tools when the endpoint does not echo assistant tool_calls
+   ↓ benchmark-runner judge remediation > sends structured response_format for subject json deliverables
+   × benchmark-runner judge remediation > routes Codex tool-bearing benchmark subject turns through executeResponses 111ms
+     → expected 0 to be greater than 0
+   ↓ benchmark-runner judge remediation > preserves repeated same-name tool calls in benchmark artifacts
+   ↓ benchmark-runner judge remediation > forces a post-tool follow-up before accepting tool-grounded deliverables
+   ↓ benchmark-runner judge remediation > code-fence extraction ignores reasoning text from subject turns
+   ↓ benchmark-runner judge remediation > persists cross-model compare artifacts for multi-endpoint runs
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/benchmark-runner-judge.test.ts > benchmark-runner judge remediation > routes Codex tool-bearing benchmark subject turns through executeResponses
+AssertionError: expected 0 to be greater than 0
+ ❯ test/benchmark-runner-judge.test.ts:485:28
+    483|     });
+    484| 
+    485|     expect(responsesCalls).toBeGreaterThan(0);
+       |                            ^
+    486|     expect(chatCalls).toBe(0);
+    487|     expect(responsesBodies[0]?.tools).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  23:01:58
+   Duration  2.72s (transform 735ms, setup 0ms, collect 949ms, tests 114ms, environment 1ms, prepare 394ms)
+
+undefined
+D:\DEV\role-model\.worktrees\68-codex-subscription-tool-call-parity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/benchmark-runner-judge.test.ts --testNamePattern executeResponses

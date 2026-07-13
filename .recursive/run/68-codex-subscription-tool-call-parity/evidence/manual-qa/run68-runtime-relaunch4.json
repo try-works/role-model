@@ -1,0 +1,137 @@
+{
+  "pid": 55548,
+  "port": 57686,
+  "scopeId": "run68-manual-qa-20260712-235024",
+  "stateRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\state",
+  "scopeTarget": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\state\\run68-manual-qa-20260712-235024",
+  "executable": "D:\\DEV\\role-model\\.worktrees\\68-codex-subscription-tool-call-parity\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+  "staticRoot": "D:\\DEV\\role-model\\.worktrees\\68-codex-subscription-tool-call-parity\\role-model-router\\dist\\release\\win32-x64\\build\\client",
+  "launchedAt": "2026-07-13T00:36:26.2324999+08:00",
+  "healthz": {
+    "status": "degraded",
+    "executionMode": "hybrid",
+    "vendors": {
+      "llama-swap": {
+        "vendorId": "llama-swap",
+        "healthStatus": "inactive"
+      },
+      "litellm": {
+        "vendorId": "litellm",
+        "healthStatus": "inactive"
+      }
+    },
+    "inactiveVendors": [
+      "llama-swap",
+      "litellm"
+    ],
+    "credentialLifecycleAuthority": {
+      "state": "authoritative",
+      "bootstrapStatus": "degraded"
+    },
+    "sessionBootstrap": {
+      "status": "degraded",
+      "startedAt": "2026-07-12T16:36:27.347Z",
+      "finishedAt": "2026-07-12T16:36:29.326Z",
+      "stages": [
+        {
+          "stageId": "credentials",
+          "status": "degraded",
+          "startedAt": "2026-07-12T16:36:27.347Z",
+          "finishedAt": "2026-07-12T16:36:28.166Z",
+          "details": {
+            "pendingAttempted": 0,
+            "pendingSucceeded": 0,
+            "pendingConnected": 0,
+            "pendingFailed": 0,
+            "pendingDeferred": 0,
+            "refreshAttempted": 1,
+            "refreshSucceeded": 0,
+            "refreshFailed": 1
+          }
+        },
+        {
+          "stageId": "endpoints",
+          "status": "ready",
+          "startedAt": "2026-07-12T16:36:28.166Z",
+          "finishedAt": "2026-07-12T16:36:28.181Z",
+          "details": {
+            "source": "sqlite",
+            "count": 4
+          }
+        },
+        {
+          "stageId": "peers",
+          "status": "skipped",
+          "startedAt": "2026-07-12T16:36:28.181Z",
+          "finishedAt": "2026-07-12T16:36:28.184Z",
+          "message": "no peer endpoints configured",
+          "details": {
+            "deferred": 1,
+            "reloaded": 0,
+            "failed": 0
+          }
+        },
+        {
+          "stageId": "vendors",
+          "status": "ready",
+          "startedAt": "2026-07-12T16:36:28.184Z",
+          "finishedAt": "2026-07-12T16:36:28.184Z"
+        },
+        {
+          "stageId": "local-reload",
+          "status": "skipped",
+          "startedAt": "2026-07-12T16:36:28.184Z",
+          "finishedAt": "2026-07-12T16:36:28.185Z",
+          "message": "no llama-swap loads in manifest"
+        },
+        {
+          "stageId": "remote-health",
+          "status": "degraded",
+          "startedAt": "2026-07-12T16:36:28.185Z",
+          "finishedAt": "2026-07-12T16:36:29.325Z",
+          "details": {
+            "probed": 3,
+            "healthy": 2,
+            "degraded": 1,
+            "results": [
+              {
+                "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+                "modelId": "deepseek/deepseek-v4-flash",
+                "reason": "healthy",
+                "healthStatus": "healthy"
+              },
+              {
+                "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+                "modelId": "deepseek/deepseek-v4-pro",
+                "reason": "healthy",
+                "healthStatus": "healthy"
+              },
+              {
+                "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+                "modelId": "moonshot/kimi-k2.7-code",
+                "reason": "credentials-missing",
+                "healthStatus": "degraded",
+                "message": "No authorization credential is available for remote probe."
+              }
+            ]
+          }
+        },
+        {
+          "stageId": "inventory",
+          "status": "ready",
+          "startedAt": "2026-07-12T16:36:29.325Z",
+          "finishedAt": "2026-07-12T16:36:29.326Z",
+          "details": {
+            "modelIdCount": 3,
+            "endpointIdCount": 3,
+            "localEndpointCount": 0,
+            "remoteEndpointCount": 3,
+            "emptyAliasIds": [],
+            "driftWarningCount": 0,
+            "driftWarnings": []
+          }
+        }
+      ]
+    }
+  }
+}

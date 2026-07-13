@@ -2,6 +2,42 @@
 
 ## Recursive Run Index
 
+### Run `68-codex-subscription-tool-call-parity`
+
+- Run folder: `/.recursive/run/68-codex-subscription-tool-call-parity/`
+- Worktree: `.worktrees/68-codex-subscription-tool-call-parity`
+- Branch: `recursive/68-codex-subscription-tool-call-parity`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - repaired routed cross-provider tool-call parity by keeping one portable continuation history internally while rendering it surface-specifically at the last hop: Codex Subscription exact-model requests now use official Responses typed replay items and named-tool forced `tool_choice`, while chat-completions-compatible Kimi or DeepSeek or LiteLLM targets continue to receive assistant `tool_calls` plus `tool` messages
+  - preserved caller-owned `parallel_tool_calls` from ingress through adapter-execution, runtime-host-bridge, and provider-openai instead of silently forcing Codex defaults
+  - restored native Codex non-stream tool-call parity on both `/v1/chat/completions` and `/v1/responses`, and moved Codex tool-bearing benchmark subject turns onto the Responses seam
+  - verified rebuilt packaged-runtime parity with a direct exact-model `/v1/responses` continuation probe plus Pi CLI proof on exact `chatgpt/gpt-5.4` and alias `difficulty.remote-only`, where the retained alias proof correctly selected DeepSeek Pro rather than Codex
+- Why:
+  - the prior runtime contract could still fail real tool-call continuations on the live Codex Subscription seam because forced tool choice and typed replay items were still malformed at the final provider hop
+  - the user required a generic cross-provider repair grounded in official OpenAI Responses semantics and verified through both exact-model and alias routing
+- How:
+  - implemented with strict TDD across provider-openai, runtime-host-bridge, benchmark-runner, and the shared execution contract
+  - verified with focused RED or GREEN regressions for request-side policy, route-switch rendering, forced-tool request shape, typed replay ingress, and benchmark subject routing, then rebuilt the packaged runtime and captured direct plus Pi-backed live receipts
+- What was not done:
+  - no provider-specific routing preference was added to force aliases onto Codex
+  - no second LiteLLM-only request contract or router-hosted tool executor was introduced
+  - no prompt-cache redesign was introduced beyond preserving the earlier run-65 behavior
+- Known issues / follow-ups:
+  - live alias proof may legitimately land on DeepSeek or another non-Codex provider depending on current routing and must be recorded as the selected provider rather than treated as a failure
+  - on Windows, packaged-runtime relaunch with spaced paths can fail under `Start-Process` argument splitting; prefer `ProcessStartInfo.ArgumentList` for rebuilt-runtime QA
+
 ### Run `67-runtime-ui-route-startup-performance-hardening`
 
 - Run folder: `/.recursive/run/67-runtime-ui-route-startup-performance-hardening/`

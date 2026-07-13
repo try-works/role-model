@@ -1,0 +1,18 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\68-codex-subscription-tool-call-parity\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+src/benchmark-runner.ts(364,25): error TS18046: 'responseFormat.json_schema' is of type 'unknown'.
+src/benchmark-runner.ts(365,27): error TS18046: 'responseFormat.json_schema' is of type 'unknown'.
+src/benchmark-runner.ts(366,27): error TS18046: 'responseFormat.json_schema' is of type 'unknown'.
+src/index.ts(10673,34): error TS2345: Argument of type '(this: undefined, message: any) => ({ type: string; call_id: string; name: string; arguments: string; } | { role: string; content: unknown[]; })[] | { type: string; call_id: string; output: string; }[]' is not assignable to parameter of type '(this: undefined, value: any, index: number, array: any[]) => { type: string; call_id: string; name: string; arguments: string; } | { role: string; content: unknown[]; } | readonly ({ type: string; call_id: string; name: string; arguments: string; } | { ...; })[]'.
+  Type '({ type: string; call_id: string; name: string; arguments: string; } | { role: string; content: unknown[]; })[] | { type: string; call_id: string; output: string; }[]' is not assignable to type '{ type: string; call_id: string; name: string; arguments: string; } | { role: string; content: unknown[]; } | readonly ({ type: string; call_id: string; name: string; arguments: string; } | { role: string; content: unknown[]; })[]'.
+    Type '{ type: string; call_id: string; output: string; }[]' is not assignable to type '{ type: string; call_id: string; name: string; arguments: string; } | { role: string; content: unknown[]; } | readonly ({ type: string; call_id: string; name: string; arguments: string; } | { role: string; content: unknown[]; })[]'.
+      Type '{ type: string; call_id: string; output: string; }[]' is not assignable to type 'readonly ({ type: string; call_id: string; name: string; arguments: string; } | { role: string; content: unknown[]; })[]'.
+        Type '{ type: string; call_id: string; output: string; }' is not assignable to type '{ type: string; call_id: string; name: string; arguments: string; } | { role: string; content: unknown[]; }'.
+          Type '{ type: string; call_id: string; output: string; }' is missing the following properties from type '{ type: string; call_id: string; name: string; arguments: string; }': name, arguments
+src/index.ts(10742,5): error TS2322: Type 'unknown[]' is not assignable to type 'readonly Record<string, unknown>[]'.
+  Type 'unknown' is not assignable to type 'Record<string, unknown>'.
+D:\DEV\role-model\.worktrees\68-codex-subscription-tool-call-parity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

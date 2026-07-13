@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/68-codex-subscription-tool-call-parity/role-model-router/packages/provider-openai
+
+ ✓ test/index.test.ts (23 tests | 22 skipped) 11ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 22 skipped (23)
+   Start at  00:06:13
+   Duration  1.68s (transform 688ms, setup 0ms, collect 724ms, tests 11ms, environment 0ms, prepare 455ms)
+

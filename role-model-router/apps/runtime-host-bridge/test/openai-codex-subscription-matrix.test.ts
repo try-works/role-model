@@ -2,11 +2,16 @@ import { mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
+import {
+  buildOpenAIRequest,
+  createOpenAIProviderAdapter,
+} from "@role-model-router/provider-openai";
 import { describe, expect, test } from "vitest";
 
 import {
   OPENAI_CODEX_SUBSCRIPTION_MODEL_IDS,
   OPENAI_CODEX_SUBSCRIPTION_MODEL_MATRIX,
+  createCodexSubscriptionResponsesExecutionAdapter,
   createRuntimeBridgeBackend,
   mapResponsesRequest,
 } from "../src/index.js";
@@ -363,6 +368,304 @@ describe("OpenAI Codex Subscription model matrix", () => {
       await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   }, 45_000);
+
+  test("bridges Codex continuation history onto chat-completions upstream targets for Kimi, DeepSeek, and generic LiteLLM", () => {
+    const executionRequest = {
+      messages: [
+        { role: "user", content: "Keep the same tool-turn semantics across providers." },
+        {
+          role: "assistant",
+          content: null,
+          tool_calls: [
+            {
+              id: "call_1",
+              type: "function" as const,
+              function: {
+                name: "lookupRegistry",
+                arguments: '{"endpointId":"router.primary"}',
+              },
+            },
+          ],
+        },
+        {
+          role: "tool",
+          tool_call_id: "call_1",
+          content: '{"endpointId":"router.primary","status":"ready"}',
+        },
+      ],
+      tools: [
+        {
+          name: "lookupRegistry",
+          description: "Look up endpoint details.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              endpointId: { type: "string" },
+            },
+            required: ["endpointId"],
+          },
+        },
+      ],
+    };
+
+    const cases = [
+      {
+        name: "codex -> kimi",
+        adapterFamily: "ai-sdk-openai-compatible",
+        target: {
+          endpointId: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+          modelId: "moonshot/kimi-k2.7-code",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          providerAccountId: "moonshot.personal.kimi-code",
+          adapterFamily: "ai-sdk-openai-compatible",
+          authFamily: "api-key",
+          apiBase: "https://api.kimi.test/coding/v1",
+          requestShapeHints: {
+            providerShape: "openai.chat.completions",
+            bodyKeys: ["messages", "tools", "tool_choice"],
+            headerKeys: ["Authorization"],
+          },
+          candidate: {
+            identity: {
+              endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+              provider_kind: "remote_openai_compat",
+            },
+          },
+          account: {
+            credentialRef: {
+              backend: "env",
+              ref: "MOONSHOT_API_KEY",
+            },
+          },
+        },
+      },
+      {
+        name: "codex -> deepseek",
+        adapterFamily: "litellm-proxy",
+        target: {
+          endpointId: "deepseek.personal.primary.global.deepseek-v4-flash",
+          modelId: "deepseek/deepseek-v4-flash",
+          providerId: "deepseek",
+          providerKind: "provider-openai",
+          providerAccountId: "deepseek.personal.primary",
+          adapterFamily: "litellm-proxy",
+          authFamily: "api-key",
+          apiBase: "https://litellm.test/v1",
+          requestShapeHints: {
+            providerShape: "openai.chat.completions",
+            bodyKeys: ["messages", "tools", "tool_choice"],
+            headerKeys: ["Authorization", "x-litellm-session-id", "x-litellm-trace-id"],
+          },
+          candidate: {
+            identity: {
+              endpoint_id: "deepseek.personal.primary.global.deepseek-v4-flash",
+              provider_kind: "remote_openai_compat",
+              serving_source: "vendor-litellm",
+            },
+          },
+          account: {
+            credentialRef: {
+              backend: "env",
+              ref: "LITELLM_PROXY_KEY",
+            },
+          },
+        },
+      },
+      {
+        name: "codex -> generic litellm",
+        adapterFamily: "litellm-proxy",
+        target: {
+          endpointId: "litellm.team.primary.global.qwen3-coder",
+          modelId: "qwen/qwen3-coder",
+          providerId: "litellm",
+          providerKind: "provider-openai",
+          providerAccountId: "litellm.team.primary",
+          adapterFamily: "litellm-proxy",
+          authFamily: "api-key",
+          apiBase: "https://litellm-generic.test/v1",
+          requestShapeHints: {
+            providerShape: "openai.chat.completions",
+            bodyKeys: ["messages", "tools", "tool_choice"],
+            headerKeys: ["Authorization", "x-litellm-session-id", "x-litellm-trace-id"],
+          },
+          candidate: {
+            identity: {
+              endpoint_id: "litellm.team.primary.global.qwen3-coder",
+              provider_kind: "remote_openai_compat",
+              serving_source: "vendor-litellm",
+            },
+          },
+          account: {
+            credentialRef: {
+              backend: "env",
+              ref: "LITELLM_PROXY_KEY",
+            },
+          },
+        },
+      },
+    ] as const;
+
+    for (const routeCase of cases) {
+      const adapter = createOpenAIProviderAdapter(routeCase.adapterFamily);
+      const capabilities = adapter.negotiateCapabilities({
+        target: routeCase.target as never,
+        executionRequest,
+      });
+      const requestCapture = buildOpenAIRequest({
+        target: routeCase.target as never,
+        executionRequest,
+        capabilities,
+      });
+
+      expect(requestCapture.url, routeCase.name).toContain("/chat/completions");
+      expect(requestCapture.body).toEqual(
+        expect.objectContaining({
+          messages: [
+            {
+              role: "user",
+              content: "Keep the same tool-turn semantics across providers.",
+            },
+            {
+              role: "assistant",
+              content: null,
+              reasoning_content: "",
+              tool_calls: [
+                {
+                  id: "call_1",
+                  type: "function",
+                  function: {
+                    name: "lookupRegistry",
+                    arguments: '{"endpointId":"router.primary"}',
+                  },
+                },
+              ],
+            },
+            {
+              role: "tool",
+              tool_call_id: "call_1",
+              content: '{"endpointId":"router.primary","status":"ready"}',
+            },
+          ],
+        }),
+      );
+    }
+  });
+
+  test("renders Kimi and DeepSeek continuation history into native Codex Responses input", async () => {
+    const sourceCases = [
+      {
+        name: "kimi -> codex",
+        providerFamily: "ai-sdk-openai-compatible",
+      },
+      {
+        name: "deepseek -> codex",
+        providerFamily: "litellm-proxy",
+      },
+    ] as const;
+
+    for (const sourceCase of sourceCases) {
+      let capturedBody: Record<string, unknown> | null = null;
+      const adapter = createCodexSubscriptionResponsesExecutionAdapter({
+        networkFetcher: (async (_url: string | URL, init?: RequestInit) => {
+          capturedBody = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+          return new Response(
+            `data: ${JSON.stringify({
+              type: "response.completed",
+              response: {
+                id: `resp-${sourceCase.name.replace(/[^a-z0-9]+/gi, "-")}`,
+                status: "completed",
+                output_text: "ok",
+                usage: { input_tokens: 3, output_tokens: 1 },
+              },
+            })}\n\n`,
+            {
+              status: 200,
+              headers: { "content-type": "text/event-stream" },
+            },
+          );
+        }) as typeof fetch,
+      });
+
+      await adapter.executeRequest({
+        runtimeStateRoot: os.tmpdir(),
+        scopeId: `matrix-${sourceCase.name.replace(/[^a-z0-9]+/gi, "-")}`,
+        requestId: `req-${sourceCase.name.replace(/[^a-z0-9]+/gi, "-")}`,
+        providerAccountId: "openai.personal.codex-subscription",
+        modelId: "gpt-5.4",
+        requestCapture: {
+          providerFamily: sourceCase.providerFamily,
+          endpointId: "openai.personal.codex-subscription.global.gpt-5.4",
+          url: "https://api.openai.com/v1/chat/completions",
+          headers: {},
+          body: {
+            model: "chatgpt/gpt-5.4",
+            stream: false,
+            messages: [
+              {
+                role: "user",
+                content: "Keep the same tool-turn semantics across providers.",
+              },
+              {
+                role: "assistant",
+                content: null,
+                tool_calls: [
+                  {
+                    id: "call_1",
+                    type: "function",
+                    function: {
+                      name: "lookupRegistry",
+                      arguments: '{"endpointId":"router.primary"}',
+                    },
+                  },
+                ],
+              },
+              {
+                role: "tool",
+                tool_call_id: "call_1",
+                content: '{"endpointId":"router.primary","status":"ready"}',
+              },
+            ],
+          },
+        },
+        authPayload: {
+          auth_mode: "chatgpt",
+          tokens: {
+            access_token: "codex-access-matrix",
+            refresh_token: "codex-refresh-matrix",
+            account_id: "codex-account-matrix",
+          },
+        },
+      });
+
+      expect(capturedBody, sourceCase.name).toEqual(
+        expect.objectContaining({
+          input: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: "Keep the same tool-turn semantics across providers.",
+                },
+              ],
+            },
+            {
+              type: "function_call",
+              call_id: "call_1",
+              name: "lookupRegistry",
+              arguments: '{"endpointId":"router.primary"}',
+            },
+            {
+              type: "function_call_output",
+              call_id: "call_1",
+              output: '{"endpointId":"router.primary","status":"ready"}',
+            },
+          ],
+        }),
+      );
+    }
+  });
 
   test("maps mixed-provider controller.remote-only web-search requests to runtime tool calling without excluding supported providers", () => {
     const result = mapResponsesRequest(

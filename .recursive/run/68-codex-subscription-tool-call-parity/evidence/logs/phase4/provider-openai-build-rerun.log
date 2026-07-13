@@ -1,0 +1,4 @@
+
+> @role-model-router/provider-openai@0.0.0 build D:\DEV\role-model\.worktrees\68-codex-subscription-tool-call-parity\role-model-router\packages\provider-openai
+> tsc -p tsconfig.json
+

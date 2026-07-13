@@ -62,8 +62,9 @@ Source-Runs:
 - `65-codex-subscription-prompt-cache-parity`
 - `66-remote-providers-deferred-request-id-loading`
 - `67-runtime-ui-route-startup-performance-hardening`
+- `68-codex-subscription-tool-call-parity`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-12`
+Last-Validated: `2026-07-13`
 Tags:
 - `runtime`
 - `routing`
@@ -95,6 +96,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - Catalog and provider metadata that shape routing and tool-capability decisions
 - Protocol and conformance artifacts tied to routing decisions and alias behavior
 - The operator-facing routing-interaction architecture doc
+- The routed-execution architecture doc that owns the cross-provider route-switch and multi-tool-call matrices
 
 ## Durable Truths
 
@@ -102,6 +104,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - Legacy `craft-ask` strategy and alias ids are removed and should not reappear in config materialization, `/v1/models`, or operator documentation.
 - Exact-model requests stay additive; alias requests resolve through the runtime-owned candidate pool before final routing.
 - The shared routed execution contract now carries additive `reasoning`, `sessionAffinity`, `transportPreference`, and `continuation` fields. Responses ingress must preserve `tool_choice`, reasoning/thinking controls, `previous_response_id`, and prompt-cache/request-affinity hints into that contract so provider adapters do not have to reconstruct dropped semantics later.
+- `parallel_tool_calls` is caller-owned tri-state policy. Preserve explicit `true`, explicit `false`, and omission distinctly from ingress through the shared execution contract and final provider request shaping; do not silently force omitted Codex requests to `true`.
 - OpenAI-family prompt caching should be treated as `supported: true` and `mode: implicit` when the upstream surface documents automatic prompt caching. Supported misses and sub-threshold requests should still serialize `cached_tokens: 0` in the documented usage-detail field instead of being downgraded to unsupported.
 - `provider-openai` must preserve documented cache shapes without rewriting totals: nested OpenAI `cached_tokens` plus `cache_write_tokens` fields for Responses or Chat Completions, and current Kimi top-level `usage.cached_tokens` for chat-completions coding routes.
 - LiteLLM-backed remote execution currently inherits those richer Responses semantics through the shared OpenAI request builder. Verify the inherited path directly before introducing a second divergent LiteLLM request contract.
@@ -129,12 +132,16 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - Observed-data time decay now applies only to latency and throughput, on a 10%-per-day retained-deviation loss curve. Fresh samples reset the age calculation. Benchmark or measured quality, measured reliability, and measured cost remain age-invariant during route scoring unless a future run explicitly introduces a new policy.
 - Effective-metric diagnostics must say whether time decay actually applied. Request-detail and routing receipts should distinguish pass-through metrics from time-decayed metrics through explicit freshness source, time-decay-applied, measured-at, and decay-rate facts rather than implying decay from generic freshness fields alone.
 - The operator-facing routing interaction reference is `/docs/architecture/09-runtime-routing-strategy-interactions.md`; when routing semantics change, that doc must stay aligned with runtime truth.
+- The canonical cross-provider route-switch and multi-tool or `parallel_tool_calls` policy matrices live in `/docs/architecture/14-routed-execution-semantics-and-receipts.md`; `/docs/architecture/09-runtime-routing-strategy-interactions.md` should cross-reference that matrix when route-switch rendering behavior matters instead of drifting into a separate compatibility table.
 - Operator-facing OpenAI inventory collapses to one `OpenAI` provider surface with `API Key` plus `Codex Subscription`; raw `chatgpt/*` provider rows are not an operator-facing provider baseline.
 - `Codex Subscription` is a truthful auth-boundary path, not an API-key equivalent:
   - device authorization can complete from the local Codex auth cache
   - a connected account can remain `Connected, no endpoint` / `entitlement-missing`
   - direct OpenAI Platform execution stays blocked when the cached ChatGPT/Codex session lacks the required request scopes
 - OpenAI-compatible chat-completions `tool_choice` must survive routed execution into provider requests. Forced function-tool selection is valid on the initial tool-bearing turn, but continuation turns that already contain tool output should drop the forced choice so the model can resume normally.
+- Cross-provider tool-call routing uses one portable continuation history inside role-model, but upstream serialization is surface-specific:
+  - Codex Subscription exact-model Responses requests require official typed replay items (`function_call`, `function_call_output`) and forced-tool `tool_choice` in named-tool form `{ type: "function", name }`
+  - generic chat-completions-compatible upstreams, including current direct Kimi OAuth and LiteLLM-backed DeepSeek, continue to use assistant `tool_calls` plus `tool` messages
 - Codex Subscription execution compatibility should be represented through runtime-owned endpoint capability markers, provider identity, vendor identity, execution family, adapter family, and equivalent production metadata surfaces, not through scattered exact-model constants. Curated GPT-family matrices remain acceptable for auth/discovery and compatibility display, but not as a primary route-selection preference when endpoint metadata already declares transport support.
 - Codex Subscription execution now uses the native ChatGPT Codex Responses surface, not `codex app-server`: route first, select the OpenAI Codex Subscription endpoint, then execute against the ChatGPT backend `/codex/responses` transport with `providerId = openai`, `vendorId = chatgpt-codex-responses`, and `adapterFamily = codex-subscription-responses`.
 - Codex Subscription request conversion is role-aware. User input maps to Responses `input_text` / `input_image`; replayed assistant history maps to `output_text` or `refusal`. Do not reuse a role-blind content-part converter across user and assistant messages.
@@ -195,9 +202,11 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - For downstream discovery changes, confirm both `/v1/models` compact metadata and the rich route against the current runtime config alias set, including empty-pool aliases where feasible, and validate the downstream OpenAI schema/fixtures.
 - For provider capability changes, verify exact-model and alias-path behavior separately where the transport boundary can differ.
 - For prompt-cache parity claims, verify exact-model and alias-backed paths separately where both are in scope, and cross-check the Pi footer cache percentage against canonical request-detail or telemetry facts rather than trusting the footer alone.
+- For cross-provider tool-call changes, verify the owning provider-openai and runtime-host-bridge tool-choice or typed-replay regressions, the route-switch matrix, one exact-model `chatgpt/gpt-5.4` Pi proof, and one alias proof such as `difficulty.remote-only`. The alias proof may legitimately select a non-Codex provider; record the selected endpoint, provider, and adapter facts instead of treating non-Codex selection as failure.
 - For routed execution hardening that claims Pi/Craft compatibility, include rebuilt-runtime proof for at least one tool-bearing case, one non-text modality case, and one degraded-family recovery case in addition to deterministic validator coverage.
 - When Phase 5 proof depends on alias routing, use canonical runtime aliases such as `difficulty.remote-only` and verify provider, vendor, execution, and adapter facts separately in raw receipts.
 - For Codex Subscription changes, verify the native `chatgpt-codex-responses` / `codex-subscription-responses` path with exact `chatgpt/gpt-5.4` and canonical aliases. Do not treat app-server-era telemetry or adapter-family labels as current proof.
+- For Windows rebuilt-runtime QA on packaged binaries with spaced paths, prefer tokenized `ProcessStartInfo.ArgumentList` over `Start-Process` positional argument splitting when capturing the authoritative live proof.
 - If Kimi or another provider cannot be live-verified in the rebuilt runtime, record the exact routing blocker and benchmark-data state in the Phase 5 artifact rather than replacing the missing live proof with an unexplained deterministic test.
 - For selected-endpoint failure capture, prefer automated selected-endpoint failure tests plus a clean live induced-provider-failure harness. Do not count a `VENDOR_NOT_CONFIGURED` setup failure as proof of selected provider execution failure telemetry.
 - For taxonomy changes, compare canonical data against proposal or generated golden fixtures, validate schemas and generated docs, probe `/api/role-model/taxonomy*`, verify runtime routing intent normalization, verify UI role assignment/drill-down, and run `@try-works/pi-role-model` compact-classification tests.

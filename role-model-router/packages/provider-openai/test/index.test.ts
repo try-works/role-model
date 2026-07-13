@@ -1,3 +1,4 @@
+import type { RuntimeExecutionRequest } from "@role-model-router/adapter-execution";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -808,9 +809,7 @@ describe("OpenAI provider adapter", () => {
     expect(requestCapture.url).toBe("https://api.openai.test/v1/responses");
     expect(requestCapture.body.tool_choice).toEqual({
       type: "function",
-      function: {
-        name: "lookupRegistry",
-      },
+      name: "lookupRegistry",
     });
     expect(requestCapture.body.reasoning).toEqual({
       effort: "high",
@@ -819,6 +818,176 @@ describe("OpenAI provider adapter", () => {
     expect(requestCapture.body.prompt_cache_key).toBe("cache-key-001");
     expect(requestCapture.headers["session-id"]).toBe("session-alpha");
     expect(requestCapture.headers["x-client-request-id"]).toBe("client-req-001");
+  });
+
+  test("forwards responses parallel_tool_calls when explicitly true", () => {
+    const target = {
+      endpointId: "openai.personal.primary.global.gpt-5.4",
+      modelId: "chatgpt/gpt-5.4",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.responses",
+        bodyKeys: ["tools", "parallel_tool_calls"],
+        headerKeys: ["Authorization", "OpenAI-Beta"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.global.gpt-5.4",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest: RuntimeExecutionRequest = {
+      messages: [{ role: "user", content: "Use every needed tool in one turn." }],
+      tools: [
+        {
+          name: "lookupRegistry",
+          description: "Look up endpoint details.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              endpointId: { type: "string" },
+            },
+          },
+        },
+      ],
+      parallelToolCalls: true,
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.body.parallel_tool_calls).toBe(true);
+  });
+
+  test("forwards responses parallel_tool_calls when explicitly false", () => {
+    const target = {
+      endpointId: "openai.personal.primary.global.gpt-5.4",
+      modelId: "chatgpt/gpt-5.4",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.responses",
+        bodyKeys: ["tools", "parallel_tool_calls"],
+        headerKeys: ["Authorization", "OpenAI-Beta"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.global.gpt-5.4",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest: RuntimeExecutionRequest = {
+      messages: [{ role: "user", content: "Use at most one tool in this turn." }],
+      tools: [
+        {
+          name: "lookupRegistry",
+          description: "Look up endpoint details.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              endpointId: { type: "string" },
+            },
+          },
+        },
+      ],
+      parallelToolCalls: false,
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.body.parallel_tool_calls).toBe(false);
+  });
+
+  test("omits responses parallel_tool_calls when the caller left it unset", () => {
+    const target = {
+      endpointId: "openai.personal.primary.global.gpt-5.4",
+      modelId: "chatgpt/gpt-5.4",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.responses",
+        bodyKeys: ["tools"],
+        headerKeys: ["Authorization", "OpenAI-Beta"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.global.gpt-5.4",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Use tools if you need them." }],
+      tools: [
+        {
+          name: "lookupRegistry",
+          description: "Look up endpoint details.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              endpointId: { type: "string" },
+            },
+          },
+        },
+      ],
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.body).not.toHaveProperty("parallel_tool_calls");
   });
 
   test("normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming", () => {
@@ -1410,6 +1579,96 @@ describe("OpenAI provider adapter", () => {
         role: "tool",
         content: "NET: $185.42",
         tool_call_id: "call_1",
+      },
+    ]);
+  });
+
+  test("renders responses continuation turns as function_call and function_call_output items", () => {
+    const target = {
+      endpointId: "openai.personal.primary.global.gpt-5.4",
+      modelId: "chatgpt/gpt-5.4",
+      providerId: "openai",
+      providerKind: "provider-openai",
+      providerAccountId: "openai.personal.primary",
+      adapterFamily: "ai-sdk-openai",
+      authFamily: "api-key",
+      apiBase: "https://api.openai.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.responses",
+        bodyKeys: ["tools", "input"],
+        headerKeys: ["Authorization", "OpenAI-Beta"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "openai.personal.primary.global.gpt-5.4",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "env",
+          ref: "OPENAI_API_KEY",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [
+        { role: "user", content: "Check Cloudflare stock price" },
+        {
+          role: "assistant",
+          content: null,
+          tool_calls: [
+            {
+              id: "call_1",
+              type: "function",
+              function: {
+                name: "web_search",
+                arguments: '{"query":"NET stock price"}',
+              },
+            },
+          ],
+        },
+        {
+          role: "tool",
+          tool_call_id: "call_1",
+          content: "NET: $185.42",
+        },
+      ],
+      tools: [
+        {
+          name: "web_search",
+          description: "Search the web.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              query: { type: "string" },
+            },
+          },
+        },
+      ],
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.body.input).toEqual([
+      { role: "user", content: "Check Cloudflare stock price" },
+      {
+        type: "function_call",
+        call_id: "call_1",
+        name: "web_search",
+        arguments: '{"query":"NET stock price"}',
+      },
+      {
+        type: "function_call_output",
+        call_id: "call_1",
+        output: "NET: $185.42",
       },
     ]);
   });
