@@ -4,6 +4,7 @@ import type {
   RuntimeTelemetryAnalyticsMetric,
   RuntimeTelemetryAnalyticsQuery,
 } from "./runtime-api";
+import type { TelemetryMetricAxisAssignments } from "./telemetry-analytics";
 import { resolveTelemetryGranularity } from "./telemetry-analytics";
 import { telemetryTimeRangeOptions } from "./telemetry-chart-config";
 
@@ -14,11 +15,17 @@ export interface TelemetryRouteChartDefinition {
   readonly description: string;
   readonly kind: "area" | "line" | "bar" | "ranking";
   readonly metrics: readonly RuntimeTelemetryAnalyticsMetric[];
+  readonly metricAxisIds?: TelemetryMetricAxisAssignments;
   readonly query: RuntimeTelemetryAnalyticsQuery;
   readonly emptyMessage: string;
   readonly minHeightClassName?: string;
   readonly className?: string;
 }
+
+const cacheEfficiencyMetricAxisIds = {
+  cacheHitTokens: "left",
+  cacheHitTokenRate: "right",
+} as const satisfies TelemetryMetricAxisAssignments;
 
 function getWindowMs(timeRange: TelemetryTimeRangeValue): number {
   return telemetryTimeRangeOptions.find((option) => option.value === timeRange)?.windowMs ?? 0;
@@ -118,6 +125,7 @@ export function buildOverviewChartDefinitions(input: {
       description: "cache-hit tokens / hit rate",
       kind: "line",
       metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+      metricAxisIds: cacheEfficiencyMetricAxisIds,
       query: buildBaseQuery({
         timeRange: input.timeRange,
         metrics: ["cacheHitTokens", "cacheHitTokenRate"],
@@ -249,6 +257,7 @@ export function buildObserveRequestsChartDefinitions(input: {
       description: "Cache-hit token volume and cache-hit rate for the filtered slice.",
       kind: "line",
       metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+      metricAxisIds: cacheEfficiencyMetricAxisIds,
       query: buildBaseQuery({
         timeRange: input.timeRange,
         metrics: ["cacheHitTokens", "cacheHitTokenRate"],

@@ -1,0 +1,15 @@
+{
+  "artifact": "03-implementation-summary.md",
+  "artifact_hash": "6c3ed11c01fd6d824af37ec5a7ace38ad5709191b91a26eb3509515a233cc4f2",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\70-cache-hit-token-rate-analytics-fix\\.recursive\\run\\70-cache-hit-token-rate-analytics-fix\\03-implementation-summary.md",
+  "locked_at": "2026-07-14T21:37:13Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "33d2283e02b4c66b6a94508985e9db2f27f9801b53bf9c5177f0fcd1963cffe9",
+    "00-worktree.md": "be1ec755930be2ad00da457b8749ded2022ec83adcf0401974aad3faf3a28895",
+    "01-as-is.md": "086facdbac7a15d1433ff4a7c5db446367af227c0ae952e8ce3cd0c660870528",
+    "01.5-root-cause.md": "b7045a22c8f5b30d49539743edfe4d743cd3f236ab2c7a2b4a7bf41e6837d4a0",
+    "02-to-be-plan.md": "78472b22fb66068b8ac3ccaf118d00e876ac9a8e00bb783d4c176405ca747f88"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "9c1a348d64ee84b0cdae2732ec1e3c66978e3d419018086091b6388f898ca60f"
+}

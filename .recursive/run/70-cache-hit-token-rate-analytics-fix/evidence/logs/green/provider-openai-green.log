@@ -1,0 +1,14 @@
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\70-cache-hit-token-rate-analytics-fix\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/70-cache-hit-token-rate-analytics-fix/role-model-router/packages/provider-openai
+
+ ✓ test/index.test.ts (23 tests) 37ms
+
+ Test Files  1 passed (1)
+      Tests  23 passed (23)
+   Start at  22:06:05
+   Duration  1.96s (transform 397ms, setup 0ms, collect 435ms, tests 37ms, environment 0ms, prepare 800ms)
+

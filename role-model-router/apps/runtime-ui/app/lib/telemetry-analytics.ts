@@ -13,7 +13,14 @@ export interface TelemetryChartSeriesModel {
   readonly dataKey: string;
   readonly strokeOpacity: number;
   readonly fillOpacity: number;
+  readonly yAxisId: TelemetryChartYAxisId;
 }
+
+export type TelemetryChartYAxisId = "left" | "right";
+
+export type TelemetryMetricAxisAssignments = Partial<
+  Record<RuntimeTelemetryAnalyticsMetric, TelemetryChartYAxisId>
+>;
 
 export type TelemetrySemanticChartStateKind =
   | "empty"
@@ -315,18 +322,20 @@ export function buildTelemetryTimeSeriesChartModel(
     readonly metrics: readonly RuntimeTelemetryAnalyticsMetric[];
     readonly breakdown?: RuntimeTelemetryAnalyticsDimension | null;
     readonly maxSeries?: number;
+    readonly metricAxisIds?: TelemetryMetricAxisAssignments;
   },
 ): TelemetryTimeSeriesChartModel {
   const breakdown = input.breakdown ?? response.breakdown ?? null;
   if (!breakdown || input.metrics.length > 1) {
     const usedColorTokens = new Set<string>();
-    const series = input.metrics.map((metric) => ({
+    const series: TelemetryChartSeriesModel[] = input.metrics.map((metric) => ({
       key: metric,
       label: metricLabels[metric],
       colorToken: pickDistinctSeriesColorToken(resolveMetricColorToken(metric), usedColorTokens),
       dataKey: metric,
       strokeOpacity: 1,
       fillOpacity: 0.16,
+      yAxisId: input.metricAxisIds?.[metric] ?? "left",
     }));
     const state = resolveTelemetryChartState(response, {
       metrics: input.metrics,
@@ -359,6 +368,35 @@ export function buildTelemetryTimeSeriesChartModel(
   });
 
   const usedColorTokens = new Set<string>();
+  const series: TelemetryChartSeriesModel[] = topSeriesKeys.map((key) => {
+    const style = getTelemetryChartSeriesStyle(breakdown, key);
+    return {
+      key,
+      label: resolveLabel(response, breakdown, key),
+      colorToken: pickDistinctSeriesColorToken(style.colorToken, usedColorTokens),
+      dataKey: `series:${key}`,
+      strokeOpacity: style.strokeOpacity,
+      fillOpacity: style.fillOpacity,
+      yAxisId: "left",
+    };
+  });
+
+  if (
+    response.buckets.some((bucket) =>
+      bucket.series.some((seriesEntry) => !includedSeries.has(seriesEntry.key)),
+    )
+  ) {
+    series.push({
+      key: "other",
+      label: "Other",
+      colorToken: "var(--rm-chart-neutral-2)",
+      dataKey: "series:other",
+      strokeOpacity: 1,
+      fillOpacity: 0.12,
+      yAxisId: "left",
+    });
+  }
+
   return {
     title: input.title,
     isEmpty: response.buckets.length === 0 || isBlockingTelemetryChartState(state),
@@ -380,33 +418,7 @@ export function buildTelemetryTimeSeriesChartModel(
         ),
       };
     }),
-    series: [
-      ...topSeriesKeys.map((key) => {
-        const style = getTelemetryChartSeriesStyle(breakdown, key);
-        return {
-          key,
-          label: resolveLabel(response, breakdown, key),
-          colorToken: pickDistinctSeriesColorToken(style.colorToken, usedColorTokens),
-          dataKey: `series:${key}`,
-          strokeOpacity: style.strokeOpacity,
-          fillOpacity: style.fillOpacity,
-        };
-      }),
-      ...(response.buckets.some((bucket) =>
-        bucket.series.some((series) => !includedSeries.has(series.key)),
-      )
-        ? [
-            {
-              key: "other",
-              label: "Other",
-              colorToken: "var(--rm-chart-neutral-2)",
-              dataKey: "series:other",
-              strokeOpacity: 1,
-              fillOpacity: 0.12,
-            },
-          ]
-        : []),
-    ],
+    series,
   };
 }
 

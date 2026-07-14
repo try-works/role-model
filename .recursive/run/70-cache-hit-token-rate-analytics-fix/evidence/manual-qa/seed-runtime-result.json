@@ -1,0 +1,10 @@
+{
+  "scopeId": "phase5-cache-efficiency-qa",
+  "runtimeStateRoot": "D:\\DEV\\role-model\\.worktrees\\70-cache-hit-token-rate-analytics-fix\\.recursive\\run\\70-cache-hit-token-rate-analytics-fix\\evidence\\manual-qa\\runtime-state",
+  "databasePath": "D:\\DEV\\role-model\\.worktrees\\70-cache-hit-token-rate-analytics-fix\\.recursive\\run\\70-cache-hit-token-rate-analytics-fix\\evidence\\manual-qa\\runtime-state\\phase5-cache-efficiency-qa\\memory\\memory.sqlite",
+  "firstRemoteTimestampMs": 1783971075407,
+  "secondRemoteTimestampMs": 1784035875407,
+  "localTimestampMs": 1784035935407,
+  "expectedCacheHitTokenRate": 0.133333,
+  "expectedCacheBackedRequestRate": 0.666667
+}

@@ -20499,7 +20499,7 @@ describe("runtime-host-bridge", () => {
     ).resolves.toEqual(
       expect.objectContaining({
         totals: expect.objectContaining({
-          cacheHitTokenRate: 0.117647,
+          cacheHitTokenRate: 0.133333,
         }),
         metricSupport: expect.objectContaining({
           cacheHitTokenRate: expect.objectContaining({
@@ -20517,6 +20517,21 @@ describe("runtime-host-bridge", () => {
         startAtMs: remoteTimestampMs - 1_000,
         endAtMs: localTimestampMs + 1_000,
         granularity: "hour",
+        metrics: ["cacheBackedRequestRate"],
+      }),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        totals: expect.objectContaining({
+          cacheBackedRequestRate: 0.5,
+        }),
+      }),
+    );
+
+    await expect(
+      backend.queryTelemetryAnalytics?.({
+        startAtMs: remoteTimestampMs - 1_000,
+        endAtMs: localTimestampMs + 1_000,
+        granularity: "hour",
         metrics: ["cacheHitTokenRate"],
         filters: {
           sourceTypes: ["remote"],
@@ -20525,7 +20540,7 @@ describe("runtime-host-bridge", () => {
     ).resolves.toEqual(
       expect.objectContaining({
         totals: expect.objectContaining({
-          cacheHitTokenRate: 0.117647,
+          cacheHitTokenRate: 0.133333,
         }),
       }),
     );

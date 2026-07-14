@@ -17334,7 +17334,7 @@ export async function createRuntimeBridgeBackend(
           0,
         );
         const tokenDenominator = supportedRecords.reduce(
-          (sum, record) => sum + record.inputTokens + record.cacheReadTokens,
+          (sum, record) => sum + record.inputTokens,
           0,
         );
         return tokenDenominator === 0

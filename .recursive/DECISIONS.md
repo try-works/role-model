@@ -2,6 +2,42 @@
 
 ## Recursive Run Index
 
+### Run `70-cache-hit-token-rate-analytics-fix`
+
+- Run folder: `/.recursive/run/70-cache-hit-token-rate-analytics-fix/`
+- Worktree: `.worktrees/70-cache-hit-token-rate-analytics-fix`
+- Branch: `recursive/70-cache-hit-token-rate-analytics-fix`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - repaired the backend `cacheHitTokenRate` metric so cache-supported rows now aggregate `cacheReadTokens / inputTokens` instead of double-counting cached tokens in the denominator
+  - preserved the existing shared OpenAI-family normalization contract across Codex Subscription, direct OpenAI-compatible, LiteLLM-backed, and Kimi-shaped paths instead of introducing a provider-specific analytics fork
+  - updated the shared Overview and Observe cache-efficiency charts so mixed absolute token totals and fractional hit rate render on split left and right Y axes
+  - proved the repaired backend math and the shared dual-axis operator outcome on the rebuilt runtime, including a separate supported-zero cache control
+- Why:
+  - the prior telemetry query contract halved operator-visible cache-hit token rate whenever cached tokens were already included in total input tokens
+  - fixing the backend denominator alone would still leave the shared Overview and Observe charts misleading because they plotted absolute token volume and fractional rate on one axis
+- How:
+  - implemented with strict TDD across the owning host-bridge analytics regression and the shared runtime-ui chart-definition or chart-model or renderer seams
+  - verified with focused RED or GREEN regressions, unchanged provider-openai and LiteLLM regression controls, package builds, rebuilt-runtime backend query proof, live Overview and Observe chart evidence, and a supported-zero cache-supported miss control
+- What was not done:
+  - no provider token-normalization rewrite landed
+  - no provider-specific analytics branch or new cache dashboard was introduced
+  - no route-local page hack replaced the shared chart stack
+- Known issues / follow-ups:
+  - future cache metrics that mix absolute totals and fractional rates should opt into the same split-axis presentation rather than reusing a single-axis line chart
+  - if a future non-OpenAI-family provider starts contributing cache-hit token rows, verify its `inputTokens` semantics before assuming the shared denominator rule still applies unchanged
+
 ### Run `69-benchmark-scoring-integrity`
 
 - Run folder: `/.recursive/run/69-benchmark-scoring-integrity/`
