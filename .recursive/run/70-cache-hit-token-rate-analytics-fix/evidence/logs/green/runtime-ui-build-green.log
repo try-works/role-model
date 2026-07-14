@@ -1,0 +1,90 @@
+
+> @role-model-router/runtime-ui@ build D:\DEV\role-model\.worktrees\70-cache-hit-token-rate-analytics-fix\role-model-router\apps\runtime-ui
+> react-router build && tsc --noEmit
+
+vite v7.3.2 building client environment for production...
+transforming...
+✓ 2372 modules transformed.
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                           23.52 kB │ gzip:   2.14 kB
+build/client/assets/root-DOBymbYX.css                      53.89 kB │ gzip:  10.26 kB
+build/client/assets/index-CgUeC-Zx.js                       0.15 kB │ gzip:   0.15 kB
+build/client/assets/live-refresh-DcaagJbF.js                0.16 kB │ gzip:   0.14 kB
+build/client/assets/local-models-DEleTGZf.js                0.16 kB │ gzip:   0.16 kB
+build/client/assets/shell-header-context-BBtNcHzJ.js        0.78 kB │ gzip:   0.40 kB
+build/client/assets/not-found-vUEvrMid.js                   1.03 kB │ gzip:   0.55 kB
+build/client/assets/routing-mode-0L6xYTH_.js                1.04 kB │ gzip:   0.48 kB
+build/client/assets/legacy-redirect-Bh8_0Ivo.js             1.19 kB │ gzip:   0.43 kB
+build/client/assets/local-matrix-Dr8U-3Qo.js                1.29 kB │ gzip:   0.52 kB
+build/client/assets/llama-swap-setup-DjrOlpYQ.js            1.50 kB │ gzip:   0.74 kB
+build/client/assets/local-choose-Dx1_mm8Y.js                1.98 kB │ gzip:   0.84 kB
+build/client/assets/integrations-downstream-DbLbPIpc.js     2.52 kB │ gzip:   1.02 kB
+build/client/assets/local-swap-DhtISQnQ.js                  3.39 kB │ gzip:   1.38 kB
+build/client/assets/control-runtime-config-B1QCQFFC.js      3.45 kB │ gzip:   1.53 kB
+build/client/assets/router-decisions-BJpohs8y.js            3.62 kB │ gzip:   1.42 kB
+build/client/assets/local-policy-5LITfDWp.js                3.74 kB │ gzip:   1.60 kB
+build/client/assets/local-peers-AJAGS9GY.js                 4.03 kB │ gzip:   1.65 kB
+build/client/assets/root-6KkDpvle.js                        4.03 kB │ gzip:   1.74 kB
+build/client/assets/integrations-upstream-BEG7Tb5w.js       4.09 kB │ gzip:   1.59 kB
+build/client/assets/local-logs-Do747GfL.js                  4.27 kB │ gzip:   1.68 kB
+build/client/assets/system-peers-DDJVKd4s.js                4.32 kB │ gzip:   1.70 kB
+build/client/assets/studio-rerank-DI4Ynu_y.js               4.34 kB │ gzip:   1.88 kB
+build/client/assets/app-layout-CM4x74mn.js                  4.46 kB │ gzip:   1.86 kB
+build/client/assets/observe-activity-CnKExk1d.js            4.52 kB │ gzip:   1.75 kB
+build/client/assets/runtime-CJQGm5ce.js                     4.57 kB │ gzip:   1.66 kB
+build/client/assets/studio-images-BRqAyiSZ.js               4.80 kB │ gzip:   1.94 kB
+build/client/assets/observe-logs-DsTB0jEY.js                4.84 kB │ gzip:   1.85 kB
+build/client/assets/session-readiness-t4yTKn71.js           4.85 kB │ gzip:   1.71 kB
+build/client/assets/llama-swap-setup-hint-BQM3iigU.js       5.42 kB │ gzip:   1.96 kB
+build/client/assets/endpoints-DjB_olgf.js                   5.55 kB │ gzip:   1.95 kB
+build/client/assets/studio-advanced-BO9gsKOV.js             5.58 kB │ gzip:   2.22 kB
+build/client/assets/control-controller-BMm0RTZd.js          5.66 kB │ gzip:   1.94 kB
+build/client/assets/local-peer-models-CjciakdC.js           5.80 kB │ gzip:   2.05 kB
+build/client/assets/local-model-role-picker-CpxfqyUb.js     5.84 kB │ gzip:   2.20 kB
+build/client/assets/router-decision-detail-DwDkjnRA.js      5.93 kB │ gzip:   1.97 kB
+build/client/assets/router-candidates-CQ1sqWdt.js           5.96 kB │ gzip:   2.08 kB
+build/client/assets/studio-audio-CqtV6ghd.js                6.25 kB │ gzip:   2.45 kB
+build/client/assets/workbench-CWnPT5f-.js                   7.03 kB │ gzip:   2.61 kB
+build/client/assets/local-llama-swap-models-oQRVyHUS.js     7.17 kB │ gzip:   2.44 kB
+build/client/assets/page-primitives-DLjaOPmB.js             7.59 kB │ gzip:   2.80 kB
+build/client/assets/dashboard-BUWF2FeY.js                   7.89 kB │ gzip:   2.95 kB
+build/client/assets/observe-routing-CqMJE7D1.js             8.17 kB │ gzip:   3.06 kB
+build/client/assets/control-routing-strategy-CYJjEvlq.js    8.67 kB │ gzip:   3.03 kB
+build/client/assets/router-config-CL2eBEOk.js               8.94 kB │ gzip:   2.33 kB
+build/client/assets/router-FPd-rvH1.js                      9.43 kB │ gzip:   2.76 kB
+build/client/assets/requests-BRUU6vt5.js                    9.51 kB │ gzip:   3.40 kB
+build/client/assets/runtime-api-Dqdl6jFE.js                14.42 kB │ gzip:   3.65 kB
+build/client/assets/control-roles-DFxRsIpF.js              16.17 kB │ gzip:   4.39 kB
+build/client/assets/request-detail-CwR-mAz5.js             19.84 kB │ gzip:   5.86 kB
+build/client/assets/control-models-DQi5xVdQ.js             22.06 kB │ gzip:   6.14 kB
+build/client/assets/view-models-FXotq8BI.js                22.31 kB │ gzip:   7.01 kB
+build/client/assets/design-system-BQrBcunQ.js              25.73 kB │ gzip:   8.08 kB
+build/client/assets/cn-B5V-leUE.js                         26.34 kB │ gzip:   8.26 kB
+build/client/assets/providers-BCml1x1c.js                  27.77 kB │ gzip:   8.01 kB
+build/client/assets/control-benchmark-D4njDm9S.js          29.00 kB │ gzip:   8.60 kB
+build/client/assets/chunk-EVOBXE3Y-CbLStoMq.js            128.07 kB │ gzip:  43.13 kB
+build/client/assets/entry.client-CUjFWg5_.js              190.57 kB │ gzip:  60.05 kB
+build/client/assets/telemetry-route-models-Bi2E_MSd.js    432.92 kB │ gzip: 116.43 kB
+✓ built in 16.11s
+vite v7.3.2 building ssr environment for production...
+transforming...
+✓ 9 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                0.23 kB
+build/server/assets/server-build-DOBymbYX.css  53.89 kB
+build/server/index.js                          69.22 kB
+
+✓ 1 asset cleaned from React Router server build.
+build\server\assets\server-build-DOBymbYX.css
+
+SPA Mode: Generated build\client\index.html
+Removing the server build in D:\DEV\role-model\.worktrees\70-cache-hit-token-rate-analytics-fix\role-model-router\apps\runtime-ui\build\server due to ssr:false
+✓ built in 701ms
+app/lib/telemetry-analytics.ts(392,5): error TS2322: Type '{ key: string; label: string; colorToken: string; dataKey: string; strokeOpacity: number; fillOpacity: number; yAxisId: string; }[]' is not assignable to type 'readonly TelemetryChartSeriesModel[]'.
+  Type '{ key: string; label: string; colorToken: string; dataKey: string; strokeOpacity: number; fillOpacity: number; yAxisId: string; }' is not assignable to type 'TelemetryChartSeriesModel'.
+    Types of property 'yAxisId' are incompatible.
+      Type 'string' is not assignable to type 'TelemetryChartYAxisId'.
+D:\DEV\role-model\.worktrees\70-cache-hit-token-rate-analytics-fix\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-ui@ build: `react-router build && tsc --noEmit`
+Exit status 2

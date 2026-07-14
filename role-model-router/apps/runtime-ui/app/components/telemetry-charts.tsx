@@ -55,6 +55,11 @@ const chartCompactYAxisProps = {
   width: 36,
 } as const;
 
+const chartDualYAxisMargin = {
+  ...chartTimeSeriesMargin,
+  right: 32,
+} as const;
+
 function ChartLegendContent(props: {
   readonly payload?: ReadonlyArray<{
     readonly color?: string;
@@ -331,7 +336,7 @@ export function TelemetryAreaTimeSeriesChart({
             tick={chartAxisTickStyle}
             tickLine={false}
           />
-          <YAxis {...chartCompactYAxisProps} />
+          <YAxis {...chartCompactYAxisProps} yAxisId="left" />
           <Tooltip content={<ChartTooltipContent />} cursor={{ stroke: "var(--rm-border)" }} />
           <Legend content={<ChartLegendContent />} />
           {model.series.map((series) => (
@@ -345,6 +350,7 @@ export function TelemetryAreaTimeSeriesChart({
               strokeOpacity={series.strokeOpacity}
               strokeWidth={2}
               type="monotone"
+              yAxisId={series.yAxisId}
             />
           ))}
         </AreaChart>
@@ -358,10 +364,14 @@ export function TelemetryLineTimeSeriesChart({
 }: {
   readonly model: TelemetryTimeSeriesChartModel;
 }) {
+  const hasSecondaryYAxis = model.series.some((series) => series.yAxisId === "right");
   return (
     <div className="h-[280px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={[...model.data]} margin={chartTimeSeriesMargin}>
+        <LineChart
+          data={[...model.data]}
+          margin={hasSecondaryYAxis ? chartDualYAxisMargin : chartTimeSeriesMargin}
+        >
           <CartesianGrid stroke="var(--rm-divider-soft)" vertical={false} />
           <XAxis
             axisLine={false}
@@ -369,7 +379,10 @@ export function TelemetryLineTimeSeriesChart({
             tick={chartAxisTickStyle}
             tickLine={false}
           />
-          <YAxis {...chartCompactYAxisProps} />
+          <YAxis {...chartCompactYAxisProps} yAxisId="left" />
+          {hasSecondaryYAxis ? (
+            <YAxis {...chartCompactYAxisProps} orientation="right" yAxisId="right" />
+          ) : null}
           <Tooltip content={<ChartTooltipContent />} cursor={{ stroke: "var(--rm-border)" }} />
           <Legend content={<ChartLegendContent />} />
           {model.series.map((series) => (
@@ -382,6 +395,7 @@ export function TelemetryLineTimeSeriesChart({
               strokeOpacity={series.strokeOpacity}
               strokeWidth={2}
               type="monotone"
+              yAxisId={series.yAxisId}
             />
           ))}
         </LineChart>
@@ -406,7 +420,7 @@ export function TelemetryBarTimeSeriesChart({
             tick={chartAxisTickStyle}
             tickLine={false}
           />
-          <YAxis {...chartCompactYAxisProps} />
+          <YAxis {...chartCompactYAxisProps} yAxisId="left" />
           <Tooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--rm-panel)" }} />
           <Legend content={<ChartLegendContent />} />
           {model.series.map((series) => (
@@ -416,6 +430,7 @@ export function TelemetryBarTimeSeriesChart({
               fill={series.colorToken}
               name={series.label}
               radius={chartBarRadius}
+              yAxisId={series.yAxisId}
             />
           ))}
         </BarChart>
@@ -523,6 +538,7 @@ export function TelemetryAnalyticsChartCard({
     title: definition.title,
     metrics: definition.metrics,
     breakdown: response.breakdown,
+    metricAxisIds: definition.metricAxisIds,
   });
 
   return (

@@ -138,6 +138,55 @@ describe("telemetry analytics view models", () => {
     expect(new Set(model.series.map((series) => series.colorToken)).size).toBe(model.series.length);
   });
 
+  test("assigns separate axes to mixed-unit cache efficiency metrics when requested", () => {
+    const response: RuntimeTelemetryAnalyticsResponse = {
+      startAtMs: Date.UTC(2026, 5, 16, 0, 0, 0),
+      endAtMs: Date.UTC(2026, 5, 17, 0, 0, 0),
+      granularity: "hour",
+      metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+      breakdown: null,
+      buckets: [
+        {
+          startAtMs: Date.UTC(2026, 5, 16, 10, 0, 0),
+          endAtMs: Date.UTC(2026, 5, 16, 11, 0, 0),
+          totals: {
+            cacheHitTokens: 96,
+            cacheHitTokenRate: 0.96,
+          },
+          series: [],
+        },
+      ],
+      totals: {
+        cacheHitTokens: 96,
+        cacheHitTokenRate: 0.96,
+      },
+      ranking: null,
+      labels: {},
+    };
+
+    const model = buildTelemetryTimeSeriesChartModel(response, {
+      title: "Cache Efficiency",
+      metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+      metricAxisIds: {
+        cacheHitTokens: "left",
+        cacheHitTokenRate: "right",
+      },
+    } as unknown as Parameters<typeof buildTelemetryTimeSeriesChartModel>[1]);
+
+    expect(model.series).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: "cacheHitTokens",
+          yAxisId: "left",
+        }),
+        expect.objectContaining({
+          key: "cacheHitTokenRate",
+          yAxisId: "right",
+        }),
+      ]),
+    );
+  });
+
   test("assigns distinct colors to each visible metric series in the same chart", () => {
     const response: RuntimeTelemetryAnalyticsResponse = {
       startAtMs: Date.UTC(2026, 5, 16, 0, 0, 0),

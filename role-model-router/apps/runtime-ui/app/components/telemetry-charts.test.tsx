@@ -1,9 +1,52 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+
+vi.mock("recharts", () => {
+  function pickAttributeValue(value: unknown) {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+    return undefined;
+  }
+
+  function createMockComponent(name: string) {
+    return function MockComponent(props: Record<string, unknown>) {
+      const children = props.children;
+      const attributes: Record<string, string> = {
+        "data-recharts": name,
+      };
+      const propNames = ["dataKey", "name", "orientation", "yAxisId", "layout", "type", "width"];
+      for (const propName of propNames) {
+        const value = pickAttributeValue(props[propName]);
+        if (value !== undefined) {
+          attributes[`data-${propName.toLowerCase()}`] = value;
+        }
+      }
+      return <div {...attributes}>{children as never}</div>;
+    };
+  }
+
+  return {
+    Area: createMockComponent("Area"),
+    AreaChart: createMockComponent("AreaChart"),
+    Bar: createMockComponent("Bar"),
+    BarChart: createMockComponent("BarChart"),
+    CartesianGrid: createMockComponent("CartesianGrid"),
+    Cell: createMockComponent("Cell"),
+    Legend: createMockComponent("Legend"),
+    Line: createMockComponent("Line"),
+    LineChart: createMockComponent("LineChart"),
+    ResponsiveContainer: createMockComponent("ResponsiveContainer"),
+    Tooltip: createMockComponent("Tooltip"),
+    XAxis: createMockComponent("XAxis"),
+    YAxis: createMockComponent("YAxis"),
+  };
+});
 
 import {
   TelemetryAnalyticsChartCard,
   TelemetryChartCard,
+  TelemetryLineTimeSeriesChart,
   TelemetryRankingBarChart,
 } from "./telemetry-charts";
 
@@ -130,6 +173,104 @@ describe("TelemetryAnalyticsChartCard", () => {
 
     expect(markup).toContain("Error");
     expect(markup).toContain("Latency Trend: upstream query timed out.");
+  });
+});
+
+describe("TelemetryLineTimeSeriesChart", () => {
+  test("renders dual y axes for mixed-unit cache efficiency charts", () => {
+    const markup = renderToStaticMarkup(
+      <TelemetryLineTimeSeriesChart
+        model={
+          {
+            title: "Cache Efficiency",
+            isEmpty: false,
+            data: [
+              {
+                bucketLabel: "Jul 13",
+                bucketStartMs: 0,
+                bucketEndMs: 1,
+                cacheHitTokens: 3394,
+                cacheHitTokenRate: 0.96,
+              },
+            ],
+            series: [
+              {
+                key: "cacheHitTokens",
+                label: "Cache hit tokens",
+                colorToken: "var(--rm-chart-cache-hit)",
+                dataKey: "cacheHitTokens",
+                strokeOpacity: 1,
+                fillOpacity: 0.16,
+                yAxisId: "left",
+              },
+              {
+                key: "cacheHitTokenRate",
+                label: "Cache hit token rate",
+                colorToken: "var(--rm-chart-cache-rate)",
+                dataKey: "cacheHitTokenRate",
+                strokeOpacity: 1,
+                fillOpacity: 0.16,
+                yAxisId: "right",
+              },
+            ],
+          } as unknown as Parameters<typeof TelemetryLineTimeSeriesChart>[0]["model"]
+        }
+      />,
+    );
+
+    expect(markup.match(/data-recharts=\"YAxis\"/g)?.length).toBe(2);
+    expect(markup).toContain('data-recharts="YAxis" data-orientation="right"');
+    expect(markup).toMatch(
+      /data-recharts="Line"[^>]*data-datakey="cacheHitTokens"[^>]*data-yaxisid="left"/,
+    );
+    expect(markup).toMatch(
+      /data-recharts="Line"[^>]*data-datakey="cacheHitTokenRate"[^>]*data-yaxisid="right"/,
+    );
+  });
+
+  test("keeps same-unit line charts on a single y axis", () => {
+    const markup = renderToStaticMarkup(
+      <TelemetryLineTimeSeriesChart
+        model={
+          {
+            title: "Latency Trend",
+            isEmpty: false,
+            data: [
+              {
+                bucketLabel: "Jul 13",
+                bucketStartMs: 0,
+                bucketEndMs: 1,
+                averageLatencyMs: 380,
+                p95LatencyMs: 820,
+              },
+            ],
+            series: [
+              {
+                key: "averageLatencyMs",
+                label: "Average latency",
+                colorToken: "var(--rm-chart-latency)",
+                dataKey: "averageLatencyMs",
+                strokeOpacity: 1,
+                fillOpacity: 0.16,
+                yAxisId: "left",
+              },
+              {
+                key: "p95LatencyMs",
+                label: "p95 latency",
+                colorToken: "var(--rm-chart-warning)",
+                dataKey: "p95LatencyMs",
+                strokeOpacity: 1,
+                fillOpacity: 0.16,
+                yAxisId: "left",
+              },
+            ],
+          } as unknown as Parameters<typeof TelemetryLineTimeSeriesChart>[0]["model"]
+        }
+      />,
+    );
+
+    expect(markup.match(/data-recharts=\"YAxis\"/g)?.length).toBe(1);
+    expect(markup).not.toContain('data-recharts="YAxis" data-orientation="right"');
   });
 });
 

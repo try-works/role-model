@@ -1,0 +1,92 @@
+{
+  "startAtMs": 1784000741873,
+  "endAtMs": 1784000861873,
+  "appliedQuery": {
+    "startAtMs": 1784000741873,
+    "endAtMs": 1784000861873,
+    "granularity": "hour",
+    "metrics": [
+      "cacheHitTokens",
+      "cacheHitTokenRate",
+      "cacheBackedRequestRate"
+    ],
+    "windowMs": 120000,
+    "breakdown": null,
+    "filters": {},
+    "ranking": null
+  },
+  "granularity": "hour",
+  "metrics": [
+    "cacheHitTokens",
+    "cacheHitTokenRate",
+    "cacheBackedRequestRate"
+  ],
+  "breakdown": null,
+  "buckets": [
+    {
+      "startAtMs": 1784000741873,
+      "endAtMs": 1784000861873,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": 0,
+        "cacheBackedRequestRate": 0
+      },
+      "series": []
+    }
+  ],
+  "totals": {
+    "cacheHitTokens": 0,
+    "cacheHitTokenRate": 0,
+    "cacheBackedRequestRate": 0
+  },
+  "ranking": null,
+  "labels": {},
+  "metadata": {
+    "scannedRowCount": 1,
+    "matchedRowCount": 1,
+    "aggregationRowCount": 1,
+    "truncated": false,
+    "truncationReason": null,
+    "generatedAtMs": 1784044019443,
+    "taxonomyCoverage": {
+      "matchedRowCount": 1,
+      "richerTaxonomyRowCount": 1,
+      "legacyRowCount": 0,
+      "coverageRate": 1,
+      "backfillPerformed": false
+    }
+  },
+  "metricSupport": {
+    "cacheHitTokens": {
+      "metric": "cacheHitTokens",
+      "status": "supported",
+      "aggregation": "sum",
+      "matchedRowCount": 1,
+      "supportedRowCount": 1,
+      "unsupportedRowCount": 0,
+      "nullValueCount": 0,
+      "reason": null
+    },
+    "cacheHitTokenRate": {
+      "metric": "cacheHitTokenRate",
+      "status": "supported",
+      "aggregation": "rate",
+      "matchedRowCount": 1,
+      "supportedRowCount": 1,
+      "unsupportedRowCount": 0,
+      "nullValueCount": 0,
+      "reason": null
+    },
+    "cacheBackedRequestRate": {
+      "metric": "cacheBackedRequestRate",
+      "status": "supported",
+      "aggregation": "rate",
+      "matchedRowCount": 1,
+      "supportedRowCount": 1,
+      "unsupportedRowCount": 0,
+      "nullValueCount": 0,
+      "reason": null
+    }
+  },
+  "dimensionSupport": {}
+}

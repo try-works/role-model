@@ -1,0 +1,149 @@
+{
+  "bottomAxisTicks": [
+    "17:42",
+    "03:42",
+    "14:42"
+  ],
+  "cardText": "Cache Efficiencycache-hit tokens / hit ratePartial1 row(s) in this slice do not support cacheHitTokens.17:4203:4214:420816243200.0350.070.1050.14Cache hit tokensCache hit token rate",
+  "headingText": "Cache Efficiency",
+  "leftAxisTicks": [
+    "0",
+    "8",
+    "16",
+    "24",
+    "32"
+  ],
+  "pageUrl": "http://127.0.0.1:3476/app",
+  "rect": {
+    "height": 545,
+    "width": 221.198,
+    "x": 737.594,
+    "y": 241.667
+  },
+  "rightAxisTicks": [
+    "0",
+    "0.035",
+    "0.07",
+    "0.105",
+    "0.14"
+  ],
+  "svgTextNodes": [
+    {
+      "anchor": "middle",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "17:42",
+      "width": 29.771,
+      "x": 772.833,
+      "y": 665.144
+    },
+    {
+      "anchor": "middle",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "03:42",
+      "width": 33.479,
+      "x": 808.341,
+      "y": 665.144
+    },
+    {
+      "anchor": "middle",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "14:42",
+      "width": 31.135,
+      "x": 850.611,
+      "y": 665.144
+    },
+    {
+      "anchor": "end",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0",
+      "width": 7.563,
+      "x": 764.69,
+      "y": 652.893
+    },
+    {
+      "anchor": "end",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "8",
+      "width": 7.417,
+      "x": 764.836,
+      "y": 609.428
+    },
+    {
+      "anchor": "end",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "16",
+      "width": 12.313,
+      "x": 759.94,
+      "y": 565.962
+    },
+    {
+      "anchor": "end",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "24",
+      "width": 14.875,
+      "x": 757.378,
+      "y": 522.496
+    },
+    {
+      "anchor": "end",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "32",
+      "width": 14.719,
+      "x": 757.534,
+      "y": 484.026
+    },
+    {
+      "anchor": "start",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0",
+      "width": 7.563,
+      "x": 874.172,
+      "y": 652.893
+    },
+    {
+      "anchor": "start",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0.035",
+      "width": 32.49,
+      "x": 874.172,
+      "y": 609.428
+    },
+    {
+      "anchor": "start",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0.07",
+      "width": 24.521,
+      "x": 874.172,
+      "y": 565.962
+    },
+    {
+      "anchor": "start",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0.105",
+      "width": 29.229,
+      "x": 874.172,
+      "y": 522.496
+    },
+    {
+      "anchor": "start",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0.14",
+      "width": 22.302,
+      "x": 874.172,
+      "y": 484.026
+    }
+  ]
+}

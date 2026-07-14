@@ -1,0 +1,272 @@
+{
+  "startAtMs": 1783971015407,
+  "endAtMs": 1784035995407,
+  "appliedQuery": {
+    "startAtMs": 1783971015407,
+    "endAtMs": 1784035995407,
+    "granularity": "hour",
+    "metrics": [
+      "cacheHitTokens",
+      "cacheHitTokenRate",
+      "cacheBackedRequestRate"
+    ],
+    "windowMs": 64980000,
+    "breakdown": null,
+    "filters": {},
+    "ranking": null
+  },
+  "granularity": "hour",
+  "metrics": [
+    "cacheHitTokens",
+    "cacheHitTokenRate",
+    "cacheBackedRequestRate"
+  ],
+  "breakdown": null,
+  "buckets": [
+    {
+      "startAtMs": 1783971015407,
+      "endAtMs": 1783974615407,
+      "totals": {
+        "cacheHitTokens": 16,
+        "cacheHitTokenRate": 0.133333,
+        "cacheBackedRequestRate": 1
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1783974615407,
+      "endAtMs": 1783978215407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1783978215407,
+      "endAtMs": 1783981815407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1783981815407,
+      "endAtMs": 1783985415407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1783985415407,
+      "endAtMs": 1783989015407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1783989015407,
+      "endAtMs": 1783992615407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1783992615407,
+      "endAtMs": 1783996215407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1783996215407,
+      "endAtMs": 1783999815407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1783999815407,
+      "endAtMs": 1784003415407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1784003415407,
+      "endAtMs": 1784007015407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1784007015407,
+      "endAtMs": 1784010615407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1784010615407,
+      "endAtMs": 1784014215407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1784014215407,
+      "endAtMs": 1784017815407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1784017815407,
+      "endAtMs": 1784021415407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1784021415407,
+      "endAtMs": 1784025015407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1784025015407,
+      "endAtMs": 1784028615407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1784028615407,
+      "endAtMs": 1784032215407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1784032215407,
+      "endAtMs": 1784035815407,
+      "totals": {
+        "cacheHitTokens": 0,
+        "cacheHitTokenRate": null,
+        "cacheBackedRequestRate": null
+      },
+      "series": []
+    },
+    {
+      "startAtMs": 1784035815407,
+      "endAtMs": 1784035995407,
+      "totals": {
+        "cacheHitTokens": 32,
+        "cacheHitTokenRate": 0.133333,
+        "cacheBackedRequestRate": 0.5
+      },
+      "series": []
+    }
+  ],
+  "totals": {
+    "cacheHitTokens": 48,
+    "cacheHitTokenRate": 0.133333,
+    "cacheBackedRequestRate": 0.666667
+  },
+  "ranking": null,
+  "labels": {},
+  "metadata": {
+    "scannedRowCount": 3,
+    "matchedRowCount": 3,
+    "aggregationRowCount": 3,
+    "truncated": false,
+    "truncationReason": null,
+    "generatedAtMs": 1784043120591,
+    "taxonomyCoverage": {
+      "matchedRowCount": 3,
+      "richerTaxonomyRowCount": 3,
+      "legacyRowCount": 0,
+      "coverageRate": 1,
+      "backfillPerformed": false
+    }
+  },
+  "metricSupport": {
+    "cacheHitTokens": {
+      "metric": "cacheHitTokens",
+      "status": "partial",
+      "aggregation": "sum",
+      "matchedRowCount": 3,
+      "supportedRowCount": 2,
+      "unsupportedRowCount": 1,
+      "nullValueCount": 0,
+      "reason": "1 row(s) in this slice do not support cacheHitTokens."
+    },
+    "cacheHitTokenRate": {
+      "metric": "cacheHitTokenRate",
+      "status": "partial",
+      "aggregation": "rate",
+      "matchedRowCount": 3,
+      "supportedRowCount": 2,
+      "unsupportedRowCount": 1,
+      "nullValueCount": 1,
+      "reason": "1 row(s) in this slice do not support cacheHitTokenRate."
+    },
+    "cacheBackedRequestRate": {
+      "metric": "cacheBackedRequestRate",
+      "status": "supported",
+      "aggregation": "rate",
+      "matchedRowCount": 3,
+      "supportedRowCount": 3,
+      "unsupportedRowCount": 0,
+      "nullValueCount": 0,
+      "reason": null
+    }
+  },
+  "dimensionSupport": {}
+}

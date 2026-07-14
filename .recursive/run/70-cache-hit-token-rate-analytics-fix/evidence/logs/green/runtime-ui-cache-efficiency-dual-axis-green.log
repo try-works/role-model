@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/70-cache-hit-token-rate-analytics-fix/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/telemetry-route-models.test.ts (3 tests) 17ms
+ ✓ app/lib/telemetry-analytics.test.ts (11 tests) 22ms
+ ✓ app/components/telemetry-charts.test.tsx (10 tests) 72ms
+
+ Test Files  3 passed (3)
+      Tests  24 passed (24)
+   Start at  22:05:47
+   Duration  2.05s (transform 393ms, setup 0ms, collect 1.07s, tests 110ms, environment 1ms, prepare 1.52s)
+

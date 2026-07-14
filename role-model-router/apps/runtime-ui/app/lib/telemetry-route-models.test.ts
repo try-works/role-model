@@ -46,6 +46,18 @@ describe("telemetry route chart definitions", () => {
         metrics: ["routingCostSavingsUsd", "cacheCostSavingsUsd", "totalAvoidedCostUsd"],
       }),
     );
+    expect(charts[4]).toEqual(
+      expect.objectContaining({
+        title: "Cache Efficiency",
+        kind: "line",
+        metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+        metricAxisIds: {
+          cacheHitTokens: "left",
+          cacheHitTokenRate: "right",
+        },
+      }),
+    );
+    expect(charts[3]).not.toHaveProperty("metricAxisIds");
   });
 
   test("builds observe requests charts from shared filters and ranked-comparison selectors", () => {
@@ -127,6 +139,18 @@ describe("telemetry route chart definitions", () => {
         }),
       }),
     );
+    expect(charts[6]).toEqual(
+      expect.objectContaining({
+        title: "Cache Efficiency Trend",
+        kind: "line",
+        metrics: ["cacheHitTokens", "cacheHitTokenRate"],
+        metricAxisIds: {
+          cacheHitTokens: "left",
+          cacheHitTokenRate: "right",
+        },
+      }),
+    );
+    expect(charts[5]).not.toHaveProperty("metricAxisIds");
   });
 
   test("keeps routing analytics under Observe with cost savings and routing dimensions", () => {

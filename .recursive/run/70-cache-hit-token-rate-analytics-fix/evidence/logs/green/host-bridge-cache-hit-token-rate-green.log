@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/70-cache-hit-token-rate-analytics-fix/role-model-router/apps/runtime-host-bridge
+
+(node:50956) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (201 tests | 200 skipped) 1526ms
+   ✓ runtime-host-bridge > aggregates generic telemetry analytics from persisted request-time routing and cost facts  1522ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 200 skipped (201)
+   Start at  22:05:16
+   Duration  6.32s (transform 2.81s, setup 0ms, collect 3.69s, tests 1.53s, environment 0ms, prepare 338ms)
+
