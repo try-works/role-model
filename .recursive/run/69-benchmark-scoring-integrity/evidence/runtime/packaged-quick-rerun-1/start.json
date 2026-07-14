@@ -1,0 +1,22 @@
+{
+  "request": {
+    "useJudge": true,
+    "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "preflightProbe": true,
+    "mode": "quick",
+    "endpointIds": [
+      "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+    ]
+  },
+  "response": {
+    "runId": "cc8ce36c-e945-428b-ae77-cd224dec0036",
+    "status": "running",
+    "warnings": [
+      "judge_subject_overlap: judge endpoint is also a benchmark subject; judge exhaustion risk"
+    ],
+    "judgeSubjectOverlap": true
+  }
+}

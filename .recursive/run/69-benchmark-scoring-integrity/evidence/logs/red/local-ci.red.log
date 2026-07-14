@@ -1,0 +1,55 @@
+
+> role-model@0.0.0 ci:check D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity
+> corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run runtime:test-critical && corepack pnpm run test:rust && corepack pnpm run smoke
+
+
+> role-model@0.0.0 lint D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity
+> biome check . && corepack pnpm run lint:rust
+
+.\role-model-router\apps\runtime-host-bridge\test\restart-rehydration.test.ts format ━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+      29   29 │   }
+      30   30 │   
+      31      │ - function·readRequestHeader(
+      32      │ - ··headers:·HeadersInit·|·undefined,
+      33      │ - ··name:·string,
+      34      │ - ):·string·|·null·{
+           31 │ + function·readRequestHeader(headers:·HeadersInit·|·undefined,·name:·string):·string·|·null·{
+      35   32 │     if (!headers) {
+      36   33 │       return null;
+  
+
+.\role-model-router\apps\runtime-host-bridge\src\index.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    11416 11416 │       }))
+    11417 11417 │       .filter(
+    11418       │ - ······(candidate):·candidate·is·{
+          11418 │ + ······(
+          11419 │ + ········candidate,
+          11420 │ + ······):·candidate·is·{
+    11419 11421 │           location: StoredOauthTokenLocation;
+    11420 11422 │           payload: StoredOauthTokenPayload;
+    ··········· │ 
+    11441 11443 │       return best;
+    11442 11444 │     });
+    11443       │ - ··const·freshestCounterpartFreshnessMs·=·readStoredOauthTokenFreshnessMs(freshestCounterpart.payload);
+          11445 │ + ··const·freshestCounterpartFreshnessMs·=·readStoredOauthTokenFreshnessMs(
+          11446 │ + ····freshestCounterpart.payload,
+          11447 │ + ··);
+    11444 11448 │     const shouldRepairActive =
+    11445 11449 │       !activeHasTokens ||
+  
+
+Checked 744 files in 2s. No fixes applied.
+Found 2 errors.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+
+ ELIFECYCLE  Command failed with exit code 1.
+ ELIFECYCLE  Command failed with exit code 1.

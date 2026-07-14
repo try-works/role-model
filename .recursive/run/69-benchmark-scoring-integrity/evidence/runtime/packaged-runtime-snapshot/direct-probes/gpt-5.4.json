@@ -1,0 +1,21 @@
+{
+  "id": "chatcmpl-role-model",
+  "object": "chat.completion",
+  "created": 1783994391,
+  "model": "chatgpt/gpt-5.4",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "OK"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 11,
+    "completion_tokens": 5,
+    "total_tokens": 16
+  }
+}

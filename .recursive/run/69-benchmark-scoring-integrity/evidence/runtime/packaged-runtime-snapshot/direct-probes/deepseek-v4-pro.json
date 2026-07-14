@@ -1,0 +1,21 @@
+{
+  "id": "chatcmpl-role-model",
+  "object": "chat.completion",
+  "created": 1783994399,
+  "model": "deepseek/deepseek-v4-pro",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "OK"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 9,
+    "completion_tokens": 26,
+    "total_tokens": 35
+  }
+}
