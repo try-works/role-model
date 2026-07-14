@@ -22,6 +22,31 @@ import {
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(import.meta.dirname, "fixtures-restart-rehydration");
 
+function encodeJwtPayload(payload: Record<string, unknown>): string {
+  const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString("base64url");
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return `${header}.${body}.signature`;
+}
+
+function readRequestHeader(headers: HeadersInit | undefined, name: string): string | null {
+  if (!headers) {
+    return null;
+  }
+  if (headers instanceof Headers) {
+    return headers.get(name);
+  }
+  if (Array.isArray(headers)) {
+    const entry = headers.find(([key]) => key.toLowerCase() === name.toLowerCase());
+    return entry?.[1] ?? null;
+  }
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() === name.toLowerCase()) {
+      return typeof value === "string" ? value : String(value);
+    }
+  }
+  return null;
+}
+
 describe("restart rehydration", () => {
   test("restores activated endpoints and session readiness summary after backend restart", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `restart-rehydration-${Date.now()}`);
@@ -1042,6 +1067,438 @@ describe("restart rehydration", () => {
       }
     } finally {
       await rm(runtimeContainerRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("repairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility", async () => {
+    const runtimeContainerRoot = path.join(
+      os.tmpdir(),
+      `restart-bridge-oauth-repair-${Date.now()}`,
+    );
+    const runtimeStateRoot = runtimeContainerRoot;
+    const scopeId = "standalone-runtime";
+    const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+    const standaloneCredentialPath = path.join(
+      runtimeContainerRoot,
+      scopeId,
+      "credentials",
+      "oauth",
+      "moonshot",
+      "moonshot.personal.kimi-code.json",
+    );
+    const bridgeCredentialPath = path.join(
+      runtimeContainerRoot,
+      "state",
+      "runtime-host-bridge",
+      "credentials",
+      "oauth",
+      "moonshot",
+      "moonshot.personal.kimi-code.json",
+    );
+
+    const firstBackend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      networkFetcher: async (input, init) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
+          expect(init?.method ?? "POST").toBe("POST");
+          return new Response(
+            JSON.stringify({
+              user_code: "ABCD-EFGH",
+              device_code: "device-001",
+              verification_uri: "https://auth.kimi.com/device",
+              verification_uri_complete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+              expires_in: 900,
+              interval: 5,
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        if (url === "https://auth.kimi.com/api/oauth/token") {
+          expect(init?.method ?? "POST").toBe("POST");
+          return new Response(
+            JSON.stringify({
+              access_token: "access-001",
+              refresh_token: "refresh-001",
+              expires_in: 3600,
+              scope: "openid profile",
+              token_type: "Bearer",
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    try {
+      const pending = await firstBackend.startProviderDeviceAuthorization({
+        providerAccountId: "moonshot.personal.kimi-code",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        variantId: "kimi-code",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+      await firstBackend.pollProviderDeviceAuthorization({
+        authRequestId: pending.authRequestId,
+      });
+      const activation = await firstBackend.activateEndpoint({
+        providerAccountId: "moonshot.personal.kimi-code",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      });
+      await firstBackend.shutdown();
+
+      const standalonePayload = JSON.parse(await readFile(standaloneCredentialPath, "utf8")) as {
+        access_token?: string;
+        refresh_token?: string;
+        expires_in?: number;
+        saved_at_ms?: number;
+      };
+      await mkdir(path.dirname(bridgeCredentialPath), { recursive: true });
+      await writeFile(
+        bridgeCredentialPath,
+        JSON.stringify(
+          {
+            ...standalonePayload,
+            access_token: "access-bridge-fresh",
+            refresh_token: "refresh-bridge-fresh",
+            expires_in: 3600,
+            saved_at_ms: Date.now(),
+          },
+          null,
+          2,
+        ),
+        "utf8",
+      );
+      await writeFile(
+        standaloneCredentialPath,
+        JSON.stringify(
+          {
+            ...standalonePayload,
+            access_token: "access-standalone-stale",
+            refresh_token: "refresh-standalone-stale",
+            expires_in: 3600,
+            saved_at_ms: Date.now() - 7_200_000,
+          },
+          null,
+          2,
+        ),
+        "utf8",
+      );
+
+      const database = new DatabaseSync(databasePath);
+      database
+        .prepare(
+          "UPDATE provider_accounts SET status = ?, health_status = ?, rotation_state = ? WHERE provider_account_id = ?",
+        )
+        .run("active", "refresh-failing", "failed", "moonshot.personal.kimi-code");
+      database
+        .prepare("UPDATE runtime_endpoints SET health_status = ? WHERE endpoint_id = ?")
+        .run("degraded", activation.endpointId);
+      database.close();
+
+      const secondBackend = await createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input, init) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (
+            url === "https://api.moonshot.ai/v1/chat/completions" ||
+            url === "https://api.kimi.com/coding/v1/chat/completions"
+          ) {
+            expect(init?.method ?? "POST").toBe("POST");
+            return new Response(
+              JSON.stringify({
+                id: "chatcmpl-kimi-restart-repair",
+                object: "chat.completion",
+                choices: [
+                  {
+                    index: 0,
+                    message: { role: "assistant", content: "standalone repaired" },
+                    finish_reason: "stop",
+                  },
+                ],
+                usage: {
+                  prompt_tokens: 8,
+                  completion_tokens: 2,
+                  total_tokens: 10,
+                },
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+          throw new Error(`Unexpected network request after restart: ${url}`);
+        },
+      });
+
+      try {
+        let health = await secondBackend.readHealthStatus();
+        for (
+          let attempt = 0;
+          attempt < 20 && health.sessionBootstrap.status === "running";
+          attempt += 1
+        ) {
+          await delay(50);
+          health = await secondBackend.readHealthStatus();
+        }
+
+        const summary = await secondBackend.readRuntimeSummary();
+        const credentialsStage = summary.sessionBootstrap.stages.find(
+          (stage) => stage.stageId === "credentials",
+        );
+        expect(credentialsStage).toEqual(
+          expect.objectContaining({
+            status: "ready",
+            details: expect.objectContaining({
+              refreshAttempted: 0,
+              refreshSucceeded: 0,
+              refreshFailed: 0,
+            }),
+          }),
+        );
+        expect(summary.readinessSummary.readyAccountCount).toBe(1);
+        expect(summary.credentialLifecycle.counts.executionReady).toBe(1);
+        expect(summary.credentialLifecycle.counts.expiredAuth).toBe(0);
+        expect(summary.credentialLifecycle.accounts).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              providerAccountId: "moonshot.personal.kimi-code",
+              lifecycleState: "execution-ready",
+            }),
+          ]),
+        );
+
+        const endpoints = await secondBackend.listEndpoints();
+        expect(endpoints).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: activation.endpointId,
+              healthStatus: "healthy",
+            }),
+          ]),
+        );
+
+        const result = await secondBackend.executeChatCompletions(
+          {
+            model: "moonshot/kimi-k2.5",
+            messages: [{ role: "user", content: "Say repaired." }],
+          },
+          "req-kimi-standalone-restart-repair-001",
+        );
+        expect(result.endpointId).toBe(activation.endpointId);
+        expect(result.outputText).toBe("standalone repaired");
+
+        const repairedStandalonePayload = JSON.parse(
+          await readFile(standaloneCredentialPath, "utf8"),
+        ) as {
+          access_token?: string;
+          refresh_token?: string;
+        };
+        expect(repairedStandalonePayload.access_token).toBe("access-bridge-fresh");
+        expect(repairedStandalonePayload.refresh_token).toBe("refresh-bridge-fresh");
+      } finally {
+        await secondBackend.shutdown();
+      }
+    } finally {
+      await rm(runtimeContainerRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("refreshes Kimi OAuth after restart by honoring the stored token device id", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `restart-kimi-device-id-${Date.now()}`);
+    const scopeId = "restart-kimi-device-id-tests";
+    const credentialPath = path.join(
+      runtimeStateRoot,
+      scopeId,
+      "credentials",
+      "oauth",
+      "moonshot",
+      "moonshot.personal.kimi-code.json",
+    );
+    const expectedDeviceId = "persisted-kimi-device-id";
+
+    const firstBackend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      networkFetcher: async (input, init) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
+          expect(init?.method ?? "POST").toBe("POST");
+          return new Response(
+            JSON.stringify({
+              user_code: "ABCD-EFGH",
+              device_code: "device-001",
+              verification_uri: "https://auth.kimi.com/device",
+              verification_uri_complete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+              expires_in: 900,
+              interval: 5,
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        if (url === "https://auth.kimi.com/api/oauth/token") {
+          expect(init?.method ?? "POST").toBe("POST");
+          return new Response(
+            JSON.stringify({
+              access_token: "access-001",
+              refresh_token: "refresh-001",
+              expires_in: 3600,
+              scope: "kimi-code",
+              token_type: "Bearer",
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    try {
+      const pending = await firstBackend.startProviderDeviceAuthorization({
+        providerAccountId: "moonshot.personal.kimi-code",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        variantId: "kimi-code",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["moonshot/kimi-k2.5"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+      await firstBackend.pollProviderDeviceAuthorization({
+        authRequestId: pending.authRequestId,
+      });
+      await firstBackend.activateEndpoint({
+        providerAccountId: "moonshot.personal.kimi-code",
+        modelId: "moonshot/kimi-k2.5",
+        region: "global",
+      });
+      await firstBackend.shutdown();
+
+      const tokenPayload = JSON.parse(await readFile(credentialPath, "utf8")) as {
+        providerId?: string;
+        providerAccountId?: string;
+      };
+      await writeFile(
+        credentialPath,
+        JSON.stringify(
+          {
+            ...tokenPayload,
+            access_token: encodeJwtPayload({
+              device_id: expectedDeviceId,
+              type: "access",
+            }),
+            refresh_token: encodeJwtPayload({
+              device_id: expectedDeviceId,
+              type: "refresh",
+            }),
+            expires_in: 3600,
+            scope: "kimi-code",
+            token_type: "Bearer",
+            saved_at_ms: Date.now() - 7_200_000,
+          },
+          null,
+          2,
+        ),
+        "utf8",
+      );
+
+      const secondBackend = await createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input, init) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url === "https://auth.kimi.com/api/oauth/token") {
+            expect(init?.method ?? "POST").toBe("POST");
+            const deviceIdHeader = readRequestHeader(init?.headers, "X-Msh-Device-Id");
+            if (deviceIdHeader === expectedDeviceId) {
+              return new Response(
+                JSON.stringify({
+                  access_token: "access-refreshed",
+                  refresh_token: "refresh-refreshed",
+                  expires_in: 3600,
+                  scope: "kimi-code",
+                  token_type: "Bearer",
+                }),
+                { status: 200, headers: { "content-type": "application/json" } },
+              );
+            }
+            return new Response(
+              JSON.stringify({
+                error: "invalid_grant",
+                error_description: `Unexpected device id ${deviceIdHeader ?? "<missing>"}.`,
+              }),
+              { status: 400, headers: { "content-type": "application/json" } },
+            );
+          }
+          throw new Error(`Unexpected network request after restart: ${url}`);
+        },
+      });
+
+      try {
+        let health = await secondBackend.readHealthStatus();
+        for (
+          let attempt = 0;
+          attempt < 20 && health.sessionBootstrap.status === "running";
+          attempt += 1
+        ) {
+          await delay(50);
+          health = await secondBackend.readHealthStatus();
+        }
+
+        const summary = await secondBackend.readRuntimeSummary();
+        const credentialsStage = summary.sessionBootstrap.stages.find(
+          (stage) => stage.stageId === "credentials",
+        );
+        expect(credentialsStage).toEqual(
+          expect.objectContaining({
+            status: "ready",
+            details: expect.objectContaining({
+              refreshAttempted: 1,
+              refreshSucceeded: 1,
+              refreshFailed: 0,
+            }),
+          }),
+        );
+        expect(summary.readinessSummary.readyAccountCount).toBe(1);
+        expect(summary.credentialLifecycle.counts.executionReady).toBe(1);
+        expect(summary.credentialLifecycle.counts.expiredAuth).toBe(0);
+
+        const refreshedPayload = JSON.parse(await readFile(credentialPath, "utf8")) as {
+          access_token?: string;
+          refresh_token?: string;
+        };
+        expect(refreshedPayload.access_token).toBe("access-refreshed");
+        expect(refreshedPayload.refresh_token).toBe("refresh-refreshed");
+      } finally {
+        await secondBackend.shutdown();
+      }
+    } finally {
+      await rm(runtimeStateRoot, { recursive: true, force: true });
     }
   });
 
