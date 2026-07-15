@@ -859,7 +859,7 @@ describe("runtime design system", () => {
     expect(routerRouteSource).not.toContain("Policy inputs");
     expect(routerRouteSource).not.toContain("/app/router/strategy");
     expect(routerRouteSource).not.toContain("configuredAliasRows.slice(0, 3)");
-    expect(routerRouteSource).toContain("candidates.slice(0, 3)");
+    expect(routerRouteSource).toContain("selectOverviewRouterCandidates(candidates)");
     expect(routingModeSource).toContain("Strategy A - Baseline");
     expect(controlRoutingStrategySource).toContain("updateRuntimeConfig");
     expect(
