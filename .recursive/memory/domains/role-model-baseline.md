@@ -59,8 +59,9 @@ Source-Runs:
 - `63-router-backend-regression-and-telemetry-surface-hardening`
 - `64-observed-data-decay-policy-recalibration`
 - `70-cache-hit-token-rate-analytics-fix`
+- `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-14T00:00:00Z`
+Last-Validated: `2026-07-16T00:00:00Z`
 Tags:
 - `baseline`
 - `workspace`
@@ -125,6 +126,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - Detailed runtime routing, provider-capability, alias-matrix, Codex Subscription lifecycle, and hosted-search/tool semantics now live in `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`.
 - Run 49 extended unified telemetry into backend-owned historical analytics, run 50 extended the same runtime baseline into Codex Subscription plus routing/provider-capability truth, and run 53 hardened telemetry analytics into an explicit backend contract with applied query metadata, metric/dimension support, full-slice aggregation, shared semantic chart states, aligned ledger filters, and a current graph matrix architecture reference. Detailed operator-routing, provider, and telemetry semantics live in the dedicated routing/provider domain shard.
 - Run 70 further corrected the shared runtime telemetry baseline: backend-owned cache-hit token rate now treats cached prompt tokens as a subset of total input tokens, and the existing Overview plus Observe cache-efficiency cards render separate token-volume and rate axes so mixed-unit cache telemetry remains truthful on live operator surfaces.
+- Run 71 further repaired the remote-runtime startup baseline: startup now reconciles durable configured endpoint intent even when SQLite already contains endpoint rows, maintenance-only provider-account rows stay separate from configured remote endpoint-model inventory, backend-owned health plus routing plus benchmark eligibility now keep Providers, Models, Router, Candidates, and Benchmark aligned after restart on the rebuilt runtime, and `/app/router` no longer hides the fourth eligible candidate behind a default three-row shortlist.
 - The runtime UI design baseline now follows the Paper Linear review authority captured in `role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md`: tokenized Inter/IBM Plex Mono typography, a fixed-shell runtime chrome with pinned sidebar/header and scrolling content frame, solid semantic pills with contrasting text, shared select/filter text sizing, icon-only theme toggle, and Recharts-backed chart primitives tuned to the current Paper route compositions.
 - Paper remains the visual source of truth for shared design-system and route-composition work, but the repo-owned design-system doc and shipped runtime implementation are the authoritative shipped baseline whenever the Paper file temporarily lags the latest approved runtime adjustments.
 - Failed execution rows in that canonical telemetry ledger now preserve caller correlation, request classification, source posture, and explicit failure-stage endpoint markers, so summary failures and request-ledger truth no longer diverge for new requests

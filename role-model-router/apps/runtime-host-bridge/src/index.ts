@@ -2702,6 +2702,8 @@ export interface RuntimeBridgeBackend {
       servingSource: string;
       sourceType: "local" | "remote";
       healthStatus: string;
+      routingEligible: boolean;
+      benchmarkEligible: boolean;
       capabilities: readonly string[];
       toolCallingSupported: boolean;
       toolCallingStyle: string;
@@ -18761,6 +18763,17 @@ export async function createRuntimeBridgeBackend(
       }),
     );
   };
+  const buildEffectiveEligibilitySnapshot = () => {
+    const effectiveExecutionEndpointIds = new Set(
+      getRouterEffectiveRegistry().endpoints.map((endpoint) => endpoint.identity.endpoint_id),
+    );
+    const effectiveRoutableEndpointIds = new Set(getRouterEffectiveRoutableInventory().endpointIds);
+    return {
+      executionEndpointIds: effectiveExecutionEndpointIds,
+      routingEligibleEndpointIds: effectiveRoutableEndpointIds,
+      benchmarkEligibleEndpointIds: effectiveRoutableEndpointIds,
+    };
+  };
   const resolveHealthyEndpoint = (endpointId: string): boolean => {
     const runtimeEndpoint = runtimeEndpoints.find((entry) => entry.endpointId === endpointId);
     if (!runtimeEndpoint) {
@@ -18774,9 +18787,11 @@ export async function createRuntimeBridgeBackend(
     const controller = getCurrentControllerAssignment();
     const guidance = getRouterGuidance();
     const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId();
-    const executionEndpointIds = new Set(
-      getRouterEffectiveRegistry().endpoints.map((endpoint) => endpoint.identity.endpoint_id),
-    );
+    const {
+      executionEndpointIds,
+      routingEligibleEndpointIds,
+      benchmarkEligibleEndpointIds,
+    } = buildEffectiveEligibilitySnapshot();
     return currentRegistry.endpoints.map((endpoint) => {
       const endpointId = endpoint.identity.endpoint_id;
       const profile = readEndpointProfileData(endpointId);
@@ -18804,6 +18819,8 @@ export async function createRuntimeBridgeBackend(
         toolCallingStyle: endpoint.declared.tool_calling.style,
         webSearchSupport: resolveEndpointWebSearchSupport(endpoint),
         executionModeEligible: executionEndpointIds.has(endpointId),
+        routingEligible: routingEligibleEndpointIds.has(endpointId),
+        benchmarkEligible: benchmarkEligibleEndpointIds.has(endpointId),
         controllerEligible: controller?.endpointId === endpointId,
         preferred: guidance.preferredEndpointIds.includes(endpointId),
         ignored: guidance.ignoredEndpointIds.includes(endpointId),
@@ -22600,6 +22617,8 @@ export async function createRuntimeBridgeBackend(
         servingSource: string;
         sourceType: "local" | "remote";
         healthStatus: string;
+        routingEligible: boolean;
+        benchmarkEligible: boolean;
         capabilities: readonly string[];
         toolCallingSupported: boolean;
         toolCallingStyle: string;
@@ -22607,6 +22626,10 @@ export async function createRuntimeBridgeBackend(
         status: string;
       }[]
     > {
+      const {
+        routingEligibleEndpointIds,
+        benchmarkEligibleEndpointIds,
+      } = buildEffectiveEligibilitySnapshot();
       const localSourcesByEndpointId = new Map(
         getCurrentRegistrySources().local.map((source) => [source.endpointId, source] as const),
       );
@@ -22650,6 +22673,8 @@ export async function createRuntimeBridgeBackend(
           healthStatus:
             runtimeEndpoint?.healthStatus ??
             (endpoint.deniedByPolicy ? "policy-blocked" : "healthy"),
+          routingEligible: routingEligibleEndpointIds.has(endpoint.identity.endpoint_id),
+          benchmarkEligible: benchmarkEligibleEndpointIds.has(endpoint.identity.endpoint_id),
           capabilities: endpoint.declared.capabilities,
           toolCallingSupported: endpoint.declared.tool_calling.supported,
           toolCallingStyle: endpoint.declared.tool_calling.style,
@@ -23089,6 +23114,7 @@ export async function createRuntimeBridgeBackend(
         endpoints: benchmarkCandidates.map((candidate) => ({
           endpointId: candidate.endpointId,
           executionModeEligible: candidate.executionModeEligible,
+          benchmarkEligible: candidate.benchmarkEligible,
         })),
       });
       if (!targetEligibility.allowed) {
@@ -23125,6 +23151,9 @@ export async function createRuntimeBridgeBackend(
                   sourceType: endpoint.sourceType,
                   healthStatus: endpoint.healthStatus,
                   executionModeEligible: executionEligibilityByEndpointId.get(endpoint.endpointId),
+                  benchmarkEligible:
+                    candidates.find((candidate) => candidate.endpointId === endpoint.endpointId)
+                      ?.benchmarkEligible,
                 }));
               },
               executeChatCompletions: async (chatBody, requestId, requestOptions) =>
@@ -23164,6 +23193,9 @@ export async function createRuntimeBridgeBackend(
               sourceType: endpoint.sourceType,
               healthStatus: endpoint.healthStatus,
               executionModeEligible: executionEligibilityByEndpointId.get(endpoint.endpointId),
+              benchmarkEligible:
+                candidates.find((candidate) => candidate.endpointId === endpoint.endpointId)
+                  ?.benchmarkEligible,
             }));
           },
           executeChatCompletions: async (chatBody, requestId, requestOptions) =>
@@ -23765,17 +23797,6 @@ export async function createRuntimeBridgeBackend(
         };
       },
       endpoints: async () => {
-        const existingEndpoints = listRuntimeEndpoints({
-          databasePath: initialization.databasePath,
-        });
-        if (existingEndpoints.length > 0) {
-          rebuildCurrentState();
-          return {
-            status: "ready",
-            details: { source: "sqlite", count: existingEndpoints.length },
-          };
-        }
-
         const operatorIntentRead = readOperatorIntentResult(operatorIntentLocation);
         operatorIntentDiagnostic = operatorIntentRead.diagnostic;
         if (operatorIntentRead.diagnostic.status === "corrupt") {
@@ -23789,33 +23810,67 @@ export async function createRuntimeBridgeBackend(
         }
 
         const manifest = operatorIntentRead.intent;
+        const existingEndpoints = listRuntimeEndpoints({
+          databasePath: initialization.databasePath,
+        });
+        const existingEndpointIds = new Set(
+          existingEndpoints.map((endpoint) => endpoint.endpointId),
+        );
         let reconciled = 0;
         let failed = 0;
+        let skipped = 0;
         for (const activation of manifest?.remoteActivations ?? []) {
+          const manifestEndpointId =
+            activation.endpointId ??
+            createEndpointId(activation.providerAccountId, activation.region, activation.modelId);
+          if (existingEndpointIds.has(manifestEndpointId)) {
+            skipped += 1;
+            continue;
+          }
           try {
             activateRuntimeEndpoint({
               providerAccountId: activation.providerAccountId,
               modelId: activation.modelId,
               region: activation.region,
-              endpointId: activation.endpointId,
+              endpointId: manifestEndpointId,
             });
+            existingEndpointIds.add(manifestEndpointId);
             reconciled += 1;
           } catch {
             failed += 1;
           }
         }
 
+        rebuildCurrentState();
+
         if (reconciled === 0 && failed > 0) {
           return {
             status: "degraded",
             message: "manifest endpoint reconciliation failed",
-            details: { reconciled, failed },
+            details: {
+              source: existingEndpoints.length > 0 ? "sqlite+manifest" : "manifest",
+              count: existingEndpoints.length,
+              reconciled,
+              failed,
+              skipped,
+            },
           };
         }
 
         return {
           status: failed > 0 ? "degraded" : "ready",
-          details: { reconciled, failed },
+          details: {
+            source:
+              existingEndpoints.length > 0
+                ? reconciled > 0 || skipped > 0
+                  ? "sqlite+manifest"
+                  : "sqlite"
+                : "manifest",
+            count: existingEndpoints.length + reconciled,
+            reconciled,
+            failed,
+            skipped,
+          },
         };
       },
       peers: async () => {

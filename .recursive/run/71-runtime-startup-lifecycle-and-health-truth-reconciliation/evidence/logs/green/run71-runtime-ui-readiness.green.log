@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/71-runtime-startup-lifecycle-and-health-truth-reconciliation/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/benchmark-model-cards.test.ts (5 tests) 10ms
+ ✓ app/lib/router-candidate-labels.test.ts (4 tests) 7ms
+ ✓ app/lib/view-models.test.ts (38 tests) 102ms
+ ✓ app/routes/control-models.test.ts (16 tests) 165ms
+
+ Test Files  4 passed (4)
+      Tests  63 passed (63)
+   Start at  21:25:14
+   Duration  2.20s (transform 1.18s, setup 0ms, collect 1.94s, tests 284ms, environment 1ms, prepare 1.24s)
+

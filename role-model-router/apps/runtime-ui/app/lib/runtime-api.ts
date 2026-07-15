@@ -275,6 +275,8 @@ export interface RuntimeEndpoint {
   readonly servingSource?: string;
   readonly sourceType?: "local" | "remote";
   readonly healthStatus?: string;
+  readonly routingEligible?: boolean;
+  readonly benchmarkEligible?: boolean;
   readonly capabilities?: readonly string[];
   readonly toolCallingSupported?: boolean;
   readonly toolCallingStyle?: string;
@@ -988,6 +990,8 @@ export interface RouterCandidate {
   readonly status?: string;
   readonly controllerEligible?: boolean;
   readonly executionModeEligible?: boolean;
+  readonly routingEligible?: boolean;
+  readonly benchmarkEligible?: boolean;
   readonly preferred?: boolean;
   readonly ignored?: boolean;
   readonly roleBindings?: readonly string[];

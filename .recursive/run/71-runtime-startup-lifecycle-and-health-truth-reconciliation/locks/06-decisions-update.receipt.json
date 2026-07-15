@@ -1,0 +1,18 @@
+{
+  "artifact": "06-decisions-update.md",
+  "artifact_hash": "38573e8b33e0239d6d03fb6e912e6e3d3c20f7f1569284e0a526450b36db58e2",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\71-runtime-startup-lifecycle-and-health-truth-reconciliation\\.recursive\\run\\71-runtime-startup-lifecycle-and-health-truth-reconciliation\\06-decisions-update.md",
+  "locked_at": "2026-07-15T23:21:50Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "38a9b9648a3df54176a5ed5f80195d005c205e7f08e83fcf1f4ba973f2d2911c",
+    "00-worktree.md": "bee68f130d229d99ac360c6196c518798ab1c9d843413baf468b60d51a58f191",
+    "01-as-is.md": "f027d2243a3dd78bd29a938f298c7a631419828bb7eabce607e417d3a33fef39",
+    "01.5-root-cause.md": "8ee1b94aab78b4df1b2716a542458826ecdc0928f55c37a9d23608cacc9bb32f",
+    "02-to-be-plan.md": "f90a2c31740c535691a68722df6461a7e09b58964924f23dce32d449da0a44e4",
+    "03-implementation-summary.md": "ebf6ecd2b51cd896969b14b1f428169c8553296ce747103b139b4a7501e48db0",
+    "04-test-summary.md": "9aa2465648f1a77b43197207d490c9d7dfdf5ae6dc1403b153c09ebbf3dc0893",
+    "05-manual-qa.md": "b639a53d4d07827dc81023a49d9c2753a90fe1aa4ea1a31728b2a801f67a131f"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "a31aa7215f64a1892e5f88b3bbd6484ec740c877015ad6a5f8ea8bd320e20c9c"
+}

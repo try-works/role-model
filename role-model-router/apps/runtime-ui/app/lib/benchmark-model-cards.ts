@@ -32,8 +32,11 @@ export function describeHardBlend(candidate: {
 }
 
 export function isBenchmarkRunnableCandidate(
-  candidate: Pick<RouterCandidate, "executionModeEligible">,
+  candidate: Pick<RouterCandidate, "benchmarkEligible" | "executionModeEligible">,
 ): boolean {
+  if (candidate.benchmarkEligible !== undefined) {
+    return candidate.benchmarkEligible !== false;
+  }
   return candidate.executionModeEligible !== false;
 }
 

@@ -1,0 +1,269 @@
+role-model
+Overview
+Studio
+Local
+Remote
+Models
+Router
+Observe
+Connect
+System
+Remote providers
+Choose provider and models
+
+Select the provider, connection method, model set, and role bindings that should flow into the runtime registry.
+
+PROVIDER
+302.AI
+CONNECTION METHOD
+302.AI API Key
+Provider connection id
+Credential reference
+MODEL
+Select a model…
+
+302.AI API Key
+
+ready
+api-key-static
+
+API-key authentication for 302.AI.
+
+Models.dev metadata enriches provider and model readback while the runtime keeps LiteLLM as the live connection path.
+
+Catalog models: 97
+
+API base: https://api.302.ai/v1
+
+SDK package: @ai-sdk/openai-compatible
+
+Docs: https://doc.302.ai
+
+Save provider
+View in Connect registry
+Configured provider connections
+
+Configured remote endpoints stay visible here with their live model and readiness posture, grouped by the saved account that owns each connection.
+
+deepseek.personal.deepseek-api-key
+deepseek
+2 endpoints
+
+Connection method: api-key-static
+
+Base URL: https://api.deepseek.com/v1
+
+DeepSeek V4 Flash
+deepseek/deepseek-v4-flash
+offline
+routing blocked
+benchmark blocked
+
+Endpoint: deepseek.personal.deepseek-api-key.global.deepseek-v4-flash
+
+All runtime roles assigned.
+
+Engineering 6/6
+Business 5/5
+Communication 5/5
++3 more groups
+DeepSeek V4 Pro
+deepseek/deepseek-v4-pro
+offline
+routing blocked
+benchmark blocked
+
+Endpoint: deepseek.personal.deepseek-api-key.global.deepseek-v4-pro
+
+All runtime roles assigned.
+
+Engineering 6/6
+Business 5/5
+Communication 5/5
++3 more groups
+moonshot.personal.kimi-code
+moonshot
+1 endpoint
+
+Connection method: oauth2-device-code
+
+Base URL: https://api.kimi.com/coding/v1
+
+Kimi K2.7 Code
+moonshot/kimi-k2.7-code
+degraded
+routing blocked
+benchmark blocked
+
+Endpoint: moonshot.personal.kimi-code.global.kimi-k2.7-code
+
+All runtime roles assigned.
+
+Engineering 6/6
+Business 5/5
+Communication 5/5
++3 more groups
+openai.personal.openai-codex-subscription
+openai
+1 endpoint
+
+Connection method: oauth2-device-code
+
+Base URL: https://api.openai.com/v1
+
+GPT-5.4
+chatgpt/gpt-5.4
+healthy
+routing eligible
+benchmark eligible
+
+Endpoint: openai.personal.openai-codex-subscription.global.gpt-5.4
+
+All runtime roles assigned.
+
+Engineering 6/6
+Business 5/5
+Communication 5/5
++3 more groups
+Saved provider maintenance
+
+Saved provider credentials stay visible here with canonical lifecycle badges, normalized credential posture, model access, and live repair state.
+
+deepseek.capture.account
+deepseek
+Connected, no endpoint
+Environment reference
+
+Connection method: api-key-static
+
+Credential posture: Variable: DEEPSEEK_API_KEY
+
+Base URL: Provider default
+
+Lifecycle reason: Credential is usable but no endpoint is active
+
+Source provenance: manual
+
+Available actions: Activate endpoint • Update API key
+
+Active endpoints: 0
+
+Update API key
+deepseek/chat-capture-v1
+
+All runtime roles assigned.
+
+Engineering 6/6
+Business 5/5
+Communication 5/5
++3 more groups
+local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0
+local-openai-compatible
+Connected, no endpoint
+Persisted local credential
+
+Connection method: api-key-static
+
+Credential posture: Canonical backend: local-file
+
+Base URL: http://127.0.0.1:1234/v1
+
+Lifecycle reason: Credential is usable but no endpoint is active
+
+Source provenance: manual
+
+Available actions: Activate endpoint
+
+Active endpoints: 0
+
+moonshot.personal.kimi-code
+moonshot
+Reconnect required
+Runtime-managed OAuth token
+
+Connection method: oauth2-device-code
+
+Credential posture: Canonical backend: local-file
+
+Base URL: https://api.kimi.com/coding/v1
+
+Lifecycle reason: Stored OAuth token failed refresh
+
+Source provenance: manual
+
+Available actions: Reconnect
+
+Active endpoints: 1
+
+Reconnect
+moonshot/kimi-k2.7-code
+
+All runtime roles assigned.
+
+Engineering 6/6
+Business 5/5
+Communication 5/5
++3 more groups
+deepseek.personal.deepseek-api-key
+deepseek
+Execution-ready
+Persisted local credential
+
+Connection method: api-key-static
+
+Credential posture: Canonical backend: local-file
+
+Base URL: https://api.deepseek.com/v1
+
+Lifecycle reason: Active endpoint is available
+
+Source provenance: manual
+
+Available actions: Update API key
+
+Active endpoints: 2
+
+Update API key
+deepseek/deepseek-v4-flash
+
+All runtime roles assigned.
+
+Engineering 6/6
+Business 5/5
+Communication 5/5
++3 more groups
+deepseek/deepseek-v4-pro
+
+All runtime roles assigned.
+
+Engineering 6/6
+Business 5/5
+Communication 5/5
++3 more groups
+openai.personal.openai-codex-subscription
+openai
+Execution-ready
+Runtime-managed OAuth token
+
+Connection method: oauth2-device-code
+
+Credential posture: Canonical backend: local-file
+
+Base URL: https://api.openai.com/v1
+
+Lifecycle reason: Active endpoint is available
+
+Source provenance: manual
+
+Available actions: None
+
+Active endpoints: 1
+
+chatgpt/gpt-5.4
+
+All runtime roles assigned.
+
+Engineering 6/6
+Business 5/5
+Communication 5/5
++3 more groups

@@ -1,6 +1,7 @@
-import { rm } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -9,7 +10,12 @@ import {
 } from "@role-model-router/sqlite-memory";
 
 import * as bridge from "../src/index.js";
-import { readOperatorIntent, resolveOperatorIntentPath } from "../src/operator-intent.js";
+import {
+  persistOperatorIntent,
+  readOperatorIntent,
+  resolveOperatorIntentPath,
+  upsertRemoteActivation,
+} from "../src/operator-intent.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(import.meta.dirname, "fixtures");
@@ -113,6 +119,321 @@ describe("endpoint rehydration", () => {
           activation.endpointId,
         );
         await restartedBackend.shutdown?.();
+      } finally {
+        if (originalMoonshotApiKey === undefined) {
+          process.env.MOONSHOT_API_KEY = undefined;
+        } else {
+          process.env.MOONSHOT_API_KEY = originalMoonshotApiKey;
+        }
+        await rm(runtimeStateRoot, { recursive: true, force: true });
+      }
+    },
+  );
+
+  test(
+    "reconciles missing persisted remote activations even when sqlite already has endpoint rows",
+    { timeout: 20_000 },
+    async () => {
+      const runtimeStateRoot = path.join(
+        os.tmpdir(),
+        `runtime-host-endpoint-reconcile-${Date.now()}`,
+      );
+      const scopeId = "endpoint-reconcile-tests";
+      const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+      const operatorIntentLocation = { runtimeStateRoot, scopeId };
+      const originalMoonshotApiKey = process.env.MOONSHOT_API_KEY;
+      process.env.MOONSHOT_API_KEY = "moonshot-reconcile-key";
+
+      const networkFetcher: typeof fetch = async (input) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url.endsWith("/models")) {
+          return new Response(
+            JSON.stringify({
+              data: [{ id: "moonshot/kimi-k2.5" }, { id: "moonshot/kimi-k2.6" }],
+            }),
+            {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            },
+          );
+        }
+        throw new Error(`Unexpected network request during endpoint reconciliation test: ${url}`);
+      };
+
+      const createBackend = async () =>
+        (
+          bridge as {
+            createRuntimeBridgeBackend: (options: {
+              repoRoot: string;
+              fixtureRoot: string;
+              runtimeStateRoot: string;
+              scopeId: string;
+              networkFetcher: typeof fetch;
+            }) => Promise<{
+              upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+              activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
+              readHealthStatus?: () => Promise<{
+                sessionBootstrap: { status: string };
+              }>;
+              shutdown?: () => Promise<void>;
+            }>;
+          }
+        ).createRuntimeBridgeBackend({
+          repoRoot,
+          fixtureRoot: testFixtureRoot,
+          runtimeStateRoot,
+          scopeId,
+          networkFetcher,
+        });
+
+      try {
+        const backend = await createBackend();
+        await backend.upsertProviderAccount({
+          providerAccountId: "moonshot.personal.primary",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "MOONSHOT_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "https://api.moonshot.ai/v1",
+          allowedModels: ["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"],
+          modelRoleBindings: [
+            {
+              modelId: "moonshot/kimi-k2.5",
+              roleIds: ["general.chat"],
+            },
+            {
+              modelId: "moonshot/kimi-k2.6",
+              roleIds: ["general.chat"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+
+        const activation = await backend.activateEndpoint({
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.5",
+          region: "global",
+        });
+        expect(
+          listRuntimeEndpoints({ databasePath }).map((endpoint) => endpoint.endpointId),
+        ).toEqual([activation.endpointId]);
+
+        persistOperatorIntent(operatorIntentLocation, (intent) =>
+          upsertRemoteActivation(intent, {
+            providerAccountId: "moonshot.personal.primary",
+            modelId: "moonshot/kimi-k2.6",
+            region: "global",
+            endpointId: "moonshot.personal.primary.global.kimi-k2.6",
+          }),
+        );
+
+        await backend.shutdown?.();
+
+        const restartedBackend = await createBackend();
+        try {
+          let health = await restartedBackend.readHealthStatus?.();
+          for (
+            let attempt = 0;
+            attempt < 20 && health?.sessionBootstrap.status === "running";
+            attempt += 1
+          ) {
+            await delay(50);
+            health = await restartedBackend.readHealthStatus?.();
+          }
+
+          expect(
+            listRuntimeEndpoints({ databasePath }).map((endpoint) => endpoint.endpointId).sort(),
+          ).toEqual([
+            activation.endpointId,
+            "moonshot.personal.primary.global.kimi-k2.6",
+          ]);
+        } finally {
+          await restartedBackend.shutdown?.();
+        }
+      } finally {
+        if (originalMoonshotApiKey === undefined) {
+          process.env.MOONSHOT_API_KEY = undefined;
+        } else {
+          process.env.MOONSHOT_API_KEY = originalMoonshotApiKey;
+        }
+        await rm(runtimeStateRoot, { recursive: true, force: true });
+      }
+    },
+  );
+
+  test(
+    "marks restarted remote endpoints offline and ineligible when startup probes time out",
+    { timeout: 20_000 },
+    async () => {
+      const runtimeStateRoot = path.join(
+        os.tmpdir(),
+        `runtime-host-endpoint-health-${Date.now()}`,
+      );
+      const scopeId = "endpoint-health-tests";
+      const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+      const originalMoonshotApiKey = process.env.MOONSHOT_API_KEY;
+      process.env.MOONSHOT_API_KEY = "moonshot-health-key";
+
+      const createBackend = async (networkFetcher: typeof fetch) =>
+        (
+          bridge as {
+            createRuntimeBridgeBackend: (options: {
+              repoRoot: string;
+              fixtureRoot: string;
+              runtimeStateRoot: string;
+              scopeId: string;
+              unifiedRuntimeConfigPath: string;
+              networkFetcher: typeof fetch;
+            }) => Promise<{
+              upsertProviderAccount: (body: Record<string, unknown>) => Promise<unknown>;
+              activateEndpoint: (body: Record<string, unknown>) => Promise<{ endpointId: string }>;
+              listEndpoints: () => Promise<
+                readonly {
+                  endpointId: string;
+                  healthStatus: string;
+                  routingEligible: boolean;
+                  benchmarkEligible: boolean;
+                }[]
+              >;
+              listRouterCandidates: () => Promise<
+                readonly {
+                  endpointId: string;
+                  healthStatus: string;
+                  routingEligible: boolean;
+                  benchmarkEligible: boolean;
+                }[]
+              >;
+              readHealthStatus?: () => Promise<{
+                sessionBootstrap: { status: string };
+              }>;
+              shutdown?: () => Promise<void>;
+            }>;
+          }
+        ).createRuntimeBridgeBackend({
+          repoRoot,
+          fixtureRoot: testFixtureRoot,
+          runtimeStateRoot,
+          scopeId,
+          unifiedRuntimeConfigPath,
+          networkFetcher,
+        });
+
+      try {
+        await mkdir(runtimeStateRoot, { recursive: true });
+        await writeFile(unifiedRuntimeConfigPath, 'version: "1.1"\nexecutionMode: hybrid\n', "utf8");
+        const backend = await createBackend(async (input) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url.endsWith("/models")) {
+            return new Response(
+              JSON.stringify({
+                data: [{ id: "moonshot/kimi-k2.5" }],
+              }),
+              {
+                status: 200,
+                headers: { "content-type": "application/json" },
+              },
+            );
+          }
+          throw new Error(`Unexpected network request during endpoint setup test: ${url}`);
+        });
+        await backend.upsertProviderAccount({
+          providerAccountId: "moonshot.personal.primary",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          credentialRef: {
+            backend: "env",
+            ref: "MOONSHOT_API_KEY",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["global"],
+          },
+          baseUrlOverride: "https://api.moonshot.ai/v1",
+          allowedModels: ["moonshot/kimi-k2.5"],
+          modelRoleBindings: [
+            {
+              modelId: "moonshot/kimi-k2.5",
+              roleIds: ["general.chat"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        });
+        const activation = await backend.activateEndpoint({
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.5",
+          region: "global",
+        });
+        await backend.shutdown?.();
+
+        const restartedBackend = await createBackend(async (input) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          if (url.endsWith("/models")) {
+            throw new Error("timeout while probing remote endpoint");
+          }
+          throw new Error(`Unexpected network request during endpoint health test: ${url}`);
+        });
+
+        try {
+          let health = await restartedBackend.readHealthStatus?.();
+          for (
+            let attempt = 0;
+            attempt < 20 && health?.sessionBootstrap.status === "running";
+            attempt += 1
+          ) {
+            await delay(50);
+            health = await restartedBackend.readHealthStatus?.();
+          }
+
+          await expect(restartedBackend.listEndpoints()).resolves.toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                endpointId: activation.endpointId,
+                healthStatus: "offline",
+                routingEligible: false,
+                benchmarkEligible: false,
+              }),
+            ]),
+          );
+          await expect(restartedBackend.listRouterCandidates()).resolves.toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                endpointId: activation.endpointId,
+                healthStatus: "offline",
+                routingEligible: false,
+                benchmarkEligible: false,
+              }),
+            ]),
+          );
+        } finally {
+          await restartedBackend.shutdown?.();
+        }
       } finally {
         if (originalMoonshotApiKey === undefined) {
           process.env.MOONSHOT_API_KEY = undefined;

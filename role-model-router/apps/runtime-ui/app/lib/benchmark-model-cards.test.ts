@@ -71,15 +71,17 @@ describe("benchmark model cards addendum layout", () => {
     ).toContain("blended 0.600");
   });
 
-  test("excludes execution-mode-ineligible endpoints from benchmark runnable candidates", () => {
+  test("excludes benchmark-ineligible endpoints from benchmark runnable candidates", () => {
     const candidates = [
       {
         endpointId: "local.lfm",
         executionModeEligible: true,
+        benchmarkEligible: true,
       },
       {
         endpointId: "remote.kimi",
-        executionModeEligible: false,
+        executionModeEligible: true,
+        benchmarkEligible: false,
       },
       {
         endpointId: "legacy.unspecified",

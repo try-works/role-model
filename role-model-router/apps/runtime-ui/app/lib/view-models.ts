@@ -501,6 +501,76 @@ export function buildProviderMaintenanceRows(input: {
     });
 }
 
+export function buildConfiguredRemoteConnectionRows(input: {
+  readonly accounts: readonly RuntimeAccount[];
+  readonly endpoints: readonly RuntimeEndpoint[];
+  readonly models: readonly RuntimeModelRecord[];
+}): Array<{
+  key: string;
+  account: RuntimeAccount | null;
+  providerAccountId: string;
+  providerId: string;
+  authMode: string;
+  baseUrlOverride: string | null;
+  endpointCount: number;
+  endpoints: Array<{
+    endpointId: string;
+    modelId: string;
+    displayName: string;
+    healthStatus: string;
+    routingEligible: boolean;
+    benchmarkEligible: boolean;
+    roleIds: readonly string[];
+  }>;
+}> {
+  const accountsById = new Map(
+    input.accounts.map((account) => [account.providerAccountId, account] as const),
+  );
+  const modelDisplayNameById = new Map(
+    input.models.map((model) => [model.id, model.displayName ?? toTitleLabel(model.id)] as const),
+  );
+  const remoteEndpoints = input.endpoints.filter(
+    (endpoint) =>
+      endpoint.sourceType === "remote" &&
+      typeof endpoint.providerAccountId === "string" &&
+      endpoint.providerAccountId.length > 0 &&
+      endpoint.status !== "inactive",
+  );
+  const providerAccountIds = uniqueStrings(
+    remoteEndpoints.map((endpoint) => endpoint.providerAccountId),
+  ).sort(sortLexical);
+
+  return providerAccountIds.map((providerAccountId) => {
+    const account = accountsById.get(providerAccountId) ?? null;
+    const endpoints = remoteEndpoints
+      .filter((endpoint) => endpoint.providerAccountId === providerAccountId)
+      .sort(
+        (left, right) =>
+          sortLexical(left.modelId, right.modelId) || sortLexical(left.endpointId, right.endpointId),
+      )
+      .map((endpoint) => ({
+        endpointId: endpoint.endpointId,
+        modelId: endpoint.modelId,
+        displayName: modelDisplayNameById.get(endpoint.modelId) ?? toTitleLabel(endpoint.modelId),
+        healthStatus: resolveEndpointReadinessStatus(endpoint),
+        routingEligible: endpoint.routingEligible !== false,
+        benchmarkEligible: endpoint.benchmarkEligible !== false,
+        roleIds: endpoint.roleIds ?? [],
+      }));
+
+    return {
+      key: providerAccountId,
+      account,
+      providerAccountId,
+      providerId: account?.providerId ?? endpoints[0]?.modelId.split("/")[0] ?? "unknown-provider",
+      authMode: account?.authMode ?? "unknown",
+      baseUrlOverride: account?.baseUrlOverride ?? null,
+      endpointCount: endpoints.length,
+      endpoints,
+    };
+  });
+}
+
 export function buildArchivedArtifactRows(
   summary: Pick<RuntimeSummary, "credentialLifecycle">,
 ): Array<{
@@ -1504,15 +1574,42 @@ function summarizeSourceTypes(sourceTypes: readonly string[]): string {
   return sourceTypes[0] ?? "unknown";
 }
 
-function summarizeModelStatus(statuses: readonly string[]): string {
-  if (statuses.includes("active")) {
-    return "active";
+function resolveEndpointReadinessStatus(
+  endpoint: Pick<RuntimeEndpoint, "healthStatus" | "status">,
+): string {
+  if (endpoint.healthStatus && endpoint.healthStatus.length > 0) {
+    return endpoint.healthStatus;
+  }
+  if (endpoint.status === "active") {
+    return "healthy";
+  }
+  return endpoint.status ?? "unknown";
+}
+
+function summarizeModelStatus(
+  endpoints: readonly Pick<RuntimeEndpoint, "healthStatus" | "status">[],
+): string {
+  const statuses = endpoints.map(resolveEndpointReadinessStatus);
+  if (statuses.length === 0) {
+    return "inactive";
+  }
+  if (statuses.every((status) => status === "healthy")) {
+    return "healthy";
+  }
+  if (statuses.every((status) => status === "offline")) {
+    return "offline";
+  }
+  if (statuses.some((status) => status === "healthy")) {
+    return "degraded";
   }
   if (statuses.includes("degraded")) {
     return "degraded";
   }
-  if (statuses.includes("offline")) {
-    return "offline";
+  if (statuses.includes("provider-unavailable")) {
+    return "provider-unavailable";
+  }
+  if (statuses.includes("policy-blocked")) {
+    return "policy-blocked";
   }
   return statuses[0] ?? "unknown";
 }
@@ -1594,7 +1691,7 @@ export function buildConfiguredModelCards(input: {
         endpointCount: endpointIds.length,
         endpointIds,
         requestCount,
-        status: summarizeModelStatus(endpoints.map((endpoint) => endpoint.status ?? "unknown")),
+        status: summarizeModelStatus(endpoints),
         roleIds,
         toolCallingSupported: endpoints.some((endpoint) => endpoint.toolCallingSupported === true),
         controllerState,

@@ -270,6 +270,7 @@ export interface BenchmarkRunnerDependencies {
       healthStatus: string;
 
       executionModeEligible?: boolean;
+      benchmarkEligible?: boolean;
     }[]
   >;
 

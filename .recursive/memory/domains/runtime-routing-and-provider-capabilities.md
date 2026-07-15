@@ -65,8 +65,9 @@ Source-Runs:
 - `68-codex-subscription-tool-call-parity`
 - `69-benchmark-scoring-integrity`
 - `70-cache-hit-token-rate-analytics-fix`
+- `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-14`
+Last-Validated: `2026-07-16`
 Tags:
 - `runtime`
 - `routing`
@@ -167,6 +168,10 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
   - persisted OAuth-backed accounts rehydrate from stored tokens
   - unresolved env-backed credentials remain `credentials-missing`
   - Studio and related consumers must not imply execution readiness before credentials and endpoint activation are actually satisfied
+- Startup endpoint reconciliation is durable-intent authoritative on every boot. A non-empty `runtime_endpoints` table is not sufficient readiness proof; startup must compare persisted endpoint rows to the current configured endpoint intent, reconcile missing valid activations, exclude stale rows that no longer belong to current intent, and keep repeated restarts idempotent.
+- Provider-account rows are maintenance state, not configured remote inventory. Configured remote inventory is the endpoint-backed endpoint-plus-model set for the current runtime posture; maintenance-only rows such as `connected-no-endpoint` credentials, env-backed account references, and peer-local credentials may appear in a separate maintenance surface but must not appear as configured remote provider connections.
+- Health, lifecycle, routing eligibility, and benchmark eligibility are distinct backend-owned fields. Runtime UI surfaces should consume `healthStatus`, `routingEligible`, and `benchmarkEligible` from backend contracts rather than inferring readiness from lifecycle `status`, raw credential presence, or raw candidate ordering.
+- Router overview slices and benchmark runnable checklists should derive from canonical eligible subsets instead of `slice(0, 3)` over raw candidates, an implicit three-row helper default, or `executionModeEligible` alone. The default `/app/router` visible list should render the full routing-eligible subset unless a caller applies an explicit limit.
 - If bridge-local Kimi OAuth state is stale but fresher standalone-runtime tokens already exist on local disk, runtime restart may repair the bridge credential from that fresher local payload rather than leaving Kimi unavailable until the user reauthorizes manually.
 - Upstream failure classification is routing-active, not purely diagnostic:
   - timeout, network, rate-limit, quota-exhausted, provider-auth, and upstream-5xx failures are fallback-eligible
@@ -187,6 +192,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - The telemetry query path is backend-owned and powers Overview plus Observe analytics surfaces; setup and control pages should not regress into chart dashboards.
 - The shared Overview `Cache Efficiency` and Observe Requests `Cache Efficiency Trend` charts intentionally mix absolute `cacheHitTokens` with fractional `cacheHitTokenRate`, so they must render split left and right Y axes instead of one shared axis.
 - `/app/remote/providers` is not a first-render request-ledger surface. Its initial bootstrap should depend only on provider/account/model/runtime-readiness data. Recent request context for that page is a deferred follow-up through `GET /api/role-model/requests/latest-ids?limit=10`; that lightweight path must select and return request ids only, must not read or parse `runtime_observations.observation_json`, and must not replace the richer `/api/role-model/requests` or request-detail inspection surfaces.
+- `/app/remote/providers` configured connections are endpoint-backed remote execution truth, not a dump of persisted provider-account rows. If maintenance-only accounts are shown on the same route, they must live in a clearly labeled maintenance section that cannot be mistaken for configured remote provider connections.
 - `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts` is part of the owning verification surface for providers-page load-path work. It should forward `listRecentRequestIds` so the stock rebuilt-runtime Playwright harness exercises the live lightweight latest-ids route without a custom QA entrypoint.
 - Richer taxonomy telemetry dimensions now include original role/task hints, normalized role/task, group, variant, capability, modality, and tool-class data. Observe analytics and request-ledger enrichment should read those dimensions from persisted telemetry-ledger fields first; reparsing large raw `runtime_observations.observation_json` bundles is now a fallback path for request detail, not the normal analytics path.
 - The telemetry analytics contract now returns applied query metadata, slice metadata, metric support, and dimension support. Analytics aggregation is full-slice by default and must not silently inherit request-ledger pagination caps.

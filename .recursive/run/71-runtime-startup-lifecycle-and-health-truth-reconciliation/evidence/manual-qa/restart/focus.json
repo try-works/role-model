@@ -1,0 +1,189 @@
+{
+  "phase": "restart",
+  "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-run71-qa-state",
+  "connectedWithoutEndpointCount": 2,
+  "lifecycleCounts": {
+    "executionReady": 2,
+    "connectedNoEndpoint": 2,
+    "pendingAuthorization": 0,
+    "expiredAuth": 1,
+    "credentialsMissing": 0,
+    "envUnresolved": 0,
+    "archivedStale": 0
+  },
+  "bootstrap": {
+    "status": "degraded",
+    "stages": [
+      {
+        "stageId": "credentials",
+        "status": "degraded",
+        "details": {
+          "pendingAttempted": 0,
+          "pendingSucceeded": 0,
+          "pendingConnected": 0,
+          "pendingFailed": 0,
+          "pendingDeferred": 0,
+          "refreshAttempted": 1,
+          "refreshSucceeded": 0,
+          "refreshFailed": 1
+        },
+        "message": null
+      },
+      {
+        "stageId": "endpoints",
+        "status": "ready",
+        "details": {
+          "source": "sqlite+manifest",
+          "count": 4,
+          "reconciled": 0,
+          "failed": 0,
+          "skipped": 4
+        },
+        "message": null
+      },
+      {
+        "stageId": "peers",
+        "status": "skipped",
+        "details": {
+          "reloaded": 0,
+          "failed": 0
+        },
+        "message": "no peer loads in manifest"
+      },
+      {
+        "stageId": "vendors",
+        "status": "ready",
+        "details": null,
+        "message": null
+      },
+      {
+        "stageId": "local-reload",
+        "status": "skipped",
+        "details": null,
+        "message": "no llama-swap loads in manifest"
+      },
+      {
+        "stageId": "remote-health",
+        "status": "degraded",
+        "details": {
+          "probed": 3,
+          "healthy": 1,
+          "degraded": 2,
+          "results": [
+            {
+              "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+              "modelId": "deepseek/deepseek-v4-flash",
+              "reason": "timeout",
+              "healthStatus": "offline",
+              "message": "The operation was aborted due to timeout"
+            },
+            {
+              "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+              "modelId": "deepseek/deepseek-v4-pro",
+              "reason": "healthy",
+              "healthStatus": "healthy"
+            },
+            {
+              "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+              "modelId": "moonshot/kimi-k2.7-code",
+              "reason": "credentials-missing",
+              "healthStatus": "degraded",
+              "message": "No authorization credential is available for remote probe."
+            }
+          ]
+        },
+        "message": null
+      },
+      {
+        "stageId": "inventory",
+        "status": "ready",
+        "details": {
+          "modelIdCount": 2,
+          "endpointIdCount": 2,
+          "localEndpointCount": 0,
+          "remoteEndpointCount": 2,
+          "emptyAliasIds": [],
+          "driftWarningCount": 0,
+          "driftWarnings": []
+        },
+        "message": null
+      }
+    ]
+  },
+  "maintenanceOnlyAccounts": [
+    "deepseek.capture.account",
+    "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0"
+  ],
+  "endpoints": [
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "modelId": "deepseek/deepseek-v4-flash",
+      "sourceType": "remote",
+      "healthStatus": "offline",
+      "routingEligible": false,
+      "benchmarkEligible": false
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "routingEligible": true,
+      "benchmarkEligible": true
+    },
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "modelId": "moonshot/kimi-k2.7-code",
+      "sourceType": "remote",
+      "healthStatus": "degraded",
+      "routingEligible": false,
+      "benchmarkEligible": false
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "modelId": "chatgpt/gpt-5.4",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "routingEligible": true,
+      "benchmarkEligible": true
+    }
+  ],
+  "candidates": [
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "modelId": "deepseek/deepseek-v4-flash",
+      "sourceType": "remote",
+      "healthStatus": "offline",
+      "routingEligible": false,
+      "benchmarkEligible": false,
+      "executionModeEligible": true
+    },
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "routingEligible": true,
+      "benchmarkEligible": true,
+      "executionModeEligible": true
+    },
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "modelId": "moonshot/kimi-k2.7-code",
+      "sourceType": "remote",
+      "healthStatus": "degraded",
+      "routingEligible": false,
+      "benchmarkEligible": false,
+      "executionModeEligible": true
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "modelId": "chatgpt/gpt-5.4",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "routingEligible": true,
+      "benchmarkEligible": true,
+      "executionModeEligible": true
+    }
+  ]
+}

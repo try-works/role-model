@@ -2,6 +2,43 @@
 
 ## Recursive Run Index
 
+### Run `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
+
+- Run folder: `/.recursive/run/71-runtime-startup-lifecycle-and-health-truth-reconciliation/`
+- Worktree: `.worktrees/71-runtime-startup-lifecycle-and-health-truth-reconciliation`
+- Branch: `recursive/71-runtime-startup-lifecycle-and-health-truth-reconciliation`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - repaired startup reconciliation so durable remote endpoint intent is reapplied on every boot instead of short-circuiting when SQLite already contains endpoint rows
+  - separated maintenance-only provider-account truth from endpoint-backed configured remote inventory, keeping `deepseek.capture.account` and maintenance-only local-openai peer credentials out of configured remote connections
+  - published backend-owned `routingEligible` and `benchmarkEligible` truth on endpoints and router candidates, then switched the Models, Providers, Router, Candidates, and Benchmark surfaces to consume that canonical readiness contract
+  - removed the router overview’s implicit three-row shortlist so `/app/router` now renders the full routing-eligible list by default
+  - copied-state rebuilt-runtime QA plus follow-up live operator proof on `127.0.0.1:3461` confirmed maintenance-only account separation, truthful cross-surface readiness alignment, and four visible configured remote candidates on `/app/router` after fresh bundle reload
+- Why:
+  - startup previously allowed stale or maintenance-only provider-account rows to surface as remote provider connections and let a non-empty SQLite endpoint table mask missing durable endpoint activation intent
+  - the runtime UI was not consuming one canonical readiness contract, so the same configured model could appear healthy on Models while appearing offline or ineligible on Router, Candidates, and Benchmark
+- How:
+  - implemented with strict TDD across host-bridge restart reconciliation, backend HTTP contract, benchmark guard, and runtime-ui inventory or readiness helpers
+  - verified with focused RED and GREEN regressions, typecheck and build proof for both affected apps, and rebuilt-runtime cold-start plus restart evidence against a copied persisted state root
+- What was not done:
+  - no provider-specific DeepSeek, Moonshot, Kimi, or OpenAI UI special-case was introduced
+  - no generic remote-health timeout or retry-policy redesign landed beyond making canonical health and eligibility truth consistent
+  - no manual SQLite cleanup step became part of the normal operator workflow
+- Known issues / follow-ups:
+  - direct `dist/cli-entry.js` launch against the built graph still hits pre-existing workspace export-condition gaps, so retained Phase 5 proof used the implementation-commit bridge CLI through `tsx` with rebuilt dependencies and rebuilt client assets
+  - restart probe outcomes remain live-provider dependent; the durable contract is that backend health and eligibility stay internally consistent and idempotent after reconciliation, not that every provider becomes healthy on restart
+
 ### Run `70-cache-hit-token-rate-analytics-fix`
 
 - Run folder: `/.recursive/run/70-cache-hit-token-rate-analytics-fix/`

@@ -193,7 +193,7 @@ export function resolveConfiguredModelStatusTone(
   if (controllerState === "active") {
     return "accent";
   }
-  if (status === "active") {
+  if (status === "active" || status === "healthy") {
     return "success";
   }
   if (status === "inactive") {
@@ -334,7 +334,7 @@ export function resolveDefaultSelectedModelId(
 ): string | null {
   return (
     cards.find((card) => card.controllerState === "active")?.modelId ??
-    cards.find((card) => card.status === "active")?.modelId ??
+    cards.find((card) => card.status === "active" || card.status === "healthy")?.modelId ??
     cards[0]?.modelId ??
     null
   );
@@ -680,7 +680,9 @@ export default function ControlModelsRoute() {
   }
 
   const toolCapableCount = cards.filter((card) => card.toolCallingSupported).length;
-  const activeModelCount = cards.filter((card) => card.status === "active").length;
+  const activeModelCount = cards.filter(
+    (card) => card.status === "active" || card.status === "healthy",
+  ).length;
   const observedRequestsFact = buildObservedRequestFact({
     requests,
     status: requestEvidenceStatus,
@@ -786,7 +788,7 @@ export default function ControlModelsRoute() {
           emphasis
         />
         <FactCard
-          label="Active models"
+          label="Healthy models"
           value={activeModelCount}
           detail="Endpoint summaries currently resolve to active."
         />

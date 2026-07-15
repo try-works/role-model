@@ -54,6 +54,7 @@ import {
 import {
   buildAccountModelCatalogIds,
   buildArchivedArtifactRows,
+  buildConfiguredRemoteConnectionRows,
   buildProviderMaintenanceRows,
 } from "../lib/view-models";
 
@@ -656,6 +657,17 @@ export default function ProvidersRoute() {
         : [],
     [snapshot],
   );
+  const configuredRemoteConnectionRows = useMemo(
+    () =>
+      snapshot
+        ? buildConfiguredRemoteConnectionRows({
+            accounts: snapshot.accounts,
+            endpoints: snapshot.endpoints,
+            models: snapshot.models,
+          })
+        : [],
+    [snapshot],
+  );
   const archivedArtifactRows = useMemo(
     () => (snapshot ? buildArchivedArtifactRows(snapshot.summary) : []),
     [snapshot],
@@ -1134,7 +1146,115 @@ export default function ProvidersRoute() {
 
           <SectionCard
             title="Configured provider connections"
-            description="Saved provider connections stay visible here with canonical lifecycle badges, normalized credential posture, model access, and live repair state."
+            description="Configured remote endpoints stay visible here with their live model and readiness posture, grouped by the saved account that owns each connection."
+          >
+            <div className="space-y-4">
+              {configuredRemoteConnectionRows.length === 0 ? (
+                <EmptyState label="No remote endpoints are configured yet. Activate a remote model to populate this pane." />
+              ) : (
+                <>
+                  {configuredRemoteConnectionRows.map((row) => (
+                    <div
+                      key={row.providerAccountId}
+                      className={`${mutedPanelClassName} p-4`}
+                      data-testid={`provider-connection-${row.providerAccountId}`}
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className={foregroundEmphasisClassName}>{row.providerAccountId}</h3>
+                        <StatusPill tone="neutral">{row.providerId}</StatusPill>
+                        <StatusPill tone="success">
+                          {row.endpointCount} endpoint{row.endpointCount === 1 ? "" : "s"}
+                        </StatusPill>
+                      </div>
+                      <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
+                        <p>
+                          <span className={foregroundEmphasisClassName}>Connection method:</span>{" "}
+                          {row.authMode}
+                        </p>
+                        <p>
+                          <span className={foregroundEmphasisClassName}>Base URL:</span>{" "}
+                          {row.baseUrlOverride ?? "Provider default"}
+                        </p>
+                      </div>
+                      <div className="mt-3 space-y-3">
+                        {row.endpoints.map((endpoint) => {
+                          const effectiveRoleIds = [...endpoint.roleIds];
+                          const healthTone =
+                            endpoint.healthStatus === "healthy"
+                              ? "success"
+                              : endpoint.healthStatus === "offline"
+                                ? "warning"
+                                : "neutral";
+                          const roleCoverageSummary = buildProviderModelRoleCoverageSummary({
+                            selectedRoleIds: effectiveRoleIds,
+                            allRoleIds: availableRoleIds,
+                            rolePolicy,
+                          });
+                          return (
+                            <div key={endpoint.endpointId} className={`${raisedPanelClassName} p-3`}>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <StatusPill tone="accent">{endpoint.displayName}</StatusPill>
+                                <StatusPill tone="neutral">{endpoint.modelId}</StatusPill>
+                                <StatusPill tone={healthTone}>{endpoint.healthStatus}</StatusPill>
+                                <StatusPill tone={endpoint.routingEligible ? "success" : "neutral"}>
+                                  {endpoint.routingEligible ? "routing eligible" : "routing blocked"}
+                                </StatusPill>
+                                <StatusPill
+                                  tone={endpoint.benchmarkEligible ? "success" : "neutral"}
+                                >
+                                  {endpoint.benchmarkEligible
+                                    ? "benchmark eligible"
+                                    : "benchmark blocked"}
+                                </StatusPill>
+                              </div>
+                              <p className={`mt-2 ${supportingTextClassName}`}>
+                                <span className={foregroundEmphasisClassName}>Endpoint:</span>{" "}
+                                {endpoint.endpointId}
+                              </p>
+                              {effectiveRoleIds.length > 0 ? (
+                                <div className="mt-2 space-y-2">
+                                  <p className={supportingTextClassName}>
+                                    {roleCoverageSummary.allRolesSelected
+                                      ? "All runtime roles assigned."
+                                      : `${roleCoverageSummary.totalSelectedCount} of ${roleCoverageSummary.totalRoleCount} runtime roles assigned.`}
+                                  </p>
+                                  {roleCoverageSummary.groupPreviewLabels.length > 0 ? (
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      {roleCoverageSummary.groupPreviewLabels.map((label) => (
+                                        <StatusPill
+                                          key={`${endpoint.endpointId}:${label}`}
+                                          tone="neutral"
+                                        >
+                                          {label}
+                                        </StatusPill>
+                                      ))}
+                                      {roleCoverageSummary.hiddenGroupCount > 0 ? (
+                                        <StatusPill tone="neutral">
+                                          +{roleCoverageSummary.hiddenGroupCount} more groups
+                                        </StatusPill>
+                                      ) : null}
+                                    </div>
+                                  ) : null}
+                                </div>
+                              ) : (
+                                <p className={`mt-2 ${supportingTextClassName}`}>
+                                  No roles assigned
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            title="Saved provider maintenance"
+            description="Saved provider credentials stay visible here with canonical lifecycle badges, normalized credential posture, model access, and live repair state."
           >
             <div className="space-y-4">
               {oauthState ? (
@@ -1147,7 +1267,7 @@ export default function ProvidersRoute() {
               ) : null}
 
               {providerMaintenanceRows.length === 0 ? (
-                <EmptyState label="No providers are configured yet. Save one from the setup form to populate the runtime registry." />
+                <EmptyState label="No saved provider credentials are available yet." />
               ) : (
                 <>
                   {providerMaintenanceRows.map((row) => (
@@ -1280,34 +1400,34 @@ export default function ProvidersRoute() {
                       ) : null}
                     </div>
                   ))}
-                  {archivedArtifactRows.length > 0 ? (
-                    <div className={`${mutedPanelClassName} p-4`}>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className={foregroundEmphasisClassName}>Archived stale diagnostics</h3>
-                        <StatusPill tone="neutral">{archivedArtifactRows.length}</StatusPill>
-                      </div>
-                      <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                        Archived stale artifacts stay separate from active saved-account blockers.
-                      </p>
-                      <div className="mt-3 space-y-3">
-                        {archivedArtifactRows.map((artifact) => (
-                          <div key={artifact.key} className={`${raisedPanelClassName} p-3`}>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <StatusPill tone="neutral">{artifact.providerId}</StatusPill>
-                              <StatusPill tone="warning">{artifact.label}</StatusPill>
-                            </div>
-                            <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                              <span className={foregroundEmphasisClassName}>Account:</span>{" "}
-                              {artifact.providerAccountId}
-                            </p>
-                            <p className={supportingTextClassName}>{artifact.detail}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
                 </>
               )}
+              {archivedArtifactRows.length > 0 ? (
+                <div className={`${mutedPanelClassName} p-4`}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className={foregroundEmphasisClassName}>Archived stale diagnostics</h3>
+                    <StatusPill tone="neutral">{archivedArtifactRows.length}</StatusPill>
+                  </div>
+                  <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                    Archived stale artifacts stay separate from active saved-account blockers.
+                  </p>
+                  <div className="mt-3 space-y-3">
+                    {archivedArtifactRows.map((artifact) => (
+                      <div key={artifact.key} className={`${raisedPanelClassName} p-3`}>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <StatusPill tone="neutral">{artifact.providerId}</StatusPill>
+                          <StatusPill tone="warning">{artifact.label}</StatusPill>
+                        </div>
+                        <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                          <span className={foregroundEmphasisClassName}>Account:</span>{" "}
+                          {artifact.providerAccountId}
+                        </p>
+                        <p className={supportingTextClassName}>{artifact.detail}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </SectionCard>
         </div>

@@ -99,4 +99,20 @@ describe("benchmark-start-guards", () => {
       `${EXECUTION_MODE_INELIGIBLE_ENDPOINT_WARNING_PREFIX}: moonshot.kimi`,
     );
   });
+
+  test("rejects benchmark targets when benchmark eligibility is explicitly false", () => {
+    const result = evaluateBenchmarkTargetEligibility({
+      endpointIds: ["local.lfm", "moonshot.kimi"],
+      endpoints: [
+        { endpointId: "local.lfm", executionModeEligible: true, benchmarkEligible: true },
+        { endpointId: "moonshot.kimi", executionModeEligible: true, benchmarkEligible: false },
+      ],
+    });
+
+    expect(result.allowed).toBe(false);
+    expect(result.ineligibleEndpointIds).toEqual(["moonshot.kimi"]);
+    expect(result.warnings).toContain(
+      `${EXECUTION_MODE_INELIGIBLE_ENDPOINT_WARNING_PREFIX}: moonshot.kimi`,
+    );
+  });
 });

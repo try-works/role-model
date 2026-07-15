@@ -1,0 +1,129 @@
+{
+  "status": "healthy",
+  "executionMode": "remote_only",
+  "vendors": {
+    "llama-swap": {
+      "vendorId": "llama-swap",
+      "healthStatus": "inactive"
+    },
+    "litellm": {
+      "vendorId": "litellm",
+      "healthStatus": "inactive"
+    }
+  },
+  "inactiveVendors": [
+    "llama-swap",
+    "litellm"
+  ],
+  "credentialLifecycleAuthority": {
+    "state": "authoritative",
+    "bootstrapStatus": "ready"
+  },
+  "sessionBootstrap": {
+    "status": "ready",
+    "startedAt": "2026-07-15T23:03:39.257Z",
+    "finishedAt": "2026-07-15T23:03:42.285Z",
+    "stages": [
+      {
+        "stageId": "credentials",
+        "status": "ready",
+        "startedAt": "2026-07-15T23:03:39.257Z",
+        "finishedAt": "2026-07-15T23:03:40.445Z",
+        "details": {
+          "pendingAttempted": 0,
+          "pendingSucceeded": 0,
+          "pendingConnected": 0,
+          "pendingFailed": 0,
+          "pendingDeferred": 0,
+          "refreshAttempted": 1,
+          "refreshSucceeded": 1,
+          "refreshFailed": 0
+        }
+      },
+      {
+        "stageId": "endpoints",
+        "status": "ready",
+        "startedAt": "2026-07-15T23:03:40.445Z",
+        "finishedAt": "2026-07-15T23:03:40.47Z",
+        "details": {
+          "source": "sqlite+manifest",
+          "count": 4,
+          "reconciled": 0,
+          "failed": 0,
+          "skipped": 4
+        }
+      },
+      {
+        "stageId": "peers",
+        "status": "skipped",
+        "startedAt": "2026-07-15T23:03:40.47Z",
+        "finishedAt": "2026-07-15T23:03:40.472Z",
+        "message": "no peer endpoints configured",
+        "details": {
+          "deferred": 1,
+          "reloaded": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "vendors",
+        "status": "ready",
+        "startedAt": "2026-07-15T23:03:40.472Z",
+        "finishedAt": "2026-07-15T23:03:40.473Z"
+      },
+      {
+        "stageId": "local-reload",
+        "status": "skipped",
+        "startedAt": "2026-07-15T23:03:40.473Z",
+        "finishedAt": "2026-07-15T23:03:40.474Z",
+        "message": "no llama-swap loads in manifest"
+      },
+      {
+        "stageId": "remote-health",
+        "status": "ready",
+        "startedAt": "2026-07-15T23:03:40.474Z",
+        "finishedAt": "2026-07-15T23:03:42.284Z",
+        "details": {
+          "probed": 3,
+          "healthy": 3,
+          "degraded": 0,
+          "results": [
+            {
+              "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+              "modelId": "deepseek/deepseek-v4-flash",
+              "reason": "healthy",
+              "healthStatus": "healthy"
+            },
+            {
+              "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+              "modelId": "deepseek/deepseek-v4-pro",
+              "reason": "healthy",
+              "healthStatus": "healthy"
+            },
+            {
+              "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+              "modelId": "moonshot/kimi-k2.7-code",
+              "reason": "healthy",
+              "healthStatus": "healthy"
+            }
+          ]
+        }
+      },
+      {
+        "stageId": "inventory",
+        "status": "ready",
+        "startedAt": "2026-07-15T23:03:42.284Z",
+        "finishedAt": "2026-07-15T23:03:42.285Z",
+        "details": {
+          "modelIdCount": 4,
+          "endpointIdCount": 4,
+          "localEndpointCount": 0,
+          "remoteEndpointCount": 4,
+          "emptyAliasIds": [],
+          "driftWarningCount": 0,
+          "driftWarnings": []
+        }
+      }
+    ]
+  }
+}
