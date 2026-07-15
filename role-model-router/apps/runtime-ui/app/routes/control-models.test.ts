@@ -110,7 +110,7 @@ describe("control model role assignment helpers", () => {
           modelId: "moonshot/kimi-k2.5",
           displayName: "Kimi K2.5",
           controllerState: "eligible",
-          status: "active",
+          status: "healthy",
         },
         {
           modelId: "llama-swap/qwen2.5-coder-32b",
@@ -122,15 +122,34 @@ describe("control model role assignment helpers", () => {
     ).toBe("moonshot/kimi-k2.5");
   });
 
+  test("falls back to the first healthy card when inactive or offline cards appear first", () => {
+    expect(
+      resolveDefaultSelectedModelId([
+        {
+          modelId: "deepseek/deepseek-v4-pro",
+          displayName: "DeepSeek V4 Pro",
+          controllerState: "eligible",
+          status: "offline",
+        },
+        {
+          modelId: "chatgpt/gpt-5.4",
+          displayName: "GPT-5.4",
+          controllerState: "inactive",
+          status: "healthy",
+        },
+      ]),
+    ).toBe("chatgpt/gpt-5.4");
+  });
+
   test("returns null when no configured model cards exist", () => {
     expect(resolveDefaultSelectedModelId([])).toBeNull();
   });
 
   test("maps configured model card status pills to the paper-aligned tones", () => {
     expect(resolveConfiguredModelStatusTone("active", "active")).toBe("accent");
-    expect(resolveConfiguredModelStatusTone("eligible", "active")).toBe("success");
+    expect(resolveConfiguredModelStatusTone("eligible", "healthy")).toBe("success");
     expect(resolveConfiguredModelStatusTone("inactive", "inactive")).toBe("neutral");
-    expect(resolveConfiguredModelStatusTone("eligible", "degraded")).toBe("warning");
+    expect(resolveConfiguredModelStatusTone("eligible", "offline")).toBe("warning");
   });
 
   test("builds configured model inventory pills with paper-aligned chip grammar", () => {

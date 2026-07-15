@@ -537,18 +537,16 @@ export default function ControlBenchmarkRoute() {
 
   const resolveJudgeEndpointId = useCallback(
     (candidateValue: readonly RouterCandidate[], savedJudgeEndpointId?: string): string => {
-      const healthy = filterBenchmarkRunnableCandidates(candidateValue).filter(
-        (candidate) => candidate.healthStatus !== "offline",
-      );
+      const runnable = filterBenchmarkRunnableCandidates(candidateValue);
       if (
         savedJudgeEndpointId &&
-        healthy.some((candidate) => candidate.endpointId === savedJudgeEndpointId)
+        runnable.some((candidate) => candidate.endpointId === savedJudgeEndpointId)
       ) {
         return savedJudgeEndpointId;
       }
       return (
-        healthy.find((candidate) => candidate.sourceType === "remote")?.endpointId ??
-        healthy[0]?.endpointId ??
+        runnable.find((candidate) => candidate.sourceType === "remote")?.endpointId ??
+        runnable[0]?.endpointId ??
         ""
       );
     },
@@ -595,11 +593,10 @@ export default function ControlBenchmarkRoute() {
           setSummariesByMode(summariesByModeValue);
           setRunHistory(runHistoryValue);
           setRuntimeSummary(runtimeSummaryValue);
-          const healthy = candidateValue.filter(
-            (candidate) =>
-              isBenchmarkRunnableCandidate(candidate) && candidate.healthStatus !== "offline",
+          const runnable = candidateValue.filter((candidate) =>
+            isBenchmarkRunnableCandidate(candidate),
           );
-          setSelectedEndpointIds(healthy.map((candidate) => candidate.endpointId));
+          setSelectedEndpointIds(runnable.map((candidate) => candidate.endpointId));
           setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
           setError(null);
         },

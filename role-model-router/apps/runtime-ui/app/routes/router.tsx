@@ -15,6 +15,7 @@ import {
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
+import { selectOverviewRouterCandidates } from "../lib/router-candidate-labels";
 import {
   type RouterCandidate,
   type RouterSummary,
@@ -153,7 +154,7 @@ export default function RouterOverviewRoute() {
       .slice(0, 3)
       .map(([modeLabel, count]) => `${modeLabel} ${count}`)
       .join(" • ") || "No alias modes";
-  const overviewCandidates = candidates.slice(0, 3);
+  const overviewCandidates = selectOverviewRouterCandidates(candidates);
 
   return (
     <div className="space-y-6">
@@ -302,8 +303,14 @@ export default function RouterOverviewRoute() {
         title="Routing candidates"
         description="Concrete endpoint and model candidates currently visible to the router for this runtime posture."
       >
-        {candidates.length === 0 ? (
-          <EmptyState label="No routing candidates are available." />
+        {overviewCandidates.length === 0 ? (
+          <EmptyState
+            label={
+              candidates.length === 0
+                ? "No routing candidates are available."
+                : "No routing candidates are currently eligible for this runtime posture."
+            }
+          />
         ) : (
           <div className="space-y-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
@@ -385,8 +392,8 @@ export default function RouterOverviewRoute() {
         <div className="space-y-2">
           <p className={foregroundEmphasisClassName}>Candidate visibility</p>
           <p className={supportingTextClassName}>
-            The overview intentionally samples the current candidate set so routing posture can be
-            read without opening the full candidate ledger immediately.
+            The overview orders routing-eligible candidates first so the visible list matches the
+            runtime posture the router can actually use.
           </p>
         </div>
       </div>

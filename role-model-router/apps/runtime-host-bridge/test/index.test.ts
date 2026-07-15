@@ -7927,6 +7927,8 @@ describe("runtime-host-bridge", () => {
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           providerId: "moonshot",
           modelId: "moonshot/kimi-k2.5",
+          routingEligible: true,
+          benchmarkEligible: true,
           webSearchSupport: {
             mode: "native",
             currentRuntimeContract: "moonshot.chat.builtin_web_search",
@@ -7987,6 +7989,8 @@ describe("runtime-host-bridge", () => {
           endpointKind: "local_process",
           servingSource: "local",
           healthStatus: "healthy",
+          routingEligible: true,
+          benchmarkEligible: true,
           controllerEligible: true,
           roleBindings: ["general.chat"],
           toolCallingSupported: true,
@@ -8336,16 +8340,18 @@ describe("runtime-host-bridge", () => {
       );
       expect(endpointsResponse.status).toBe(200);
       expect(await endpointsResponse.json()).toEqual([
-        {
+        expect.objectContaining({
           endpointId: "moonshot.personal.primary.global.kimi-k2.5",
           providerId: "moonshot",
           modelId: "moonshot/kimi-k2.5",
+          routingEligible: true,
+          benchmarkEligible: true,
           webSearchSupport: {
             mode: "native",
             currentRuntimeContract: "moonshot.chat.builtin_web_search",
             documentedProviderContract: "moonshot.chat.builtin_web_search",
           },
-        },
+        }),
       ]);
 
       const routerSummaryResponse = await fetch(
@@ -8407,7 +8413,7 @@ describe("runtime-host-bridge", () => {
       );
       expect(routerCandidatesResponse.status).toBe(200);
       expect(await routerCandidatesResponse.json()).toEqual([
-        {
+        expect.objectContaining({
           endpointId: "cli.local.coder",
           modelId: "gpt-5.4",
           providerId: "local",
@@ -8415,10 +8421,12 @@ describe("runtime-host-bridge", () => {
           endpointKind: "local_process",
           servingSource: "local",
           healthStatus: "healthy",
+          routingEligible: true,
+          benchmarkEligible: true,
           controllerEligible: true,
           roleBindings: ["general.chat"],
           toolCallingSupported: true,
-        },
+        }),
       ]);
 
       const routerDecisionsResponse = await fetch(

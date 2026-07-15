@@ -1,0 +1,5 @@
+'vitest' is not recognized as an internal or external command,
+operable program or batch file.
+undefined
+D:\DEV\role-model\.worktrees\71-red-repro-temp\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command "vitest" not found

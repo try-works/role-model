@@ -1,0 +1,92 @@
+role-model
+Overview
+Studio
+Local
+Remote
+Models
+Router
+Observe
+Connect
+System
+Routing overview
+Overview
+Routing Strategy
+Controller
+Candidates
+Decisions
+
+STRATEGY
+
+baseline
+
+EXECUTION MODE
+
+remote_only
+
+CONTROLLER
+
+deepseek/deepseek-v4-flash
+
+ALIAS POOLS
+
+15
+
+ACTIVE ALIAS
+
+baseline.remote-only
+
+Alias inventory
+
+Keep the current alias posture visible in-page, then expand into the full alias registry only when you need the complete inventory.
+
+CURRENT ACTIVE ALIAS
+
+baseline.remote-only
+
+active
+
+basic mode • 4 models / 4 endpoints
+
+ALIAS READINESS
+
+15 ready
+0 degraded
+0 unavailable
+
+Readiness is derived from matching endpoint availability, active state, and health posture.
+
+ALIAS MODES
+
+basic 6 • difficulty 3 • hybrid 3
+
+Mode mix across the full alias registry without forcing the entire table open.
+
+Browse all alias pools (15)
+Routing candidates
+
+Concrete endpoint and model candidates currently visible to the router for this runtime posture.
+
+Model	Endpoint	Source	Health	Routing
+deepseek/deepseek-v4-flash	deepseek.personal.deepseek-api-key.global.deepseek-v4-flash	remote	healthy	
+controller
+
+chatgpt/gpt-5.4	openai.personal.openai-codex-subscription.global.gpt-5.4	remote	healthy	
+candidate
+
+deepseek/deepseek-v4-pro	deepseek.personal.deepseek-api-key.global.deepseek-v4-pro	remote	healthy	
+candidate
+
+moonshot/kimi-k2.7-code	moonshot.personal.kimi-code.global.kimi-k2.7-code	remote	healthy	
+candidate
+
+Config-owned posture
+
+Routing overview stays observational. Strategy and controller edits live on their dedicated Router pages.
+
+Alias source of truth
+
+Effective models and expansion counts are derived from runtime config plus the current endpoint snapshot instead of placeholder overview state.
+
+Candidate visibility
+
+The overview orders routing-eligible candidates first so the visible list matches the runtime posture the router can actually use.

@@ -1,0 +1,45 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/71-runtime-startup-lifecycle-and-health-truth-reconciliation/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/router-candidate-labels.test.ts (5 tests | 1 failed) 39ms
+   ✓ formatCandidateLatencyLine > uses latency_ms_p50 and latency_ms_p95 from the observed profile 2ms
+   ✓ formatCandidateLatencyLine > shows n/a when percentile fields are missing even if latency_ms is present 0ms
+   ✓ formatCandidateLatencyLine > accepts camelCase percentile aliases 0ms
+   ✓ formatCandidateLatencyLine > prefers routing-eligible candidates for the overview sample instead of slicing raw rows 1ms
+   × formatCandidateLatencyLine > returns all routing-eligible candidates by default instead of truncating the router page list 33ms
+     → expected [ …(3) ] to deeply equal [ …(4) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/router-candidate-labels.test.ts > formatCandidateLatencyLine > returns all routing-eligible candidates by default instead of truncating the router page list
+AssertionError: expected [ …(3) ] to deeply equal [ …(4) ]
+
+- Expected
++ Received
+
+  [
+    "deepseek.personal.primary.global.deepseek-v4-flash",
+    "openai.personal.primary.global.gpt-5.4",
+    "anthropic.personal.primary.global.claude-3.7",
+-   "moonshot.personal.primary.global.kimi-k2.7-code",
+  ]
+
+ ❯ app/lib/router-candidate-labels.test.ts:109:7
+    107|         },
+    108|       ]).map((candidate) => candidate.endpointId),
+    109|     ).toEqual([
+       |       ^
+    110|       "deepseek.personal.primary.global.deepseek-v4-flash",
+    111|       "openai.personal.primary.global.gpt-5.4",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+   Start at  07:12:53
+   Duration  944ms (transform 39ms, setup 0ms, collect 49ms, tests 39ms, environment 0ms, prepare 267ms)
+
+undefined
+D:\DEV\role-model\.worktrees\71-runtime-startup-lifecycle-and-health-truth-reconciliation\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/router-candidate-labels.test.ts

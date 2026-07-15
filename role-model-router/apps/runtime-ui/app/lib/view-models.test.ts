@@ -9,6 +9,7 @@ import {
   buildConfiguredModelCards,
   buildConfiguredModelMetadataRows,
   buildConfiguredProviderRows,
+  buildConfiguredRemoteConnectionRows,
   buildCredentialLifecycleAccountRows,
   buildCredentialLifecycleBanner,
   buildCredentialReadinessRows,
@@ -670,7 +671,7 @@ describe("buildConfiguredModelCards", () => {
         sourceSummary: "local",
         endpointCount: 1,
         requestCount: 0,
-        status: "active",
+        status: "healthy",
         roleIds: ["developer"],
         toolCallingSupported: true,
         controllerState: "active",
@@ -685,7 +686,7 @@ describe("buildConfiguredModelCards", () => {
         sourceSummary: "remote",
         endpointCount: 1,
         requestCount: 1,
-        status: "active",
+        status: "healthy",
         roleIds: ["general.chat"],
         toolCallingSupported: true,
         controllerState: "eligible",
@@ -734,6 +735,43 @@ describe("buildConfiguredModelCards", () => {
       expect.objectContaining({
         modelId: "moonshot/kimi-k2.5",
         requestCount: null,
+      }),
+    ]);
+  });
+
+  test("derives model status from endpoint health instead of lifecycle activation state", () => {
+    expect(
+      buildConfiguredModelCards({
+        models: [
+          {
+            id: "moonshot/kimi-k2.5",
+            endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
+            displayName: "Kimi K2.5",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            contextWindow: 262144,
+            maxOutputTokens: 16384,
+          },
+        ],
+        endpoints: [
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
+            roleIds: ["general.chat"],
+            status: "active",
+            healthStatus: "offline",
+            sourceType: "remote",
+            servingSource: "remote-service",
+            toolCallingSupported: true,
+          },
+        ],
+        accounts: [],
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        modelId: "moonshot/kimi-k2.5",
+        status: "offline",
       }),
     ]);
   });
@@ -1395,6 +1433,82 @@ describe("buildProviderMaintenanceRows", () => {
         availableActionsLabel: "Update API key",
         activeEndpointCount: 0,
         allowedModels: ["moonshot/kimi-k2.6"],
+      }),
+    ]);
+  });
+});
+
+describe("buildConfiguredRemoteConnectionRows", () => {
+  test("shows only configured remote endpoints and their models, excluding maintenance-only and local accounts", () => {
+    expect(
+      buildConfiguredRemoteConnectionRows({
+        accounts: [
+          {
+            providerAccountId: "deepseek.capture.account",
+            providerId: "deepseek",
+            authMode: "api-key-static",
+            baseUrlOverride: null,
+            allowedModels: ["deepseek/chat-capture-v1"],
+          },
+          {
+            providerAccountId: "local-openai-compatible.personal.123",
+            providerId: "local-openai-compatible",
+            authMode: "api-key-static",
+            baseUrlOverride: "http://127.0.0.1:1234/v1",
+            allowedModels: ["local/model-a"],
+          },
+          {
+            providerAccountId: "openai.personal.primary",
+            providerId: "openai",
+            authMode: "oauth2-device-code",
+            baseUrlOverride: null,
+            allowedModels: ["chatgpt/gpt-5.4"],
+          },
+        ],
+        endpoints: [
+          {
+            endpointId: "local-openai-compatible.personal.123.local.model-a",
+            providerAccountId: "local-openai-compatible.personal.123",
+            providerId: "local-openai-compatible",
+            modelId: "local/model-a",
+            sourceType: "local",
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
+          },
+          {
+            endpointId: "openai.personal.primary.global.gpt-5.4",
+            providerAccountId: "openai.personal.primary",
+            providerId: "openai",
+            modelId: "chatgpt/gpt-5.4",
+            sourceType: "remote",
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
+          },
+        ],
+        models: [
+          {
+            id: "chatgpt/gpt-5.4",
+            displayName: "GPT-5.4",
+            endpoint_ids: ["openai.personal.primary.global.gpt-5.4"],
+          },
+        ],
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        providerAccountId: "openai.personal.primary",
+        providerId: "openai",
+        endpointCount: 1,
+        endpoints: [
+          expect.objectContaining({
+            endpointId: "openai.personal.primary.global.gpt-5.4",
+            modelId: "chatgpt/gpt-5.4",
+            displayName: "GPT-5.4",
+          }),
+        ],
       }),
     ]);
   });

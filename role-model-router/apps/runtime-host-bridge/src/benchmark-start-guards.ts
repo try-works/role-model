@@ -26,6 +26,7 @@ export interface BenchmarkTargetEligibilityInput {
   readonly endpoints: readonly {
     readonly endpointId: string;
     readonly executionModeEligible?: boolean;
+    readonly benchmarkEligible?: boolean;
   }[];
 }
 
@@ -39,7 +40,10 @@ export function evaluateBenchmarkTargetEligibility(
   input: BenchmarkTargetEligibilityInput,
 ): BenchmarkTargetEligibilityResult {
   const endpointEligibility = new Map(
-    input.endpoints.map((endpoint) => [endpoint.endpointId, endpoint.executionModeEligible]),
+    input.endpoints.map((endpoint) => [
+      endpoint.endpointId,
+      endpoint.benchmarkEligible ?? endpoint.executionModeEligible,
+    ]),
   );
   const requestedEndpointIds = new Set<string>([
     ...(input.endpointIds ?? []),
