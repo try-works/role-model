@@ -18787,11 +18787,8 @@ export async function createRuntimeBridgeBackend(
     const controller = getCurrentControllerAssignment();
     const guidance = getRouterGuidance();
     const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId();
-    const {
-      executionEndpointIds,
-      routingEligibleEndpointIds,
-      benchmarkEligibleEndpointIds,
-    } = buildEffectiveEligibilitySnapshot();
+    const { executionEndpointIds, routingEligibleEndpointIds, benchmarkEligibleEndpointIds } =
+      buildEffectiveEligibilitySnapshot();
     return currentRegistry.endpoints.map((endpoint) => {
       const endpointId = endpoint.identity.endpoint_id;
       const profile = readEndpointProfileData(endpointId);
@@ -22626,10 +22623,8 @@ export async function createRuntimeBridgeBackend(
         status: string;
       }[]
     > {
-      const {
-        routingEligibleEndpointIds,
-        benchmarkEligibleEndpointIds,
-      } = buildEffectiveEligibilitySnapshot();
+      const { routingEligibleEndpointIds, benchmarkEligibleEndpointIds } =
+        buildEffectiveEligibilitySnapshot();
       const localSourcesByEndpointId = new Map(
         getCurrentRegistrySources().local.map((source) => [source.endpointId, source] as const),
       );
@@ -23151,9 +23146,9 @@ export async function createRuntimeBridgeBackend(
                   sourceType: endpoint.sourceType,
                   healthStatus: endpoint.healthStatus,
                   executionModeEligible: executionEligibilityByEndpointId.get(endpoint.endpointId),
-                  benchmarkEligible:
-                    candidates.find((candidate) => candidate.endpointId === endpoint.endpointId)
-                      ?.benchmarkEligible,
+                  benchmarkEligible: candidates.find(
+                    (candidate) => candidate.endpointId === endpoint.endpointId,
+                  )?.benchmarkEligible,
                 }));
               },
               executeChatCompletions: async (chatBody, requestId, requestOptions) =>
@@ -23193,9 +23188,9 @@ export async function createRuntimeBridgeBackend(
               sourceType: endpoint.sourceType,
               healthStatus: endpoint.healthStatus,
               executionModeEligible: executionEligibilityByEndpointId.get(endpoint.endpointId),
-              benchmarkEligible:
-                candidates.find((candidate) => candidate.endpointId === endpoint.endpointId)
-                  ?.benchmarkEligible,
+              benchmarkEligible: candidates.find(
+                (candidate) => candidate.endpointId === endpoint.endpointId,
+              )?.benchmarkEligible,
             }));
           },
           executeChatCompletions: async (chatBody, requestId, requestOptions) =>

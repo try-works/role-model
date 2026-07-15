@@ -258,11 +258,10 @@ describe("endpoint rehydration", () => {
           }
 
           expect(
-            listRuntimeEndpoints({ databasePath }).map((endpoint) => endpoint.endpointId).sort(),
-          ).toEqual([
-            activation.endpointId,
-            "moonshot.personal.primary.global.kimi-k2.6",
-          ]);
+            listRuntimeEndpoints({ databasePath })
+              .map((endpoint) => endpoint.endpointId)
+              .sort(),
+          ).toEqual([activation.endpointId, "moonshot.personal.primary.global.kimi-k2.6"]);
         } finally {
           await restartedBackend.shutdown?.();
         }
@@ -281,10 +280,7 @@ describe("endpoint rehydration", () => {
     "marks restarted remote endpoints offline and ineligible when startup probes time out",
     { timeout: 20_000 },
     async () => {
-      const runtimeStateRoot = path.join(
-        os.tmpdir(),
-        `runtime-host-endpoint-health-${Date.now()}`,
-      );
+      const runtimeStateRoot = path.join(os.tmpdir(), `runtime-host-endpoint-health-${Date.now()}`);
       const scopeId = "endpoint-health-tests";
       const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
       const originalMoonshotApiKey = process.env.MOONSHOT_API_KEY;
@@ -336,7 +332,11 @@ describe("endpoint rehydration", () => {
 
       try {
         await mkdir(runtimeStateRoot, { recursive: true });
-        await writeFile(unifiedRuntimeConfigPath, 'version: "1.1"\nexecutionMode: hybrid\n', "utf8");
+        await writeFile(
+          unifiedRuntimeConfigPath,
+          'version: "1.1"\nexecutionMode: hybrid\n',
+          "utf8",
+        );
         const backend = await createBackend(async (input) => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;

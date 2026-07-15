@@ -15,6 +15,7 @@ import {
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
+import { selectOverviewRouterCandidates } from "../lib/router-candidate-labels";
 import {
   type RouterCandidate,
   type RouterSummary,
@@ -25,7 +26,6 @@ import {
   fetchRuntimeConfig,
   fetchRuntimeEndpoints,
 } from "../lib/runtime-api";
-import { selectOverviewRouterCandidates } from "../lib/router-candidate-labels";
 import { buildAliasReadinessRows } from "../lib/view-models";
 
 export default function RouterOverviewRoute() {

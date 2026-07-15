@@ -1191,13 +1191,18 @@ export default function ProvidersRoute() {
                             rolePolicy,
                           });
                           return (
-                            <div key={endpoint.endpointId} className={`${raisedPanelClassName} p-3`}>
+                            <div
+                              key={endpoint.endpointId}
+                              className={`${raisedPanelClassName} p-3`}
+                            >
                               <div className="flex flex-wrap items-center gap-2">
                                 <StatusPill tone="accent">{endpoint.displayName}</StatusPill>
                                 <StatusPill tone="neutral">{endpoint.modelId}</StatusPill>
                                 <StatusPill tone={healthTone}>{endpoint.healthStatus}</StatusPill>
                                 <StatusPill tone={endpoint.routingEligible ? "success" : "neutral"}>
-                                  {endpoint.routingEligible ? "routing eligible" : "routing blocked"}
+                                  {endpoint.routingEligible
+                                    ? "routing eligible"
+                                    : "routing blocked"}
                                 </StatusPill>
                                 <StatusPill
                                   tone={endpoint.benchmarkEligible ? "success" : "neutral"}

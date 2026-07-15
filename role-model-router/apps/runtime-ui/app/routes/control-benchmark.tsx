@@ -538,7 +538,10 @@ export default function ControlBenchmarkRoute() {
   const resolveJudgeEndpointId = useCallback(
     (candidateValue: readonly RouterCandidate[], savedJudgeEndpointId?: string): string => {
       const runnable = filterBenchmarkRunnableCandidates(candidateValue);
-      if (savedJudgeEndpointId && runnable.some((candidate) => candidate.endpointId === savedJudgeEndpointId)) {
+      if (
+        savedJudgeEndpointId &&
+        runnable.some((candidate) => candidate.endpointId === savedJudgeEndpointId)
+      ) {
         return savedJudgeEndpointId;
       }
       return (
@@ -590,7 +593,9 @@ export default function ControlBenchmarkRoute() {
           setSummariesByMode(summariesByModeValue);
           setRunHistory(runHistoryValue);
           setRuntimeSummary(runtimeSummaryValue);
-          const runnable = candidateValue.filter((candidate) => isBenchmarkRunnableCandidate(candidate));
+          const runnable = candidateValue.filter((candidate) =>
+            isBenchmarkRunnableCandidate(candidate),
+          );
           setSelectedEndpointIds(runnable.map((candidate) => candidate.endpointId));
           setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
           setError(null);

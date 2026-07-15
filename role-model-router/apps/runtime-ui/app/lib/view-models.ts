@@ -546,7 +546,8 @@ export function buildConfiguredRemoteConnectionRows(input: {
       .filter((endpoint) => endpoint.providerAccountId === providerAccountId)
       .sort(
         (left, right) =>
-          sortLexical(left.modelId, right.modelId) || sortLexical(left.endpointId, right.endpointId),
+          sortLexical(left.modelId, right.modelId) ||
+          sortLexical(left.endpointId, right.endpointId),
       )
       .map((endpoint) => ({
         endpointId: endpoint.endpointId,
