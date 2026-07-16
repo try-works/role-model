@@ -1,0 +1,224 @@
+
+> @role-model-router/sqlite-memory@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\sqlite-memory
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/packages/sqlite-memory
+
+(node:26320) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (39 tests | 1 failed) 9330ms
+   ✓ initializeSqliteMemory > creates the planned schema, WAL mode, and initial migration receipt under the runtime state root 98ms
+   ✓ initializeSqliteMemory > persists validated provider accounts by credential reference without storing raw secrets 151ms
+   ✓ initializeSqliteMemory > upserts and lists provider accounts for runtime control-plane reads 103ms
+   ✓ initializeSqliteMemory > persists runtime-managed endpoint activations for dynamic registry materialization 105ms
+   ✓ initializeSqliteMemory > persists and reads the global controller assignment for the runtime control plane 109ms
+   ✓ initializeSqliteMemory > persists device-auth session state for runtime OAuth polling 123ms
+   ✓ initializeSqliteMemory > records explicit maintenance defaults and idempotent migration behavior 104ms
+   ✓ initializeSqliteMemory > does not repeat observation metadata JSON backfills after migration receipt 146ms
+   ✓ initializeSqliteMemory > persists and reloads the continuity rows needed for bounded context assembly 122ms
+   ✓ initializeSqliteMemory > persists retrieval receipts for later routing diagnostics 124ms
+   ✓ initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads  338ms
+   ✓ initializeSqliteMemory > listRecentRuntimeRequestIds > returns latest request ids in recency order without parsing observation_json 108ms
+   ✓ initializeSqliteMemory > listRecentRuntimeRequestIds > enforces limit 10 for the lightweight latest-id query 121ms
+   ✓ initializeSqliteMemory > listRecentRuntimeRequestIds > returns an empty array when no runtime observations exist 95ms
+   ✓ initializeSqliteMemory > stores and reads conversation-level difficulty classification cache entries 97ms
+   ✓ initializeSqliteMemory > persists and reads segmented observed samples and profiles by difficulty bucket 254ms
+   ✓ initializeSqliteMemory > derives an advisory max-difficulty recommendation from bucketed observed profiles 111ms
+   ✓ initializeSqliteMemory > reads the latest observed profiles for a set of endpoint ids 252ms
+   × initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows 314ms
+     → expected [ { …(100) }, { …(100) } ] to deeply equal [ ObjectContaining{…}, …(1) ]
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure records latencyMs in telemetry summary average 244ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure preserves caller correlation and request classification for failed rows 256ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure preserves routed provider failure context and structured observation 253ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures 241ms
+   ✓ initializeSqliteMemory > persistRuntimeObservationBundle projects telemetry handling receipts into the telemetry ledger 236ms
+   ✓ initializeSqliteMemory > persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger 253ms
+   ✓ initializeSqliteMemory > exports persisted runtime state for operator drills 257ms
+   ✓ initializeSqliteMemory > restores runtime state from a backup after scoped deletion 266ms
+   ✓ initializeSqliteMemory > persists throughput penalty state and expires it after the penalty window 99ms
+   ✓ clearAllObservedBenchmarkData > removes all benchmark samples across endpoints and clears profiles  308ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retains benchmark_mode on readback for quick benchmark samples 107ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting benchmark samples  469ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles  626ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading difficulty classification cache  427ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting difficulty classification cache  456ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading advisory max difficulty recommendations  445ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records  586ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns  605ms
+   ✓ clearObservedBenchmarkDataForEndpoint > removes benchmark samples and clears the endpoint profile when no live samples remain 128ms
+   ✓ runRuntimeStateValidation > validates provider accounts and initializes SQLite through the local validation path 183ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows
+AssertionError: expected [ { …(100) }, { …(100) } ] to deeply equal [ ObjectContaining{…}, …(1) ]
+
+- Expected
++ Received
+
+@@ -41,67 +41,138 @@
+      "toolCallCount": 0,
+      "toolingUsed": false,
+      "totalAvoidedCostUsd": 0,
+      "totalTokens": 32,
+    },
+-   ObjectContaining {
++   {
+      "actualCostUsd": 0.0042,
++     "adapterFamily": "ai-sdk-openai",
+      "baselineMaxEligibleCostUsd": 0.0116,
+      "cacheCostSavingsUsd": 0.002,
+      "cacheReadTokens": 16,
+      "cacheReadTokensSupported": true,
+      "cacheState": "hit",
+      "cacheWriteTokens": 8,
+      "cacheWriteTokensSupported": true,
++     "candidateCostSnapshot": {
++       "llama-swap.local.local-mock-llama": {
++         "estimatedRequestUsd": 0.0116,
++         "modelId": "local/mock-llama",
++         "providerId": "llama-swap",
++         "sourceType": "local",
++       },
++       "openai.personal.primary.us-east-1.fast": {
++         "estimatedRequestUsd": 0.0062,
++         "modelId": "openai/gpt-4.1-mini-fast",
++         "providerId": "openai",
++         "sourceType": "remote",
++       },
++     },
++     "clientRequestId": null,
++     "conversationId": "conversation-main",
++     "cooldownDecision": "not_applied",
+      "costBaselineSource": "eligible_candidate_max",
+      "costCalculationBasis": "actual_vendor_cost",
+      "costCalculationVersion": "run49.v1",
+      "costProvenance": "actual",
+      "costSavingsSupport": "full",
++     "createdAtMs": 1784231884527,
++     "currency": "USD",
+      "difficultyBucket": "easy",
++     "dimensions": {
++       "chartSourceLabel": "Remote",
++       "requestedModelFamily": "mixed.local-remote",
++     },
+      "effectiveCostUsd": 0.0042,
++     "eligibleEndpointIds": [
++       "openai.personal.primary.us-east-1.fast",
++       "llama-swap.local.local-mock-llama",
++     ],
++     "eligibleModelIds": [
++       "openai/gpt-4.1-mini-fast",
++       "local/mock-llama",
++     ],
+      "endpointId": "openai.personal.primary.us-east-1.fast",
+      "endpointKind": "remote_api",
+      "errorClass": null,
+      "estimatedCostUsd": 0.0042,
++     "executionFamily": "remote-service",
+      "finishReason": "stop",
+      "healthStatusAtRequest": "healthy",
++     "idempotencyDecision": "tool_replay_guard_required",
++     "ingressPayloadBytes": 683,
+      "inputTokens": 120,
+-     "inputTokensAvailable": true,
+-     "inputTokensSource": "normalized",
+      "latencyMs": 840,
++     "lifecycleStateAtRequest": "active",
+      "modelId": "openai/gpt-4.1-mini-fast",
+      "outputTokens": 48,
+-     "outputTokensAvailable": true,
+-     "outputTokensSource": "normalized",
+-     "promptCacheRequestSource": "explicit",
+      "promptCacheRequested": true,
+      "promptCacheSupported": true,
+      "promptCacheUsed": true,
+      "providerAccountId": "openai.personal",
++     "providerCanonicalPayloadBytes": 683,
+      "providerFamily": "ai-sdk-openai",
+      "providerId": "openai",
+      "providerKind": "remote_openai_compat",
++     "providerWirePayloadBytes": 683,
++     "rawCaptureAvailable": true,
++     "redactionLevel": "strict",
++     "region": "us-east-1",
++     "requestClass": "live_request",
+      "requestId": "req-telemetry-remote-001",
+      "requestOperation": "chat",
++     "requestPayloadBytes": 683,
+      "requestedModelId": "mixed.local-remote",
+      "requestedRoleId": "coder.patch",
++     "rerouteCount": 0,
++     "responsePayloadBytes": 353,
++     "retainUntil": 1786823885527,
++     "retentionClass": "standard",
++     "retentionTtlHours": 720,
++     "retryCount": 0,
++     "roleIds": [
++       "coder.patch",
++       "general.chat",
++     ],
+      "routingCostSavingsUsd": 0.0054,
++     "routingDecisionId": "decision-telemetry-remote-001",
+      "routingMode": "hybrid",
++     "samplingRate": 1,
++     "selectedModelId": "openai/gpt-4.1-mini-fast",
++     "selectedPricingSnapshot": {
++       "estimatedRequestUsd": 0.0062,
++       "modelId": "openai/gpt-4.1-mini-fast",
++       "providerId": "openai",
++       "sourceType": "remote",
++     },
+      "selectedStrategy": "quality",
+      "selectedUncachedCostUsd": 0.0062,
+      "servingSource": "remote-service",
++     "sourceClient": null,
+      "sourceType": "remote",
+      "statusCode": 200,
+      "statusFamily": "success",
+      "streamTextDeltaCount": 4,
+      "streamTextSupported": true,
+      "streamToolArgumentDeltaCount": 2,
+      "streamToolArgumentSupported": true,
+      "streamToolCallDeltaCount": 1,
+      "streamToolCallSupported": true,
++     "structuredInspectionAvailable": true,
++     "structuredInspectionMode": "redacted",
++     "taxonomyCapabilityIds": [],
++     "taxonomyGroupId": null,
++     "taxonomyModalityIds": [],
++     "taxonomyRoleId": null,
++     "taxonomyTaskType": null,
++     "taxonomyTaskVariant": null,
++     "taxonomyToolClassIds": [],
+      "toolCallCount": 1,
++     "toolExecutionCount": 0,
++     "toolSideEffectState": "not_executed",
+      "toolingUsed": true,
+      "totalAvoidedCostUsd": 0.0074,
+      "totalTokens": 168,
++     "translatedPayloadBytes": 683,
++     "vendorId": null,
+    },
+  ]
+
+ ❯ test/index.test.ts:2181:7
+    2179|         limit: 10,
+    2180|       }),
+    2181|     ).toEqual([
+       |       ^
+    2182|       expect.objectContaining({
+    2183|         requestId: "req-telemetry-local-001",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 38 passed (39)
+   Start at  03:58:00
+   Duration  11.14s (transform 628ms, setup 0ms, collect 841ms, tests 9.33s, environment 0ms, prepare 313ms)
+
+D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\sqlite-memory:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/sqlite-memory@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

@@ -109,6 +109,7 @@ describe("executeRoutedRequest", () => {
             outputTokens: 24,
             cacheReadTokens: 0,
             cacheWriteTokens: 0,
+            source: "measured",
           },
           vendorMetadata: {
             vendorId: "litellm",
@@ -396,6 +397,12 @@ describe("executeRoutedRequest", () => {
     expect(result.requestCapture.url).toBe("https://api.openai.test/v1/responses");
     expect(result.normalized.outputText).toBe("OpenAI summary");
     expect(result.usageEvent.tokens_in).toBe(32);
+    expect(result.usageEvent).toMatchObject({
+      tokens_in_source: "measured",
+      tokens_in_available: true,
+      tokens_out_source: "measured",
+      tokens_out_available: true,
+    });
     expect(result.usageEvent.cost_actual).toBe(0.0042);
     expect(result.trace.spans.map((span) => span.span_type)).toEqual([
       "provider.load",

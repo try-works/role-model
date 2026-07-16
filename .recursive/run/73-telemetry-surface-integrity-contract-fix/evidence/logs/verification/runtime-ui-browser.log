@@ -1,0 +1,32 @@
+
+> @role-model-router/runtime-ui@ test:browser D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\apps\runtime-ui
+> playwright test
+
+[WebServer] (node:10500) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28996) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:14464) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:28272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:26152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:26152) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:26152) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+
+Running 6 tests using 2 workers
+
+(node:10464) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 e2e\runtime-shell.spec.ts:3:1 › shows seeded provider maintenance and session readiness over the rebuilt runtime (3.8s)
+  ok 2 e2e\shared-surface-regression.spec.ts:65:1 › keeps shared typography and tokenized controls aligned on seeded QA routes (5.0s)
+  ok 3 e2e\shared-surface-regression.spec.ts:99:1 › supports filter changes, query-param restoration, and request-list narrowing on the request analytics surface (2.4s)
+  ok 4 e2e\shared-surface-regression.spec.ts:132:1 › supports request inspection drill-in from request analytics (2.0s)
+  ok 5 e2e\shared-surface-regression.spec.ts:149:1 › renders shared time-series charts without clipped axes and with inset legends (3.4s)
+  ok 6 e2e\shared-surface-regression.spec.ts:164:1 › renders deterministic request-detail token and cache provenance (1.4s)
+
+  6 passed (55.5s)

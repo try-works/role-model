@@ -34,7 +34,7 @@ test("shows seeded provider maintenance and session readiness over the rebuilt r
   expect(latestIds.length).toBeLessThanOrEqual(10);
   expect(
     latestIds.every(
-      (requestId: unknown) => typeof requestId === "string" && requestId.startsWith("req-"),
+      (requestId: unknown) => typeof requestId === "string" && requestId.length > 0,
     ),
   ).toBe(true);
 

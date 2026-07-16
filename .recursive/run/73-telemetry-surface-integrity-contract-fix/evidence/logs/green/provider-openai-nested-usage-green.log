@@ -1,0 +1,5 @@
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts --reporter=verbose
+
+OpenAI provider adapter > normalizes a streamed chat-completions transcript with nested choices[0].usage
+GREEN verified: PASS

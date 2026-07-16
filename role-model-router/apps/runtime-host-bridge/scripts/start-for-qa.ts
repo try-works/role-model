@@ -3,6 +3,12 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { runRuntimeAdapterValidation } from "../../../packages/adapter-execution/src/cli.js";
+import { createRuntimeObservationBundle } from "../../../packages/runtime-observability/src/index.js";
+import {
+  persistRuntimeObservationBundle,
+  resolveSqliteMemoryLocation,
+} from "../../../packages/sqlite-memory/src/index.js";
 import {
   type CreateRuntimeBridgeBackendOptions,
   type RuntimeBridgeBackend,
@@ -24,6 +30,14 @@ const qaActivatedModelId = "moonshot/kimi-k2.5";
 const qaActivatedEndpointRegion = "global";
 const qaMoonshotApiKeyEnv = "MOONSHOT_API_KEY";
 const qaPlaceholderApiKey = "role-model-runtime-qa-placeholder";
+
+export const qaTelemetryRequestIds = {
+  measured: "qa-telemetry-measured-001",
+  estimated: "qa-telemetry-estimated-001",
+  unavailable: "qa-telemetry-unavailable-001",
+  zero: "qa-telemetry-zero-001",
+  measuredSecondary: "qa-telemetry-measured-002",
+} as const;
 
 type QaBridgeBackend = Pick<
   RuntimeBridgeBackend,
@@ -223,6 +237,180 @@ export async function bootstrapQaControlPlane(
   }
 }
 
+export async function seedQaTelemetry(
+  currentRepoRoot: string,
+  currentRuntimeStateRoot: string,
+  currentScopeId: string,
+): Promise<void> {
+  const validation = await runRuntimeAdapterValidation({
+    repoRoot: currentRepoRoot,
+    fixtureRoot: createQaFixtureRoot(currentRepoRoot),
+    runtimeStateRoot: currentRuntimeStateRoot,
+    scopeId: currentScopeId,
+  });
+  const baseBundle = createRuntimeObservationBundle({
+    decision: validation.decision,
+    routingDiagnostics: validation.routingDiagnostics,
+    retrievalReceipt: validation.retrievalReceipt,
+    contextEnvelope: validation.contextEnvelope,
+    execution: validation.execution,
+    priorSamples: [],
+    maintenancePolicy: {
+      "redaction.level": "strict",
+      "retention.class": "standard",
+    },
+    capturePolicy: {},
+    accountState: {
+      providerAccountId: validation.execution.target.providerAccountId,
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    },
+  });
+  const now = Date.now();
+  const fixtures = [
+    {
+      requestId: qaTelemetryRequestIds.measured,
+      source: "measured" as const,
+      available: true,
+      inputTokens: 120000,
+      outputTokens: 4000,
+      cacheReadTokens: 90000,
+      promptCacheRequestSource: "explicit" as const,
+      hoursAgo: 5,
+    },
+    {
+      requestId: qaTelemetryRequestIds.estimated,
+      source: "estimated" as const,
+      available: true,
+      inputTokens: 107,
+      outputTokens: 32,
+      cacheReadTokens: 0,
+      promptCacheRequestSource: "synthesized" as const,
+      hoursAgo: 4,
+    },
+    {
+      requestId: qaTelemetryRequestIds.unavailable,
+      source: "unavailable" as const,
+      available: false,
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      promptCacheRequestSource: null,
+      hoursAgo: 3,
+    },
+    {
+      requestId: qaTelemetryRequestIds.zero,
+      source: "measured" as const,
+      available: true,
+      inputTokens: 0,
+      outputTokens: 0,
+      cacheReadTokens: 0,
+      promptCacheRequestSource: "synthesized" as const,
+      hoursAgo: 2,
+    },
+    {
+      requestId: qaTelemetryRequestIds.measuredSecondary,
+      source: "normalized" as const,
+      available: true,
+      inputTokens: 400,
+      outputTokens: 80,
+      cacheReadTokens: 100,
+      promptCacheRequestSource: "synthesized" as const,
+      hoursAgo: 1,
+    },
+  ];
+  const databasePath = resolveSqliteMemoryLocation({
+    runtimeStateRoot: currentRuntimeStateRoot,
+    scopeId: currentScopeId,
+  });
+
+  for (const fixture of fixtures) {
+    const timestampMs = now - fixture.hoursAgo * 60 * 60 * 1000;
+    const routingDecisionId = `decision-${fixture.requestId}`;
+    persistRuntimeObservationBundle({
+      databasePath,
+      observation: {
+        ...baseBundle,
+        requestId: fixture.requestId,
+        routingDecisionId,
+        usageEvent: {
+          ...baseBundle.usageEvent,
+          request_id: fixture.requestId,
+          routing_decision_id: routingDecisionId,
+          tokens_in: fixture.inputTokens,
+          tokens_in_source: fixture.source,
+          tokens_in_available: fixture.available,
+          tokens_out: fixture.outputTokens,
+          tokens_out_source: fixture.source,
+          tokens_out_available: fixture.available,
+          timestamp_ms: timestampMs,
+        },
+        observedPerformance: {
+          ...baseBundle.observedPerformance,
+          sample: {
+            ...baseBundle.observedPerformance.sample,
+            request_id: fixture.requestId,
+            routing_decision_id: routingDecisionId,
+            timestamp_ms: timestampMs,
+          },
+          profile: {
+            ...baseBundle.observedPerformance.profile,
+            measured_at_ms: timestampMs,
+          },
+        },
+        cacheObservability: {
+          ...baseBundle.cacheObservability,
+          promptCacheRequested: fixture.promptCacheRequestSource !== null,
+          ...(fixture.promptCacheRequestSource
+            ? { promptCacheRequestSource: fixture.promptCacheRequestSource }
+            : {}),
+          promptCacheUsed: fixture.cacheReadTokens > 0,
+          cacheReadTokens: fixture.cacheReadTokens,
+          cacheWriteTokens: 0,
+        },
+        executionTelemetry: {
+          ...baseBundle.executionTelemetry,
+          promptCaching: { supported: true },
+          usageSupport: {
+            ...baseBundle.executionTelemetry.usageSupport,
+            inputTokens: true,
+            outputTokens: true,
+            cacheReadTokens: true,
+            cacheWriteTokens: true,
+          },
+        },
+        telemetrySnapshot: {
+          providerId: "moonshot",
+          providerAccountId: qaProviderAccountId,
+          sourceType: "remote",
+          endpointKind: "remote_api",
+          servingSource: "remote-service",
+          region: "global",
+          lifecycleStateAtRequest: "active",
+          healthStatusAtRequest: "healthy",
+          requestedModelId: qaActivatedModelId,
+          requestOperation: "chat",
+          roleIds: ["general.chat"],
+          toolingUsed: false,
+          cacheState: fixture.cacheReadTokens > 0 ? "hit" : "miss",
+          eligibleEndpointIds: [baseBundle.endpointId],
+          eligibleModelIds: [qaActivatedModelId],
+          candidateCostSnapshot: null,
+          selectedPricingSnapshot: null,
+          selectedUncachedCostUsd: null,
+          baselineMaxEligibleCostUsd: null,
+          routingCostSavingsUsd: 0,
+          cacheCostSavingsUsd: 0,
+          totalAvoidedCostUsd: 0,
+          costBaselineSource: null,
+          costSavingsSupport: null,
+        },
+      },
+    });
+  }
+}
+
 export function createQaServerOptions(
   currentRepoRoot: string,
   backend: QaBridgeBackend,
@@ -393,6 +581,9 @@ export async function main(): Promise<void> {
     db.close();
     console.log("[QA] Pre-registered DeepSeek account.");
   }
+
+  await seedQaTelemetry(repoRoot, runtimeStateRoot, scopeId);
+  console.log(`[QA] Seeded deterministic telemetry request: ${qaTelemetryRequestIds.measured}`);
 
   const backend = await createRuntimeBridgeBackend(
     createQaRuntimeBridgeBackendOptions(repoRoot, runtimeStateRoot, scopeId),

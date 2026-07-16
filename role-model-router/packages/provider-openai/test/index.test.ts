@@ -146,6 +146,11 @@ describe("OpenAI provider adapter", () => {
       outputTokens: 24,
       cacheReadTokens: 0,
       cacheWriteTokens: 0,
+      inputTokensSource: "measured",
+      outputTokensSource: "measured",
+      inputTokensAvailable: true,
+      outputTokensAvailable: true,
+      source: "measured",
     });
     expect(normalized.latencyMs).toBe(87);
     expect(normalized.promptCache.used).toBe(false);
@@ -250,6 +255,11 @@ describe("OpenAI provider adapter", () => {
       outputTokens: 4,
       cacheReadTokens: 0,
       cacheWriteTokens: 0,
+      inputTokensSource: "measured",
+      outputTokensSource: "measured",
+      inputTokensAvailable: true,
+      outputTokensAvailable: true,
+      source: "measured",
     });
   });
 
@@ -328,6 +338,11 @@ describe("OpenAI provider adapter", () => {
       outputTokens: 41,
       cacheReadTokens: 1111,
       cacheWriteTokens: 222,
+      inputTokensSource: "measured",
+      outputTokensSource: "measured",
+      inputTokensAvailable: true,
+      outputTokensAvailable: true,
+      source: "measured",
     });
   });
 
@@ -599,6 +614,11 @@ describe("OpenAI provider adapter", () => {
       outputTokens: 4,
       cacheReadTokens: 0,
       cacheWriteTokens: 0,
+      inputTokensSource: "normalized",
+      outputTokensSource: "normalized",
+      inputTokensAvailable: true,
+      outputTokensAvailable: true,
+      source: "normalized",
     });
   });
 
@@ -1135,6 +1155,11 @@ describe("OpenAI provider adapter", () => {
       outputTokens: 7,
       cacheReadTokens: 875,
       cacheWriteTokens: 0,
+      inputTokensSource: "normalized",
+      outputTokensSource: "normalized",
+      inputTokensAvailable: true,
+      outputTokensAvailable: true,
+      source: "normalized",
     });
   });
 
@@ -1275,6 +1300,11 @@ describe("OpenAI provider adapter", () => {
       outputTokens: 41,
       cacheReadTokens: 1111,
       cacheWriteTokens: 222,
+      inputTokensSource: "measured",
+      outputTokensSource: "measured",
+      inputTokensAvailable: true,
+      outputTokensAvailable: true,
+      source: "measured",
     });
   });
 
@@ -1312,6 +1342,7 @@ describe("OpenAI provider adapter", () => {
       promptCache: {
         mode: "prefer",
         key: "kimi-cache-key",
+        source: "explicit" as const,
       },
     };
 
@@ -1351,6 +1382,7 @@ describe("OpenAI provider adapter", () => {
 
     expect(normalized.promptCache).toEqual({
       requested: true,
+      requestSource: "explicit",
       used: true,
       readTokens: 875,
       writeTokens: 0,
@@ -1360,6 +1392,11 @@ describe("OpenAI provider adapter", () => {
       outputTokens: 7,
       cacheReadTokens: 875,
       cacheWriteTokens: 0,
+      inputTokensSource: "normalized",
+      outputTokensSource: "normalized",
+      inputTokensAvailable: true,
+      outputTokensAvailable: true,
+      source: "normalized",
     });
   });
 
@@ -1671,5 +1708,367 @@ describe("OpenAI provider adapter", () => {
         output: "NET: $185.42",
       },
     ]);
+  });
+
+  test("normalizes a streamed chat-completions transcript with nested choices[0].usage", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.6",
+      modelId: "moonshot/kimi-k2.6",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "tools"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.6",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [{ role: "user", content: "Summarize routing outcomes." }],
+      stream: true,
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      responseCapture: {
+        providerFamily: "ai-sdk-openai-compatible",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        body: [
+          'data: {"id":"chatcmpl_kimi_nested","choices":[{"index":0,"delta":{"role":"assistant","content":"Routing"}}]}',
+          'data: {"id":"chatcmpl_kimi_nested","choices":[{"index":0,"delta":{"content":" outcomes"}}]}',
+          'data: {"id":"chatcmpl_kimi_nested","choices":[{"index":0,"finish_reason":"stop","usage":{"prompt_tokens":37,"completion_tokens":6}}]}',
+        ].join("\n\n"),
+      },
+      capabilities,
+    });
+
+    expect(normalized.outputText).toBe("Routing outcomes");
+    expect(normalized.finishReason).toBe("stop");
+    expect(normalized.usage).toEqual({
+      inputTokens: 37,
+      outputTokens: 6,
+      cacheReadTokens: 0,
+      cacheWriteTokens: 0,
+      inputTokensSource: "normalized",
+      outputTokensSource: "normalized",
+      inputTokensAvailable: true,
+      outputTokensAvailable: true,
+      source: "normalized",
+    });
+  });
+
+  test("estimates input tokens when streamed usage is absent and labels provenance", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.6",
+      modelId: "moonshot/kimi-k2.6",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "tools"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.6",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+
+    const executionRequest = {
+      messages: [
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: "Summarize routing outcomes in a few words." },
+      ],
+      stream: true,
+      tools: [
+        {
+          name: "lookupTelemetry",
+          description: "Read telemetry facts.",
+          inputSchema: {
+            type: "object",
+            properties: { requestId: { type: "string" } },
+            required: ["requestId"],
+          },
+        },
+      ],
+    };
+
+    const adapter = createOpenAIProviderAdapter();
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      responseCapture: {
+        providerFamily: "ai-sdk-openai-compatible",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        body: [
+          'data: {"id":"chatcmpl_kimi_no_usage","choices":[{"index":0,"delta":{"role":"assistant","content":"Done"}}]}',
+          'data: {"id":"chatcmpl_kimi_no_usage","choices":[{"index":0,"finish_reason":"stop","delta":{}}]}',
+        ].join("\n\n"),
+      },
+      capabilities,
+    });
+
+    expect(normalized.outputText).toBe("Done");
+    expect(normalized.finishReason).toBe("stop");
+    expect(normalized.usage.inputTokens).toBe(
+      Math.ceil(new TextEncoder().encode(JSON.stringify(requestCapture.body)).length / 4),
+    );
+    expect(normalized.usage.outputTokens).toBeGreaterThanOrEqual(0);
+    expect(normalized.usage.source).toBe("estimated");
+  });
+
+  test("marks request-size usage unavailable when the captured provider body cannot be serialized", () => {
+    const target = {
+      endpointId: "moonshot.circular.global.kimi",
+      modelId: "moonshot/kimi-k2.7-code",
+      providerId: "moonshot",
+      requestShapeHints: { providerShape: "openai.chat.completions" },
+    } as never;
+    const executionRequest: RuntimeExecutionRequest = {
+      messages: [{ role: "user", content: "Circular request capture" }],
+    };
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const body: Record<string, unknown> = { model: "kimi-k2.7-code" };
+    body.self = body;
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      capabilities,
+      requestCapture: {
+        providerFamily: "moonshot",
+        endpointId: "moonshot.circular.global.kimi",
+        url: "https://api.kimi.test/coding/v1/chat/completions",
+        headers: {},
+        body,
+      },
+      responseCapture: {
+        providerFamily: "moonshot",
+        endpointId: "moonshot.circular.global.kimi",
+        statusCode: 200,
+        body: { choices: [{ finish_reason: "stop", message: { content: "ok" } }] },
+      },
+    });
+
+    expect(normalized.usage).toMatchObject({
+      inputTokens: 0,
+      inputTokensAvailable: false,
+      inputTokensSource: "unavailable",
+      source: "unavailable",
+    });
+  });
+
+  test("requests Kimi streamed usage and forwards a capable prompt cache key on the final wire body", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      modelId: "moonshot/kimi-k2.7-code",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["stream", "stream_options", "prompt_cache_key"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+    const executionRequest = {
+      messages: [{ role: "user", content: "Inspect the final request body." }],
+      stream: true,
+      promptCache: {
+        mode: "prefer" as const,
+        key: "kimi-session-stable",
+        source: "synthesized" as const,
+      },
+    };
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({ target, executionRequest, capabilities });
+
+    expect(capabilities.usage).toMatchObject({ streamOptionsIncludeUsage: true });
+    expect(requestCapture.body).toMatchObject({
+      stream: true,
+      stream_options: { include_usage: true },
+      prompt_cache_key: "kimi-session-stable",
+    });
+  });
+
+  test("does not activate prompt caching for an unsupported selected capability", () => {
+    const target = {
+      endpointId: "compatible.no-cache.global.model",
+      modelId: "compatible/model",
+      providerId: "compatible",
+      providerKind: "provider-openai",
+      providerAccountId: "compatible.primary",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://compatible.test/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["stream"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "compatible.no-cache.global.model",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: { credentialRef: { backend: "env", ref: "COMPATIBLE_API_KEY" } },
+    };
+    const executionRequest = {
+      messages: [{ role: "user", content: "Do not activate caching." }],
+      promptCache: {
+        mode: "prefer" as const,
+        key: "must-not-be-forwarded",
+        source: "synthesized" as const,
+      },
+    };
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const negotiated = adapter.negotiateCapabilities({ target, executionRequest });
+    const capabilities = {
+      ...negotiated,
+      promptCaching: { supported: false, mode: "unsupported" as const },
+    };
+    const requestCapture = buildOpenAIRequest({ target, executionRequest, capabilities });
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      responseCapture: {
+        providerFamily: "compatible",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        body: {
+          choices: [{ finish_reason: "stop", message: { content: "ok" } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1 },
+        },
+      },
+      capabilities,
+    });
+
+    expect(requestCapture.body).not.toHaveProperty("prompt_cache_key");
+    expect(normalized.promptCache.requested).toBe(false);
+  });
+
+  test("normalizes nested final usage when a streamed Kimi response ends with tool_calls", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      modelId: "moonshot/kimi-k2.7-code",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["stream", "tools"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+    const executionRequest = {
+      messages: [{ role: "user", content: "Call the lookup tool." }],
+      stream: true,
+    };
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({ target, executionRequest, capabilities });
+    const normalized = normalizeOpenAIResponse({
+      target,
+      executionRequest,
+      requestCapture,
+      responseCapture: {
+        providerFamily: "moonshot",
+        endpointId: target.endpointId,
+        statusCode: 200,
+        body: [
+          'data: {"id":"tool-usage","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"id":"call-1","type":"function","function":{"name":"lookup","arguments":"{}"}}]},"finish_reason":null}]}',
+          'data: {"id":"tool-usage","choices":[{"index":0,"delta":{},"finish_reason":"tool_calls","usage":{"prompt_tokens":91,"completion_tokens":12,"cached_tokens":40}}]}',
+          "data: [DONE]",
+        ].join("\n\n"),
+      },
+      capabilities,
+    });
+
+    expect(normalized.finishReason).toBe("tool_calls");
+    expect(normalized.usage).toMatchObject({
+      inputTokens: 91,
+      outputTokens: 12,
+      cacheReadTokens: 40,
+      source: "normalized",
+    });
   });
 });

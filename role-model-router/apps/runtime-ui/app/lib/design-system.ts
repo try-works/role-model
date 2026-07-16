@@ -746,6 +746,71 @@ export const chartHorizontalRankingLegend = {
   axisCategoryWidth: 0,
 } as const;
 
+export const telemetryChartLayoutContract = {
+  leftAxisGutter: { min: 40, max: 88 },
+  rightAxisReserve: { min: 34, max: 64 },
+  legendInset: 12,
+  plotMargin: { top: 4, right: 0, bottom: 0, left: 0 },
+  plotHeight: 280,
+  tickCharacterWidth: 7,
+  tickHorizontalPadding: 16,
+} as const;
+
+export interface ResolvedTelemetryChartLayout {
+  readonly leftAxisGutter: number;
+  readonly rightAxisReserve: number;
+  readonly legendInset: number;
+  readonly plotMargin: typeof telemetryChartLayoutContract.plotMargin;
+  readonly plotHeight: number;
+}
+
+function resolveChartAxisWidth(
+  labels: readonly string[],
+  bounds: { readonly min: number; readonly max: number },
+): number {
+  const widestLabelLength = labels.reduce(
+    (widest, label) => Math.max(widest, [...label].length),
+    0,
+  );
+  return Math.min(
+    bounds.max,
+    Math.max(
+      bounds.min,
+      widestLabelLength * telemetryChartLayoutContract.tickCharacterWidth +
+        telemetryChartLayoutContract.tickHorizontalPadding,
+    ),
+  );
+}
+
+export function resolveTelemetryChartLayout(input: {
+  readonly leftTickLabels: readonly string[];
+  readonly rightTickLabels?: readonly string[];
+}): ResolvedTelemetryChartLayout {
+  const rightTickLabels = input.rightTickLabels ?? [];
+  return {
+    leftAxisGutter: resolveChartAxisWidth(
+      input.leftTickLabels,
+      telemetryChartLayoutContract.leftAxisGutter,
+    ),
+    rightAxisReserve:
+      rightTickLabels.length > 0
+        ? resolveChartAxisWidth(rightTickLabels, telemetryChartLayoutContract.rightAxisReserve)
+        : 0,
+    legendInset: telemetryChartLayoutContract.legendInset,
+    plotMargin: telemetryChartLayoutContract.plotMargin,
+    plotHeight: telemetryChartLayoutContract.plotHeight,
+  };
+}
+
+export function formatTelemetryChartTick(value: number): string {
+  if (!Number.isFinite(value)) {
+    return "";
+  }
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: Math.abs(value) < 1 ? 2 : 0,
+  }).format(value);
+}
+
 export const telemetryChartStates = {
   loading: {
     label: "Loading",

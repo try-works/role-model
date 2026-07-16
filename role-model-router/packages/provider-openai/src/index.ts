@@ -12,14 +12,17 @@ import { normalizeToolCallArguments } from "@role-model-router/adapter-execution
 export function createOpenAIProviderAdapter(adapterFamily = "ai-sdk-openai"): ProviderAdapter {
   return {
     adapterFamily,
-    negotiateCapabilities: ({ executionRequest }) =>
-      getOpenAICapabilities(Boolean(executionRequest.structuredOutput)),
+    negotiateCapabilities: ({ executionRequest, target }) =>
+      getOpenAICapabilities(Boolean(executionRequest.structuredOutput), target.providerId),
     buildRequest: buildOpenAIRequest,
     normalizeResponse: normalizeOpenAIResponse,
   };
 }
 
-function getOpenAICapabilities(hasStructuredOutput: boolean): ProviderCapabilityMatrix {
+function getOpenAICapabilities(
+  hasStructuredOutput: boolean,
+  providerId: string,
+): ProviderCapabilityMatrix {
   return {
     structuredOutputs: hasStructuredOutput ? "native" : "unsupported",
     toolCalling: {
@@ -40,6 +43,7 @@ function getOpenAICapabilities(hasStructuredOutput: boolean): ProviderCapability
       outputTokens: true,
       cacheReadTokens: true,
       cacheWriteTokens: true,
+      ...(providerId === "moonshot" ? { streamOptionsIncludeUsage: true } : {}),
     },
   };
 }
@@ -393,6 +397,28 @@ function readOpenAIUsageCacheFacts(
   };
 }
 
+function estimateTokensFromRequestCapture(
+  requestCapture: ProviderRequestCapture,
+  outputText = "",
+): { inputTokens: number; outputTokens: number; source: "estimated" | "unavailable" } {
+  try {
+    const inputText = JSON.stringify(requestCapture.body);
+    const outputBytes = new TextEncoder().encode(outputText).length;
+    const inputBytes = new TextEncoder().encode(inputText).length;
+    return {
+      inputTokens: Math.max(1, Math.ceil(inputBytes / 4)),
+      outputTokens: Math.max(0, Math.ceil(outputBytes / 4)),
+      source: "estimated",
+    };
+  } catch {
+    return {
+      inputTokens: 0,
+      outputTokens: 0,
+      source: "unavailable",
+    };
+  }
+}
+
 function readAssistantContent(
   message:
     | {
@@ -539,6 +565,8 @@ function parseOpenAIChatCompletionsStreamTranscript(rawTranscript: string): {
     if (!firstChoice) {
       continue;
     }
+
+    usage = (firstChoice as { usage?: typeof usage }).usage ?? usage;
 
     if (typeof firstChoice.finish_reason === "string" && firstChoice.finish_reason.length > 0) {
       finishReason = firstChoice.finish_reason;
@@ -868,6 +896,9 @@ export function buildOpenAIRequest(
           ? { max_tokens: input.executionRequest.maxOutputTokens }
           : {}),
         ...(input.executionRequest.stream ? { stream: true } : {}),
+        ...(input.executionRequest.stream && input.capabilities.usage.streamOptionsIncludeUsage
+          ? { stream_options: { include_usage: true } }
+          : {}),
         ...(input.executionRequest.tools?.length
           ? { tools: toOpenAIChatTools(input.executionRequest.tools ?? []) }
           : {}),
@@ -879,6 +910,7 @@ export function buildOpenAIRequest(
           : {}),
         ...(input.executionRequest.promptCache &&
         input.executionRequest.promptCache.mode !== "disabled" &&
+        input.capabilities.promptCaching.supported &&
         typeof input.executionRequest.promptCache.key === "string"
           ? { prompt_cache_key: input.executionRequest.promptCache.key }
           : {}),
@@ -945,6 +977,7 @@ export function buildOpenAIRequest(
         : {}),
       ...(input.executionRequest.promptCache &&
       input.executionRequest.promptCache.mode !== "disabled" &&
+      input.capabilities.promptCaching.supported &&
       typeof input.executionRequest.promptCache.key === "string"
         ? { prompt_cache_key: input.executionRequest.promptCache.key }
         : {}),
@@ -1015,6 +1048,18 @@ export function normalizeOpenAIResponse(
         providerToolId: entry.id,
       }));
 
+    const hasMeasuredUsage =
+      typeof body.usage?.prompt_tokens === "number" ||
+      typeof body.usage?.completion_tokens === "number";
+    const estimatedUsage = hasMeasuredUsage
+      ? null
+      : estimateTokensFromRequestCapture(input.requestCapture, outputText);
+    const usageSource = hasMeasuredUsage
+      ? input.target.adapterFamily === "ai-sdk-openai-compatible"
+        ? "normalized"
+        : "measured"
+      : estimatedUsage?.source ?? "unavailable";
+
     return {
       providerFamily: input.responseCapture.providerFamily,
       requestCapture: input.requestCapture,
@@ -1039,16 +1084,25 @@ export function normalizeOpenAIResponse(
         toolArgumentDeltas: streamedBody?.streamStats.toolArgumentDeltas ?? toolCalls.length,
       },
       promptCache: {
-        requested: Boolean(input.executionRequest?.promptCache),
+        requested: typeof input.requestCapture.body.prompt_cache_key === "string",
+        ...(typeof input.requestCapture.body.prompt_cache_key === "string" &&
+        input.executionRequest?.promptCache?.source
+          ? { requestSource: input.executionRequest.promptCache.source }
+          : {}),
         used: cacheFacts.used,
         readTokens: cacheFacts.readTokens,
         writeTokens: cacheFacts.writeTokens,
       },
       usage: {
-        inputTokens: body.usage?.prompt_tokens ?? 0,
-        outputTokens: body.usage?.completion_tokens ?? 0,
+        inputTokens: body.usage?.prompt_tokens ?? estimatedUsage?.inputTokens ?? 0,
+        outputTokens: body.usage?.completion_tokens ?? estimatedUsage?.outputTokens ?? 0,
         cacheReadTokens: cacheFacts.readTokens,
         cacheWriteTokens: cacheFacts.writeTokens,
+        source: usageSource,
+        inputTokensSource: usageSource,
+        outputTokensSource: usageSource,
+        inputTokensAvailable: usageSource !== "unavailable",
+        outputTokensAvailable: usageSource !== "unavailable",
       },
       errorClass: null,
       latencyMs: readLatencyMs(input),
@@ -1122,6 +1176,18 @@ export function normalizeOpenAIResponse(
       providerToolId: entry.call_id,
     }));
 
+  const hasMeasuredUsage =
+    typeof body.usage?.input_tokens === "number" ||
+    typeof body.usage?.output_tokens === "number";
+  const estimatedUsage = hasMeasuredUsage
+    ? null
+    : estimateTokensFromRequestCapture(input.requestCapture, outputText);
+  const usageSource = hasMeasuredUsage
+    ? input.target.adapterFamily === "ai-sdk-openai-compatible"
+      ? "normalized"
+      : "measured"
+    : estimatedUsage?.source ?? "unavailable";
+
   return {
     providerFamily: input.responseCapture.providerFamily,
     requestCapture: input.requestCapture,
@@ -1144,16 +1210,25 @@ export function normalizeOpenAIResponse(
       toolArgumentDeltas: streamedBody?.streamStats.toolArgumentDeltas ?? toolCalls.length,
     },
     promptCache: {
-      requested: Boolean(input.executionRequest?.promptCache),
+      requested: typeof input.requestCapture.body.prompt_cache_key === "string",
+      ...(typeof input.requestCapture.body.prompt_cache_key === "string" &&
+      input.executionRequest?.promptCache?.source
+        ? { requestSource: input.executionRequest.promptCache.source }
+        : {}),
       used: cacheFacts.used,
       readTokens: cacheFacts.readTokens,
       writeTokens: cacheFacts.writeTokens,
     },
     usage: {
-      inputTokens: body.usage?.input_tokens ?? 0,
-      outputTokens: body.usage?.output_tokens ?? 0,
+      inputTokens: body.usage?.input_tokens ?? estimatedUsage?.inputTokens ?? 0,
+      outputTokens: body.usage?.output_tokens ?? estimatedUsage?.outputTokens ?? 0,
       cacheReadTokens: cacheFacts.readTokens,
       cacheWriteTokens: cacheFacts.writeTokens,
+      source: usageSource,
+      inputTokensSource: usageSource,
+      outputTokensSource: usageSource,
+      inputTokensAvailable: usageSource !== "unavailable",
+      outputTokensAvailable: usageSource !== "unavailable",
     },
     errorClass: null,
     latencyMs: readLatencyMs(input),

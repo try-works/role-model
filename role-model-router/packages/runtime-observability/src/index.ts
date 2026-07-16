@@ -507,6 +507,7 @@ export interface RuntimeObservationBundle {
   };
   readonly cacheObservability: {
     readonly promptCacheRequested: boolean;
+    readonly promptCacheRequestSource?: "explicit" | "synthesized";
     readonly promptCacheUsed: boolean;
     readonly cacheReadTokens: number;
     readonly cacheWriteTokens: number;
@@ -1059,6 +1060,9 @@ export function createRuntimeObservationBundle(
     executionSemantics,
     cacheObservability: {
       promptCacheRequested: input.execution.normalized.promptCache.requested,
+      ...(input.execution.normalized.promptCache.requestSource
+        ? { promptCacheRequestSource: input.execution.normalized.promptCache.requestSource }
+        : {}),
       promptCacheUsed: input.execution.normalized.promptCache.used,
       cacheReadTokens: input.execution.normalized.promptCache.readTokens,
       cacheWriteTokens: input.execution.normalized.promptCache.writeTokens,

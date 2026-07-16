@@ -47,7 +47,16 @@ describe("runtime-observability", () => {
         routingDiagnostics: validation.routingDiagnostics,
         retrievalReceipt: validation.retrievalReceipt,
         contextEnvelope: validation.contextEnvelope,
-        execution: validation.execution,
+        execution: {
+          ...validation.execution,
+          normalized: {
+            ...validation.execution.normalized,
+            promptCache: {
+              ...validation.execution.normalized.promptCache,
+              requestSource: "synthesized",
+            },
+          },
+        },
         priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
         normalizedIntent: {
           originalRoleHintId: "coder",
@@ -127,6 +136,7 @@ describe("runtime-observability", () => {
         },
         cacheObservability: {
           promptCacheRequested: true,
+          promptCacheRequestSource: "synthesized",
           promptCacheUsed: false,
         },
         capturePolicy: {

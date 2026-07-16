@@ -149,4 +149,110 @@ describe("alias capability routing", () => {
       ),
     ).toThrow(/no_eligible_target/i);
   });
+
+  test("synthesizes prompt_cache_key from session_id when caller omits it", () => {
+    const plan = mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.7-code",
+        messages: [{ role: "user", content: "Hello" }],
+      } as never,
+      "req-synthesized-cache-key",
+      [],
+      undefined,
+      undefined,
+      { sessionId: "session-abc" },
+    );
+
+    expect(plan.executionRequest.promptCache).toEqual({
+      mode: "prefer",
+      key: "session-abc",
+      source: "synthesized",
+    });
+  });
+
+  test("keeps explicit prompt_cache_key and marks it explicit", () => {
+    const plan = mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.7-code",
+        messages: [{ role: "user", content: "Hello" }],
+        prompt_cache_key: "caller-key",
+      } as never,
+      "req-explicit-cache-key",
+      [],
+      undefined,
+      undefined,
+      { sessionId: "session-abc" },
+    );
+
+    expect(plan.executionRequest.promptCache).toEqual({
+      mode: "prefer",
+      key: "caller-key",
+      source: "explicit",
+    });
+  });
+
+  test("derives the same opaque SHA-256 cache key from identical ordered messages", () => {
+    const body = {
+      model: "moonshot/kimi-k2.7-code",
+      messages: [
+        { role: "system", content: "Keep this private system instruction." },
+        { role: "user", content: "Implement the cache contract." },
+      ],
+    } as never;
+
+    const first = mapChatCompletionsRequest(registry, body, "req-hash-first");
+    const second = mapChatCompletionsRequest(registry, body, "req-hash-second");
+
+    expect(first.executionRequest.promptCache).toEqual(second.executionRequest.promptCache);
+    expect(first.executionRequest.promptCache).toMatchObject({
+      mode: "prefer",
+      source: "synthesized",
+      key: expect.stringMatching(/^rm-prompt-sha256:[a-f0-9]{64}$/),
+    });
+  });
+
+  test("changes the synthesized cache key when ordered message content changes", () => {
+    const first = mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.7-code",
+        messages: [
+          { role: "system", content: "Stable system" },
+          { role: "user", content: "First request" },
+        ],
+      } as never,
+      "req-hash-content-first",
+    );
+    const second = mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.7-code",
+        messages: [
+          { role: "system", content: "Stable system" },
+          { role: "user", content: "Second request" },
+        ],
+      } as never,
+      "req-hash-content-second",
+    );
+
+    expect(first.executionRequest.promptCache?.key).not.toBe(
+      second.executionRequest.promptCache?.key,
+    );
+  });
+
+  test("does not expose raw message content in a synthesized cache key", () => {
+    const secret = "private-prompt-material";
+    const plan = mapChatCompletionsRequest(
+      registry,
+      {
+        model: "moonshot/kimi-k2.7-code",
+        messages: [{ role: "user", content: secret }],
+      } as never,
+      "req-hash-private",
+    );
+
+    expect(plan.executionRequest.promptCache?.key).not.toContain(secret);
+  });
 });

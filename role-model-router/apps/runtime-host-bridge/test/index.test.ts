@@ -18,6 +18,7 @@ import {
   initializeSqliteMemory,
   listProviderAccounts,
   listRuntimeEndpoints,
+  listRuntimeTelemetryRecords,
   persistRuntimeObservationBundle,
   persistRuntimeTelemetryFailure,
   resolveSqliteMemoryLocation,
@@ -36,6 +37,8 @@ import {
   createQaRuntimeConfigPath,
   createQaRuntimeConfigText,
   createQaServerOptions,
+  qaTelemetryRequestIds,
+  seedQaTelemetry,
   shouldBootstrapQaPlaceholderControlPlane,
 } from "../scripts/start-for-qa.ts";
 import * as cli from "../src/cli.js";
@@ -726,6 +729,48 @@ describe("runtime-host-bridge", () => {
     const config = createQaRuntimeConfigText();
     expect(config).toContain("version:");
     expect(config).toContain("routing:");
+  });
+
+  test("seeds deterministic QA telemetry for chart geometry and token-truth browser checks", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-qa-seed-"));
+    const scopeId = "runtime-qa-seed";
+
+    await seedQaTelemetry(repoRoot, runtimeStateRoot, scopeId);
+
+    const records = listRuntimeTelemetryRecords({
+      databasePath: resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId }),
+      startAtMs: 0,
+      endAtMs: Date.now() + 1_000,
+      limit: 20,
+    });
+    expect(records.map((record) => record.requestId)).toEqual(
+      expect.arrayContaining(Object.values(qaTelemetryRequestIds)),
+    );
+    expect(records).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          requestId: qaTelemetryRequestIds.measured,
+          inputTokens: 120000,
+          inputTokensSource: "measured",
+          inputTokensAvailable: true,
+          promptCacheRequestSource: "explicit",
+          cacheReadTokens: 90000,
+        }),
+        expect.objectContaining({
+          requestId: qaTelemetryRequestIds.estimated,
+          inputTokens: 107,
+          inputTokensSource: "estimated",
+          inputTokensAvailable: true,
+          promptCacheRequestSource: "synthesized",
+        }),
+        expect.objectContaining({
+          requestId: qaTelemetryRequestIds.unavailable,
+          inputTokens: 0,
+          inputTokensSource: "unavailable",
+          inputTokensAvailable: false,
+        }),
+      ]),
+    );
   });
 
   test("binds managed QA backends to canonical taxonomy roles for classified request QA", () => {
@@ -1467,6 +1512,11 @@ describe("runtime-host-bridge", () => {
             },
           },
         ],
+        promptCache: {
+          key: "rm-prompt-sha256:ab2c2f98d9bd47f92d17297fb41a4b051a2e8c54cdb1fa06969efe9bd9f3881f",
+          mode: "prefer",
+          source: "synthesized",
+        },
         stream: true,
         maxOutputTokens: 256,
         temperature: 0.2,
@@ -6133,6 +6183,7 @@ describe("runtime-host-bridge", () => {
     expect(result.executionRequest.promptCache).toEqual({
       mode: "prefer",
       key: "cache-key-001",
+      source: "explicit",
     });
     expect(result.executionRequest.reasoning).toEqual({
       effort: "high",
@@ -6348,6 +6399,7 @@ describe("runtime-host-bridge", () => {
     expect(result.executionRequest.promptCache).toEqual({
       mode: "prefer",
       key: "chat-cache-key-001",
+      source: "explicit",
     });
   });
 
@@ -19923,7 +19975,11 @@ describe("runtime-host-bridge", () => {
         model_id: "openai/gpt-4.1-mini-fast",
         provider_kind: "remote_openai_compat",
         tokens_in: 120,
+        tokens_in_source: "measured",
+        tokens_in_available: true,
         tokens_out: 48,
+        tokens_out_source: "measured",
+        tokens_out_available: true,
         latency_ms: 840,
         cost_actual: 0.0042,
         cost_estimate: 0.0042,
@@ -20070,7 +20126,11 @@ describe("runtime-host-bridge", () => {
         model_id: "local/mock-llama",
         provider_kind: "local_openai_compat",
         tokens_in: 32,
+        tokens_in_source: "unavailable",
+        tokens_in_available: false,
         tokens_out: 0,
+        tokens_out_source: "unavailable",
+        tokens_out_available: false,
         latency_ms: 1200,
         cost_actual: undefined,
         cost_estimate: 0.0011,
@@ -20212,7 +20272,11 @@ describe("runtime-host-bridge", () => {
           model_id: "openai/gpt-4.1-mini-fast",
           provider_kind: "remote_openai_compat",
           tokens_in: 80,
+          tokens_in_source: "unavailable",
+          tokens_in_available: false,
           tokens_out: 24,
+          tokens_out_source: "unavailable",
+          tokens_out_available: false,
           latency_ms: 640,
           cost_actual: 0.0031,
           cost_estimate: 0.0031,
@@ -20500,21 +20564,28 @@ describe("runtime-host-bridge", () => {
     await expect(
       backend.queryTelemetryAnalytics?.({
         startAtMs: remoteTimestampMs - 1_000,
-        endAtMs: localTimestampMs + 1_000,
+        endAtMs: legacyTimestampMs + 1_000,
         granularity: "hour",
-        metrics: ["cacheHitTokenRate"],
+        metrics: ["cacheHitTokenRate", "inputTokens"],
       }),
     ).resolves.toEqual(
       expect.objectContaining({
         totals: expect.objectContaining({
           cacheHitTokenRate: 0.133333,
+          inputTokens: 120,
         }),
         metricSupport: expect.objectContaining({
           cacheHitTokenRate: expect.objectContaining({
             status: "partial",
             supportedRowCount: 1,
-            unsupportedRowCount: 1,
-            reason: "1 row(s) in this slice do not support cacheHitTokenRate.",
+            unsupportedRowCount: 2,
+            reason: "2 row(s) in this slice do not support cacheHitTokenRate.",
+          }),
+          inputTokens: expect.objectContaining({
+            status: "partial",
+            supportedRowCount: 1,
+            unsupportedRowCount: 2,
+            reason: "2 row(s) in this slice do not support inputTokens.",
           }),
         }),
       }),
@@ -20827,6 +20898,18 @@ describe("runtime-host-bridge", () => {
         ...bundle,
         requestId: "req-retention-expired-001",
         routingDecisionId: "decision-retention-expired-001",
+        usageEvent: {
+          ...bundle.usageEvent,
+          tokens_in_source: "normalized",
+          tokens_in_available: true,
+          tokens_out_source: "normalized",
+          tokens_out_available: true,
+        },
+        cacheObservability: {
+          ...bundle.cacheObservability,
+          promptCacheRequested: true,
+          promptCacheRequestSource: "explicit",
+        },
         privacyReceipt: {
           ...bundle.privacyReceipt,
           retainUntil: Date.now() - 60_000,
@@ -20891,6 +20974,16 @@ describe("runtime-host-bridge", () => {
         observationAvailability: expect.objectContaining({
           source: "telemetry-ledger-fallback",
           rawObservationAvailable: false,
+        }),
+        usageEvent: expect.objectContaining({
+          tokens_in_source: "normalized",
+          tokens_in_available: true,
+          tokens_out_source: "normalized",
+          tokens_out_available: true,
+        }),
+        cacheObservability: expect.objectContaining({
+          promptCacheRequested: true,
+          promptCacheRequestSource: "explicit",
         }),
       }),
     );

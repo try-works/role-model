@@ -62,6 +62,7 @@ export interface StructuredOutputRequest {
 export interface PromptCacheRequest {
   readonly mode: "prefer" | "require" | "disabled";
   readonly key?: string;
+  readonly source?: "explicit" | "synthesized";
 }
 
 export interface RuntimeExecutionReasoningRequest {
@@ -128,6 +129,7 @@ export interface ProviderCapabilityMatrix {
     readonly outputTokens: boolean;
     readonly cacheReadTokens: boolean;
     readonly cacheWriteTokens: boolean;
+    readonly streamOptionsIncludeUsage?: boolean;
   };
 }
 
@@ -191,6 +193,7 @@ export interface NormalizedProviderResponse {
   };
   readonly promptCache: {
     readonly requested: boolean;
+    readonly requestSource?: "explicit" | "synthesized";
     readonly used: boolean;
     readonly readTokens: number;
     readonly writeTokens: number;
@@ -200,6 +203,11 @@ export interface NormalizedProviderResponse {
     readonly outputTokens: number;
     readonly cacheReadTokens: number;
     readonly cacheWriteTokens: number;
+    readonly source?: "measured" | "normalized" | "estimated" | "unavailable";
+    readonly inputTokensSource?: "measured" | "normalized" | "estimated" | "unavailable";
+    readonly outputTokensSource?: "measured" | "normalized" | "estimated" | "unavailable";
+    readonly inputTokensAvailable?: boolean;
+    readonly outputTokensAvailable?: boolean;
   };
   readonly errorClass: string | null;
   readonly latencyMs: number;
@@ -640,6 +648,10 @@ function createUsageEvent(
     (candidate) => candidate.identity.endpoint_id === target.endpointId,
   );
 
+  const inputTokensSource = normalized.usage.inputTokensSource ?? normalized.usage.source ?? "unavailable";
+  const outputTokensSource =
+    normalized.usage.outputTokensSource ?? normalized.usage.source ?? "unavailable";
+
   return {
     event_id: `usage-${routeResult.decision.request_id}`,
     timestamp_ms: Date.now(),
@@ -652,7 +664,13 @@ function createUsageEvent(
     package_id: target.providerKind,
     provider_kind: target.candidate.identity.provider_kind,
     tokens_in: normalized.usage.inputTokens,
+    tokens_in_source: inputTokensSource,
+    tokens_in_available:
+      normalized.usage.inputTokensAvailable ?? inputTokensSource !== "unavailable",
     tokens_out: normalized.usage.outputTokens,
+    tokens_out_source: outputTokensSource,
+    tokens_out_available:
+      normalized.usage.outputTokensAvailable ?? outputTokensSource !== "unavailable",
     latency_ms: normalized.latencyMs,
     ...(typeof normalized.vendorMetadata?.costUsd === "number"
       ? { cost_actual: normalized.vendorMetadata.costUsd }

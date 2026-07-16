@@ -1,0 +1,6 @@
+
+> role-model@0.0.0 schemas:validate D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate
+
+Validated 37 schema file(s).
+Validated 30 fixture file(s).

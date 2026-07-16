@@ -547,7 +547,11 @@ export interface UsageEvent {
   package_id?: string;
   provider_kind: string;
   tokens_in: number;
+  tokens_in_source?: "measured" | "normalized" | "estimated" | "unavailable";
+  tokens_in_available?: boolean;
   tokens_out: number;
+  tokens_out_source?: "measured" | "normalized" | "estimated" | "unavailable";
+  tokens_out_available?: boolean;
   latency_ms: number;
   cost_actual?: number;
   cost_estimate?: number;

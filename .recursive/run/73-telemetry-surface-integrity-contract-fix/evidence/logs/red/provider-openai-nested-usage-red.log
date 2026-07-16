@@ -1,0 +1,3 @@
+OpenAI provider adapter > normalizes a streamed chat-completions transcript with nested choices[0].usage
+AssertionError: expected { inputTokens: +0, ... } to deeply equal { inputTokens: 37, ... }
+RED verified: FAIL as expected because parser only read top-level payload.usage and missed nested choices[0].usage.

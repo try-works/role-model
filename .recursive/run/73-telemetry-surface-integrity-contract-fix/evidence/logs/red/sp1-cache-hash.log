@@ -1,0 +1,76 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/apps/runtime-host-bridge
+
+(node:9456) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/alias-capability-routing.test.ts (8 tests | 3 failed) 62ms
+   ✓ alias capability routing > filters image requests to image-capable alias targets before scoring 30ms
+   ✓ alias capability routing > treats Craft inline image content as image input before alias scoring 2ms
+   ✓ alias capability routing > returns a stable no-eligible-target error when alias targets cannot satisfy image input 3ms
+   ✓ alias capability routing > synthesizes prompt_cache_key from session_id when caller omits it 1ms
+   ✓ alias capability routing > keeps explicit prompt_cache_key and marks it explicit 0ms
+   × alias capability routing > derives the same opaque SHA-256 cache key from identical ordered messages 20ms
+     → expected undefined to match object { mode: 'prefer', …(2) }
+   × alias capability routing > changes the synthesized cache key when ordered message content changes 2ms
+     → expected undefined not to be undefined // Object.is equality
+   × alias capability routing > does not expose raw message content in a synthesized cache key 2ms
+     → the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/alias-capability-routing.test.ts > alias capability routing > derives the same opaque SHA-256 cache key from identical ordered messages
+AssertionError: expected undefined to match object { mode: 'prefer', …(2) }
+
+- Expected: 
+{
+  "key": StringMatching /^rm-prompt-sha256:[a-f0-9]{64}$/,
+  "mode": "prefer",
+  "source": "synthesized",
+}
+
++ Received: 
+undefined
+
+ ❯ test/alias-capability-routing.test.ts:209:48
+    207| 
+    208|     expect(first.executionRequest.promptCache).toEqual(second.executio…
+    209|     expect(first.executionRequest.promptCache).toMatchObject({
+       |                                                ^
+    210|       mode: "prefer",
+    211|       source: "synthesized",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/alias-capability-routing.test.ts > alias capability routing > changes the synthesized cache key when ordered message content changes
+AssertionError: expected undefined not to be undefined // Object.is equality
+ ❯ test/alias-capability-routing.test.ts:240:57
+    238|     );
+    239| 
+    240|     expect(first.executionRequest.promptCache?.key).not.toBe(
+       |                                                         ^
+    241|       second.executionRequest.promptCache?.key,
+    242|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/alias-capability-routing.test.ts > alias capability routing > does not expose raw message content in a synthesized cache key
+AssertionError: the given combination of arguments (undefined and string) is invalid for this assertion. You can use an array, a map, an object, a set, a string, or a weakset instead of a string
+ ❯ test/alias-capability-routing.test.ts:256:56
+    254|     );
+    255| 
+    256|     expect(plan.executionRequest.promptCache?.key).not.toContain(secre…
+       |                                                        ^
+    257|   });
+    258| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 5 passed (8)
+   Start at  03:49:07
+   Duration  3.20s (transform 1.56s, setup 0ms, collect 2.20s, tests 62ms, environment 0ms, prepare 323ms)
+
+undefined
+D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/alias-capability-routing.test.ts

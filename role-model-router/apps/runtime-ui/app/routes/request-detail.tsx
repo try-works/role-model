@@ -70,6 +70,55 @@ function pickBoolean(record: Record<string, unknown>, ...keys: string[]): boolea
   return null;
 }
 
+type TokenSource = "measured" | "normalized" | "estimated" | "unavailable";
+
+export interface TokenTruthDisplay {
+  readonly available: boolean;
+  readonly source: TokenSource;
+  readonly value: number | null;
+  readonly text: string;
+}
+
+export function readTokenTruth(
+  usageEvent: Record<string, unknown>,
+  direction: "input" | "output",
+): TokenTruthDisplay {
+  const prefix = direction === "input" ? "tokens_in" : "tokens_out";
+  const value = pickNumber(
+    usageEvent,
+    prefix,
+    direction === "input" ? "inputTokens" : "outputTokens",
+    direction === "input" ? "promptTokens" : "completionTokens",
+  );
+  const sourceCandidate = pickString(usageEvent, `${prefix}_source`);
+  const source: TokenSource =
+    sourceCandidate === "measured" ||
+    sourceCandidate === "normalized" ||
+    sourceCandidate === "estimated" ||
+    sourceCandidate === "unavailable"
+      ? sourceCandidate
+      : "unavailable";
+  const available = pickBoolean(usageEvent, `${prefix}_available`) === true;
+
+  if (!available || source === "unavailable" || value === null) {
+    return {
+      available: false,
+      source: "unavailable",
+      value: null,
+      text: "n/a · unavailable",
+    };
+  }
+
+  return { available: true, source, value, text: `${value} · ${source}` };
+}
+
+export function readPromptCacheRequestSource(
+  cacheObservability: Record<string, unknown>,
+): "explicit" | "synthesized" | null {
+  const source = pickString(cacheObservability, "promptCacheRequestSource");
+  return source === "explicit" || source === "synthesized" ? source : null;
+}
+
 function formatDateTime(value: number | null): string {
   if (value === null) {
     return "n/a";
@@ -190,15 +239,15 @@ export default function RequestDetailRoute() {
         ? "local"
         : null);
   const latencyMs = pickNumber(usageEvent, "latency_ms", "latencyMs");
-  const inputTokens = pickNumber(usageEvent, "tokens_in", "inputTokens", "promptTokens");
-  const outputTokens = pickNumber(usageEvent, "tokens_out", "outputTokens", "completionTokens");
+  const inputTokenTruth = readTokenTruth(usageEvent, "input");
+  const outputTokenTruth = readTokenTruth(usageEvent, "output");
+  const inputTokens = inputTokenTruth.value;
+  const outputTokens = outputTokenTruth.value;
   const totalTokens =
-    pickNumber(usageEvent, "total_tokens", "totalTokens") ??
-    (() => {
-      const promptTokens = inputTokens ?? 0;
-      const completionTokens = outputTokens ?? 0;
-      return promptTokens > 0 || completionTokens > 0 ? promptTokens + completionTokens : null;
-    })();
+    inputTokenTruth.available && outputTokenTruth.available
+      ? (pickNumber(usageEvent, "total_tokens", "totalTokens") ??
+        (inputTokens ?? 0) + (outputTokens ?? 0))
+      : null;
   const pickCostNumber = (...keys: string[]): number | null =>
     pickNumber(request, ...keys) ??
     pickNumber(telemetrySnapshot, ...keys) ??
@@ -242,6 +291,7 @@ export default function RequestDetailRoute() {
   const promptCacheRequested =
     pickBoolean(cacheObservability, "promptCacheRequested") ??
     pickBoolean(request, "promptCacheRequested");
+  const promptCacheRequestSource = readPromptCacheRequestSource(cacheObservability);
   const promptCacheUsed =
     pickBoolean(cacheObservability, "promptCacheUsed") ?? pickBoolean(request, "promptCacheUsed");
   const cacheStatus = !promptCacheSupported
@@ -493,7 +543,11 @@ export default function RequestDetailRoute() {
         <FactCard
           label="Tokens"
           value={renderMetricValue(totalTokens)}
-          detail="Total token usage when the provider exposed prompt/completion accounting."
+          detail={
+            inputTokenTruth.available && outputTokenTruth.available
+              ? `Input ${inputTokenTruth.source}; output ${outputTokenTruth.source}.`
+              : "Token usage is unavailable; numeric placeholders are not treated as measured usage."
+          }
         />
         <FactCard
           label="Cost"
@@ -509,7 +563,11 @@ export default function RequestDetailRoute() {
         <FactCard
           label="Cache"
           value={renderMetricValue(cacheStatus)}
-          detail="Captured cache posture using explicit support semantics rather than zero-only inference."
+          detail={
+            promptCacheRequestSource
+              ? `Captured cache posture; request key source: ${promptCacheRequestSource}.`
+              : "Captured cache posture using explicit support semantics rather than zero-only inference."
+          }
         />
       </div>
 
@@ -744,8 +802,9 @@ export default function RequestDetailRoute() {
               ["Provider", providerKind],
               ["Model", modelId],
               ["Finish reason", finishReason],
-              ["Input tokens", inputTokens === null ? null : String(inputTokens)],
-              ["Output tokens", outputTokens === null ? null : String(outputTokens)],
+              ["Input tokens", inputTokenTruth.text],
+              ["Output tokens", outputTokenTruth.text],
+              ["Cache request source", promptCacheRequestSource],
               ["Response status", responseStatus === null ? null : String(responseStatus)],
               ["Recorded", formatDateTime(createdAtMs)],
               ["Profile measured", formatDateTime(measuredAtMs)],

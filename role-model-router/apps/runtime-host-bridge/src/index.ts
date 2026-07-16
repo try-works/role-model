@@ -440,11 +440,34 @@ interface OpenAIChatCompletionsBody {
   readonly tool_choice?: RuntimeExecutionToolChoice;
   readonly parallel_tool_calls?: boolean;
   readonly prompt_cache_key?: string;
+  readonly conversation_id?: string;
   readonly reasoning_effort?: string;
   readonly reasoning?: Record<string, unknown>;
   readonly thinking?: Record<string, unknown>;
   readonly stream?: boolean;
   readonly max_tokens?: number;
+  readonly temperature?: number;
+}
+
+interface OpenAIResponsesBody {
+  readonly model: string;
+  readonly input: OpenAIResponsesInput;
+  readonly tools?: readonly OpenAIResponsesTool[];
+  readonly tool_choice?:
+    | RuntimeExecutionToolChoice
+    | {
+        readonly type: "function";
+        readonly name: string;
+      };
+  readonly parallel_tool_calls?: boolean;
+  readonly reasoning_effort?: string;
+  readonly reasoning?: Record<string, unknown>;
+  readonly thinking?: Record<string, unknown>;
+  readonly previous_response_id?: string;
+  readonly prompt_cache_key?: string;
+  readonly conversation_id?: string;
+  readonly stream?: boolean;
+  readonly max_output_tokens?: number;
   readonly temperature?: number;
 }
 
@@ -483,27 +506,6 @@ type OpenAIChatCompletionsToolCall = {
     arguments: string;
   };
 };
-
-interface OpenAIResponsesBody {
-  readonly model: string;
-  readonly input: OpenAIResponsesInput;
-  readonly tools?: readonly OpenAIResponsesTool[];
-  readonly tool_choice?:
-    | RuntimeExecutionToolChoice
-    | {
-        readonly type: "function";
-        readonly name: string;
-      };
-  readonly parallel_tool_calls?: boolean;
-  readonly reasoning_effort?: string;
-  readonly reasoning?: Record<string, unknown>;
-  readonly thinking?: Record<string, unknown>;
-  readonly previous_response_id?: string;
-  readonly prompt_cache_key?: string;
-  readonly stream?: boolean;
-  readonly max_output_tokens?: number;
-  readonly temperature?: number;
-}
 
 function asPlainRecord(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null && !Array.isArray(value)
@@ -573,13 +575,59 @@ const readChatCompletionsReasoningRequest = readOpenAIReasoningRequest;
 function readOpenAIPromptCacheRequest(body: {
   readonly prompt_cache_key?: string | null;
 }): RuntimeExecutionRequest["promptCache"] | undefined {
-  if (typeof body.prompt_cache_key !== "string" || body.prompt_cache_key.trim().length === 0) {
-    return undefined;
+  if (typeof body.prompt_cache_key === "string" && body.prompt_cache_key.trim().length > 0) {
+    return {
+      mode: "prefer",
+      key: body.prompt_cache_key.trim(),
+      source: "explicit",
+    };
   }
-  return {
-    mode: "prefer",
-    key: body.prompt_cache_key.trim(),
-  };
+  return undefined;
+}
+
+function synthesizePromptCacheRequest(
+  requestOptions: BridgeExecutionRequestOptions | undefined,
+  fallbackKey?: string,
+  messages?: RuntimeExecutionRequest["messages"],
+): RuntimeExecutionRequest["promptCache"] | undefined {
+  if (typeof requestOptions?.sessionId === "string" && requestOptions.sessionId.trim().length > 0) {
+    return {
+      mode: "prefer",
+      key: requestOptions.sessionId.trim(),
+      source: "synthesized",
+    };
+  }
+  if (typeof fallbackKey === "string" && fallbackKey.trim().length > 0) {
+    return {
+      mode: "prefer",
+      key: fallbackKey.trim(),
+      source: "synthesized",
+    };
+  }
+  if (messages && messages.length > 0) {
+    const canonicalMessages = JSON.stringify(canonicalizePromptCacheValue(messages));
+    return {
+      mode: "prefer",
+      key: `rm-prompt-sha256:${createHash("sha256").update(canonicalMessages).digest("hex")}`,
+      source: "synthesized",
+    };
+  }
+  return undefined;
+}
+
+function canonicalizePromptCacheValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(canonicalizePromptCacheValue);
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, entry]) => entry !== undefined)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => [key, canonicalizePromptCacheValue(entry)]),
+    );
+  }
+  return value;
 }
 
 const readResponsesPromptCacheRequest = readOpenAIPromptCacheRequest;
@@ -8160,7 +8208,12 @@ export function mapChatCompletionsRequest(
     taskDefinitions,
     requestOptions,
   });
-  const promptCache = readChatCompletionsPromptCacheRequest(body);
+  const promptCache = readChatCompletionsPromptCacheRequest(body) ??
+    synthesizePromptCacheRequest(
+      requestOptions,
+      body.conversation_id,
+      rolePolicyExecution.executionRequest.messages,
+    );
   const sessionAffinity = buildBridgeExecutionSessionAffinity(requestOptions);
   const reasoning = readChatCompletionsReasoningRequest(body);
 
@@ -8328,7 +8381,12 @@ export function mapResponsesRequest(
     requestOptions,
   });
   const reasoning = readResponsesReasoningRequest(body);
-  const promptCache = readResponsesPromptCacheRequest(body);
+  const promptCache = readResponsesPromptCacheRequest(body) ??
+    synthesizePromptCacheRequest(
+      requestOptions,
+      body.conversation_id,
+      rolePolicyExecution.executionRequest.messages,
+    );
   const continuation = readResponsesContinuationRequest(body);
   const sessionAffinity = buildBridgeExecutionSessionAffinity(requestOptions);
 
@@ -17365,11 +17423,32 @@ export async function createRuntimeBridgeBackend(
       case "failureCount":
         return records.filter((record) => record.errorClass !== null).length;
       case "inputTokens":
-        return records.reduce((sum, record) => sum + record.inputTokens, 0);
+        return records.some((record) => record.inputTokensAvailable)
+          ? records.reduce(
+              (sum, record) => sum + (record.inputTokensAvailable ? record.inputTokens : 0),
+              0,
+            )
+          : null;
       case "outputTokens":
-        return records.reduce((sum, record) => sum + record.outputTokens, 0);
+        return records.some((record) => record.outputTokensAvailable)
+          ? records.reduce(
+              (sum, record) => sum + (record.outputTokensAvailable ? record.outputTokens : 0),
+              0,
+            )
+          : null;
       case "totalTokens":
-        return records.reduce((sum, record) => sum + record.totalTokens, 0);
+        return records.some(
+          (record) => record.inputTokensAvailable && record.outputTokensAvailable,
+        )
+          ? records.reduce(
+              (sum, record) =>
+                sum +
+                (record.inputTokensAvailable && record.outputTokensAvailable
+                  ? record.totalTokens
+                  : 0),
+              0,
+            )
+          : null;
       case "cacheHitTokens":
       case "cacheReadTokens":
         return records.reduce((sum, record) => sum + record.cacheReadTokens, 0);
@@ -17380,7 +17459,9 @@ export async function createRuntimeBridgeBackend(
               records.filter((record) => record.promptCacheUsed).length / records.length,
             );
       case "cacheHitTokenRate": {
-        const supportedRecords = records.filter((record) => record.cacheReadTokensSupported);
+        const supportedRecords = records.filter(
+          (record) => record.cacheReadTokensSupported && record.inputTokensAvailable,
+        );
         if (supportedRecords.length === 0) {
           return null;
         }
@@ -17532,8 +17613,15 @@ export async function createRuntimeBridgeBackend(
     switch (metric) {
       case "cacheHitTokens":
       case "cacheReadTokens":
-      case "cacheHitTokenRate":
         return record.cacheReadTokensSupported;
+      case "cacheHitTokenRate":
+        return record.cacheReadTokensSupported && record.inputTokensAvailable;
+      case "inputTokens":
+        return record.inputTokensAvailable;
+      case "outputTokens":
+        return record.outputTokensAvailable;
+      case "totalTokens":
+        return record.inputTokensAvailable && record.outputTokensAvailable;
       case "actualCostUsd":
         return record.actualCostUsd !== null;
       case "estimatedCostUsd":
@@ -17554,6 +17642,15 @@ export async function createRuntimeBridgeBackend(
     }
   };
   const describeTelemetryMetricUnsupported = (metric: BridgeTelemetryAnalyticsMetric): string => {
+    if (metric === "inputTokens") {
+      return "No rows in this slice expose available input-token usage.";
+    }
+    if (metric === "outputTokens") {
+      return "No rows in this slice expose available output-token usage.";
+    }
+    if (metric === "totalTokens") {
+      return "No rows in this slice expose complete available token usage.";
+    }
     if (metric === "cacheHitTokenRate") {
       return "No rows in this slice expose cache-read-token support.";
     }
@@ -22911,13 +23008,26 @@ export async function createRuntimeBridgeBackend(
             model_id: telemetryRecord.modelId,
             provider_kind: telemetryRecord.providerKind,
             tokens_in: telemetryRecord.inputTokens,
+            tokens_in_source: telemetryRecord.inputTokensSource,
+            tokens_in_available: telemetryRecord.inputTokensAvailable,
             tokens_out: telemetryRecord.outputTokens,
+            tokens_out_source: telemetryRecord.outputTokensSource,
+            tokens_out_available: telemetryRecord.outputTokensAvailable,
             latency_ms: telemetryRecord.latencyMs,
             cost_actual: telemetryRecord.actualCostUsd,
             cost_estimate: telemetryRecord.estimatedCostUsd,
             currency: telemetryRecord.currency ?? "USD",
             error_class: telemetryRecord.errorClass,
             timestamp_ms: telemetryRecord.createdAtMs,
+          },
+          cacheObservability: {
+            promptCacheRequested: telemetryRecord.promptCacheRequested,
+            ...(telemetryRecord.promptCacheRequestSource
+              ? { promptCacheRequestSource: telemetryRecord.promptCacheRequestSource }
+              : {}),
+            promptCacheUsed: telemetryRecord.promptCacheUsed,
+            cacheReadTokens: telemetryRecord.cacheReadTokens,
+            cacheWriteTokens: telemetryRecord.cacheWriteTokens,
           },
           diagnostics: {
             routing: [],

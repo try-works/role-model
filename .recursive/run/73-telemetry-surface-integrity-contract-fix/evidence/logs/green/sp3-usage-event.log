@@ -1,0 +1,17 @@
+
+> @role-model-router/adapter-execution@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\adapter-execution
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/packages/adapter-execution
+
+ ✓ test/index.test.ts (5 tests) 16ms
+(node:26120) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/cli.test.ts (1 test) 233ms
+
+ Test Files  2 passed (2)
+      Tests  6 passed (6)
+   Start at  03:51:48
+   Duration  1.82s (transform 626ms, setup 0ms, collect 882ms, tests 249ms, environment 1ms, prepare 634ms)
+

@@ -882,13 +882,18 @@ export interface RuntimeTelemetryRecord {
   readonly candidateCostSnapshot: Record<string, unknown> | null;
   readonly selectedPricingSnapshot: Record<string, unknown> | null;
   readonly inputTokens: number;
+  readonly inputTokensSource: "measured" | "normalized" | "estimated" | "unavailable";
+  readonly inputTokensAvailable: boolean;
   readonly outputTokens: number;
+  readonly outputTokensSource: "measured" | "normalized" | "estimated" | "unavailable";
+  readonly outputTokensAvailable: boolean;
   readonly totalTokens: number;
   readonly latencyMs: number | null;
   readonly errorClass: string | null;
   readonly statusCode: number | null;
   readonly finishReason: string | null;
   readonly promptCacheRequested: boolean;
+  readonly promptCacheRequestSource: "explicit" | "synthesized" | null;
   readonly promptCacheSupported: boolean;
   readonly promptCacheUsed: boolean;
   readonly cacheReadTokens: number;
@@ -997,7 +1002,11 @@ export interface PersistedRuntimeObservationBundle {
     readonly model_id?: string;
     readonly provider_kind?: string;
     readonly tokens_in?: number;
+    readonly tokens_in_source?: "measured" | "normalized" | "estimated" | "unavailable";
+    readonly tokens_in_available?: boolean;
     readonly tokens_out?: number;
+    readonly tokens_out_source?: "measured" | "normalized" | "estimated" | "unavailable";
+    readonly tokens_out_available?: boolean;
     readonly latency_ms?: number;
     readonly cost_actual?: number;
     readonly cost_estimate?: number;
@@ -1010,6 +1019,7 @@ export interface PersistedRuntimeObservationBundle {
   };
   readonly cacheObservability?: {
     readonly promptCacheRequested?: boolean;
+    readonly promptCacheRequestSource?: "explicit" | "synthesized";
     readonly promptCacheUsed?: boolean;
     readonly cacheReadTokens?: number;
     readonly cacheWriteTokens?: number;
@@ -2395,6 +2405,31 @@ function mapRuntimeTelemetryRecord(row: {
           (entry): entry is string => typeof entry === "string",
         )
       : [];
+  const dimensions = row.dimensions_json
+    ? (JSON.parse(row.dimensions_json) as Record<string, unknown>)
+    : null;
+  const usageTokenTruth =
+    dimensions?.usageTokenTruth &&
+    typeof dimensions.usageTokenTruth === "object" &&
+    !Array.isArray(dimensions.usageTokenTruth)
+      ? (dimensions.usageTokenTruth as Record<string, unknown>)
+      : null;
+  const readTokenSource = (
+    value: unknown,
+  ): RuntimeTelemetryRecord["inputTokensSource"] =>
+    value === "measured" ||
+    value === "normalized" ||
+    value === "estimated" ||
+    value === "unavailable"
+      ? value
+      : "unavailable";
+  const inputTokensSource = readTokenSource(usageTokenTruth?.inputSource);
+  const outputTokensSource = readTokenSource(usageTokenTruth?.outputSource);
+  const promptCacheRequestSource =
+    dimensions?.promptCacheRequestSource === "explicit" ||
+    dimensions?.promptCacheRequestSource === "synthesized"
+      ? dimensions.promptCacheRequestSource
+      : null;
   return {
     requestId: row.request_id,
     routingDecisionId: row.routing_decision_id,
@@ -2475,13 +2510,24 @@ function mapRuntimeTelemetryRecord(row: {
       ? (JSON.parse(row.selected_pricing_snapshot_json) as Record<string, unknown>)
       : null,
     inputTokens: row.input_tokens,
+    inputTokensSource,
+    inputTokensAvailable:
+      typeof usageTokenTruth?.inputAvailable === "boolean"
+        ? usageTokenTruth.inputAvailable
+        : false,
     outputTokens: row.output_tokens,
+    outputTokensSource,
+    outputTokensAvailable:
+      typeof usageTokenTruth?.outputAvailable === "boolean"
+        ? usageTokenTruth.outputAvailable
+        : false,
     totalTokens: row.total_tokens,
     latencyMs: row.latency_ms,
     errorClass: row.error_class,
     statusCode: row.status_code,
     finishReason: row.finish_reason,
     promptCacheRequested: row.prompt_cache_requested === 1,
+    promptCacheRequestSource,
     promptCacheSupported: row.prompt_cache_supported === 1,
     promptCacheUsed: row.prompt_cache_used === 1,
     cacheReadTokens: row.cache_read_tokens,
@@ -2530,9 +2576,7 @@ function mapRuntimeTelemetryRecord(row: {
     taxonomyModalityIds: parseStringList(row.taxonomy_modality_ids_json),
     taxonomyToolClassIds: parseStringList(row.taxonomy_tool_class_ids_json),
     currency: row.currency,
-    dimensions: row.dimensions_json
-      ? (JSON.parse(row.dimensions_json) as Record<string, unknown>)
-      : null,
+    dimensions,
   };
 }
 
@@ -2552,6 +2596,10 @@ function toRuntimeTelemetryRecord(
 ): RuntimeTelemetryRecord {
   const inputTokens = observation.usageEvent.tokens_in ?? 0;
   const outputTokens = observation.usageEvent.tokens_out ?? 0;
+  const inputTokensSource = observation.usageEvent.tokens_in_source ?? "unavailable";
+  const outputTokensSource = observation.usageEvent.tokens_out_source ?? "unavailable";
+  const inputTokensAvailable = observation.usageEvent.tokens_in_available ?? false;
+  const outputTokensAvailable = observation.usageEvent.tokens_out_available ?? false;
   const executionTelemetry = observation.executionTelemetry;
   const streamSupport = executionTelemetry?.streamSupport;
   const actualCostUsd = observation.usageEvent.cost_actual ?? null;
@@ -2599,6 +2647,30 @@ function toRuntimeTelemetryRecord(
         ? "failure"
         : "unknown";
   const taxonomyDimensions = observation.taxonomyDimensions;
+  const promptCacheRequestSource =
+    observation.cacheObservability?.promptCacheRequestSource ?? null;
+  const hasUsageTokenTruth =
+    observation.usageEvent.tokens_in_source !== undefined ||
+    observation.usageEvent.tokens_in_available !== undefined ||
+    observation.usageEvent.tokens_out_source !== undefined ||
+    observation.usageEvent.tokens_out_available !== undefined;
+  const dimensions =
+    hasUsageTokenTruth || promptCacheRequestSource
+      ? {
+          ...(telemetrySnapshot?.dimensions ?? {}),
+          ...(hasUsageTokenTruth
+            ? {
+                usageTokenTruth: {
+                  inputSource: inputTokensSource,
+                  inputAvailable: inputTokensAvailable,
+                  outputSource: outputTokensSource,
+                  outputAvailable: outputTokensAvailable,
+                },
+              }
+            : {}),
+          ...(promptCacheRequestSource ? { promptCacheRequestSource } : {}),
+        }
+      : (telemetrySnapshot?.dimensions ?? null);
   return {
     requestId: observation.requestId,
     routingDecisionId: observation.routingDecisionId,
@@ -2660,7 +2732,11 @@ function toRuntimeTelemetryRecord(
     candidateCostSnapshot: telemetrySnapshot?.candidateCostSnapshot ?? null,
     selectedPricingSnapshot: telemetrySnapshot?.selectedPricingSnapshot ?? null,
     inputTokens,
+    inputTokensSource,
+    inputTokensAvailable,
     outputTokens,
+    outputTokensSource,
+    outputTokensAvailable,
     totalTokens: inputTokens + outputTokens,
     latencyMs:
       observation.usageEvent.latency_ms ??
@@ -2670,6 +2746,7 @@ function toRuntimeTelemetryRecord(
     statusCode,
     finishReason: executionTelemetry?.finishReason ?? null,
     promptCacheRequested: observation.cacheObservability?.promptCacheRequested ?? false,
+    promptCacheRequestSource,
     promptCacheSupported: executionTelemetry?.promptCaching?.supported ?? false,
     promptCacheUsed: observation.cacheObservability?.promptCacheUsed ?? false,
     cacheReadTokens: observation.cacheObservability?.cacheReadTokens ?? 0,
@@ -2720,7 +2797,7 @@ function toRuntimeTelemetryRecord(
       taxonomyDimensions?.taxonomy_tool_class_ids,
     ),
     currency: observation.usageEvent.currency ?? null,
-    dimensions: telemetrySnapshot?.dimensions ?? null,
+    dimensions,
   };
 }
 
@@ -2893,13 +2970,18 @@ function toFailureRuntimeTelemetryRecord(
     candidateCostSnapshot: input.candidateCostSnapshot ?? null,
     selectedPricingSnapshot: input.selectedPricingSnapshot ?? null,
     inputTokens: 0,
+    inputTokensSource: "unavailable",
+    inputTokensAvailable: false,
     outputTokens: 0,
+    outputTokensSource: "unavailable",
+    outputTokensAvailable: false,
     totalTokens: 0,
     latencyMs: input.latencyMs ?? null,
     errorClass: input.errorClass,
     statusCode: input.statusCode,
     finishReason: null,
     promptCacheRequested: false,
+    promptCacheRequestSource: null,
     promptCacheSupported: true,
     promptCacheUsed: false,
     cacheReadTokens: 0,

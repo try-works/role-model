@@ -5,6 +5,48 @@ async function capture(page: Page, file: string, fullPage = false) {
   await page.screenshot({ path: outputPath, fullPage });
 }
 
+async function assertTimeSeriesGeometry(
+  page: Page,
+  cardTestId: string,
+  expectedAxisCount: number,
+) {
+  const card = page.getByTestId(cardTestId);
+  const plot = card.getByTestId("telemetry-chart-plot");
+  const legend = card.getByTestId("telemetry-chart-legend");
+  const firstLegendItem = legend.getByTestId("telemetry-chart-legend-item").first();
+  await expect(card).toBeVisible();
+  await expect(plot).toBeVisible();
+  await expect(legend).toBeVisible();
+  await expect(firstLegendItem).toBeVisible();
+  await expect(plot.locator(".recharts-yAxis")).toHaveCount(expectedAxisCount);
+
+  const cardBox = await card.boundingBox();
+  const plotBox = await plot.boundingBox();
+  const legendBox = await firstLegendItem.boundingBox();
+  expect(cardBox).not.toBeNull();
+  expect(plotBox).not.toBeNull();
+  expect(legendBox).not.toBeNull();
+  if (!cardBox || !plotBox || !legendBox) {
+    return;
+  }
+
+  const tickLabels = plot.locator(".recharts-yAxis .recharts-cartesian-axis-tick-value");
+  expect(await tickLabels.count()).toBeGreaterThan(0);
+  for (let index = 0; index < (await tickLabels.count()); index += 1) {
+    const tickBox = await tickLabels.nth(index).boundingBox();
+    expect(tickBox).not.toBeNull();
+    if (tickBox) {
+      expect(tickBox.x).toBeGreaterThanOrEqual(cardBox.x - 1);
+      expect(tickBox.x + tickBox.width).toBeLessThanOrEqual(cardBox.x + cardBox.width + 1);
+    }
+  }
+
+  expect(legendBox.x - plotBox.x).toBeGreaterThanOrEqual(11);
+  const plotLeftInset = plotBox.x - cardBox.x;
+  const plotRightInset = cardBox.x + cardBox.width - (plotBox.x + plotBox.width);
+  expect(Math.abs(plotLeftInset - plotRightInset)).toBeLessThanOrEqual(2);
+}
+
 async function seedTelemetryFailureRequest(request: APIRequestContext, model: string) {
   const response = await request.post("/v1/chat/completions", {
     data: {
@@ -102,4 +144,34 @@ test("supports request inspection drill-in from request analytics", async ({ pag
   await expect(page).toHaveURL(/\/app\/observe\/requests\/[^/]+$/);
   await expect(page.getByRole("link", { name: "Back to request ledger" })).toBeVisible();
   await expect(page.getByText(modelId, { exact: true })).toBeVisible();
+});
+
+test("renders shared time-series charts without clipped axes and with inset legends", async ({ page }) => {
+  await page.goto("/app");
+  await expect(page.getByRole("heading", { name: "Runtime overview" })).toBeVisible();
+  await assertTimeSeriesGeometry(page, "telemetry-chart-card-latency-trend", 1);
+  await assertTimeSeriesGeometry(page, "telemetry-chart-card-cache-efficiency", 2);
+  await assertTimeSeriesGeometry(page, "telemetry-chart-card-token-usage-over-time", 1);
+  await assertTimeSeriesGeometry(page, "telemetry-chart-card-success-vs-failure", 1);
+  await capture(page, "qa-overview-cache-efficiency.png");
+
+  await page.goto("/app/observe/requests");
+  await expect(page.getByRole("heading", { name: "Telemetry request ledger" })).toBeVisible();
+  await assertTimeSeriesGeometry(page, "telemetry-chart-card-cache-efficiency-trend", 2);
+  await capture(page, "qa-observe-cache-efficiency.png");
+});
+
+test("renders deterministic request-detail token and cache provenance", async ({ page }) => {
+  await page.goto("/app/observe/requests/qa-telemetry-measured-001");
+  await expect(page.getByText("120000 · measured", { exact: true })).toBeVisible();
+  await expect(page.getByText("explicit", { exact: true })).toBeVisible();
+  await capture(page, "qa-request-detail-token-provenance.png");
+
+  await page.goto("/app/observe/requests/qa-telemetry-estimated-001");
+  await expect(page.getByText("107 · estimated", { exact: true })).toBeVisible();
+  await expect(page.getByText("synthesized", { exact: true })).toBeVisible();
+
+  await page.goto("/app/observe/requests/qa-telemetry-unavailable-001");
+  await expect(page.getByText("n/a · unavailable", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("0 · measured", { exact: true })).toHaveCount(0);
 });

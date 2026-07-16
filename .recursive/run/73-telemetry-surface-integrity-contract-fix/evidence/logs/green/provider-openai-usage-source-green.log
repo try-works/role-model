@@ -1,0 +1,156 @@
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts "--" "--reporter=verbose"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/packages/provider-openai[39m
+
+ [31m❯[39m test/index.test.ts [2m([22m[2m25 tests[22m[2m | [22m[31m5 failed[39m[2m)[22m[32m 45[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mcan be created for the openai-compatible adapter family[32m 2[2mms[22m[39m
+[31m   [31m×[31m OpenAI provider adapter[2m > [22mbuilds an OpenAI responses request and normalizes text, usage, and tool calls[39m[32m 22[2mms[22m[39m
+[31m     → expected { inputTokens: 32, …(3) } to deeply equal { inputTokens: 32, …(4) }[39m
+[31m   [31m×[31m OpenAI provider adapter[2m > [22mnormalizes a streamed OpenAI responses transcript into final text, tool calls, and usage[39m[32m 4[2mms[22m[39m
+[31m     → expected { inputTokens: 11, …(3) } to deeply equal { inputTokens: 11, …(4) }[39m
+[31m   [31m×[31m OpenAI provider adapter[2m > [22mpreserves cached-token detail fields from a streamed OpenAI responses transcript[39m[32m 2[2mms[22m[39m
+[31m     → expected { inputTokens: 1400, …(3) } to deeply equal { inputTokens: 1400, …(4) }[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mpreserves hosted OpenAI responses tools instead of coercing them into function tools[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforces the OpenAI Responses API path when hosted tools are requested[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mkeeps Kimi hosted web search on chat-completions and disables thinking[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mbuilds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards forced chat-completions tool_choice to the downstream OpenAI request body[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards chat-completions reasoning controls to the downstream OpenAI request body[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards responses tool_choice, reasoning, continuation, and session-affinity hints[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards responses parallel_tool_calls when explicitly true[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards responses parallel_tool_calls when explicitly false[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22momits responses parallel_tool_calls when the caller left it unset[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mnormalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mpreserves cached-token detail fields from a streamed chat-completions transcript[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22madvertises implicit prompt caching support for OpenAI-family providers[32m 0[2mms[22m[39m
+[31m   [31m×[31m OpenAI provider adapter[2m > [22mnormalizes OpenAI Responses cached-token detail fields without rewriting totals[39m[32m 1[2mms[22m[39m
+[31m     → expected { inputTokens: 1400, …(3) } to deeply equal { inputTokens: 1400, …(4) }[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mnormalizes Kimi chat-completions cached tokens from top-level usage[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards chat-completions prompt_cache_key when prompt caching is enabled[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mnormalizes reasoning-only chat-completions bodies into assistant output text[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards null assistant content and tool-turn fields for chat completions[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mrenders responses continuation turns as function_call and function_call_output items[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mnormalizes a streamed chat-completions transcript with nested choices[0].usage[32m 0[2mms[22m[39m
+[31m   [31m×[31m OpenAI provider adapter[2m > [22mestimates input tokens when streamed usage is absent and labels provenance[39m[32m 1[2mms[22m[39m
+[31m     → expected 0 to be greater than 0[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mOpenAI provider adapter[2m > [22mbuilds an OpenAI responses request and normalizes text, usage, and tool calls
+[31m[1mAssertionError[22m: expected { inputTokens: 32, …(3) } to deeply equal { inputTokens: 32, …(4) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "cacheReadTokens": 0,[22m
+[2m    "cacheWriteTokens": 0,[22m
+[2m    "inputTokens": 32,[22m
+[2m    "outputTokens": 24,[22m
+[32m-   "source": "measured",[39m
+[2m  }[22m
+
+[36m [2m❯[22m test/index.test.ts:[2m144:30[22m[39m
+    [90m142| [39m      name[33m:[39m [32m"lookupRegistry"[39m[33m,[39m
+    [90m143| [39m    })[33m;[39m
+    [90m144| [39m    [34mexpect[39m(normalized[33m.[39musage)[33m.[39m[34mtoEqual[39m({
+    [90m   | [39m                             [31m^[39m
+    [90m145| [39m      inputTokens[33m:[39m [34m32[39m[33m,[39m
+    [90m146| [39m      outputTokens[33m:[39m [34m24[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mOpenAI provider adapter[2m > [22mnormalizes a streamed OpenAI responses transcript into final text, tool calls, and usage
+[31m[1mAssertionError[22m: expected { inputTokens: 11, …(3) } to deeply equal { inputTokens: 11, …(4) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "cacheReadTokens": 0,[22m
+[2m    "cacheWriteTokens": 0,[22m
+[2m    "inputTokens": 11,[22m
+[2m    "outputTokens": 4,[22m
+[32m-   "source": "measured",[39m
+[2m  }[22m
+
+[36m [2m❯[22m test/index.test.ts:[2m249:30[22m[39m
+    [90m247| [39m      toolArgumentDeltas[33m:[39m [34m1[39m[33m,[39m
+    [90m248| [39m    })[33m;[39m
+    [90m249| [39m    [34mexpect[39m(normalized[33m.[39musage)[33m.[39m[34mtoEqual[39m({
+    [90m   | [39m                             [31m^[39m
+    [90m250| [39m      inputTokens[33m:[39m [34m11[39m[33m,[39m
+    [90m251| [39m      outputTokens[33m:[39m [34m4[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mOpenAI provider adapter[2m > [22mpreserves cached-token detail fields from a streamed OpenAI responses transcript
+[31m[1mAssertionError[22m: expected { inputTokens: 1400, …(3) } to deeply equal { inputTokens: 1400, …(4) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "cacheReadTokens": 1111,[22m
+[2m    "cacheWriteTokens": 222,[22m
+[2m    "inputTokens": 1400,[22m
+[2m    "outputTokens": 41,[22m
+[32m-   "source": "measured",[39m
+[2m  }[22m
+
+[36m [2m❯[22m test/index.test.ts:[2m328:30[22m[39m
+    [90m326| [39m      writeTokens[33m:[39m [34m222[39m[33m,[39m
+    [90m327| [39m    })[33m;[39m
+    [90m328| [39m    [34mexpect[39m(normalized[33m.[39musage)[33m.[39m[34mtoEqual[39m({
+    [90m   | [39m                             [31m^[39m
+    [90m329| [39m      inputTokens[33m:[39m [34m1400[39m[33m,[39m
+    [90m330| [39m      outputTokens[33m:[39m [34m41[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mOpenAI provider adapter[2m > [22mnormalizes OpenAI Responses cached-token detail fields without rewriting totals
+[31m[1mAssertionError[22m: expected { inputTokens: 1400, …(3) } to deeply equal { inputTokens: 1400, …(4) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "cacheReadTokens": 1111,[22m
+[2m    "cacheWriteTokens": 222,[22m
+[2m    "inputTokens": 1400,[22m
+[2m    "outputTokens": 41,[22m
+[32m-   "source": "measured",[39m
+[2m  }[22m
+
+[36m [2m❯[22m test/index.test.ts:[2m1278:30[22m[39m
+    [90m1276| [39m      writeTokens[33m:[39m [34m222[39m[33m,[39m
+    [90m1277| [39m    })[33m;[39m
+    [90m1278| [39m    [34mexpect[39m(normalized[33m.[39musage)[33m.[39m[34mtoEqual[39m({
+    [90m   | [39m                             [31m^[39m
+    [90m1279| [39m      inputTokens[33m:[39m [34m1400[39m[33m,[39m
+    [90m1280| [39m      outputTokens[33m:[39m [34m41[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mOpenAI provider adapter[2m > [22mestimates input tokens when streamed usage is absent and labels provenance
+[31m[1mAssertionError[22m: expected 0 to be greater than 0[39m
+[36m [2m❯[22m test/index.test.ts:[2m1815:43[22m[39m
+    [90m1813| [39m    [34mexpect[39m(normalized[33m.[39mfinishReason)[33m.[39m[34mtoBe[39m([32m"stop"[39m)[33m;[39m
+    [90m1814| [39m    [34mexpect[39m(normalized[33m.[39musage[33m.[39minputTokens)[33m.[39m[34mtoBeGreaterThan[39m([34m0[39m)[33m;[39m
+    [90m1815| [39m    [34mexpect[39m(normalized[33m.[39musage[33m.[39moutputTokens)[33m.[39m[34mtoBeGreaterThan[39m([34m0[39m)[33m;[39m
+    [90m   | [39m                                          [31m^[39m
+    [90m1816| [39m    [34mexpect[39m(normalized[33m.[39musage[33m.[39msource)[33m.[39m[34mtoBe[39m([32m"estimated"[39m)[33m;[39m
+    [90m1817| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[2m | [22m[1m[32m20 passed[39m[22m[90m (25)[39m
+[2m   Start at [22m 20:24:20
+[2m   Duration [22m 1.06s[2m (transform 202ms, setup 0ms, collect 227ms, tests 45ms, environment 0ms, prepare 238ms)[22m
+
+ ELIFECYCLE  Test failed. See above for more details.

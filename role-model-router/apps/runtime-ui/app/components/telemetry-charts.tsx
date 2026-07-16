@@ -23,10 +23,13 @@ import {
   chartHorizontalRankingLegend,
   chartRankingBarRadius,
   eyebrowClassName,
+  formatTelemetryChartTick,
   getTelemetryChartStatePillTone,
   inlineTitleClassName,
   mutedPanelClassName,
   supportingTextClassName,
+  resolveTelemetryChartLayout,
+  telemetryChartLayoutContract,
   telemetryChartStates,
   utilityLabelClassName,
 } from "../lib/design-system";
@@ -41,25 +44,6 @@ import {
 } from "../lib/telemetry-analytics";
 import type { TelemetryRouteChartDefinition } from "../lib/telemetry-route-models";
 
-const chartTimeSeriesMargin = {
-  top: 4,
-  right: 8,
-  bottom: 0,
-  left: -18,
-} as const;
-
-const chartCompactYAxisProps = {
-  axisLine: false,
-  tick: chartAxisTickStyle,
-  tickLine: false,
-  width: 36,
-} as const;
-
-const chartDualYAxisMargin = {
-  ...chartTimeSeriesMargin,
-  right: 32,
-} as const;
-
 function ChartLegendContent(props: {
   readonly payload?: ReadonlyArray<{
     readonly color?: string;
@@ -67,13 +51,18 @@ function ChartLegendContent(props: {
   }>;
 }) {
   const items = props.payload ?? [];
-  if (items.length === 0) {
-    return null;
-  }
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-2 pt-4">
+    <div
+      data-testid="telemetry-chart-legend"
+      className="flex flex-wrap gap-x-4 gap-y-2 pt-4"
+      style={{ paddingInlineStart: telemetryChartLayoutContract.legendInset }}
+    >
       {items.map((item) => (
-        <div key={`${item.value}:${item.color}`} className="inline-flex items-center gap-2">
+        <div
+          key={`${item.value}:${item.color}`}
+          data-testid="telemetry-chart-legend-item"
+          className="inline-flex items-center gap-2"
+        >
           <span
             className="h-2.5 w-2.5 rounded-full"
             style={{ backgroundColor: item.color ?? "var(--rm-chart-neutral-1)" }}
@@ -83,6 +72,57 @@ function ChartLegendContent(props: {
           </span>
         </div>
       ))}
+    </div>
+  );
+}
+
+function readAxisTickLabels(
+  model: TelemetryTimeSeriesChartModel,
+  axisId: "left" | "right",
+): readonly string[] {
+  const labels = model.series
+    .filter((series) => series.yAxisId === axisId)
+    .flatMap((series) =>
+      model.data.flatMap((row) => {
+        const value = row[series.dataKey];
+        return typeof value === "number" && Number.isFinite(value)
+          ? [formatTelemetryChartTick(value)]
+          : [];
+      }),
+    );
+  return labels.length > 0 ? [...new Set(["0", ...labels])] : [];
+}
+
+function resolveTimeSeriesLayout(model: TelemetryTimeSeriesChartModel) {
+  return resolveTelemetryChartLayout({
+    leftTickLabels: readAxisTickLabels(model, "left"),
+    rightTickLabels: readAxisTickLabels(model, "right"),
+  });
+}
+
+const timeSeriesAxisProps = {
+  axisLine: false,
+  tick: chartAxisTickStyle,
+  tickFormatter: formatTelemetryChartTick,
+  tickLine: false,
+} as const;
+
+function TimeSeriesPlot({
+  layout,
+  children,
+}: {
+  readonly layout: ReturnType<typeof resolveTimeSeriesLayout>;
+  readonly children: ReactNode;
+}) {
+  return (
+    <div
+      data-testid="telemetry-chart-plot"
+      data-left-axis-gutter={layout.leftAxisGutter}
+      data-right-axis-reserve={layout.rightAxisReserve}
+      className="w-full"
+      style={{ height: layout.plotHeight }}
+    >
+      {children}
     </div>
   );
 }
@@ -183,6 +223,13 @@ function getTelemetryChartCardState(
   return undefined;
 }
 
+function toTelemetryChartTestId(title: string): string {
+  return `telemetry-chart-card-${title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}`;
+}
+
 function ChartTooltipContent(props: {
   readonly active?: boolean;
   readonly label?: string;
@@ -273,7 +320,10 @@ export function TelemetryChartCard({
   const showStateBadge = resolvedState && resolvedState.kind !== "empty";
 
   return (
-    <section className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-5 py-5 md:px-6 md:py-6">
+    <section
+      data-testid={toTelemetryChartTestId(title)}
+      className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-5 py-5 md:px-6 md:py-6"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-2">
           <h3 className={`text-[var(--rm-fg)] ${inlineTitleClassName}`}>{title}</h3>
@@ -325,10 +375,11 @@ export function TelemetryAreaTimeSeriesChart({
 }: {
   readonly model: TelemetryTimeSeriesChartModel;
 }) {
+  const layout = resolveTimeSeriesLayout(model);
   return (
-    <div className="h-[280px] w-full">
+    <TimeSeriesPlot layout={layout}>
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={[...model.data]} margin={chartTimeSeriesMargin}>
+        <AreaChart data={[...model.data]} margin={layout.plotMargin}>
           <CartesianGrid stroke="var(--rm-divider-soft)" vertical={false} />
           <XAxis
             axisLine={false}
@@ -336,7 +387,21 @@ export function TelemetryAreaTimeSeriesChart({
             tick={chartAxisTickStyle}
             tickLine={false}
           />
-          <YAxis {...chartCompactYAxisProps} yAxisId="left" />
+          <YAxis
+            {...timeSeriesAxisProps}
+            data-testid="telemetry-chart-axis-left"
+            width={layout.leftAxisGutter}
+            yAxisId="left"
+          />
+          {layout.rightAxisReserve > 0 ? (
+            <YAxis
+              {...timeSeriesAxisProps}
+              data-testid="telemetry-chart-axis-right"
+              orientation="right"
+              width={layout.rightAxisReserve}
+              yAxisId="right"
+            />
+          ) : null}
           <Tooltip content={<ChartTooltipContent />} cursor={{ stroke: "var(--rm-border)" }} />
           <Legend content={<ChartLegendContent />} />
           {model.series.map((series) => (
@@ -355,7 +420,7 @@ export function TelemetryAreaTimeSeriesChart({
           ))}
         </AreaChart>
       </ResponsiveContainer>
-    </div>
+    </TimeSeriesPlot>
   );
 }
 
@@ -364,13 +429,13 @@ export function TelemetryLineTimeSeriesChart({
 }: {
   readonly model: TelemetryTimeSeriesChartModel;
 }) {
-  const hasSecondaryYAxis = model.series.some((series) => series.yAxisId === "right");
+  const layout = resolveTimeSeriesLayout(model);
   return (
-    <div className="h-[280px] w-full">
+    <TimeSeriesPlot layout={layout}>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={[...model.data]}
-          margin={hasSecondaryYAxis ? chartDualYAxisMargin : chartTimeSeriesMargin}
+          margin={layout.plotMargin}
         >
           <CartesianGrid stroke="var(--rm-divider-soft)" vertical={false} />
           <XAxis
@@ -379,9 +444,20 @@ export function TelemetryLineTimeSeriesChart({
             tick={chartAxisTickStyle}
             tickLine={false}
           />
-          <YAxis {...chartCompactYAxisProps} yAxisId="left" />
-          {hasSecondaryYAxis ? (
-            <YAxis {...chartCompactYAxisProps} orientation="right" yAxisId="right" />
+          <YAxis
+            {...timeSeriesAxisProps}
+            data-testid="telemetry-chart-axis-left"
+            width={layout.leftAxisGutter}
+            yAxisId="left"
+          />
+          {layout.rightAxisReserve > 0 ? (
+            <YAxis
+              {...timeSeriesAxisProps}
+              data-testid="telemetry-chart-axis-right"
+              orientation="right"
+              width={layout.rightAxisReserve}
+              yAxisId="right"
+            />
           ) : null}
           <Tooltip content={<ChartTooltipContent />} cursor={{ stroke: "var(--rm-border)" }} />
           <Legend content={<ChartLegendContent />} />
@@ -400,7 +476,7 @@ export function TelemetryLineTimeSeriesChart({
           ))}
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </TimeSeriesPlot>
   );
 }
 
@@ -409,10 +485,11 @@ export function TelemetryBarTimeSeriesChart({
 }: {
   readonly model: TelemetryTimeSeriesChartModel;
 }) {
+  const layout = resolveTimeSeriesLayout(model);
   return (
-    <div className="h-[280px] w-full">
+    <TimeSeriesPlot layout={layout}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={[...model.data]} margin={chartTimeSeriesMargin}>
+        <BarChart data={[...model.data]} margin={layout.plotMargin}>
           <CartesianGrid stroke="var(--rm-divider-soft)" vertical={false} />
           <XAxis
             axisLine={false}
@@ -420,7 +497,21 @@ export function TelemetryBarTimeSeriesChart({
             tick={chartAxisTickStyle}
             tickLine={false}
           />
-          <YAxis {...chartCompactYAxisProps} yAxisId="left" />
+          <YAxis
+            {...timeSeriesAxisProps}
+            data-testid="telemetry-chart-axis-left"
+            width={layout.leftAxisGutter}
+            yAxisId="left"
+          />
+          {layout.rightAxisReserve > 0 ? (
+            <YAxis
+              {...timeSeriesAxisProps}
+              data-testid="telemetry-chart-axis-right"
+              orientation="right"
+              width={layout.rightAxisReserve}
+              yAxisId="right"
+            />
+          ) : null}
           <Tooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--rm-panel)" }} />
           <Legend content={<ChartLegendContent />} />
           {model.series.map((series) => (
@@ -435,7 +526,7 @@ export function TelemetryBarTimeSeriesChart({
           ))}
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </TimeSeriesPlot>
   );
 }
 
@@ -446,7 +537,11 @@ export function TelemetryRankingBarChart({
 }) {
   return (
     <div className="w-full">
-      <div data-chart-horizontal-plot="true" className="h-[280px] w-full">
+      <div
+        data-chart-horizontal-plot="true"
+        className="w-full"
+        style={{ height: telemetryChartLayoutContract.plotHeight }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={[...model.rows]} layout="vertical" margin={{ left: 0, right: 8 }}>
             <CartesianGrid stroke="var(--rm-divider-soft)" horizontal={false} />

@@ -26,7 +26,9 @@ import {
   getRuntimeRouteDefinition,
   runtimeNavigationSections,
   runtimeTheme,
+  resolveTelemetryChartLayout,
   shellQuickLinks,
+  telemetryChartLayoutContract,
   telemetryChartStates,
 } from "./design-system";
 import { ShellHeaderProvider } from "./shell-header-context";
@@ -2179,12 +2181,23 @@ describe("runtime design system", () => {
       "data-chart-horizontal-legend={chartHorizontalRankingLegend.placement}",
     );
     expect(telemetryChartsSource).toContain('data-chart-horizontal-plot="true"');
-    expect(telemetryChartsSource).toContain('className="h-[280px] w-full"');
+    expect(telemetryChartsSource).toContain("resolveTimeSeriesLayout");
+    expect(telemetryChartsSource).toContain("style={{ height: layout.plotHeight }}");
+    expect(telemetryChartsSource).not.toContain('className="h-[280px] w-full"');
     expect(telemetryChartsSource).not.toContain("width={128}");
     expect(telemetryChartsSource).not.toContain("fontSize: 12");
     expect(telemetryChartsSource).not.toContain("fontSize: 13");
     expect(telemetryChartsSource).not.toContain("radius={[8, 8, 0, 0]}");
     expect(telemetryChartsSource).not.toContain("radius={[0, 8, 8, 0]}");
+    expect(telemetryChartLayoutContract.plotMargin).toEqual({
+      top: 4,
+      right: 0,
+      bottom: 0,
+      left: 0,
+    });
+    expect(
+      resolveTelemetryChartLayout({ leftTickLabels: ["0", "120,000"] }).leftAxisGutter,
+    ).toBeGreaterThan(40);
   });
 
   test("telemetry chart states are shared design-system vocabulary", () => {

@@ -1,0 +1,6 @@
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\apps\runtime-host-bridge
+> vitest run test/alias-capability-routing.test.ts --reporter=verbose
+
+alias capability routing > synthesizes prompt_cache_key from session_id when caller omits it
+alias capability routing > keeps explicit prompt_cache_key and marks it explicit
+GREEN verified: PASS

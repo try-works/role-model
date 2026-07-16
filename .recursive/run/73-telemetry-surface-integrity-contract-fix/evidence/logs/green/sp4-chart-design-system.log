@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/apps/runtime-ui
+
+ ✓ app/components/telemetry-charts.test.tsx (13 tests) 61ms
+ ✓ app/lib/design-system.test.ts (97 tests) 158ms
+
+ Test Files  2 passed (2)
+      Tests  110 passed (110)
+   Start at  04:12:59
+   Duration  2.67s (transform 1.15s, setup 0ms, collect 2.11s, tests 218ms, environment 1ms, prepare 556ms)
+

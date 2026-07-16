@@ -225,6 +225,11 @@ Charts inherit the same theme and typography system as the rest of runtime UI. T
 
 ### Chart behavior rules
 
+- All line, area, bar, and ranking telemetry charts use `telemetryChartLayoutContract`; route-local axis widths, margins, legend offsets, and plot heights are not allowed.
+- `resolveTelemetryChartLayout` sizes the left gutter and optional right reserve from the formatted tick labels using bounded character-width approximation. Wide labels grow the gutter without clipping, while a single-axis chart reserves zero right-axis width.
+- Time-series plot margins are nonnegative and symmetric at the left/right chart boundary. Axis components own their computed label reserve, avoiding the previous combination of a negative left margin and excess fixed right margin.
+- Legends use the shared `12px` inline inset, and every shared chart exposes stable card, plot, axis, and legend test selectors for browser geometry verification.
+- The shared plot height is `280px` and is consumed from the contract by every telemetry chart kind rather than repeated as route or component utility classes.
 - legends display explicit human-readable labels for endpoint, model, provider, role, strategy, and source series
 - horizontal ranking charts place category labels in a bottom legend, not on the left axis, so long endpoint/model names do not compete with the bar plot area
 - ranked comparisons remain horizontal bars rather than pie charts because ordered bars preserve rank, magnitude, and outlier comparison more clearly for long technical labels

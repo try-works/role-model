@@ -15,14 +15,23 @@ vi.mock("recharts", () => {
       const attributes: Record<string, string> = {
         "data-recharts": name,
       };
-      const propNames = ["dataKey", "name", "orientation", "yAxisId", "layout", "type", "width"];
+      const propNames = [
+        "dataKey",
+        "name",
+        "orientation",
+        "yAxisId",
+        "layout",
+        "type",
+        "width",
+        "data-testid",
+      ];
       for (const propName of propNames) {
         const value = pickAttributeValue(props[propName]);
         if (value !== undefined) {
           attributes[`data-${propName.toLowerCase()}`] = value;
         }
       }
-      return <div {...attributes}>{children as never}</div>;
+      return <div {...attributes}>{(name === "Legend" ? props.content : children) as never}</div>;
     };
   }
 
@@ -44,11 +53,51 @@ vi.mock("recharts", () => {
 });
 
 import {
+  TelemetryAreaTimeSeriesChart,
   TelemetryAnalyticsChartCard,
+  TelemetryBarTimeSeriesChart,
   TelemetryChartCard,
   TelemetryLineTimeSeriesChart,
   TelemetryRankingBarChart,
 } from "./telemetry-charts";
+import {
+  resolveTelemetryChartLayout,
+  telemetryChartLayoutContract,
+} from "../lib/design-system";
+
+describe("telemetry chart layout contract", () => {
+  test("exports bounded data-dependent geometry and shared plot values", () => {
+    const compact = resolveTelemetryChartLayout({
+      leftTickLabels: ["0", "8"],
+      rightTickLabels: [],
+    });
+    const wide = resolveTelemetryChartLayout({
+      leftTickLabels: ["0", "120,000"],
+      rightTickLabels: ["0", "0.25", "0.5", "0.75", "1"],
+    });
+
+    expect(telemetryChartLayoutContract).toEqual(
+      expect.objectContaining({
+        leftAxisGutter: expect.objectContaining({ min: expect.any(Number), max: expect.any(Number) }),
+        rightAxisReserve: expect.objectContaining({
+          min: expect.any(Number),
+          max: expect.any(Number),
+        }),
+        legendInset: expect.any(Number),
+        plotMargin: expect.objectContaining({ left: 0, right: 0 }),
+        plotHeight: expect.any(Number),
+      }),
+    );
+    expect(wide.leftAxisGutter).toBeGreaterThan(compact.leftAxisGutter);
+    expect(wide.leftAxisGutter).toBeLessThanOrEqual(
+      telemetryChartLayoutContract.leftAxisGutter.max,
+    );
+    expect(wide.rightAxisReserve).toBeGreaterThan(0);
+    expect(compact.rightAxisReserve).toBe(0);
+    expect(wide.plotMargin.left).toBeGreaterThanOrEqual(0);
+    expect(wide.plotMargin.right).toBeGreaterThanOrEqual(0);
+  });
+});
 
 describe("TelemetryChartCard", () => {
   test("keeps populated chart content visible while a background refresh is in progress", () => {
@@ -63,6 +112,7 @@ describe("TelemetryChartCard", () => {
     );
 
     expect(markup).toContain("Latency Trend");
+    expect(markup).toContain('data-testid="telemetry-chart-card-latency-trend"');
     expect(markup).toContain("Average and p95 latency for the selected slice.");
     expect(markup).toContain("Rendered chart body");
     expect(markup).toContain("Refreshing…");
@@ -220,6 +270,9 @@ describe("TelemetryLineTimeSeriesChart", () => {
 
     expect(markup.match(/data-recharts=\"YAxis\"/g)?.length).toBe(2);
     expect(markup).toContain('data-recharts="YAxis" data-orientation="right"');
+    expect(markup).toContain('data-testid="telemetry-chart-plot"');
+    expect(markup).toContain('data-testid="telemetry-chart-legend"');
+    expect(markup).toContain(`height:${telemetryChartLayoutContract.plotHeight}px`);
     expect(markup).toMatch(
       /data-recharts="Line"[^>]*data-datakey="cacheHitTokens"[^>]*data-yaxisid="left"/,
     );
@@ -274,6 +327,57 @@ describe("TelemetryLineTimeSeriesChart", () => {
   });
 });
 
+describe("shared area and bar time-series geometry", () => {
+  const dualAxisModel = {
+    title: "Mixed units",
+    isEmpty: false,
+    data: [
+      {
+        bucketLabel: "Jul 13",
+        bucketStartMs: 0,
+        bucketEndMs: 1,
+        requestCount: 120000,
+        cacheHitTokenRate: 0.75,
+      },
+    ],
+    series: [
+      {
+        key: "requestCount",
+        label: "Requests",
+        colorToken: "var(--rm-chart-latency)",
+        dataKey: "requestCount",
+        strokeOpacity: 1,
+        fillOpacity: 0.16,
+        yAxisId: "left",
+      },
+      {
+        key: "cacheHitTokenRate",
+        label: "Cache hit token rate",
+        colorToken: "var(--rm-chart-cache-rate)",
+        dataKey: "cacheHitTokenRate",
+        strokeOpacity: 1,
+        fillOpacity: 0.16,
+        yAxisId: "right",
+      },
+    ],
+  } as unknown as Parameters<typeof TelemetryAreaTimeSeriesChart>[0]["model"];
+
+  test.each([
+    ["area", TelemetryAreaTimeSeriesChart],
+    ["bar", TelemetryBarTimeSeriesChart],
+  ] as const)("renders data-dependent dual axes and inset legend for %s charts", (_, Chart) => {
+    const markup = renderToStaticMarkup(<Chart model={dualAxisModel} />);
+
+    expect(markup.match(/data-recharts="YAxis"/g)?.length).toBe(2);
+    expect(markup).toContain('data-recharts="YAxis" data-orientation="right"');
+    expect(markup).toMatch(/data-recharts="YAxis"[^>]*data-width="[5-9][0-9]"/);
+    expect(markup).toContain('data-testid="telemetry-chart-legend"');
+    expect(markup).toContain(
+      `padding-inline-start:${telemetryChartLayoutContract.legendInset}px`,
+    );
+  });
+});
+
 describe("TelemetryRankingBarChart", () => {
   test("places horizontal chart labels in a bottom legend instead of a left category axis", () => {
     const markup = renderToStaticMarkup(
@@ -301,8 +405,10 @@ describe("TelemetryRankingBarChart", () => {
     );
 
     expect(markup).toContain('data-chart-horizontal-legend="bottom"');
+    expect(markup).toContain('data-testid="telemetry-chart-legend-item"');
     expect(markup).toContain('data-chart-horizontal-plot="true"');
-    expect(markup).toContain("h-[280px]");
+    expect(markup).toContain(`height:${telemetryChartLayoutContract.plotHeight}px`);
+    expect(markup).not.toContain("h-[280px]");
     expect(markup).toContain("qa-local-llama-8b");
     expect(markup).toContain("anthropic-claude-haiku");
     expect(markup).not.toContain('width="128"');
