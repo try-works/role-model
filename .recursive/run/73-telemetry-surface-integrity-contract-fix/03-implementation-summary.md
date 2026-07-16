@@ -1,8 +1,8 @@
 Run: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/`
 Phase: `03 Implementation Summary`
 Status: `LOCKED`
-LockedAt: `2026-07-16T20:38:42Z`
-LockHash: `e419083199651058945ba97862aa95a34d4cbf71282de78d1c0319877fed7a71`
+LockedAt: `2026-07-16T20:51:25Z`
+LockHash: `cd3a29f1d9cfeb66e7bec5afd7f87af9c5440fefa559349398e35536b8554c47`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/00-requirements.md` (LOCKED)
@@ -24,6 +24,7 @@ Scope note: Records the strict-TDD remediation of findings `A73-01` through `A73
 - [x] Implement SP3 token truth, persistence, analytics, fallback, and UI provenance
 - [x] Implement SP4 one shared line/area/bar chart layout contract
 - [x] Implement SP5 deterministic QA seeding and rendered browser regressions
+- [x] Repair the SP7 SEA compressed-asset fallback discovered by packaged startup
 - [x] Reconcile the complete worktree diff and strict RED/GREEN evidence
 - [x] Complete Phase 3 audit and gates
 
@@ -85,6 +86,12 @@ Scope note: Records the strict-TDD remediation of findings `A73-01` through `A73
 - Covered Overview single-axis line, dual-axis cache efficiency, area, bar, Observe dual-axis, and exact request-detail provenance.
 - Removed an unrelated fixture-specific `req-` prefix assumption from the runtime shell browser test; the API contract is non-empty request IDs, while dedicated tests assert exact QA IDs.
 
+### SP7 Packaged runtime bootstrap repair
+
+- Reproduced the implementation-commit SEA startup failure on isolated port `3483`.
+- Added an optional SEA asset lookup that treats only `ERR_SINGLE_EXECUTABLE_APPLICATION_ASSET_NOT_FOUND` as absent, then reads and decompresses the embedded `.gz` llama-swap asset.
+- Preserved fail-fast behavior for every other asset exception.
+
 ## TDD Compliance Log
 
 TDD Mode: strict
@@ -95,6 +102,7 @@ RED Evidence:
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/red/sp3-ledger-provenance.log`
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/red/sp4-chart-layout-contract.log`
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/red/sp5-qa-telemetry-seed.log`
+- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/red/sp7-sea-asset-fallback.log`
 
 GREEN Evidence:
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp1-cache-hash.log`
@@ -102,6 +110,7 @@ GREEN Evidence:
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp3-ledger-provenance.log`
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp4-chart-design-system.log`
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp5-browser-regressions.log`
+- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp7-sea-asset-fallback.log`
 
 TDD Compliance: PASS
 
@@ -130,6 +139,11 @@ TDD Compliance: PASS
 - RED: `evidence/logs/red/sp5-qa-telemetry-seed.log` proved the canonical QA runtime lacked deterministic telemetry cases.
 - GREEN: `evidence/logs/green/sp5-qa-telemetry-seed.log` proves canonical persistence; `sp5-browser-regressions.log` proves rendered geometry and provenance.
 - The full-suite stale request-prefix failure is retained in `evidence/logs/verification/runtime-ui-browser.log` history through the command rerun; the final log is the passing six-test run.
+
+### SP7 RED-GREEN
+
+- RED: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/red/sp7-sea-asset-fallback.log` proves the real Node SEA missing-asset exception bypassed the compressed fallback.
+- GREEN: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp7-sea-asset-fallback.log` proves compressed extraction succeeds while unexpected errors remain fatal.
 
 ## Plan Deviations
 
@@ -175,7 +189,7 @@ TDD Compliance: PASS
 - R4 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/test/index.test.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp3-analytics-token-availability.log`, `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp3-host-fallback-provenance.log`
 - R5 | Status: implemented | Changed Files: `role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md`, `role-model-router/apps/runtime-ui/app/lib/design-system.ts`, `role-model-router/apps/runtime-ui/app/lib/design-system.test.ts`, `role-model-router/apps/runtime-ui/app/components/telemetry-charts.tsx` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp4-chart-design-system.log`
 - R6 | Status: implemented | Changed Files: `role-model-router/apps/runtime-ui/app/components/telemetry-charts.test.tsx` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp4-chart-layout-contract.log`
-- R7 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp5-qa-telemetry-seed.log` and the complete RED/GREEN matrix above.
+- R7 | Status: implemented | Changed Files: `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts`, `role-model-router/apps/runtime-host-bridge/src/runtime-assets.ts`, `role-model-router/apps/runtime-host-bridge/test/runtime-assets.test.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp5-qa-telemetry-seed.log`, `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp7-sea-asset-fallback.log`
 - R8 | Status: implemented | Changed Files: `role-model-router/apps/runtime-ui/e2e/runtime-shell.spec.ts`, `role-model-router/apps/runtime-ui/e2e/shared-surface-regression.spec.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp5-browser-regressions.log`
 - R9 | Status: deferred | Rationale: packaged implementation-commit QA belongs to Phase 5 | Deferred By: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-02.md`
 
@@ -202,8 +216,10 @@ TDD Compliance: PASS
   - `protocol/schemas/usage-event.schema.json`
   - `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts`
   - `role-model-router/apps/runtime-host-bridge/src/index.ts`
+  - `role-model-router/apps/runtime-host-bridge/src/runtime-assets.ts`
   - `role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts`
   - `role-model-router/apps/runtime-host-bridge/test/index.test.ts`
+  - `role-model-router/apps/runtime-host-bridge/test/runtime-assets.test.ts`
   - `role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md`
   - `role-model-router/apps/runtime-ui/app/components/telemetry-charts.test.tsx`
   - `role-model-router/apps/runtime-ui/app/components/telemetry-charts.tsx`

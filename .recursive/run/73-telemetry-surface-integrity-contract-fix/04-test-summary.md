@@ -1,8 +1,8 @@
 Run: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/`
 Phase: `04 Test Summary`
 Status: `LOCKED`
-LockedAt: `2026-07-16T20:42:32Z`
-LockHash: `7f4bf3744b3a02e9ae56833e6b1b8734f1222fd7df45c95a681f28760f4666b4`
+LockedAt: `2026-07-16T20:51:51Z`
+LockHash: `99216aa54b87196c3d929e7706f8b910319ce7c3f327861d2197e6240ed8ca23`
 Workflow version: `recursive-mode-audit-v2`
 Inputs:
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/00-requirements.md` (LOCKED)
@@ -38,7 +38,7 @@ Scope note: Records complete automated verification for repaired R1-R8 before th
 
 ## Effective Inputs Re-read
 
-- Phase 3 lock hash: `e419083199651058945ba97862aa95a34d4cbf71282de78d1c0319877fed7a71`.
+- Phase 3 lock hash: `cd3a29f1d9cfeb66e7bec5afd7f87af9c5440fefa559349398e35536b8554c47`.
 - Addendum `02` SP6 requires the complete package, build, schema, observability, and Playwright matrix.
 - R8 requires executed real-browser checks, not test-source presence; that gate is satisfied below.
 
@@ -81,6 +81,7 @@ corepack pnpm --filter @role-model-router/adapter-execution test
 corepack pnpm --filter @role-model-router/runtime-observability test
 corepack pnpm --filter @role-model-router/sqlite-memory test
 corepack pnpm --filter runtime-host-bridge test
+corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/runtime-assets.test.ts
 corepack pnpm --filter runtime-ui test
 corepack pnpm --filter @role-model-router/runtime-ui build
 corepack pnpm --filter runtime-ui test:browser
@@ -100,7 +101,7 @@ All final commands exited `0`.
 | adapter-execution | PASS | 6 tests |
 | runtime-observability | PASS | 7 tests |
 | sqlite-memory | PASS | 39 tests |
-| runtime-host-bridge | PASS | 58 files, 546 tests |
+| runtime-host-bridge | PASS | 58 files, 547 tests |
 | runtime-ui Vitest | PASS | 30 files, 349 tests |
 | runtime-ui production build | PASS | client build plus `tsc --noEmit` |
 | runtime-ui Playwright | PASS | 6 tests |
@@ -136,6 +137,7 @@ All final commands exited `0`.
 
 - Initial full host execution found one stale exact-object expectation and one missing-build precondition for the standalone packaged test. The expectation was updated to the new synthesized-cache contract, the workspace was built, both focused cases passed, and the full 546-test host suite then passed.
 - Initial full Playwright execution passed all new regressions but found a fixture-specific `req-` prefix assertion in `runtime-shell.spec.ts`. The assertion was corrected to the API contract of non-empty IDs; exact deterministic QA IDs remain asserted by the provenance test. The full six-test suite then passed.
+- Initial SEA startup exposed Node's throwing missing-asset lookup before the embedded `.gz` fallback. A strict RED/GREEN regression repaired the lookup, and the final full host suite passed with the added test.
 - No failure remains in the final matrix.
 
 ## Flake/Rerun Notes
@@ -173,7 +175,7 @@ All final commands exited `0`.
 - R4 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/test/index.test.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp3-analytics-token-availability.log` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/verification/runtime-host-bridge.log`
 - R5 | Status: verified | Changed Files: `role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md`, `role-model-router/apps/runtime-ui/app/lib/design-system.ts`, `role-model-router/apps/runtime-ui/app/lib/design-system.test.ts`, `role-model-router/apps/runtime-ui/app/components/telemetry-charts.tsx` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp4-chart-design-system.log` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/verification/runtime-ui-build.log`
 - R6 | Status: verified | Changed Files: `role-model-router/apps/runtime-ui/app/components/telemetry-charts.test.tsx` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp4-chart-layout-contract.log` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/verification/runtime-ui-browser.log`
-- R7 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/verification/workspace-build.log`
+- R7 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts`, `role-model-router/apps/runtime-host-bridge/src/runtime-assets.ts`, `role-model-router/apps/runtime-host-bridge/test/runtime-assets.test.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/verification/runtime-host-bridge.log`
 - R8 | Status: verified | Changed Files: `role-model-router/apps/runtime-ui/e2e/runtime-shell.spec.ts`, `role-model-router/apps/runtime-ui/e2e/shared-surface-regression.spec.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/sp5-browser-regressions.log` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/verification/runtime-ui-browser.log`
 - R9 | Status: deferred | Rationale: implementation-commit packaged runtime browser QA is Phase 5 | Deferred By: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-02.md`
 
@@ -202,8 +204,10 @@ All final commands exited `0`.
   - `protocol/schemas/usage-event.schema.json`
   - `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts`
   - `role-model-router/apps/runtime-host-bridge/src/index.ts`
+  - `role-model-router/apps/runtime-host-bridge/src/runtime-assets.ts`
   - `role-model-router/apps/runtime-host-bridge/test/alias-capability-routing.test.ts`
   - `role-model-router/apps/runtime-host-bridge/test/index.test.ts`
+  - `role-model-router/apps/runtime-host-bridge/test/runtime-assets.test.ts`
   - `role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md`
   - `role-model-router/apps/runtime-ui/app/components/telemetry-charts.test.tsx`
   - `role-model-router/apps/runtime-ui/app/components/telemetry-charts.tsx`
@@ -235,7 +239,7 @@ All R1-R8 implementation claims have independent passing verification. No ignore
 - [x] Every owning package suite passes.
 - [x] Schema and observability validators pass.
 - [x] Production UI and full workspace builds pass.
-- [x] Full host suite passes with 546 tests.
+- [x] Full host suite passes with 547 tests.
 - [x] Executed deterministic Playwright suite passes with rendered geometry and provenance assertions.
 - [x] Protected port `3456` remains PID `4640`; temporary port `3462` is free.
 

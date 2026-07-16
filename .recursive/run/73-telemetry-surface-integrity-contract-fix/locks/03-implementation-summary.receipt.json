@@ -1,8 +1,8 @@
 {
   "artifact": "03-implementation-summary.md",
-  "artifact_hash": "e419083199651058945ba97862aa95a34d4cbf71282de78d1c0319877fed7a71",
+  "artifact_hash": "cd3a29f1d9cfeb66e7bec5afd7f87af9c5440fefa559349398e35536b8554c47",
   "artifact_path": "D:\\DEV\\role-model\\.worktrees\\73-telemetry-surface-integrity-contract-fix\\.recursive\\run\\73-telemetry-surface-integrity-contract-fix\\03-implementation-summary.md",
-  "locked_at": "2026-07-16T20:38:42Z",
+  "locked_at": "2026-07-16T20:51:25Z",
   "prerequisite_hashes": {
     "00-requirements.md": "b0bdd63637158a5c8b4b9829f85dfccf7e8374b42cd48e7be8bbd748c60ccf76",
     "00-worktree.md": "38a22f1b0340a1127e914da23a3652e9c58977e4d5fea26aa2d027e8092ea8b0",
@@ -11,5 +11,5 @@
     "02-to-be-plan.md": "143115fdb7561e7ec7d5866e3deb98925eb9c65650b7445737cc2d75a71d2c85"
   },
   "previous_receipt_hash": null,
-  "receipt_hash": "ed327b4a7ac84df04b00f6081130fc8ece54eb1a22f39dc633bc6b085c0fa4a5"
+  "receipt_hash": "e6f02c39ce18508acb1ece2c788c86df87f8d9482a288d5de7fff199da129f4c"
 }

@@ -142,4 +142,32 @@ describe("runtime asset packaging", () => {
     );
     await expect(readFile(extractedPath ?? "", "utf8")).resolves.toBe("sea-asset");
   });
+
+  test("falls back to the compressed SEA asset when Node throws for a missing raw asset", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-assets-"));
+    const extractedPath = await resolveLlamaSwapCommand({
+      repoRoot: path.join(tempRoot, "repo"),
+      runtimeStateRoot: path.join(tempRoot, "runtime"),
+      platform: "win32",
+      arch: "x64",
+      assetReader: {
+        isSea: true,
+        getRawAsset(assetKey) {
+          if (assetKey === "vendor/llama-swap/win32-x64/llama-swap.exe") {
+            throw Object.assign(new Error(`Missing SEA asset: ${assetKey}`), {
+              code: "ERR_SINGLE_EXECUTABLE_APPLICATION_ASSET_NOT_FOUND",
+            });
+          }
+          if (assetKey === "vendor/llama-swap/win32-x64/llama-swap.exe.gz") {
+            return gzipSync(Buffer.from("compressed-sea-asset"));
+          }
+          throw new Error(`Unexpected asset key: ${assetKey}`);
+        },
+      },
+    });
+
+    await expect(readFile(extractedPath ?? "", "utf8")).resolves.toBe(
+      "compressed-sea-asset",
+    );
+  });
 });

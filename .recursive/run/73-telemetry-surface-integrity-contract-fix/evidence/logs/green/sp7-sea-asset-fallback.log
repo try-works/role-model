@@ -1,0 +1,9 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/runtime-assets.test.ts (5 tests) 37ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  04:48:43
+   Duration  1.24s (transform 131ms, setup 0ms, collect 237ms, tests 37ms, environment 0ms, prepare 305ms)
