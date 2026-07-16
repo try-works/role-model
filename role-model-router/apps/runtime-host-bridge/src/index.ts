@@ -15178,14 +15178,15 @@ export async function createRuntimeBridgeBackend(
       return;
     }
 
-    const canonicalRuntimeConfigText = await readFile(options.unifiedRuntimeConfigPath, "utf8").catch(
-      (error: unknown) => {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-          return null;
-        }
-        throw error;
-      },
-    );
+    const canonicalRuntimeConfigText = await readFile(
+      options.unifiedRuntimeConfigPath,
+      "utf8",
+    ).catch((error: unknown) => {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return null;
+      }
+      throw error;
+    });
     if (canonicalRuntimeConfigText !== null) {
       return;
     }
