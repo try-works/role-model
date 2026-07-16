@@ -15165,6 +15165,48 @@ export async function createRuntimeBridgeBackend(
   const runtimeVendorStartup = options.runtimeVendorStartup ?? "enabled";
   const fixtureRoot = options.fixtureRoot ?? null;
   const useFixtures = fixtureRoot !== null;
+  const migrateLegacyStandaloneRuntimeConfigIfNeeded = async (): Promise<void> => {
+    if (!options.unifiedRuntimeConfigPath || options.scopeId !== "standalone-runtime") {
+      return;
+    }
+
+    const normalizedCanonicalPath = path.resolve(options.unifiedRuntimeConfigPath);
+    const legacyRuntimeConfigPath = path.resolve(
+      path.join(options.runtimeStateRoot, "runtime-config.yaml"),
+    );
+    if (legacyRuntimeConfigPath === normalizedCanonicalPath) {
+      return;
+    }
+
+    const canonicalRuntimeConfigText = await readFile(
+      options.unifiedRuntimeConfigPath,
+      "utf8",
+    ).catch((error: unknown) => {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        return null;
+      }
+      throw error;
+    });
+    if (canonicalRuntimeConfigText !== null) {
+      return;
+    }
+
+    const legacyRuntimeConfigText = await readFile(legacyRuntimeConfigPath, "utf8").catch(
+      (error: unknown) => {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+          return null;
+        }
+        throw error;
+      },
+    );
+    if (legacyRuntimeConfigText === null) {
+      return;
+    }
+
+    await mkdir(path.dirname(options.unifiedRuntimeConfigPath), { recursive: true });
+    await writeFile(options.unifiedRuntimeConfigPath, legacyRuntimeConfigText, "utf8");
+  };
+  await migrateLegacyStandaloneRuntimeConfigIfNeeded();
   const initialUnifiedRuntimeConfigText = options.unifiedRuntimeConfigPath
     ? await readFile(options.unifiedRuntimeConfigPath, "utf8").catch((error: unknown) => {
         if ((error as NodeJS.ErrnoException).code === "ENOENT") {
@@ -16026,6 +16068,30 @@ export async function createRuntimeBridgeBackend(
       ...config,
       modelAliases: nextAliases,
     };
+  };
+  const persistMaterializedCanonicalRoutingAliasesIfNeeded = async (): Promise<boolean> => {
+    if (currentUnifiedRuntimeConfig === null) {
+      return false;
+    }
+
+    const materializedConfig = materializeCanonicalRoutingAliasMatrix(currentUnifiedRuntimeConfig);
+    if (materializedConfig === currentUnifiedRuntimeConfig) {
+      return false;
+    }
+
+    currentUnifiedRuntimeConfig = materializedConfig;
+    syncRoutingModelSelection();
+    refreshRoutableInventoryState();
+    if (options.unifiedRuntimeConfigPath) {
+      await mkdir(path.dirname(options.unifiedRuntimeConfigPath), { recursive: true });
+      await writeFile(
+        options.unifiedRuntimeConfigPath,
+        renderUnifiedRuntimeConfigText(materializedConfig),
+        "utf8",
+      );
+    }
+
+    return true;
   };
   let currentRoutableInventory: RoutableInventory = emptyRoutableInventory();
   let currentAliasDriftWarnings: readonly AliasDriftWarning[] = [];
@@ -17110,20 +17176,7 @@ export async function createRuntimeBridgeBackend(
     await syncLocalPeerState(await readStoredPeers());
     rebuildCurrentState();
     if (nextConfig !== null) {
-      const materializedConfig = materializeCanonicalRoutingAliasMatrix(nextConfig);
-      if (materializedConfig !== nextConfig) {
-        currentUnifiedRuntimeConfig = materializedConfig;
-        syncRoutingModelSelection();
-        refreshRoutableInventoryState();
-        if (options.unifiedRuntimeConfigPath) {
-          await mkdir(path.dirname(options.unifiedRuntimeConfigPath), { recursive: true });
-          await writeFile(
-            options.unifiedRuntimeConfigPath,
-            renderUnifiedRuntimeConfigText(materializedConfig),
-            "utf8",
-          );
-        }
-      }
+      await persistMaterializedCanonicalRoutingAliasesIfNeeded();
     }
     const nextModelAliases = currentUnifiedRuntimeConfig?.modelAliases ?? [];
     if (
@@ -24053,6 +24106,7 @@ export async function createRuntimeBridgeBackend(
       },
       inventory: async () => {
         refreshRoutableInventoryState();
+        await persistMaterializedCanonicalRoutingAliasesIfNeeded();
         const inventorySummary = buildInventorySummary();
         const driftWarnings = currentAliasDriftWarnings;
 

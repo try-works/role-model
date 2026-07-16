@@ -60,6 +60,7 @@ Source-Runs:
 - `64-observed-data-decay-policy-recalibration`
 - `70-cache-hit-token-rate-analytics-fix`
 - `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
+- `72-standalone-runtime-config-authority-and-alias-rematerialization`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-07-16T00:00:00Z`
 Tags:
@@ -122,6 +123,7 @@ This repository now has a real product baseline rather than only recursive scaff
 - The unified-vendor baseline now includes shared `cacheStatus` metadata, routed fallback-model propagation into LiteLLM `fallbacks`, and additive vendor `healthCheck()` / `executeStream()` compatibility methods for managed llama-swap and LiteLLM vendors
 - The repo-owned validation floor now includes `runtime:validate-vendors`, which proves the decision-only/local-only/remote-only/hybrid execution matrix end to end with managed vendor processes, plus separate live-vendor and browser-backed closeout proof for the final local llama-swap and remote LiteLLM bridge paths
 - The runtime now has a first SEA packaging path through `/role-model-router/sea-config.json`, `/role-model-router/apps/runtime-host-bridge/src/package-sea.ts`, `runtime:package-sea`, `runtime:validate-packaging`, and `/.github/workflows/build-binaries.yml`; the packaged executable embeds platform-aware llama-swap assets and is validated by booting the SEA binary and exercising `/healthz` plus `/v1/models`
+- The packaged standalone launcher in `/role-model-router/apps/launcher/` now passes the canonical `--unified-runtime-config <runtimeStateRoot>/state/runtime-config.yaml` argument explicitly, so the standalone executable and the backend no longer diverge across root-level versus `state/` runtime-config authorities on restart.
 - The runtime now also exposes a canonical unified telemetry baseline for mixed local and remote execution, including summary, ledger, request-detail, and `/api/role-model/telemetry/stream` SSE surfaces in `/role-model-router/apps/runtime-host-bridge/` and matching dashboard, requests, and request-detail consumers in `/role-model-router/apps/runtime-ui/`
 - Detailed runtime routing, provider-capability, alias-matrix, Codex Subscription lifecycle, and hosted-search/tool semantics now live in `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`.
 - Run 49 extended unified telemetry into backend-owned historical analytics, run 50 extended the same runtime baseline into Codex Subscription plus routing/provider-capability truth, and run 53 hardened telemetry analytics into an explicit backend contract with applied query metadata, metric/dimension support, full-slice aggregation, shared semantic chart states, aligned ledger filters, and a current graph matrix architecture reference. Detailed operator-routing, provider, and telemetry semantics live in the dedicated routing/provider domain shard.

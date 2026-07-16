@@ -1,10 +1,13 @@
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import { afterEach, describe, expect, test } from "vitest";
 
+import * as bridge from "../src/index.js";
 import { createRuntimeBridgeBackend } from "../src/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -1824,6 +1827,498 @@ version: "1.0"
       }
     }
   });
+
+  test("migrates a legacy standalone runtime config into the canonical state path on startup", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run72-standalone-config-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "standalone-runtime-root");
+    const legacyRuntimeConfigPath = path.join(runtimeStateRoot, "runtime-config.yaml");
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "state", "runtime-config.yaml");
+
+    await mkdir(runtimeStateRoot, { recursive: true });
+    await writeFile(
+      legacyRuntimeConfigPath,
+      [
+        'version: "1.0"',
+        "execution_mode: remote_only",
+        "routing:",
+        "  strategy: difficulty",
+        "model_aliases:",
+        "  exact.remote-golden:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "moonshot/kimi-k2.7-code"',
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "standalone-runtime",
+      unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
+    });
+
+    await expect(backend.readRuntimeConfig()).resolves.toEqual(
+      expect.objectContaining({
+        applied: true,
+        path: unifiedRuntimeConfigPath,
+        config: expect.objectContaining({
+          executionMode: "remote_only",
+          routingStrategy: "difficulty",
+          modelAliases: expect.arrayContaining([
+            expect.objectContaining({
+              aliasId: "exact.remote-golden",
+              modelIds: ["moonshot/kimi-k2.7-code"],
+            }),
+          ]),
+        }),
+      }),
+    );
+    await expect(backend.readRuntimeSummary()).resolves.toEqual(
+      expect.objectContaining({
+        unifiedConfig: {
+          enabled: true,
+          path: unifiedRuntimeConfigPath,
+        },
+      }),
+    );
+    await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.toContain(
+      "exact.remote-golden:",
+    );
+
+    await backend.shutdown();
+  });
+
+  test("repairs stale standalone canonical remote aliases after restart bootstrap rehydrates env-backed persisted endpoints", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run72-standalone-alias-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "standalone-runtime-root");
+    const unifiedRuntimeConfigPath = path.join(runtimeStateRoot, "state", "runtime-config.yaml");
+    const originalOpenAiApiKey = process.env.RUN72_OPENAI_API_KEY;
+    const originalDeepseekApiKey = process.env.RUN72_DEEPSEEK_API_KEY;
+    const originalMoonshotApiKey = process.env.RUN72_MOONSHOT_API_KEY;
+    process.env.RUN72_OPENAI_API_KEY = "run72-openai-seed";
+    process.env.RUN72_DEEPSEEK_API_KEY = "run72-deepseek-seed";
+    process.env.RUN72_MOONSHOT_API_KEY = "run72-moonshot-seed";
+
+    const healthServer = createServer((request, response) => {
+      if (request.url === "/v1/models") {
+        response.writeHead(200, { "content-type": "application/json" });
+        response.end(
+          JSON.stringify({
+            data: [
+              { id: "chatgpt/gpt-5.4" },
+              { id: "deepseek/deepseek-v4-flash" },
+              { id: "moonshot/kimi-k2.7-code" },
+            ],
+          }),
+        );
+        return;
+      }
+
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end("{}");
+    });
+    await new Promise<void>((resolve) => healthServer.listen(0, "127.0.0.1", () => resolve()));
+    const healthServerAddress = healthServer.address();
+    if (
+      healthServerAddress === null ||
+      typeof healthServerAddress !== "object" ||
+      typeof healthServerAddress.port !== "number"
+    ) {
+      throw new Error("health server failed to bind");
+    }
+    const healthServerBaseUrl = `http://127.0.0.1:${healthServerAddress.port}/v1`;
+
+    try {
+      const seedBackend = await createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "standalone-runtime",
+        runtimeVendorStartup: "disabled",
+      });
+      await seedBackend.upsertProviderAccount({
+        providerAccountId: "openai.personal.run72-openai",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "RUN72_OPENAI_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: healthServerBaseUrl,
+        allowedModels: ["chatgpt/gpt-5.4"],
+        modelRoleBindings: [
+          {
+            modelId: "chatgpt/gpt-5.4",
+            roleIds: ["writer"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      await seedBackend.upsertProviderAccount({
+        providerAccountId: "deepseek.personal.run72-deepseek",
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "RUN72_DEEPSEEK_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: healthServerBaseUrl,
+        allowedModels: ["deepseek/deepseek-v4-flash"],
+        modelRoleBindings: [
+          {
+            modelId: "deepseek/deepseek-v4-flash",
+            roleIds: ["writer"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      await seedBackend.upsertProviderAccount({
+        providerAccountId: "moonshot.personal.run72-moonshot",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "RUN72_MOONSHOT_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: healthServerBaseUrl,
+        allowedModels: ["moonshot/kimi-k2.7-code"],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.7-code",
+            roleIds: ["writer"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "active",
+        healthStatus: "healthy",
+        rotationState: "stable",
+      });
+      await seedBackend.activateEndpoint({
+        providerAccountId: "openai.personal.run72-openai",
+        modelId: "chatgpt/gpt-5.4",
+        region: "global",
+      });
+      await seedBackend.activateEndpoint({
+        providerAccountId: "deepseek.personal.run72-deepseek",
+        modelId: "deepseek/deepseek-v4-flash",
+        region: "global",
+      });
+      await seedBackend.activateEndpoint({
+        providerAccountId: "moonshot.personal.run72-moonshot",
+        modelId: "moonshot/kimi-k2.7-code",
+        region: "global",
+      });
+      delete process.env.RUN72_OPENAI_API_KEY;
+      delete process.env.RUN72_DEEPSEEK_API_KEY;
+      delete process.env.RUN72_MOONSHOT_API_KEY;
+      await seedBackend.upsertProviderAccount({
+        providerAccountId: "openai.personal.run72-openai",
+        providerId: "openai",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "RUN72_OPENAI_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: healthServerBaseUrl,
+        allowedModels: ["chatgpt/gpt-5.4"],
+        modelRoleBindings: [
+          {
+            modelId: "chatgpt/gpt-5.4",
+            roleIds: ["writer"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "disabled",
+        healthStatus: "credentials-missing",
+        rotationState: "not-required",
+      });
+      await seedBackend.upsertProviderAccount({
+        providerAccountId: "deepseek.personal.run72-deepseek",
+        providerId: "deepseek",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "RUN72_DEEPSEEK_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: healthServerBaseUrl,
+        allowedModels: ["deepseek/deepseek-v4-flash"],
+        modelRoleBindings: [
+          {
+            modelId: "deepseek/deepseek-v4-flash",
+            roleIds: ["writer"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "disabled",
+        healthStatus: "credentials-missing",
+        rotationState: "not-required",
+      });
+      await seedBackend.upsertProviderAccount({
+        providerAccountId: "moonshot.personal.run72-moonshot",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        credentialRef: {
+          backend: "env",
+          ref: "RUN72_MOONSHOT_API_KEY",
+        },
+        authMode: "api-key-static",
+        regionPolicy: {
+          mode: "prefer",
+          regions: ["global"],
+        },
+        baseUrlOverride: healthServerBaseUrl,
+        allowedModels: ["moonshot/kimi-k2.7-code"],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.7-code",
+            roleIds: ["writer"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+        status: "disabled",
+        healthStatus: "credentials-missing",
+        rotationState: "not-required",
+      });
+      await seedBackend.shutdown();
+
+      await mkdir(path.dirname(unifiedRuntimeConfigPath), { recursive: true });
+      await writeFile(
+        unifiedRuntimeConfigPath,
+        [
+          'version: "1.0"',
+          "execution_mode: remote_only",
+          "routing:",
+          "  strategy: baseline",
+          "model_aliases:",
+          "  default.remote-only:",
+          '    mode: "basic"',
+          "    model_ids:",
+          '      - "chatgpt/gpt-5.4"',
+          "  baseline.remote-only:",
+          '    mode: "basic"',
+          "    model_ids:",
+          '      - "chatgpt/gpt-5.4"',
+          "  controller.remote-only:",
+          '    mode: "intelligent"',
+          "    model_ids:",
+          '      - "chatgpt/gpt-5.4"',
+          "  difficulty.remote-only:",
+          '    mode: "difficulty"',
+          "    model_ids:",
+          '      - "chatgpt/gpt-5.4"',
+          "  hybrid.remote-only:",
+          '    mode: "hybrid"',
+          "    model_ids:",
+          '      - "chatgpt/gpt-5.4"',
+          "",
+        ].join("\n"),
+        "utf8",
+      );
+
+      process.env.RUN72_OPENAI_API_KEY = "run72-openai-key";
+      process.env.RUN72_DEEPSEEK_API_KEY = "run72-deepseek-key";
+      process.env.RUN72_MOONSHOT_API_KEY = "run72-moonshot-key";
+
+      const backend = await createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "standalone-runtime",
+        unifiedRuntimeConfigPath,
+        runtimeVendorStartup: "disabled",
+      });
+
+      try {
+        let health = await backend.readHealthStatus();
+        for (
+          let attempt = 0;
+          attempt < 20 && health.sessionBootstrap.status === "running";
+          attempt += 1
+        ) {
+          await delay(50);
+          health = await backend.readHealthStatus();
+        }
+
+        expect(health.sessionBootstrap.status).toBe("ready");
+
+        const expectedModelIds = [
+          "chatgpt/gpt-5.4",
+          "deepseek/deepseek-v4-flash",
+          "moonshot/kimi-k2.7-code",
+        ];
+        const endpoints = await backend.listEndpoints();
+        const expectedEndpointIds = endpoints
+          .filter((endpoint) => endpoint.sourceType === "remote")
+          .map((endpoint) => endpoint.endpointId)
+          .sort();
+        const runtimeConfig = await backend.readRuntimeConfig();
+        const baselineRemoteOnlyAlias = runtimeConfig.config?.modelAliases?.find(
+          (alias) => alias.aliasId === "baseline.remote-only",
+        );
+        expect(baselineRemoteOnlyAlias?.modelIds.toSorted()).toEqual(expectedModelIds);
+
+        const summary = await backend.readRuntimeSummary();
+        expect(summary.aliasDrift).toEqual([]);
+        expect(summary.unifiedConfig).toEqual({
+          enabled: true,
+          path: unifiedRuntimeConfigPath,
+        });
+
+        const routerSummary = await backend.readRouterSummary();
+        const routerAlias = routerSummary.aliasInventory.find(
+          (alias) => alias.aliasId === "baseline.remote-only",
+        );
+        expect(routerAlias?.resolvedModelIds.toSorted()).toEqual(expectedModelIds);
+        expect(routerAlias?.allowEndpointIds.toSorted()).toEqual(expectedEndpointIds);
+
+        const effectiveInventory = backend.getEffectiveRoutableInventory();
+        expect(effectiveInventory?.endpointIds.toSorted()).toEqual(expectedEndpointIds);
+
+        const mapping = (
+          bridge as {
+            mapChatCompletionsRequest: (
+              registry: typeof backend.effectiveRegistry,
+              body: Record<string, unknown>,
+              requestId: string,
+              modelAliases?: readonly {
+                aliasId: string;
+                mode?: "basic" | "difficulty" | "intelligent" | "hybrid" | null;
+                modelIds: readonly string[];
+              }[],
+              difficultyContext?: unknown,
+              controllerContext?: unknown,
+              requestOptions?: unknown,
+              roleDefinitions?: unknown,
+              defaultRoutingMode?: unknown,
+              inventory?: ReturnType<typeof backend.getEffectiveRoutableInventory>,
+            ) => {
+              routingRequest: {
+                allowEndpoints: readonly string[];
+              };
+              routingDiagnostics?: {
+                aliasResolution?: {
+                  requestedModel: string;
+                  aliasId: string;
+                  resolvedModelIds: readonly string[];
+                  allowEndpoints: readonly string[];
+                };
+              };
+            };
+          }
+        ).mapChatCompletionsRequest(
+          backend.effectiveRegistry,
+          {
+            model: "baseline.remote-only",
+            messages: [{ role: "user", content: "Route this through the repaired alias pool." }],
+          },
+          "req-run72-repaired-baseline-remote-only",
+          runtimeConfig.config?.modelAliases,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          effectiveInventory,
+        );
+
+        expect(mapping.routingRequest.allowEndpoints.toSorted()).toEqual(expectedEndpointIds);
+        expect(mapping.routingDiagnostics?.aliasResolution).toEqual({
+          requestedModel: "baseline.remote-only",
+          aliasId: "baseline.remote-only",
+          resolvedModelIds: expectedModelIds,
+          allowEndpoints: expectedEndpointIds,
+        });
+      } finally {
+        await backend.shutdown();
+      }
+    } finally {
+      await new Promise<void>((resolve, reject) =>
+        healthServer.close((error) => (error ? reject(error) : resolve())),
+      );
+      if (originalOpenAiApiKey === undefined) {
+        delete process.env.RUN72_OPENAI_API_KEY;
+      } else {
+        process.env.RUN72_OPENAI_API_KEY = originalOpenAiApiKey;
+      }
+      if (originalDeepseekApiKey === undefined) {
+        delete process.env.RUN72_DEEPSEEK_API_KEY;
+      } else {
+        process.env.RUN72_DEEPSEEK_API_KEY = originalDeepseekApiKey;
+      }
+      if (originalMoonshotApiKey === undefined) {
+        delete process.env.RUN72_MOONSHOT_API_KEY;
+      } else {
+        process.env.RUN72_MOONSHOT_API_KEY = originalMoonshotApiKey;
+      }
+    }
+  }, 60_000);
 
   test("surfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run16-litellm-models-"));

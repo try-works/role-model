@@ -1,0 +1,56 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test:router D:\DEV\role-model\.worktrees\72-standalone-runtime-config-authority-and-alias-rematerialization\role-model-router\apps\runtime-host-bridge
+> vitest run test/controller-routing-contract.test.ts test/runtime-routing-model.test.ts test/request-capability-inference.test.ts test/alias-capability-routing.test.ts test/restart-rehydration.test.ts test/endpoint-rehydration.test.ts test/model-capability-resolver.test.ts test/session-readiness-api.test.ts test/downstream-openai-discovery.test.ts test/validate-restart-rehydration.test.ts test/validate-observability.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/72-standalone-runtime-config-authority-and-alias-rematerialization/role-model-router/apps/runtime-host-bridge
+
+(node:27516) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/runtime-routing-model.test.ts (4 tests) 9ms
+ ✓ test/controller-routing-contract.test.ts (8 tests) 46ms
+ ✓ test/model-capability-resolver.test.ts (3 tests) 39ms
+(node:8904) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/request-capability-inference.test.ts (2 tests) 46ms
+ ✓ test/downstream-openai-discovery.test.ts (4 tests) 48ms
+(node:26964) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27504) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14580) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26400) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/alias-capability-routing.test.ts (3 tests) 45ms
+ ✓ test/session-readiness-api.test.ts (1 test) 1110ms
+   ✓ session readiness API > exposes bootstrap, inventory, and readiness fields over HTTP  1106ms
+ ✓ test/validate-restart-rehydration.test.ts (1 test) 3627ms
+   ✓ runRestartRehydrationValidation > rehydrates activated endpoints and mixed alias model list after backend restart  3624ms
+ ✓ test/endpoint-rehydration.test.ts (3 tests) 5355ms
+   ✓ endpoint rehydration > rehydrates sqlite runtime endpoints across backend restart without re-activation  1947ms
+   ✓ endpoint rehydration > reconciles missing persisted remote activations even when sqlite already has endpoint rows  1725ms
+   ✓ endpoint rehydration > marks restarted remote endpoints offline and ineligible when startup probes time out  1680ms
+ ✓ test/validate-observability.test.ts (1 test) 7425ms
+   ✓ runRuntimeObservabilityValidation > proves structured request, capture, metrics, and otel observability over the real host path  7423ms
+ ✓ test/restart-rehydration.test.ts (14 tests) 22674ms
+   ✓ restart rehydration > restores activated endpoints and session readiness summary after backend restart  2116ms
+   ✓ restart rehydration > keeps restarted remote endpoints healthy when provider /models returns unprefixed ids  1845ms
+   ✓ restart rehydration > does not count expired pending device authorization as an active readiness blocker after restart  1514ms
+   ✓ restart rehydration > archives orphan pending authorizations and orphan credential files instead of counting them as active readiness  1394ms
+   ✓ restart rehydration > archives invalid persisted provider accounts instead of surfacing them as active lifecycle records  1626ms
+   ✓ restart rehydration > surfaces failed pending authorization polling in bootstrap stage details after restart  1580ms
+   ✓ restart rehydration > classifies failed startup OAuth refresh as expired auth after restart  1647ms
+   ✓ restart rehydration > repairs stale bridge Kimi OAuth credentials from fresher standalone runtime tokens on restart  1552ms
+   ✓ restart rehydration > repairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility  1756ms
+   ✓ restart rehydration > refreshes Kimi OAuth after restart by honoring the stored token device id  1859ms
+   ✓ restart rehydration > polls the earliest-expiring pending authorizations first and surfaces deferred count  1975ms
+   ✓ restart rehydration > cleans up a pending Codex Subscription device-code session after restart  1486ms
+   ✓ restart rehydration > normalizes legacy local peer role bindings during restart rehydration  1516ms
+   ✓ restart rehydration > defers persisted peer auto-reload entries during restart bootstrap when peers are not configured  803ms
+
+ Test Files  11 passed (11)
+      Tests  44 passed (44)
+   Start at  08:59:58
+   Duration  26.04s (transform 3.51s, setup 0ms, collect 14.16s, tests 40.42s, environment 5ms, prepare 4.60s)
+

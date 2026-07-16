@@ -19,6 +19,8 @@ func TestBuildRuntimeArgsUsesStandalonePaths(t *testing.T) {
 		"--repo-root", packageDir,
 		"--runtime-state-root", runtimeStateRoot,
 		"--scope-id", "standalone-runtime",
+		"--unified-runtime-config",
+		filepath.Join(runtimeStateRoot, "state", "runtime-config.yaml"),
 		"--host", runtimeHost,
 		"--port", "3456",
 		"--static-root", filepath.Join(packageDir, "build", "client"),

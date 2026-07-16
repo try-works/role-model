@@ -2,6 +2,41 @@
 
 ## Recursive Run Index
 
+### Run `72-standalone-runtime-config-authority-and-alias-rematerialization`
+
+- Run folder: `/.recursive/run/72-standalone-runtime-config-authority-and-alias-rematerialization/`
+- Worktree: `.worktrees/72-standalone-runtime-config-authority-and-alias-rematerialization`
+- Branch: `recursive/72-standalone-runtime-config-authority-and-alias-rematerialization`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - made the standalone runtime path that owns `:3456` pass and honor one canonical unified runtime config path at `<runtimeStateRoot>/state/runtime-config.yaml`
+  - added deterministic standalone legacy-config migration so an obsolete root-level `runtime-config.yaml` is copied forward only when the canonical state-path file is missing
+  - repaired canonical primary alias materialization so startup reruns it after the authoritative inventory bootstrap, allowing env-backed persisted endpoints to expand `baseline.remote-only` and the other primary aliases back to the full healthy remote pool on restart
+  - added strict-TDD launcher, backend, and packaged-runtime regressions, including a rebuilt standalone executable restart proof
+- Why:
+  - the packaged standalone runtime could preserve stale singleton canonical aliases because the launcher and backend could observe competing config authorities and because alias materialization originally ran before restart bootstrap restored the live routable remote inventory
+  - request-time routing policy was already correct; the bug was stale canonical alias truth narrowing the candidate pool before normal routing logic ran
+- How:
+  - implemented with strict TDD across the standalone launcher seam, the backend authority-normalization and alias-rematerialization seam, and a Windows packaged-runtime restart regression
+  - verified with focused RED/GREEN evidence, the broader router floor, Go launcher tests, and rebuilt-runtime packaged restart proof against representative persisted state
+- What was not done:
+  - no provider-specific OpenAI, DeepSeek, or Moonshot routing hack was introduced
+  - no request-time `allowEndpoints` bypass or forced endpoint override was added
+  - no manual cleanup of user runtime files or SQLite state became part of the fix
+- Known issues / follow-ups:
+  - rebuilt packaged-runtime closeout currently proves authoritative alias-pool truth on the real executable; the direct request-level `allowEndpoints` proof remains cleanest at the owning backend seam under the current models-only mock upstream harness
+
 ### Run `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
 
 - Run folder: `/.recursive/run/71-runtime-startup-lifecycle-and-health-truth-reconciliation/`

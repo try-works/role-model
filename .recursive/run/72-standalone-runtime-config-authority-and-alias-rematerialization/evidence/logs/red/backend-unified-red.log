@@ -1,0 +1,72 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/72-standalone-runtime-config-authority-and-alias-rematerialization/role-model-router/apps/runtime-host-bridge
+
+(node:7000) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/backend-unified-runtime-config.test.ts (25 tests | 1 failed | 23 skipped) 2783ms
+   ↓ runtime-host-bridge unified runtime backend > router candidates expose every configured endpoint and mark current execution-mode eligibility
+   ↓ runtime-host-bridge unified runtime backend > rejects benchmark runs that target endpoints excluded by execution mode
+   ↓ runtime-host-bridge unified runtime backend > surfaces the derived execution mode in the runtime summary when a unified config file is provided
+   ↓ runtime-host-bridge unified runtime backend > reads and updates unified runtime config through the backend
+   ↓ runtime-host-bridge unified runtime backend > merges partial runtime config updates without dropping existing routing strategy
+   ↓ runtime-host-bridge unified runtime backend > canonicalizes the primary routing alias to the live routing matrix on startup
+   ↓ runtime-host-bridge unified runtime backend > creates and updates unified runtime config when the configured path does not exist yet
+   ↓ runtime-host-bridge unified runtime backend > persists explicit hybrid execution mode from routing strategy updates
+   ↓ runtime-host-bridge unified runtime backend > bootstraps the primary routing alias when routing posture is saved without preconfigured aliases
+   ↓ runtime-host-bridge unified runtime backend > bootstraps a settings-specific primary routing alias for remote-only posture without preconfigured aliases
+   ↓ runtime-host-bridge unified runtime backend > maintains the routing alias matrix across strategy families and execution modes
+   ↓ runtime-host-bridge unified runtime backend > persists the full canonical routing alias matrix instead of a single primary alias
+   ↓ runtime-host-bridge unified runtime backend > normalizes legacy craft-ask routing strategy updates to the default alias family
+   ↓ runtime-host-bridge unified runtime backend > rewrites persisted craft-ask alias ids out of startup config materialization
+   ↓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when the canonical matrix already exists
+   ↓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases
+   ↓ runtime-host-bridge unified runtime backend > renames the primary routing alias when routing strategy and execution mode change
+   ↓ runtime-host-bridge unified runtime backend > does not mark all candidates ignored when routing guidance has no preferred endpoints
+   ↓ runtime-host-bridge unified runtime backend > preserves synthesized activated endpoint models across runtime config updates
+   ↓ runtime-host-bridge unified runtime backend > returns no controller assignment when the unified config has no endpoints yet
+   ↓ runtime-host-bridge unified runtime backend > surfaces normalized provider docs and npm metadata through listProviders
+   ↓ runtime-host-bridge unified runtime backend > preserves manual account authority and provenance on exact runtime-config account-id collision
+   × runtime-host-bridge unified runtime backend > migrates a legacy standalone runtime config into the canonical state path on startup 863ms
+     → expected { applied: false, …(2) } to deeply equal ObjectContaining{…}
+   ✓ runtime-host-bridge unified runtime backend > repairs stale standalone canonical remote aliases after restart bootstrap restores persisted remote endpoints  1918ms
+   ↓ runtime-host-bridge unified runtime backend > surfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/backend-unified-runtime-config.test.ts > runtime-host-bridge unified runtime backend > migrates a legacy standalone runtime config into the canonical state path on startup
+AssertionError: expected { applied: false, …(2) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "applied": true,
+-   "config": ObjectContaining {
+-     "executionMode": "remote_only",
+-     "modelAliases": ArrayContaining [
+-       ObjectContaining {
+-         "aliasId": "exact.remote-golden",
+-         "modelIds": [
+-           "moonshot/kimi-k2.7-code",
+-         ],
+-       },
+-     ],
+-     "routingStrategy": "difficulty",
+-   },
++ {
++   "applied": false,
++   "config": null,
+    "path": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-run72-standalone-config-gPMOsd\\standalone-runtime-root\\state\\runtime-config.yaml",
+  }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 23 skipped (25)
+   Start at  08:57:42
+   Duration  5.99s (transform 1.69s, setup 0ms, collect 2.30s, tests 2.78s, environment 0ms, prepare 255ms)
+
+undefined
+D:\DEV\role-model\.worktrees\72-standalone-runtime-config-authority-and-alias-rematerialization\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/backend-unified-runtime-config.test.ts -t migrates a legacy standalone runtime config into the canonical state path on startup|repairs stale standalone canonical remote aliases after restart bootstrap restores persisted remote endpoints

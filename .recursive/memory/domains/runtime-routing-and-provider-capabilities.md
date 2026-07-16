@@ -66,6 +66,7 @@ Source-Runs:
 - `69-benchmark-scoring-integrity`
 - `70-cache-hit-token-rate-analytics-fix`
 - `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
+- `72-standalone-runtime-config-authority-and-alias-rematerialization`
 Validated-At-Commit: `working-tree`
 Last-Validated: `2026-07-16`
 Tags:
@@ -105,6 +106,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 ## Durable Truths
 
 - The runtime owns a canonical strategy × execution-mode routing matrix, and alias materialization must reflect that matrix instead of ad hoc inventory fallback.
+- For `scopeId = standalone-runtime`, the canonical unified runtime config authority is `<runtimeStateRoot>/state/runtime-config.yaml`. A legacy root-level `runtime-config.yaml` may be copied forward only when the canonical file is missing; do not treat both paths as live authorities after startup.
 - Legacy `craft-ask` strategy and alias ids are removed and should not reappear in config materialization, `/v1/models`, or operator documentation.
 - Exact-model requests stay additive; alias requests resolve through the runtime-owned candidate pool before final routing.
 - The shared routed execution contract now carries additive `reasoning`, `sessionAffinity`, `transportPreference`, and `continuation` fields. Responses ingress must preserve `tool_choice`, reasoning/thinking controls, `previous_response_id`, and prompt-cache/request-affinity hints into that contract so provider adapters do not have to reconstruct dropped semantics later.
@@ -169,6 +171,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
   - unresolved env-backed credentials remain `credentials-missing`
   - Studio and related consumers must not imply execution readiness before credentials and endpoint activation are actually satisfied
 - Startup endpoint reconciliation is durable-intent authoritative on every boot. A non-empty `runtime_endpoints` table is not sufficient readiness proof; startup must compare persisted endpoint rows to the current configured endpoint intent, reconcile missing valid activations, exclude stale rows that no longer belong to current intent, and keep repeated restarts idempotent.
+- Canonical primary aliases must be re-materialized after startup inventory reconciliation changes the effective routable inventory, not only during the initial config-load pass. When env-backed or persisted endpoints return to the healthy routable pool on restart, the canonical alias matrix must be rewritten from that post-bootstrap truth and persisted only if membership actually changed.
 - Provider-account rows are maintenance state, not configured remote inventory. Configured remote inventory is the endpoint-backed endpoint-plus-model set for the current runtime posture; maintenance-only rows such as `connected-no-endpoint` credentials, env-backed account references, and peer-local credentials may appear in a separate maintenance surface but must not appear as configured remote provider connections.
 - Health, lifecycle, routing eligibility, and benchmark eligibility are distinct backend-owned fields. Runtime UI surfaces should consume `healthStatus`, `routingEligible`, and `benchmarkEligible` from backend contracts rather than inferring readiness from lifecycle `status`, raw credential presence, or raw candidate ordering.
 - Router overview slices and benchmark runnable checklists should derive from canonical eligible subsets instead of `slice(0, 3)` over raw candidates, an implicit three-row helper default, or `executionModeEligible` alone. The default `/app/router` visible list should render the full routing-eligible subset unless a caller applies an explicit limit.
