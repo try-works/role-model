@@ -6,205 +6,225 @@ Inputs:
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/00-requirements.md` (LOCKED)
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/00-worktree.md` (LOCKED)
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/01-as-is.md` (LOCKED)
+- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/01.5-root-cause.md` (LOCKED)
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/02-to-be-plan.md` (LOCKED)
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` (LOCKED)
 - `/.recursive/run/73-telemetry-surface-integrity-contract-fix/04-test-summary.md` (LOCKED)
-- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-01.md` (DRAFT)
-- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-02.md` (DRAFT)
+- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-01.md` (LOCKED)
+- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-02.md` (LOCKED)
 Outputs:
 - This file.
+- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/`
 
-Scope note: Records the manual QA verification steps and results for the telemetry surface integrity fix run, confirming the rebuilt-runtime browser behavior for cache-key synthesis, token provenance, chart layout contract, and dual-axis rendering.
+Scope note: Records browser verification against the SEA runtime built from the final implementation commit on isolated port `3483`; human-mode approval remains pending explicit user sign-off.
 
 ## TODO
 
-- [ ] Complete workflow recovery and the implementation remediation plan in addendum `02`
-- [ ] Relock repaired Phase 3 and Phase 4 artifacts in order
-- [ ] Rebuild the runtime from worktree sources on a non-`:3456` port
-- [ ] Verify prompt-cache synthesis in request receipts
-- [ ] Verify token provenance labels on request detail
-- [ ] Verify chart layout contract (no negative left margin, legend aligned)
-- [ ] Verify dual-axis rendering on area and bar charts
-- [ ] Verify existing telemetry surfaces still populate correctly
-- [ ] Record results and screenshots
-- [ ] Complete user sign-off
+- [x] Package the final implementation commit
+- [x] Seed isolated deterministic telemetry through canonical runtime persistence
+- [x] Start the SEA runtime on a non-`3456` port
+- [x] Verify explicit and synthesized prompt-cache truth
+- [x] Verify measured, normalized, estimated, unavailable, and genuine-zero token truth
+- [x] Verify single-axis, dual-axis, area, and bar chart geometry in Chromium
+- [x] Capture routes, request IDs, DOM measurements, API receipts, and screenshots
+- [x] Stop only the test runtime and prove port `3456` is unchanged
+- [ ] Obtain explicit human sign-off
 
 ## Audit Context
 
-- Audit Execution Mode: self-audit
+- Audit Execution Mode: self-audit plus human approval gate
 - Subagent Availability: unavailable
-- Subagent Capability Probe: No subagent CLI or model route is configured in the current worktree.
-- Delegation Decision Basis: Manual QA is inherently an operator-executed phase; the scenarios are documented here for operator execution.
-- Delegation Override Reason: N/A
-- Audit Inputs Provided:
-  - All locked phase artifacts `00-requirements.md` through `04-test-summary.md`
+- Subagent Capability Probe: no recursive router or delegated browser-review transport is configured in this worktree.
+- Delegation Decision Basis: browser automation, screenshots, API receipts, process records, and package manifest are directly reproducible; the declared human sign-off cannot be self-issued.
+- Audit Inputs Provided: lock-valid Phase 3/4, both locked addenda, package manifest, startup logs, browser script/output, request evidence, screenshots, and process isolation log.
 
 ## Effective Inputs Re-read
 
-- `02-to-be-plan.md` (LOCKED) defines the Manual QA Scenarios section with specific verification targets.
-- `03-implementation-summary.md` (LOCKED) documents the changed files and TDD evidence paths, but audit addendum `01` identifies invalid strict-TDD and completion claims.
-- `04-test-summary.md` (LOCKED) records focused package results, but audit addendum `01` identifies an unexecuted and currently failing R8 browser regression path.
-- `05-manual-qa.upstream-gap.02-to-be-plan.addendum-01.md` records blocking findings `A73-01` through `A73-08`.
-- `05-manual-qa.upstream-gap.02-to-be-plan.addendum-02.md` defines workflow recovery, strict-TDD repair, Phase 4 reverification, and rebuilt-runtime QA.
-- R9 (rebuilt-runtime browser verification) is the primary objective of this phase.
+- Addendum `02` SP7 requires a named implementation commit, `runtime:package-sea`, isolated state, port `3483`, deterministic request evidence, exact browser routes, screenshots, and proof that `3456` was untouched.
+- R9 requires the rebuilt runtime itself, not source preview or mocked component rendering.
+- `05-manual-qa.md` declares `QA Execution Mode: human`; browser execution may be recorded by the agent, but lock approval requires explicit human sign-off.
 
 ## Prior Recursive Evidence Reviewed
 
-- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/02-to-be-plan.md` (LOCKED): Manual QA Scenarios section
-- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` (LOCKED): changed files and evidence
-- Prior run 65: rebuilt-runtime verification discipline and non-`:3456` port requirement
-- The Phase 5 audit found contradictions between Phase 3/4 completion claims and the implementation/test evidence. Both addenda are authoritative effective inputs until remediation is complete.
+- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` records strict TDD through the SEA compressed-asset fallback repair.
+- `/.recursive/run/73-telemetry-surface-integrity-contract-fix/04-test-summary.md` records 547 host tests, 349 UI tests, six Playwright regressions, builds, schemas, and validators.
+- `/.recursive/run/65-codex-subscription-prompt-cache-parity/05-manual-qa.md` provides the prior rebuilt-runtime/isolation discipline.
+- `/.recursive/run/70-cache-hit-token-rate-analytics-fix/` remains the cache-efficiency metric ownership baseline.
 
 ## Earlier Phase Reconciliation
 
-- Phase 5 is blocked by audit findings `A73-01` through `A73-08`.
-- Phase 2 must be reopened so the missing root-cause gate and amended plan can be reconciled.
-- Phase 3 and Phase 4 must then be reopened, repaired, audited, and relocked in order before QA resumes.
-- No Phase 5 scenario result may be recorded as passing from the failed source-based Playwright audit run.
+- Phase 3 is locked at `cd3a29f1d9cfeb66e7bec5afd7f87af9c5440fefa559349398e35536b8554c47`.
+- Phase 4 is locked at `99216aa54b87196c3d929e7706f8b910319ce7c3f327861d2197e6240ed8ca23`.
+- The first SEA startup exposed a real compressed-asset fallback defect. Phase 3/4 were canonically reopened, repaired under RED/GREEN TDD, retested, and relocked before QA resumed.
+- Final implementation commit: `67f1ec95068523b8655970137d0bea381b9e8951`.
 
 ## QA Execution Record
 
 ### Environment
 
-- Runtime built from worktree: `D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/`
-- Port: Non-`:3456` as required by run constraints
-- Browser: Chromium-based (Playwright target)
-- Runtime state root: Fresh `state/` directory or existing persisted state
+- QA Execution Mode: human
+- Worktree: `D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/`
+- Package command: `corepack pnpm run runtime:package-sea`
+- Package result: PASS
+- Packaged executable: `role-model-router/dist/release/win32-x64/role-model-runtime.exe`
+- Manifest version: `0.0.6-9-g67f1ec95`
+- Manifest commit: `67f1ec95068523b8655970137d0bea381b9e8951`
+- Executable SHA-256: `814e370d7a9413b7c500ee5ac842f14306dc59278401a79c633f6af4b0990ca5`
+- Runtime state: `C:/Users/erikb/AppData/Local/Temp/role-model-runtime-qa`
+- Runtime scope: `runtime-qa`
+- Browser: Microsoft Edge Chromium through Playwright, headless, 1600x1100 viewport
+- Verification URL: `http://127.0.0.1:3483`
+- Test runtime PID: `26172`
+- Protected runtime: `127.0.0.1:3456`, PID `4640`
+
+### Startup Command
+
+```powershell
+role-model-runtime.exe `
+  --repo-root <release>/win32-x64 `
+  --runtime-state-root C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa `
+  --scope-id runtime-qa `
+  --host 127.0.0.1 `
+  --port 3483 `
+  --fixture-root <worktree>/testdata/router-runtime/fixtures `
+  --static-root <release>/win32-x64/build/client
+```
 
 ### QA Execution Status
 
-QA Execution Mode: human
-
-**Status**: BLOCKED — rebuilt runtime has not been started, and the audit addenda require implementation and automated-test remediation before operator execution.
+Status: EXECUTED - all agent-verifiable scenarios pass; explicit human sign-off is pending.
 
 ## QA Scenarios and Results
 
-### Scenario 1: Prompt-cache synthesis in receipts
+### Scenario 1: Package provenance and startup
 
-**Precondition**: Runtime running with Kimi (`moonshot/kimi-k2.7-code`) configured and routable.
-**Steps**:
-1. Send a chat request through the runtime without explicit `prompt_cache_key` but with `session_id` set.
-2. Navigate to request detail for the resulting request.
-3. Verify the receipt shows `promptCache` with `source: "synthesized"` and a key derived from `session_id`.
-4. Send a second request with explicit `prompt_cache_key`.
-5. Verify the receipt shows `source: "explicit"`.
+- Expected: package comes from the final implementation commit and initializes on a port other than `3456`.
+- Actual: manifest identifies commit `67f1ec95`, SHA-256 `814e370d...`; SEA backend initialized successfully on `3483` as PID `26172`.
+- Evidence: `evidence/phase5/package-manifest.json`, `packaged-runtime-launch.log`, `packaged-runtime.stderr.log`.
+- Status: PASS
 
-**Expected Result**: Synthesized keys carry `source: "synthesized"`, explicit keys carry `source: "explicit"`.
-**Actual Result**: PENDING
-**Status**: PENDING
+### Scenario 2: Prompt-cache request truth
 
-### Scenario 2: Token provenance on request detail
+- Routes: `/app/observe/requests/qa-telemetry-measured-001`, `/app/observe/requests/qa-telemetry-estimated-001`.
+- Actual: measured request shows `explicit`; estimated request shows `synthesized`. API evidence records `promptCacheRequested: true` with matching sources.
+- Explicit authority and synthesized fallback are both visible after packaged-runtime restart.
+- Evidence: `packaged-request-evidence.json`, `packaged-qa-telemetry-measured-001.png`, `packaged-qa-telemetry-estimated-001.png`.
+- Status: PASS
 
-**Precondition**: Runtime running. At least one request routed through an OpenAI-compatible provider.
-**Steps**:
-1. Navigate to `/app/requests` and select a completed request.
-2. Observe the Tokens fact card.
-3. Verify `source: measured` appears when provider returns usage.
-4. For providers without usage data, verify `source: estimated` appears with non-zero token counts.
+### Scenario 3: Token truth and provenance
 
-**Expected Result**: `source` provenance field visible in the Tokens detail section.
-**Actual Result**: PENDING
-**Status**: PENDING
+- Measured: `qa-telemetry-measured-001` -> `120000 · measured`.
+- Estimated: `qa-telemetry-estimated-001` -> `107 · estimated`.
+- Unavailable: `qa-telemetry-unavailable-001` -> `n/a · unavailable`, with no fabricated `0 · measured`.
+- Genuine zero: `qa-telemetry-zero-001` -> `0 · measured`.
+- Normalized: `qa-telemetry-measured-002` -> `400 · normalized`.
+- Evidence: `browser-observations.json`, `packaged-request-evidence.json`, and matching request screenshots.
+- Status: PASS
 
-### Scenario 3: Chart layout contract (no negative left margin)
+### Scenario 4: Overview shared chart geometry
 
-**Precondition**: Runtime running with telemetry data from recent requests.
-**Steps**:
-1. Navigate to `/app/observe` and observe the telemetry charts.
-2. Inspect chart container CSS to verify no `left: -18px` negative margin.
-3. Verify chart legend is positioned inside the chart area (not overlapping axes).
+- Route: `/app`.
+- Consumers: latency line, cache-efficiency dual-axis line, token-usage area, success/failure bar.
+- Actual: every Y tick bounding box remains inside its card; axis counts are 1/2/1/1; legend inset is 12px; plot left/right insets are 25px/25px.
+- Wide labels include the 140,000/105,000/70,000/35,000 scale and are visibly complete in the screenshot.
+- Evidence: `browser-observations.json`, `packaged-overview.png`.
+- Status: PASS
 
-**Expected Result**: No negative margin applied. Legend positioned within chart bounds.
-**Actual Result**: PENDING
-**Status**: PENDING
+### Scenario 5: Observe dual-axis chart geometry
 
-### Scenario 4: Dual-axis rendering on area and bar charts
+- Route: `/app/observe/requests`.
+- Consumer: Cache Efficiency Trend.
+- Actual: two rendered Y axes, ten tick labels, 12px legend inset, and balanced 25px/25px plot insets.
+- Evidence: `browser-observations.json`, `packaged-observe-requests.png`.
+- Status: PASS
 
-**Precondition**: Runtime running with telemetry data.
-**Steps**:
-1. Navigate to `/app/observe` and find a split-axis chart (e.g., Cache Efficiency with absolute tokens + rate).
-2. Verify both left and right Y-axes are visible.
-3. Verify axis labels correspond to correct metrics.
+### Scenario 6: Runtime isolation and teardown
 
-**Expected Result**: Both Y-axes render with correct labels and scales.
-**Actual Result**: PENDING
-**Status**: PENDING
-
-### Scenario 5: Existing telemetry surfaces still populate
-
-**Precondition**: Runtime running with existing state containing telemetry data.
-**Steps**:
-1. Navigate to view models, router, providers, and observe routes.
-2. Verify all tables populate with data.
-3. Verify no console errors related to chart rendering or token parsing.
-
-**Expected Result**: All routes load without errors. No regressions on existing surfaces.
-**Actual Result**: PENDING
-**Status**: PENDING
+- Before: port `3456` PID `4640`; port `3483` PID `26172`.
+- Action: stopped only PID `26172`.
+- After: port `3456` still PID `4640`; port `3483` has no listener.
+- Evidence: `process-isolation.log`.
+- Status: PASS
 
 ## Evidence and Artifacts
 
-- Package test passes: `04-test-summary.md` (LOCKED)
-- TDD GREEN evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/green/` (4 files)
-- Playwright test source: `role-model-router/apps/runtime-ui/e2e/shared-surface-regression.spec.ts`
-- Screenshots: PENDING (to be captured during rebuilt-runtime browser verification)
+- Package log: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/verification/runtime-package-sea.log`
+- Browser script: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/verify-packaged-runtime.mjs`
+- Browser output: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/browser-verification.log`
+- DOM measurements: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/browser-observations.json`
+- API truth: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/packaged-request-evidence.json`
+- Package provenance: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/package-manifest.json`
+- Process isolation: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/process-isolation.log`
+- Screenshots: seven `packaged-*.png` files under `evidence/phase5/`.
+- Initial SEA failure receipts are retained as `initial-sea-failure.*.log` and correspond to the strict-TDD SP7 repair.
 
 ## User Sign-Off
 
 - Approved by: PENDING
 - Date: PENDING
-- [ ] Scenario 1: Prompt-cache synthesis verified
-- [ ] Scenario 2: Token provenance verified
-- [ ] Scenario 3: Chart layout contract verified
-- [ ] Scenario 4: Dual-axis rendering verified
-- [ ] Scenario 5: Existing telemetry surfaces verified
-- [ ] Overall QA passed
-- [ ] Operator: ________ Date: ________
+- [x] Scenario 1: package provenance/startup agent-verified
+- [x] Scenario 2: cache request truth agent-verified
+- [x] Scenario 3: token provenance agent-verified
+- [x] Scenario 4: Overview geometry agent-verified
+- [x] Scenario 5: Observe geometry agent-verified
+- [x] Scenario 6: process isolation agent-verified
+- [ ] Human reviewer accepts the rebuilt-runtime evidence
+- [ ] Overall human QA approved
+
+## Requirement Completion Status
+
+- R1 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/packaged-request-evidence.json`
+- R2 | Status: verified | Changed Files: `role-model-router/packages/provider-openai/src/index.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/packaged-request-evidence.json`
+- R3 | Status: verified | Changed Files: `role-model-router/apps/runtime-ui/app/routes/request-detail.tsx` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/browser-observations.json`
+- R4 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/index.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/packaged-request-evidence.json`
+- R5 | Status: verified | Changed Files: `role-model-router/apps/runtime-ui/app/lib/design-system.ts`, `role-model-router/apps/runtime-ui/app/components/telemetry-charts.tsx` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/browser-observations.json`
+- R6 | Status: verified | Changed Files: `role-model-router/apps/runtime-ui/app/components/telemetry-charts.tsx` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/browser-observations.json`
+- R7 | Status: verified | Changed Files: `role-model-router/apps/runtime-host-bridge/src/runtime-assets.ts`, `role-model-router/apps/runtime-host-bridge/test/runtime-assets.test.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/verification/runtime-host-bridge.log`
+- R8 | Status: verified | Changed Files: `role-model-router/apps/runtime-ui/e2e/shared-surface-regression.spec.ts` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/03-implementation-summary.md` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/verification/runtime-ui-browser.log`
+- R9 | Status: verified | Changed Files: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/verify-packaged-runtime.mjs` | Implementation Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/package-manifest.json` | Verification Evidence: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/browser-observations.json`
 
 ## Traceability
 
-- Scenario 1 → R1 (prompt-cache synthesis and provenance)
-- Scenario 2 → R2 (nested usage normalization), R3 (token provenance rendering), R4 (ownership preservation — truthful usage feeds cacheHitTokenRate)
-- Scenario 3 → R5/R6 (shared chart layout contract and geometry)
-- Scenario 4 → R5/R6 (dual-axis support)
-- Scenario 5 → R7 (no existing test regression), R8 (no regression on existing surfaces)
-- R9 closure → All scenarios passed
+- R1/R2/R4 -> packaged request API evidence and explicit/synthesized browser surfaces.
+- R3 -> all four token truth sources plus genuine-zero browser and API evidence.
+- R5/R6 -> five shared time-series consumers with exact DOM measurements and screenshots.
+- R7/R8 -> strict TDD logs, full automated suites, and reproducible packaged-browser script.
+- R9 -> implementation commit manifest, isolated SEA startup, exact routes/IDs, screenshots, and process-isolation receipt.
 
 ## Worktree Diff Audit
 
 - Baseline type: `local commit`
-- Baseline reference: `11461400640736ab86d9340045bc1f90c102b464`
+- Baseline reference: `67f1ec95`
 - Comparison reference: `working-tree`
-- Normalized baseline: `11461400640736ab86d9340045bc1f90c102b464`
+- Normalized baseline: `67f1ec95`
 - Normalized comparison: `working-tree`
-- Normalized diff command: `git diff --name-only 11461400640736ab86d9340045bc1f90c102b464`
-- Planned or claimed changed files: same as prior phases
-- Actual changed files reviewed: same as prior phases
-- Unexplained drift: none
+- Normalized diff command: `git diff --name-only 67f1ec95`
+- Planned or claimed changed files: `/.recursive/run/73-telemetry-surface-integrity-contract-fix/05-manual-qa.md`, `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/logs/verification/runtime-package-sea.log`, and `/.recursive/run/73-telemetry-surface-integrity-contract-fix/evidence/phase5/`.
+- Actual changed files reviewed: same as planned or claimed changed files.
+- Unexplained drift: none.
 
 ## Audit Verdict
 
-Audit: FAIL
+Audit: PASS
 
-Manual verification has not been executed, and implementation findings `A73-01` through `A73-08` block Phase 5.
+All executable R9 evidence is present and internally consistent. The packaged runtime is tied to the final implementation commit, browser assertions and screenshots agree, and process isolation is proven.
 
 ## Coverage Gate
 
-- [ ] All 5 QA scenarios executed with results recorded.
-- [ ] R9 is closed when all scenarios pass.
-- [ ] Operator sign-off marks QA complete.
+- [x] Package commit and SHA-256 are recorded.
+- [x] Cache and token truth are verified on exact deterministic request IDs.
+- [x] Single-axis, dual-axis, area, bar, Overview, and Observe geometry are verified.
+- [x] Exact routes, measurements, API facts, and screenshots are retained.
+- [x] Port `3456` remained PID `4640`; port `3483` is free after teardown.
 
-Coverage: FAIL
-
-Implementation remediation, automated browser verification, rebuilt-runtime execution, and operator sign-off remain incomplete.
+Coverage: PASS
 
 ## Approval Gate
 
-- [ ] QA execution complete.
-- [ ] No regressions found.
-- [ ] Operator sign-off recorded.
+- [x] Agent-executable QA is complete.
+- [x] Audit and coverage gates pass.
+- [ ] Human-mode sign-off is explicit.
 
 Approval: FAIL
 
-Approval remains blocked pending the effective remediation plan and rebuilt-runtime QA.
-- Note: Operator must rebuild runtime from worktree sources on a non-`:3456` port and execute all scenarios before signing off.
+Approval remains pending only because `QA Execution Mode: human` requires the user to accept the recorded rebuilt-runtime evidence.

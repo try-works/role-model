@@ -1,0 +1,87 @@
+{
+  "baseUrl": "http://127.0.0.1:3483",
+  "verifiedAt": "2026-07-16T20:58:03.505Z",
+  "routes": [
+    "/app",
+    "/app/observe/requests",
+    "/app/observe/requests/qa-telemetry-measured-001",
+    "/app/observe/requests/qa-telemetry-estimated-001",
+    "/app/observe/requests/qa-telemetry-unavailable-001",
+    "/app/observe/requests/qa-telemetry-zero-001",
+    "/app/observe/requests/qa-telemetry-measured-002"
+  ],
+  "charts": [
+    {
+      "cardTestId": "telemetry-chart-card-latency-trend",
+      "axisCount": 1,
+      "tickCount": 5,
+      "minimumTickInset": 37.2274169921875,
+      "legendInset": 12,
+      "plotLeftInset": 25,
+      "plotRightInset": 25
+    },
+    {
+      "cardTestId": "telemetry-chart-card-cache-efficiency",
+      "axisCount": 2,
+      "tickCount": 10,
+      "minimumTickInset": 29.40625,
+      "legendInset": 12,
+      "plotLeftInset": 25,
+      "plotRightInset": 25
+    },
+    {
+      "cardTestId": "telemetry-chart-card-token-usage-over-time",
+      "axisCount": 1,
+      "tickCount": 5,
+      "minimumTickInset": 36.234375,
+      "legendInset": 12,
+      "plotLeftInset": 25,
+      "plotRightInset": 25
+    },
+    {
+      "cardTestId": "telemetry-chart-card-success-vs-failure",
+      "axisCount": 1,
+      "tickCount": 5,
+      "minimumTickInset": 31.828125,
+      "legendInset": 12,
+      "plotLeftInset": 25,
+      "plotRightInset": 25
+    },
+    {
+      "cardTestId": "telemetry-chart-card-cache-efficiency-trend",
+      "axisCount": 2,
+      "tickCount": 10,
+      "minimumTickInset": 29.438079833984375,
+      "legendInset": 12,
+      "plotLeftInset": 25,
+      "plotRightInset": 25
+    }
+  ],
+  "requests": [
+    {
+      "requestId": "qa-telemetry-measured-001",
+      "tokenText": "120000 · measured",
+      "cacheSource": "explicit"
+    },
+    {
+      "requestId": "qa-telemetry-estimated-001",
+      "tokenText": "107 · estimated",
+      "cacheSource": "synthesized"
+    },
+    {
+      "requestId": "qa-telemetry-unavailable-001",
+      "tokenText": "n/a · unavailable",
+      "cacheSource": null
+    },
+    {
+      "requestId": "qa-telemetry-zero-001",
+      "tokenText": "0 · measured",
+      "cacheSource": "synthesized"
+    },
+    {
+      "requestId": "qa-telemetry-measured-002",
+      "tokenText": "400 · normalized",
+      "cacheSource": "synthesized"
+    }
+  ]
+}

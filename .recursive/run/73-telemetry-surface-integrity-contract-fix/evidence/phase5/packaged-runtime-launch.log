@@ -1,0 +1,7 @@
+PID=26172
+COMMIT=67f1ec95
+SHA256=814e370d7a9413b7c500ee5ac842f14306dc59278401a79c633f6af4b0990ca5
+EXE=D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\dist\release\win32-x64\role-model-runtime.exe
+STATE=C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa
+PORT=3483
+ARGS=--repo-root D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\dist\release\win32-x64 --runtime-state-root C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa --scope-id runtime-qa --host 127.0.0.1 --port 3483 --fixture-root D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\testdata\router-runtime\fixtures --static-root D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\dist\release\win32-x64\build\client

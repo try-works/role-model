@@ -1,0 +1,10 @@
+{
+  "executable": "role-model-runtime.exe",
+  "platform": "win32",
+  "arch": "x64",
+  "target": "win32-x64",
+  "sha256": "814e370d7a9413b7c500ee5ac842f14306dc59278401a79c633f6af4b0990ca5",
+  "version": "0.0.6-9-g67f1ec95",
+  "commit": "67f1ec95068523b8655970137d0bea381b9e8951",
+  "build_date": "2026-07-16T20:53:40.734Z"
+}
