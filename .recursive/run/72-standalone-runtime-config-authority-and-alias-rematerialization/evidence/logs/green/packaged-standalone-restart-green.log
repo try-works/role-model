@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/72-standalone-runtime-config-authority-and-alias-rematerialization/role-model-router/apps/runtime-host-bridge
+
+(node:11012) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Wrote single executable preparation blob to ./dist/sea-prep.blob
+ ✓ test/packaged-standalone-restart.test.ts (1 test) 23399ms
+   ✓ packaged runtime repairs stale standalone aliases after env-backed restart bootstrap  23397ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  10:00:09
+   Duration  26.36s (transform 1.49s, setup 0ms, collect 2.09s, tests 23.40s, environment 0ms, prepare 341ms)
+

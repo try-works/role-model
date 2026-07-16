@@ -86,10 +86,12 @@ func resolveStandaloneWorkspaceRoot(packageDir string) string {
 
 func buildRuntimeArgs(packageDir string, runtimeStateRoot string) []string {
 	workspaceRoot := resolveStandaloneWorkspaceRoot(packageDir)
+	unifiedRuntimeConfigPath := filepath.Join(runtimeStateRoot, "state", "runtime-config.yaml")
 	return []string{
 		"--repo-root", workspaceRoot,
 		"--runtime-state-root", runtimeStateRoot,
 		"--scope-id", "standalone-runtime",
+		"--unified-runtime-config", unifiedRuntimeConfigPath,
 		"--host", runtimeHost,
 		"--port", fmt.Sprintf("%d", runtimePort),
 		"--static-root", filepath.Join(packageDir, "build", "client"),
