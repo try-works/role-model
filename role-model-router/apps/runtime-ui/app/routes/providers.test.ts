@@ -131,6 +131,101 @@ describe("provider model role assignment helpers", () => {
   });
 });
 
+describe("existing OAuth account model activation", () => {
+  test("builds immediate action feedback for save and OAuth outcomes", () => {
+    const buildProviderActionFeedback = (
+      providersModule as {
+        buildProviderActionFeedback?: unknown;
+      }
+    ).buildProviderActionFeedback;
+    expect(buildProviderActionFeedback).toBeTypeOf("function");
+    if (typeof buildProviderActionFeedback !== "function") {
+      return;
+    }
+
+    expect(
+      buildProviderActionFeedback({
+        action: "saved",
+        modelId: "moonshot/kimi-k3",
+        endpointActivated: true,
+      }),
+    ).toBe("Saved moonshot/kimi-k3 and activated its runtime endpoint.");
+    expect(
+      buildProviderActionFeedback({
+        action: "oauth",
+        modelId: "moonshot/kimi-k3",
+        providerLabel: "Kimi Code",
+        authorizationStatus: "pending",
+      }),
+    ).toBe("OAuth started for moonshot/kimi-k3. Complete authorization in the Kimi Code window.");
+    expect(
+      buildProviderActionFeedback({
+        action: "oauth",
+        modelId: "moonshot/kimi-k3",
+        providerLabel: "Kimi Code",
+        authorizationStatus: "connected",
+      }),
+    ).toBe("OAuth is connected and moonshot/kimi-k3 is active.");
+  });
+
+  test("treats a healthy persisted OAuth account as ready for endpoint activation", () => {
+    const shouldActivateSavedProviderEndpoint = (
+      providersModule as {
+        shouldActivateSavedProviderEndpoint?: unknown;
+      }
+    ).shouldActivateSavedProviderEndpoint;
+    expect(shouldActivateSavedProviderEndpoint).toBeTypeOf("function");
+    if (typeof shouldActivateSavedProviderEndpoint !== "function") {
+      return;
+    }
+
+    expect(
+      shouldActivateSavedProviderEndpoint({
+        authMode: "oauth2-device-code",
+        oauthConnected: false,
+        existingAccount: {
+          providerAccountId: "moonshot.personal.kimi-code",
+          authMode: "oauth2-device-code",
+          status: "active",
+          healthStatus: "healthy",
+        },
+      }),
+    ).toBe(true);
+  });
+
+  test("activates the selected model when device authorization reuses a connected credential", async () => {
+    const syncStartedProviderAuthorization = (
+      providersModule as {
+        syncStartedProviderAuthorization?: unknown;
+      }
+    ).syncStartedProviderAuthorization;
+    expect(syncStartedProviderAuthorization).toBeTypeOf("function");
+    if (typeof syncStartedProviderAuthorization !== "function") {
+      return;
+    }
+    const activateEndpoint = vi.fn(async () => undefined);
+
+    await syncStartedProviderAuthorization({
+      session: {
+        authRequestId: "auth-kimi-connected",
+        providerAccountId: "moonshot.personal.kimi-code",
+        providerId: "moonshot",
+        variantId: "kimi-code",
+        status: "connected",
+      },
+      selectedModels: ["moonshot/kimi-k3"],
+      activateEndpoint,
+    });
+
+    expect(activateEndpoint).toHaveBeenCalledOnce();
+    expect(activateEndpoint).toHaveBeenCalledWith({
+      providerAccountId: "moonshot.personal.kimi-code",
+      modelId: "moonshot/kimi-k3",
+      region: "global",
+    });
+  });
+});
+
 describe("startDeferredProvidersBootstrap", () => {
   test("waits for the initial providers load to settle before fetching the latest request ids", async () => {
     const startDeferredProvidersBootstrap = (

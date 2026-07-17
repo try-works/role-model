@@ -1,8 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("shows seeded provider maintenance and session readiness over the rebuilt runtime", async ({
-  page,
-}) => {
+test("keeps provider maintenance absent while showing configured connections", async ({ page }) => {
   const latestIdsResponsePromise = page.waitForResponse(
     (response) =>
       response.url().includes("/api/role-model/requests/latest-ids?limit=10") &&
@@ -15,17 +13,9 @@ test("shows seeded provider maintenance and session readiness over the rebuilt r
     page.getByRole("heading", { name: "Configured provider connections" }),
   ).toBeVisible();
 
-  const moonshotMaintenanceCard = page.getByTestId(
-    "provider-maintenance-moonshot.personal.primary",
-  );
-  await expect(
-    moonshotMaintenanceCard.getByRole("heading", { name: "moonshot.personal.primary" }),
-  ).toBeVisible();
-  await expect(
-    moonshotMaintenanceCard.getByText("Connection method: api-key-static"),
-  ).toBeVisible();
-  await expect(moonshotMaintenanceCard.getByText("Active endpoints: 1")).toBeVisible();
-  await expect(moonshotMaintenanceCard.getByText("moonshot/kimi-k2.5")).toBeVisible();
+  await expect(page.getByText("Saved provider maintenance", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Archived stale diagnostics", { exact: true })).toHaveCount(0);
+  await expect(page.getByTestId(/provider-maintenance-/)).toHaveCount(0);
 
   const latestIdsResponse = await latestIdsResponsePromise;
   expect(latestIdsResponse.status()).toBe(200);

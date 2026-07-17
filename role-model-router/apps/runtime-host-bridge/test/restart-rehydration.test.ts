@@ -9,6 +9,7 @@ import {
   listProviderAccounts,
   listRuntimeEndpoints,
   resolveSqliteMemoryLocation,
+  upsertProviderAccount as upsertSqliteProviderAccount,
 } from "@role-model-router/sqlite-memory";
 
 import { createRuntimeBridgeBackend } from "../src/index.js";
@@ -1311,6 +1312,160 @@ describe("restart rehydration", () => {
         };
         expect(repairedStandalonePayload.access_token).toBe("access-bridge-fresh");
         expect(repairedStandalonePayload.refresh_token).toBe("refresh-bridge-fresh");
+      } finally {
+        await secondBackend.shutdown();
+      }
+    } finally {
+      await rm(runtimeContainerRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("repairs standalone Kimi account model drift when an activated legacy endpoint still exists on restart", async () => {
+    const runtimeContainerRoot = path.join(os.tmpdir(), `restart-kimi-model-drift-${Date.now()}`);
+    const runtimeStateRoot = runtimeContainerRoot;
+    const scopeId = "standalone-runtime";
+    const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId });
+
+    const firstBackend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      networkFetcher: async (input, init) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
+          expect(init?.method ?? "POST").toBe("POST");
+          return new Response(
+            JSON.stringify({
+              user_code: "ABCD-EFGH",
+              device_code: "device-001",
+              verification_uri: "https://auth.kimi.com/device",
+              verification_uri_complete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
+              expires_in: 900,
+              interval: 5,
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        if (url === "https://auth.kimi.com/api/oauth/token") {
+          expect(init?.method ?? "POST").toBe("POST");
+          return new Response(
+            JSON.stringify({
+              access_token: "access-001",
+              refresh_token: "refresh-001",
+              expires_in: 3600,
+              scope: "openid profile",
+              token_type: "Bearer",
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    try {
+      const pending = await firstBackend.startProviderDeviceAuthorization({
+        providerAccountId: "moonshot.personal.kimi-code",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        variantId: "kimi-code",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["moonshot/kimi-k2.7-code"],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+      await firstBackend.pollProviderDeviceAuthorization({
+        authRequestId: pending.authRequestId,
+      });
+      const activation = await firstBackend.activateEndpoint({
+        providerAccountId: "moonshot.personal.kimi-code",
+        modelId: "moonshot/kimi-k2.7-code",
+        region: "global",
+      });
+      await firstBackend.shutdown();
+
+      const [persistedAccount] = listProviderAccounts({ databasePath }).filter(
+        (account) => account.providerAccountId === "moonshot.personal.kimi-code",
+      );
+      expect(persistedAccount).toBeDefined();
+      if (!persistedAccount) {
+        throw new Error("Expected persisted Kimi account before corruption step.");
+      }
+
+      upsertSqliteProviderAccount({
+        databasePath,
+        account: {
+          ...persistedAccount,
+          allowedModels: ["moonshot/kimi-k3"],
+          modelRoleBindings: [
+            {
+              modelId: "moonshot/kimi-k3",
+              roleIds: [],
+              roleAssignmentMode: "all",
+              enabledRoleIds: [],
+              disabledRoleIds: [],
+            },
+          ],
+        },
+      });
+
+      const secondBackend = await createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId,
+        networkFetcher: async (input) => {
+          const url =
+            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+          throw new Error(`Unexpected network request after restart: ${url}`);
+        },
+      });
+
+      try {
+        let health = await secondBackend.readHealthStatus();
+        for (
+          let attempt = 0;
+          attempt < 20 && health.sessionBootstrap.status === "running";
+          attempt += 1
+        ) {
+          await delay(50);
+          health = await secondBackend.readHealthStatus();
+        }
+
+        await expect(secondBackend.listAccounts()).resolves.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              providerAccountId: "moonshot.personal.kimi-code",
+              allowedModels: expect.arrayContaining([
+                "moonshot/kimi-k2.7-code",
+                "moonshot/kimi-k3",
+              ]),
+            }),
+          ]),
+        );
+        await expect(secondBackend.listEndpoints()).resolves.toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              endpointId: activation.endpointId,
+              providerAccountId: "moonshot.personal.kimi-code",
+              modelId: "moonshot/kimi-k2.7-code",
+              healthStatus: "healthy",
+            }),
+          ]),
+        );
+
+        const [repairedAccount] = listProviderAccounts({ databasePath }).filter(
+          (account) => account.providerAccountId === "moonshot.personal.kimi-code",
+        );
+        expect(repairedAccount?.allowedModels).toEqual(
+          expect.arrayContaining(["moonshot/kimi-k2.7-code", "moonshot/kimi-k3"]),
+        );
       } finally {
         await secondBackend.shutdown();
       }

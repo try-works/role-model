@@ -792,43 +792,15 @@ describe("runtime design system", () => {
     expect(providersRouteSource).not.toContain('providerKind === "local-engine"');
   });
 
-  test("providers surface exposes explicit in-place maintenance actions for saved remote accounts", () => {
-    expect(designSystemDocSource).toContain("explicit **Reconnect**");
-    expect(designSystemDocSource).toContain("explicit **Update API key**");
-    expect(providersRouteSource).toContain("Reconnect");
-    expect(providersRouteSource).toContain("Update API key");
-  });
-
-  test("providers surface uses an explicit save-cancel modal for api-key maintenance", () => {
-    expect(designSystemDocSource).toContain("explicit **Save** and **Cancel** controls");
-    expect(providersRouteSource).toContain("<dialog");
-    expect(providersRouteSource).toContain('aria-modal="true"');
-    expect(providersRouteSource).toContain("API key");
-    expect(providersRouteSource).toContain("Save");
-    expect(providersRouteSource).toContain("Cancel");
-  });
-
-  test("providers surface keeps oauth reconnect as a one-click saved-account action", () => {
-    expect(designSystemDocSource).toContain("explicit **Reconnect**");
-    expect(providersRouteSource).toContain("Reconnect");
-    expect(providersRouteSource).toContain("onReconnectAccount");
-  });
-
-  test("providers maintenance flows call explicit repair APIs instead of generic account writes", () => {
-    expect(providersRouteSource).toContain("reconnectRuntimeAccount");
-    expect(providersRouteSource).toContain("updateRuntimeAccountApiKey");
-  });
-
-  test("providers saved-account cards use canonical lifecycle rows and bounded archived diagnostics", () => {
-    expect(designSystemDocSource).toContain(
-      "lifecycle badge from the canonical backend lifecycle contract",
-    );
-    expect(designSystemDocSource).toContain("normalized storage-mode/credential posture");
-    expect(designSystemDocSource).toContain("bounded diagnostics separate from active accounts");
-    expect(providersRouteSource).toContain("buildProviderMaintenanceRows");
-    expect(providersRouteSource).toContain("buildArchivedArtifactRows");
-    expect(providersRouteSource).toContain("Archived stale diagnostics");
-    expect(providersRouteSource).not.toContain("credentialRef.backend");
+  test("providers surface omits saved-provider maintenance and archived diagnostics", () => {
+    expect(designSystemDocSource).not.toContain("repairing saved accounts in place");
+    expect(providersRouteSource).not.toContain("Saved provider maintenance");
+    expect(providersRouteSource).not.toContain("provider-maintenance-");
+    expect(providersRouteSource).not.toContain("buildProviderMaintenanceRows");
+    expect(providersRouteSource).not.toContain("buildArchivedArtifactRows");
+    expect(providersRouteSource).not.toContain("Archived stale diagnostics");
+    expect(providersRouteSource).not.toContain("onReconnectAccount");
+    expect(providersRouteSource).not.toContain("updateRuntimeAccountApiKey");
   });
 
   test("runtime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics", () => {
