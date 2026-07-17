@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 
-import { DeviceAuthorizationCard } from "../components/device-authorization-card";
 import { DeviceAuthorizationModal } from "../components/device-authorization-modal";
 import { LocalModelRolePicker } from "../components/local-model-role-picker";
 import {
@@ -48,14 +47,11 @@ import {
   reconnectRuntimeAccount,
   roleIdsToExplicitAssignment,
   startRuntimeDeviceAuthorization,
-  updateRuntimeAccountApiKey,
   upsertRuntimeAccount,
 } from "../lib/runtime-api";
 import {
   buildAccountModelCatalogIds,
-  buildArchivedArtifactRows,
   buildConfiguredRemoteConnectionRows,
-  buildProviderMaintenanceRows,
 } from "../lib/view-models";
 
 const inputClass = fieldClassName;
@@ -70,6 +66,61 @@ type ProviderModelRoleCoverageSummary = {
   readonly groupPreviewLabels: readonly string[];
   readonly hiddenGroupCount: number;
 };
+
+export function buildProviderActionFeedback(
+  input:
+    | {
+        readonly action: "saved";
+        readonly modelId: string;
+        readonly endpointActivated: boolean;
+      }
+    | {
+        readonly action: "oauth";
+        readonly modelId: string;
+        readonly providerLabel: string;
+        readonly authorizationStatus: RuntimeDeviceAuthorization["status"];
+      },
+): string {
+  if (input.action === "saved") {
+    return input.endpointActivated
+      ? `Saved ${input.modelId} and activated its runtime endpoint.`
+      : `Saved ${input.modelId}. Complete authentication to activate its runtime endpoint.`;
+  }
+
+  return input.authorizationStatus === "connected"
+    ? `OAuth is connected and ${input.modelId} is active.`
+    : `OAuth started for ${input.modelId}. Complete authorization in the ${input.providerLabel} window.`;
+}
+
+export function shouldActivateSavedProviderEndpoint(input: {
+  readonly authMode: string;
+  readonly oauthConnected: boolean;
+  readonly existingAccount?: Pick<RuntimeAccount, "authMode" | "status" | "healthStatus"> | null;
+}): boolean {
+  if (input.authMode === "api-key-static" || input.oauthConnected) {
+    return true;
+  }
+
+  return (
+    input.authMode === "oauth2-device-code" &&
+    input.existingAccount?.authMode === "oauth2-device-code" &&
+    input.existingAccount.status === "active" &&
+    input.existingAccount.healthStatus === "healthy"
+  );
+}
+
+export async function syncStartedProviderAuthorization(input: {
+  readonly session: RuntimeDeviceAuthorization;
+  readonly selectedModels: readonly string[];
+  readonly activateEndpoint: (payload: {
+    readonly providerAccountId: string;
+    readonly modelId: string;
+    readonly region: string;
+  }) => Promise<unknown>;
+}): Promise<boolean> {
+  await syncConnectedDeviceAuthorizationEndpoints(input);
+  return input.session.status === "connected";
+}
 
 type ProvidersInitialLoadResult = {
   readonly snapshot: ProvidersSnapshot;
@@ -316,6 +367,7 @@ export default function ProvidersRoute() {
   const recentRequestIdsErrorRef = useRef<string | null>(null);
   const [snapshot, setSnapshot] = useState<ProvidersSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [actionFeedback, setActionFeedback] = useState<string | null>(null);
   const [providerAccountId, setProviderAccountId] = useState("");
   const [providerId, setProviderId] = useState("");
   const [variantId, setVariantId] = useState("");
@@ -331,10 +383,6 @@ export default function ProvidersRoute() {
   const [submitting, setSubmitting] = useState(false);
   const [authorizing, setAuthorizing] = useState(false);
   const [polling, setPolling] = useState(false);
-  const [apiKeyModalAccount, setApiKeyModalAccount] = useState<RuntimeAccount | null>(null);
-  const [apiKeyDraft, setApiKeyDraft] = useState("");
-  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
-  const [savingApiKey, setSavingApiKey] = useState(false);
 
   const applyProviderSelection = useCallback(
     (
@@ -647,16 +695,6 @@ export default function ProvidersRoute() {
     }
     return snapshot?.roles.map((role) => role.roleId) ?? [];
   }, [rolePolicy, snapshot]);
-  const providerMaintenanceRows = useMemo(
-    () =>
-      snapshot
-        ? buildProviderMaintenanceRows({
-            accounts: snapshot.accounts,
-            summary: snapshot.summary,
-          })
-        : [],
-    [snapshot],
-  );
   const configuredRemoteConnectionRows = useMemo(
     () =>
       snapshot
@@ -668,62 +706,6 @@ export default function ProvidersRoute() {
         : [],
     [snapshot],
   );
-  const archivedArtifactRows = useMemo(
-    () => (snapshot ? buildArchivedArtifactRows(snapshot.summary) : []),
-    [snapshot],
-  );
-
-  const onReconnectAccount = async (account: RuntimeAccount) => {
-    const provider = remoteProviders.find((entry) => entry.providerId === account.providerId);
-    if (!provider) {
-      setError(`Could not locate provider ${account.providerId} for reconnect.`);
-      return;
-    }
-    const variant =
-      provider.variants?.find(
-        (entry) =>
-          entry.authMode === account.authMode &&
-          (account.baseUrlOverride
-            ? (entry.baseUrl ?? provider.apiBase) === account.baseUrlOverride
-            : true),
-      ) ??
-      provider.variants?.find((entry) => entry.authMode === account.authMode) ??
-      provider.variants?.[0];
-    if (!variant) {
-      setError(`Could not locate a reconnect variant for ${account.providerAccountId}.`);
-      return;
-    }
-
-    const restoredModelIds = [...(account.allowedModels ?? [])];
-    setProviderId(provider.providerId);
-    setVariantId(variant.variantId);
-    setProviderAccountId(account.providerAccountId);
-    setCredentialRef(defaultCredentialRef(provider));
-    setSelectedModel(restoredModelIds[0] ?? "");
-    setSelectedModelRoles(
-      buildModelRoleSelection(restoredModelIds, availableRoleIds, account.modelRoleBindings),
-    );
-    setOauthConnected(false);
-    setCopiedUserCode(false);
-    setDeviceAuthorizationModalSession(null);
-    setAuthorizing(true);
-    setError(null);
-    try {
-      const result = await reconnectRuntimeAccount({
-        providerAccountId: account.providerAccountId,
-      });
-      setOauthState(result);
-      if (shouldAutoOpenDeviceAuthorizationWindow(result)) {
-        void openVerificationUrl(result);
-      }
-      await load();
-    } catch (value) {
-      setError(value instanceof Error ? value.message : "Could not start provider reconnect.");
-    } finally {
-      setAuthorizing(false);
-    }
-  };
-
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -812,9 +794,15 @@ export default function ProvidersRoute() {
 
     setSubmitting(true);
     setError(null);
+    setActionFeedback(null);
     try {
       await upsertRuntimeAccount(buildProviderPayload());
-      if (selectedVariant.authMode === "api-key-static" || oauthConnected) {
+      const endpointActivated = shouldActivateSavedProviderEndpoint({
+        authMode: selectedVariant.authMode,
+        oauthConnected,
+        existingAccount: selectedSavedAccount,
+      });
+      if (endpointActivated) {
         await activateRuntimeEndpoint({
           providerAccountId,
           modelId: selectedModel,
@@ -822,6 +810,13 @@ export default function ProvidersRoute() {
         });
       }
       await load();
+      setActionFeedback(
+        buildProviderActionFeedback({
+          action: "saved",
+          modelId: selectedModel,
+          endpointActivated,
+        }),
+      );
     } catch (value) {
       setError(value instanceof Error ? value.message : "Could not save provider configuration.");
     } finally {
@@ -835,6 +830,7 @@ export default function ProvidersRoute() {
     }
     setAuthorizing(true);
     setError(null);
+    setActionFeedback(null);
     setCopiedUserCode(false);
     setDeviceAuthorizationModalSession(null);
     try {
@@ -855,10 +851,26 @@ export default function ProvidersRoute() {
         quotaPolicyRef: "quota.default",
       });
       setOauthState(result);
-      if (shouldAutoOpenDeviceAuthorizationWindow(result)) {
+      const connected = await syncStartedProviderAuthorization({
+        session: result,
+        selectedModels: selectedModel ? [selectedModel] : [],
+        activateEndpoint: activateRuntimeEndpoint,
+      });
+      if (connected) {
+        setOauthConnected(true);
+      }
+      if (result.status === "pending" && shouldAutoOpenDeviceAuthorizationWindow(result)) {
         void openVerificationUrl(result);
       }
       await load();
+      setActionFeedback(
+        buildProviderActionFeedback({
+          action: "oauth",
+          modelId: selectedModel,
+          providerLabel: selectedVariant.label,
+          authorizationStatus: result.status,
+        }),
+      );
     } catch (value) {
       setError(value instanceof Error ? value.message : "Could not start provider authorization.");
     } finally {
@@ -900,41 +912,6 @@ export default function ProvidersRoute() {
       setCopiedUserCode(true);
     } catch {
       setError("Could not copy the device code. Copy it manually and continue.");
-    }
-  };
-
-  const onSaveApiKey = async () => {
-    if (!apiKeyModalAccount) {
-      return;
-    }
-    if (apiKeyDraft.trim().length === 0) {
-      setApiKeyError("Enter an API key before saving this credential.");
-      return;
-    }
-
-    setSavingApiKey(true);
-    setApiKeyError(null);
-    setError(null);
-    try {
-      await updateRuntimeAccountApiKey({
-        providerAccountId: apiKeyModalAccount.providerAccountId,
-        apiKey: apiKeyDraft.trim(),
-      });
-      const modelId = apiKeyModalAccount.allowedModels?.[0];
-      if (modelId) {
-        await activateRuntimeEndpoint({
-          providerAccountId: apiKeyModalAccount.providerAccountId,
-          modelId,
-          region: "global",
-        });
-      }
-      await load();
-      setApiKeyModalAccount(null);
-      setApiKeyDraft("");
-    } catch (value) {
-      setApiKeyError(value instanceof Error ? value.message : "Could not update API key.");
-    } finally {
-      setSavingApiKey(false);
     }
   };
 
@@ -1141,6 +1118,11 @@ export default function ProvidersRoute() {
                   View in Connect registry
                 </Link>
               </div>
+              {actionFeedback ? (
+                <output className="rounded-[var(--rm-radius-field)] border border-[var(--rm-pill-success-bg)] bg-[var(--rm-pill-success-bg)] px-4 py-3 text-sm text-[var(--rm-pill-success-ink)]">
+                  {actionFeedback}
+                </output>
+              ) : null}
             </form>
           </SectionCard>
 
@@ -1256,185 +1238,6 @@ export default function ProvidersRoute() {
               )}
             </div>
           </SectionCard>
-
-          <SectionCard
-            title="Saved provider maintenance"
-            description="Saved provider credentials stay visible here with canonical lifecycle badges, normalized credential posture, model access, and live repair state."
-          >
-            <div className="space-y-4">
-              {oauthState ? (
-                <DeviceAuthorizationCard
-                  session={oauthState}
-                  copyCodeLabel={copiedUserCode ? "Copied" : "Copy code"}
-                  onCopyCode={() => void onCopyUserCode()}
-                  onOpenVerificationUrl={() => void openVerificationUrl(oauthState)}
-                />
-              ) : null}
-
-              {providerMaintenanceRows.length === 0 ? (
-                <EmptyState label="No saved provider credentials are available yet." />
-              ) : (
-                <>
-                  {providerMaintenanceRows.map((row) => (
-                    <div
-                      key={row.providerAccountId}
-                      className={`${mutedPanelClassName} p-4`}
-                      data-testid={`provider-maintenance-${row.providerAccountId}`}
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className={foregroundEmphasisClassName}>{row.providerAccountId}</h3>
-                        <StatusPill tone="neutral">{row.providerId}</StatusPill>
-                        <StatusPill tone={row.lifecycleTone}>{row.lifecycleLabel}</StatusPill>
-                        <StatusPill tone="neutral">{row.storageLabel}</StatusPill>
-                      </div>
-                      <div className="mt-3 grid gap-1 text-sm text-[var(--rm-secondary)]">
-                        <p>
-                          <span className={foregroundEmphasisClassName}>Connection method:</span>{" "}
-                          {row.authMode}
-                        </p>
-                        <p>
-                          <span className={foregroundEmphasisClassName}>Credential posture:</span>{" "}
-                          {row.storageDetail}
-                        </p>
-                        <p>
-                          <span className={foregroundEmphasisClassName}>Base URL:</span>{" "}
-                          {row.baseUrlOverride ?? "Provider default"}
-                        </p>
-                        <p>
-                          <span className={foregroundEmphasisClassName}>Lifecycle reason:</span>{" "}
-                          {row.reasonLabel}
-                        </p>
-                        <p>
-                          <span className={foregroundEmphasisClassName}>Source provenance:</span>{" "}
-                          {row.sourceProvenanceLabel}
-                        </p>
-                        <p>
-                          <span className={foregroundEmphasisClassName}>Available actions:</span>{" "}
-                          {row.availableActionsLabel}
-                        </p>
-                        <p>
-                          <span className={foregroundEmphasisClassName}>Active endpoints:</span>{" "}
-                          {row.activeEndpointCount}
-                        </p>
-                      </div>
-                      <div className="mt-3 flex flex-wrap gap-3">
-                        {(() => {
-                          const account = row.account;
-                          if (!account) {
-                            return null;
-                          }
-                          return (
-                            <>
-                              {row.availableActions.includes("reconnect") ? (
-                                <button
-                                  className={secondaryButtonClassName}
-                                  disabled={authorizing}
-                                  type="button"
-                                  onClick={() => void onReconnectAccount(account)}
-                                >
-                                  Reconnect
-                                </button>
-                              ) : null}
-                              {row.availableActions.includes("update-api-key") ? (
-                                <button
-                                  className={secondaryButtonClassName}
-                                  type="button"
-                                  onClick={() => {
-                                    setApiKeyModalAccount(account);
-                                    setApiKeyDraft("");
-                                    setApiKeyError(null);
-                                  }}
-                                >
-                                  Update API key
-                                </button>
-                              ) : null}
-                            </>
-                          );
-                        })()}
-                      </div>
-                      {row.allowedModels.length > 0 ? (
-                        <div className="mt-3 space-y-3">
-                          {row.allowedModels.map((modelId) => {
-                            const modelRoleSelection = buildModelRoleSelection(
-                              [modelId],
-                              availableRoleIds,
-                              row.modelRoleBindings,
-                            );
-                            const effectiveRoleIds = modelRoleSelection[modelId] ?? [];
-                            const roleCoverageSummary = buildProviderModelRoleCoverageSummary({
-                              selectedRoleIds: effectiveRoleIds,
-                              allRoleIds: availableRoleIds,
-                              rolePolicy,
-                            });
-                            return (
-                              <div key={modelId} className={`${raisedPanelClassName} p-3`}>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <StatusPill tone="accent">{modelId}</StatusPill>
-                                </div>
-                                {effectiveRoleIds.length > 0 ? (
-                                  <div className="mt-2 space-y-2">
-                                    <p className={supportingTextClassName}>
-                                      {roleCoverageSummary.allRolesSelected
-                                        ? "All runtime roles assigned."
-                                        : `${roleCoverageSummary.totalSelectedCount} of ${roleCoverageSummary.totalRoleCount} runtime roles assigned.`}
-                                    </p>
-                                    {roleCoverageSummary.groupPreviewLabels.length > 0 ? (
-                                      <div className="flex flex-wrap items-center gap-2">
-                                        {roleCoverageSummary.groupPreviewLabels.map((label) => (
-                                          <StatusPill key={`${modelId}:${label}`} tone="neutral">
-                                            {label}
-                                          </StatusPill>
-                                        ))}
-                                        {roleCoverageSummary.hiddenGroupCount > 0 ? (
-                                          <StatusPill tone="neutral">
-                                            +{roleCoverageSummary.hiddenGroupCount} more groups
-                                          </StatusPill>
-                                        ) : null}
-                                      </div>
-                                    ) : null}
-                                  </div>
-                                ) : (
-                                  <p className={`mt-2 ${supportingTextClassName}`}>
-                                    No roles assigned
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : null}
-                    </div>
-                  ))}
-                </>
-              )}
-              {archivedArtifactRows.length > 0 ? (
-                <div className={`${mutedPanelClassName} p-4`}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className={foregroundEmphasisClassName}>Archived stale diagnostics</h3>
-                    <StatusPill tone="neutral">{archivedArtifactRows.length}</StatusPill>
-                  </div>
-                  <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                    Archived stale artifacts stay separate from active saved-account blockers.
-                  </p>
-                  <div className="mt-3 space-y-3">
-                    {archivedArtifactRows.map((artifact) => (
-                      <div key={artifact.key} className={`${raisedPanelClassName} p-3`}>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <StatusPill tone="neutral">{artifact.providerId}</StatusPill>
-                          <StatusPill tone="warning">{artifact.label}</StatusPill>
-                        </div>
-                        <p className="mt-2 text-sm text-[var(--rm-secondary)]">
-                          <span className={foregroundEmphasisClassName}>Account:</span>{" "}
-                          {artifact.providerAccountId}
-                        </p>
-                        <p className={supportingTextClassName}>{artifact.detail}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </SectionCard>
         </div>
       </div>
       {deviceAuthorizationModalSession ? (
@@ -1445,92 +1248,6 @@ export default function ProvidersRoute() {
           onCopyCode={() => void onCopyUserCode()}
           onOpenVerificationUrl={() => void openVerificationUrl(deviceAuthorizationModalSession)}
         />
-      ) : null}
-      {apiKeyModalAccount ? (
-        <div className="fixed inset-0 z-50 overflow-y-auto p-4" role="presentation">
-          <button
-            aria-label="Close API key update modal"
-            className="absolute inset-0 bg-[var(--rm-accent-ghost)] backdrop-blur-[1px]"
-            type="button"
-            onClick={() => {
-              if (savingApiKey) {
-                return;
-              }
-              setApiKeyModalAccount(null);
-              setApiKeyDraft("");
-              setApiKeyError(null);
-            }}
-          />
-          <dialog
-            open
-            aria-modal="true"
-            className="relative mx-auto max-w-2xl rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]"
-            aria-labelledby="provider-api-key-modal-title"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                  Saved provider maintenance
-                </p>
-                <h2
-                  id="provider-api-key-modal-title"
-                  className="mt-2 text-2xl font-light tracking-tight text-[var(--rm-fg)]"
-                >
-                  Update API key
-                </h2>
-                <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
-                  Enter a replacement API key for{" "}
-                  <span className={foregroundEmphasisClassName}>
-                    {apiKeyModalAccount.providerAccountId}
-                  </span>
-                  . The key is saved into runtime-managed local credential storage after this dialog
-                  submits successfully.
-                </p>
-              </div>
-            </div>
-            <div className="mt-6 space-y-4">
-              <label className="grid gap-2 text-sm">
-                <span className={foregroundEmphasisClassName}>API key</span>
-                <input
-                  className={inputClass}
-                  type="password"
-                  value={apiKeyDraft}
-                  onChange={(event) => setApiKeyDraft(event.target.value)}
-                />
-              </label>
-              {apiKeyError ? (
-                <ErrorState label={apiKeyError} />
-              ) : (
-                <div className={insetPanelClassName}>
-                  The existing saved-account identity, model bindings, and endpoint linkage stay in
-                  place while the API key rotates.
-                </div>
-              )}
-            </div>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                className={buttonClass}
-                disabled={savingApiKey}
-                type="button"
-                onClick={() => void onSaveApiKey()}
-              >
-                {savingApiKey ? "Saving…" : "Save"}
-              </button>
-              <button
-                className={secondaryButtonClassName}
-                disabled={savingApiKey}
-                type="button"
-                onClick={() => {
-                  setApiKeyModalAccount(null);
-                  setApiKeyDraft("");
-                  setApiKeyError(null);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </dialog>
-        </div>
       ) : null}
     </>
   );

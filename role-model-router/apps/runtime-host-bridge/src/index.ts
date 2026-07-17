@@ -173,6 +173,7 @@ import {
 import { resolveOauthCredentialRef } from "./oauth-credential.js";
 import {
   type OperatorIntentDiagnostic,
+  type OperatorIntentRemoteActivation,
   type OperatorIntentV1,
   persistOperatorIntent,
   readOperatorIntent,
@@ -15416,6 +15417,54 @@ export async function createRuntimeBridgeBackend(
   let currentRuntimeRoles = buildRuntimeRoleCatalog(currentRolePolicy.roleDefinitions);
   const getAllowedRoleIds = (): readonly string[] =>
     currentRuntimeRoles.roleSummaries.map((role) => role.roleId);
+  const mergeProviderAccountMutation = (
+    account: Record<string, unknown>,
+    existingAccount: ProviderAccountRecord | undefined,
+  ): Record<string, unknown> => {
+    if (!existingAccount) {
+      return account;
+    }
+
+    const mergedAccount = { ...account };
+    const newAllowedModels = Array.isArray(mergedAccount.allowedModels)
+      ? (mergedAccount.allowedModels as string[])
+      : [];
+    mergedAccount.allowedModels = [
+      ...new Set([...existingAccount.allowedModels, ...newAllowedModels]),
+    ];
+
+    if (
+      Array.isArray(mergedAccount.modelRoleBindings) &&
+      (existingAccount.modelRoleBindings?.length ?? 0) > 0
+    ) {
+      const newBindings = mergedAccount.modelRoleBindings as NonNullable<
+        ProviderAccountRecord["modelRoleBindings"]
+      >;
+      const existingBindings = existingAccount.modelRoleBindings ?? [];
+      mergedAccount.modelRoleBindings = [
+        ...existingBindings.filter(
+          (existingBinding) =>
+            !newBindings.some((newBinding) => newBinding.modelId === existingBinding.modelId),
+        ),
+        ...newBindings,
+      ];
+    }
+
+    if (!mergedAccount.credentialRef) {
+      mergedAccount.credentialRef = existingAccount.credentialRef;
+    }
+    if (mergedAccount.status === undefined && existingAccount.status) {
+      mergedAccount.status = existingAccount.status;
+    }
+    if (mergedAccount.healthStatus === undefined && existingAccount.healthStatus) {
+      mergedAccount.healthStatus = existingAccount.healthStatus;
+    }
+    if (mergedAccount.rotationState === undefined && existingAccount.rotationState) {
+      mergedAccount.rotationState = existingAccount.rotationState;
+    }
+
+    return mergedAccount;
+  };
   const deviceId = randomUUID();
 
   // ── Retention cleanup: delete telemetry records past their retainUntil timestamp ──
@@ -15470,8 +15519,139 @@ export async function createRuntimeBridgeBackend(
         }
       : registrySourcesFixture;
   const activeProviderAccountRepairs = new Set<string>();
+  const repairPersistedProviderAccountsFromRuntimeState = (
+    persistedAccounts: readonly ProviderAccountRecord[],
+  ): ProviderAccountRecord[] => {
+    const persistedRuntimeEndpoints = listRuntimeEndpoints({
+      databasePath: initialization.databasePath,
+    });
+    const operatorIntentRead = readOperatorIntentResult(operatorIntentLocation);
+    operatorIntentDiagnostic = operatorIntentRead.diagnostic;
+    const remoteActivations: readonly OperatorIntentRemoteActivation[] =
+      operatorIntentRead.diagnostic.status === "corrupt"
+        ? []
+        : (operatorIntentRead.intent?.remoteActivations ?? []);
+    const requiredModelsByAccountId = new Map<string, Set<string>>();
+    const activationBindingsByAccountModelKey = new Map<string, ProviderAccountModelRoleBinding>();
+    const rememberRequiredModel = (providerAccountId: string, modelId: string): void => {
+      const requiredModels = requiredModelsByAccountId.get(providerAccountId) ?? new Set<string>();
+      requiredModels.add(modelId);
+      requiredModelsByAccountId.set(providerAccountId, requiredModels);
+    };
+    const buildActivationBinding = (
+      activation: OperatorIntentRemoteActivation,
+    ): ProviderAccountModelRoleBinding | null => {
+      const matchingBindings = (activation.modelRoleBindings ?? []).filter(
+        (binding) => binding.modelId === activation.modelId,
+      );
+      if (matchingBindings.length === 0) {
+        return null;
+      }
+      const roleIds = [
+        ...new Set(
+          matchingBindings.flatMap(
+            (binding) => normalizeRuntimeRoleIds(binding.roleIds) ?? binding.roleIds,
+          ),
+        ),
+      ].sort(compareText);
+      if (roleIds.length === 0) {
+        return {
+          modelId: activation.modelId,
+          roleIds: [],
+          roleAssignmentMode: "all",
+          enabledRoleIds: [],
+          disabledRoleIds: [],
+        };
+      }
+      return {
+        modelId: activation.modelId,
+        roleIds,
+      };
+    };
+
+    for (const endpoint of persistedRuntimeEndpoints) {
+      rememberRequiredModel(endpoint.providerAccountId, endpoint.modelId);
+    }
+    for (const activation of remoteActivations) {
+      rememberRequiredModel(activation.providerAccountId, activation.modelId);
+      const binding = buildActivationBinding(activation);
+      if (binding) {
+        activationBindingsByAccountModelKey.set(
+          `${activation.providerAccountId}:${activation.modelId}`,
+          binding,
+        );
+      }
+    }
+
+    if (requiredModelsByAccountId.size === 0) {
+      return [...persistedAccounts];
+    }
+
+    const allowedRoleIds = new Set(getAllowedRoleIds());
+    const repairedAccounts = persistedAccounts.map((account) => {
+      const requiredModels = requiredModelsByAccountId.get(account.providerAccountId);
+      if (!requiredModels || account.allowedModels.length === 0) {
+        return account;
+      }
+
+      const nextAllowedModels = [...new Set([...account.allowedModels, ...requiredModels])].sort(
+        compareText,
+      );
+      const nextBindings = [
+        ...((account.modelRoleBindings ?? []).map((binding) =>
+          normalizeProviderAccountModelRoleBinding(binding),
+        ) as ProviderAccountModelRoleBinding[]),
+      ];
+      const existingBindingModelIds = new Set(nextBindings.map((binding) => binding.modelId));
+      for (const modelId of requiredModels) {
+        if (existingBindingModelIds.has(modelId)) {
+          continue;
+        }
+        const activationBinding = activationBindingsByAccountModelKey.get(
+          `${account.providerAccountId}:${modelId}`,
+        );
+        if (!activationBinding) {
+          continue;
+        }
+        nextBindings.push(activationBinding);
+        existingBindingModelIds.add(modelId);
+      }
+      const sanitizedBindings = sanitizeProviderAccountModelRoleBindingsForAllowedRoles(
+        nextBindings,
+        allowedRoleIds,
+      );
+      return {
+        ...account,
+        allowedModels: nextAllowedModels,
+        ...(sanitizedBindings ? { modelRoleBindings: sanitizedBindings } : {}),
+      };
+    });
+    const changedAccounts = repairedAccounts.filter((account, index) => {
+      const previousAccount = persistedAccounts[index];
+      return (
+        previousAccount !== undefined &&
+        (JSON.stringify(account.allowedModels) !== JSON.stringify(previousAccount.allowedModels) ||
+          JSON.stringify(account.modelRoleBindings ?? []) !==
+            JSON.stringify(previousAccount.modelRoleBindings ?? []))
+      );
+    });
+    if (changedAccounts.length > 0) {
+      persistProviderAccounts({
+        databasePath: initialization.databasePath,
+        accounts: changedAccounts,
+      });
+    }
+    return repairedAccounts;
+  };
   const readCurrentAccounts = (): ProviderAccountRecord[] => {
-    const persistedAccounts = listProviderAccounts({ databasePath: initialization.databasePath });
+    const persistedAccounts = repairPersistedProviderAccountsFromRuntimeState(
+      listProviderAccounts({ databasePath: initialization.databasePath }).map(
+        (account) =>
+          normalizeProviderAccountRoleBindings(
+            account as unknown as Record<string, unknown>,
+          ) as unknown as ProviderAccountRecord,
+      ),
+    );
     const normalizedPersistedAccounts = persistedAccounts.map(
       (account) =>
         normalizeProviderAccountRoleBindings(
@@ -22136,48 +22316,9 @@ export async function createRuntimeBridgeBackend(
       const existingAccount = currentAccounts.find(
         (entry) => entry.providerAccountId === providerAccountId,
       );
-      if (existingAccount) {
-        const newAllowedModels = Array.isArray(account.allowedModels)
-          ? (account.allowedModels as string[])
-          : [];
-        const mergedAllowedModels = [
-          ...new Set([...existingAccount.allowedModels, ...newAllowedModels]),
-        ];
-        account.allowedModels = mergedAllowedModels;
+      const mergedAccount = mergeProviderAccountMutation(account, existingAccount);
 
-        if (
-          Array.isArray(account.modelRoleBindings) &&
-          (existingAccount.modelRoleBindings?.length ?? 0) > 0
-        ) {
-          const newBindings = account.modelRoleBindings as NonNullable<
-            ProviderAccountRecord["modelRoleBindings"]
-          >;
-          const existingBindings = existingAccount.modelRoleBindings ?? [];
-          const mergedBindings = [
-            ...existingBindings.filter(
-              (existingBinding) =>
-                !newBindings.some((newBinding) => newBinding.modelId === existingBinding.modelId),
-            ),
-            ...newBindings,
-          ];
-          account.modelRoleBindings = mergedBindings;
-        }
-
-        if (!account.credentialRef) {
-          account.credentialRef = existingAccount.credentialRef;
-        }
-        if (account.status === undefined && existingAccount.status) {
-          account.status = existingAccount.status;
-        }
-        if (account.healthStatus === undefined && existingAccount.healthStatus) {
-          account.healthStatus = existingAccount.healthStatus;
-        }
-        if (account.rotationState === undefined && existingAccount.rotationState) {
-          account.rotationState = existingAccount.rotationState;
-        }
-      }
-
-      const normalizedAccount = normalizeProviderAccountRoleBindings(account);
+      const normalizedAccount = normalizeProviderAccountRoleBindings(mergedAccount);
 
       if (
         typeof normalizedAccount.providerId === "string" &&
@@ -22283,39 +22424,47 @@ export async function createRuntimeBridgeBackend(
         assertOpenAICodexSubscriptionModelIds(allowedModels);
       }
 
+      const existingAccount = currentAccounts.find(
+        (entry) => entry.providerAccountId === providerAccountId,
+      );
       const credentialRef = createCredentialRef(providerId, providerAccountId);
-      const deviceAuthorizationAccount = normalizeProviderAccountRoleBindings({
-        providerAccountId,
-        providerId,
-        providerKind:
-          readOptionalString(body, "providerKind") ??
-          mergedMetadata?.providerKind ??
-          provider.providerKind,
-        orgScope: readOptionalString(body, "orgScope") ?? "personal",
-        accountScope: readOptionalString(body, "accountScope") ?? "workspace-default",
-        credentialRef: {
-          backend: "local-file",
-          ref: credentialRef,
-        },
-        authMode: variant.authMode,
-        regionPolicy: {
-          mode: "prefer",
-          regions: [readOptionalString(body, "region") ?? "global"],
-        },
-        baseUrlOverride: variant.baseUrl,
-        allowedModels,
-        modelRoleBindings: (() => {
-          const modelRoleBindings = body.modelRoleBindings;
-          return Array.isArray(modelRoleBindings) ? modelRoleBindings : [];
-        })(),
-        deniedModels: readStringArray(body, "deniedModels") ?? [],
-        entitlementTags: readStringArray(body, "entitlementTags") ?? ["chat"],
-        budgetPolicyRef: readOptionalString(body, "budgetPolicyRef") ?? "budget.default",
-        quotaPolicyRef: readOptionalString(body, "quotaPolicyRef") ?? "quota.default",
-        status: "disabled",
-        healthStatus: "credentials-missing",
-        rotationState: "in-progress",
-      });
+      const deviceAuthorizationAccount = normalizeProviderAccountRoleBindings(
+        mergeProviderAccountMutation(
+          {
+            providerAccountId,
+            providerId,
+            providerKind:
+              readOptionalString(body, "providerKind") ??
+              mergedMetadata?.providerKind ??
+              provider.providerKind,
+            orgScope: readOptionalString(body, "orgScope") ?? "personal",
+            accountScope: readOptionalString(body, "accountScope") ?? "workspace-default",
+            credentialRef: {
+              backend: "local-file",
+              ref: credentialRef,
+            },
+            authMode: variant.authMode,
+            regionPolicy: {
+              mode: "prefer",
+              regions: [readOptionalString(body, "region") ?? "global"],
+            },
+            baseUrlOverride: variant.baseUrl,
+            allowedModels,
+            modelRoleBindings: (() => {
+              const modelRoleBindings = body.modelRoleBindings;
+              return Array.isArray(modelRoleBindings) ? modelRoleBindings : [];
+            })(),
+            deniedModels: readStringArray(body, "deniedModels") ?? [],
+            entitlementTags: readStringArray(body, "entitlementTags") ?? ["chat"],
+            budgetPolicyRef: readOptionalString(body, "budgetPolicyRef") ?? "budget.default",
+            quotaPolicyRef: readOptionalString(body, "quotaPolicyRef") ?? "quota.default",
+            status: "disabled",
+            healthStatus: "credentials-missing",
+            rotationState: "in-progress",
+          },
+          existingAccount,
+        ),
+      );
       const validationResult = validateProviderAccounts({
         catalog: currentNormalizedCatalog,
         additionalProviders: liteLLMProviders,

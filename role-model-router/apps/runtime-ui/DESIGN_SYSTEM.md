@@ -296,7 +296,7 @@ Charts inherit the same theme and typography system as the rest of runtime UI. T
 | `/app/studio/audio` | live | `studio-workspace` | Unified audio workspace over `/v1/audio/speech`, `/v1/audio/voices`, and `/v1/audio/transcriptions` so voice discovery, speech generation, and transcript workflows remain one operator surface. |
 | `/app/studio/rerank` | live | `studio-workspace` | Ranked-input evaluation workspace over `/v1/rerank` and `/v1/reranking` with a compact request rail, ordered score ledger, and raw payload inspection. |
 | `/app/studio/advanced` | live | `studio-workspace` | Contract-and-request workspace for advanced families that stay under Studio: `/v1/responses`, `/v1/messages`, `/v1/messages/count_tokens`, `/v1/embeddings`, `/completion`, and `/infill`. |
-| `/app/remote/providers` | live | `registry-detail` | Primary remote-provider onboarding and maintenance route for choosing a LiteLLM-backed provider, selecting provider models, completing API-key or OAuth setup, and repairing saved accounts in place with explicit **Reconnect** and **Update API key** actions. |
+| `/app/remote/providers` | live | `registry-detail` | Primary remote-provider onboarding route for choosing a LiteLLM-backed provider, selecting provider models, completing API-key or OAuth setup, and reviewing configured provider connections. |
 | `/app/models` | live | `model-inventory` | Unified local/remote model inventory with inspect-only card drill-ins, explicit handoff to the runtime-config editor, and a non-error pre-activation state when no controller exists yet. |
 | `/app/models/roles` | live | `registry-detail` | Runtime role policy authoring and task allowlist management over the live router policy surface. |
 | `/app/models/benchmark` | live | `registry-detail` | Capability benchmark for configured models with judge grading, persisted scores, and routing-impact explanation. |
@@ -382,7 +382,7 @@ Redirect-only routes inherit the contract of their live destination and do not d
 | `/app/studio/audio` | Studio workspace with speech/transcription controls leading, result stage adjacent, and secondary receipts below. | Must show provider/model/voice or transcription controls, audio or transcript result surfaces, and request/response detail. |
 | `/app/studio/rerank` | Single dominant result column is preferred when the score list would otherwise feel cramped; controls stay above results. | Must show query/candidate inputs, model selection, rerank execution, ordered scores, and payload inspection. |
 | `/app/studio/advanced` | Studio workspace with compact operation selector and request form first, then result/contract panes. | Must show advanced API family selection, operation-specific inputs, response area, and raw contract/payload detail. |
-| `/app/remote/providers` | Registry-detail split with onboarding/editor rail on one side and saved-account operational state on the other. Role groups default collapsed. | Must show provider selection, connection method, credentials/account metadata, model selection, grouped role binding controls, saved provider connections, and repair actions like reconnect or API-key update. |
+| `/app/remote/providers` | Registry-detail split with onboarding/editor rail on one side and configured provider connections on the other. Role groups default collapsed. | Must show provider selection, connection method, credentials/account metadata, model selection, grouped role binding controls, and configured provider connections. Saved-provider maintenance and archived diagnostics are intentionally omitted. |
 | `/app/models` | Model-inventory card grid with summary facts above and inspect-first modal/detail drill-in behind cards. | Must show configured model counts, inventory cards, controller/coverage/capability pills, and inspect-only detail with role/group evidence. |
 | `/app/models/roles` | Registry-detail page with collapsed create-role disclosure above the main role catalog; catalog gets the dominant width. | Must show role definitions, grouped task/category content, create/edit role flows, and bounded advanced policy fields behind disclosure controls. |
 | `/app/models/benchmark` | Single-column benchmark flow with controls first and broad content sections below so score surfaces do not get squeezed. | Must show benchmark scope controls, run-capability summary, benchmark score rows, historical/latest run detail, and clear empty/error states without fixture data. |
@@ -413,16 +413,9 @@ Redirect-only routes inherit the contract of their live destination and do not d
 | `/app/system/session-readiness` | System-topology page with bootstrap/readiness ladder first, blockers next, and operator-intent diagnostics after. | Must show bootstrap status, lifecycle authority, blockers, routing readiness, alias drift, and operator-intent outcomes. |
 | `/app/system/peers` | System-topology inventory page with peer cards/rows first and topology/policy context second. | Must show peer sources, auth posture, live model matches, topology relationships, timeout/filter policy, and empty-state guidance. |
 
-## Runtime, session readiness, and provider-maintenance rules
+## Runtime and session-readiness rules
 
-- The route keeps the existing onboarding form on one side and saved-account operational state on the other.
-- Saved-account cards must expose:
-  - lifecycle badge from the canonical backend lifecycle contract
-  - normalized storage-mode/credential posture
-  - explicit **Reconnect** for repairable OAuth accounts
-  - explicit **Update API key** for API-key accounts
-- **Update API key** uses a restrained modal with explicit **Save** and **Cancel** controls, clear saving/error states, and no secret echo/backfill.
-- Archived stale legacy artifacts are never shown as current blocking setup rows on the saved-account surface; if surfaced, they appear only as bounded diagnostics separate from active accounts.
+- The provider route keeps onboarding and configured provider connections visible without duplicating saved-account maintenance or archived diagnostics.
 - `System > Runtime`, `System > Session readiness`, `Connect`, `Workbench`, and `Studio > Advanced` must use the same canonical lifecycle/readiness vocabulary.
 - Blocking banners and provider rollups come from the backend lifecycle contract, not route-local inference from raw account fields.
 - Provisional-vs-authoritative bootstrap posture must read consistently across these surfaces.

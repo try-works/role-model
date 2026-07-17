@@ -2396,6 +2396,77 @@ describe("initializeSqliteMemory", () => {
     );
   });
 
+  test("keeps positive legacy token counts available when provenance metadata is absent", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-legacy-token-truth",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+    const {
+      tokens_in_source: _inputSource,
+      tokens_in_available: _inputAvailable,
+      tokens_out_source: _outputSource,
+      tokens_out_available: _outputAvailable,
+      ...legacyUsageEvent
+    } = bundle.usageEvent;
+
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: {
+        ...bundle,
+        usageEvent: {
+          ...legacyUsageEvent,
+          tokens_in: 120,
+          tokens_out: 48,
+        },
+      },
+    });
+
+    expect(
+      listRuntimeTelemetryRecords({
+        databasePath: validation.databasePath,
+        windowMs: 60_000,
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          requestId: bundle.requestId,
+          inputTokens: 120,
+          inputTokensSource: "unavailable",
+          inputTokensAvailable: true,
+          outputTokens: 48,
+          outputTokensSource: "unavailable",
+          outputTokensAvailable: true,
+          totalTokens: 168,
+        }),
+      ]),
+    );
+  });
+
   test("persistRuntimeTelemetryFailure preserves caller correlation and request classification for failed rows", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const validation = await runRuntimeAdapterValidation({

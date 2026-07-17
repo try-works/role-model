@@ -9,6 +9,143 @@ const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const testFixtureRoot = path.join(import.meta.dirname, "fixtures-restart-rehydration");
 
 describe("account repair mutations", () => {
+  test("starting Kimi Code authorization for k3 preserves existing allowed models and active endpoints", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `account-repair-kimi-k3-${Date.now()}`);
+    const scopeId = "account-repair-kimi-k3-tests";
+    let deviceAuthorizationRequests = 0;
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId,
+      networkFetcher: async (input, init) => {
+        const url =
+          typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+        if (url === "https://auth.kimi.com/api/oauth/device_authorization") {
+          expect(init?.method ?? "POST").toBe("POST");
+          deviceAuthorizationRequests += 1;
+          return new Response(
+            JSON.stringify({
+              user_code: `ABCD-EFG${deviceAuthorizationRequests}`,
+              device_code: `device-00${deviceAuthorizationRequests}`,
+              verification_uri: "https://auth.kimi.com/device",
+              verification_uri_complete: `https://auth.kimi.com/device?user_code=ABCD-EFG${deviceAuthorizationRequests}`,
+              expires_in: 900,
+              interval: 5,
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        if (url === "https://auth.kimi.com/api/oauth/token") {
+          expect(init?.method ?? "POST").toBe("POST");
+          return new Response(
+            JSON.stringify({
+              access_token: "access-001",
+              refresh_token: "refresh-001",
+              expires_in: 3600,
+              scope: "openid profile",
+              token_type: "Bearer",
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        throw new Error(`Unexpected network request: ${url}`);
+      },
+    });
+
+    try {
+      const firstPending = await backend.startProviderDeviceAuthorization({
+        providerAccountId: "moonshot.personal.kimi-code",
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        variantId: "kimi-code",
+        orgScope: "personal",
+        accountScope: "workspace-default",
+        allowedModels: ["moonshot/kimi-k2.7-code"],
+        modelRoleBindings: [
+          {
+            modelId: "moonshot/kimi-k2.7-code",
+            roleIds: ["coder"],
+          },
+        ],
+        deniedModels: [],
+        entitlementTags: ["chat"],
+        budgetPolicyRef: "budget.default",
+        quotaPolicyRef: "quota.default",
+      });
+
+      await backend.pollProviderDeviceAuthorization({
+        authRequestId: firstPending.authRequestId,
+      });
+      await backend.activateEndpoint({
+        providerAccountId: "moonshot.personal.kimi-code",
+        modelId: "moonshot/kimi-k2.7-code",
+        region: "global",
+      });
+
+      await expect(
+        backend.startProviderDeviceAuthorization({
+          providerAccountId: "moonshot.personal.kimi-code",
+          providerId: "moonshot",
+          providerKind: "provider-openai",
+          variantId: "kimi-code",
+          orgScope: "personal",
+          accountScope: "workspace-default",
+          allowedModels: ["moonshot/kimi-k3"],
+          modelRoleBindings: [
+            {
+              modelId: "moonshot/kimi-k3",
+              roleIds: ["coder"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+        }),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          providerAccountId: "moonshot.personal.kimi-code",
+          status: "pending",
+          userCode: "ABCD-EFG2",
+        }),
+      );
+
+      await expect(backend.listAccounts()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            providerAccountId: "moonshot.personal.kimi-code",
+            allowedModels: expect.arrayContaining(["moonshot/kimi-k2.7-code", "moonshot/kimi-k3"]),
+            modelRoleBindings: expect.arrayContaining([
+              expect.objectContaining({
+                modelId: "moonshot/kimi-k2.7-code",
+                roleIds: ["coder"],
+              }),
+              expect.objectContaining({
+                modelId: "moonshot/kimi-k3",
+                roleIds: ["coder"],
+              }),
+            ]),
+          }),
+        ]),
+      );
+      await expect(backend.listEndpoints()).resolves.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            endpointId: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+            providerAccountId: "moonshot.personal.kimi-code",
+            modelId: "moonshot/kimi-k2.7-code",
+          }),
+        ]),
+      );
+      expect(deviceAuthorizationRequests).toBe(2);
+    } finally {
+      await backend.shutdown();
+      await rm(runtimeStateRoot, { recursive: true, force: true });
+    }
+  });
+
   test("reconnect returns the current pending device-authorization session for the same account", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `account-repair-reconnect-${Date.now()}`);
     const scopeId = "account-repair-reconnect-tests";

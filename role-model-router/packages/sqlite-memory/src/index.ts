@@ -2510,13 +2510,15 @@ function mapRuntimeTelemetryRecord(row: {
     inputTokens: row.input_tokens,
     inputTokensSource,
     inputTokensAvailable:
-      typeof usageTokenTruth?.inputAvailable === "boolean" ? usageTokenTruth.inputAvailable : false,
+      typeof usageTokenTruth?.inputAvailable === "boolean"
+        ? usageTokenTruth.inputAvailable
+        : usageTokenTruth === null && row.input_tokens > 0,
     outputTokens: row.output_tokens,
     outputTokensSource,
     outputTokensAvailable:
       typeof usageTokenTruth?.outputAvailable === "boolean"
         ? usageTokenTruth.outputAvailable
-        : false,
+        : usageTokenTruth === null && row.output_tokens > 0,
     totalTokens: row.total_tokens,
     latencyMs: row.latency_ms,
     errorClass: row.error_class,
