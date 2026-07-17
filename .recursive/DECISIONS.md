@@ -2223,3 +2223,8 @@
 - Known issues / follow-ups:
   - Pi noninteractive smoke processes can remain alive after role-model completes the backend request; role-model telemetry is the authoritative backend receipt for this QA path
   - inherited `runtime-host-bridge` validator timeouts in `test/validate-observability.test.ts` and `test/validate-ui.test.ts` remain outside Run 54 scope
+# Run 76 configured membership authority (2026-07-17)
+
+- Configured remote membership is keyed by exact `{providerAccountId, modelId}`. SQLite `allowed_models_json` owns manual accounts; a matching YAML LiteLLM provider owns the full membership set for its reserved `*.litellm` account id.
+- Runtime endpoints, remote activation intent, role bindings, generated aliases, inventory, health, and UI cards are derived and must never add membership.
+- Eject and ordinary config mutation share serialized atomic YAML replacement. Explicit references block before mutation; successful eject returns authority/prune receipts; rollback failure is typed indeterminate; startup sanitation emits a durable reason-coded receipt.

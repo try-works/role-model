@@ -1,0 +1,14 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "b727979f345e7ee1d37d2f112c656535e73c1d65a9e1b3544ebc28c8382d5cb3",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\76-configured-model-membership-authority-and-eject-convergence\\.recursive\\run\\76-configured-model-membership-authority-and-eject-convergence\\02-to-be-plan.md",
+  "locked_at": "2026-07-17T11:00:14Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "d98e2f65884e1b30d8b2b6811cdc45ff78011304066540f0d18341ecbfd85d52",
+    "00-worktree.md": "b313dd770a8e09606881446052878780ca15de662d1219c3cf6bda0b8a395f97",
+    "01-as-is.md": "db6611a364ade4d7ed08db620c276dd3a280ffd9b9c7f5bcafb145772e7c1080",
+    "01.5-root-cause.md": "80572079809c366ffd4c3f92fc2b3a945310763e47899a7074da81e2d076e777"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "400b13a274c3aa60ccb797e7b5d67af6f9cc2573a37f28f37b546393df762435"
+}

@@ -2243,6 +2243,7 @@ describe("removeRuntimeAccountModel", () => {
       return jsonResponse({
         success: true,
         removedAccount: false,
+        alreadyAbsent: false,
       });
     });
 
@@ -2251,7 +2252,26 @@ describe("removeRuntimeAccountModel", () => {
     ).resolves.toEqual({
       success: true,
       removedAccount: false,
+      alreadyAbsent: false,
     });
+  });
+
+  test("preserves structured conflict reference paths in the client error", async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            error: "Configured model is still referenced.",
+            code: "configured_model_reference_conflict",
+            references: [{ kind: "custom-alias", path: "modelAliases.production" }],
+            mutationApplied: false,
+          }),
+          { status: 409, headers: { "content-type": "application/json" } },
+        ),
+    );
+    await expect(removeRuntimeAccountModel("acme.primary", "acme/model", fetcher)).rejects.toThrow(
+      "configured_model_reference_conflict: modelAliases.production",
+    );
   });
 });
 

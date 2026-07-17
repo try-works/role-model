@@ -240,6 +240,13 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - Do not document, emit, or accept routing aliases that are not part of the canonical runtime-owned matrix.
 - Do not implement taxonomy-aware benchmark scoring, taxonomy telemetry rollups, or telemetry-informed taxonomy routing inside the Phase 1-4 taxonomy baseline; those are later proposal phases.
 
+## Configured Membership Authority (Run 76)
+
+- Treat configured remote membership as exact `{providerAccountId, modelId}` identity. A model with the same id on a sibling account is a separate membership.
+- SQLite provider-account `allowedModels` owns manual accounts. When YAML declares a matching provider, YAML owns the complete membership set for the reserved `${providerId}.litellm` account; persisted rows at that id are credential/metadata projections and cannot union extra membership.
+- Runtime endpoints, `operator-intent.remoteActivations`, role bindings, primary aliases, inventory, health, and UI cards are derived evidence. Rebuild, repair, and restart may materialize them only for configured keys and must prune stale residue rather than promote it.
+- Serialize eject with ordinary config mutation, atomically replace YAML, preflight explicit references, and expose structured authority/prune, rollback/indeterminate, conflict, and reconciliation receipts.
+
 ## Benchmark Quality Routing (Added 2026-06-24)
 
 Benchmark runs produce per-endpoint quality scores (`endpointGrades[].overallScore`) that are stored on routing candidates as `benchmarkCapability.overallScore`. The `getQualityMetric()` function in the router core reads these through a three-tier priority system:

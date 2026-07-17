@@ -10,6 +10,11 @@ import {
 } from "@role-model-router/sqlite-memory";
 
 import * as bridge from "../src/index.js";
+import {
+  persistOperatorIntent,
+  readOperatorIntent,
+  upsertRemoteActivation,
+} from "../src/operator-intent.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,6 +85,16 @@ describe("removeProviderAccountModel", () => {
         healthStatus: "healthy",
       },
     });
+    persistOperatorIntent(
+      { runtimeStateRoot, scopeId: "runtime-remove-model-keep-account" },
+      (intent) =>
+        upsertRemoteActivation(intent, {
+          endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.5",
+          region: "global",
+        }),
+    );
     upsertRuntimeEndpoint({
       databasePath,
       endpoint: {
@@ -96,10 +111,27 @@ describe("removeProviderAccountModel", () => {
 
     await expect(
       backend.removeProviderAccountModel("moonshot.personal.primary", "moonshot/kimi-k2.5"),
-    ).resolves.toEqual({
-      success: true,
-      removedAccount: false,
-    });
+    ).resolves.toEqual(
+      expect.objectContaining({
+        success: true,
+        removedAccount: false,
+        alreadyAbsent: false,
+      }),
+    );
+
+    expect(
+      readOperatorIntent({
+        runtimeStateRoot,
+        scopeId: "runtime-remove-model-keep-account",
+      })?.remoteActivations,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k2.5",
+        }),
+      ]),
+    );
 
     const remainingAccount = (await backend.listAccounts()).find(
       (entry) => entry.providerAccountId === "moonshot.personal.primary",
@@ -119,6 +151,16 @@ describe("removeProviderAccountModel", () => {
         modelId: "moonshot/kimi-k2.7-code",
       }),
     ]);
+
+    await expect(
+      backend.removeProviderAccountModel("moonshot.personal.primary", "moonshot/kimi-k2.5"),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        success: true,
+        removedAccount: false,
+        alreadyAbsent: true,
+      }),
+    );
   });
 
   test("deletes the backing account when its last configured model is removed", async () => {
@@ -165,10 +207,13 @@ describe("removeProviderAccountModel", () => {
 
     await expect(
       backend.removeProviderAccountModel("moonshot.personal.primary", "moonshot/kimi-k2.5"),
-    ).resolves.toEqual({
-      success: true,
-      removedAccount: true,
-    });
+    ).resolves.toEqual(
+      expect.objectContaining({
+        success: true,
+        removedAccount: true,
+        alreadyAbsent: false,
+      }),
+    );
 
     const removedAccount = (await backend.listAccounts()).find(
       (entry) => entry.providerAccountId === "moonshot.personal.primary",
