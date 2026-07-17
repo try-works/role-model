@@ -28,7 +28,7 @@ const discovery: DownstreamOpenAIDiscovery = {
   },
   models: [
     {
-      id: "role-model/auto",
+      id: "baseline.remote-only",
       object: "model",
       owned_by: "role-model",
       endpoint_ids: ["local"],
@@ -54,7 +54,7 @@ const discovery: DownstreamOpenAIDiscovery = {
       sources: ["runtime"],
     },
   ],
-  setup: { recommendedModel: "role-model/auto", notes: ["Use discovery"] },
+  setup: { recommendedModel: "baseline.remote-only", notes: ["Use discovery"] },
   freshness: {
     generatedAt: "2026-06-22T00:00:00Z",
     catalogVersion: "test",
@@ -78,7 +78,7 @@ describe("downstream OpenAI discovery mapping", () => {
     expect(provider.config.apiKey).toBe("role-model-local");
     expect(provider.config.models).toEqual([
       expect.objectContaining({
-        id: "role-model/auto",
+        id: "baseline.remote-only",
         contextWindow: 120000,
         maxTokens: 8000,
       }),
@@ -139,7 +139,7 @@ describe("downstream OpenAI discovery mapping", () => {
       },
     };
 
-    expect(createPiModelSelection(discoveryWithCompat, "role-model/auto")).toEqual(
+    expect(createPiModelSelection(discoveryWithCompat, "baseline.remote-only")).toEqual(
       expect.objectContaining({
         compat: expect.objectContaining({
           supportsDeveloperRole: false,
@@ -191,7 +191,7 @@ describe("downstream OpenAI discovery mapping", () => {
     );
     expect(provider.modelDiagnostics).toEqual([
       expect.objectContaining({
-        id: "role-model/auto",
+        id: "baseline.remote-only",
         degraded: true,
         reasons: expect.arrayContaining([
           "missing piMapping.contextWindow",

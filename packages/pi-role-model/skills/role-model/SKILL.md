@@ -9,9 +9,13 @@ Use this skill when the user wants Pi to use Role-Model as the routing provider.
 
 Role-Model is the routing authority. Pi sends requests to the `role-model` provider, and the external Role-Model runtime decides which endpoint or alias should handle the request. The Pi package only discovers the runtime, registers provider models, exposes diagnostics, and helps choose aliases.
 
-First check `/role-model status`. If setup has not completed, run `/role-model setup`, then use `/role-model doctor` to verify the endpoint, runtime version, auth state, endpoint trust, provider state, and downstream discovery contract.
+Use slash commands only from an interactive Pi session. `pi -p "/role-model status"` is unsupported because Pi print mode does not currently invoke package slash commands; treat that as an upstream Pi limitation, not as proof that Role-Model routing is broken.
 
-For model selection, use `/role-model alias list` to inspect available aliases, `/role-model alias recommended` to show the runtime recommendation, and `/role-model alias use <alias>` or `/role-model alias choose <alias>` to select the alias Pi should use. Use `/role-model alias refresh` after the Role-Model runtime catalog changes.
+First check `/role-model status`. If setup has not completed, run `/role-model setup`, then use `/role-model doctor` to verify the endpoint, runtime version, auth state, endpoint trust, provider state, downstream discovery contract, and the current canonical provider-relative alias guidance.
+
+For explicit provider prompts, use the provider-relative Role-Model id that Pi lists for provider `role-model`, for example `pi --no-session --provider role-model --model baseline.remote-only -p "<prompt>"`. The provider-relative alias is canonical. `role-model/<alias>` is compatibility-only for Pi surfaces that explicitly require a qualified id.
+
+For model selection, use `/role-model alias list` to inspect available aliases, `/role-model alias recommended` to show the runtime recommendation, and `/role-model alias use <alias>` or `/role-model alias choose <alias>` to select the alias Pi should use. Use `/role-model alias refresh` after the Role-Model runtime catalog changes. If someone tries a foreign id such as `gpt-4o` under provider `role-model`, send them back to `/role-model alias list` and `/role-model alias recommended`.
 
 For runtime-owned request diagnostics, use `/role-model requests` to inspect recent runtime requests and `/role-model explain <request-id|latest>` to read the runtime's structured request detail and router decision detail for that request. Use those commands when the user asks why Role-Model chose a route, what reason codes were recorded, or whether benchmark/telemetry advisory signals showed up in the runtime diagnostics.
 
@@ -26,3 +30,5 @@ Role-Model benchmarks, routing decisions, endpoint eligibility, fallback, and te
 If the user explicitly asks to install or launch the external Role-Model router runtime, point them to the Role-Model repository README for those instructions and make it clear that this is external runtime setup, not a side effect of installing the Pi package.
 
 Security boundaries: remote endpoints require explicit trust, runtimes reporting `authentication.required` must fail closed unless an explicit supported token source exists, and the package must not manage the runtime lifecycle. Do not read, print, copy, or sync Pi auth files.
+
+Raw HTTP calls to the runtime are debug-only fallback tools when diagnosing Pi or runtime issues. They are not the primary supported workflow when the Pi provider path is available.

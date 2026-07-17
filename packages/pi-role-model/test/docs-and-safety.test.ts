@@ -28,10 +28,19 @@ describe("Pi installation docs, skill, and safety guardrails", () => {
     const skill = await readFile(join(packageRoot, "skills", "role-model", "SKILL.md"), "utf8");
     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
     const packageReadme = await readFile(join(packageRoot, "README.md"), "utf8");
+    const docsSite = await readFile(
+      join(repoRoot, "apps", "docs-site", "content", "docs", "integrations", "pi.mdx"),
+      "utf8",
+    );
 
     expect(skill).toContain("role-model");
     expect(skill).toContain("/role-model status");
     expect(skill).toContain("/role-model alias use");
+    expect(skill).toContain("interactive Pi session");
+    expect(skill).toContain('pi -p "/role-model status"');
+    expect(skill).toContain("unsupported");
+    expect(skill).toContain("baseline.remote-only");
+    expect(skill).toContain("--provider role-model --model baseline.remote-only");
     expect(readme).toContain("## Installation for Pi");
     expect(readme).toContain("ROLE_MODEL_ENDPOINT");
     expect(readme).toContain("allowRemote");
@@ -41,6 +50,10 @@ describe("Pi installation docs, skill, and safety guardrails", () => {
     expect(readme).toContain("/role-model doctor");
     expect(readme).toContain("/role-model alias choose");
     expect(readme).toContain("/role-model alias use");
+    expect(readme).toContain("baseline.remote-only");
+    expect(readme).toContain('pi --no-session --provider role-model --model baseline.remote-only -p "<prompt>"');
+    expect(readme).toContain('pi -p "/role-model status"');
+    expect(readme).toContain("debug-only");
     expect(packageReadme).toContain("pi install npm:@try-works/pi-role-model");
     expect(packageReadme).toContain("pi install ./packages/pi-role-model");
     expect(packageReadme).toContain("/role-model alias recommended");
@@ -49,6 +62,16 @@ describe("Pi installation docs, skill, and safety guardrails", () => {
     expect(packageReadme).toContain("ROLE_MODEL_ENDPOINT");
     expect(packageReadme).toContain("allowRemote");
     expect(packageReadme).toContain("active model");
+    expect(packageReadme).toContain("baseline.remote-only");
+    expect(packageReadme).toContain('pi --no-session --provider role-model --model baseline.remote-only -p "<prompt>"');
+    expect(packageReadme).toContain('pi -p "/role-model status"');
+    expect(packageReadme).toContain("compatibility-only");
+    expect(packageReadme).toContain("debug-only");
+    expect(docsSite).toContain("baseline.remote-only");
+    expect(docsSite).toContain('pi --no-session --provider role-model --model baseline.remote-only -p "<prompt>"');
+    expect(docsSite).toContain('pi -p "/role-model status"');
+    expect(docsSite).toContain("compatibility-only");
+    expect(docsSite).toContain("upstream Pi bug");
     expect(skill).toContain("Role-Model repository README");
     expect(skill).toContain("aliases");
     expect(skill).toContain("routing authority");

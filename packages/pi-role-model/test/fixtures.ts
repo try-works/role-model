@@ -4,7 +4,7 @@ export function createModelRecord(
   overrides: Partial<DownstreamOpenAIModelRecord> = {},
 ): DownstreamOpenAIModelRecord {
   return {
-    id: "role-model/auto",
+    id: "baseline.remote-only",
     object: "model",
     owned_by: "role-model",
     endpoint_ids: ["local"],
@@ -65,7 +65,7 @@ export function createDiscovery(
       note: "placeholder only",
     },
     models: [createModelRecord()],
-    setup: { recommendedModel: "role-model/auto", notes: ["Use discovery"] },
+    setup: { recommendedModel: "baseline.remote-only", notes: ["Use discovery"] },
     freshness: {
       generatedAt: "2026-06-22T00:00:00Z",
       catalogVersion: "test",

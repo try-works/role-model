@@ -8,6 +8,11 @@ type RegisteredCommandConfig = {
   handler: (args?: string, context?: PiCommandContext) => Promise<void>;
 };
 
+type BeforeProviderRequestCallback = (
+  event: { type: "before_provider_request"; payload: unknown },
+  context?: { model?: PiModelSelection },
+) => unknown;
+
 describe("Pi extension registration", () => {
   test("uses ROLE_MODEL_ENDPOINT for runtime request commands when no explicit endpoint is passed", async () => {
     const commands: Array<{ name: string; config: RegisteredCommandConfig }> = [];
@@ -118,7 +123,7 @@ describe("Pi extension registration", () => {
       },
     });
 
-    await commands[0]?.config.handler("alias use role-model/auto", {
+    await commands[0]?.config.handler("alias use baseline.remote-only", {
       ui: { notify: () => undefined },
       isProjectTrusted: () => true,
     });
@@ -126,7 +131,7 @@ describe("Pi extension registration", () => {
     expect(activeModels).toEqual([
       expect.objectContaining({
         provider: "role-model",
-        id: "role-model/auto",
+        id: "baseline.remote-only",
       }),
     ]);
   });
@@ -177,9 +182,7 @@ describe("Pi extension registration", () => {
     ]);
   });
   test("injects provider requests with the resolved runtime taxonomy when available", async () => {
-    const callbacks: Array<
-      (event: { type: "before_provider_request"; payload: unknown }) => unknown
-    > = [];
+    const callbacks: BeforeProviderRequestCallback[] = [];
     const runtimeTaxonomy = {
       ...loadCompactTaxonomy(),
       manifest: {
@@ -217,7 +220,7 @@ describe("Pi extension registration", () => {
     const payload = await callbacks[0]?.({
       type: "before_provider_request",
       payload: {
-        model: "role-model/auto",
+        model: "baseline.remote-only",
         messages: [{ role: "user", content: "Implement this small bug fix." }],
       },
     });
@@ -234,9 +237,7 @@ describe("Pi extension registration", () => {
   });
 
   test("loads runtime task chunks for request candidate roles before injecting intent", async () => {
-    const callbacks: Array<
-      (event: { type: "before_provider_request"; payload: unknown }) => unknown
-    > = [];
+    const callbacks: BeforeProviderRequestCallback[] = [];
     const packageTaxonomy = loadCompactTaxonomy();
     const taskChunkRequests: string[] = [];
     const extension = createRoleModelExtension({
@@ -296,7 +297,7 @@ describe("Pi extension registration", () => {
     const payload = await callbacks[0]?.({
       type: "before_provider_request",
       payload: {
-        model: "role-model/auto",
+        model: "baseline.remote-only",
         messages: [
           { role: "user", content: "Implement this small bug fix and add a regression test." },
         ],
@@ -319,9 +320,7 @@ describe("Pi extension registration", () => {
   });
 
   test("loads runtime task chunks on the default endpoint path without requiring explicit endpoint config", async () => {
-    const callbacks: Array<
-      (event: { type: "before_provider_request"; payload: unknown }) => unknown
-    > = [];
+    const callbacks: BeforeProviderRequestCallback[] = [];
     const taskChunkRequests: string[] = [];
     const extension = createRoleModelExtension({
       discover: async () => ({
@@ -352,7 +351,7 @@ describe("Pi extension registration", () => {
     await callbacks[0]?.({
       type: "before_provider_request",
       payload: {
-        model: "role-model/auto",
+        model: "baseline.remote-only",
         messages: [
           { role: "user", content: "Implement this small bug fix and add a regression test." },
         ],
@@ -365,9 +364,7 @@ describe("Pi extension registration", () => {
   });
 
   test("refreshes effective taxonomy during command setup and alias refresh", async () => {
-    const callbacks: Array<
-      (event: { type: "before_provider_request"; payload: unknown }) => unknown
-    > = [];
+    const callbacks: BeforeProviderRequestCallback[] = [];
     const commands: Array<{ name: string; config: RegisteredCommandConfig }> = [];
     let contentRevision = "startup-taxonomy";
     const extension = createRoleModelExtension({
@@ -416,7 +413,7 @@ describe("Pi extension registration", () => {
     const payload = await callbacks[0]?.({
       type: "before_provider_request",
       payload: {
-        model: "role-model/auto",
+        model: "baseline.remote-only",
         messages: [{ role: "user", content: "Implement this small bug fix." }],
       },
     });
@@ -433,9 +430,7 @@ describe("Pi extension registration", () => {
   });
 
   test("injects provider requests for direct Role-Model model records", async () => {
-    const callbacks: Array<
-      (event: { type: "before_provider_request"; payload: unknown }) => unknown
-    > = [];
+    const callbacks: BeforeProviderRequestCallback[] = [];
     const extension = createRoleModelExtension({
       discover: async () => ({
         discovery: createDiscovery({
@@ -488,5 +483,52 @@ describe("Pi extension registration", () => {
         }),
       }),
     );
+  });
+
+  test("rejects foreign provider ids before sending Role-Model provider requests", async () => {
+    const callbacks: BeforeProviderRequestCallback[] = [];
+    const extension = createRoleModelExtension({
+      discover: async () => ({
+        discovery: createDiscovery(),
+        state: "ready",
+        warnings: [],
+        modelDiagnostics: [],
+      }),
+      fetchRuntimeTaskChunk: async () => [],
+      fetchRuntimeRoleSummaries: async () => [],
+    });
+
+    await extension({
+      registerProvider() {
+        // registered during startup discovery
+      },
+      registerCommand() {
+        // registered below startup discovery
+      },
+      on(event, callback) {
+        if (event === "before_provider_request") callbacks.push(callback);
+      },
+    });
+
+    await expect(
+      callbacks[0]?.(
+        {
+          type: "before_provider_request",
+          payload: {
+            model: "gpt-4o",
+            messages: [{ role: "user", content: "Reply with ok." }],
+          },
+        },
+        {
+          model: {
+            provider: "role-model",
+            id: "gpt-4o",
+            api: "openai-completions",
+            input: ["text"],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+          },
+        },
+      ),
+    ).rejects.toThrow(/foreign provider ids are not valid under provider role-model/i);
   });
 });

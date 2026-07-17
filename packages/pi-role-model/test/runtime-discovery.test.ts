@@ -74,7 +74,7 @@ describe("Role-Model runtime discovery", () => {
             object: "list",
             data: [
               {
-                id: "role-model/auto",
+                id: "role-model/baseline.remote-only",
                 object: "model",
                 owned_by: "role-model",
                 endpoint_ids: ["local"],
@@ -93,7 +93,8 @@ describe("Role-Model runtime discovery", () => {
     expect(calls).toContain("http://127.0.0.1:3456/v1/models");
     expect(result.state).toBe("fallback");
     expect(result.warnings?.join("\n")).toContain("compact /v1/models fallback");
-    expect(result.discovery.models[0]?.id).toBe("role-model/auto");
+    expect(result.discovery.models[0]?.id).toBe("baseline.remote-only");
+    expect(result.discovery.setup.recommendedModel).toBe("baseline.remote-only");
   });
 
   test("reports malformed rich discovery as incompatible without fallback", async () => {

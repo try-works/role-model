@@ -88,6 +88,7 @@ Inside Pi, run:
 
 ```text
 /role-model setup
+/role-model status
 /role-model doctor
 /role-model alias list
 /role-model alias choose
@@ -96,6 +97,8 @@ Inside Pi, run:
 /role-model explain latest
 ```
 
+Use those slash commands only from an interactive Pi session. `pi -p "/role-model status"` is unsupported because Pi print mode does not currently invoke extension commands.
+
 By default the package connects to `http://127.0.0.1:3456` and registers Role-Model as the
 `role-model` provider using `/api/role-model/downstream/openai`. Set `ROLE_MODEL_ENDPOINT`
 before starting Pi to use a different local runtime. Remote endpoints require explicit
@@ -103,6 +106,14 @@ trusted `allowRemote` behavior, and runtimes that report `authentication.require
 closed unless a future supported token source is configured. For local development installs
 and the full command reference, see
 [`packages/pi-role-model/README.md`](packages/pi-role-model/README.md).
+
+For explicit provider prompts, use the provider-relative Role-Model alias that Pi lists for provider `role-model`, for example:
+
+```bash
+pi --no-session --provider role-model --model baseline.remote-only -p "<prompt>"
+```
+
+`baseline.remote-only` is the canonical provider-relative form. `role-model/<alias>` is compatibility-only for Pi surfaces that explicitly require a qualified id. Raw HTTP `curl` calls to the runtime are debug-only fallback tools, not the primary supported Pi workflow.
 
 ## Develop from source
 

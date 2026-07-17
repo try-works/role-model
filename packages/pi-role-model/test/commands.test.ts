@@ -25,7 +25,7 @@ const discovery: DownstreamOpenAIDiscovery = {
   },
   models: [
     {
-      id: "role-model/auto",
+      id: "baseline.remote-only",
       object: "model",
       owned_by: "role-model",
       endpoint_ids: ["local"],
@@ -51,7 +51,7 @@ const discovery: DownstreamOpenAIDiscovery = {
       sources: ["runtime"],
     },
   ],
-  setup: { recommendedModel: "role-model/auto", notes: [] },
+  setup: { recommendedModel: "baseline.remote-only", notes: [] },
   freshness: {
     generatedAt: "2026-06-22T00:00:00Z",
     catalogVersion: "test",
@@ -118,7 +118,7 @@ describe("role-model command dispatcher", () => {
 
     await expect(handler("setup")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("role-model/auto"),
+      text: expect.stringContaining("baseline.remote-only"),
     });
     await expect(handler("ui")).resolves.toMatchObject({
       ok: true,
@@ -126,11 +126,11 @@ describe("role-model command dispatcher", () => {
     });
     await expect(handler("alias recommended")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("role-model/auto"),
+      text: expect.stringContaining("baseline.remote-only"),
     });
-    await expect(handler("alias use role-model/auto")).resolves.toMatchObject({
+    await expect(handler("alias use baseline.remote-only")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("role-model/auto"),
+      text: expect.stringContaining("baseline.remote-only"),
     });
     await expect(handler("alias refresh")).resolves.toMatchObject({
       ok: true,
@@ -138,7 +138,7 @@ describe("role-model command dispatcher", () => {
     });
 
     expect(refreshed).toEqual(["http://127.0.0.1:3456", "http://127.0.0.1:3456"]);
-    expect(selectedAlias).toBe("role-model/auto");
+    expect(selectedAlias).toBe("baseline.remote-only");
   });
 
   test("lists recent runtime requests and explains the latest routing decision", async () => {
@@ -214,11 +214,11 @@ describe("role-model command dispatcher", () => {
 
     await expect(handler("alias list")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("role-model/auto"),
+      text: expect.stringContaining("baseline.remote-only"),
     });
-    await expect(handler("alias choose role-model/auto")).resolves.toMatchObject({
+    await expect(handler("alias choose baseline.remote-only")).resolves.toMatchObject({
       ok: true,
-      text: expect.stringContaining("role-model/auto"),
+      text: expect.stringContaining("baseline.remote-only"),
     });
     await expect(handler("alias current")).resolves.toMatchObject({
       ok: true,
@@ -237,7 +237,7 @@ describe("role-model command dispatcher", () => {
         providerRegistered: true,
         modelDiagnostics: [],
       }),
-      readSelectedAlias: async () => "role-model/auto",
+      readSelectedAlias: async () => "baseline.remote-only",
     });
 
     await expect(handler("status")).resolves.toMatchObject({
@@ -246,11 +246,36 @@ describe("role-model command dispatcher", () => {
     });
     const result = await handler("status");
     expect(result.text).toContain("aliases: 1");
-    expect(result.text).toContain("selected alias: role-model/auto");
+    expect(result.text).toContain("selected alias: baseline.remote-only");
     expect(result.text).toContain("provider: registered");
     expect(result.text).toContain("auth: placeholder");
     expect(result.text).toContain("endpoint trust: local");
     expect(result.text).toContain("fallback: no");
+  });
+
+  test("status reports canonical provider-relative prompt guidance and invocation-mode truth", async () => {
+    const handler = createRoleModelCommandHandler({
+      discover: async () => ({
+        discovery: createDiscovery(),
+        version: { version: "0.0.0-test" },
+        health: { status: "healthy" },
+        state: "ready",
+        warnings: [],
+        providerRegistered: true,
+        modelDiagnostics: [],
+      }),
+      readSelectedAlias: async () => "baseline.remote-only",
+    });
+
+    const result = await handler("status");
+    expect(result.ok).toBe(true);
+    expect(result.text).toContain("recommended alias: baseline.remote-only");
+    expect(result.text).toContain("canonical provider model id: baseline.remote-only");
+    expect(result.text).toContain(
+      'supported prompt path: pi --no-session --provider role-model --model baseline.remote-only -p "<prompt>"',
+    );
+    expect(result.text).toContain("command invocation: interactive slash commands only");
+    expect(result.text).toContain('unsupported noninteractive path: pi -p "/role-model ..."');
   });
 
   test("status prefers the live Pi role-model selection over a stale stored alias", async () => {
@@ -296,7 +321,10 @@ describe("role-model command dispatcher", () => {
 
     const result = await handler("doctor");
     expect(result.ok).toBe(false);
-    expect(result.text).toContain("state: blocked-remote");
+    expect(result.text).toContain("check: endpoint trust");
+    expect(result.text).toContain("classification: blocked-remote");
+    expect(result.text).toContain("runtime reached: no");
+    expect(result.text).toContain("input endpoint: https://role-model.example.test");
     expect(result.text).toContain("remediation: Enable allowRemote");
   });
 
@@ -307,15 +335,15 @@ describe("role-model command dispatcher", () => {
         state: "fallback",
         warnings: ["using compact /v1/models fallback"],
         modelDiagnostics: [
-          { id: "role-model/auto", degraded: true, reasons: ["missing piMapping.maxTokens"] },
+          { id: "baseline.remote-only", degraded: true, reasons: ["missing piMapping.maxTokens"] },
         ],
       }),
-      readSelectedAlias: async () => "role-model/auto",
+      readSelectedAlias: async () => "baseline.remote-only",
     });
 
     const result = await handler("alias list");
     expect(result.ok).toBe(true);
-    expect(result.text).toContain("role-model/auto");
+    expect(result.text).toContain("baseline.remote-only");
     expect(result.text).toContain("recommended");
     expect(result.text).toContain("selected");
     expect(result.text).toContain("ready");
@@ -341,16 +369,16 @@ describe("role-model command dispatcher", () => {
       },
     });
 
-    const result = await handler("alias use role-model/auto");
+    const result = await handler("alias use baseline.remote-only");
     expect(result.ok).toBe(true);
-    expect(selectedAlias).toBe("role-model/auto");
+    expect(selectedAlias).toBe("baseline.remote-only");
     expect(activeSelections).toEqual([
       expect.objectContaining({
         provider: "role-model",
-        id: "role-model/auto",
+        id: "baseline.remote-only",
       }),
     ]);
-    expect(result.text).toContain("active model: role-model/auto");
+    expect(result.text).toContain("active model: baseline.remote-only");
   });
 
   test("alias use reports active-model failure without claiming Pi switched models", async () => {
@@ -365,13 +393,13 @@ describe("role-model command dispatcher", () => {
       setActiveModel: async () => false,
     });
 
-    const result = await handler("alias use role-model/auto");
+    const result = await handler("alias use baseline.remote-only");
     expect(result.ok).toBe(false);
-    expect(result.text).toContain("selected alias: role-model/auto");
+    expect(result.text).toContain("selected alias: baseline.remote-only");
     expect(result.text).toContain("active model: not changed");
   });
 
-  test("alias use accepts unprefixed alias ids and stores the canonical runtime alias", async () => {
+  test("alias use accepts compatibility-prefixed ids and stores the canonical runtime alias", async () => {
     let selectedAlias: string | null = null;
     const handler = createRoleModelCommandHandler({
       discover: async () => ({
@@ -386,9 +414,27 @@ describe("role-model command dispatcher", () => {
       setActiveModel: async () => true,
     });
 
-    const result = await handler("alias use auto");
+    const result = await handler("alias use role-model/baseline.remote-only");
     expect(result.ok).toBe(true);
-    expect(selectedAlias).toBe("role-model/auto");
-    expect(result.text).toContain("selected alias: role-model/auto");
+    expect(selectedAlias).toBe("baseline.remote-only");
+    expect(result.text).toContain("selected alias: baseline.remote-only");
+  });
+
+  test("alias use explains how to recover from a foreign model id", async () => {
+    const handler = createRoleModelCommandHandler({
+      discover: async () => ({
+        discovery: createDiscovery(),
+        state: "ready",
+        warnings: [],
+        modelDiagnostics: [],
+      }),
+    });
+
+    const result = await handler("alias use gpt-4o");
+    expect(result.ok).toBe(false);
+    expect(result.text).toContain("invalid Role-Model alias: gpt-4o");
+    expect(result.text).toContain("foreign provider ids are not valid under provider role-model");
+    expect(result.text).toContain("Run /role-model alias list");
+    expect(result.text).toContain("Recommended Role-Model alias: baseline.remote-only");
   });
 });

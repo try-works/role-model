@@ -8,6 +8,7 @@ import {
   CONSERVATIVE_MAX_TOKENS,
   validateDownstreamOpenAIDiscovery,
 } from "./downstream-openai.js";
+import { normalizeRoleModelModelId } from "./model-guidance.js";
 import type {
   DiscoveryResult,
   DownstreamOpenAIDiscovery,
@@ -99,6 +100,7 @@ function createFallbackModelRecord(
   ) {
     return undefined;
   }
+  const normalizedModelId = normalizeRoleModelModelId(record.id);
   const roleModel = isObject(record.role_model) ? record.role_model : {};
   const contextWindow =
     typeof record.context_window === "number"
@@ -119,13 +121,13 @@ function createFallbackModelRecord(
     ? record.endpoint_ids.filter((item): item is string => typeof item === "string")
     : [];
   return {
-    id: record.id,
+    id: normalizedModelId,
     object: "model",
     owned_by: "role-model",
     endpoint_ids: endpointIds,
     type: roleModel.type === "model" ? "model" : "alias",
-    targetModelIds: [record.id],
-    canonicalModelIds: [record.id],
+    targetModelIds: [normalizedModelId],
+    canonicalModelIds: [normalizedModelId],
     providerIds: ["role-model"],
     limits: {
       safeContextWindow: contextWindow,
@@ -148,8 +150,8 @@ function createFallbackModelRecord(
       structuredOutput: { supported: false },
       caching: { promptRead: null, promptWrite: null, source: "unknown" },
     },
-    declared: { modelIds: [record.id], endpointIds },
-    routable: { modelIds: [record.id], endpointIds },
+    declared: { modelIds: [normalizedModelId], endpointIds },
+    routable: { modelIds: [normalizedModelId], endpointIds },
     piMapping: {
       contextWindow: contextWindow ?? CONSERVATIVE_CONTEXT_WINDOW,
       maxTokens: maxTokens ?? CONSERVATIVE_MAX_TOKENS,
