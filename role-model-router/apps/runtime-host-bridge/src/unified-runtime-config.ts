@@ -234,6 +234,27 @@ export function removeUnifiedRuntimeConfigProviderModel(
   };
 }
 
+export function rewriteUnifiedRuntimeConfigController(
+  config: UnifiedRuntimeConfig,
+  controller: Pick<UnifiedRuntimeControllerConfig, "endpointId" | "modelId" | "sourceType"> | null,
+): UnifiedRuntimeConfig {
+  if (controller === null) {
+    const { controller: _controller, ...rest } = config;
+    return rest;
+  }
+
+  return {
+    ...config,
+    controller: {
+      enabled: config.controller?.enabled ?? true,
+      sourceType: controller.sourceType,
+      endpointId: controller.endpointId,
+      modelId: controller.modelId,
+      timeoutMs: config.controller?.timeoutMs ?? DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS,
+    },
+  };
+}
+
 interface RawLlamaSwapModel {
   readonly path?: string;
   readonly capabilities?: readonly string[];

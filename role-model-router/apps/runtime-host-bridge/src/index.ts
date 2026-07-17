@@ -66,6 +66,7 @@ import {
   clearAllObservedBenchmarkData,
   clearBenchmarkRunArtifacts,
   clearObservedBenchmarkDataForEndpoint,
+  deleteRuntimeControllerAssignment,
   initializeSqliteMemory,
   insertSwapEvent,
   listProviderAccounts,
@@ -162,7 +163,10 @@ import {
   readLatestBenchmarkSummary,
   writeBenchmarkPreferences,
 } from "./benchmark-summary.js";
-import { findConfiguredModelBlockingReferences } from "./configured-model-membership.js";
+import {
+  findConfiguredModelBlockingReferences,
+  findConfiguredModelReferencesByPolicy,
+} from "./configured-model-membership.js";
 import { looksLikeInlineApiKey, resolveEnvCredentialRef } from "./credential-ref-env.js";
 import {
   buildAccountEndpointRoleBindings,
@@ -236,6 +240,7 @@ import {
   removeUnifiedRuntimeConfigProviderModel,
   renderUnifiedRuntimeConfigText,
   resolveUnifiedRuntimeObservedDataConfig,
+  rewriteUnifiedRuntimeConfigController,
 } from "./unified-runtime-config.js";
 
 interface OpenAIChatCompletionsTool {
@@ -18953,8 +18958,9 @@ export async function createRuntimeBridgeBackend(
       listener(event);
     }
   };
-  const getDefaultControllerAssignment = (): BridgeControllerAssignment | null => {
-    const effectiveRegistry = getRouterEffectiveRegistry();
+  const resolveDefaultControllerAssignment = (
+    effectiveRegistry: EndpointRegistryResult,
+  ): BridgeControllerAssignment | null => {
     const guidance = summarizeRouterGuidance({
       routingModel,
       routableEndpointIds: effectiveRegistry.endpoints.map(
@@ -18973,11 +18979,71 @@ export async function createRuntimeBridgeBackend(
     }
     return toControllerAssignmentFromEndpoint(fallbackEndpoint);
   };
+  const getDefaultControllerAssignment = (): BridgeControllerAssignment | null =>
+    resolveDefaultControllerAssignment(getRouterEffectiveRegistry());
+  const resolveProjectedControllerAssignment = (
+    excludedEndpointIds: ReadonlySet<string>,
+  ): BridgeControllerAssignment | null => {
+    const effectiveRegistry = getRouterEffectiveRegistry();
+    const candidates = effectiveRegistry.endpoints
+      .filter((endpoint) => !excludedEndpointIds.has(endpoint.identity.endpoint_id))
+      .map((endpoint) => toControllerAssignmentFromEndpoint(endpoint));
+    const candidateByEndpointId = new Map(
+      candidates.map((candidate) => [candidate.endpointId, candidate]),
+    );
+    for (const endpoint of runtimeEndpoints) {
+      if (
+        excludedEndpointIds.has(endpoint.endpointId) ||
+        candidateByEndpointId.has(endpoint.endpointId)
+      ) {
+        continue;
+      }
+      candidates.push({
+        scope: "global",
+        endpointId: endpoint.endpointId,
+        modelId: endpoint.modelId,
+        sourceType: telemetrySourceTypeFromEndpointKind(endpoint.endpointKind),
+      });
+      candidateByEndpointId.set(endpoint.endpointId, candidates[candidates.length - 1]);
+    }
+    const guidance = summarizeRouterGuidance({
+      routingModel,
+      routableEndpointIds: candidates.map((candidate) => candidate.endpointId),
+    });
+    if (guidance.endpointId) {
+      const guided = candidateByEndpointId.get(guidance.endpointId);
+      if (guided) {
+        return guided;
+      }
+    }
+    return candidates[0] ?? null;
+  };
   const readPersistedControllerAssignment = () =>
     readRuntimeControllerAssignment({
       databasePath: initialization.databasePath,
       scope: "global",
     });
+  const writeResolvedControllerAssignment = (
+    controller: BridgeControllerAssignment | null,
+  ): void => {
+    if (controller) {
+      upsertRuntimeControllerAssignment({
+        databasePath: initialization.databasePath,
+        assignment: {
+          scope: "global",
+          endpointId: controller.endpointId,
+          modelId: controller.modelId,
+          sourceType: controller.sourceType,
+          updatedAtMs: Date.now(),
+        },
+      });
+      return;
+    }
+    deleteRuntimeControllerAssignment({
+      databasePath: initialization.databasePath,
+      scope: "global",
+    });
+  };
   const asObjectRecord = (value: unknown): Record<string, unknown> | null =>
     typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
   const asStringValue = (value: unknown): string | null =>
@@ -22404,14 +22470,20 @@ export async function createRuntimeBridgeBackend(
         return configuredModelEjectResult("absent", false, true, {}, false);
       }
       return withUnifiedConfigMutationLock(async () => {
-        const targetEndpointIds = new Set(
-          runtimeEndpoints
+        const targetEndpointIds = new Set([
+          ...runtimeEndpoints
             .filter(
               (endpoint) =>
                 endpoint.providerAccountId === providerAccountId && endpoint.modelId === modelId,
             )
             .map((endpoint) => endpoint.endpointId),
-        );
+          ...currentRegistrySources.cloud
+            .filter(
+              (endpoint) =>
+                endpoint.providerAccountId === providerAccountId && endpoint.modelId === modelId,
+            )
+            .map((endpoint) => endpoint.endpointId),
+        ]);
         const explicitReferences = [
           ...(currentUnifiedRuntimeConfig?.modelAliases ?? [])
             .filter(
@@ -22431,7 +22503,7 @@ export async function createRuntimeBridgeBackend(
                   kind: "controller",
                   owner: "unified-runtime-config",
                   path: "controller",
-                  policy: "block" as const,
+                  policy: "auto-reassign-or-clear" as const,
                   modelId: currentUnifiedRuntimeConfig.controller.modelId ?? undefined,
                   endpointId: currentUnifiedRuntimeConfig.controller.endpointId ?? undefined,
                 },
@@ -22451,15 +22523,23 @@ export async function createRuntimeBridgeBackend(
               ]
             : []),
         ];
+        const configuredKeys = currentAccounts.flatMap((account) =>
+          account.allowedModels.map((configuredModelId) => ({
+            providerAccountId: account.providerAccountId,
+            modelId: configuredModelId,
+          })),
+        );
         const blockingReferences = findConfiguredModelBlockingReferences({
           target: { providerAccountId, modelId },
-          configuredKeys: currentAccounts.flatMap((account) =>
-            account.allowedModels.map((configuredModelId) => ({
-              providerAccountId: account.providerAccountId,
-              modelId: configuredModelId,
-            })),
-          ),
+          configuredKeys,
           references: explicitReferences,
+          targetEndpointIds,
+        });
+        const controllerReferences = findConfiguredModelReferencesByPolicy({
+          target: { providerAccountId, modelId },
+          configuredKeys,
+          references: explicitReferences,
+          policy: "auto-reassign-or-clear",
           targetEndpointIds,
         });
         const modelSuppliedBySibling = currentAccounts.some(
@@ -22475,10 +22555,28 @@ export async function createRuntimeBridgeBackend(
         if (blockingReferences.length > 0) {
           throw new ConfiguredModelReferenceConflictError(blockingReferences);
         }
+        const resolvedControllerAssignment =
+          controllerReferences.length > 0
+            ? resolveProjectedControllerAssignment(targetEndpointIds)
+            : null;
+        const nextUnifiedRuntimeConfig =
+          currentUnifiedRuntimeConfig && controllerReferences.length > 0
+            ? rewriteUnifiedRuntimeConfigController(
+                currentUnifiedRuntimeConfig,
+                resolvedControllerAssignment
+                  ? {
+                      endpointId: resolvedControllerAssignment.endpointId,
+                      modelId: resolvedControllerAssignment.modelId,
+                      sourceType: resolvedControllerAssignment.sourceType,
+                    }
+                  : null,
+              )
+            : currentUnifiedRuntimeConfig;
         const configOwnsAccount =
           currentUnifiedRuntimeConfig?.liteLLM.providers.some(
             (provider) => `${provider.providerId}.litellm` === providerAccountId,
           ) ?? false;
+        const previousPersistedController = readPersistedControllerAssignment();
         if (configOwnsAccount && currentUnifiedRuntimeConfig) {
           if (!currentUnifiedRuntimeConfig) {
             throw new Error("Runtime config disappeared while waiting for its mutation lock.");
@@ -22488,6 +22586,14 @@ export async function createRuntimeBridgeBackend(
             providerAccountId,
             modelId,
           );
+          const nextConfig =
+            mutation.removed && nextUnifiedRuntimeConfig
+              ? removeUnifiedRuntimeConfigProviderModel(
+                  nextUnifiedRuntimeConfig,
+                  providerAccountId,
+                  modelId,
+                ).config
+              : mutation.config;
           if (!mutation.removed) {
             return configuredModelEjectResult(
               "runtime-config-managed",
@@ -22512,7 +22618,7 @@ export async function createRuntimeBridgeBackend(
           const previousEndpoints = runtimeEndpoints.filter(
             (endpoint) => endpoint.providerAccountId === providerAccountId,
           );
-          const nextText = renderUnifiedRuntimeConfigText(mutation.config);
+          const nextText = renderUnifiedRuntimeConfigText(nextConfig);
           try {
             await writeConfigTextAtomically(options.unifiedRuntimeConfigPath, nextText);
             persistOperatorIntent(operatorIntentLocation, (intent) =>
@@ -22521,8 +22627,9 @@ export async function createRuntimeBridgeBackend(
             deleteRuntimeEndpointsByModelId(initialization.databasePath, modelId, [
               providerAccountId,
             ]);
+            writeResolvedControllerAssignment(resolvedControllerAssignment);
             const projectedModelIds =
-              mutation.config.liteLLM.providers
+              nextConfig.liteLLM.providers
                 .find((provider) => `${provider.providerId}.litellm` === providerAccountId)
                 ?.modelMappings.map((mapping) => mapping.modelId) ?? [];
             const projectedAccount = currentAccounts.find(
@@ -22542,11 +22649,23 @@ export async function createRuntimeBridgeBackend(
                 },
               });
             }
-            await applyUnifiedRuntimeConfigState(mutation.config);
+            await applyUnifiedRuntimeConfigState(nextConfig);
           } catch (error) {
             try {
               await writeConfigTextAtomically(options.unifiedRuntimeConfigPath, previousText);
               await applyUnifiedRuntimeConfigState(previousConfig);
+              writeResolvedControllerAssignment(
+                previousPersistedController
+                  ? {
+                      scope: "global",
+                      endpointId: previousPersistedController.endpointId,
+                      modelId: previousPersistedController.modelId,
+                      sourceType:
+                        previousPersistedController.sourceType === "remote" ? "remote" : "local",
+                      updatedAtMs: previousPersistedController.updatedAtMs,
+                    }
+                  : null,
+              );
               if (previousAccount) {
                 upsertSqliteProviderAccount({
                   databasePath: initialization.databasePath,
@@ -22662,6 +22781,14 @@ export async function createRuntimeBridgeBackend(
           (endpoint) =>
             endpoint.providerAccountId === providerAccountId && endpoint.modelId === modelId,
         );
+        const runtimeConfigChanged =
+          nextUnifiedRuntimeConfig !== null &&
+          nextUnifiedRuntimeConfig !== currentUnifiedRuntimeConfig;
+        const previousConfig = currentUnifiedRuntimeConfig;
+        const previousConfigText =
+          runtimeConfigChanged && options.unifiedRuntimeConfigPath
+            ? await readFile(options.unifiedRuntimeConfigPath, "utf8")
+            : null;
         try {
           persistOperatorIntent(operatorIntentLocation, (intent) =>
             removeRemoteActivationsByConfiguredModel(intent, providerAccountId, modelId),
@@ -22669,6 +22796,17 @@ export async function createRuntimeBridgeBackend(
           deleteRuntimeEndpointsByModelId(initialization.databasePath, modelId, [
             providerAccountId,
           ]);
+          if (
+            runtimeConfigChanged &&
+            nextUnifiedRuntimeConfig &&
+            options.unifiedRuntimeConfigPath
+          ) {
+            await writeConfigTextAtomically(
+              options.unifiedRuntimeConfigPath,
+              renderUnifiedRuntimeConfigText(nextUnifiedRuntimeConfig),
+            );
+            writeResolvedControllerAssignment(resolvedControllerAssignment);
+          }
           if (!validatedAccount) {
             deleteProviderAccountsById(initialization.databasePath, [providerAccountId]);
           } else {
@@ -22677,7 +22815,11 @@ export async function createRuntimeBridgeBackend(
               account: validatedAccount,
             });
           }
-          rebuildCurrentState();
+          if (runtimeConfigChanged && nextUnifiedRuntimeConfig) {
+            await applyUnifiedRuntimeConfigState(nextUnifiedRuntimeConfig);
+          } else {
+            rebuildCurrentState();
+          }
           return configuredModelEjectResult("account-managed", validatedAccount === null, false, {
             modelRoleBindings:
               (existingAccount.modelRoleBindings?.length ?? 0) - nextModelRoleBindings.length,
@@ -22704,7 +22846,29 @@ export async function createRuntimeBridgeBackend(
             } else {
               await rm(resolveOperatorIntentPath(operatorIntentLocation), { force: true });
             }
-            rebuildCurrentState();
+            if (
+              runtimeConfigChanged &&
+              previousConfigText &&
+              previousConfig &&
+              options.unifiedRuntimeConfigPath
+            ) {
+              await writeConfigTextAtomically(options.unifiedRuntimeConfigPath, previousConfigText);
+              writeResolvedControllerAssignment(
+                previousPersistedController
+                  ? {
+                      scope: "global",
+                      endpointId: previousPersistedController.endpointId,
+                      modelId: previousPersistedController.modelId,
+                      sourceType:
+                        previousPersistedController.sourceType === "remote" ? "remote" : "local",
+                      updatedAtMs: previousPersistedController.updatedAtMs,
+                    }
+                  : null,
+              );
+              await applyUnifiedRuntimeConfigState(previousConfig);
+            } else {
+              rebuildCurrentState();
+            }
           } catch (rollbackError) {
             throw new ConfiguredModelEjectMutationError(
               "configured_model_eject_indeterminate",

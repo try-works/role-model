@@ -104,6 +104,198 @@ litellm_proxy:
     await restarted.shutdown();
   });
 
+  test("reassigns the controller when config-owned eject removes the active controller model", async () => {
+    const tempRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-run76-config-controller-reassign-"),
+    );
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+execution_mode: remote_only
+controller:
+  enabled: true
+  source_type: remote
+  endpoint_id: moonshot.litellm.global.moonshot-kimi-k2-5
+  model_id: moonshot/kimi-k2.5
+  timeout_ms: 15000
+litellm_proxy:
+  providers:
+    moonshot:
+      api_key: "\${MOONSHOT_API_KEY}"
+      model_list:
+        - model_name: moonshot/kimi-k2.5
+          litellm_params: { model: moonshot/kimi-k2.5 }
+        - model_name: moonshot/kimi-k2.6
+          litellm_params: { model: moonshot/kimi-k2.6 }
+`,
+      "utf8",
+    );
+
+    const seed = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "run76-config-controller-reassign",
+    });
+    await seed.upsertProviderAccount({
+      providerAccountId: "moonshot.litellm",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      credentialRef: { backend: "env", ref: "MOONSHOT_API_KEY" },
+      authMode: "api-key-static",
+      regionPolicy: { mode: "prefer", regions: ["global"] },
+      baseUrlOverride: "https://api.moonshot.ai/v1",
+      allowedModels: ["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    });
+    await seed.shutdown();
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "run76-config-controller-reassign",
+      unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
+    });
+    await backend.updateControllerAssignment({
+      endpointId: "moonshot.litellm.global.moonshot-kimi-k2-5",
+    });
+
+    await expect(
+      backend.removeProviderAccountModel("moonshot.litellm", "moonshot/kimi-k2.5"),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        success: true,
+        removedAccount: false,
+        alreadyAbsent: false,
+      }),
+    );
+
+    await expect(backend.readControllerAssignment()).resolves.toEqual(
+      expect.objectContaining({
+        endpointId: "moonshot.litellm.global.moonshot-kimi-k2-6",
+        modelId: "moonshot/kimi-k2.6",
+        sourceType: "remote",
+      }),
+    );
+    await expect(backend.readRuntimeConfig()).resolves.toEqual(
+      expect.objectContaining({
+        config: expect.objectContaining({
+          controller: expect.objectContaining({
+            endpointId: "moonshot.litellm.global.moonshot-kimi-k2-6",
+            modelId: "moonshot/kimi-k2.6",
+            sourceType: "remote",
+          }),
+        }),
+      }),
+    );
+
+    await backend.shutdown();
+  });
+
+  test("clears the controller when config-owned eject removes the last controller-backed model", async () => {
+    const tempRoot = await mkdtemp(
+      path.join(os.tmpdir(), "role-model-run76-config-controller-clear-"),
+    );
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+execution_mode: remote_only
+controller:
+  enabled: true
+  source_type: remote
+  endpoint_id: moonshot.litellm.global.moonshot-kimi-k2-5
+  model_id: moonshot/kimi-k2.5
+  timeout_ms: 15000
+litellm_proxy:
+  providers:
+    moonshot:
+      api_key: "\${MOONSHOT_API_KEY}"
+      model_list:
+        - model_name: moonshot/kimi-k2.5
+          litellm_params: { model: moonshot/kimi-k2.5 }
+`,
+      "utf8",
+    );
+
+    const seed = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "run76-config-controller-clear",
+    });
+    await seed.upsertProviderAccount({
+      providerAccountId: "moonshot.litellm",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      credentialRef: { backend: "env", ref: "MOONSHOT_API_KEY" },
+      authMode: "api-key-static",
+      regionPolicy: { mode: "prefer", regions: ["global"] },
+      baseUrlOverride: "https://api.moonshot.ai/v1",
+      allowedModels: ["moonshot/kimi-k2.5"],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    });
+    await seed.shutdown();
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "run76-config-controller-clear",
+      unifiedRuntimeConfigPath,
+      runtimeVendorStartup: "disabled",
+    });
+    await backend.updateControllerAssignment({
+      endpointId: "moonshot.litellm.global.moonshot-kimi-k2-5",
+    });
+
+    await expect(
+      backend.removeProviderAccountModel("moonshot.litellm", "moonshot/kimi-k2.5"),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        success: true,
+        removedAccount: true,
+        alreadyAbsent: false,
+      }),
+    );
+
+    await expect(backend.readControllerAssignment()).resolves.toBeNull();
+    await expect(backend.readRuntimeConfig()).resolves.toEqual(
+      expect.objectContaining({
+        config: expect.not.objectContaining({
+          controller: expect.anything(),
+        }),
+      }),
+    );
+
+    await backend.shutdown();
+  });
+
   test("router candidates expose every configured endpoint and mark current execution-mode eligibility", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run49-candidates-"));
     tempRoots.push(tempRoot);
