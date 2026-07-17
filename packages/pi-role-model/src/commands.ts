@@ -1,8 +1,15 @@
 import { createPiModelSelection } from "./downstream-openai.js";
+import {
+  formatInvalidRoleModelModelId,
+  formatRoleModelInvocationGuidance,
+  normalizeRoleModelModelId,
+  recommendedRoleModelModelId,
+} from "./model-guidance.js";
 import { RoleModelDiscoveryError } from "./runtime-discovery.js";
 import type { RoleModelRecentRequest, RoleModelRequestInspection } from "./runtime-inspection.js";
 import type {
   DiscoveryResult,
+  PiModelRef,
   PiCommandContext,
   PiModelSelection,
   RoleModelCommandResult,
@@ -154,18 +161,6 @@ function resolveAliasId(result: DiscoveryResult, rawAlias: string): string | nul
   return match?.id ?? null;
 }
 
-function formatDiscoveryError(error: unknown): string {
-  if (error instanceof RoleModelDiscoveryError) {
-    return [
-      `Role-Model runtime unavailable: ${error.message}`,
-      `state: ${error.state}`,
-      `endpoint: ${error.endpoint}`,
-      `remediation: ${error.remediation}`,
-    ].join("\n");
-  }
-  return `Role-Model runtime unavailable: ${error instanceof Error ? error.message : String(error)}`;
-}
-
 function versionText(result: DiscoveryResult): string {
   return typeof result.version?.version === "string" ? result.version.version : "unknown";
 }
@@ -189,18 +184,26 @@ function runtimeBuildText(result: DiscoveryResult): string | null {
   return buildVersion;
 }
 
-function currentPiRoleModelAlias(context?: Pick<PiCommandContext, "getModel">): string | null {
-  const model = context?.getModel?.();
+function modelFromContext(
+  context?: Pick<PiCommandContext, "getModel" | "model">,
+): PiModelRef | undefined {
+  return context?.model ?? context?.getModel?.();
+}
+
+function currentPiRoleModelAlias(
+  context?: Pick<PiCommandContext, "getModel" | "model">,
+): string | null {
+  const model = modelFromContext(context);
   if (!model || model.provider !== "role-model" || typeof model.id !== "string") {
     return null;
   }
-  return model.id.startsWith("role-model/") ? model.id.slice("role-model/".length) : model.id;
+  return normalizeRoleModelModelId(model.id);
 }
 
 async function selectedAliasText(
   result: DiscoveryResult,
   readSelectedAlias?: () => Promise<string | null>,
-  context?: Pick<PiCommandContext, "getModel">,
+  context?: Pick<PiCommandContext, "getModel" | "model">,
 ): Promise<string> {
   return (
     currentPiRoleModelAlias(context) ??
@@ -210,10 +213,78 @@ async function selectedAliasText(
   );
 }
 
+function discoveryRuntimeReached(state: RoleModelDiscoveryError["state"]): "yes" | "no" {
+  switch (state) {
+    case "auth-required":
+    case "incompatible":
+      return "yes";
+    default:
+      return "no";
+  }
+}
+
+function discoveryCheck(state: RoleModelDiscoveryError["state"]): string {
+  switch (state) {
+    case "malformed":
+      return "endpoint format";
+    case "blocked-remote":
+      return "endpoint trust";
+    case "timeout":
+    case "unavailable":
+      return "endpoint reachability";
+    case "incompatible":
+      return "runtime compatibility";
+    case "auth-required":
+      return "runtime authentication";
+  }
+}
+
+function formatDiscoveryFailure(
+  error: unknown,
+  commandName: "status" | "doctor",
+): string {
+  if (error instanceof RoleModelDiscoveryError) {
+    return [
+      `${commandName}: fail`,
+      `check: ${discoveryCheck(error.state)}`,
+      `classification: ${error.state}`,
+      `runtime reached: ${discoveryRuntimeReached(error.state)}`,
+      `input endpoint: ${error.endpoint}`,
+      `reason: ${error.message}`,
+      `remediation: ${error.remediation}`,
+      ...formatRoleModelInvocationGuidance(null),
+    ].join("\n");
+  }
+  return [
+    `${commandName}: fail`,
+    "check: runtime discovery",
+    "classification: unavailable",
+    "runtime reached: no",
+    `reason: ${error instanceof Error ? error.message : String(error)}`,
+    ...formatRoleModelInvocationGuidance(null),
+  ].join("\n");
+}
+
+function aliasState(result: DiscoveryResult, alias: string | null): string | null {
+  if (!alias || alias === "none") {
+    return null;
+  }
+  return aliasRecords(result).some((model) => model.id === alias)
+    ? "discoverable"
+    : "removed or no longer discoverable";
+}
+
+function formatAliasSelectionError(result: DiscoveryResult, requestedAlias: string): string {
+  return formatInvalidRoleModelModelId(result.discovery, requestedAlias, "yes").replace(
+    "invalid Role-Model model id:",
+    "invalid Role-Model alias:",
+  );
+}
+
 export function createRoleModelCommandHandler(dependencies: RoleModelCommandDependencies) {
   return async function handleRoleModelCommand(
     args = "",
-    context?: Pick<PiCommandContext, "getModel">,
+    context?: Pick<PiCommandContext, "getModel" | "model">,
   ): Promise<RoleModelCommandResult> {
     const [command = "help", subcommand, ...rest] = args.trim().split(/\s+/).filter(Boolean);
 
@@ -225,7 +296,7 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
     try {
       result = await dependencies.discover();
     } catch (error) {
-      return fail(formatDiscoveryError(error));
+      return fail(formatDiscoveryFailure(error, command === "doctor" ? "doctor" : "status"));
     }
 
     if (command === "setup") {
@@ -243,25 +314,34 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
     if (command === "status") {
       const storedAlias = await dependencies.readSelectedAlias?.();
       const activeAlias = currentPiRoleModelAlias(context);
-      const selected = await selectedAliasText(result, dependencies.readSelectedAlias, context);
+      const selected =
+        activeAlias ?? storedAlias ?? recommendedRoleModelModelId(result.discovery) ?? "none";
       const aliases = aliasRecords(result);
+      const recommendedAlias = recommendedRoleModelModelId(result.discovery);
       return ok(
         [
           result.discovery.displayName,
           `state: ${result.state ?? "ready"}`,
           `endpoint: ${result.discovery.baseUrl}`,
+          "runtime reachability: reachable",
           `runtime version: ${runtimeDisplayVersionText(result)}`,
           ...(runtimeBuildText(result) ? [`runtime build: ${runtimeBuildText(result)}`] : []),
           `aliases: ${aliases.length}`,
           `selected alias: ${selected}`,
+          `selected alias state: ${aliasState(result, selected) ?? "none"}`,
+          `recommended alias: ${recommendedAlias ?? "none"}`,
           activeAlias && storedAlias && activeAlias !== storedAlias
             ? `stored alias: ${storedAlias}`
+            : null,
+          storedAlias && activeAlias !== storedAlias
+            ? `stored alias state: ${aliasState(result, storedAlias) ?? "none"}`
             : null,
           `provider: ${result.providerRegistered === false ? "not registered" : "registered"}`,
           `auth: ${result.discovery.authentication.required ? "required" : "placeholder"}`,
           `endpoint trust: ${result.discovery.baseUrl.startsWith("http://127.0.0.1") || result.discovery.baseUrl.startsWith("http://localhost") ? "local" : "remote"}`,
           `fallback: ${(result.state ?? "ready") === "fallback" ? "yes" : "no"}`,
           `warnings: ${result.warnings && result.warnings.length > 0 ? result.warnings.join("; ") : "none"}`,
+          ...formatRoleModelInvocationGuidance(recommendedAlias),
         ]
           .filter((line): line is string => line !== null)
           .join("\n"),
@@ -271,9 +351,13 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
     if (command === "doctor") {
       const aliases = aliasRecords(result);
       const degraded = (result.modelDiagnostics ?? []).filter((diagnostic) => diagnostic.degraded);
+      const recommendedAlias = recommendedRoleModelModelId(result.discovery);
       return ok(
         [
           "doctor: ok",
+          "check: endpoint reachability",
+          "classification: ready",
+          "runtime reached: yes",
           `endpoint: ${result.discovery.baseUrl}`,
           "health: ok",
           `runtime version: ${versionText(result) === "unknown" ? "unknown" : "ok"}`,
@@ -285,7 +369,7 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
           `aliases: ${aliases.length > 0 ? "ok" : "missing"}`,
           `degraded models: ${degraded.length > 0 ? degraded.map((diagnostic) => diagnostic.id).join(", ") : "none"}`,
           `models: ${result.discovery.models.length}`,
-          `recommended alias: ${result.discovery.setup.recommendedModel ?? "none"}`,
+          ...formatRoleModelInvocationGuidance(recommendedAlias),
         ].join("\n"),
       );
     }
@@ -352,7 +436,7 @@ export function createRoleModelCommandHandler(dependencies: RoleModelCommandDepe
       }
       const alias = resolveAliasId(result, requestedAlias);
       if (!alias) {
-        return fail(`Unknown Role-Model alias: ${requestedAlias}`);
+        return fail(formatAliasSelectionError(result, requestedAlias));
       }
       await dependencies.writeSelectedAlias?.(alias);
       const model = createPiModelSelection(result.discovery, alias);

@@ -1,0 +1,14 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "dc5c188e338eae39588278f2295a3ad25eb81e4cb906fe45649f0c4929973dee",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\75-pi-role-model-cli-ux-and-model-id-hardening\\.recursive\\run\\75-pi-role-model-cli-ux-and-model-id-hardening\\02-to-be-plan.md",
+  "locked_at": "2026-07-17T07:22:52Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "2cd2aec61bb37be5839189b80583f92d73e87f264b2a382c96134a9765b28032",
+    "00-worktree.md": "bc6675ce8be942466c9633d75ad93813aeb7a7265915a023bf1e8e457b4d93ac",
+    "01-as-is.md": "45ff7bf466d98f8d31055dd4bdfca5bc56c826bfe75bc8f692519d5c44cf4181",
+    "01.5-root-cause.md": "cd81eed11a1058cbf4ec79711b432cbd73da32ec8ee8eec08937b117ab7f739d"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "5bec43c66f6c482c6ad0543fa8e5eaf69ebf5958d3c6a39b3a23e3b9459a4516"
+}

@@ -104,24 +104,39 @@ export interface ProviderRegistration {
   modelDiagnostics: RoleModelModelDiagnostic[];
 }
 
+export interface PiModelRef {
+  id: string;
+  provider: string;
+}
+
+export type PiExtensionMode = "tui" | "rpc" | "json" | "print";
+
+export interface PiExtensionContext {
+  ui?: {
+    notify?: (message: string, level?: "info" | "error") => void;
+  };
+  mode?: PiExtensionMode;
+  model?: PiModelRef;
+  isProjectTrusted?: () => boolean;
+}
+
 export interface PiExtensionAPI {
   registerProvider(name: string, config: PiProviderConfig): void;
   registerCommand(name: string, config: { description: string; handler: PiCommandHandler }): void;
   on?: (
     event: "before_provider_request",
-    handler: (event: { type: "before_provider_request"; payload: unknown }) =>
+    handler: (
+      event: { type: "before_provider_request"; payload: unknown },
+      context?: PiExtensionContext,
+    ) =>
       | unknown
       | Promise<unknown>,
   ) => void;
   setModel?: (model: PiModelSelection) => Promise<boolean>;
 }
 
-export interface PiCommandContext {
-  ui?: {
-    notify?: (message: string, level?: "info" | "error") => void;
-  };
-  isProjectTrusted?: () => boolean;
-  getModel?: () => PiModelSelection | undefined;
+export interface PiCommandContext extends PiExtensionContext {
+  getModel?: () => PiModelRef | undefined;
 }
 
 export type PiCommandHandler = (args?: string, context?: PiCommandContext) => Promise<void>;

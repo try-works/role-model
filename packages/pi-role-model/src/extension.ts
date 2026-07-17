@@ -1,6 +1,7 @@
 import { createFileAliasStore } from "./alias-store.js";
 import { type RoleModelCommandDependencies, createRoleModelCommandHandler } from "./commands.js";
 import { createRoleModelConfig } from "./config.js";
+import { findRoleModelDiscoveryModel, formatInvalidRoleModelModelId } from "./model-guidance.js";
 import { registerRoleModelProvider } from "./provider-registration.js";
 import { injectRoleModelIntentIntoPayloadWithRuntimeTasks } from "./request-intent.js";
 import { discoverRoleModelRuntime } from "./runtime-discovery.js";
@@ -30,8 +31,10 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
       ...(options.endpoint === undefined ? {} : { endpoint: options.endpoint }),
     }).endpoint;
     const roleModelModelIds = new Set<string>();
+    let latestDiscovery: DownstreamOpenAIDiscovery | undefined;
     let effectiveTaxonomy: CompactTaxonomy | undefined;
     const rememberRoleModelModels = (discovery: DownstreamOpenAIDiscovery) => {
+      latestDiscovery = discovery;
       roleModelModelIds.clear();
       for (const model of discovery.models) {
         roleModelModelIds.add(model.id);
@@ -118,15 +121,29 @@ export function createRoleModelExtension(options: RoleModelExtensionOptions = {}
           endpoint: runtimeEndpoint,
         }));
 
-    pi.on?.("before_provider_request", (event) =>
-      injectRoleModelIntentIntoPayloadWithRuntimeTasks(
+    pi.on?.("before_provider_request", async (event, context) => {
+      const payload =
+        typeof event.payload === "object" && event.payload !== null
+          ? (event.payload as Record<string, unknown>)
+          : null;
+      const payloadModel = typeof payload?.model === "string" ? payload.model : null;
+      if (
+        context?.model?.provider === "role-model" &&
+        latestDiscovery &&
+        payloadModel &&
+        !findRoleModelDiscoveryModel(latestDiscovery, payloadModel)
+      ) {
+        throw new Error(formatInvalidRoleModelModelId(latestDiscovery, payloadModel, "yes"));
+      }
+
+      return injectRoleModelIntentIntoPayloadWithRuntimeTasks(
         event.payload,
         roleModelModelIds,
         effectiveTaxonomy,
         fetchRuntimeTaskChunk,
         readRuntimeRoleSummaries,
-      ),
-    );
+      );
+    });
 
     pi.registerCommand("role-model", {
       description: "Configure and inspect the Role-Model provider for Pi.",
