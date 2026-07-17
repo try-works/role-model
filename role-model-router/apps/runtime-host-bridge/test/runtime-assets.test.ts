@@ -166,8 +166,6 @@ describe("runtime asset packaging", () => {
       },
     });
 
-    await expect(readFile(extractedPath ?? "", "utf8")).resolves.toBe(
-      "compressed-sea-asset",
-    );
+    await expect(readFile(extractedPath ?? "", "utf8")).resolves.toBe("compressed-sea-asset");
   });
 });

@@ -1,0 +1,18 @@
+{
+  "artifact": "07-state-update.md",
+  "artifact_hash": "33872aeeb33806b84bdbd75a4f72ea2ca84a723a6c20f5bda45732165f7a053b",
+  "artifact_path": "D:\\DEV\\role-model\\.recursive\\run\\74-kimi-k3-kimi-code-oauth-support\\07-state-update.md",
+  "locked_at": "2026-07-17T01:34:13Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "1f53babcd69f541a71d2dc7436390b79bbe3122f6d6657522b32fbf6ec075d7f",
+    "00-worktree.md": "401864a512f5e364f36ba46bbc7ef467dc5e82fb64787c2856c61c5ffda45199",
+    "01-as-is.md": "61dc84d92e84d45c2fedec6e21ae0149fdde5d4cc32a4d284f4fb05f348e5d8a",
+    "02-to-be-plan.md": "46295de2c53d5479d1891ba3aa4a2672e4ad220f0edb99c7e4558c61f3035364",
+    "03-implementation-summary.md": "8caad5af957c535d98cd4f370453c26c87e752af644e079347e6d5e5c6e12323",
+    "04-test-summary.md": "3376b8fd06bbf441b61bf0ce33a0bd09c97217ea0f99c2c2c6b5f4b33a6726bd",
+    "05-manual-qa.md": "24bb98abbf5c7269ad616ddf3cebcbfa298ccd9c46b340da1aa358a020dc548e",
+    "06-decisions-update.md": "18a50c45d90ea43f95e89bf124031602466433dfe15aa55bdb0465ee1e81bd53"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "6b1a326235e136a44ce2779b2b86c43e03f3c31d0e3d368ddd4061e56fbd208b"
+}

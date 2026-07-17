@@ -95228,6 +95228,60 @@
       }
     },
     {
+      "modelId": "moonshot/kimi-k3",
+      "providerId": "moonshot",
+      "providerKind": "provider-openai",
+      "authFamily": "api-key",
+      "displayName": "Kimi K3",
+      "version": "2026-07-16",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+        "code.edit"
+      ],
+      "modalities": [
+        "text",
+        "image",
+        "video"
+      ],
+      "contextWindow": 1048576,
+      "maxOutputTokens": 131072,
+      "pricing": null,
+      "requestShapeHints": {
+        "providerShape": "openai.chat.completions",
+        "bodyKeys": [
+          "max_tokens",
+          "tools",
+          "reasoning_effort"
+        ],
+        "headerKeys": [
+          "Authorization"
+        ]
+      },
+      "experimentalModes": [
+        {
+          "modeId": "reasoning.long-context",
+          "label": "Long context reasoning"
+        }
+      ],
+      "extendsProvenance": {
+        "baseModelId": null,
+        "chain": []
+      },
+      "localOverrideApplied": true,
+      "localNotes": [
+        "Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"
+      ],
+      "upstreamProvenance": {
+        "vendor": "models.dev",
+        "commit": "ce1478719296c77dff5633b93e1ce307e380fe30",
+        "capturedAt": "2026-06-14T20:00:43.505Z",
+        "schemaVersion": "models.dev.v1"
+      }
+    },
+    {
       "modelId": "moonshotai-cn/kimi-k2-0711-preview",
       "providerId": "moonshotai-cn",
       "providerKind": "provider-moonshotai-cn",
@@ -95774,6 +95828,46 @@
       "pricing": {
         "inputPer1M": 0.95,
         "outputPer1M": 4,
+        "currency": "USD"
+      },
+      "requestShapeHints": null,
+      "experimentalModes": [],
+      "extendsProvenance": {
+        "baseModelId": null,
+        "chain": []
+      },
+      "localOverrideApplied": false,
+      "localNotes": [],
+      "upstreamProvenance": {
+        "vendor": "models.dev",
+        "commit": "ce1478719296c77dff5633b93e1ce307e380fe30",
+        "capturedAt": "2026-06-14T20:00:43.505Z",
+        "schemaVersion": "models.dev.v1"
+      }
+    },
+    {
+      "modelId": "moonshotai/kimi-k3",
+      "providerId": "moonshotai",
+      "providerKind": "provider-moonshotai",
+      "authFamily": "api-key",
+      "displayName": "Kimi K3",
+      "version": "2026-07-16",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output"
+      ],
+      "modalities": [
+        "image",
+        "text",
+        "video"
+      ],
+      "contextWindow": 1048576,
+      "maxOutputTokens": 131072,
+      "pricing": {
+        "inputPer1M": 3,
+        "outputPer1M": 15,
         "currency": "USD"
       },
       "requestShapeHints": null,

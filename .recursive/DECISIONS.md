@@ -2,6 +2,39 @@
 
 ## Recursive Run Index
 
+### Run `74-kimi-k3-kimi-code-oauth-support`
+
+- Run folder: `/.recursive/run/74-kimi-k3-kimi-code-oauth-support/`
+- Worktree: `.worktrees/74-kimi-k3-kimi-code-oauth-support`
+- Branch: `recursive/74-kimi-k3-kimi-code-oauth-support`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added first-class Kimi Code K3 catalog support with canonical operator id `moonshot/kimi-k3`, exported limits `contextWindow = 1048576` and `maxOutputTokens = 131072`, and hidden economics authority `moonshotai/kimi-k3`
+  - extended Moonshot and Kimi Code provider surfaces plus remote-health comparable aliases so `moonshot/kimi-k3`, `kimi-k3`, and `k3` all reconcile through the existing Moonshot/Kimi model path
+  - centralized provider-openai Kimi request policy so canonical `moonshot/kimi-k3` maps upstream to `k3` and the current fixed-temperature Kimi Code chat-completions models omit caller-supplied `temperature`
+  - added strict RED/GREEN regression coverage across catalog export, alias/economics resolution, provider surfaces, and provider-openai request shaping, then completed live repo-path Kimi OAuth verification on Friday, July 17, 2026, through the worktree runtime-host bridge
+- Why:
+  - K3 was absent from the shipped catalog, provider surfaces, comparable aliases, and canonical-to-upstream execution seam
+  - live Kimi endpoint discovery also proved the inherited K2.7 fixed-temperature assumption was wrong, so a K3-only patch would have left the broader Kimi Code family inconsistent
+- How:
+  - implemented with strict TDD across the catalog, alias/economics, runtime-host, and provider-openai seams
+  - used direct live Kimi API discovery during implementation to resolve the real request contract, then verified the final behavior through the repo runtime path with copied persisted Kimi OAuth state and captured upstream wire bodies
+- What was not done:
+  - no new provider, provider variant family, or OAuth flow was introduced
+  - no tier-specific context-window publication or entitlement-aware catalog split was added; the catalog keeps the documented provider-maximum K3 limit
+- Known issues / follow-ups:
+  - the copied Phase 5 runtime state predated K3 and initially allowed only `moonshot/kimi-k2.7-code`, so the isolated QA copy had to add `moonshot/kimi-k3` to the account's allowed-model list before endpoint activation; that copied-state enablement step was verification setup, not a product-source code change
+
 ### Run `72-standalone-runtime-config-authority-and-alias-rematerialization`
 
 - Run folder: `/.recursive/run/72-standalone-runtime-config-authority-and-alias-rematerialization/`

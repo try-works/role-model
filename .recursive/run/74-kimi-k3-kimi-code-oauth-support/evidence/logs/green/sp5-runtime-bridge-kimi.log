@@ -1,0 +1,48 @@
+(node:14164) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+PROVIDER_KIMI_CODE_MODELS ["moonshot/kimi-k2.5","moonshot/kimi-k2.6","moonshot/kimi-k2.7-code","moonshot/kimi-k3"]
+PROVIDER_HAS_K3 true
+ACCOUNT_BEFORE {"providerAccountId":"moonshot.personal.kimi-code","providerId":"moonshot","providerKind":"provider-openai","orgScope":"personal","accountScope":"workspace-default","credentialRef":{"backend":"local-file","ref":"oauth/moonshot/moonshot.personal.kimi-code"},"authMode":"oauth2-device-code","regionPolicy":{"mode":"prefer","regions":["global"]},"baseUrlOverride":"https://api.kimi.com/coding/v1","allowedModels":["moonshot/kimi-k2.7-code"],"modelRoleBindings":[{"modelId":"moonshot/kimi-k2.7-code","roleIds":[],"roleAssignmentMode":"all","enabledRoleIds":[],"disabledRoleIds":[]}],"deniedModels":[],"entitlementTags":["chat"],"budgetPolicyRef":"budget.default","quotaPolicyRef":"quota.default","status":"active","healthStatus":"healthy","rotationState":"stable"}
+ACCOUNT_AFTER {"providerAccountId":"moonshot.personal.kimi-code","providerId":"moonshot","providerKind":"provider-openai","orgScope":"personal","accountScope":"workspace-default","credentialRef":{"backend":"local-file","ref":"oauth/moonshot/moonshot.personal.kimi-code"},"authMode":"oauth2-device-code","regionPolicy":{"mode":"prefer","regions":["global"]},"baseUrlOverride":"https://api.kimi.com/coding/v1","allowedModels":["moonshot/kimi-k2.7-code","moonshot/kimi-k3"],"modelRoleBindings":[{"modelId":"moonshot/kimi-k2.7-code","roleIds":[],"roleAssignmentMode":"all","enabledRoleIds":[],"disabledRoleIds":[]},{"modelId":"moonshot/kimi-k3","roleIds":[],"roleAssignmentMode":"all","enabledRoleIds":[],"disabledRoleIds":[]}],"deniedModels":[],"entitlementTags":["chat"],"budgetPolicyRef":"budget.default","quotaPolicyRef":"quota.default","status":"active","healthStatus":"healthy","rotationState":"stable"}
+ACTIVATION {"endpointId":"moonshot.personal.kimi-code.global.kimi-k3","providerAccountId":"moonshot.personal.kimi-code","providerId":"moonshot","modelId":"moonshot/kimi-k3","roleIds":[],"status":"active"}
+K3_RESULT {"model":"moonshot/kimi-k3","endpointId":"moonshot.personal.kimi-code.global.kimi-k3","adapterFamily":"ai-sdk-openai-compatible","outputText":"K3_RUNTIME_OK","finishReason":"stop","usage":{"inputTokens":92,"outputTokens":38},"streamedChunkCount":26}
+K27_RESULT {"model":"moonshot/kimi-k2.7-code","endpointId":"moonshot.personal.kimi-code.global.kimi-k2.7-code","adapterFamily":"ai-sdk-openai-compatible","outputText":"K27_RUNTIME_OK","finishReason":"stop","usage":{"inputTokens":15,"outputTokens":54},"streamedChunkCount":55}
+WIRE_CHAT_REQUESTS [
+  {
+    "url": "https://api.kimi.com/coding/v1/chat/completions",
+    "method": "POST",
+    "body": {
+      "model": "k3",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Return exactly K3_RUNTIME_OK."
+        }
+      ],
+      "stream": true,
+      "stream_options": {
+        "include_usage": true
+      },
+      "prompt_cache_key": "rm-prompt-sha256:53e52a91bd2478656b9eb1b6de20122ea430df9bd0a349e085cb6dd334f4af14",
+      "reasoning_effort": "max"
+    }
+  },
+  {
+    "url": "https://api.kimi.com/coding/v1/chat/completions",
+    "method": "POST",
+    "body": {
+      "model": "kimi-k2.7-code",
+      "messages": [
+        {
+          "role": "user",
+          "content": "Return exactly K27_RUNTIME_OK."
+        }
+      ],
+      "stream": true,
+      "stream_options": {
+        "include_usage": true
+      },
+      "prompt_cache_key": "rm-prompt-sha256:e5f50f828e667c2776eefb83257780a3d79a3a9de3a80638e728731520a49f2d"
+    }
+  }
+]

@@ -337,6 +337,54 @@ describe("normalizeCatalogSnapshot", () => {
     });
   });
 
+  test("normalizes moonshot/kimi-k3 operator slice with documented limits and capabilities", () => {
+    const snapshot = JSON.parse(`{
+      "source": {
+        "vendor": "models.dev",
+        "commit": "moonshot-k3-test",
+        "capturedAt": "2026-07-16T12:00:00Z",
+        "schemaVersion": "models.dev.v1"
+      },
+      "providers": [
+        {
+          "providerId": "moonshot",
+          "displayName": "Moonshot AI",
+          "npmPackage": "@ai-sdk/openai-compatible",
+          "apiBase": "https://api.moonshot.ai/v1",
+          "envVars": ["MOONSHOT_API_KEY"],
+          "adapterFamilyHint": "ai-sdk-openai-compatible"
+        }
+      ],
+      "models": [
+        {
+          "modelId": "moonshot/kimi-k3",
+          "providerId": "moonshot",
+          "displayName": "Kimi K3",
+          "version": "2026-07-16",
+          "capabilities": ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+          "modalities": ["text", "image", "video"],
+          "contextWindow": 1048576,
+          "maxOutputTokens": 131072
+        }
+      ]
+    }`);
+    const catalog = normalizeCatalogSnapshot(snapshot, {});
+    const kimiModel = catalog.models.find((model) => model.modelId === "moonshot/kimi-k3");
+    expect(kimiModel).toMatchObject({
+      modelId: "moonshot/kimi-k3",
+      providerId: "moonshot",
+      displayName: "Kimi K3",
+      capabilities: expect.arrayContaining([
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+      ]),
+      modalities: expect.arrayContaining(["text", "image", "video"]),
+      contextWindow: 1048576,
+      maxOutputTokens: 131072,
+    });
+  });
   test("preserves provider docs and npm compatibility metadata for downstream consumers", () => {
     const snapshot = JSON.parse(`{
       "source": {
@@ -458,6 +506,24 @@ describe("runCatalogExportCli", () => {
 
     expect(result.normalizedCatalogPath).toBe(path.join(outputDir, "normalized-catalog.json"));
     expect(result.vendorLedgerPath).toBe(path.join(outputDir, "vendor-version-ledger.json"));
+  });
+
+  test("exports moonshot/kimi-k3 from local supplement into normalized catalog", async () => {
+    const outputDir = await mkdtemp(path.join(os.tmpdir(), "role-model-catalog-k3-"));
+    const result = await runCatalogExportCli({ repoRoot, outputDir });
+    const catalog = JSON.parse(await readFile(result.normalizedCatalogPath, "utf8")) as {
+      models: Array<{
+        modelId: string;
+        contextWindow: number;
+        maxOutputTokens: number;
+        capabilities: string[];
+      }>;
+    };
+    const k3 = catalog.models.find((model) => model.modelId === "moonshot/kimi-k3");
+    expect(k3).toBeDefined();
+    expect(k3?.contextWindow).toBe(1048576);
+    expect(k3?.maxOutputTokens).toBe(131072);
+    expect(k3?.capabilities).toEqual(expect.arrayContaining(["code.edit"]));
   });
 
   test("rewrites tracked package-data catalog artifacts alongside the runtime-output export", async () => {

@@ -1,0 +1,48 @@
+No projects matched the filters "D:\dev\role-model\.worktrees\74-kimi-k3-kimi-code-oauth-support" in "D:\DEV\role-model\.worktrees\74-kimi-k3-kimi-code-oauth-support"
+
+> @role-model-router/catalog@0.0.0 test D:\DEV\role-model\.worktrees\74-kimi-k3-kimi-code-oauth-support\role-model-router\packages\catalog
+> vitest run test
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/74-kimi-k3-kimi-code-oauth-support/role-model-router/packages/catalog[39m
+
+ [32m✓[39m test/token-economics.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 206[2mms[22m[39m
+ [31m❯[39m test/index.test.ts [2m([22m[2m13 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 887[2mms[22m[39m
+   [32m✓[39m deriveCapabilities[2m > [22mmaps models.dev structured_output to structured.output capability[32m 3[2mms[22m[39m
+   [32m✓[39m normalizeCatalogSnapshot[2m > [22mpreserves upstream provenance while layering role-model enrichment[32m 26[2mms[22m[39m
+   [32m✓[39m normalizeCatalogSnapshot[2m > [22mnormalizes a moonshot slice with explicit auth-mode support[32m 1[2mms[22m[39m
+   [32m✓[39m normalizeCatalogSnapshot[2m > [22mnormalizes moonshot/kimi-k2.7-code operator slice with structured output[32m 1[2mms[22m[39m
+   [32m✓[39m normalizeCatalogSnapshot[2m > [22mnormalizes moonshot/kimi-k3 operator slice with documented limits and capabilities[32m 1[2mms[22m[39m
+   [32m✓[39m normalizeCatalogSnapshot[2m > [22mpreserves provider docs and npm compatibility metadata for downstream consumers[32m 1[2mms[22m[39m
+   [32m✓[39m deriveLiteLLMProviders[2m > [22mpreserves fallback SDK metadata for LiteLLM-only providers[32m 2[2mms[22m[39m
+   [32m✓[39m exportCatalogArtifacts[2m > [22mwrites stable normalized catalog and vendor ledger artifacts for local validation[32m 246[2mms[22m[39m
+   [32m✓[39m runCatalogExportCli[2m > [22mderives the repo-local catalog export paths for the validation command[32m 139[2mms[22m[39m
+[31m   [31m×[31m runCatalogExportCli[2m > [22mexports moonshot/kimi-k3 from local supplement into normalized catalog[39m[32m 201[2mms[22m[39m
+[31m     → expected undefined to be defined[39m
+   [32m✓[39m runCatalogExportCli[2m > [22mrewrites tracked package-data catalog artifacts alongside the runtime-output export[32m 238[2mms[22m[39m
+   [32m✓[39m runCatalogRefreshCli[2m > [22mwrites the pinned snapshot fixture from live models.dev provider and model metadata[32m 14[2mms[22m[39m
+   [32m✓[39m runCatalogRefreshCli[2m > [22mmerges local supplemental alias models into the refreshed snapshot[32m 10[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mrunCatalogExportCli[2m > [22mexports moonshot/kimi-k3 from local supplement into normalized catalog
+[31m[1mAssertionError[22m: expected undefined to be defined[39m
+[36m [2m❯[22m test/index.test.ts:[2m522:16[22m[39m
+    [90m520| [39m    }[33m;[39m
+    [90m521| [39m    const k3 = catalog.models.find((model) => model.modelId === "moons…
+    [90m522| [39m    [34mexpect[39m(k3)[33m.[39m[34mtoBeDefined[39m()[33m;[39m
+    [90m   | [39m               [31m^[39m
+    [90m523| [39m    [34mexpect[39m(k3[33m?.[39mcontextWindow)[33m.[39m[34mtoBe[39m([34m1048576[39m)[33m;[39m
+    [90m524| [39m    [34mexpect[39m(k3[33m?.[39mmaxOutputTokens)[33m.[39m[34mtoBe[39m([34m131072[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m17 passed[39m[22m[90m (18)[39m
+[2m   Start at [22m 06:04:53
+[2m   Duration [22m 2.05s[2m (transform 278ms, setup 0ms, collect 373ms, tests 1.09s, environment 1ms, prepare 578ms)[22m
+
+D:\DEV\role-model\.worktrees\74-kimi-k3-kimi-code-oauth-support\role-model-router\packages\catalog:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/catalog@0.0.0 test: `vitest run test`
+Exit status 1

@@ -48,9 +48,7 @@ describe("request detail token truth", () => {
   });
 
   test("reads only canonical prompt-cache request provenance", () => {
-    expect(readPromptCacheRequestSource({ promptCacheRequestSource: "explicit" })).toBe(
-      "explicit",
-    );
+    expect(readPromptCacheRequestSource({ promptCacheRequestSource: "explicit" })).toBe("explicit");
     expect(readPromptCacheRequestSource({ promptCacheRequestSource: "synthesized" })).toBe(
       "synthesized",
     );

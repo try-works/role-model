@@ -61,8 +61,9 @@ Source-Runs:
 - `70-cache-hit-token-rate-analytics-fix`
 - `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
 - `72-standalone-runtime-config-authority-and-alias-rematerialization`
+- `74-kimi-k3-kimi-code-oauth-support`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-16T00:00:00Z`
+Last-Validated: `2026-07-17T00:00:00Z`
 Tags:
 - `baseline`
 - `workspace`

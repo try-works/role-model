@@ -2414,9 +2414,7 @@ function mapRuntimeTelemetryRecord(row: {
     !Array.isArray(dimensions.usageTokenTruth)
       ? (dimensions.usageTokenTruth as Record<string, unknown>)
       : null;
-  const readTokenSource = (
-    value: unknown,
-  ): RuntimeTelemetryRecord["inputTokensSource"] =>
+  const readTokenSource = (value: unknown): RuntimeTelemetryRecord["inputTokensSource"] =>
     value === "measured" ||
     value === "normalized" ||
     value === "estimated" ||
@@ -2512,9 +2510,7 @@ function mapRuntimeTelemetryRecord(row: {
     inputTokens: row.input_tokens,
     inputTokensSource,
     inputTokensAvailable:
-      typeof usageTokenTruth?.inputAvailable === "boolean"
-        ? usageTokenTruth.inputAvailable
-        : false,
+      typeof usageTokenTruth?.inputAvailable === "boolean" ? usageTokenTruth.inputAvailable : false,
     outputTokens: row.output_tokens,
     outputTokensSource,
     outputTokensAvailable:
@@ -2647,8 +2643,7 @@ function toRuntimeTelemetryRecord(
         ? "failure"
         : "unknown";
   const taxonomyDimensions = observation.taxonomyDimensions;
-  const promptCacheRequestSource =
-    observation.cacheObservability?.promptCacheRequestSource ?? null;
+  const promptCacheRequestSource = observation.cacheObservability?.promptCacheRequestSource ?? null;
   const hasUsageTokenTruth =
     observation.usageEvent.tokens_in_source !== undefined ||
     observation.usageEvent.tokens_in_available !== undefined ||
