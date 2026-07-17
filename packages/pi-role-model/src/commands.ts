@@ -9,8 +9,8 @@ import { RoleModelDiscoveryError } from "./runtime-discovery.js";
 import type { RoleModelRecentRequest, RoleModelRequestInspection } from "./runtime-inspection.js";
 import type {
   DiscoveryResult,
-  PiModelRef,
   PiCommandContext,
+  PiModelRef,
   PiModelSelection,
   RoleModelCommandResult,
   RoleModelModelDiagnostic,
@@ -239,10 +239,7 @@ function discoveryCheck(state: RoleModelDiscoveryError["state"]): string {
   }
 }
 
-function formatDiscoveryFailure(
-  error: unknown,
-  commandName: "status" | "doctor",
-): string {
+function formatDiscoveryFailure(error: unknown, commandName: "status" | "doctor"): string {
   if (error instanceof RoleModelDiscoveryError) {
     return [
       `${commandName}: fail`,

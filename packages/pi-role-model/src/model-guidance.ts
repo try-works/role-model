@@ -14,9 +14,7 @@ const LIKELY_FOREIGN_PROVIDER_MODEL_PATTERNS = [
   /^grok-/i,
 ] as const;
 
-export type InvalidRoleModelModelClassification =
-  | "foreign-provider-model"
-  | "unknown-model-id";
+export type InvalidRoleModelModelClassification = "foreign-provider-model" | "unknown-model-id";
 
 export interface InvalidRoleModelModelDiagnostic {
   classification: InvalidRoleModelModelClassification;
@@ -40,9 +38,7 @@ export function findRoleModelDiscoveryModel(
   );
 }
 
-export function recommendedRoleModelModelId(
-  discovery: DownstreamOpenAIDiscovery,
-): string | null {
+export function recommendedRoleModelModelId(discovery: DownstreamOpenAIDiscovery): string | null {
   return discovery.setup.recommendedModel ?? discovery.models[0]?.id ?? null;
 }
 

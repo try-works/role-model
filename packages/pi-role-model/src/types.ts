@@ -128,9 +128,7 @@ export interface PiExtensionAPI {
     handler: (
       event: { type: "before_provider_request"; payload: unknown },
       context?: PiExtensionContext,
-    ) =>
-      | unknown
-      | Promise<unknown>,
+    ) => unknown | Promise<unknown>,
   ) => void;
   setModel?: (model: PiModelSelection) => Promise<boolean>;
 }
