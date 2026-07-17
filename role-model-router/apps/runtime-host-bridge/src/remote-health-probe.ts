@@ -39,6 +39,9 @@ const COMPARABLE_MODEL_ID_ALIASES: Readonly<Record<string, readonly string[]>> =
   "moonshot/kimi-k2.7-code": ["kimi-for-coding"],
   "kimi-k2.7-code": ["kimi-for-coding"],
   "kimi-for-coding": ["moonshot/kimi-k2.7-code", "kimi-k2.7-code"],
+  "moonshot/kimi-k3": ["kimi-k3", "k3"],
+  "kimi-k3": ["moonshot/kimi-k3", "k3"],
+  k3: ["moonshot/kimi-k3", "kimi-k3"],
 };
 
 export interface RemoteHealthProbeSummary {

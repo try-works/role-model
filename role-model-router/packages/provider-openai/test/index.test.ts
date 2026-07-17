@@ -604,9 +604,9 @@ describe("OpenAI provider adapter", () => {
     expect(requestCapture.body).toMatchObject({
       model: "kimi-k2.5",
       messages: [{ role: "user", content: "Reply with the word ok." }],
-      temperature: 0.1,
       max_tokens: 128,
     });
+    expect(requestCapture.body.temperature).toBeUndefined();
     expect(normalized.outputText).toBe("ok");
     expect(normalized.finishReason).toBe("stop");
     expect(normalized.usage).toEqual({
@@ -621,6 +621,155 @@ describe("OpenAI provider adapter", () => {
       source: "normalized",
     });
   });
+
+  test("maps moonshot/kimi-k3 to upstream k3 and omits K3-incompatible fixed knobs", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.k3",
+      modelId: "moonshot/kimi-k3",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["max_tokens", "tools", "reasoning_effort"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.k3",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+    const executionRequest = {
+      messages: [{ role: "user", content: "Use max reasoning effort." }],
+      maxOutputTokens: 256,
+      temperature: 0.2,
+      reasoning: {
+        effort: "max" as const,
+      },
+    };
+
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.providerFamily).toBe("moonshot");
+    expect(requestCapture.url).toBe("https://api.kimi.test/coding/v1/chat/completions");
+    expect(requestCapture.body.model).toBe("k3");
+    expect(requestCapture.body.max_tokens).toBe(256);
+    expect(requestCapture.body.reasoning_effort).toBe("max");
+    expect(requestCapture.body.temperature).toBeUndefined();
+    expect(requestCapture.body.thinking).toBeUndefined();
+  });
+
+  test("keeps moonshot/kimi-k2.7-code on its existing upstream id and omits fixed temperature", () => {
+    const target = {
+      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      modelId: "moonshot/kimi-k2.7-code",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      providerAccountId: "moonshot.personal.kimi-code",
+      adapterFamily: "ai-sdk-openai-compatible",
+      authFamily: "api-key",
+      apiBase: "https://api.kimi.test/coding/v1",
+      requestShapeHints: {
+        providerShape: "openai.chat.completions",
+        bodyKeys: ["temperature", "max_tokens", "tools"],
+        headerKeys: ["Authorization"],
+      },
+      candidate: {
+        identity: {
+          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+          provider_kind: "remote_openai_compat",
+        },
+      },
+      account: {
+        credentialRef: {
+          backend: "local-encrypted-file",
+          ref: "oauth/moonshot/moonshot.personal.kimi-code",
+        },
+      },
+    };
+    const executionRequest = {
+      messages: [{ role: "user", content: "Keep the existing K2.7 behavior." }],
+      maxOutputTokens: 128,
+      temperature: 0.1,
+    };
+
+    const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+    const requestCapture = buildOpenAIRequest({
+      target,
+      executionRequest,
+      capabilities,
+    });
+
+    expect(requestCapture.body.model).toBe("kimi-k2.7-code");
+    expect(requestCapture.body.temperature).toBeUndefined();
+    expect(requestCapture.body.reasoning_effort).toBeUndefined();
+  });
+
+  for (const modelId of ["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"] as const) {
+    test(`omits fixed temperature for ${modelId}`, () => {
+      const target = {
+        endpointId: `moonshot.personal.primary.global.${modelId.split("/")[1]}`,
+        modelId,
+        providerId: "moonshot",
+        providerKind: "provider-openai",
+        providerAccountId: "moonshot.personal.primary",
+        adapterFamily: "ai-sdk-openai-compatible",
+        authFamily: "api-key",
+        apiBase: "https://api.moonshot.test/v1",
+        requestShapeHints: {
+          providerShape: "openai.chat.completions",
+          bodyKeys: ["temperature", "max_tokens"],
+          headerKeys: ["Authorization"],
+        },
+        candidate: {
+          identity: {
+            endpoint_id: `moonshot.personal.primary.global.${modelId.split("/")[1]}`,
+            provider_kind: "remote_openai_compat",
+          },
+        },
+        account: {
+          credentialRef: {
+            backend: "env",
+            ref: "MOONSHOT_API_KEY",
+          },
+        },
+      };
+      const executionRequest = {
+        messages: [{ role: "user", content: `Keep ${modelId} on its fixed temperature contract.` }],
+        maxOutputTokens: 128,
+        temperature: 0.1,
+      };
+
+      const adapter = createOpenAIProviderAdapter("ai-sdk-openai-compatible");
+      const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
+      const requestCapture = buildOpenAIRequest({
+        target,
+        executionRequest,
+        capabilities,
+      });
+
+      expect(requestCapture.body.model).toBe(modelId.split("/")[1]);
+      expect(requestCapture.body.temperature).toBeUndefined();
+    });
+  }
 
   test("forwards forced chat-completions tool_choice to the downstream OpenAI request body", () => {
     const target = {

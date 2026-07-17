@@ -1,0 +1,19 @@
+Date: 2026-07-17
+Scope: provider-openai Kimi request-policy repair
+
+Commands:
+`corepack pnpm --filter @role-model-router/provider-openai test`
+`corepack pnpm --filter @role-model-router/runtime-host-bridge test`
+
+GREEN result:
+- `@role-model-router/provider-openai`: PASS
+  - Test files: 1 passed
+  - Tests: 33 passed
+- `@role-model-router/runtime-host-bridge`: PASS
+  - Test files: 58 passed
+  - Tests: 548 passed
+
+Implementation repaired:
+- `moonshot/kimi-k3` maps to upstream `k3`
+- `moonshot/kimi-k2.5`, `moonshot/kimi-k2.6`, `moonshot/kimi-k2.7-code`, and `moonshot/kimi-k3` omit fixed `temperature` on chat-completions requests
+- K3 request body keeps `reasoning_effort: "max"` and omits `thinking`

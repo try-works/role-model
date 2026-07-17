@@ -8208,7 +8208,8 @@ export function mapChatCompletionsRequest(
     taskDefinitions,
     requestOptions,
   });
-  const promptCache = readChatCompletionsPromptCacheRequest(body) ??
+  const promptCache =
+    readChatCompletionsPromptCacheRequest(body) ??
     synthesizePromptCacheRequest(
       requestOptions,
       body.conversation_id,
@@ -8381,7 +8382,8 @@ export function mapResponsesRequest(
     requestOptions,
   });
   const reasoning = readResponsesReasoningRequest(body);
-  const promptCache = readResponsesPromptCacheRequest(body) ??
+  const promptCache =
+    readResponsesPromptCacheRequest(body) ??
     synthesizePromptCacheRequest(
       requestOptions,
       body.conversation_id,
@@ -17437,9 +17439,7 @@ export async function createRuntimeBridgeBackend(
             )
           : null;
       case "totalTokens":
-        return records.some(
-          (record) => record.inputTokensAvailable && record.outputTokensAvailable,
-        )
+        return records.some((record) => record.inputTokensAvailable && record.outputTokensAvailable)
           ? records.reduce(
               (sum, record) =>
                 sum +

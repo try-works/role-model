@@ -5,11 +5,7 @@ async function capture(page: Page, file: string, fullPage = false) {
   await page.screenshot({ path: outputPath, fullPage });
 }
 
-async function assertTimeSeriesGeometry(
-  page: Page,
-  cardTestId: string,
-  expectedAxisCount: number,
-) {
+async function assertTimeSeriesGeometry(page: Page, cardTestId: string, expectedAxisCount: number) {
   const card = page.getByTestId(cardTestId);
   const plot = card.getByTestId("telemetry-chart-plot");
   const legend = card.getByTestId("telemetry-chart-legend");
@@ -146,7 +142,9 @@ test("supports request inspection drill-in from request analytics", async ({ pag
   await expect(page.getByText(modelId, { exact: true })).toBeVisible();
 });
 
-test("renders shared time-series charts without clipped axes and with inset legends", async ({ page }) => {
+test("renders shared time-series charts without clipped axes and with inset legends", async ({
+  page,
+}) => {
   await page.goto("/app");
   await expect(page.getByRole("heading", { name: "Runtime overview" })).toBeVisible();
   await assertTimeSeriesGeometry(page, "telemetry-chart-card-latency-trend", 1);

@@ -41,7 +41,7 @@ version: "1.0"
     await backend.shutdown();
   });
 
-  test("lists moonshot/kimi-k2.7-code on moonshot and kimi-code variants", async () => {
+  test("lists Moonshot Kimi coding models on moonshot and kimi-code variants", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run44-providers-"));
     const runtimeStateRoot = path.join(tempRoot, "state");
     const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
@@ -70,6 +70,7 @@ version: "1.0"
         "moonshot/kimi-k2.5",
         "moonshot/kimi-k2.6",
         "moonshot/kimi-k2.7-code",
+        "moonshot/kimi-k3",
       ]),
     );
 
@@ -77,8 +78,12 @@ version: "1.0"
       (variant) => variant.variantId === "moonshot-open-platform",
     );
     const kimiCode = moonshot?.variants.find((variant) => variant.variantId === "kimi-code");
-    expect(openPlatform?.modelIds).toEqual(expect.arrayContaining(["moonshot/kimi-k2.7-code"]));
-    expect(kimiCode?.modelIds).toEqual(expect.arrayContaining(["moonshot/kimi-k2.7-code"]));
+    expect(openPlatform?.modelIds).toEqual(
+      expect.arrayContaining(["moonshot/kimi-k2.7-code", "moonshot/kimi-k3"]),
+    );
+    expect(kimiCode?.modelIds).toEqual(
+      expect.arrayContaining(["moonshot/kimi-k2.7-code", "moonshot/kimi-k3"]),
+    );
 
     await backend.shutdown();
   });

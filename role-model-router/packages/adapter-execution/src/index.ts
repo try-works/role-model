@@ -648,7 +648,8 @@ function createUsageEvent(
     (candidate) => candidate.identity.endpoint_id === target.endpointId,
   );
 
-  const inputTokensSource = normalized.usage.inputTokensSource ?? normalized.usage.source ?? "unavailable";
+  const inputTokensSource =
+    normalized.usage.inputTokensSource ?? normalized.usage.source ?? "unavailable";
   const outputTokensSource =
     normalized.usage.outputTokensSource ?? normalized.usage.source ?? "unavailable";
 

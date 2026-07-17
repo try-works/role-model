@@ -52,18 +52,15 @@ vi.mock("recharts", () => {
   };
 });
 
+import { resolveTelemetryChartLayout, telemetryChartLayoutContract } from "../lib/design-system";
 import {
-  TelemetryAreaTimeSeriesChart,
   TelemetryAnalyticsChartCard,
+  TelemetryAreaTimeSeriesChart,
   TelemetryBarTimeSeriesChart,
   TelemetryChartCard,
   TelemetryLineTimeSeriesChart,
   TelemetryRankingBarChart,
 } from "./telemetry-charts";
-import {
-  resolveTelemetryChartLayout,
-  telemetryChartLayoutContract,
-} from "../lib/design-system";
 
 describe("telemetry chart layout contract", () => {
   test("exports bounded data-dependent geometry and shared plot values", () => {
@@ -78,7 +75,10 @@ describe("telemetry chart layout contract", () => {
 
     expect(telemetryChartLayoutContract).toEqual(
       expect.objectContaining({
-        leftAxisGutter: expect.objectContaining({ min: expect.any(Number), max: expect.any(Number) }),
+        leftAxisGutter: expect.objectContaining({
+          min: expect.any(Number),
+          max: expect.any(Number),
+        }),
         rightAxisReserve: expect.objectContaining({
           min: expect.any(Number),
           max: expect.any(Number),
@@ -372,9 +372,7 @@ describe("shared area and bar time-series geometry", () => {
     expect(markup).toContain('data-recharts="YAxis" data-orientation="right"');
     expect(markup).toMatch(/data-recharts="YAxis"[^>]*data-width="[5-9][0-9]"/);
     expect(markup).toContain('data-testid="telemetry-chart-legend"');
-    expect(markup).toContain(
-      `padding-inline-start:${telemetryChartLayoutContract.legendInset}px`,
-    );
+    expect(markup).toContain(`padding-inline-start:${telemetryChartLayoutContract.legendInset}px`);
   });
 });
 

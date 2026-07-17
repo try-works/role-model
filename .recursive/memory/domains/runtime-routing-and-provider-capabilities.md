@@ -67,8 +67,9 @@ Source-Runs:
 - `70-cache-hit-token-rate-analytics-fix`
 - `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
 - `72-standalone-runtime-config-authority-and-alias-rematerialization`
+- `74-kimi-k3-kimi-code-oauth-support`
 Validated-At-Commit: `working-tree`
-Last-Validated: `2026-07-16`
+Last-Validated: `2026-07-17`
 Tags:
 - `runtime`
 - `routing`
@@ -113,6 +114,8 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - `parallel_tool_calls` is caller-owned tri-state policy. Preserve explicit `true`, explicit `false`, and omission distinctly from ingress through the shared execution contract and final provider request shaping; do not silently force omitted Codex requests to `true`.
 - OpenAI-family prompt caching should be treated as `supported: true` and `mode: implicit` when the upstream surface documents automatic prompt caching. Supported misses and sub-threshold requests should still serialize `cached_tokens: 0` in the documented usage-detail field instead of being downgraded to unsupported.
 - `provider-openai` must preserve documented cache shapes without rewriting totals: nested OpenAI `cached_tokens` plus `cache_write_tokens` fields for Responses or Chat Completions, and current Kimi top-level `usage.cached_tokens` for chat-completions coding routes.
+- `moonshot/kimi-k3` is the canonical operator-visible Kimi Code K3 id. The shipped catalog publishes provider-maximum limits `contextWindow = 1048576` and `maxOutputTokens = 131072`, token economics resolves that outward id through hidden authority `moonshotai/kimi-k3`, and provider-local ids such as `k3` stay normalization-only inputs rather than user-facing catalog truth.
+- Current Kimi Code chat-completions models `moonshot/kimi-k2.5`, `moonshot/kimi-k2.6`, `moonshot/kimi-k2.7-code`, and `moonshot/kimi-k3` are fixed-temperature on the verified provider-openai path. Preserve canonical outward ids, translate `moonshot/kimi-k3` to upstream `k3` in one centralized seam, keep `moonshot/kimi-k2.7-code` on upstream `kimi-k2.7-code`, and omit caller-supplied `temperature` for this family instead of leaving one model on a bespoke request branch.
 - `cacheHitTokenRate` is a backend-owned telemetry metric and, for the current shared OpenAI-family cache contract, must aggregate cache-supported rows as `sum(cacheReadTokens) / sum(inputTokens)`. Do not add cached tokens back into the denominator when `inputTokens` already represents total prompt input.
 - LiteLLM-backed remote execution currently inherits those richer Responses semantics through the shared OpenAI request builder. Verify the inherited path directly before introducing a second divergent LiteLLM request contract.
 - `providerId` and `providerFamily` must identify the actual routed provider, never the adapter family. Intermediaries such as LiteLLM, llama-swap, or ChatGPT Codex Responses belong in `vendorId`; high-level routing belongs in `executionFamily`; concrete request-shaping implementation belongs in `adapterFamily`. `codex-app-server` is historical and must not reappear as the current Codex Subscription execution path.
@@ -218,6 +221,7 @@ This shard owns the detailed runtime truth for how role-model routes requests, e
 - For alias-matrix or controller behavior changes, confirm persisted config truth, live `/v1/models` exposure, and Pi-originated requests for every configured alias when Pi compatibility is in scope.
 - For downstream discovery changes, confirm both `/v1/models` compact metadata and the rich route against the current runtime config alias set, including empty-pool aliases where feasible, and validate the downstream OpenAI schema/fixtures.
 - For provider capability changes, verify exact-model and alias-path behavior separately where the transport boundary can differ.
+- For Kimi Code catalog or request-policy changes, verify the owning catalog, provider-openai, and runtime-host suites, then run a live repo-path Kimi OAuth proof that captures the upstream request body for canonical `moonshot/kimi-k3` and at least one existing Kimi Code model such as `moonshot/kimi-k2.7-code`. Direct-wire discovery may explain upstream contract limits, but it does not replace the runtime-path verification needed to prove canonical-to-upstream mapping and shared parameter omission.
 - For prompt-cache parity claims, verify exact-model and alias-backed paths separately where both are in scope, and cross-check the Pi footer cache percentage against canonical request-detail or telemetry facts rather than trusting the footer alone.
 - For cross-provider tool-call changes, verify the owning provider-openai and runtime-host-bridge tool-choice or typed-replay regressions, the route-switch matrix, one exact-model `chatgpt/gpt-5.4` Pi proof, and one alias proof such as `difficulty.remote-only`. The alias proof may legitimately select a non-Codex provider; record the selected endpoint, provider, and adapter facts instead of treating non-Codex selection as failure.
 - For routed execution hardening that claims Pi/Craft compatibility, include rebuilt-runtime proof for at least one tool-bearing case, one non-text modality case, and one degraded-family recovery case in addition to deterministic validator coverage.

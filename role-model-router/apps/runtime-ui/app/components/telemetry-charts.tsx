@@ -27,8 +27,8 @@ import {
   getTelemetryChartStatePillTone,
   inlineTitleClassName,
   mutedPanelClassName,
-  supportingTextClassName,
   resolveTelemetryChartLayout,
+  supportingTextClassName,
   telemetryChartLayoutContract,
   telemetryChartStates,
   utilityLabelClassName,
@@ -433,10 +433,7 @@ export function TelemetryLineTimeSeriesChart({
   return (
     <TimeSeriesPlot layout={layout}>
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={[...model.data]}
-          margin={layout.plotMargin}
-        >
+        <LineChart data={[...model.data]} margin={layout.plotMargin}>
           <CartesianGrid stroke="var(--rm-divider-soft)" vertical={false} />
           <XAxis
             axisLine={false}

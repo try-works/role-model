@@ -19,6 +19,27 @@ export function createOpenAIProviderAdapter(adapterFamily = "ai-sdk-openai"): Pr
   };
 }
 
+type OpenAIModelRequestPolicy = {
+  readonly upstreamModelId?: string;
+  readonly omitChatCompletionsBodyKeys?: readonly "temperature"[];
+};
+
+const OPENAI_MODEL_REQUEST_POLICIES: Record<string, OpenAIModelRequestPolicy> = {
+  "moonshot/kimi-k2.5": {
+    omitChatCompletionsBodyKeys: ["temperature"],
+  },
+  "moonshot/kimi-k2.6": {
+    omitChatCompletionsBodyKeys: ["temperature"],
+  },
+  "moonshot/kimi-k2.7-code": {
+    omitChatCompletionsBodyKeys: ["temperature"],
+  },
+  "moonshot/kimi-k3": {
+    upstreamModelId: "k3",
+    omitChatCompletionsBodyKeys: ["temperature"],
+  },
+};
+
 function getOpenAICapabilities(
   hasStructuredOutput: boolean,
   providerId: string,
@@ -46,6 +67,20 @@ function getOpenAICapabilities(
       ...(providerId === "moonshot" ? { streamOptionsIncludeUsage: true } : {}),
     },
   };
+}
+
+function resolveProviderLocalModelId(modelId: string): string {
+  const override = OPENAI_MODEL_REQUEST_POLICIES[modelId]?.upstreamModelId;
+  if (override) {
+    return override;
+  }
+  return modelId.includes("/") ? modelId.split("/").slice(1).join("/") : modelId;
+}
+
+function shouldOmitChatCompletionsBodyKey(modelId: string, key: "temperature"): boolean {
+  return (
+    OPENAI_MODEL_REQUEST_POLICIES[modelId]?.omitChatCompletionsBodyKeys?.includes(key) ?? false
+  );
 }
 
 function toOpenAIProviderMessageContent(
@@ -885,11 +920,10 @@ export function buildOpenAIRequest(
       url: `${input.target.apiBase}/chat/completions`,
       headers,
       body: {
-        model: input.target.modelId.includes("/")
-          ? input.target.modelId.split("/").slice(1).join("/")
-          : input.target.modelId,
+        model: resolveProviderLocalModelId(input.target.modelId),
         messages: toOpenAIInput(input.executionRequest.messages),
-        ...(typeof input.executionRequest.temperature === "number"
+        ...(typeof input.executionRequest.temperature === "number" &&
+        !shouldOmitChatCompletionsBodyKey(input.target.modelId, "temperature")
           ? { temperature: input.executionRequest.temperature }
           : {}),
         ...(typeof input.executionRequest.maxOutputTokens === "number"
@@ -949,9 +983,7 @@ export function buildOpenAIRequest(
       "OpenAI-Beta": "responses=v1",
     },
     body: {
-      model: input.target.modelId.includes("/")
-        ? input.target.modelId.split("/").slice(1).join("/")
-        : input.target.modelId,
+      model: resolveProviderLocalModelId(input.target.modelId),
       input: hasResponsesToolReplayHistory(input.executionRequest.messages)
         ? toOpenAIResponsesInput(input.executionRequest.messages)
         : toOpenAIInput(input.executionRequest.messages),
@@ -1058,7 +1090,7 @@ export function normalizeOpenAIResponse(
       ? input.target.adapterFamily === "ai-sdk-openai-compatible"
         ? "normalized"
         : "measured"
-      : estimatedUsage?.source ?? "unavailable";
+      : (estimatedUsage?.source ?? "unavailable");
 
     return {
       providerFamily: input.responseCapture.providerFamily,
@@ -1177,8 +1209,7 @@ export function normalizeOpenAIResponse(
     }));
 
   const hasMeasuredUsage =
-    typeof body.usage?.input_tokens === "number" ||
-    typeof body.usage?.output_tokens === "number";
+    typeof body.usage?.input_tokens === "number" || typeof body.usage?.output_tokens === "number";
   const estimatedUsage = hasMeasuredUsage
     ? null
     : estimateTokensFromRequestCapture(input.requestCapture, outputText);
@@ -1186,7 +1217,7 @@ export function normalizeOpenAIResponse(
     ? input.target.adapterFamily === "ai-sdk-openai-compatible"
       ? "normalized"
       : "measured"
-    : estimatedUsage?.source ?? "unavailable";
+    : (estimatedUsage?.source ?? "unavailable");
 
   return {
     providerFamily: input.responseCapture.providerFamily,

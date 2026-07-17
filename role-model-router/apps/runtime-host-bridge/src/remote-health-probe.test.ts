@@ -163,6 +163,32 @@ describe("remote-health-probe", () => {
     });
   });
 
+  it("accepts k3 and kimi-k3 as comparable model ids for moonshot/kimi-k3", async () => {
+    const result = await probeRemoteEndpoints({
+      litellmHealthy: true,
+      targets: [
+        {
+          endpointId: "moonshot.personal.primary.global.kimi-k3",
+          providerAccountId: "moonshot.personal.primary",
+          modelId: "moonshot/kimi-k3",
+          apiBase: "https://api.kimi.com/coding/v1",
+          servingSource: "remote-service",
+        },
+      ],
+      resolveAuthorization: async () => "moonshot-live-key",
+      networkFetcher: async () =>
+        new Response(JSON.stringify({ data: [{ id: "k3" }] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+    });
+
+    expect(result.results[0]).toMatchObject({
+      reason: "healthy",
+      healthStatus: "healthy",
+    });
+  });
+
   it("accepts kimi-for-coding as the comparable model id for moonshot coding OAuth", async () => {
     const result = await probeRemoteEndpoints({
       litellmHealthy: true,

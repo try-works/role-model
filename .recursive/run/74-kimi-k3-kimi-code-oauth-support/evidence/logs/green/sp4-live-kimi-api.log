@@ -1,0 +1,21 @@
+Date: 2026-07-17
+Scope: live Kimi OAuth verification using the persisted Moonshot/Kimi Code account
+
+Verification flow:
+1. Refreshed the stored Moonshot OAuth credential with `POST https://auth.kimi.com/api/oauth/token`
+2. Queried `GET https://api.kimi.com/coding/v1/models`
+3. Executed live `POST https://api.kimi.com/coding/v1/chat/completions` requests
+
+Live findings:
+- `/models` returned `kimi-for-coding`, `kimi-for-coding-highspeed`, and `k3`
+- `k3` reported `context_length: 1048576`
+- `k3` reported `think_efforts.valid_efforts: ["max"]`
+- `model: "k3"` with `reasoning_effort: "max"` and no `temperature` returned `K3_OK`
+- `model: "kimi-k2.7-code"` with no `temperature` returned `K27_OK`
+- `model: "k3"` with `temperature: 0.1` returned HTTP 400 `invalid temperature: only 1 is allowed for this model`
+- `model: "kimi-k2.7-code"` with `temperature: 0.1` returned HTTP 400 `invalid temperature: only 1 is allowed for this model`
+
+Conclusion:
+- K3 support requires upstream id `k3`
+- Kimi fixed-temperature models must not forward caller-supplied `temperature`
+- The inherited K2.7 "preserve temperature" expectation was incorrect and was repaired

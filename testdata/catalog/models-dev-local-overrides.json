@@ -32,6 +32,10 @@
       "capabilities": ["code.edit"],
       "localNotes": ["Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"]
     },
+    "moonshot/kimi-k3": {
+      "capabilities": ["code.edit"],
+      "localNotes": ["Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"]
+    },
     "deepseek/deepseek-v4-flash": {
       "capabilities": ["code.edit"]
     },
