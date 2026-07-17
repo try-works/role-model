@@ -125,6 +125,20 @@ export interface RuntimeSummary {
     readonly status: "missing" | "ok" | "corrupt";
     readonly message?: string;
   };
+  readonly configuredMembershipReconciliation?: {
+    readonly reconciledAt: string;
+    readonly authorityVersion: 1;
+    readonly inspected: {
+      readonly runtimeEndpoints: number;
+      readonly remoteActivations: number;
+    };
+    readonly pruned: {
+      readonly runtimeEndpoints: number;
+      readonly remoteActivations: number;
+      readonly modelRoleBindings: number;
+    };
+    readonly reasonCodes: readonly string[];
+  } | null;
 }
 
 export interface RuntimeHealthStatus {
@@ -1159,7 +1173,24 @@ async function extractErrorMessage(response: Response, path: string): Promise<st
         : typeof body.error?.message === "string"
           ? body.error.message
           : JSON.stringify(body);
-    return `Request to ${path} failed with ${status}: ${detail}`;
+    const structuredDetail =
+      typeof body.code === "string"
+        ? `${body.code}${
+            Array.isArray(body.references)
+              ? `: ${body.references
+                  .map((reference: unknown) =>
+                    reference &&
+                    typeof reference === "object" &&
+                    typeof (reference as { path?: unknown }).path === "string"
+                      ? (reference as { path: string }).path
+                      : null,
+                  )
+                  .filter(Boolean)
+                  .join(", ")}`
+              : ""
+          } — ${detail}`
+        : detail;
+    return `Request to ${path} failed with ${status}: ${structuredDetail}`;
   } catch {
     try {
       const text = await response.text();
@@ -1888,8 +1919,30 @@ export async function removeRuntimeAccountModel(
   providerAccountId: string,
   modelId: string,
   fetcher: RuntimeFetcher = fetch,
-): Promise<{ success: boolean; removedAccount: boolean }> {
-  return fetchJson<{ success: boolean; removedAccount: boolean }>(
+): Promise<{
+  success: boolean;
+  removedAccount: boolean;
+  alreadyAbsent?: boolean;
+  authority?: "account-managed" | "runtime-config-managed" | "absent";
+  pruned?: {
+    modelRoleBindings: number;
+    runtimeEndpoints: number;
+    remoteActivations: number;
+    generatedAliases: number;
+  };
+}> {
+  return fetchJson<{
+    success: boolean;
+    removedAccount: boolean;
+    alreadyAbsent?: boolean;
+    authority?: "account-managed" | "runtime-config-managed" | "absent";
+    pruned?: {
+      modelRoleBindings: number;
+      runtimeEndpoints: number;
+      remoteActivations: number;
+      generatedAliases: number;
+    };
+  }>(
     `/api/role-model/accounts/${encodeURIComponent(providerAccountId)}/models/${encodeURIComponent(modelId)}`,
     fetcher,
     {

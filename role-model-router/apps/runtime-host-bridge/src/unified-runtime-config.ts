@@ -199,6 +199,41 @@ export interface UnifiedRuntimeConfig {
   };
 }
 
+export function removeUnifiedRuntimeConfigProviderModel(
+  config: UnifiedRuntimeConfig,
+  providerAccountId: string,
+  modelId: string,
+): { config: UnifiedRuntimeConfig; removed: boolean; removedAccount: boolean } {
+  const providerIndex = config.liteLLM.providers.findIndex(
+    (provider) => `${provider.providerId}.litellm` === providerAccountId,
+  );
+  if (providerIndex < 0) {
+    return { config, removed: false, removedAccount: true };
+  }
+  const provider = config.liteLLM.providers[providerIndex];
+  if (!provider.modelMappings.some((mapping) => mapping.modelId === modelId)) {
+    return { config, removed: false, removedAccount: provider.modelMappings.length === 0 };
+  }
+  const modelMappings = provider.modelMappings.filter((mapping) => mapping.modelId !== modelId);
+  const providers =
+    modelMappings.length === 0
+      ? config.liteLLM.providers.filter((_, index) => index !== providerIndex)
+      : config.liteLLM.providers.map((entry, index) =>
+          index === providerIndex
+            ? {
+                ...entry,
+                modelMappings,
+                modelNames: modelMappings.map((mapping) => mapping.modelId),
+              }
+            : entry,
+        );
+  return {
+    config: { ...config, liteLLM: { ...config.liteLLM, providers } },
+    removed: true,
+    removedAccount: modelMappings.length === 0,
+  };
+}
+
 interface RawLlamaSwapModel {
   readonly path?: string;
   readonly capabilities?: readonly string[];

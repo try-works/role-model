@@ -26,6 +26,84 @@ afterEach(async () => {
 });
 
 describe("runtime-host-bridge unified runtime backend", () => {
+  test("ejects config-owned membership durably across config reapply and restart", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run76-config-eject-"));
+    tempRoots.push(tempRoot);
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+    await writeFile(
+      unifiedRuntimeConfigPath,
+      `
+version: "1.0"
+execution_mode: remote_only
+litellm_proxy:
+  providers:
+    moonshot:
+      api_key: "\${MOONSHOT_API_KEY}"
+      model_list:
+        - model_name: moonshot/kimi-k2.5
+          litellm_params: { model: moonshot/kimi-k2.5 }
+        - model_name: moonshot/kimi-k2.6
+          litellm_params: { model: moonshot/kimi-k2.6 }
+`,
+      "utf8",
+    );
+    const seed = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: testFixtureRoot,
+      runtimeStateRoot,
+      scopeId: "run76-config-eject",
+    });
+    await seed.upsertProviderAccount({
+      providerAccountId: "moonshot.litellm",
+      providerId: "moonshot",
+      providerKind: "provider-openai",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      credentialRef: { backend: "env", ref: "MOONSHOT_API_KEY" },
+      authMode: "api-key-static",
+      regionPolicy: { mode: "prefer", regions: ["global"] },
+      baseUrlOverride: "https://api.moonshot.ai/v1",
+      allowedModels: ["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+      status: "active",
+      healthStatus: "healthy",
+      rotationState: "stable",
+    });
+    await seed.shutdown();
+    const createBackend = () =>
+      createRuntimeBridgeBackend({
+        repoRoot,
+        fixtureRoot: testFixtureRoot,
+        runtimeStateRoot,
+        scopeId: "run76-config-eject",
+        unifiedRuntimeConfigPath,
+        runtimeVendorStartup: "disabled",
+      });
+
+    const backend = await createBackend();
+    const [, ejectResult] = await Promise.all([
+      backend.updateRuntimeConfig({ version: "2.0" }),
+      backend.removeProviderAccountModel("moonshot.litellm", "moonshot/kimi-k2.5"),
+    ]);
+    expect(ejectResult).toEqual(
+      expect.objectContaining({ success: true, removedAccount: false, alreadyAbsent: false }),
+    );
+    await backend.shutdown();
+
+    expect(await readFile(unifiedRuntimeConfigPath, "utf8")).not.toContain("kimi-k2.5");
+    expect(await readFile(unifiedRuntimeConfigPath, "utf8")).toContain('version: "2.0"');
+    const restarted = await createBackend();
+    const account = (await restarted.listAccounts()).find(
+      (entry) => entry.providerAccountId === "moonshot.litellm",
+    );
+    expect(account?.allowedModels).toEqual(["moonshot/kimi-k2.6"]);
+    await restarted.shutdown();
+  });
+
   test("router candidates expose every configured endpoint and mark current execution-mode eligibility", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run49-candidates-"));
     tempRoots.push(tempRoot);
@@ -1695,7 +1773,7 @@ version: "1.0"
     await backend.shutdown();
   });
 
-  test("preserves manual account authority and provenance on exact runtime-config account-id collision", async () => {
+  test("uses YAML membership authority while preserving manual metadata on reserved-id collision", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run47-account-collision-"));
     tempRoots.push(tempRoot);
     const runtimeStateRoot = path.join(tempRoot, "state");
@@ -1791,13 +1869,8 @@ version: "1.0"
               backend: "env",
               ref: "MANUAL_MOONSHOT_API_KEY",
             },
-            allowedModels: expect.arrayContaining(["moonshot/kimi-k2.5", "moonshot/kimi-k2.6"]),
-            modelRoleBindings: expect.arrayContaining([
-              expect.objectContaining({
-                modelId: "moonshot/kimi-k2.6",
-                roleIds: ["writer"],
-              }),
-            ]),
+            allowedModels: ["moonshot/kimi-k2.5"],
+            modelRoleBindings: [],
           }),
         );
 

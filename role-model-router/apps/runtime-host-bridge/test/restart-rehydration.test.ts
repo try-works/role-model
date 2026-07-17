@@ -1320,7 +1320,7 @@ describe("restart rehydration", () => {
     }
   });
 
-  test("repairs standalone Kimi account model drift when an activated legacy endpoint still exists on restart", async () => {
+  test("sanitizes stale activation and endpoint evidence without expanding configured membership", async () => {
     const runtimeContainerRoot = path.join(os.tmpdir(), `restart-kimi-model-drift-${Date.now()}`);
     const runtimeStateRoot = runtimeContainerRoot;
     const scopeId = "standalone-runtime";
@@ -1438,34 +1438,40 @@ describe("restart rehydration", () => {
           health = await secondBackend.readHealthStatus();
         }
 
+        const reconciliation = (await secondBackend.readRuntimeSummary())
+          .configuredMembershipReconciliation;
+        expect(reconciliation).toEqual(
+          expect.objectContaining({
+            pruned: expect.objectContaining({
+              runtimeEndpoints: 1,
+              remoteActivations: 1,
+            }),
+            reasonCodes: expect.arrayContaining([
+              "endpoint-not-configured",
+              "activation-not-configured",
+            ]),
+          }),
+        );
+
         await expect(secondBackend.listAccounts()).resolves.toEqual(
           expect.arrayContaining([
             expect.objectContaining({
               providerAccountId: "moonshot.personal.kimi-code",
-              allowedModels: expect.arrayContaining([
-                "moonshot/kimi-k2.7-code",
-                "moonshot/kimi-k3",
-              ]),
+              allowedModels: ["moonshot/kimi-k3"],
             }),
           ]),
         );
-        await expect(secondBackend.listEndpoints()).resolves.toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              endpointId: activation.endpointId,
-              providerAccountId: "moonshot.personal.kimi-code",
-              modelId: "moonshot/kimi-k2.7-code",
-              healthStatus: "healthy",
-            }),
-          ]),
+        await expect(secondBackend.listEndpoints()).resolves.not.toEqual(
+          expect.arrayContaining([expect.objectContaining({ endpointId: activation.endpointId })]),
+        );
+        expect(readOperatorIntent({ runtimeStateRoot, scopeId })?.remoteActivations).not.toEqual(
+          expect.arrayContaining([expect.objectContaining({ endpointId: activation.endpointId })]),
         );
 
         const [repairedAccount] = listProviderAccounts({ databasePath }).filter(
           (account) => account.providerAccountId === "moonshot.personal.kimi-code",
         );
-        expect(repairedAccount?.allowedModels).toEqual(
-          expect.arrayContaining(["moonshot/kimi-k2.7-code", "moonshot/kimi-k3"]),
-        );
+        expect(repairedAccount?.allowedModels).toEqual(["moonshot/kimi-k3"]);
       } finally {
         await secondBackend.shutdown();
       }

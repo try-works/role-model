@@ -641,9 +641,11 @@ export default function ControlModelsRoute() {
         );
         await refreshModelState();
         setStatusMessage(
-          result.removedAccount
-            ? `Removed ${selectedCard.modelId} and deleted ${account.providerAccountId} because it was the last configured model on that account.`
-            : `Removed ${selectedCard.modelId} from ${account.providerAccountId}.`,
+          result.alreadyAbsent
+            ? `${selectedCard.modelId} was already absent from ${account.providerAccountId}; the pool is converged.`
+            : result.removedAccount
+              ? `Removed ${selectedCard.modelId} and deleted ${account.providerAccountId} because it was the last configured model on that account.`
+              : `Removed ${selectedCard.modelId} from ${account.providerAccountId}.`,
         );
       }
       setError(null);

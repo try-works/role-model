@@ -162,6 +162,7 @@ import {
   readLatestBenchmarkSummary,
   writeBenchmarkPreferences,
 } from "./benchmark-summary.js";
+import { findConfiguredModelBlockingReferences } from "./configured-model-membership.js";
 import { looksLikeInlineApiKey, resolveEnvCredentialRef } from "./credential-ref-env.js";
 import {
   buildAccountEndpointRoleBindings,
@@ -179,10 +180,12 @@ import {
   readOperatorIntent,
   readOperatorIntentResult,
   removePeerLoad,
+  removeRemoteActivationsByConfiguredModel,
   resolveOperatorIntentPath,
   upsertLlamaSwapLoad,
   upsertPeerLoad,
   upsertRemoteActivation,
+  writeOperatorIntent,
 } from "./operator-intent.js";
 import {
   type RemoteHealthProbeResult,
@@ -230,6 +233,7 @@ import {
   mergeUnifiedRuntimeConfigDocuments,
   normalizeUnifiedRuntimeConfigInput,
   parseUnifiedRuntimeConfigText,
+  removeUnifiedRuntimeConfigProviderModel,
   renderUnifiedRuntimeConfigText,
   resolveUnifiedRuntimeObservedDataConfig,
 } from "./unified-runtime-config.js";
@@ -240,6 +244,73 @@ interface OpenAIChatCompletionsTool {
     readonly name: string;
     readonly description?: string;
     readonly parameters: Record<string, unknown>;
+  };
+}
+
+class ConfiguredModelReferenceConflictError extends Error {
+  readonly code = "configured_model_reference_conflict";
+  readonly mutationApplied = false;
+
+  constructor(readonly references: readonly { kind: string; path: string }[]) {
+    super("Configured model is still referenced by explicit runtime configuration.");
+  }
+}
+
+class ConfiguredModelEjectMutationError extends Error {
+  constructor(
+    readonly code: "configured_model_eject_rolled_back" | "configured_model_eject_indeterminate",
+    readonly failedBoundary: string,
+    readonly mutationApplied: false | "indeterminate",
+    readonly reconciliationRequired: boolean,
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+export interface ConfiguredModelEjectResult {
+  readonly success: boolean;
+  readonly removedAccount: boolean;
+  readonly alreadyAbsent: boolean;
+  readonly authority: "account-managed" | "runtime-config-managed" | "absent";
+  readonly pruned: {
+    readonly modelRoleBindings: number;
+    readonly runtimeEndpoints: number;
+    readonly remoteActivations: number;
+    readonly generatedAliases: number;
+  };
+}
+
+interface ConfiguredMembershipReconciliationReceipt {
+  readonly reconciledAt: string;
+  readonly authorityVersion: 1;
+  readonly inspected: { readonly runtimeEndpoints: number; readonly remoteActivations: number };
+  readonly pruned: {
+    readonly runtimeEndpoints: number;
+    readonly remoteActivations: number;
+    readonly modelRoleBindings: number;
+  };
+  readonly reasonCodes: readonly string[];
+}
+
+function configuredModelEjectResult(
+  authority: ConfiguredModelEjectResult["authority"],
+  removedAccount: boolean,
+  alreadyAbsent: boolean,
+  pruned: Partial<ConfiguredModelEjectResult["pruned"]> = {},
+  success = true,
+): ConfiguredModelEjectResult {
+  return {
+    success,
+    removedAccount,
+    alreadyAbsent,
+    authority,
+    pruned: {
+      modelRoleBindings: pruned.modelRoleBindings ?? 0,
+      runtimeEndpoints: pruned.runtimeEndpoints ?? 0,
+      remoteActivations: pruned.remoteActivations ?? 0,
+      generatedAliases: pruned.generatedAliases ?? 0,
+    },
   };
 }
 
@@ -2524,7 +2595,7 @@ export interface StartBridgeServerOptions {
   readonly removeProviderAccountModel?: (
     providerAccountId: string,
     modelId: string,
-  ) => Promise<{ success: boolean; removedAccount: boolean }>;
+  ) => Promise<ConfiguredModelEjectResult>;
   readonly startProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly pollProviderDeviceAuthorization?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readRuntimeConfig?: () => Promise<unknown>;
@@ -2716,7 +2787,7 @@ export interface RuntimeBridgeBackend {
   removeProviderAccountModel(
     providerAccountId: string,
     modelId: string,
-  ): Promise<{ success: boolean; removedAccount: boolean }>;
+  ): Promise<ConfiguredModelEjectResult>;
   startProviderDeviceAuthorization(
     body: Record<string, unknown>,
   ): Promise<DeviceAuthorizationStartResult>;
@@ -2997,6 +3068,7 @@ interface RuntimeBridgeSummary {
     status: OperatorIntentDiagnostic["status"];
     message?: string;
   };
+  configuredMembershipReconciliation: ConfiguredMembershipReconciliationReceipt | null;
 }
 
 export interface CreateRuntimeBridgeBackendOptions {
@@ -5905,14 +5977,11 @@ function mergeRuntimeConfigProviderAccount(
     authMode: manualAccount.authMode,
     regionPolicy: manualAccount.regionPolicy,
     baseUrlOverride: manualAccount.baseUrlOverride ?? runtimeConfigAccount.baseUrlOverride,
-    allowedModels: mergeProviderAccountAllowedModels(
-      manualAccount.allowedModels,
-      runtimeConfigAccount.allowedModels,
-    ),
+    allowedModels: runtimeConfigAccount.allowedModels,
     modelRoleBindings: mergeProviderAccountModelRoleBindings(
       manualAccount.modelRoleBindings ?? [],
       runtimeConfigAccount.modelRoleBindings ?? [],
-    ),
+    )?.filter((binding) => runtimeConfigAccount.allowedModels.includes(binding.modelId)),
     deniedModels: manualAccount.deniedModels,
     entitlementTags: manualAccount.entitlementTags,
     budgetPolicyRef: manualAccount.budgetPolicyRef,
@@ -14636,9 +14705,26 @@ function createRequestHandler(options: StartBridgeServerOptions) {
           await options.removeProviderAccountModel(providerAccountId, modelId),
         );
       } catch (error) {
-        writeJson(response, 400, {
-          error: error instanceof Error ? error.message : "provider model removal failed",
-        });
+        if (error instanceof ConfiguredModelReferenceConflictError) {
+          writeJson(response, 409, {
+            error: error.message,
+            code: error.code,
+            references: error.references,
+            mutationApplied: error.mutationApplied,
+          });
+        } else if (error instanceof ConfiguredModelEjectMutationError) {
+          writeJson(response, 500, {
+            error: error.message,
+            code: error.code,
+            failedBoundary: error.failedBoundary,
+            mutationApplied: error.mutationApplied,
+            reconciliationRequired: error.reconciliationRequired,
+          });
+        } else {
+          writeJson(response, 400, {
+            error: error instanceof Error ? error.message : "provider model removal failed",
+          });
+        }
       }
       return;
     }
@@ -15519,6 +15605,33 @@ export async function createRuntimeBridgeBackend(
         }
       : registrySourcesFixture;
   const activeProviderAccountRepairs = new Set<string>();
+  let latestConfiguredMembershipReconciliation: ConfiguredMembershipReconciliationReceipt | null =
+    null;
+  let unifiedConfigMutationTail: Promise<void> = Promise.resolve();
+  const withUnifiedConfigMutationLock = async <T>(operation: () => Promise<T>): Promise<T> => {
+    const previous = unifiedConfigMutationTail;
+    let release!: () => void;
+    unifiedConfigMutationTail = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    await previous;
+    try {
+      return await operation();
+    } finally {
+      release();
+    }
+  };
+  const writeConfigTextAtomically = async (targetPath: string, text: string): Promise<void> => {
+    await mkdir(path.dirname(targetPath), { recursive: true });
+    const tempPath = `${targetPath}.${process.pid}.${randomUUID()}.tmp`;
+    await writeFile(tempPath, text, "utf8");
+    try {
+      await rename(tempPath, targetPath);
+    } catch (error) {
+      await rm(tempPath, { force: true });
+      throw error;
+    }
+  };
   const repairPersistedProviderAccountsFromRuntimeState = (
     persistedAccounts: readonly ProviderAccountRecord[],
   ): ProviderAccountRecord[] => {
@@ -15531,9 +15644,47 @@ export async function createRuntimeBridgeBackend(
       operatorIntentRead.diagnostic.status === "corrupt"
         ? []
         : (operatorIntentRead.intent?.remoteActivations ?? []);
+    const configuredModelKeys = new Set(
+      persistedAccounts.flatMap((account) =>
+        account.allowedModels.map((modelId) => `${account.providerAccountId}\u0000${modelId}`),
+      ),
+    );
+    const isConfigured = (providerAccountId: string, modelId: string): boolean =>
+      configuredModelKeys.has(`${providerAccountId}\u0000${modelId}`);
+    let prunedEndpointCount = 0;
+    for (const endpoint of persistedRuntimeEndpoints) {
+      if (
+        endpoint.servingSource === "remote-service" &&
+        !isConfigured(endpoint.providerAccountId, endpoint.modelId)
+      ) {
+        deleteRuntimeEndpointsByModelId(initialization.databasePath, endpoint.modelId, [
+          endpoint.providerAccountId,
+        ]);
+        prunedEndpointCount += 1;
+      }
+    }
+    const staleActivations = remoteActivations.filter(
+      (activation) => !isConfigured(activation.providerAccountId, activation.modelId),
+    );
+    if (staleActivations.length > 0) {
+      persistOperatorIntent(operatorIntentLocation, (intent) =>
+        staleActivations.reduce(
+          (next, activation) =>
+            removeRemoteActivationsByConfiguredModel(
+              next,
+              activation.providerAccountId,
+              activation.modelId,
+            ),
+          intent,
+        ),
+      );
+    }
     const requiredModelsByAccountId = new Map<string, Set<string>>();
     const activationBindingsByAccountModelKey = new Map<string, ProviderAccountModelRoleBinding>();
     const rememberRequiredModel = (providerAccountId: string, modelId: string): void => {
+      if (!isConfigured(providerAccountId, modelId)) {
+        return;
+      }
       const requiredModels = requiredModelsByAccountId.get(providerAccountId) ?? new Set<string>();
       requiredModels.add(modelId);
       requiredModelsByAccountId.set(providerAccountId, requiredModels);
@@ -15583,25 +15734,21 @@ export async function createRuntimeBridgeBackend(
       }
     }
 
-    if (requiredModelsByAccountId.size === 0) {
-      return [...persistedAccounts];
-    }
-
     const allowedRoleIds = new Set(getAllowedRoleIds());
+    let prunedBindingCount = 0;
     const repairedAccounts = persistedAccounts.map((account) => {
-      const requiredModels = requiredModelsByAccountId.get(account.providerAccountId);
-      if (!requiredModels || account.allowedModels.length === 0) {
-        return account;
-      }
+      const requiredModels =
+        requiredModelsByAccountId.get(account.providerAccountId) ?? new Set<string>();
 
       const nextAllowedModels = [...new Set([...account.allowedModels, ...requiredModels])].sort(
         compareText,
       );
-      const nextBindings = [
-        ...((account.modelRoleBindings ?? []).map((binding) =>
+      const nextBindings = (
+        (account.modelRoleBindings ?? []).map((binding) =>
           normalizeProviderAccountModelRoleBinding(binding),
-        ) as ProviderAccountModelRoleBinding[]),
-      ];
+        ) as ProviderAccountModelRoleBinding[]
+      ).filter((binding) => account.allowedModels.includes(binding.modelId));
+      prunedBindingCount += (account.modelRoleBindings?.length ?? 0) - nextBindings.length;
       const existingBindingModelIds = new Set(nextBindings.map((binding) => binding.modelId));
       for (const modelId of requiredModels) {
         if (existingBindingModelIds.has(modelId)) {
@@ -15640,6 +15787,30 @@ export async function createRuntimeBridgeBackend(
         databasePath: initialization.databasePath,
         accounts: changedAccounts,
       });
+    }
+    const reconciliationReceipt: ConfiguredMembershipReconciliationReceipt = {
+      reconciledAt: new Date().toISOString(),
+      authorityVersion: 1,
+      inspected: {
+        runtimeEndpoints: persistedRuntimeEndpoints.length,
+        remoteActivations: remoteActivations.length,
+      },
+      pruned: {
+        runtimeEndpoints: prunedEndpointCount,
+        remoteActivations: staleActivations.length,
+        modelRoleBindings: prunedBindingCount,
+      },
+      reasonCodes: [
+        ...(prunedEndpointCount > 0 ? ["endpoint-not-configured"] : []),
+        ...(staleActivations.length > 0 ? ["activation-not-configured"] : []),
+        ...(prunedBindingCount > 0 ? ["binding-not-configured"] : []),
+      ],
+    };
+    if (
+      latestConfiguredMembershipReconciliation === null ||
+      prunedEndpointCount + staleActivations.length + prunedBindingCount > 0
+    ) {
+      latestConfiguredMembershipReconciliation = reconciliationReceipt;
     }
     return repairedAccounts;
   };
@@ -21548,6 +21719,7 @@ export async function createRuntimeBridgeBackend(
             ? { message: operatorIntentDiagnostic.message }
             : {}),
         },
+        configuredMembershipReconciliation: latestConfiguredMembershipReconciliation,
       };
     },
     async readHealthStatus(): Promise<{
@@ -21614,50 +21786,51 @@ export async function createRuntimeBridgeBackend(
       if (!options.unifiedRuntimeConfigPath) {
         throw new Error("Unified runtime config editing requires unifiedRuntimeConfigPath.");
       }
+      const unifiedRuntimeConfigPath = options.unifiedRuntimeConfigPath;
+      return withUnifiedConfigMutationLock(async () => {
+        const previousConfig = currentUnifiedRuntimeConfig;
+        const previousText = await readFile(unifiedRuntimeConfigPath, "utf8").catch(
+          (error: unknown) => {
+            if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+              return null;
+            }
+            throw error;
+          },
+        );
+        const previousDocument = previousText
+          ? (parse(previousText) as Record<string, unknown>)
+          : null;
+        const nextConfig = mergeUnifiedRuntimeConfigDocuments(previousDocument, body);
+        let finalConfig = nextConfig;
+        let finalText = renderUnifiedRuntimeConfigText(finalConfig);
 
-      const previousConfig = currentUnifiedRuntimeConfig;
-      const previousText = await readFile(options.unifiedRuntimeConfigPath, "utf8").catch(
-        (error: unknown) => {
-          if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-            return null;
+        await writeConfigTextAtomically(unifiedRuntimeConfigPath, finalText);
+
+        try {
+          await applyUnifiedRuntimeConfigState(finalConfig);
+          if (currentUnifiedRuntimeConfig !== null && currentUnifiedRuntimeConfig !== finalConfig) {
+            finalConfig = currentUnifiedRuntimeConfig;
+            finalText = renderUnifiedRuntimeConfigText(currentUnifiedRuntimeConfig);
+            await writeConfigTextAtomically(unifiedRuntimeConfigPath, finalText);
+          }
+        } catch (error) {
+          if (previousText === null) {
+            await rm(unifiedRuntimeConfigPath, { force: true });
+          } else {
+            await writeConfigTextAtomically(unifiedRuntimeConfigPath, previousText);
+          }
+          if (previousConfig) {
+            await applyUnifiedRuntimeConfigState(previousConfig);
           }
           throw error;
-        },
-      );
-      const previousDocument = previousText
-        ? (parse(previousText) as Record<string, unknown>)
-        : null;
-      const nextConfig = mergeUnifiedRuntimeConfigDocuments(previousDocument, body);
-      let finalConfig = nextConfig;
-      let finalText = renderUnifiedRuntimeConfigText(finalConfig);
-
-      await mkdir(path.dirname(options.unifiedRuntimeConfigPath), { recursive: true });
-      await writeFile(options.unifiedRuntimeConfigPath, finalText, "utf8");
-
-      try {
-        await applyUnifiedRuntimeConfigState(finalConfig);
-        if (currentUnifiedRuntimeConfig !== null && currentUnifiedRuntimeConfig !== finalConfig) {
-          finalConfig = currentUnifiedRuntimeConfig;
-          finalText = renderUnifiedRuntimeConfigText(currentUnifiedRuntimeConfig);
-          await writeFile(options.unifiedRuntimeConfigPath, finalText, "utf8");
         }
-      } catch (error) {
-        if (previousText === null) {
-          await rm(options.unifiedRuntimeConfigPath, { force: true });
-        } else {
-          await writeFile(options.unifiedRuntimeConfigPath, previousText, "utf8");
-        }
-        if (previousConfig) {
-          await applyUnifiedRuntimeConfigState(previousConfig);
-        }
-        throw error;
-      }
 
-      return {
-        applied: true,
-        path: options.unifiedRuntimeConfigPath,
-        config: currentUnifiedRuntimeConfig,
-      };
+        return {
+          applied: true,
+          path: unifiedRuntimeConfigPath,
+          config: currentUnifiedRuntimeConfig,
+        };
+      });
     },
     async listProviders(): Promise<
       readonly {
@@ -22226,69 +22399,332 @@ export async function createRuntimeBridgeBackend(
     async removeProviderAccountModel(
       providerAccountId: string,
       modelId: string,
-    ): Promise<{ success: boolean; removedAccount: boolean }> {
+    ): Promise<ConfiguredModelEjectResult> {
       if (isLocalPeerProviderAccountId(providerAccountId)) {
-        return { success: false, removedAccount: false };
+        return configuredModelEjectResult("absent", false, true, {}, false);
       }
-      const existingAccount = currentAccounts.find(
-        (entry) => entry.providerAccountId === providerAccountId,
-      );
-      if (!existingAccount) {
-        return { success: false, removedAccount: false };
-      }
-
-      const nextAllowedModels = existingAccount.allowedModels.filter(
-        (candidate) => candidate !== modelId,
-      );
-      const nextModelRoleBindings = (existingAccount.modelRoleBindings ?? []).filter(
-        (binding) => binding.modelId !== modelId,
-      );
-      const hadEndpoint = runtimeEndpoints.some(
-        (endpoint) =>
-          endpoint.providerAccountId === providerAccountId && endpoint.modelId === modelId,
-      );
-      const modelChanged =
-        nextAllowedModels.length !== existingAccount.allowedModels.length ||
-        nextModelRoleBindings.length !== (existingAccount.modelRoleBindings?.length ?? 0) ||
-        hadEndpoint;
-      if (!modelChanged) {
-        return { success: false, removedAccount: false };
-      }
-
-      deleteRuntimeEndpointsByModelId(initialization.databasePath, modelId, [providerAccountId]);
-      if (nextAllowedModels.length === 0) {
-        deleteProviderDeviceAuthorizationsByAccountId(initialization.databasePath, [
-          providerAccountId,
-        ]);
-        deleteProviderAccountsById(initialization.databasePath, [providerAccountId]);
-        rebuildCurrentState();
-        return { success: true, removedAccount: true };
-      }
-
-      const normalizedAccount = normalizeProviderAccountRoleBindings({
-        ...existingAccount,
-        allowedModels: nextAllowedModels,
-        modelRoleBindings: nextModelRoleBindings,
-      });
-      const validationResult = validateProviderAccounts({
-        catalog: currentNormalizedCatalog,
-        additionalProviders: liteLLMProviders,
-        allowedRoleIds: getAllowedRoleIds(),
-        accounts: [normalizedAccount],
-      });
-      if (validationResult.diagnostics.length > 0 || validationResult.accounts.length !== 1) {
-        throw new Error(
-          validationResult.diagnostics[0]?.message ??
-            "Provider account model removal validation failed.",
+      return withUnifiedConfigMutationLock(async () => {
+        const targetEndpointIds = new Set(
+          runtimeEndpoints
+            .filter(
+              (endpoint) =>
+                endpoint.providerAccountId === providerAccountId && endpoint.modelId === modelId,
+            )
+            .map((endpoint) => endpoint.endpointId),
         );
-      }
+        const explicitReferences = [
+          ...(currentUnifiedRuntimeConfig?.modelAliases ?? [])
+            .filter(
+              (alias) =>
+                !isPrimaryRoutingAliasId(alias.aliasId) && alias.modelIds.includes(modelId),
+            )
+            .map((alias) => ({
+              kind: "custom-alias",
+              owner: "unified-runtime-config",
+              path: `modelAliases.${alias.aliasId}`,
+              policy: "block" as const,
+              modelId,
+            })),
+          ...(currentUnifiedRuntimeConfig?.controller
+            ? [
+                {
+                  kind: "controller",
+                  owner: "unified-runtime-config",
+                  path: "controller",
+                  policy: "block" as const,
+                  modelId: currentUnifiedRuntimeConfig.controller.modelId ?? undefined,
+                  endpointId: currentUnifiedRuntimeConfig.controller.endpointId ?? undefined,
+                },
+              ]
+            : []),
+          ...(currentUnifiedRuntimeConfig?.difficultyClassifier
+            ? [
+                {
+                  kind: "difficulty-classifier",
+                  owner: "unified-runtime-config",
+                  path: "difficultyClassifier",
+                  policy: "block" as const,
+                  modelId: currentUnifiedRuntimeConfig.difficultyClassifier.modelId ?? undefined,
+                  endpointId:
+                    currentUnifiedRuntimeConfig.difficultyClassifier.endpointId ?? undefined,
+                },
+              ]
+            : []),
+        ];
+        const blockingReferences = findConfiguredModelBlockingReferences({
+          target: { providerAccountId, modelId },
+          configuredKeys: currentAccounts.flatMap((account) =>
+            account.allowedModels.map((configuredModelId) => ({
+              providerAccountId: account.providerAccountId,
+              modelId: configuredModelId,
+            })),
+          ),
+          references: explicitReferences,
+          targetEndpointIds,
+        });
+        const modelSuppliedBySibling = currentAccounts.some(
+          (account) =>
+            account.providerAccountId !== providerAccountId &&
+            account.allowedModels.includes(modelId),
+        );
+        const generatedAliasPruneCount = modelSuppliedBySibling
+          ? 0
+          : (currentUnifiedRuntimeConfig?.modelAliases ?? []).filter(
+              (alias) => isPrimaryRoutingAliasId(alias.aliasId) && alias.modelIds.includes(modelId),
+            ).length;
+        if (blockingReferences.length > 0) {
+          throw new ConfiguredModelReferenceConflictError(blockingReferences);
+        }
+        const configOwnsAccount =
+          currentUnifiedRuntimeConfig?.liteLLM.providers.some(
+            (provider) => `${provider.providerId}.litellm` === providerAccountId,
+          ) ?? false;
+        if (configOwnsAccount && currentUnifiedRuntimeConfig) {
+          if (!currentUnifiedRuntimeConfig) {
+            throw new Error("Runtime config disappeared while waiting for its mutation lock.");
+          }
+          const mutation = removeUnifiedRuntimeConfigProviderModel(
+            currentUnifiedRuntimeConfig,
+            providerAccountId,
+            modelId,
+          );
+          if (!mutation.removed) {
+            return configuredModelEjectResult(
+              "runtime-config-managed",
+              mutation.removedAccount,
+              true,
+            );
+          }
+          if (!options.unifiedRuntimeConfigPath) {
+            throw new Error("Config-owned model eject requires unifiedRuntimeConfigPath.");
+          }
+          const previousConfig = currentUnifiedRuntimeConfig;
+          const previousText = await readFile(options.unifiedRuntimeConfigPath, "utf8");
+          const previousIntent = readOperatorIntentResult(operatorIntentLocation);
+          if (previousIntent.diagnostic.status === "corrupt") {
+            throw new Error(
+              `operator intent manifest is corrupt: ${previousIntent.diagnostic.message}`,
+            );
+          }
+          const previousAccount = currentAccounts.find(
+            (account) => account.providerAccountId === providerAccountId,
+          );
+          const previousEndpoints = runtimeEndpoints.filter(
+            (endpoint) => endpoint.providerAccountId === providerAccountId,
+          );
+          const nextText = renderUnifiedRuntimeConfigText(mutation.config);
+          try {
+            await writeConfigTextAtomically(options.unifiedRuntimeConfigPath, nextText);
+            persistOperatorIntent(operatorIntentLocation, (intent) =>
+              removeRemoteActivationsByConfiguredModel(intent, providerAccountId, modelId),
+            );
+            deleteRuntimeEndpointsByModelId(initialization.databasePath, modelId, [
+              providerAccountId,
+            ]);
+            const projectedModelIds =
+              mutation.config.liteLLM.providers
+                .find((provider) => `${provider.providerId}.litellm` === providerAccountId)
+                ?.modelMappings.map((mapping) => mapping.modelId) ?? [];
+            const projectedAccount = currentAccounts.find(
+              (account) => account.providerAccountId === providerAccountId,
+            );
+            if (projectedModelIds.length === 0) {
+              deleteProviderAccountsById(initialization.databasePath, [providerAccountId]);
+            } else if (projectedAccount) {
+              upsertSqliteProviderAccount({
+                databasePath: initialization.databasePath,
+                account: {
+                  ...projectedAccount,
+                  allowedModels: projectedModelIds,
+                  modelRoleBindings: projectedAccount.modelRoleBindings?.filter((binding) =>
+                    projectedModelIds.includes(binding.modelId),
+                  ),
+                },
+              });
+            }
+            await applyUnifiedRuntimeConfigState(mutation.config);
+          } catch (error) {
+            try {
+              await writeConfigTextAtomically(options.unifiedRuntimeConfigPath, previousText);
+              await applyUnifiedRuntimeConfigState(previousConfig);
+              if (previousAccount) {
+                upsertSqliteProviderAccount({
+                  databasePath: initialization.databasePath,
+                  account: previousAccount,
+                });
+              }
+              for (const endpoint of previousEndpoints) {
+                upsertSqliteRuntimeEndpoint({
+                  databasePath: initialization.databasePath,
+                  endpoint,
+                });
+              }
+              if (previousIntent.intent) {
+                writeOperatorIntent(operatorIntentLocation, previousIntent.intent);
+              } else {
+                await rm(resolveOperatorIntentPath(operatorIntentLocation), { force: true });
+              }
+              rebuildCurrentState();
+            } catch (rollbackError) {
+              throw new ConfiguredModelEjectMutationError(
+                "configured_model_eject_indeterminate",
+                "runtime-config-rollback",
+                "indeterminate",
+                true,
+                rollbackError instanceof Error
+                  ? rollbackError.message
+                  : "Runtime config rollback failed.",
+              );
+            }
+            throw new ConfiguredModelEjectMutationError(
+              "configured_model_eject_rolled_back",
+              "runtime-config-apply",
+              false,
+              false,
+              error instanceof Error ? error.message : "Runtime config eject was rolled back.",
+            );
+          }
+          return configuredModelEjectResult(
+            "runtime-config-managed",
+            mutation.removedAccount,
+            false,
+            {
+              modelRoleBindings:
+                (previousAccount?.modelRoleBindings?.length ?? 0) -
+                (currentAccounts.find((account) => account.providerAccountId === providerAccountId)
+                  ?.modelRoleBindings?.length ?? 0),
+              runtimeEndpoints: previousEndpoints.filter((endpoint) => endpoint.modelId === modelId)
+                .length,
+              remoteActivations:
+                previousIntent.intent?.remoteActivations.filter(
+                  (activation) =>
+                    activation.providerAccountId === providerAccountId &&
+                    activation.modelId === modelId,
+                ).length ?? 0,
+              generatedAliases: generatedAliasPruneCount,
+            },
+          );
+        }
+        const existingAccount = currentAccounts.find(
+          (entry) => entry.providerAccountId === providerAccountId,
+        );
+        if (!existingAccount) {
+          return configuredModelEjectResult("absent", true, true);
+        }
 
-      upsertSqliteProviderAccount({
-        databasePath: initialization.databasePath,
-        account: validationResult.accounts[0],
+        const nextAllowedModels = existingAccount.allowedModels.filter(
+          (candidate) => candidate !== modelId,
+        );
+        const nextModelRoleBindings = (existingAccount.modelRoleBindings ?? []).filter(
+          (binding) => binding.modelId !== modelId,
+        );
+        const hadEndpoint = runtimeEndpoints.some(
+          (endpoint) =>
+            endpoint.providerAccountId === providerAccountId && endpoint.modelId === modelId,
+        );
+        const modelChanged =
+          nextAllowedModels.length !== existingAccount.allowedModels.length ||
+          nextModelRoleBindings.length !== (existingAccount.modelRoleBindings?.length ?? 0) ||
+          hadEndpoint;
+        if (!modelChanged) {
+          return configuredModelEjectResult("account-managed", false, true);
+        }
+
+        let validatedAccount: ProviderAccountRecord | null = null;
+        if (nextAllowedModels.length > 0) {
+          const normalizedAccount = normalizeProviderAccountRoleBindings({
+            ...existingAccount,
+            allowedModels: nextAllowedModels,
+            modelRoleBindings: nextModelRoleBindings,
+          });
+          const validationResult = validateProviderAccounts({
+            catalog: currentNormalizedCatalog,
+            additionalProviders: liteLLMProviders,
+            allowedRoleIds: getAllowedRoleIds(),
+            accounts: [normalizedAccount],
+          });
+          if (validationResult.diagnostics.length > 0 || validationResult.accounts.length !== 1) {
+            throw new Error(
+              validationResult.diagnostics[0]?.message ??
+                "Provider account model removal validation failed.",
+            );
+          }
+          validatedAccount = validationResult.accounts[0];
+        }
+
+        const previousIntent = readOperatorIntentResult(operatorIntentLocation);
+        if (previousIntent.diagnostic.status === "corrupt") {
+          throw new Error(
+            `operator intent manifest is corrupt: ${previousIntent.diagnostic.message}`,
+          );
+        }
+        const removedEndpoints = runtimeEndpoints.filter(
+          (endpoint) =>
+            endpoint.providerAccountId === providerAccountId && endpoint.modelId === modelId,
+        );
+        try {
+          persistOperatorIntent(operatorIntentLocation, (intent) =>
+            removeRemoteActivationsByConfiguredModel(intent, providerAccountId, modelId),
+          );
+          deleteRuntimeEndpointsByModelId(initialization.databasePath, modelId, [
+            providerAccountId,
+          ]);
+          if (!validatedAccount) {
+            deleteProviderAccountsById(initialization.databasePath, [providerAccountId]);
+          } else {
+            upsertSqliteProviderAccount({
+              databasePath: initialization.databasePath,
+              account: validatedAccount,
+            });
+          }
+          rebuildCurrentState();
+          return configuredModelEjectResult("account-managed", validatedAccount === null, false, {
+            modelRoleBindings:
+              (existingAccount.modelRoleBindings?.length ?? 0) - nextModelRoleBindings.length,
+            runtimeEndpoints: removedEndpoints.length,
+            remoteActivations:
+              previousIntent.intent?.remoteActivations.filter(
+                (activation) =>
+                  activation.providerAccountId === providerAccountId &&
+                  activation.modelId === modelId,
+              ).length ?? 0,
+            generatedAliases: generatedAliasPruneCount,
+          });
+        } catch (error) {
+          try {
+            upsertSqliteProviderAccount({
+              databasePath: initialization.databasePath,
+              account: existingAccount,
+            });
+            for (const endpoint of removedEndpoints) {
+              upsertSqliteRuntimeEndpoint({ databasePath: initialization.databasePath, endpoint });
+            }
+            if (previousIntent.intent) {
+              writeOperatorIntent(operatorIntentLocation, previousIntent.intent);
+            } else {
+              await rm(resolveOperatorIntentPath(operatorIntentLocation), { force: true });
+            }
+            rebuildCurrentState();
+          } catch (rollbackError) {
+            throw new ConfiguredModelEjectMutationError(
+              "configured_model_eject_indeterminate",
+              "account-managed-rollback",
+              "indeterminate",
+              true,
+              rollbackError instanceof Error
+                ? rollbackError.message
+                : "Account eject rollback failed.",
+            );
+          }
+          throw new ConfiguredModelEjectMutationError(
+            "configured_model_eject_rolled_back",
+            "account-managed-apply",
+            false,
+            false,
+            error instanceof Error ? error.message : "Account eject was rolled back.",
+          );
+        }
       });
-      rebuildCurrentState();
-      return { success: true, removedAccount: false };
     },
     async upsertProviderAccount(account: Record<string, unknown>): Promise<ProviderAccountRecord> {
       const credentialRef = account.credentialRef as { backend: string; ref: string } | undefined;
