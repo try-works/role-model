@@ -785,6 +785,11 @@ export interface ReadRuntimeControllerAssignmentInput {
   readonly scope: string;
 }
 
+export interface DeleteRuntimeControllerAssignmentInput {
+  readonly databasePath: string;
+  readonly scope: string;
+}
+
 export interface ExportRuntimeStateInput {
   readonly databasePath: string;
   readonly exportPath: string;
@@ -1891,6 +1896,14 @@ export function readRuntimeControllerAssignment(
   database.close();
 
   return row ? mapRuntimeControllerAssignmentRow(row) : null;
+}
+
+export function deleteRuntimeControllerAssignment(
+  input: DeleteRuntimeControllerAssignmentInput,
+): void {
+  const database = new DatabaseSync(input.databasePath);
+  database.prepare("DELETE FROM runtime_controller_assignments WHERE scope = ?").run(input.scope);
+  database.close();
 }
 
 export function upsertProviderDeviceAuthSession(input: UpsertProviderDeviceAuthSessionInput): void {
