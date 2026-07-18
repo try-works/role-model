@@ -100,12 +100,10 @@ describe("deriveCapabilities", () => {
 
 describe("normalizeCatalogSnapshot", () => {
   test("round-trips compact catalog omissions through the versioned hydration boundary", () => {
-    const serializeNormalizedCatalog = (
-      catalogModule as { serializeNormalizedCatalog?: unknown }
-    ).serializeNormalizedCatalog;
-    const hydrateNormalizedCatalog = (
-      catalogModule as { hydrateNormalizedCatalog?: unknown }
-    ).hydrateNormalizedCatalog;
+    const serializeNormalizedCatalog = (catalogModule as { serializeNormalizedCatalog?: unknown })
+      .serializeNormalizedCatalog;
+    const hydrateNormalizedCatalog = (catalogModule as { hydrateNormalizedCatalog?: unknown })
+      .hydrateNormalizedCatalog;
     expect(serializeNormalizedCatalog).toBeTypeOf("function");
     expect(hydrateNormalizedCatalog).toBeTypeOf("function");
     if (
@@ -181,9 +179,8 @@ describe("normalizeCatalogSnapshot", () => {
   });
 
   test("keeps the tracked compact catalog at least forty percent below the pinned baseline", async () => {
-    const hydrateNormalizedCatalog = (
-      catalogModule as { hydrateNormalizedCatalog?: unknown }
-    ).hydrateNormalizedCatalog;
+    const hydrateNormalizedCatalog = (catalogModule as { hydrateNormalizedCatalog?: unknown })
+      .hydrateNormalizedCatalog;
     expect(hydrateNormalizedCatalog).toBeTypeOf("function");
     if (typeof hydrateNormalizedCatalog !== "function") {
       return;
@@ -197,10 +194,12 @@ describe("normalizeCatalogSnapshot", () => {
       "normalized-catalog.json",
     );
     const raw = await readFile(catalogPath, "utf8");
-    const hydrated = (hydrateNormalizedCatalog as (value: unknown) => {
-      providers: readonly unknown[];
-      models: readonly unknown[];
-    })(JSON.parse(raw));
+    const hydrated = (
+      hydrateNormalizedCatalog as (value: unknown) => {
+        providers: readonly unknown[];
+        models: readonly unknown[];
+      }
+    )(JSON.parse(raw));
 
     expect(Buffer.byteLength(raw)).toBeLessThanOrEqual(Math.floor(5_434_995 * 0.6));
     expect(hydrated.providers).toHaveLength(146);
@@ -208,9 +207,8 @@ describe("normalizeCatalogSnapshot", () => {
   });
 
   test("loads the tracked compact artifact through the canonical hydrated file boundary", async () => {
-    const readNormalizedCatalogFile = (
-      catalogModule as { readNormalizedCatalogFile?: unknown }
-    ).readNormalizedCatalogFile;
+    const readNormalizedCatalogFile = (catalogModule as { readNormalizedCatalogFile?: unknown })
+      .readNormalizedCatalogFile;
     expect(readNormalizedCatalogFile).toBeTypeOf("function");
     if (typeof readNormalizedCatalogFile !== "function") {
       return;

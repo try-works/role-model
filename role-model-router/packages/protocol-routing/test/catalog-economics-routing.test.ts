@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
-import { readNormalizedCatalogFile, type NormalizedCatalog } from "@role-model-router/catalog";
+import { type NormalizedCatalog, readNormalizedCatalogFile } from "@role-model-router/catalog";
 
 import { routeRuntimeRequest } from "../src/index.js";
 import { TEST_CATALOG } from "./test-catalog-fixture.js";

@@ -5,10 +5,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
+  type NormalizedCatalog,
   deriveLiteLLMProviders,
   hydrateNormalizedCatalog,
   loadLiteLLMModelPrices,
-  type NormalizedCatalog,
 } from "@role-model-router/catalog";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 import { describe, expect, test } from "vitest";

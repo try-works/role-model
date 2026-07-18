@@ -191,10 +191,7 @@ function unique(values: readonly string[] | undefined): string[] {
   return [...new Set(values ?? [])];
 }
 
-function hasSameSource(
-  left: CatalogSnapshotSource,
-  right: CatalogSnapshotSource,
-): boolean {
+function hasSameSource(left: CatalogSnapshotSource, right: CatalogSnapshotSource): boolean {
   return (
     left.vendor === right.vendor &&
     left.commit === right.commit &&

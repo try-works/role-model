@@ -4058,10 +4058,7 @@ export function readAdvisoryMaxDifficultyRecommendation(
 }
 
 export function buildAdvisoryMaxDifficultyRecommendation(input: {
-  readonly profiles: Record<
-    (typeof DIFFICULTY_BUCKETS)[number],
-    ObservedPerformanceProfile | null
-  >;
+  readonly profiles: Record<(typeof DIFFICULTY_BUCKETS)[number], ObservedPerformanceProfile | null>;
   readonly thresholds: AdvisoryMaxDifficultyThresholds;
 }): AdvisoryMaxDifficultyRecommendation {
   const evaluations = Object.fromEntries(

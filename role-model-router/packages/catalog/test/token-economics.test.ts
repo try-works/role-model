@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
-import { readNormalizedCatalogFile, type NormalizedCatalog } from "../src/index.js";
+import { type NormalizedCatalog, readNormalizedCatalogFile } from "../src/index.js";
 import {
   CANONICAL_MODEL_ID_ALIASES,
   OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS,

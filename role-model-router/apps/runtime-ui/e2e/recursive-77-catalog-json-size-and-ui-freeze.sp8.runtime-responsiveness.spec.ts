@@ -51,15 +51,17 @@ test("@smoke @recursive:77-catalog-json-size-and-ui-freeze @sp8 keeps Models and
   expect(summaryMs).toBeLessThan(1_000);
   expect(buttonPendingMs - mutationResponseMs).toBeLessThan(500);
   expect(buttonPendingMs).toBeLessThan(3_000);
-  const mutationModelPaths = requestedPaths.slice(mutationRequestOffset).filter((path) =>
-    [
-      "/api/role-model/accounts",
-      "/api/role-model/endpoints",
-      "/api/role-model/models",
-      "/api/role-model/router/candidates",
-      "/api/role-model/requests",
-    ].includes(path),
-  );
+  const mutationModelPaths = requestedPaths
+    .slice(mutationRequestOffset)
+    .filter((path) =>
+      [
+        "/api/role-model/accounts",
+        "/api/role-model/endpoints",
+        "/api/role-model/models",
+        "/api/role-model/router/candidates",
+        "/api/role-model/requests",
+      ].includes(path),
+    );
   expect(mutationModelPaths).toEqual(["/api/role-model/accounts"]);
 
   expect(requestedPaths).not.toContain("/api/role-model/requests");

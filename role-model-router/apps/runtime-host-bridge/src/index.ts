@@ -63,8 +63,8 @@ import {
   createRuntimeObservationBundle,
 } from "@role-model-router/runtime-observability";
 import {
-  clearAllObservedBenchmarkData,
   buildAdvisoryMaxDifficultyRecommendation,
+  clearAllObservedBenchmarkData,
   clearBenchmarkRunArtifacts,
   clearObservedBenchmarkDataForEndpoint,
   deleteRuntimeControllerAssignment,
@@ -19333,9 +19333,7 @@ export async function createRuntimeBridgeBackend(
       getLlamaSwapRoleIdsByModelId(),
     );
   const readCandidateProfileDataByEndpointId = () => {
-    const endpointIds = currentRegistry.endpoints.map(
-      (endpoint) => endpoint.identity.endpoint_id,
-    );
+    const endpointIds = currentRegistry.endpoints.map((endpoint) => endpoint.identity.endpoint_id);
     const latestProfiles = readLatestObservedProfilesByEndpointIds({
       databasePath: initialization.databasePath,
       endpointIds,
@@ -19359,10 +19357,7 @@ export async function createRuntimeBridgeBackend(
             difficultyBucket,
             difficultyProfilesByBucket[difficultyBucket][endpointId] ?? null,
           ]),
-        ) as Record<
-          UnifiedRuntimeDifficultyBucket,
-          ReturnType<typeof readLatestObservedProfile>
-        >;
+        ) as Record<UnifiedRuntimeDifficultyBucket, ReturnType<typeof readLatestObservedProfile>>;
         return [
           endpointId,
           {
@@ -19424,9 +19419,8 @@ export async function createRuntimeBridgeBackend(
     const controller = getCurrentControllerAssignment();
     const guidance = getRouterGuidance();
     const profilesByEndpointId = readCandidateProfileDataByEndpointId();
-    const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId(
-      profilesByEndpointId,
-    );
+    const benchmarkCapabilitiesByEndpointId =
+      await buildBenchmarkCapabilityByEndpointId(profilesByEndpointId);
     const { executionEndpointIds, routingEligibleEndpointIds, benchmarkEligibleEndpointIds } =
       buildEffectiveEligibilitySnapshot();
     return currentRegistry.endpoints.map((endpoint) => {

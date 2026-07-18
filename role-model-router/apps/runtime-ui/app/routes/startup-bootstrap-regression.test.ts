@@ -15,11 +15,7 @@ const p0BootstrapExpectations = [
   {
     routePath: "/app/models",
     fileName: "control-models.tsx",
-    expectedHelpers: [
-      "fetchRuntimeAccounts",
-      "fetchRuntimeEndpoints",
-      "fetchRuntimeModels",
-    ],
+    expectedHelpers: ["fetchRuntimeAccounts", "fetchRuntimeEndpoints", "fetchRuntimeModels"],
   },
   {
     routePath: "/app/router",

@@ -377,10 +377,22 @@ describe("configured model mutation convergence", () => {
         loadController: () => Promise<string>;
       }) => Promise<unknown>
     )({
-      loadAccounts: async () => (events.push("accounts"), ["account"]),
-      loadEndpoints: async () => (events.push("endpoints"), ["endpoint"]),
-      loadModels: async () => (events.push("models"), ["model"]),
-      loadController: async () => (events.push("controller"), "controller"),
+      loadAccounts: async () => {
+        events.push("accounts");
+        return ["account"];
+      },
+      loadEndpoints: async () => {
+        events.push("endpoints");
+        return ["endpoint"];
+      },
+      loadModels: async () => {
+        events.push("models");
+        return ["model"];
+      },
+      loadController: async () => {
+        events.push("controller");
+        return "controller";
+      },
     });
 
     expect(events.sort()).toEqual(["accounts", "controller", "endpoints", "models"]);
