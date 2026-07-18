@@ -318,3 +318,12 @@
   - `@try-works/pi-role-model` now exposes runtime-owned `/role-model requests` and `/role-model explain latest` flows, refreshes effective taxonomy after setup and alias refresh, honors `ROLE_MODEL_ENDPOINT` for runtime inspection, and remains read-only with no runtime-process or credential ownership.
   - A late rebuilt-runtime benchmark proof found and repaired a real mixed-data router bug where measured quality shadowed benchmark task/role/group quality. Live rebuilt-runtime receipts now emit `BENCHMARK_TASK_SCORE`, `BENCHMARK_ROLE_SCORE`, and `BENCHMARK_GROUP_SCORE` when appropriate, while measured latency/throughput/reliability remain advisory non-quality inputs.
   - Agent-operated manual QA passed on rebuilt runtime `:3462`, and the rebuilt run-59 runtime was later restarted on `:3456` with Pi `0.80.2` for direct operator testing.
+
+- Run 77 (Catalog JSON Size and UI Freeze) completed on branch `recursive/77-catalog-json-size-and-ui-freeze` in worktree `D:/DEV/role-model/.worktrees/77-catalog-json-size-and-ui-freeze`:
+  - repaired the minute-scale server stall by making recent observations a projection-only indexed query and by removing rich request history and full candidate data from Models mutation completion
+  - made benchmark bootstrap progressive and bounded candidate/profile reads with matching SQLite indexes and bulk access
+  - introduced compact catalog wire format v2 with canonical hydration, reducing the artifact from 5,434,995 to 2,089,147 bytes
+  - hardened committed Chat Completions and Responses stream failures against duplicate-header writes and verified Kimi K3 provider model mapping
+  - all focused suites, validators, browser regressions, packaging validation, and rebuilt SEA runtime QA passed; disposable QA state was removed, and the later canonical-state credential drill stopped its isolated listener while intentionally preserving the authorized device-local credential update
+  - user-authorized closeout QA refreshed the device-local Kimi OAuth credential, proved persistence through a rebuilt-runtime restart, and passed real Pi requests for direct `moonshot/kimi-k3`, direct `chatgpt/gpt-5.4`, and `baseline.remote-only` with coherent telemetry, request-detail, router-decision, and Observe-page receipts
+  - the worktree branch is locally committed for review at closeout; no push or merge to `main` was requested

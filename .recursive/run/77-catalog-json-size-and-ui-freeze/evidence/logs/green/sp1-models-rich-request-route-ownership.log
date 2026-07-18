@@ -1,0 +1,12 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP1
+Timestamp: 2026-07-18T01:17:33Z
+Command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/startup-bootstrap-regression.test.ts -t "/app/models avoids"
+Result: PASS (1 passed, 10 skipped; 0.888s)
+
+GREEN verified: PASS
+- control-models.tsx no longer imports or calls fetchRuntimeRequests.
+- Startup marks broad request evidence unavailable without blocking model inventory.
+- Mutation paths no longer fetch rich history.
+
+Owning regression: startup-bootstrap-regression and control-models suites passed 27/27 before SP2.

@@ -1,0 +1,12 @@
+{
+  "originalPid": 32100,
+  "originalPidStopped": true,
+  "portClosedBeforeRestart": true,
+  "restartPid": 43768,
+  "port": 55726,
+  "healthStatus": 200,
+  "stateMode": "canonical-local",
+  "restartPidStopped": true,
+  "portClosedAfterVerification": true,
+  "canonicalStatePreserved": true
+}

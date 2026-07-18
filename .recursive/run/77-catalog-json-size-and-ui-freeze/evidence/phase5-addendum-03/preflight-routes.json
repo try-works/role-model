@@ -1,0 +1,26 @@
+[
+  {
+    "path": "/api/role-model/endpoints",
+    "status": 200,
+    "bytes": 1366,
+    "ms": 276
+  },
+  {
+    "path": "/api/role-model/router/candidates",
+    "status": 200,
+    "bytes": 2501,
+    "ms": 24
+  },
+  {
+    "path": "/v1/models",
+    "status": 200,
+    "bytes": 15514,
+    "ms": 14
+  },
+  {
+    "path": "/api/role-model/downstream/openai",
+    "status": 200,
+    "bytes": 33405,
+    "ms": 29
+  }
+]

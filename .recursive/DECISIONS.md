@@ -2228,3 +2228,10 @@
 - Configured remote membership is keyed by exact `{providerAccountId, modelId}`. SQLite `allowed_models_json` owns manual accounts; a matching YAML LiteLLM provider owns the full membership set for its reserved `*.litellm` account id.
 - Runtime endpoints, remote activation intent, role bindings, generated aliases, inventory, health, and UI cards are derived and must never add membership.
 - Eject and ordinary config mutation share serialized atomic YAML replacement. Explicit references block before mutation; successful eject returns authority/prune receipts; rollback failure is typed indeterminate; startup sanitation emits a durable reason-coded receipt.
+
+# Run 77 runtime responsiveness and compact catalog boundaries (2026-07-18)
+
+- Canonical mutation truth and essential route identity may gate UI completion; request history, full router candidates, profile enrichment, and benchmark history are advisory and must load independently or converge after the operator regains control.
+- SQLite summary/list paths must select dedicated projected columns through matching recency indexes. Large JSON observation blobs are detail-only and must never be parsed to reconstruct fields already persisted as columns.
+- The normalized catalog is stored and packaged as a versioned compact wire representation and is hydrated only through the catalog package boundary. Direct production or test JSON imports are prohibited so omitted defaults and provenance remain deterministic.
+- Once an HTTP streaming response is committed, bridge failures must terminate or end that response and preserve runtime health; they must not attempt a second JSON response or mutate headers. Provider-specific model rewriting remains explicit and regression-tested, including Moonshot Kimi K3 mapping.

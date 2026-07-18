@@ -1,0 +1,83 @@
+packages/pi-role-model/src\runtime-inspection.ts:176:  const payload = await fetchJson(`${endpoint}/api/role-model/requests`, timeoutMs, fetchImpl);
+packages/pi-role-model/src\runtime-inspection.ts:195:    `${endpoint}/api/role-model/requests/${encodeURIComponent(input.requestId)}`,
+role-model-router/packages\catalog\test\token-economics.test.ts:25:    "normalized-catalog.json",
+role-model-router/packages\catalog\test\index.test.ts:60:      "normalized-catalog.json",
+role-model-router/packages\catalog\test\index.test.ts:197:      "normalized-catalog.json",
+role-model-router/packages\catalog\test\index.test.ts:224:      "normalized-catalog.json",
+role-model-router/packages\catalog\test\index.test.ts:646:    expect(result.normalizedCatalogPath).toBe(path.join(outputDir, "normalized-catalog.json"));
+role-model-router/packages\catalog\test\index.test.ts:681:      "normalized-catalog.json",
+role-model-router/packages\adapter-execution\src\cli.ts:190:      "normalized-catalog.json",
+role-model-router/packages\catalog\src\index.ts:479:  const normalizedCatalogPath = path.join(options.outputDir, "normalized-catalog.json");
+role-model-router/packages\catalog\src\cli.ts:35:      path.join(trackedCatalogDataDir, "normalized-catalog.json"),
+role-model-router/packages\endpoint-registry\src\cli.ts:84:      "normalized-catalog.json",
+role-model-router/packages\provider-account\test\index.test.ts:84:        "normalized-catalog.json",
+role-model-router/packages\provider-account\test\index.test.ts:128:        "normalized-catalog.json",
+role-model-router/apps/runtime-host-bridge/src\validate-ui.ts:678:      `${baseUrl}/api/role-model/requests/${routedRequestId}`,
+role-model-router/apps/runtime-host-bridge/src\validate-ui.ts:708:      `${baseUrl}/api/role-model/requests/${mixedAliasRequestId}`,
+role-model-router/packages\protocol-routing\test\catalog-economics-routing.test.ts:21:    "normalized-catalog.json",
+role-model-router/apps/runtime-host-bridge/src\validate-packaging.ts:345:    `${input.baseUrl}/api/role-model/requests/latest-ids?limit=10`,
+role-model-router/apps/runtime-host-bridge/src\validate-host.ts:83:    const recentRequestsResponse = await waitForOk(`${hostBaseUrl}/api/role-model/requests`, 5000);
+role-model-router/apps/runtime-host-bridge/src\validate-host.ts:179:      `${hostBaseUrl}/api/role-model/requests/${runtimeRequestId}`,
+role-model-router/apps/runtime-ui/app\routes\startup-bootstrap-regression.test.ts:91:      expect(source).not.toContain("fetchRuntimeSnapshot(");
+role-model-router/apps/runtime-ui/app\routes\startup-bootstrap-regression.test.ts:96:        expect(source).not.toContain("fetchRuntimeRequests");
+role-model-router/apps/runtime-host-bridge/src\validate-catalog-economics.ts:379:          const recentResponse = await fetch(`${baseUrl}/api/role-model/requests`, {
+role-model-router/apps/runtime-host-bridge/src\validate-catalog-economics.ts:399:              `${baseUrl}/api/role-model/requests/${encodeURIComponent(routedRequestId)}`,
+role-model-router/packages\sqlite-memory\test\index.test.ts:116:        "normalized-catalog.json",
+role-model-router/packages\protocol-routing\src\cli.ts:73:      "normalized-catalog.json",
+role-model-router/packages\sqlite-memory\src\cli.ts:58:      "normalized-catalog.json",
+role-model-router/apps/runtime-ui/app\routes\router.tsx:24:  fetchRouterCandidates,
+role-model-router/apps/runtime-ui/app\routes\router.tsx:41:      fetchRouterCandidates(),
+role-model-router/apps/runtime-host-bridge/src\package-sea.ts:97:    sourceRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
+role-model-router/apps/runtime-host-bridge/src\package-sea.ts:98:    destinationRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
+role-model-router/apps/runtime-ui/app\routes\router-candidates.tsx:21:import { type RouterCandidate, fetchRouterCandidates } from "../lib/runtime-api";
+role-model-router/apps/runtime-ui/app\routes\router-candidates.tsx:83:    void fetchRouterCandidates()
+role-model-router/apps/runtime-ui/app\routes\control-benchmark.tsx:57:  fetchRouterCandidates,
+role-model-router/apps/runtime-ui/app\routes\control-benchmark.tsx:604:      fetchRouterCandidates(),
+role-model-router/apps/runtime-ui/app\routes\control-benchmark.tsx:616:      loadCandidates: fetchRouterCandidates,
+role-model-router/apps/runtime-ui/app\routes\control-routing-strategy.tsx:34:  fetchRouterCandidates,
+role-model-router/apps/runtime-ui/app\routes\control-routing-strategy.tsx:209:        fetchRouterCandidates(),
+role-model-router/apps/runtime-host-bridge/src\index.ts:13999:    if (request.method === "GET" && url.pathname === "/api/role-model/telemetry/summary") {
+role-model-router/apps/runtime-host-bridge/src\index.ts:14026:    if (request.method === "POST" && url.pathname === "/api/role-model/telemetry/query") {
+role-model-router/apps/runtime-host-bridge/src\index.ts:14880:    if (request.method === "GET" && url.pathname === "/api/role-model/requests") {
+role-model-router/apps/runtime-host-bridge/src\index.ts:14889:    if (request.method === "GET" && url.pathname === "/api/role-model/requests/latest-ids") {
+role-model-router/apps/runtime-host-bridge/src\index.ts:14899:    if (request.method === "GET" && url.pathname.startsWith("/api/role-model/requests/")) {
+role-model-router/apps/runtime-host-bridge/src\index.ts:14904:      const requestId = decodeURIComponent(url.pathname.slice("/api/role-model/requests/".length));
+role-model-router/apps/runtime-host-bridge/src\index.ts:15419:      "normalized-catalog.json",
+role-model-router/apps/runtime-ui/app\routes\control-models.tsx:42:  fetchRouterCandidates,
+role-model-router/apps/runtime-ui/app\routes\control-models.tsx:444:            fetchRouterCandidates(),
+role-model-router/apps/runtime-ui/app\lib\design-system.test.ts:881:    expect(routerRouteSource).toContain("fetchRouterCandidates");
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:21:  fetchRouterCandidates,
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:29:  fetchRuntimeSnapshot,
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:90:describe("fetchRuntimeSnapshot", () => {
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:139:        case "/api/role-model/requests":
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:189:    await expect(fetchRuntimeSnapshot(fetcher)).resolves.toEqual({
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:302:        case "/api/role-model/requests":
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:312:          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:339:    expect(requestedTargets).not.toContain("/api/role-model/requests");
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:384:          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:397:describe("fetchRuntimeRequests", () => {
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:399:    const fetchRuntimeRequests = (
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:401:        fetchRuntimeRequests?: unknown;
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:403:    ).fetchRuntimeRequests;
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:404:    expect(fetchRuntimeRequests).toBeTypeOf("function");
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:405:    if (typeof fetchRuntimeRequests !== "function") {
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:418:        fetchRuntimeRequests as (
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:419:          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:423:    expect(requestedTargets).toEqual(["/api/role-model/requests"]);
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:450:          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:454:    expect(requestedTargets).toEqual(["/api/role-model/requests/latest-ids?limit=10"]);
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:532:        case "/api/role-model/requests":
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:601:        case "/api/role-model/requests":
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:749:        case "/api/role-model/requests/req-001":
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:1167:    await expect(fetchRouterCandidates(fetcher)).resolves.toEqual([
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:1285:        case "/api/role-model/telemetry/summary":
+role-model-router/apps/runtime-ui/app\lib\runtime-api.test.ts:1472:      expect(url).toBe("/api/role-model/telemetry/query");
+role-model-router/apps/runtime-ui/app\lib\runtime-api.ts:1327:export async function fetchRuntimeRequests(
+role-model-router/apps/runtime-ui/app\lib\runtime-api.ts:1330:  return fetchJson<RuntimeRequestListItem[]>("/api/role-model/requests", fetcher);
+role-model-router/apps/runtime-ui/app\lib\runtime-api.ts:1344:export async function fetchRuntimeSnapshot(
+role-model-router/apps/runtime-ui/app\lib\runtime-api.ts:1355:      fetchRuntimeRequests(fetcher),
+role-model-router/apps/runtime-ui/app\lib\runtime-api.ts:1433:    `/api/role-model/requests/latest-ids?limit=${limit}`,
+role-model-router/apps/runtime-ui/app\lib\runtime-api.ts:1491:    fetchJson<RuntimeTelemetrySummary>("/api/role-model/telemetry/summary", fetcher),
+role-model-router/apps/runtime-ui/app\lib\runtime-api.ts:1524:    "/api/role-model/telemetry/query",
+role-model-router/apps/runtime-ui/app\lib\runtime-api.ts:1624:    `/api/role-model/requests/${requestId}`,
+role-model-router/apps/runtime-ui/app\lib\runtime-api.ts:1650:export async function fetchRouterCandidates(

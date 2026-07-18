@@ -1,0 +1,243 @@
+{
+  "generatedAt": "2026-07-18T03:36:14.261Z",
+  "routeMatrix": [
+    {
+      "path": "/healthz",
+      "status": 200,
+      "bytes": 1865,
+      "elapsedMs": 78.225
+    },
+    {
+      "path": "/api/role-model/runtime/summary",
+      "status": 200,
+      "bytes": 4779,
+      "elapsedMs": 49.218
+    },
+    {
+      "path": "/api/role-model/providers",
+      "status": 200,
+      "bytes": 657151,
+      "elapsedMs": 257.184
+    },
+    {
+      "path": "/api/role-model/accounts",
+      "status": 200,
+      "bytes": 1352,
+      "elapsedMs": 258.77
+    },
+    {
+      "path": "/api/role-model/endpoints",
+      "status": 200,
+      "bytes": 1366,
+      "elapsedMs": 261.92
+    },
+    {
+      "path": "/api/role-model/models",
+      "status": 200,
+      "bytes": 826,
+      "elapsedMs": 264.969
+    },
+    {
+      "path": "/api/role-model/router/summary",
+      "status": 200,
+      "bytes": 7206,
+      "elapsedMs": 272.088
+    },
+    {
+      "path": "/api/role-model/router/candidates",
+      "status": 200,
+      "bytes": 4047,
+      "elapsedMs": 347.135
+    },
+    {
+      "path": "/api/role-model/benchmark/suite",
+      "status": 200,
+      "bytes": 77271,
+      "elapsedMs": 292.824
+    },
+    {
+      "path": "/api/role-model/benchmark/summary",
+      "status": 200,
+      "bytes": 213,
+      "elapsedMs": 365.988
+    },
+    {
+      "path": "/api/role-model/benchmark/summaries/by-mode",
+      "status": 200,
+      "bytes": 443,
+      "elapsedMs": 363.787
+    },
+    {
+      "path": "/api/role-model/benchmark/runs",
+      "status": 200,
+      "bytes": 3,
+      "elapsedMs": 364.51
+    },
+    {
+      "path": "/api/role-model/telemetry/summary",
+      "status": 200,
+      "bytes": 921,
+      "elapsedMs": 303.017
+    },
+    {
+      "path": "/api/role-model/telemetry/rows",
+      "status": 200,
+      "bytes": 4009,
+      "elapsedMs": 316.494
+    },
+    {
+      "path": "/api/role-model/telemetry/requests?limit=50",
+      "status": 200,
+      "bytes": 102090,
+      "elapsedMs": 323.989
+    },
+    {
+      "path": "/api/role-model/requests",
+      "status": 200,
+      "bytes": 5387,
+      "elapsedMs": 327.274
+    },
+    {
+      "path": "/api/role-model/requests/latest-ids?limit=10",
+      "status": 200,
+      "bytes": 432,
+      "elapsedMs": 331.594
+    },
+    {
+      "path": "/api/role-model/downstream/openai",
+      "status": 200,
+      "bytes": 32865,
+      "elapsedMs": 337.323
+    },
+    {
+      "path": "/v1/models",
+      "status": 200,
+      "bytes": 15514,
+      "elapsedMs": 342.844
+    }
+  ],
+  "telemetrySummary": {
+    "requestCount": 28,
+    "successCount": 3,
+    "failureCount": 25,
+    "totalTokens": 1337
+  },
+  "piRequestReceipts": [
+    {
+      "requestId": "req-0b7dec90-c660-472a-8884-c32c55322927",
+      "requestedModelId": "baseline.remote-only",
+      "selectedModelId": "deepseek/deepseek-v4-pro",
+      "endpointId": "deepseek.run77.phase5.addendum03.global.deepseek-v4-pro",
+      "providerId": "deepseek",
+      "statusFamily": "success",
+      "statusCode": 200,
+      "inputTokens": 411,
+      "outputTokens": 34,
+      "latencyMs": 690,
+      "requestDetailBytes": 33849,
+      "routerDecisionBytes": 45294,
+      "aliasId": "baseline.remote-only",
+      "aliasResolvedModelIds": [
+        "deepseek/deepseek-v4-pro",
+        "moonshot/kimi-k3"
+      ],
+      "rewriteApplied": true,
+      "rewrittenModelId": "deepseek/deepseek-v4-pro"
+    },
+    {
+      "requestId": "req-1bb4d521-6b2b-456a-991b-c583e1eea4e8",
+      "requestedModelId": "difficulty.remote-only",
+      "selectedModelId": "deepseek/deepseek-v4-pro",
+      "endpointId": "deepseek.run77.phase5.addendum03.global.deepseek-v4-pro",
+      "providerId": "deepseek",
+      "statusFamily": "success",
+      "statusCode": 200,
+      "inputTokens": 413,
+      "outputTokens": 37,
+      "latencyMs": 231,
+      "requestDetailBytes": 38183,
+      "routerDecisionBytes": 51657,
+      "aliasId": "difficulty.remote-only",
+      "aliasResolvedModelIds": [
+        "deepseek/deepseek-v4-pro",
+        "moonshot/kimi-k3"
+      ],
+      "rewriteApplied": true,
+      "rewrittenModelId": "deepseek/deepseek-v4-pro"
+    },
+    {
+      "requestId": "req-e82c0358-f856-4769-8aec-26f9d8872127",
+      "requestedModelId": "deepseek/deepseek-v4-pro",
+      "selectedModelId": "deepseek/deepseek-v4-pro",
+      "endpointId": "deepseek.run77.phase5.addendum03.global.deepseek-v4-pro",
+      "providerId": "deepseek",
+      "statusFamily": "success",
+      "statusCode": 200,
+      "inputTokens": 410,
+      "outputTokens": 32,
+      "latencyMs": 224,
+      "requestDetailBytes": 35147,
+      "routerDecisionBytes": 46809,
+      "aliasId": null,
+      "aliasResolvedModelIds": [],
+      "rewriteApplied": false,
+      "rewrittenModelId": "deepseek/deepseek-v4-pro"
+    },
+    {
+      "requestId": "req-9f44928d-4a14-4a18-ac1c-597d393d4ee8",
+      "requestedModelId": "moonshot/kimi-k3",
+      "selectedModelId": null,
+      "endpointId": "routing.failed.pre-execution",
+      "providerId": null,
+      "statusFamily": "failure",
+      "statusCode": 400,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "latencyMs": 594,
+      "requestDetailBytes": 5661,
+      "routerDecisionBytes": 6211,
+      "aliasId": null,
+      "aliasResolvedModelIds": [],
+      "rewriteApplied": false,
+      "rewrittenModelId": null
+    }
+  ],
+  "endpointProfile": {
+    "path": "/api/role-model/endpoints/deepseek.run77.phase5.addendum03.global.deepseek-v4-pro/profile",
+    "status": 200,
+    "bytes": 3427,
+    "elapsedMs": 27.767
+  },
+  "analytics": {
+    "status": 200,
+    "bytes": 8204,
+    "elapsedMs": 15.541,
+    "totals": {
+      "requestCount": 28,
+      "successCount": 3,
+      "failureCount": 25,
+      "totalTokens": 1337,
+      "effectiveCostUsd": 0.001659,
+      "averageLatencyMs": 115
+    },
+    "metadata": {
+      "scannedRowCount": 28,
+      "matchedRowCount": 28,
+      "aggregationRowCount": 28,
+      "truncated": false,
+      "truncationReason": null,
+      "generatedAtMs": 1784345774252,
+      "taxonomyCoverage": {
+        "matchedRowCount": 28,
+        "richerTaxonomyRowCount": 3,
+        "legacyRowCount": 25,
+        "coverageRate": 0.107143,
+        "backfillPerformed": false
+      }
+    }
+  },
+  "telemetryStream": {
+    "status": 200,
+    "contentType": "text/event-stream; charset=utf-8"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "a2c05d623241fda11cc200ff1ee118124476a3246768511a077744c899c9eccb",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\77-catalog-json-size-and-ui-freeze\\.recursive\\run\\77-catalog-json-size-and-ui-freeze\\01-as-is.md",
+  "locked_at": "2026-07-18T00:12:03Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "047a803d6847af511f434e3eb4f5d9df07b2cc763712c218b361024c0ce0ce8f",
+    "00-worktree.md": "34bfa7d67ff7058a3c6ce472761997e88abd77f1e60a5b6da02033f70e8bb27e"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "e0ca103b7fbba6303b1b9421e3967edb13cfc4f14c9460e136817e2900dfc432"
+}

@@ -1,0 +1,11 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP5 (incident-priority execution after SP3 index gate)
+TDD Mode: strict
+Timestamp: 2026-07-18T01:25:20Z
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/index.test.ts -t "terminates a committed chat stream"
+Exit code: 1
+
+RED verified: PASS
+Expected: after one real SSE chunk commits headers and execution rejects, the client body settles within 750ms and the server remains usable.
+Actual: terminalState was timeout. The inner chat catch attempted writeJson after commit, raised ERR_HTTP_HEADERS_SENT, the outer guard declined a second write, and the committed response remained open.
+Vitest summary: 1 failed, 202 skipped; duration 6.78s.

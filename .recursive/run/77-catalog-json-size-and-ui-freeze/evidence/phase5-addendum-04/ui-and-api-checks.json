@@ -1,0 +1,26 @@
+[
+  {
+    "path": "/health",
+    "status": 200,
+    "bytes": 2,
+    "contentType": "text/plain; charset=utf-8"
+  },
+  {
+    "path": "/api/role-model/telemetry/requests?limit=3",
+    "status": 200,
+    "bytes": 13320,
+    "contentType": "application/json"
+  },
+  {
+    "path": "/app/observe",
+    "status": 200,
+    "bytes": 4384,
+    "contentType": "text/html; charset=utf-8"
+  },
+  {
+    "path": "/app/observe/requests/req-22e4925f-1a81-4b46-9d65-de9a207539b7",
+    "status": 200,
+    "bytes": 4384,
+    "contentType": "text/html; charset=utf-8"
+  }
+]

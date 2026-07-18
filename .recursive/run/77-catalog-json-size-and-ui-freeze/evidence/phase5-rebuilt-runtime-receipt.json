@@ -1,0 +1,84 @@
+{
+  "executionMode": "agent-operated",
+  "executable": "role-model-router/dist/release/win32-x64/role-model-runtime.exe",
+  "sha256": "b4c1592881622abe69e3847e098638f2fdab34ae68d2cd5aee28fde6692c6fb8",
+  "version": "0.0.6-22-g7094a252-dirty",
+  "commit": "7094a252b7cab222f5ff12d1753e77cef83d6a22",
+  "buildDate": "2026-07-18T02:19:14.181Z",
+  "host": "127.0.0.1",
+  "port": 55724,
+  "scopeId": "run77-phase5",
+  "stateIsolation": "Disposable Windows temp root; no live runtime state or port used.",
+  "startup": {
+    "healthStatus": "healthy",
+    "bootstrapStatus": "ready",
+    "catalogBytes": 2089147,
+    "stdout": "evidence/phase5-runtime.stdout.log",
+    "stderr": "evidence/phase5-runtime.stderr.log"
+  },
+  "browser": {
+    "modelsEssentialMs": 391,
+    "candidatePayloadBytes": 1221,
+    "mutationStatus": 200,
+    "mutationResponseMs": 100,
+    "buttonPendingMs": 139,
+    "convergenceAfterResponseMs": 39,
+    "mutationPaths": ["/api/role-model/accounts"],
+    "richRequestRouteObserved": false,
+    "healthStatus": 200,
+    "healthMs": 139,
+    "summaryStatus": 200,
+    "summaryMs": 138,
+    "benchmarkEssentialMs": 324,
+    "longTasksMs": [101]
+  },
+  "liveApi": {
+    "requestListP50Ms": 4.851,
+    "requestListP95Ms": 6.333,
+    "requestListMaxMs": 6.413,
+    "concurrentHealthP50Ms": 5.012,
+    "concurrentHealthP95Ms": 6.355,
+    "concurrentHealthMaxMs": 6.868,
+    "sampleCount": 30
+  },
+  "committedStream": {
+    "method": "Disposable local Kimi K3-shaped upstream emitted one valid SSE content delta, then an invalid/truncated HTTP stream terminator.",
+    "status": 200,
+    "terminatedMs": 85.804,
+    "partialDeltaObserved": true,
+    "clientHung": false,
+    "selectedEndpointId": "moonshot.run77.streamfail.global.kimi-k3",
+    "selectedModelId": "moonshot/kimi-k3",
+    "upstreamWireModel": "k3",
+    "postFailureHealthStatus": 200,
+    "postFailureHealthMs": 1.055,
+    "postFailureSummaryStatus": 200,
+    "postFailureSummaryMs": 19.642,
+    "headerErrorLogMatches": 0,
+    "note": "The provider parser normalizes a truncated upstream SSE EOF to a bounded partial success; the owning real-server bridge tests separately inject an execution throw after downstream commit and verify both Chat Completions and Responses termination."
+  },
+  "malformedModelNegativeControl": {
+    "modelId": "/proc/1513/fd/63",
+    "status": 400,
+    "elapsedMs": 16.6,
+    "postRequestHealthStatus": 200
+  },
+  "safeEject": {
+    "accountManagedRemoval": "200 success, removedAccount=true, pruned one binding/endpoint/activation",
+    "repeatRemoval": "200 success, alreadyAbsent=true, authority=absent"
+  },
+  "packaging": {
+    "retiredImportMatches": 0,
+    "assetFileCount": 60,
+    "cleanPackagingValidator": "PASS"
+  },
+  "kimiK3LiveSuccess": {
+    "status": "blocked",
+    "reason": "No isolated real Kimi OAuth/API credential was available; a disposable local K3-compatible upstream and deterministic provider/host tests were used without touching user credentials."
+  },
+  "cleanup": {
+    "processExists": false,
+    "portOpen": false,
+    "phaseRootsRemaining": 0
+  }
+}

@@ -4,8 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { NormalizedCatalog } from "@role-model-router/catalog";
-import { deriveLiteLLMProviders, loadLiteLLMModelPrices } from "@role-model-router/catalog";
+import {
+  type NormalizedCatalog,
+  deriveLiteLLMProviders,
+  hydrateNormalizedCatalog,
+  loadLiteLLMModelPrices,
+} from "@role-model-router/catalog";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 import { describe, expect, test } from "vitest";
 
@@ -23,9 +27,9 @@ const repoRoot = path.resolve(testDir, "..", "..", "..", "..");
 const catalogRoot = path.join(repoRoot, "role-model-router", "packages", "catalog");
 
 function loadCatalog(): NormalizedCatalog {
-  return JSON.parse(
-    readFileSync(path.join(catalogRoot, "data", "normalized-catalog.json"), "utf8"),
-  ) as NormalizedCatalog;
+  return hydrateNormalizedCatalog(
+    JSON.parse(readFileSync(path.join(catalogRoot, "data", "normalized-catalog.json"), "utf8")),
+  );
 }
 
 function buildUiEquivalentAccount(providerId: string, providerKind: string) {

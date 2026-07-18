@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
+import { readNormalizedCatalogFile } from "@role-model-router/catalog";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 import { runRuntimeAdapterValidation } from "../../adapter-execution/src/cli.ts";
 import { createRuntimeObservationBundle } from "../../runtime-observability/src/index.ts";
@@ -98,13 +99,22 @@ describe("initializeSqliteMemory", () => {
       { migration_id: "run06-v1-initial-schema" },
       { migration_id: "run62-observation-metadata-backfill-v1" },
       { migration_id: "run62-telemetry-metadata-backfill-v1" },
+      { migration_id: "run77-observed-profile-indexes-v1" },
+      { migration_id: "run77-recent-observations-index-v1" },
     ]);
   });
 
   test("persists validated provider accounts by credential reference without storing raw secrets", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
-    const catalog = await readJson(
-      "role-model-router/packages/catalog/data/normalized-catalog.json",
+    const catalog = await readNormalizedCatalogFile(
+      path.join(
+        repoRoot,
+        "role-model-router",
+        "packages",
+        "catalog",
+        "data",
+        "normalized-catalog.json",
+      ),
     );
     const fixture = await readJson<{ accounts: unknown[] }>(
       "testdata/router-runtime/fixtures/provider-accounts.json",
@@ -1072,6 +1082,68 @@ describe("initializeSqliteMemory", () => {
     });
   });
 
+  describe("listRecentRuntimeObservations", () => {
+    test("uses the projected client request id without reading the observation JSON blob", async () => {
+      const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+      const initialized = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "workspace-dev-recent-observation-projection",
+      });
+      const database = new DatabaseSync(initialized.databasePath);
+      database
+        .prepare(
+          "INSERT INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          "req-projected",
+          "decision-projected",
+          "endpoint-projected",
+          "conversation-projected",
+          1000,
+          "client-projected",
+          "not-json-and-intentionally-large".repeat(100_000),
+        );
+      database.close();
+
+      expect(
+        sqliteMemory.listRecentRuntimeObservations({
+          databasePath: initialized.databasePath,
+          limit: 1,
+        }),
+      ).toEqual([
+        {
+          requestId: "req-projected",
+          clientRequestId: "client-projected",
+          routingDecisionId: "decision-projected",
+          endpointId: "endpoint-projected",
+          createdAtMs: 1000,
+        },
+      ]);
+    });
+
+    test("uses the covering recency index for ordered summaries", async () => {
+      const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+      const initialized = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "workspace-dev-recent-observation-query-plan",
+      });
+      const database = new DatabaseSync(initialized.databasePath);
+      const plan = database
+        .prepare(
+          "EXPLAIN QUERY PLAN SELECT request_id, client_request_id, routing_decision_id, endpoint_id, created_at_ms FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
+        )
+        .all(20) as Array<{ detail: string }>;
+      database.close();
+
+      expect(plan.map((row) => row.detail).join("\n")).toContain(
+        "runtime_observations_created_at_idx",
+      );
+      expect(plan.map((row) => row.detail).join("\n")).not.toContain(
+        "USE TEMP B-TREE FOR ORDER BY",
+      );
+    });
+  });
+
   describe("listRecentRuntimeRequestIds", () => {
     test("returns latest request ids in recency order without parsing observation_json", async () => {
       expect(
@@ -1227,6 +1299,47 @@ describe("initializeSqliteMemory", () => {
         }),
       ).toEqual([]);
     });
+  });
+
+  test("uses matching indexes for endpoint profile and sample ordering", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-observed-profile-query-plans",
+    });
+    const database = new DatabaseSync(initialized.databasePath);
+    const cases = [
+      {
+        sql: "EXPLAIN QUERY PLAN SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+        params: ["endpoint-1"],
+        indexName: "observed_performance_samples_endpoint_time_idx",
+      },
+      {
+        sql: "EXPLAIN QUERY PLAN SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+        params: ["endpoint-1", "hard"],
+        indexName: "observed_performance_samples_difficulty_time_idx",
+      },
+      {
+        sql: "EXPLAIN QUERY PLAN SELECT profile_json FROM observed_profile_snapshots WHERE endpoint_id = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+        params: ["endpoint-1"],
+        indexName: "observed_profile_snapshots_endpoint_time_idx",
+      },
+      {
+        sql: "EXPLAIN QUERY PLAN SELECT profile_json FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+        params: ["endpoint-1", "hard"],
+        indexName: "observed_profile_snapshots_difficulty_time_idx",
+      },
+    ] as const;
+
+    for (const queryCase of cases) {
+      const plan = database.prepare(queryCase.sql).all(...queryCase.params) as Array<{
+        detail: string;
+      }>;
+      const detail = plan.map((row) => row.detail).join("\n");
+      expect(detail).toContain(queryCase.indexName);
+      expect(detail).not.toContain("USE TEMP B-TREE FOR ORDER BY");
+    }
+    database.close();
   });
 
   test("stores and reads conversation-level difficulty classification cache entries", async () => {

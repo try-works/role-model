@@ -1,0 +1,46 @@
+[
+  {
+    "caseId": "alias-baseline",
+    "model": "baseline.remote-only",
+    "marker": "RUN77_ALIAS_BASELINE_OK",
+    "markerObserved": true,
+    "elapsedMs": 5724.394,
+    "exited": true,
+    "exitCode": 0,
+    "stdoutFile": "alias-baseline.stdout.log",
+    "stderrFile": "alias-baseline.stderr.log"
+  },
+  {
+    "caseId": "alias-difficulty",
+    "model": "difficulty.remote-only",
+    "marker": "RUN77_ALIAS_DIFFICULTY_OK",
+    "markerObserved": true,
+    "elapsedMs": 5140.242,
+    "exited": true,
+    "exitCode": 0,
+    "stdoutFile": "alias-difficulty.stdout.log",
+    "stderrFile": "alias-difficulty.stderr.log"
+  },
+  {
+    "caseId": "direct-deepseek",
+    "model": "deepseek/deepseek-v4-pro",
+    "marker": "RUN77_DIRECT_DEEPSEEK_OK",
+    "markerObserved": true,
+    "elapsedMs": 5279.219,
+    "exited": true,
+    "exitCode": 0,
+    "stdoutFile": "direct-deepseek.stdout.log",
+    "stderrFile": "direct-deepseek.stderr.log"
+  },
+  {
+    "caseId": "direct-kimi-k3",
+    "model": "moonshot/kimi-k3",
+    "marker": "RUN77_DIRECT_KIMI_K3_OK",
+    "markerObserved": false,
+    "elapsedMs": 4662.086,
+    "exited": true,
+    "exitCode": 1,
+    "stdoutFile": "direct-kimi-k3.stdout.log",
+    "stderrFile": "direct-kimi-k3.stderr.log"
+  }
+]

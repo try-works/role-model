@@ -323,6 +323,86 @@ describe("startDeferredConfiguredModelsBootstrap", () => {
   });
 });
 
+describe("configured model mutation convergence", () => {
+  test("converges Save bindings from the returned account without advisory reloads", async () => {
+    const convergeSavedRuntimeAccount = (
+      controlModelsModule as { convergeSavedRuntimeAccount?: unknown }
+    ).convergeSavedRuntimeAccount;
+    expect(convergeSavedRuntimeAccount).toBeTypeOf("function");
+    if (typeof convergeSavedRuntimeAccount !== "function") {
+      return;
+    }
+
+    const events: string[] = [];
+    const currentSnapshot = {
+      accounts: [account],
+      endpoints: [{ endpointId: "endpoint-1" }],
+      models: [{ modelId: "openai/gpt-4.1-mini-fast" }],
+    };
+    const updatedAccount = { ...account, healthStatus: "degraded" };
+    const result = await (
+      convergeSavedRuntimeAccount as (input: {
+        currentSnapshot: typeof currentSnapshot;
+        mutate: () => Promise<typeof updatedAccount>;
+      }) => Promise<typeof currentSnapshot>
+    )({
+      currentSnapshot,
+      mutate: async () => {
+        events.push("mutation");
+        return updatedAccount;
+      },
+    });
+
+    expect(events).toEqual(["mutation"]);
+    expect(result.accounts).toEqual([updatedAccount]);
+    expect(result.endpoints).toBe(currentSnapshot.endpoints);
+    expect(result.models).toBe(currentSnapshot.models);
+  });
+
+  test("reloads only canonical inventory surfaces after an eject receipt", async () => {
+    const loadConfiguredModelsMutationState = (
+      controlModelsModule as { loadConfiguredModelsMutationState?: unknown }
+    ).loadConfiguredModelsMutationState;
+    expect(loadConfiguredModelsMutationState).toBeTypeOf("function");
+    if (typeof loadConfiguredModelsMutationState !== "function") {
+      return;
+    }
+
+    const events: string[] = [];
+    const result = await (
+      loadConfiguredModelsMutationState as (input: {
+        loadAccounts: () => Promise<readonly string[]>;
+        loadEndpoints: () => Promise<readonly string[]>;
+        loadModels: () => Promise<readonly string[]>;
+        loadController: () => Promise<string>;
+      }) => Promise<unknown>
+    )({
+      loadAccounts: async () => {
+        events.push("accounts");
+        return ["account"];
+      },
+      loadEndpoints: async () => {
+        events.push("endpoints");
+        return ["endpoint"];
+      },
+      loadModels: async () => {
+        events.push("models");
+        return ["model"];
+      },
+      loadController: async () => {
+        events.push("controller");
+        return "controller";
+      },
+    });
+
+    expect(events.sort()).toEqual(["accounts", "controller", "endpoints", "models"]);
+    expect(result).toEqual({
+      snapshot: { accounts: ["account"], endpoints: ["endpoint"], models: ["model"] },
+      controller: "controller",
+    });
+  });
+});
+
 describe("describeConfiguredModelRequestEvidence", () => {
   test("keeps request-evidence copy truthful while deferred request history is pending or unavailable", () => {
     const describeConfiguredModelRequestEvidence = (

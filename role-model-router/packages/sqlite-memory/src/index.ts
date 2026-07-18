@@ -13,6 +13,8 @@ import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
 const OBSERVATION_METADATA_BACKFILL_MIGRATION_ID = "run62-observation-metadata-backfill-v1";
 const TELEMETRY_METADATA_BACKFILL_MIGRATION_ID = "run62-telemetry-metadata-backfill-v1";
+const RECENT_OBSERVATIONS_INDEX_MIGRATION_ID = "run77-recent-observations-index-v1";
+const OBSERVED_PROFILE_INDEXES_MIGRATION_ID = "run77-observed-profile-indexes-v1";
 const CURRENT_SCHEMA_VERSION = 1;
 const COST_CALCULATION_VERSION = "run49.v1";
 const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
@@ -1257,6 +1259,23 @@ function initializeSchema(database: DatabaseSync): void {
           OR taxonomy_role_id IS NULL
           OR taxonomy_task_type IS NULL`,
       ),
+  );
+  runOnceMigration(database, RECENT_OBSERVATIONS_INDEX_MIGRATION_ID, true, () =>
+    database.exec(
+      "CREATE INDEX IF NOT EXISTS runtime_observations_created_at_idx ON runtime_observations (created_at_ms DESC, request_id DESC)",
+    ),
+  );
+  runOnceMigration(database, OBSERVED_PROFILE_INDEXES_MIGRATION_ID, true, () =>
+    database.exec(`
+      CREATE INDEX IF NOT EXISTS observed_performance_samples_endpoint_time_idx
+        ON observed_performance_samples (endpoint_id, timestamp_ms ASC, sample_id ASC);
+      CREATE INDEX IF NOT EXISTS observed_performance_samples_difficulty_time_idx
+        ON observed_performance_samples_by_difficulty (endpoint_id, difficulty_bucket, timestamp_ms ASC, sample_id ASC);
+      CREATE INDEX IF NOT EXISTS observed_profile_snapshots_endpoint_time_idx
+        ON observed_profile_snapshots (endpoint_id, measured_at_ms DESC, snapshot_id DESC);
+      CREATE INDEX IF NOT EXISTS observed_profile_snapshots_difficulty_time_idx
+        ON observed_profile_snapshots_by_difficulty (endpoint_id, difficulty_bucket, measured_at_ms DESC, snapshot_id DESC);
+    `),
   );
   const runtimeTelemetryColumns = new Set(
     (
@@ -4025,15 +4044,28 @@ function evaluateAdvisoryMaxDifficultyProfile(
 export function readAdvisoryMaxDifficultyRecommendation(
   input: ReadAdvisoryMaxDifficultyRecommendationInput,
 ): AdvisoryMaxDifficultyRecommendation {
-  const evaluations = Object.fromEntries(
-    DIFFICULTY_BUCKETS.map((difficultyBucket) => {
-      const profile = readLatestObservedProfile({
+  const profiles = Object.fromEntries(
+    DIFFICULTY_BUCKETS.map((difficultyBucket) => [
+      difficultyBucket,
+      readLatestObservedProfile({
         databasePath: input.databasePath,
         endpointId: input.endpointId,
         difficultyBucket,
-      });
-      return [difficultyBucket, evaluateAdvisoryMaxDifficultyProfile(profile, input.thresholds)];
-    }),
+      }),
+    ]),
+  ) as Record<(typeof DIFFICULTY_BUCKETS)[number], ObservedPerformanceProfile | null>;
+  return buildAdvisoryMaxDifficultyRecommendation({ profiles, thresholds: input.thresholds });
+}
+
+export function buildAdvisoryMaxDifficultyRecommendation(input: {
+  readonly profiles: Record<(typeof DIFFICULTY_BUCKETS)[number], ObservedPerformanceProfile | null>;
+  readonly thresholds: AdvisoryMaxDifficultyThresholds;
+}): AdvisoryMaxDifficultyRecommendation {
+  const evaluations = Object.fromEntries(
+    DIFFICULTY_BUCKETS.map((difficultyBucket) => [
+      difficultyBucket,
+      evaluateAdvisoryMaxDifficultyProfile(input.profiles[difficultyBucket], input.thresholds),
+    ]),
   ) as AdvisoryMaxDifficultyRecommendation["evaluations"];
 
   let recommendedMaxDifficulty: AdvisoryMaxDifficultyRecommendation["recommendedMaxDifficulty"] =
@@ -4084,25 +4116,20 @@ export function listRecentRuntimeObservations(
   const database = openSqliteDatabase(input.databasePath);
   const rows = database
     .prepare(
-      "SELECT request_id, routing_decision_id, endpoint_id, created_at_ms, observation_json FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
+      "SELECT request_id, client_request_id, routing_decision_id, endpoint_id, created_at_ms FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
     )
     .all(input.limit ?? 20) as Array<{
     request_id: string;
     routing_decision_id: string;
     endpoint_id: string;
     created_at_ms: number;
-    observation_json: string;
+    client_request_id: string | null;
   }>;
   database.close();
 
   return rows.map((row) => ({
     requestId: row.request_id,
-    clientRequestId:
-      (
-        JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle & {
-          clientRequestId?: string | null;
-        }
-      ).clientRequestId ?? null,
+    clientRequestId: row.client_request_id,
     routingDecisionId: row.routing_decision_id,
     endpointId: row.endpoint_id,
     createdAtMs: row.created_at_ms,

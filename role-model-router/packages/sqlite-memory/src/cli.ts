@@ -3,8 +3,11 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { NormalizedCatalog } from "@role-model-router/catalog";
-import { deriveLiteLLMProviders, loadLiteLLMModelPrices } from "@role-model-router/catalog";
+import {
+  deriveLiteLLMProviders,
+  loadLiteLLMModelPrices,
+  readNormalizedCatalogFile,
+} from "@role-model-router/catalog";
 import {
   type ProviderAccountDiagnostic,
   validateProviderAccounts,
@@ -45,7 +48,7 @@ export async function runRuntimeStateValidation(
 ): Promise<RuntimeStateValidationResult> {
   const fixtureRoot =
     options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
-  const normalizedCatalog = await readJson<NormalizedCatalog>(
+  const normalizedCatalog = await readNormalizedCatalogFile(
     path.join(
       options.repoRoot,
       "role-model-router",

@@ -15,12 +15,7 @@ const p0BootstrapExpectations = [
   {
     routePath: "/app/models",
     fileName: "control-models.tsx",
-    expectedHelpers: [
-      "fetchRuntimeAccounts",
-      "fetchRuntimeEndpoints",
-      "fetchRuntimeModels",
-      "fetchRuntimeRequests",
-    ],
+    expectedHelpers: ["fetchRuntimeAccounts", "fetchRuntimeEndpoints", "fetchRuntimeModels"],
   },
   {
     routePath: "/app/router",
@@ -92,6 +87,9 @@ describe("runtime-ui P0 startup bootstrap regressions", () => {
       expect(source).not.toContain("fetchRuntimeSnapshot(");
       for (const helperName of expectation.expectedHelpers) {
         expect(source).toContain(helperName);
+      }
+      if (expectation.routePath === "/app/models") {
+        expect(source).not.toContain("fetchRuntimeRequests");
       }
     });
   }

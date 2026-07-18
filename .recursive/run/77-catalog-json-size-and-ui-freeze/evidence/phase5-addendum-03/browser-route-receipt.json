@@ -1,0 +1,221 @@
+{
+  "generatedAt": "2026-07-18T03:38:15.308Z",
+  "requestId": "req-0b7dec90-c660-472a-8884-c32c55322927",
+  "results": [
+    {
+      "route": "/app",
+      "status": 200,
+      "elapsedMs": 1115,
+      "headings": [
+        "role-model",
+        "Runtime overview",
+        "Latest requests",
+        "Current endpoint inventory"
+      ],
+      "bodyCharacters": 2510,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/models",
+      "status": 200,
+      "elapsedMs": 1029,
+      "headings": [
+        "role-model",
+        "Configured models",
+        "Model inventory",
+        "Selected model detail"
+      ],
+      "bodyCharacters": 1407,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/models/benchmark",
+      "status": 200,
+      "elapsedMs": 1001,
+      "headings": [
+        "role-model",
+        "Capability benchmark",
+        "Run capability benchmark",
+        "Benchmark scores",
+        "Taxonomy dimensions"
+      ],
+      "bodyCharacters": 3504,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/remote/providers",
+      "status": 200,
+      "elapsedMs": 1004,
+      "headings": [
+        "role-model",
+        "Remote providers",
+        "Choose provider and models",
+        "Configured provider connections"
+      ],
+      "bodyCharacters": 1501,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/router",
+      "status": 200,
+      "elapsedMs": 1006,
+      "headings": [
+        "role-model",
+        "Routing overview",
+        "Alias inventory",
+        "Routing candidates"
+      ],
+      "bodyCharacters": 1649,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/router/candidates",
+      "status": 200,
+      "elapsedMs": 1006,
+      "headings": [
+        "role-model",
+        "Candidate inventory",
+        "Candidate inventory"
+      ],
+      "bodyCharacters": 1169,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/router/strategy",
+      "status": 200,
+      "elapsedMs": 1005,
+      "headings": [
+        "role-model",
+        "Routing strategy",
+        "Persisted routing posture",
+        "Benchmark-informed difficulty advisory"
+      ],
+      "bodyCharacters": 2113,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/router/decisions",
+      "status": 200,
+      "elapsedMs": 1003,
+      "headings": [
+        "role-model",
+        "Routing decisions",
+        "Decision ledger"
+      ],
+      "bodyCharacters": 6082,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/router/decisions/req-0b7dec90-c660-472a-8884-c32c55322927",
+      "status": 200,
+      "elapsedMs": 1006,
+      "headings": [
+        "role-model",
+        "Routing decision detail",
+        "Routing decision detail",
+        "Fallback endpoints",
+        "Decision bundle"
+      ],
+      "bodyCharacters": 54344,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/observe/requests",
+      "status": 200,
+      "elapsedMs": 1010,
+      "headings": [
+        "role-model",
+        "Telemetry request ledger",
+        "Analytics controls",
+        "Adjacent raw-host tools",
+        "Recent telemetry requests"
+      ],
+      "bodyCharacters": 12162,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/observe/routing",
+      "status": 200,
+      "elapsedMs": 1019,
+      "headings": [
+        "role-model",
+        "Routing analytics",
+        "Routing analytics controls",
+        "Current routing slice",
+        "Most active roles"
+      ],
+      "bodyCharacters": 3447,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/observe/requests/req-0b7dec90-c660-472a-8884-c32c55322927",
+      "status": 200,
+      "elapsedMs": 989,
+      "headings": [
+        "role-model",
+        "req-0b7dec90-c660-472a-8884-c32c55322927",
+        "Adjacent raw-host tools",
+        "Taxonomy classification",
+        "Cost audit"
+      ],
+      "bodyCharacters": 4597,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/connect/downstream",
+      "status": 200,
+      "elapsedMs": 1021,
+      "headings": [
+        "role-model",
+        "Connect your application",
+        "Connection contract",
+        "Consumer setup"
+      ],
+      "bodyCharacters": 1919,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    },
+    {
+      "route": "/app/system/runtime",
+      "status": 200,
+      "elapsedMs": 1016,
+      "headings": [
+        "role-model",
+        "Runtime topology",
+        "Applied runtime policy",
+        "Execution readiness",
+        "Controller posture"
+      ],
+      "bodyCharacters": 1254,
+      "apiFailures": [],
+      "failedRequests": [],
+      "visibleFatalError": false
+    }
+  ],
+  "failed": []
+}

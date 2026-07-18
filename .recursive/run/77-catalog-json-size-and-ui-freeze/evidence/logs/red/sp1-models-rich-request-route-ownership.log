@@ -1,0 +1,13 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP1
+TDD Mode: strict
+Timestamp: 2026-07-18T01:16:26Z
+Command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/startup-bootstrap-regression.test.ts -t "/app/models avoids"
+Exit code: 1
+
+RED verified: PASS
+Test: /app/models avoids full runtime snapshot startup fanout
+Expected failure: the production Models route still owns the rich fetchRuntimeRequests endpoint.
+Actual failure: startup-bootstrap-regression.test.ts:96 found fetchRuntimeRequests in control-models.tsx, including the import, deferred startup loader, and mutation refresh path.
+
+Vitest summary: 1 failed, 10 skipped; duration 1.04s.

@@ -1,0 +1,1 @@
+400 /chat/completions: Invalid model name passed in model=k3. Call `/v1/models` to view available models for your key.

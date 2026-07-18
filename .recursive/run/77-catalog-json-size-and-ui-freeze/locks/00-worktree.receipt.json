@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "34bfa7d67ff7058a3c6ce472761997e88abd77f1e60a5b6da02033f70e8bb27e",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\77-catalog-json-size-and-ui-freeze\\.recursive\\run\\77-catalog-json-size-and-ui-freeze\\00-worktree.md",
+  "locked_at": "2026-07-17T23:50:31Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "047a803d6847af511f434e3eb4f5d9df07b2cc763712c218b361024c0ce0ce8f"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "24c0416a31ba9f81d82da1fc572b70273fabc360ab4092e591a2aa3d4819c359"
+}

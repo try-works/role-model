@@ -1,0 +1,15 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP4
+Timestamp: 2026-07-18T01:33:31Z
+Focused command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/control-benchmark.test.ts
+Focused result: PASS
+
+Owning command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/control-benchmark.test.ts app/routes/control-models.test.ts app/routes/startup-bootstrap-regression.test.ts
+Result: PASS (30/30; 2.00s)
+Typecheck: corepack pnpm --filter @role-model-router/runtime-ui exec tsc --noEmit
+Result: PASS
+
+GREEN verified: PASS
+- Essential suite/candidates/preferences publish independently of summary, history, and runtime-summary advisory reads.
+- Each advisory surface hydrates independently and cannot hold the essential bootstrap Promise.
+- Disposal prevents post-unmount state writes.

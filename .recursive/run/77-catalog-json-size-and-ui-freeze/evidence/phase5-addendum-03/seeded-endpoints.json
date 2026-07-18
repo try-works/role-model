@@ -1,0 +1,14 @@
+[
+  {
+    "accountId": "deepseek.run77.phase5.addendum03",
+    "modelId": "deepseek/deepseek-v4-pro",
+    "endpointId": "deepseek.run77.phase5.addendum03.global.deepseek-v4-pro",
+    "health": null
+  },
+  {
+    "accountId": "moonshot.run77.phase5.addendum03",
+    "modelId": "moonshot/kimi-k3",
+    "endpointId": "moonshot.run77.phase5.addendum03.global.kimi-k3",
+    "health": null
+  }
+]

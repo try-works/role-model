@@ -7730,6 +7730,147 @@ describe("runtime-host-bridge", () => {
     expect(end).not.toHaveBeenCalled();
   });
 
+  test("terminates a committed chat stream after execution rejects and remains responsive", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: {
+          host: string;
+          port: number;
+          registry: EndpointRegistryResult;
+          executeChatCompletions: (
+            body: Record<string, unknown>,
+            requestId: string,
+            streamWriter?: (
+              chunk: Record<string, unknown>,
+              metadata?: {
+                endpointId: string;
+                adapterFamily: string;
+                routingDecisionId: string;
+              },
+            ) => Promise<void>,
+          ) => Promise<unknown>;
+          readRuntimeSummary: () => Promise<unknown>;
+        }) => Promise<{ port: number; close(): Promise<void> }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async (_body, _requestId, streamWriter) => {
+        await streamWriter?.(
+          { id: "chunk-1", choices: [{ delta: { content: "partial" } }] },
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k3",
+            adapterFamily: "ai-sdk-openai-compatible",
+            routingDecisionId: "decision-late-stream-failure",
+          },
+        );
+        throw new Error("induced post-commit stream failure");
+      },
+      readRuntimeSummary: async () => ({ status: "healthy" }),
+    });
+    const abortController = new AbortController();
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          model: "moonshot/kimi-k3",
+          stream: true,
+          messages: [{ role: "user", content: "ping" }],
+        }),
+        signal: abortController.signal,
+      });
+      expect(response.status).toBe(200);
+      const terminalState = await Promise.race([
+        response.text().then(
+          () => "ended",
+          () => "rejected",
+        ),
+        new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 750)),
+      ]);
+      expect(terminalState).not.toBe("timeout");
+
+      const healthResponse = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/runtime/summary`,
+      );
+      expect(healthResponse.status).toBe(200);
+      await expect(healthResponse.json()).resolves.toEqual({ status: "healthy" });
+      expect(errorSpy.mock.calls.flat().join(" ")).not.toContain("ERR_HTTP_HEADERS_SENT");
+    } finally {
+      abortController.abort();
+      await server.close();
+      errorSpy.mockRestore();
+    }
+  });
+
+  test("terminates a committed Responses stream after execution rejects", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const server = await (
+      bridge as {
+        startBridgeServer: (options: Record<string, unknown>) => Promise<{
+          port: number;
+          close(): Promise<void>;
+        }>;
+      }
+    ).startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry,
+      executeChatCompletions: async () => {
+        throw new Error("not used");
+      },
+      executeResponses: async (
+        _body: Record<string, unknown>,
+        _requestId: string,
+        streamWriter?: (
+          chunk: Record<string, unknown>,
+          metadata?: {
+            endpointId: string;
+            adapterFamily: string;
+            routingDecisionId: string;
+          },
+        ) => Promise<void>,
+      ) => {
+        await streamWriter?.(
+          { type: "response.output_text.delta", delta: "partial" },
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k3",
+            adapterFamily: "ai-sdk-openai-compatible",
+            routingDecisionId: "decision-late-responses-failure",
+          },
+        );
+        throw new Error("induced post-commit Responses failure");
+      },
+    });
+    const abortController = new AbortController();
+
+    try {
+      const response = await fetch(`http://127.0.0.1:${server.port}/v1/responses`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ model: "moonshot/kimi-k3", stream: true, input: "ping" }),
+        signal: abortController.signal,
+      });
+      expect(response.status).toBe(200);
+      const terminalState = await Promise.race([
+        response.text().then(
+          () => "ended",
+          () => "rejected",
+        ),
+        new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 750)),
+      ]);
+      expect(terminalState).not.toBe("timeout");
+      expect(errorSpy.mock.calls.flat().join(" ")).not.toContain("ERR_HTTP_HEADERS_SENT");
+    } finally {
+      abortController.abort();
+      await server.close();
+      errorSpy.mockRestore();
+    }
+  });
+
   test("generates a unique canonical request id for each request when headers omit request ids", async () => {
     const capturedRequestIds: string[] = [];
     const server = await (

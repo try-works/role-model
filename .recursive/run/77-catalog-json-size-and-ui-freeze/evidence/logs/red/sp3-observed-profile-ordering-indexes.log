@@ -1,0 +1,11 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP3
+TDD Mode: strict
+Timestamp: 2026-07-18T01:23:01Z
+Command: corepack pnpm --filter @role-model-router/sqlite-memory exec vitest run test/index.test.ts -t "matching indexes for endpoint profile"
+Exit code: 1
+
+RED verified: PASS
+Expected: all endpoint/difficulty sample and profile reads use matching filter+ordering indexes without temporary sorts.
+Actual first failure: SCAN observed_performance_samples; USE TEMP B-TREE FOR ORDER BY; expected observed_performance_samples_endpoint_time_idx.
+Vitest summary: 1 failed, 42 skipped; duration 2.17s.

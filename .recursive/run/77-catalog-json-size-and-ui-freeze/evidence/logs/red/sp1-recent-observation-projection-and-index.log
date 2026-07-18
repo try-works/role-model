@@ -1,0 +1,18 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP1
+TDD Mode: strict
+Timestamp: 2026-07-18T01:14:46Z
+Command: corepack pnpm --filter @role-model-router/sqlite-memory exec vitest run test/index.test.ts -t "listRecentRuntimeObservations"
+Exit code: 1
+
+RED 1 verified: PASS
+Test: uses the projected client request id without reading the observation JSON blob
+Expected failure: listRecentRuntimeObservations parses malformed observation_json instead of reading client_request_id.
+Actual failure: SyntaxError at src/index.ts:4102 JSON.parse(row.observation_json).
+
+RED 2 verified: PASS
+Test: uses the covering recency index for ordered summaries
+Expected failure: the query plan has no runtime_observations_created_at_idx and sorts through a temporary B-tree.
+Actual plan: SCAN runtime_observations; USE TEMP B-TREE FOR ORDER BY.
+
+Vitest summary: 2 failed, 40 skipped; duration 2.55s.

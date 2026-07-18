@@ -1,0 +1,13 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP1
+TDD Mode: strict
+Timestamp: 2026-07-18T01:15:53Z
+Command: corepack pnpm --filter @role-model-router/sqlite-memory exec vitest run test/index.test.ts -t "listRecentRuntimeObservations"
+Exit code: 0
+
+GREEN verified: PASS
+- listRecentRuntimeObservations projects nullable client_request_id directly and does not select or parse observation_json.
+- run77-recent-observations-index-v1 records an idempotent migration receipt and creates runtime_observations_created_at_idx.
+- EXPLAIN QUERY PLAN uses the recency index and no temporary ORDER BY B-tree.
+
+Vitest summary: 1 file passed; 2 passed, 40 skipped; duration 2.70s.
