@@ -1,10 +1,9 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
-import type { NormalizedCatalog } from "@role-model-router/catalog";
+import { readNormalizedCatalogFile, type NormalizedCatalog } from "@role-model-router/catalog";
 
 import { routeRuntimeRequest } from "../src/index.js";
 import { TEST_CATALOG } from "./test-catalog-fixture.js";
@@ -21,7 +20,7 @@ async function loadNormalizedCatalog(): Promise<NormalizedCatalog> {
     "data",
     "normalized-catalog.json",
   );
-  return JSON.parse(await readFile(catalogPath, "utf8")) as NormalizedCatalog;
+  return readNormalizedCatalogFile(catalogPath);
 }
 
 describe("catalog economics routing", () => {

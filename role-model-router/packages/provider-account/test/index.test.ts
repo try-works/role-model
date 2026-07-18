@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
+import { readNormalizedCatalogFile } from "@role-model-router/catalog";
 import { SUPPORTED_AUTH_MODES, validateProviderAccounts } from "../src/index.ts";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,8 +74,15 @@ describe("SUPPORTED_AUTH_MODES", () => {
 
 describe("validateProviderAccounts", () => {
   test("validates provider-account fixtures against catalog provider metadata without exposing raw secrets", async () => {
-    const catalog = await readJson(
-      "role-model-router/packages/catalog/data/normalized-catalog.json",
+    const catalog = await readNormalizedCatalogFile(
+      path.join(
+        repoRoot,
+        "role-model-router",
+        "packages",
+        "catalog",
+        "data",
+        "normalized-catalog.json",
+      ),
     );
     const fixture = await readJson<{ accounts: unknown[] }>(
       "testdata/router-runtime/fixtures/provider-accounts.json",
@@ -110,8 +118,15 @@ describe("validateProviderAccounts", () => {
   });
 
   test("reports incompatible auth modes for api-key-only catalog providers", async () => {
-    const catalog = await readJson(
-      "role-model-router/packages/catalog/data/normalized-catalog.json",
+    const catalog = await readNormalizedCatalogFile(
+      path.join(
+        repoRoot,
+        "role-model-router",
+        "packages",
+        "catalog",
+        "data",
+        "normalized-catalog.json",
+      ),
     );
 
     const result = validateProviderAccounts({

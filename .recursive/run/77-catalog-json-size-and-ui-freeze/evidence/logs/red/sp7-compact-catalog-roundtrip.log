@@ -1,0 +1,12 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP7
+TDD Mode: strict
+Timestamp: 2026-07-18T01:39:25Z
+Command: corepack pnpm --filter @role-model-router/catalog exec vitest run test/index.test.ts -t "compact catalog"
+Exit code: 1
+
+RED verified: PASS
+- serializeNormalizedCatalog was undefined; no versioned wire contract existed.
+- hydrateNormalizedCatalog was undefined; no canonical decoder/default restoration boundary existed.
+- The tracked artifact remained the 5,434,995-byte v1 baseline.
+Vitest summary: 2 failed, 13 skipped; duration 1.17s.

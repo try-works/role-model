@@ -64,6 +64,7 @@ import {
 } from "@role-model-router/runtime-observability";
 import {
   clearAllObservedBenchmarkData,
+  buildAdvisoryMaxDifficultyRecommendation,
   clearBenchmarkRunArtifacts,
   clearObservedBenchmarkDataForEndpoint,
   deleteRuntimeControllerAssignment,
@@ -217,6 +218,7 @@ import {
   deriveLiteLLMProviders,
   extractLiteLLMModelIds,
   loadLiteLLMModelPrices,
+  readNormalizedCatalogFile,
 } from "@role-model-router/catalog";
 import { resolveValidationProviderMetadata } from "./provider-metadata-merge.js";
 import { resolveLlamaSwapCommand } from "./runtime-assets.js";
@@ -8511,8 +8513,21 @@ function writeJson(
   response.end(`${JSON.stringify(body)}\n`);
 }
 
+function endCommittedBridgeResponse(response: ServerResponse): boolean {
+  if (response.headersSent) {
+    if (!response.writableEnded) {
+      response.end();
+    }
+    return true;
+  }
+  return false;
+}
+
 export function writeUnhandledBridgeError(response: ServerResponse, error: unknown): boolean {
-  if (response.headersSent || response.writableEnded) {
+  if (endCommittedBridgeResponse(response)) {
+    return false;
+  }
+  if (response.writableEnded) {
     return false;
   }
   if (error instanceof BridgeHttpError) {
@@ -13794,6 +13809,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         );
         return;
       } catch (error) {
+        if (endCommittedBridgeResponse(response)) {
+          return;
+        }
         if (error instanceof BridgeHttpError) {
           throw error;
         }
@@ -13928,6 +13946,9 @@ function createRequestHandler(options: StartBridgeServerOptions) {
         );
         return;
       } catch (error) {
+        if (endCommittedBridgeResponse(response)) {
+          return;
+        }
         if (error instanceof BridgeHttpError) {
           throw error;
         }
@@ -15388,7 +15409,7 @@ export async function createRuntimeBridgeBackend(
     );
   }
   const supervisor = options.unifiedRuntimeConfigPath ? new ProcessSupervisor() : null;
-  const baseCatalog = await readJson<NormalizedCatalog>(
+  const baseCatalog = await readNormalizedCatalogFile(
     path.join(
       options.repoRoot,
       "role-model-router",
@@ -19311,17 +19332,66 @@ export async function createRuntimeBridgeBackend(
       currentRolePolicy.roleDefinitions,
       getLlamaSwapRoleIdsByModelId(),
     );
-  const buildBenchmarkCapabilityByEndpointId = async () => {
+  const readCandidateProfileDataByEndpointId = () => {
+    const endpointIds = currentRegistry.endpoints.map(
+      (endpoint) => endpoint.identity.endpoint_id,
+    );
+    const latestProfiles = readLatestObservedProfilesByEndpointIds({
+      databasePath: initialization.databasePath,
+      endpointIds,
+    });
+    const difficultyProfilesByBucket = Object.fromEntries(
+      (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
+        difficultyBucket,
+        readLatestObservedProfilesByEndpointIds({
+          databasePath: initialization.databasePath,
+          endpointIds,
+          difficultyBucket,
+        }),
+      ]),
+    );
+    const thresholds = resolveUnifiedRuntimeObservedDataConfig(currentUnifiedRuntimeConfig)
+      .difficultyLearning.recommendation;
+    return Object.fromEntries(
+      endpointIds.map((endpointId) => {
+        const difficultyProfiles = Object.fromEntries(
+          (["easy", "medium", "hard"] as const).map((difficultyBucket) => [
+            difficultyBucket,
+            difficultyProfilesByBucket[difficultyBucket][endpointId] ?? null,
+          ]),
+        ) as Record<
+          UnifiedRuntimeDifficultyBucket,
+          ReturnType<typeof readLatestObservedProfile>
+        >;
+        return [
+          endpointId,
+          {
+            endpointId,
+            latestProfile: latestProfiles[endpointId] ?? null,
+            recentSamples: [],
+            difficultyProfiles,
+            advisoryMaxDifficultyRecommendation: buildAdvisoryMaxDifficultyRecommendation({
+              profiles: difficultyProfiles,
+              thresholds,
+            }),
+          },
+        ] as const;
+      }),
+    );
+  };
+  const buildBenchmarkCapabilityByEndpointId = async (
+    profilesByEndpointId: ReturnType<typeof readCandidateProfileDataByEndpointId>,
+  ) => {
     const benchmarkSummary = await readBenchmarkSummaryData();
     return Object.fromEntries(
       currentRegistry.endpoints.map((endpoint) => {
         const endpointId = endpoint.identity.endpoint_id;
-        const profile = readEndpointProfileData(endpointId);
+        const profile = profilesByEndpointId[endpointId];
         return [
           endpointId,
           buildBenchmarkCapabilityForEndpoint({
             endpointId,
-            latestProfile: profile.latestProfile as Record<string, unknown> | null,
+            latestProfile: profile.latestProfile as unknown as Record<string, unknown> | null,
             difficultyProfiles: profile.difficultyProfiles as Record<string, unknown> | null,
             summary: benchmarkSummary,
             availableRoleIds: resolveEndpointAvailableRoleIds(endpointId),
@@ -19353,18 +19423,18 @@ export async function createRuntimeBridgeBackend(
   const listRouterCandidateData = async () => {
     const controller = getCurrentControllerAssignment();
     const guidance = getRouterGuidance();
-    const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId();
+    const profilesByEndpointId = readCandidateProfileDataByEndpointId();
+    const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId(
+      profilesByEndpointId,
+    );
     const { executionEndpointIds, routingEligibleEndpointIds, benchmarkEligibleEndpointIds } =
       buildEffectiveEligibilitySnapshot();
     return currentRegistry.endpoints.map((endpoint) => {
       const endpointId = endpoint.identity.endpoint_id;
-      const profile = readEndpointProfileData(endpointId);
+      const profile = profilesByEndpointId[endpointId];
       const benchmarkCapability = benchmarkCapabilitiesByEndpointId[endpointId] ?? null;
-      const benchmarkSamples = profile.recentSamples.filter(
-        (sample) => sample.source_type === "benchmark",
-      );
-      const routingBenchmarkQuality = resolveRoutingBenchmarkQuality(benchmarkSamples);
-      const routingQualityScore = routingBenchmarkQuality?.quality_score ?? null;
+      const routingQualityScore =
+        profile.latestProfile?.quality_score ?? profile.latestProfile?.judge_score ?? null;
       return {
         endpointId,
         modelId: endpoint.identity.model_id,
@@ -19393,12 +19463,7 @@ export async function createRuntimeBridgeBackend(
         difficultyProfiles: profile.difficultyProfiles,
         advisoryMaxDifficultyRecommendation: profile.advisoryMaxDifficultyRecommendation,
         ...(benchmarkCapability ? { benchmarkCapability } : {}),
-        ...(routingBenchmarkQuality
-          ? {
-              routingBenchmarkQuality,
-              routingQualityScore,
-            }
-          : {}),
+        ...(routingQualityScore !== null ? { routingQualityScore } : {}),
       };
     });
   };
@@ -19561,7 +19626,9 @@ export async function createRuntimeBridgeBackend(
           await streamWriter(chunk, metadata);
         }
       : undefined;
-    const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId();
+    const benchmarkCapabilitiesByEndpointId = await buildBenchmarkCapabilityByEndpointId(
+      readCandidateProfileDataByEndpointId(),
+    );
     const roleBindings = buildRuntimeRoleBindings(
       [],
       executionSnapshot.runtimeEndpoints,
@@ -23606,7 +23673,7 @@ export async function createRuntimeBridgeBackend(
             };
           }
         ).benchmarkCapability;
-        const latestProfile = candidate.latestProfile as Record<string, unknown> | null;
+        const latestProfile = candidate.latestProfile as unknown as Record<string, unknown> | null;
         const sources = latestProfile?.sources as Record<string, unknown> | undefined;
         const benchmarkSamples =
           typeof sources?.benchmark_samples === "number" ? sources.benchmark_samples : 0;

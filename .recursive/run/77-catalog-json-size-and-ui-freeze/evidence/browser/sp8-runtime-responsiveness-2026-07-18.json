@@ -1,0 +1,19 @@
+{
+  "command": "corepack pnpm --dir role-model-router --filter @role-model-router/runtime-ui exec playwright test --grep \"@recursive:77-catalog-json-size-and-ui-freeze @sp8\" --reporter=line",
+  "result": "1 passed (36.3s)",
+  "environment": "Playwright msedge, freshly built runtime-ui, isolated QA host on 127.0.0.1:3462",
+  "modelsEssentialMs": 1026,
+  "candidatePayloadBytes": 5186,
+  "mutationResponseMs": 129,
+  "buttonPendingMs": 158,
+  "convergenceAfterResponseMs": 29,
+  "mutationModelPaths": ["/api/role-model/accounts"],
+  "healthMs": 158,
+  "summaryMs": 155,
+  "benchmarkEssentialMs": 305,
+  "benchmarkEssentialBudgetMs": 500,
+  "malformedModel": "/proc/1513/fd/63",
+  "malformedModelStatus": 400,
+  "postFailureHealthStatus": 200,
+  "richRequestRouteObserved": false
+}

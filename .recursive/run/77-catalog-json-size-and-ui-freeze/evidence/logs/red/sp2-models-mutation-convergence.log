@@ -1,0 +1,12 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP2
+TDD Mode: strict
+Timestamp: 2026-07-18T01:19:26Z
+Command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/control-models.test.ts -t "configured model mutation convergence"
+Exit code: 1
+
+RED verified: PASS
+- convergeSavedRuntimeAccount was undefined; Save had no response-carried convergence helper and reread the full six-surface initial payload.
+- loadConfiguredModelsMutationState was undefined; Eject reused the full initial loader including role policy and rich candidates.
+
+Vitest summary: 2 failed, 16 skipped; duration 1.85s.

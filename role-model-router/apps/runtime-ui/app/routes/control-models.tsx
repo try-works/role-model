@@ -43,7 +43,6 @@ import {
   fetchRuntimeAccounts,
   fetchRuntimeEndpoints,
   fetchRuntimeModels,
-  fetchRuntimeRequests,
   removeRuntimeAccountModel,
   unloadLocalModel,
   unloadPeerModel,
@@ -89,7 +88,7 @@ type EvidencePillInput = {
   }[];
 };
 
-type ConfiguredModelsSnapshot = Pick<RuntimeSnapshot, "accounts" | "endpoints" | "models">;
+export type ConfiguredModelsSnapshot = Pick<RuntimeSnapshot, "accounts" | "endpoints" | "models">;
 type RequestEvidenceStatus = "loading" | "ready" | "unavailable";
 
 type ConfiguredModelsInitialLoadResult = {
@@ -378,6 +377,43 @@ export function createAccountMutationPayload(
   };
 }
 
+export async function convergeSavedRuntimeAccount(input: {
+  readonly currentSnapshot: ConfiguredModelsSnapshot;
+  readonly mutate: () => Promise<RuntimeAccount>;
+}): Promise<ConfiguredModelsSnapshot> {
+  const updatedAccount = await input.mutate();
+  const hasExistingAccount = input.currentSnapshot.accounts.some(
+    (account) => account.providerAccountId === updatedAccount.providerAccountId,
+  );
+  return {
+    accounts: hasExistingAccount
+      ? input.currentSnapshot.accounts.map((account) =>
+          account.providerAccountId === updatedAccount.providerAccountId ? updatedAccount : account,
+        )
+      : [...input.currentSnapshot.accounts, updatedAccount],
+    endpoints: input.currentSnapshot.endpoints,
+    models: input.currentSnapshot.models,
+  };
+}
+
+export async function loadConfiguredModelsMutationState(input: {
+  readonly loadAccounts: () => Promise<ConfiguredModelsSnapshot["accounts"]>;
+  readonly loadEndpoints: () => Promise<ConfiguredModelsSnapshot["endpoints"]>;
+  readonly loadModels: () => Promise<ConfiguredModelsSnapshot["models"]>;
+  readonly loadController: () => Promise<RuntimeControllerAssignment | null>;
+}): Promise<{
+  readonly snapshot: ConfiguredModelsSnapshot;
+  readonly controller: RuntimeControllerAssignment | null;
+}> {
+  const [accounts, endpoints, models, controller] = await Promise.all([
+    input.loadAccounts(),
+    input.loadEndpoints(),
+    input.loadModels(),
+    input.loadController(),
+  ]);
+  return { snapshot: { accounts, endpoints, models }, controller };
+}
+
 export default function ControlModelsRoute() {
   const [snapshot, setSnapshot] = useState<ConfiguredModelsSnapshot | null>(null);
   const [requests, setRequests] = useState<readonly RuntimeRequestListItem[]>([]);
@@ -431,10 +467,10 @@ export default function ControlModelsRoute() {
       onInitialError: (message) => {
         setError(message);
       },
-      loadObservedRequests: () => fetchRuntimeRequests(),
-      onObservedRequests: (loadedRequests) => {
-        setRequests([...loadedRequests]);
-        setRequestEvidenceStatus("ready");
+      loadObservedRequests: async () => [],
+      onObservedRequests: () => {
+        setRequests([]);
+        setRequestEvidenceStatus("unavailable");
       },
       onObservedRequestsError: () => {
         setRequests([]);
@@ -542,68 +578,27 @@ export default function ControlModelsRoute() {
     );
   }, [allRuntimeRoleIds, selectedCard, selectedModelAccounts]);
 
-  const loadConfiguredModelsInitialData = async (): Promise<ConfiguredModelsInitialLoadResult> => {
-    const [accounts, endpoints, models, nextController, nextRolePolicy, nextCandidates] =
-      await Promise.all([
-        fetchRuntimeAccounts(),
-        fetchRuntimeEndpoints(),
-        fetchRuntimeModels(),
-        fetchControllerAssignment(),
-        fetchRolePolicy(),
-        fetchRouterCandidates(),
-      ]);
-    return {
-      snapshot: {
-        accounts,
-        endpoints,
-        models,
-      },
-      controller: nextController,
-      rolePolicy: nextRolePolicy,
-      candidates: nextCandidates,
-    };
-  };
-
-  const applyConfiguredModelsInitialData = (loaded: ConfiguredModelsInitialLoadResult): void => {
-    setSnapshot(loaded.snapshot);
-    setController(loaded.controller);
-    setRolePolicy(loaded.rolePolicy);
-    setCandidates(loaded.candidates);
-    setRequests([]);
-    setRequestEvidenceStatus("loading");
-    setControllerLoaded(true);
-    setError(null);
-  };
-
-  const refreshObservedRequestEvidence = async (): Promise<void> => {
-    try {
-      const loadedRequests = await fetchRuntimeRequests();
-      setRequests([...loadedRequests]);
-      setRequestEvidenceStatus("ready");
-    } catch {
-      setRequests([]);
-      setRequestEvidenceStatus("unavailable");
-    }
-  };
-
   const saveAccountRoles = async (account: RuntimeAccount) => {
-    if (!selectedCard) {
+    if (!selectedCard || !snapshot) {
       return;
     }
     setSavingAccountId(account.providerAccountId);
     setStatusMessage(null);
     try {
-      await upsertRuntimeAccount(
-        createAccountMutationPayload(
-          account,
-          selectedCard.modelId,
-          draftRolesByAccountId[account.providerAccountId] ?? [],
-          allRuntimeRoleIds,
-        ),
-      );
-      const loaded = await loadConfiguredModelsInitialData();
-      applyConfiguredModelsInitialData(loaded);
-      await refreshObservedRequestEvidence();
+      const nextSnapshot = await convergeSavedRuntimeAccount({
+        currentSnapshot: snapshot,
+        mutate: () =>
+          upsertRuntimeAccount(
+            createAccountMutationPayload(
+              account,
+              selectedCard.modelId,
+              draftRolesByAccountId[account.providerAccountId] ?? [],
+              allRuntimeRoleIds,
+            ),
+          ),
+      });
+      setSnapshot(nextSnapshot);
+      setError(null);
       setStatusMessage(`Updated roles for ${account.providerAccountId}.`);
     } catch (value) {
       setError(value instanceof Error ? value.message : "Could not update model roles.");
@@ -613,9 +608,16 @@ export default function ControlModelsRoute() {
   };
 
   const refreshModelState = async () => {
-    const loaded = await loadConfiguredModelsInitialData();
-    applyConfiguredModelsInitialData(loaded);
-    await refreshObservedRequestEvidence();
+    const loaded = await loadConfiguredModelsMutationState({
+      loadAccounts: fetchRuntimeAccounts,
+      loadEndpoints: fetchRuntimeEndpoints,
+      loadModels: fetchRuntimeModels,
+      loadController: fetchControllerAssignment,
+    });
+    setSnapshot(loaded.snapshot);
+    setController(loaded.controller);
+    setControllerLoaded(true);
+    setError(null);
   };
 
   const removeConfiguredModel = async (account: RuntimeAccount) => {

@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { NormalizedCatalog } from "@role-model-router/catalog";
+import { readNormalizedCatalogFile } from "@role-model-router/catalog";
 import { assembleContextEnvelope } from "@role-model-router/context-envelope";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 import { createRetrievalReceipt } from "@role-model-router/retrieval-receipt";
@@ -74,7 +74,7 @@ export async function runRuntimeRegistryValidation(
 ): Promise<RuntimeRegistryValidationResult> {
   const fixtureRoot =
     options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
-  const normalizedCatalog = await readJson<NormalizedCatalog>(
+  const normalizedCatalog = await readNormalizedCatalogFile(
     path.join(
       options.repoRoot,
       "role-model-router",

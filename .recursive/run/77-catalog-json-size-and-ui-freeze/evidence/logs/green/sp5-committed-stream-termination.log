@@ -1,0 +1,10 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP5
+Timestamp: 2026-07-18T01:29:05Z
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/index.test.ts -t "terminates a committed (chat|Responses) stream"
+Result: PASS (2 passed, 202 skipped; 3.75s)
+
+GREEN verified: PASS
+- Chat Completions commits one real SSE chunk, execution rejects, body terminates, no ERR_HTTP_HEADERS_SENT is logged, and the same server answers runtime summary.
+- Responses commits one normalized SSE chunk, execution rejects, body terminates, and no ERR_HTTP_HEADERS_SENT is logged.
+- Shared endCommittedBridgeResponse ownership covers inner protocol catches and the outer fallback guard.

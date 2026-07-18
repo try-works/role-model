@@ -263,3 +263,12 @@ The `MetricSource` type includes `"benchmark"` for provenance. `EndpointCandidat
 
 Those numeric examples are historical proof from run 36, not a durable current leaderboard.
 After run 69, the benchmark stack itself is validated by fresh `VALID` quick and full reruns that include both Kimi and GPT under a `deepseek-v4-pro` judge, but benchmark-backed quality remains run-config dependent. Future readers should pull the current benchmark summary or the latest Phase 5 receipt instead of trusting a frozen score table in this domain shard.
+
+## Run 77 responsiveness, projection, and committed-stream rules
+
+- Treat mutation receipts and the smallest canonical rereads as the completion boundary. Request history, full router candidates, benchmark summaries, and profile enrichment are advisory; load them progressively and never let them keep operator actions in a generic pending state.
+- For SQLite-backed list and startup paths, persist frequently listed fields as columns, select only those columns, and add an index matching the exact filter/order/limit shape. Large observation JSON belongs to explicit detail reads; reconstructing list fields by blob parsing can synchronously stall the entire Node runtime.
+- Candidate/profile startup work should reuse one database access scope, query endpoints in bulk, and cap recent sample history. Validate scaling at multiple endpoint counts because a fast tiny fixture can hide per-endpoint scans and repeated setup.
+- After `headersSent` or equivalent stream commitment, an upstream failure cannot be rewritten as JSON. End or destroy the committed stream according to protocol semantics, keep the server healthy, and test the actual HTTP server path so `ERR_HTTP_HEADERS_SENT` cannot regress.
+- Provider model translation is a separate boundary from runtime aliases. Preserve explicit regression coverage for catalog model IDs such as `moonshot/kimi-k3` mapping to the provider wire model `k3`, without injecting unsupported fixed sampling parameters.
+- Large static metadata may use a versioned compact wire representation, but all consumers must hydrate through one owning package boundary. Do not let direct JSON imports bypass default restoration or provenance reconstruction.

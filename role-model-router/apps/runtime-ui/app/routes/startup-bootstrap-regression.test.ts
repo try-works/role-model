@@ -19,7 +19,6 @@ const p0BootstrapExpectations = [
       "fetchRuntimeAccounts",
       "fetchRuntimeEndpoints",
       "fetchRuntimeModels",
-      "fetchRuntimeRequests",
     ],
   },
   {
@@ -92,6 +91,9 @@ describe("runtime-ui P0 startup bootstrap regressions", () => {
       expect(source).not.toContain("fetchRuntimeSnapshot(");
       for (const helperName of expectation.expectedHelpers) {
         expect(source).toContain(helperName);
+      }
+      if (expectation.routePath === "/app/models") {
+        expect(source).not.toContain("fetchRuntimeRequests");
       }
     });
   }

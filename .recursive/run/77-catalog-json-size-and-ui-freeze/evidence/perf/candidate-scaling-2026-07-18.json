@@ -1,0 +1,38 @@
+{
+  "command": "corepack pnpm --dir role-model-router --filter @role-model-router/runtime-host-bridge exec tsx D:/DEV/role-model/.worktrees/77-catalog-json-size-and-ui-freeze/.recursive/run/77-catalog-json-size-and-ui-freeze/evidence/perf/run77-candidate-scaling-harness.mts",
+  "platform": "win32 10.0.26200 x64",
+  "node": "v24.11.0",
+  "method": "5 warmups plus 30 sequential listRouterCandidates samples per cumulative endpoint tier",
+  "tiers": [
+    {
+      "configuredEndpoints": 4,
+      "returnedCandidates": 4,
+      "payloadBytes": 4868,
+      "samplesMs": [21.595, 21.871, 20.541, 21.683, 22.903, 20.021, 20.995, 19.506, 20.792, 21.617, 21.433, 31.267, 20.88, 21.441, 21.156, 20.9, 22.024, 22.698, 21.159, 22.264, 22.043, 20.44, 20.152, 21.251, 21.76, 19.721, 20.487, 19.981, 22.538, 21.502],
+      "p50Ms": 21.251,
+      "p95Ms": 22.903,
+      "maxMs": 31.267
+    },
+    {
+      "configuredEndpoints": 16,
+      "returnedCandidates": 16,
+      "payloadBytes": 19472,
+      "samplesMs": [22.612, 22.571, 27.492, 23.071, 23.14, 22.042, 21.975, 22.508, 19.845, 19.069, 19.892, 20.722, 20.388, 20.653, 21.119, 20.908, 22.134, 23.136, 21.851, 29.001, 23.089, 23.215, 24.79, 20.034, 20.516, 21.018, 20.905, 22.878, 20.532, 22.349],
+      "p50Ms": 21.975,
+      "p95Ms": 27.492,
+      "maxMs": 29.001
+    },
+    {
+      "configuredEndpoints": 64,
+      "returnedCandidates": 64,
+      "payloadBytes": 77888,
+      "samplesMs": [21.892, 23.325, 21.032, 22.817, 21.279, 20.669, 24.524, 22.202, 21.288, 22.836, 25.63, 20.816, 21.624, 21.123, 21.302, 22.645, 23.607, 25.021, 25.364, 21.346, 20.642, 20.433, 21.893, 27.367, 51.675, 20.213, 20.641, 21.477, 21.147, 26.129],
+      "p50Ms": 21.624,
+      "p95Ms": 27.367,
+      "maxMs": 51.675
+    }
+  ],
+  "p95BudgetMs": 500,
+  "budgetPassed": true,
+  "scalingConclusion": "Payload grows linearly with endpoints; p95 remains 22.9-27.4 ms across 4x and 16x tiers, showing bounded batched profile work rather than per-candidate history reads."
+}

@@ -1,10 +1,9 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
-import type { NormalizedCatalog } from "../src/index.js";
+import { readNormalizedCatalogFile, type NormalizedCatalog } from "../src/index.js";
 import {
   CANONICAL_MODEL_ID_ALIASES,
   OPERATOR_HIDDEN_CATALOG_PROVIDER_IDS,
@@ -25,7 +24,7 @@ async function loadNormalizedCatalog(): Promise<NormalizedCatalog> {
     "data",
     "normalized-catalog.json",
   );
-  return JSON.parse(await readFile(catalogPath, "utf8")) as NormalizedCatalog;
+  return readNormalizedCatalogFile(catalogPath);
 }
 
 describe("token-economics", () => {

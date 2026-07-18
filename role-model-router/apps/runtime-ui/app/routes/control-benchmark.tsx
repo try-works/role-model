@@ -513,6 +513,49 @@ function buildModelScoreRows(
   return rows.sort((left, right) => right.modelId.localeCompare(left.modelId, "en"));
 }
 
+export function startProgressiveBenchmarkBootstrap<TSuite, TCandidates, TPreferences>(input: {
+  readonly loadSuite: () => Promise<TSuite>;
+  readonly loadCandidates: () => Promise<TCandidates>;
+  readonly loadPreferences: () => Promise<TPreferences>;
+  readonly onEssential: (value: {
+    readonly suite: TSuite;
+    readonly candidates: TCandidates;
+    readonly preferences: TPreferences;
+  }) => void;
+  readonly advisoryLoads: readonly {
+    readonly load: () => Promise<unknown>;
+    readonly onData: (value: unknown) => void;
+  }[];
+  readonly onError: (message: string) => void;
+}): () => void {
+  let disposed = false;
+  const reportError = (value: unknown) => {
+    if (!disposed) {
+      input.onError(value instanceof Error ? value.message : "Could not load benchmark data.");
+    }
+  };
+
+  void Promise.all([input.loadSuite(), input.loadCandidates(), input.loadPreferences()]).then(
+    ([suite, candidates, preferences]) => {
+      if (!disposed) {
+        input.onEssential({ suite, candidates, preferences });
+      }
+    },
+    reportError,
+  );
+  for (const advisoryLoad of input.advisoryLoads) {
+    void advisoryLoad.load().then((value) => {
+      if (!disposed) {
+        advisoryLoad.onData(value);
+      }
+    }, reportError);
+  }
+
+  return () => {
+    disposed = true;
+  };
+}
+
 export default function ControlBenchmarkRoute() {
   const [suite, setSuite] = useState<BenchmarkSuite | null>(null);
   const [candidates, setCandidates] = useState<readonly RouterCandidate[] | null>(null);
@@ -568,42 +611,40 @@ export default function ControlBenchmarkRoute() {
   }, []);
 
   useEffect(() => {
-    void Promise.all([
-      fetchBenchmarkSuite(),
-      fetchRouterCandidates(),
-      fetchBenchmarkSummary(),
-      fetchBenchmarkSummariesByMode(),
-      fetchBenchmarkRuns(),
-      fetchBenchmarkPreferences(),
-      fetchRuntimeSummary(),
-    ])
-      .then(
-        ([
-          suiteValue,
-          candidateValue,
-          summaryValue,
-          summariesByModeValue,
-          runHistoryValue,
-          preferences,
-          runtimeSummaryValue,
-        ]) => {
-          setSuite(suiteValue);
-          setCandidates(candidateValue);
-          setLastSummary(summaryValue);
-          setSummariesByMode(summariesByModeValue);
-          setRunHistory(runHistoryValue);
-          setRuntimeSummary(runtimeSummaryValue);
-          const runnable = candidateValue.filter((candidate) =>
-            isBenchmarkRunnableCandidate(candidate),
-          );
-          setSelectedEndpointIds(runnable.map((candidate) => candidate.endpointId));
-          setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
-          setError(null);
+    return startProgressiveBenchmarkBootstrap({
+      loadSuite: fetchBenchmarkSuite,
+      loadCandidates: fetchRouterCandidates,
+      loadPreferences: fetchBenchmarkPreferences,
+      onEssential: ({ suite: suiteValue, candidates: candidateValue, preferences }) => {
+        setSuite(suiteValue);
+        setCandidates(candidateValue);
+        const runnable = candidateValue.filter((candidate) =>
+          isBenchmarkRunnableCandidate(candidate),
+        );
+        setSelectedEndpointIds(runnable.map((candidate) => candidate.endpointId));
+        setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
+        setError(null);
+      },
+      advisoryLoads: [
+        {
+          load: fetchBenchmarkSummary,
+          onData: (value) => setLastSummary(value as BenchmarkSummary),
         },
-      )
-      .catch((value: unknown) =>
-        setError(value instanceof Error ? value.message : "Could not load benchmark data."),
-      );
+        {
+          load: fetchBenchmarkSummariesByMode,
+          onData: (value) => setSummariesByMode(value as BenchmarkSummariesByMode),
+        },
+        {
+          load: fetchBenchmarkRuns,
+          onData: (value) => setRunHistory(value as readonly BenchmarkRunListEntry[]),
+        },
+        {
+          load: fetchRuntimeSummary,
+          onData: (value) => setRuntimeSummary(value as RuntimeSummary),
+        },
+      ],
+      onError: setError,
+    });
   }, [resolveJudgeEndpointId]);
 
   useEffect(() => {

@@ -1,0 +1,13 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP3
+Timestamp: 2026-07-18T01:47:08Z
+Focused command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/candidate-profile-scaling.test.ts
+Result: PASS (1/1; 1.01s)
+Build command: corepack pnpm --filter @role-model-router/runtime-host-bridge run build
+Result: PASS
+
+GREEN verified: PASS
+- Candidate construction performs one endpoint-wide bulk profile read and one bulk read per difficulty bucket.
+- Advisory difficulty recommendations reuse those hydrated bulk profiles.
+- Candidate construction performs zero sample-history reads and zero per-endpoint profile reads.
+- Explicit endpoint detail retains readEndpointProfileData and its full contract.

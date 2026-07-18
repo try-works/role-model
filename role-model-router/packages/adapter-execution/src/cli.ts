@@ -23,7 +23,11 @@ import {
   readConversationContinuity,
 } from "@role-model-router/sqlite-memory";
 
-import { deriveLiteLLMProviders, loadLiteLLMModelPrices } from "@role-model-router/catalog";
+import {
+  deriveLiteLLMProviders,
+  loadLiteLLMModelPrices,
+  readNormalizedCatalogFile,
+} from "@role-model-router/catalog";
 import {
   type RoutedExecutionResult,
   type RuntimeExecutionRequest,
@@ -176,7 +180,7 @@ export async function runRuntimeAdapterValidation(
 ): Promise<RuntimeAdapterValidationResult> {
   const fixtureRoot =
     options.fixtureRoot ?? path.join(options.repoRoot, "testdata", "router-runtime");
-  let normalizedCatalog = await readJson<NormalizedCatalog>(
+  let normalizedCatalog = await readNormalizedCatalogFile(
     path.join(
       options.repoRoot,
       "role-model-router",

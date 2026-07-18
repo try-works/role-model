@@ -1,0 +1,35 @@
+[
+  {
+    "caseId": "direct-kimi-k3",
+    "model": "moonshot/kimi-k3",
+    "marker": "RUN77_KIMI_REFRESH_OK",
+    "markerObserved": true,
+    "elapsedMs": 15759.794,
+    "exited": true,
+    "exitCode": 0,
+    "stdoutFile": "direct-kimi-k3.stdout.log",
+    "stderrFile": "direct-kimi-k3.stderr.log"
+  },
+  {
+    "caseId": "direct-gpt-5-4",
+    "model": "chatgpt/gpt-5.4",
+    "marker": "RUN77_GPT54_DIRECT_OK",
+    "markerObserved": true,
+    "elapsedMs": 6976.56,
+    "exited": true,
+    "exitCode": 0,
+    "stdoutFile": "direct-gpt-5-4.stdout.log",
+    "stderrFile": "direct-gpt-5-4.stderr.log"
+  },
+  {
+    "caseId": "alias-baseline",
+    "model": "baseline.remote-only",
+    "marker": "RUN77_ALIAS_AFTER_REFRESH_OK",
+    "markerObserved": true,
+    "elapsedMs": 7078.028,
+    "exited": true,
+    "exitCode": 0,
+    "stdoutFile": "alias-baseline.stdout.log",
+    "stderrFile": "alias-baseline.stderr.log"
+  }
+]

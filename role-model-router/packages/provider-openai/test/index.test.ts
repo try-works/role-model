@@ -1159,10 +1159,10 @@ describe("OpenAI provider adapter", () => {
     expect(requestCapture.body).not.toHaveProperty("parallel_tool_calls");
   });
 
-  test("normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming", () => {
+  test("normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi K3 streaming", () => {
     const target = {
-      endpointId: "moonshot.personal.kimi-code.global.kimi-k2.5",
-      modelId: "moonshot/kimi-k2.5",
+      endpointId: "moonshot.personal.kimi-code.global.k3",
+      modelId: "moonshot/kimi-k3",
       providerId: "moonshot",
       providerKind: "provider-openai",
       providerAccountId: "moonshot.personal.kimi-code",
@@ -1176,7 +1176,7 @@ describe("OpenAI provider adapter", () => {
       },
       candidate: {
         identity: {
-          endpoint_id: "moonshot.personal.kimi-code.global.kimi-k2.5",
+          endpoint_id: "moonshot.personal.kimi-code.global.k3",
           provider_kind: "remote_openai_compat",
         },
       },
@@ -1211,15 +1211,17 @@ describe("OpenAI provider adapter", () => {
         endpointId: target.endpointId,
         statusCode: 200,
         body: [
-          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
-          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{"content":"Ready"},"finish_reason":null}]}',
-          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"moonshot/kimi-k2.5","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}',
+          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"k3","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
+          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"k3","choices":[{"index":0,"delta":{"content":"Ready"},"finish_reason":null}]}',
+          'data: {"id":"chatcmpl-kimi-1","object":"chat.completion.chunk","created":1,"model":"k3","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}',
           "data: [DONE]",
         ].join("\n\n"),
       },
       capabilities,
     });
 
+    expect(requestCapture.body.model).toBe("k3");
+    expect(requestCapture.body.temperature).toBeUndefined();
     expect(normalized.outputText).toBe("Ready");
     expect(normalized.finishReason).toBe("stop");
     expect(normalized.stream).toEqual({
