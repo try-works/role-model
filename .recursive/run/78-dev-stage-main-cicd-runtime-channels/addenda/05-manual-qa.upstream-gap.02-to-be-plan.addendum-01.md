@@ -19,6 +19,7 @@ The locked Phase 2 plan required stable required checks and a Codex recursive-mo
 
 1. The workspace-wide recursive test fan-out twice terminated `@try-works/pi-role-model` without a failing assertion while its resource-heavy rebuilt-runtime proof was running. The identical package passed all 95 tests in isolation and passed on rerun, so repeated blind reruns would leave a flaky required check.
 2. `/.codex/AGENTS.md` instructed recursive-mode sessions, but the repository had no root `/AGENTS.md` with unconditional branch, promotion, runtime-channel, and naming rules for ordinary agent work.
+3. After Pi isolation made the rest of the host suite run to completion on Linux, `endpoint-rehydration.test.ts` exposed a separate one-second bootstrap polling assumption. Under CI load the assertion ran while bootstrap still reported `running`, before the remote health probe could mark the endpoint offline.
 
 ## Evidence and compensation
 
@@ -26,6 +27,7 @@ The locked Phase 2 plan required stable required checks and a Codex recursive-mo
 - The isolated command `corepack pnpm --filter @try-works/pi-role-model test` passed 15 files and 95 tests, including the 15-second rebuilt-runtime alias proof.
 - `/package.json` now excludes `@try-works/pi-role-model` from the concurrent recursive fan-out and runs it once afterward.
 - `/scripts/ci-workflow.test.mjs` contains the RED/GREEN contract for that sequencing.
+- `/role-model-router/apps/runtime-host-bridge/test/endpoint-rehydration.test.ts` now makes the slow-probe case deterministic, waits up to the test's bounded deadline, and asserts bootstrap completion before endpoint state.
 - `/AGENTS.md` makes the delivery workflow visible without requiring recursive-mode discovery.
 
 ## Implications
@@ -38,6 +40,7 @@ The promotion PR must wait for this compensation to merge into `dev`, then rerun
 - [x] Add a failing sequencing contract.
 - [x] Isolate and verify the Pi package test.
 - [x] Add root agent instructions.
+- [x] Reproduce and repair the endpoint-rehydration bootstrap timing race.
 - [ ] Merge the compensation through a reviewed pull request into `dev`.
 - [ ] Re-run and complete the promotion QA.
 
