@@ -44,7 +44,7 @@
     "runtime:test-router": "corepack pnpm --filter @role-model-router/runtime-host-bridge run test:router && corepack pnpm --filter @role-model-router/trace test && corepack pnpm --filter @role-model-router/usage test && corepack pnpm run runtime:validate-routing && corepack pnpm run runtime:validate-observability",
     "runtime:test-full": "corepack pnpm run runtime:test-critical && corepack pnpm run runtime:test-browser",
     "build": "corepack pnpm run types:generate && corepack pnpm -r --if-present build",
-    "test": "corepack pnpm run test:release-workflows && corepack pnpm -r --if-present test",
+    "test": "corepack pnpm run test:release-workflows && corepack pnpm -r --if-present --filter=./** --filter=!@try-works/pi-role-model test && corepack pnpm --filter @try-works/pi-role-model test",
     "test:release-workflows": "node --test scripts/ci-workflow.test.mjs scripts/build-binaries-workflow.test.mjs apps/docs-site/scripts/docs-site-deploy-workflow.test.mjs",
     "test:rust": "cargo test --manifest-path role-model-router/rust/Cargo.toml --workspace",
     "smoke": "corepack pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts",
