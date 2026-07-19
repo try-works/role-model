@@ -1,0 +1,25 @@
+
+> role-model@0.0.0 schemas:validate D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\compile\util.ts:211
+  if (mode === true) throw new Error(msg)
+                           ^
+
+Error: strict mode: missing type "array" for keyword "maxItems" at "https://role-model.dev/schemas/taxonomy/model-role-assignment.schema.json#/allOf/0/then/properties/enabledRoleIds" (strictTypes)
+    at checkStrictMode (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\compile\util.ts:211:28)
+    at strictTypesError (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\compile\validate\index.ts:331:18)
+    at checkKeywordTypes (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\compile\validate\index.ts:305:9)
+    at checkStrictTypes (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\compile\validate\index.ts:275:3)
+    at schemaKeywords (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\compile\validate\index.ts:231:18)
+    at typeAndKeywords (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\compile\validate\index.ts:161:3)
+    at subSchemaObjCode (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\compile\validate\index.ts:147:3)
+    at subschemaCode (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\compile\validate\index.ts:124:7)
+    at KeywordCxt.subschema (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\compile\validate\index.ts:500:5)
+    at applyPropertySchema (D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\ajv@8.18.0\node_modules\ajv\lib\vocabularies\applicator\properties.ts:45:11)
+
+Node.js v24.11.0
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\schema-tools:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx src/validate-schemas.ts validate
+ ELIFECYCLE  Command failed with exit code 1.

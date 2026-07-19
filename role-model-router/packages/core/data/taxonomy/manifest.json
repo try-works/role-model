@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "role-model.taxonomy.schema.v1",
+  "taxonomyVersion": "1.0.0-alpha.1",
+  "databaseVersion": 1,
+  "contentRevision": "taxonomy-v1-alpha.1",
+  "classificationContractVersion": "role-model.classification.v1",
+  "generatedAt": "2026-06-23T00:00:00.000Z",
+  "entryFiles": {
+    "groups": "groups.json",
+    "roles": "roles.json",
+    "taskTypes": "task-types.json",
+    "capabilities": "capabilities.json",
+    "modalities": "modalities.json",
+    "toolClasses": "tool-classes.json",
+    "intentPresets": "intent-presets.json"
+  },
+  "contentHashes": {
+    "groups": "sha256:dafd8ba0d20c79795dea157aa5484e7bdd81ca0999c67ad0c961d7d342c83c59",
+    "roles": "sha256:2f9caa873b8c3269f3fc9b76fe853534265c2cbf6986ef4dfa29847ca1076df5",
+    "taskTypes": "sha256:c4c9dfa1ac2d3a30efc4fe9c42d9433380fc29eec04a112ae91d0b58535a503e",
+    "capabilities": "sha256:8318320ad8d755bd6ea0709adbafbc545f1526dce92e7389a74384998c66f68e",
+    "modalities": "sha256:6de4f8ed64d14c567bbc725d29db1519b7a9e4462764114cfec48435685a9018",
+    "toolClasses": "sha256:ff8962fe2cbdbc208cabf53599365bfe99d14958ba0ba10e7fb296041034ba2c",
+    "intentPresets": "sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "entryCounts": {
+    "groups": 6,
+    "roles": 28,
+    "capabilities": 46,
+    "modalities": 9,
+    "toolClasses": 15,
+    "intentPresets": 0,
+    "taskTypes": 280
+  }
+}

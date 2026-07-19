@@ -1,0 +1,15 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "h09-agent-metrics-chain",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The response includes all required tool calls (list_endpoints, get_metrics for both endpoints) and an answer string that explicitly compares remote vs local p95 latency, satisfying the grading checklist.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h09-agent-metrics-chain.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/h09-agent-metrics-chain/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783932044228
+}

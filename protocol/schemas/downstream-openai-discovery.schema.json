@@ -1,0 +1,263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "downstream-openai-discovery.schema.json",
+  "title": "DownstreamOpenAIDiscovery",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "kind",
+    "providerId",
+    "displayName",
+    "baseUrl",
+    "endpoints",
+    "authentication",
+    "models",
+    "setup",
+    "freshness"
+  ],
+  "properties": {
+    "contractVersion": {
+      "type": "string",
+      "const": "role-model.downstream.openai.v1"
+    },
+    "kind": { "type": "string", "const": "openai-compatible" },
+    "providerId": { "type": "string", "const": "role-model-runtime" },
+    "displayName": { "type": "string", "minLength": 1 },
+    "baseUrl": { "type": "string", "format": "uri" },
+    "endpoints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["health", "models", "chatCompletions", "responses"],
+      "properties": {
+        "health": { "type": "string", "format": "uri" },
+        "models": { "type": "string", "format": "uri" },
+        "chatCompletions": { "type": "string", "format": "uri" },
+        "responses": { "type": "string", "format": "uri" }
+      }
+    },
+    "authentication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "headerName", "required", "placeholderToken", "note"],
+      "properties": {
+        "type": { "type": "string", "const": "bearer" },
+        "headerName": { "type": "string", "const": "Authorization" },
+        "required": { "type": "boolean", "const": false },
+        "placeholderToken": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "models": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/DownstreamOpenAIModelRecord" }
+    },
+    "setup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["recommendedModel", "notes"],
+      "properties": {
+        "recommendedModel": { "type": ["string", "null"] },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "generatedAt",
+        "catalogVersion",
+        "catalogCapturedAt",
+        "runtimeInventoryRevision"
+      ],
+      "properties": {
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "catalogVersion": { "type": "string" },
+        "catalogCapturedAt": { "type": ["string", "null"], "format": "date-time" },
+        "runtimeInventoryRevision": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "NullableNonNegativeInteger": {
+      "title": "NullableNonNegativeInteger",
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "StringList": {
+      "title": "StringList",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "ConditionalSupport": {
+      "title": "DownstreamOpenAIConditionalSupport",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetModelIds", "endpointIds"],
+      "properties": {
+        "targetModelIds": { "$ref": "#/$defs/StringList" },
+        "endpointIds": { "$ref": "#/$defs/StringList" }
+      }
+    },
+    "ConditionalSupportMap": {
+      "title": "ConditionalSupportMap",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/ConditionalSupport" }
+    },
+    "DownstreamOpenAIModelRecord": {
+      "title": "DownstreamOpenAIModelRecord",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "object",
+        "owned_by",
+        "endpoint_ids",
+        "type",
+        "targetModelIds",
+        "canonicalModelIds",
+        "providerIds",
+        "limits",
+        "modalities",
+        "capabilities",
+        "declared",
+        "routable",
+        "piMapping",
+        "sources"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "object": { "type": "string", "const": "model" },
+        "owned_by": { "type": "string", "const": "role-model" },
+        "endpoint_ids": { "$ref": "#/$defs/StringList" },
+        "type": { "type": "string", "enum": ["model", "alias"] },
+        "routingMode": {
+          "type": "string",
+          "enum": ["basic", "difficulty", "intelligent", "hybrid"]
+        },
+        "targetModelIds": { "$ref": "#/$defs/StringList" },
+        "canonicalModelIds": { "$ref": "#/$defs/StringList" },
+        "providerIds": { "$ref": "#/$defs/StringList" },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "safeContextWindow",
+            "safeMaxOutputTokens",
+            "maxContextWindow",
+            "maxOutputTokens"
+          ],
+          "properties": {
+            "safeContextWindow": { "$ref": "#/$defs/NullableNonNegativeInteger" },
+            "safeMaxOutputTokens": { "$ref": "#/$defs/NullableNonNegativeInteger" },
+            "maxContextWindow": { "$ref": "#/$defs/NullableNonNegativeInteger" },
+            "maxOutputTokens": { "$ref": "#/$defs/NullableNonNegativeInteger" }
+          }
+        },
+        "modalities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["guaranteedInput", "availableInput", "conditionalInput", "output"],
+          "properties": {
+            "guaranteedInput": { "$ref": "#/$defs/StringList" },
+            "availableInput": { "$ref": "#/$defs/StringList" },
+            "conditionalInput": { "$ref": "#/$defs/ConditionalSupportMap" },
+            "output": { "$ref": "#/$defs/StringList" }
+          }
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "guaranteed",
+            "available",
+            "conditional",
+            "tools",
+            "reasoning",
+            "structuredOutput",
+            "caching"
+          ],
+          "properties": {
+            "guaranteed": { "$ref": "#/$defs/StringList" },
+            "available": { "$ref": "#/$defs/StringList" },
+            "conditional": { "$ref": "#/$defs/ConditionalSupportMap" },
+            "tools": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["functionCalling"],
+              "properties": {
+                "functionCalling": { "type": "boolean" }
+              }
+            },
+            "reasoning": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["supported", "effortControl"],
+              "properties": {
+                "supported": { "type": "boolean" },
+                "effortControl": { "type": "boolean" }
+              }
+            },
+            "structuredOutput": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["supported"],
+              "properties": {
+                "supported": { "type": "boolean" }
+              }
+            },
+            "caching": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["promptRead", "promptWrite", "source"],
+              "properties": {
+                "promptRead": { "type": ["boolean", "null"] },
+                "promptWrite": { "type": ["boolean", "null"] },
+                "source": {
+                  "type": "string",
+                  "enum": ["catalog", "unknown", "mixed"]
+                }
+              }
+            }
+          }
+        },
+        "declared": { "$ref": "#/$defs/ModelEndpointSet" },
+        "routable": { "$ref": "#/$defs/ModelEndpointSet" },
+        "piMapping": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["contextWindow", "maxTokens"],
+          "properties": {
+            "contextWindow": { "$ref": "#/$defs/NullableNonNegativeInteger" },
+            "maxTokens": { "$ref": "#/$defs/NullableNonNegativeInteger" },
+            "compat": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "supportsDeveloperRole": { "type": "boolean" },
+                "sendSessionAffinityHeaders": { "type": "boolean" },
+                "supportsLongCacheRetention": { "type": "boolean" }
+              }
+            }
+          }
+        },
+        "sources": { "$ref": "#/$defs/StringList" }
+      }
+    },
+    "ModelEndpointSet": {
+      "title": "DownstreamOpenAIModelEndpointSet",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["modelIds", "endpointIds"],
+      "properties": {
+        "modelIds": { "$ref": "#/$defs/StringList" },
+        "endpointIds": { "$ref": "#/$defs/StringList" }
+      }
+    }
+  }
+}

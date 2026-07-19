@@ -1,0 +1,67 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/48-runtime-ui-design-system-apple-theme[39m
+
+ [31m❯[39m role-model-router/apps/runtime-ui/app/lib/design-system.test.ts [2m([22m[2m35 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 5705[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 10[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdefines the Apple-inspired runtime theme contract with explicit tokenized radii and content width[32m 1[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract [33m 1794[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints [33m 1343[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces [33m 758[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface uses an explicit save-cancel modal for api-key maintenance[32m 40[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface keeps oauth reconnect as a one-click saved-account action[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders maintenance flows call explicit repair APIs instead of generic account writes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders saved-account cards use canonical lifecycle rows and bounded archived diagnostics[32m 12[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 10[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls[32m 19[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 91[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdesign-system docs and architecture point at the Apple reference instead of Swiss authority[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshared app bootstrap uses explicit Light and Dark theme tokens instead of media-query-only IBM Plex chrome[32m 1[2mms[22m[39m
+[31m   [31m×[31m runtime design system[2m > [22mshared shell and primitives own the global Light/Dark toggle and transparent semantic pills[39m[33m 887[2mms[22m[39m
+[31m     → expected '' to contain 'Light'[39m
+   [32m✓[39m runtime design system[2m > [22mkeeps shared states on semantic design tokens instead of Tailwind utility palettes[32m 113[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy[32m 89[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 47[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders[32m 178[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs[32m 68[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdashboard passes telemetry detail to FactCard for Latency[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22moverview metadata and design doc describe a telemetry-first summary with an interaction rail[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  role-model-router/apps/runtime-ui/app/lib/design-system.test.ts > runtime design system > shared shell and primitives own the global Light/Dark toggle and transparent semantic pills
+AssertionError: expected '' to contain 'Light'
+
+- Expected
++ Received
+
+- Light
+
+ ❯ role-model-router/apps/runtime-ui/app/lib/design-system.test.ts:724:31
+    722| 
+    723|   test("shared shell and primitives own the global Light/Dark toggle a…
+    724|     expect(themeToggleSource).toContain("Light");
+       |                               ^
+    725|     expect(themeToggleSource).toContain("Dark");
+    726|     expect(themeToggleSource).not.toContain("System");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m34 passed[39m[22m[90m (35)[39m
+[2m   Start at [22m 21:26:25
+[2m   Duration [22m 61.42s[2m (transform 16.47s, setup 0ms, collect 25.95s, tests 5.71s, environment 0ms, prepare 8.42s)[22m
+

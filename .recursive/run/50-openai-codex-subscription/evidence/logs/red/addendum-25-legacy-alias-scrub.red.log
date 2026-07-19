@@ -1,0 +1,15 @@
+Command:
+corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/backend-unified-runtime-config.test.ts --testNamePattern "rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases"
+
+Observed failure before patch:
+
+FAIL test/backend-unified-runtime-config.test.ts > runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases
+AssertionError: expected persisted runtime-config.yaml not to contain "craft-ask.decision-only:"
+
+Relevant failing excerpt:
+- persisted YAML still contained `craft-ask.decision-only`
+- persisted YAML still contained `craft-ask.hybrid`
+- persisted YAML still contained `craft-ask.remote-only`
+
+Companion unit failure before patch:
+- `parseUnifiedRuntimeConfigText(...)` returned `craft-ask.remote-only` unchanged for a multi-alias payload instead of folding it into `default.remote-only`

@@ -1,0 +1,35 @@
+{
+  "piProvider": "role-model",
+  "piConfiguredBaseUrl": "http://127.0.0.1:3456/v1",
+  "discoveryUrl": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+  "piConfiguredModel": "hybrid.hybrid",
+  "piConfiguredInput": [
+    "text"
+  ],
+  "piConfiguredContextWindow": 128000,
+  "piConfiguredMaxTokens": 16384,
+  "piConfiguredReasoning": false,
+  "discoveredContractVersion": "role-model.downstream.openai.v1",
+  "discoveredRevision": "6724b58e69412806",
+  "discoveredSafeContextWindow": 262144,
+  "discoveredSafeMaxTokens": 128000,
+  "discoveredGuaranteedInput": [
+    "text"
+  ],
+  "discoveredAvailableInput": [
+    "image",
+    "pdf",
+    "text",
+    "video"
+  ],
+  "discoveredImageTargets": [
+    "chatgpt/gpt-5.4",
+    "moonshot/kimi-k2.7-code"
+  ],
+  "discoveredVideoTargets": [
+    "moonshot/kimi-k2.7-code"
+  ],
+  "discoveredReasoningSupported": true,
+  "discoveredReasoningEffortControl": true,
+  "discoveredFunctionTools": true
+}

@@ -1,0 +1,93 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [31m❯[39m test/taxonomy-classification.test.ts [2m([22m[2m10 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 62[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mloads a compact group-first taxonomy snapshot[32m 9[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies Review this diff for security risks and likely regressions.[32m 4[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies Implement this small bug fix and add a regression test.[32m 3[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies Compare current public documentation for this API and cite differences.[32m 3[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies Turn these support notes into a clear customer reply.[32m 3[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies Inspect this schema and propose a migration plan.[32m 3[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22mclassifies Create product requirements and acceptance criteria for this workflow.[32m 3[2mms[22m[39m
+   [32m✓[39m compact taxonomy and progressive classification[2m > [22memits the complete stable advisory classification contract[32m 6[2mms[22m[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mdegrades unknown prompts to broad low-confidence advisory metadata[39m[32m 14[2mms[22m[39m
+[31m     → expected 'security' not to be 'security' // Object.is equality[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mrecords only taxonomy chunks that were actually consulted[39m[32m 11[2mms[22m[39m
+[31m     → expected [ 'groups', 'roles:product', …(1) ] to deeply equal ArrayContaining{…}[39m
+ [32m✓[39m test/taxonomy-data-files.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 97[2mms[22m[39m
+ [31m❯[39m test/extension.test.ts [2m([22m[2m5 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 74[2mms[22m[39m
+   [32m✓[39m Pi extension registration[2m > [22mregisters the role-model provider and one role-model command[32m 34[2mms[22m[39m
+   [32m✓[39m Pi extension registration[2m > [22mpasses Pi setModel into alias selection command dependencies[32m 8[2mms[22m[39m
+   [32m✓[39m Pi extension registration[2m > [22minjects provider requests with the resolved runtime taxonomy when available[32m 6[2mms[22m[39m
+[31m   [31m×[31m Pi extension registration[2m > [22mloads runtime task chunks for request candidate roles before injecting intent[39m[32m 16[2mms[22m[39m
+[31m     → expected [] to deeply equal [ 'coder' ][39m
+   [32m✓[39m Pi extension registration[2m > [22minjects provider requests for direct Role-Model model records[32m 8[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/extension.test.ts > Pi extension registration > loads runtime task chunks for request candidate roles before injecting intent
+AssertionError: expected [] to deeply equal [ 'coder' ]
+
+- Expected
++ Received
+
+- [
+-   "coder",
+- ]
++ []
+
+ ❯ test/extension.test.ts:206:31
+    204|     });
+    205| 
+    206|     expect(taskChunkRequests).toEqual(["coder"]);
+       |                               ^
+    207|     expect(payload).toEqual(
+    208|       expect.objectContaining({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/taxonomy-classification.test.ts > compact taxonomy and progressive classification > degrades unknown prompts to broad low-confidence advisory metadata
+AssertionError: expected 'security' not to be 'security' // Object.is equality
+ ❯ test/taxonomy-classification.test.ts:89:63
+     87|     });
+     88| 
+     89|     expect(classification.role_model.intent.role_hint_id).not.toBe("se…
+       |                                                               ^
+     90|     expect(classification.role_model.intent.task_type).not.toBe("secur…
+     91|     expect(classification.role_model.intent.confidence).toBeLessThan(0…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/taxonomy-classification.test.ts > compact taxonomy and progressive classification > records only taxonomy chunks that were actually consulted
+AssertionError: expected [ 'groups', 'roles:product', …(1) ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
++ [
+    "groups",
+-   "role-summaries",
++   "roles:product",
+    "tasks:product",
+  ]
+
+ ❯ test/taxonomy-classification.test.ts:107:41
+    105|     expect(classification.candidateGroupIds).toEqual(["product_design"…
+    106|     expect(classification.candidateRoleIds).toEqual(expect.arrayContai…
+    107|     expect(classification.loadedChunks).toEqual(
+       |                                         ^
+    108|       expect.arrayContaining(["groups", "role-summaries", "tasks:produ…
+    109|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m16 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 02:04:08
+[2m   Duration [22m 1.32s[2m (transform 469ms, setup 0ms, collect 674ms, tests 233ms, environment 1ms, prepare 1.04s)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/taxonomy-classification.test.ts test/extension.test.ts test/taxonomy-data-files.test.ts

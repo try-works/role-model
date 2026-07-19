@@ -1,0 +1,17 @@
+{
+  "baseUrl": "http://127.0.0.1:3456",
+  "capturedAt": "2026-07-08T00:08:52.909Z",
+  "pi": {
+    "requestId": "req-5e767978-9415-4fec-bdad-92f118a807e7",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "clientRequestIdObserved": null,
+    "telemetryFound": true
+  },
+  "craft": {
+    "requestId": "req-288f5a01-76c1-48b6-aeff-50b86f484811",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "clientRequestIdObserved": null,
+    "telemetryFound": true,
+    "statusCode": 200
+  }
+}

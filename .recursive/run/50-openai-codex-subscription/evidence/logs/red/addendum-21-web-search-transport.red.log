@@ -1,0 +1,5 @@
+RED failure before the addendum-21 patch:
+FAIL test/index.test.ts > runtime-host-bridge > describes endpoint web-search support by active runtime transport
+AssertionError: expected ''undefined'' to be ''function''
+- the bridge did not yet export or use an explicit endpoint web-search support descriptor
+- endpoint inventory also did not expose webSearchSupport metadata for operator-facing inspection

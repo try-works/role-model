@@ -1,0 +1,11 @@
+{
+  "url": "http://127.0.0.1:3456/app/models/benchmark",
+  "result": "PASS",
+  "observations": [
+    "Remote moonshot/kimi-k2.5 endpoint displayed as disabled and unchecked.",
+    "Remote row includes 'Excluded by current execution mode'.",
+    "Eligible local llama-swap endpoint remains checked.",
+    "Judge endpoint options exclude the ineligible remote endpoint.",
+    "Run button reflects only 1 runnable model, preventing compare-capable run start."
+  ]
+}

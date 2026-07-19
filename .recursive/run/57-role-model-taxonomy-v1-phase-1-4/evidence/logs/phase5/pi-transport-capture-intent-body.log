@@ -1,0 +1,79 @@
+(node:25144) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+STDOUT:
+{"id":"set-model","type":"response","command":"set_model","success":true,"data":{"id":"default.decision-only","name":"default.decision-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4599/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":32768,"maxTokens":4096,"compat":{"supportsDeveloperRole":false}}}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+{"type":"agent_start"}
+{"type":"turn_start"}
+{"type":"message_start","message":{"role":"user","content":[{"type":"text","text":"Implement a bug fix and add a regression test for an API endpoint."}],"timestamp":1782215195274}}
+{"type":"message_end","message":{"role":"user","content":[{"type":"text","text":"Implement a bug fix and add a regression test for an API endpoint."}],"timestamp":1782215195274}}
+CAPTURED_BODY:
+{
+  "model": "default.decision-only",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert coding assistant operating inside pi, a coding agent harness. You help users by reading files, executing commands, editing code, and writing new files.\n\nAvailable tools:\n(none)\n\nIn addition to the tools above, you may have access to other custom tools depending on the project.\n\nGuidelines:\n- Be concise in your responses\n- Show file paths clearly when working with files\n\nPi documentation (read only when the user asks about pi itself, its SDK, extensions, themes, skills, or TUI):\n- Main documentation: D:\\pi\\node_modules\\@earendil-works\\pi-coding-agent\\README.md\n- Additional docs: D:\\pi\\node_modules\\@earendil-works\\pi-coding-agent\\docs\n- Examples: D:\\pi\\node_modules\\@earendil-works\\pi-coding-agent\\examples (extensions, custom tools, SDK)\n- When reading pi docs or examples, resolve docs/... under Additional docs and examples/... under Examples, not the current working directory\n- When asked about: extensions (docs/extensions.md, examples/extensions/), themes (docs/themes.md), skills (docs/skills.md), prompt templates (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings (docs/keybindings.md), SDK integrations (docs/sdk.md), custom providers (docs/custom-provider.md), adding models (docs/models.md), pi packages (docs/packages.md)\n- When working on pi topics, read the docs and examples, and follow .md cross-references before implementing\n- Always read pi .md files completely and follow links to related docs (e.g., tui.md for TUI API details)\nCurrent date: 2026-06-23\nCurrent working directory: D:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4"
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "Implement a bug fix and add a regression test for an API endpoint."
+        }
+      ]
+    }
+  ],
+  "stream": true,
+  "stream_options": {
+    "include_usage": true
+  },
+  "store": false,
+  "role_model": {
+    "intent": {
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "role": {
+        "id": "coder",
+        "hard": false
+      },
+      "task": {
+        "id": "coder.edit",
+        "hard": false
+      },
+      "capabilities": {
+        "preferred": [
+          "code.read",
+          "code.write"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.execute"
+      ],
+      "source": "heuristic",
+      "confidence": 0.72,
+      "evidence": [
+        "implementation/fix signal"
+      ],
+      "alternatives": [
+        {
+          "roleId": "coder",
+          "taskType": "coder.review"
+        },
+        {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause"
+        }
+      ]
+    }
+  }
+}
+EXIT=0 SIGNAL=

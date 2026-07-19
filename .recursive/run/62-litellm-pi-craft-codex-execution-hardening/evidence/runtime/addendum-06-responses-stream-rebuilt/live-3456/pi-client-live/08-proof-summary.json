@@ -1,0 +1,15 @@
+{
+  "requestId": "req-550f7e2c-50f7-4beb-85d0-0e4a288bd040",
+  "requestedModelId": "difficulty.remote-only",
+  "sourceClient": "openai.chat.completions",
+  "executionFamily": "remote-service",
+  "adapterFamily": "ai-sdk-openai",
+  "providerFamily": "openai",
+  "vendorId": "codex-app-server",
+  "selectedEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "selectedModelId": "chatgpt/gpt-5.4",
+  "requestedAlias": "difficulty.remote-only",
+  "statusFamily": "success",
+  "statusCode": 200,
+  "finishReason": "stop"
+}

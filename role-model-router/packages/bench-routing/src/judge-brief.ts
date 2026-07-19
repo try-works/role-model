@@ -34,7 +34,7 @@ const GLOBAL_ANTI_PATTERNS = [
   "MUST NOT use diff placeholders (----/+++, [file header])",
   "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
   "MUST NOT submit reasoning prose as the graded code deliverable",
-  "MUST NOT leave apply_patch arguments as stub text without @@ hunks",
+  "MUST NOT leave apply_patch arguments as placeholder or malformed patch content",
 ] as const;
 
 export function formatQuestionTranscript(caseItem: JudgeBriefCaseRef): string {
@@ -54,6 +54,80 @@ function splitGradingCriteria(criteria: string): string[] {
     .filter((part) => part.length > 8);
 }
 
+function isTrivialAcceptPattern(pattern: string): boolean {
+  const trimmed = pattern.trim();
+  return (
+    trimmed === ".+" ||
+    /^\.\{\d+(,\d*)?\}$/.test(trimmed) ||
+    /^[\^\$\.\+\*\?\(\)\[\]\{\}\\|,\s]+$/.test(trimmed)
+  );
+}
+
+function describeAcceptPattern(pattern: string): string | null {
+  const trimmed = pattern.trim();
+  if (!trimmed || isTrivialAcceptPattern(trimmed)) {
+    return null;
+  }
+  const exactLiteralMatch = trimmed.match(/^\^([A-Za-z0-9 _:/.-]+)\$$/);
+  if (exactLiteralMatch) {
+    return `exact value ${exactLiteralMatch[1]}`;
+  }
+  return trimmed;
+}
+
+function summarizeAcceptPatternsForJudge(patterns: readonly string[]): string[] {
+  return [
+    ...new Set(patterns.map(describeAcceptPattern).filter((value): value is string => !!value)),
+  ];
+}
+
+function parseRequiredKeys(format: BenchmarkAnswerFormat): string[] {
+  return Array.isArray(format.schema?.required) ? (format.schema.required as string[]) : [];
+}
+
+function hasExactCodeFence(answer: string, language?: string): boolean {
+  const trimmed = answer.trim();
+  const languageTag = (language ?? "").trim();
+  const prefix = languageTag ? `\`\`\`${languageTag}` : "```";
+  return trimmed.startsWith(prefix) && trimmed.endsWith("```");
+}
+
+function hasABCDSections(answer: string): boolean {
+  return ["A", "B", "C", "D"].every((label) =>
+    new RegExp(`(?:^|\\n)\\s*${label}[):]`, "m").test(answer),
+  );
+}
+
+export function validateJudgeCaseContract(caseItem: JudgeBriefCaseRef): void {
+  const format = resolveAnswerFormat(caseItem);
+  const authored =
+    caseItem.example_deliverable?.trim() ||
+    caseItem.judge_guidance?.exemplar?.deliverable?.trim() ||
+    "";
+  if (!authored) {
+    return;
+  }
+
+  if (format.kind === "code_fence" && !hasExactCodeFence(authored, format.language)) {
+    throw new Error(
+      `Contradictory code_fence example_deliverable for ${caseItem.case_id}: expected a fenced ${format.language ?? "code"} block.`,
+    );
+  }
+
+  const requiredKeys = parseRequiredKeys(format);
+  const requiresABCD = /A\/B\/C\/D sections/i.test(caseItem.grading_criteria);
+  const structuredJsonFormat =
+    format.kind === "json" ||
+    format.kind === "tool_calls_with_answer" ||
+    format.kind === "tool_calls_with_summary";
+  const schemaCarriesABCD = requiredKeys.some((key) => /^(section_)?[abcd]$/i.test(key));
+  if (requiresABCD && structuredJsonFormat && !schemaCarriesABCD && !hasABCDSections(authored)) {
+    throw new Error(
+      `Contradictory deliverable contract for ${caseItem.case_id}: grading_criteria require A/B/C/D sections but the structured answer format and authored exemplar do not carry them.`,
+    );
+  }
+}
+
 export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): string[] {
   const checklist: string[] = [];
 
@@ -66,20 +140,21 @@ export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): st
   }
 
   const format = resolveAnswerFormat(caseItem);
-  const required = Array.isArray(format.schema?.required)
-    ? (format.schema.required as string[])
-    : [];
+  const required = parseRequiredKeys(format);
   if (required.length > 0) {
     checklist.push(`[MUST] Include JSON keys: ${required.join(", ")}`);
   }
 
   if (caseItem.accept_patterns?.length) {
-    checklist.push(`[SHOULD] Match patterns: ${caseItem.accept_patterns.join(", ")}`);
+    const patternSummaries = summarizeAcceptPatternsForJudge(caseItem.accept_patterns);
+    if (patternSummaries.length > 0) {
+      checklist.push(`[SHOULD] Match clues: ${patternSummaries.join(", ")}`);
+    }
   }
 
   if (caseItem.expected_tool_names?.includes("apply_patch")) {
     checklist.push(
-      "[MUST] apply_patch diff must contain ---/+++ file headers and @@ hunk markers with real content",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable",
     );
   }
 
@@ -94,9 +169,7 @@ export function buildJudgeDeliverablesChecklist(caseItem: JudgeBriefCaseRef): st
 
 function deriveExemplarAnswer(caseItem: JudgeBriefCaseRef): string {
   const format = resolveAnswerFormat(caseItem);
-  const required = Array.isArray(format.schema?.required)
-    ? (format.schema.required as string[])
-    : [];
+  const required = parseRequiredKeys(format);
   const toolNames = caseItem.expected_tool_names ?? [];
   const parts: string[] = [caseItem.expected_response];
 
@@ -104,7 +177,9 @@ function deriveExemplarAnswer(caseItem: JudgeBriefCaseRef): string {
     parts.push(
       `Tool calls: ${toolNames
         .map((name) =>
-          name === "apply_patch" ? `${name} with valid unified diff (---/+++/@@)` : name,
+          name === "apply_patch"
+            ? `${name} with ---/+++ headers plus @@ hunk marker (line numbers optional) or Codex patch envelope`
+            : name,
         )
         .join(", ")}`,
     );
@@ -132,6 +207,7 @@ export function resolveExemplarAnswer(caseItem: JudgeBriefCaseRef): {
 }
 
 export function buildJudgeGradingBrief(caseItem: JudgeBriefCaseRef): JudgeGradingBrief {
+  validateJudgeCaseContract(caseItem);
   const exemplar = resolveExemplarAnswer(caseItem);
   return {
     questionTranscript: formatQuestionTranscript(caseItem),

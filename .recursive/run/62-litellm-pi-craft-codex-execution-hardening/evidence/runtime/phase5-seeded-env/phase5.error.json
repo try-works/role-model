@@ -1,0 +1,4 @@
+{
+  "error": "pi-alias-text-001 failed with HTTP 503: {\"error\":{\"message\":\"Configure litellm_proxy.providers to enable remote execution.\",\"type\":\"VENDOR_NOT_CONFIGURED\",\"code\":\"VENDOR_NOT_CONFIGURED\"}}",
+  "stack": "Error: pi-alias-text-001 failed with HTTP 503: {\"error\":{\"message\":\"Configure litellm_proxy.providers to enable remote execution.\",\"type\":\"VENDOR_NOT_CONFIGURED\",\"code\":\"VENDOR_NOT_CONFIGURED\"}}\n    at file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/[eval1]:541:13"
+}

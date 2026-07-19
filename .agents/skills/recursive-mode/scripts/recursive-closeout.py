@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -83,6 +84,19 @@ def load_lint_module():
         raise RuntimeError(f"Unable to load lint module from {module_path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    return module
+
+
+def load_phase_rules_module():
+    module_path = Path(__file__).with_name("recursive_phase_rules.py")
+    spec = importlib.util.spec_from_file_location("recursive_phase_rules", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load phase rules module from {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+    except FileNotFoundError:
+        raise RuntimeError(f"Phase rules module not found: {module_path}")
     return module
 
 
@@ -415,6 +429,42 @@ def resolve_phase_key(raw_phase: str) -> str:
     return phase_key
 
 
+def artifact_is_locked(artifact_path: Path) -> bool:
+    if not artifact_path.exists():
+        return False
+    content = artifact_path.read_text(encoding="utf-8")
+    return bool(re.search(r"(?m)^Status:\s*`?LOCKED`?\s*$", content)) or "LockedAt:" in content
+
+
+def run_phase8_training_trigger(repo_root: Path, run_id: str) -> int:
+    trigger_script = repo_root / ".recursive" / "scripts" / "recursive-training-phase8-trigger.py"
+    if not trigger_script.exists():
+        print("[INFO] recursive-training Phase 8 trigger not installed; skipping experiential training refresh.")
+        return 0
+
+    command = [
+        sys.executable,
+        str(trigger_script),
+        "--repo-root",
+        str(repo_root),
+        "--run-id",
+        run_id,
+        "--auto",
+    ]
+    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    if result.returncode != 0:
+        details = result.stderr.strip() or result.stdout.strip() or "no diagnostics emitted"
+        print(f"[FAIL] recursive-training Phase 8 trigger failed: {details}")
+        return result.returncode or 1
+
+    print("[OK] Ran recursive-training Phase 8 trigger.")
+    if result.stdout.strip():
+        print(result.stdout.strip())
+    if result.stderr.strip():
+        print(result.stderr.strip())
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Scaffold recursive-mode closeout artifacts for Phases 4-8.")
     parser.add_argument("--run-id", required=True, help="Run ID under .recursive/run/.")
@@ -454,8 +504,21 @@ def main() -> int:
         return 1
 
     lint = load_lint_module()
+    phase_rules = load_phase_rules_module()
     file_name = PHASE_CONFIG[phase_key]["file_name"]  # type: ignore[index]
     artifact_path = run_dir / file_name
+
+    # Advisory prerequisite check: warn if earlier phases are not yet locked.
+    # (Hard enforcement happens at lock time via recursive-lock.py.)
+    blockers = phase_rules.get_prerequisite_blockers(file_name, run_dir)
+    if blockers:
+        print(f"[WARN] Scaffolding {file_name} before prerequisite phases are LOCKED")
+        for blocker in blockers:
+            print(f"  - {blocker['artifact']}: {blocker['status']}")
+
+    if phase_key == "08" and artifact_path.exists() and not args.force and artifact_is_locked(artifact_path):
+        print(f"[INFO] Phase 8 artifact already locked: {artifact_path}")
+        return run_phase8_training_trigger(repo_root, args.run_id)
     if artifact_path.exists() and not args.force:
         print(f"[INFO] Closeout artifact exists, not overwriting: {artifact_path}")
         return 0

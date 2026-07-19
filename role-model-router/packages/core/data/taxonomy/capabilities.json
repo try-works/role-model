@@ -1,0 +1,600 @@
+[
+  {
+    "id": "text.chat",
+    "kind": "capability",
+    "label": "Text Chat",
+    "category": "Text",
+    "description": "General text understanding and generation.",
+    "classificationGuidance": "Use for ordinary text requests.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "code.read",
+    "kind": "capability",
+    "label": "Code Read",
+    "category": "Code",
+    "description": "Understand source code, diffs, configuration, and tests.",
+    "classificationGuidance": "Use when request requires reading code, logs, configs, or diffs.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "code.write",
+    "kind": "capability",
+    "label": "Code Write",
+    "category": "Code",
+    "description": "Produce code changes or patches.",
+    "classificationGuidance": "Use when files need to be modified or new code should be produced.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "reasoning.multi_step",
+    "kind": "capability",
+    "label": "Reasoning Multi Step",
+    "category": "Reasoning",
+    "description": "Handle multi-step reasoning and planning.",
+    "classificationGuidance": "Prefer for debugging, design, review, complex synthesis, and hard tasks.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "tools.function_calling",
+    "kind": "capability",
+    "label": "Tools Function Calling",
+    "category": "Tools",
+    "description": "Call structured tools reliably.",
+    "classificationGuidance": "Require when the client will expose function tools to the model.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "tools.command_execution",
+    "kind": "capability",
+    "label": "Tools Command Execution",
+    "category": "Tools",
+    "description": "Use command execution tools safely and reliably.",
+    "classificationGuidance": "Prefer when tests, builds, diagnostics, package installation, or local runtime verification are needed.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "json.schema_adherence",
+    "kind": "capability",
+    "label": "Json Schema Adherence",
+    "category": "Structured Output",
+    "description": "Produce valid JSON matching a schema.",
+    "classificationGuidance": "Require when strict structured output is requested.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "security.analysis",
+    "kind": "capability",
+    "label": "Security Analysis",
+    "category": "Security",
+    "description": "Identify security risks, vulnerabilities, and abuse cases.",
+    "classificationGuidance": "Use for audits, threat models, auth/permission analysis, or risk review.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "web.search",
+    "kind": "capability",
+    "label": "Web Search",
+    "category": "Retrieval",
+    "description": "Use live web search or retrieval.",
+    "classificationGuidance": "Require when current external information is needed.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "citation.synthesis",
+    "kind": "capability",
+    "label": "Citation Synthesis",
+    "category": "Retrieval",
+    "description": "Compare and cite retrieved sources.",
+    "classificationGuidance": "Prefer when answers should cite or compare sources.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "long_context",
+    "kind": "capability",
+    "label": "Long Context",
+    "category": "Context",
+    "description": "Work effectively with large context windows.",
+    "classificationGuidance": "Prefer when context is large or multi-file/multi-document.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "tools.browser_control",
+    "kind": "capability",
+    "label": "Tools Browser Control",
+    "category": "Tools",
+    "description": "Use browser automation/control tools reliably.",
+    "classificationGuidance": "Prefer when a task needs browser-driven QA, UI inspection, or workflow validation.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "vision.input",
+    "kind": "capability",
+    "label": "Vision Input",
+    "category": "Vision",
+    "description": "Understand screenshots, images, diagrams, or other visual inputs.",
+    "classificationGuidance": "Require when classification depends on image or screenshot content.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "data.query",
+    "kind": "capability",
+    "label": "Data Query",
+    "category": "Data",
+    "description": "Write, inspect, or explain structured data queries.",
+    "classificationGuidance": "Use for SQL, analytics queries, and data extraction work.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "data.schema",
+    "kind": "capability",
+    "label": "Data Schema",
+    "category": "Data",
+    "description": "Reason about database, event, analytics, or API schemas.",
+    "classificationGuidance": "Use for schema review, schema evolution, and data model compatibility.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "data.transform",
+    "kind": "capability",
+    "label": "Data Transform",
+    "category": "Data",
+    "description": "Map, normalize, clean, or convert data between shapes.",
+    "classificationGuidance": "Use when records, files, or payloads must be transformed.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "legal.analysis",
+    "kind": "capability",
+    "label": "Legal Analysis",
+    "category": "Legal",
+    "description": "Reason about legal, licensing, terms, privacy, or compliance-sensitive text.",
+    "classificationGuidance": "Use for legal-review support, with appropriate domain and policy constraints.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "finance.analysis",
+    "kind": "capability",
+    "label": "Finance Analysis",
+    "category": "Finance",
+    "description": "Reason about cost, pricing, budget, spend, or ROI.",
+    "classificationGuidance": "Use for estimates, budget tradeoffs, and financial comparisons.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "reasoning.divergent",
+    "kind": "capability",
+    "label": "Reasoning Divergent",
+    "category": "Reasoning",
+    "description": "Generate diverse creative alternatives.",
+    "classificationGuidance": "Prefer for brainstorming, naming, ideation, and variant generation.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "vision.output",
+    "kind": "capability",
+    "label": "Vision Output",
+    "category": "Vision",
+    "description": "Plan or specify visual outputs, scenes, layouts, or storyboards.",
+    "classificationGuidance": "Use when the requested result is primarily visual or scene-oriented.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "communication.user_facing",
+    "kind": "capability",
+    "label": "Communication User Facing",
+    "category": "Communication",
+    "description": "Produce clear user-facing explanations, remediation steps, or support responses.",
+    "classificationGuidance": "Prefer when the output needs to be understandable by an end user.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "communication.follow_up",
+    "kind": "capability",
+    "label": "Communication Follow Up",
+    "category": "Communication",
+    "description": "Produce follow-up messages, reminders, recaps, and next-step communication.",
+    "classificationGuidance": "Use when the output is a follow-up artifact after a meeting, sale, support issue, or project step.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "education.tutoring",
+    "kind": "capability",
+    "label": "Education Tutoring",
+    "category": "Education",
+    "description": "Teach concepts with examples, scaffolding, and learner-appropriate explanations.",
+    "classificationGuidance": "Use for tutoring, lessons, and study support.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "education.assessment",
+    "kind": "capability",
+    "label": "Education Assessment",
+    "category": "Education",
+    "description": "Generate or review learning assessments, quizzes, rubrics, and feedback.",
+    "classificationGuidance": "Use for practice questions, grading-style feedback, or learning checks.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "language.translation",
+    "kind": "capability",
+    "label": "Language Translation",
+    "category": "Language",
+    "description": "Translate content between languages while preserving meaning.",
+    "classificationGuidance": "Use for direct translation tasks.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "language.localization",
+    "kind": "capability",
+    "label": "Language Localization",
+    "category": "Language",
+    "description": "Adapt content for locale, idiom, format, and cultural expectations.",
+    "classificationGuidance": "Use when literal translation is insufficient.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "marketing.analysis",
+    "kind": "capability",
+    "label": "Marketing Analysis",
+    "category": "Marketing",
+    "description": "Reason about audience, positioning, campaign strategy, and search intent.",
+    "classificationGuidance": "Use for marketing strategy, SEO, campaign planning, and positioning.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "marketing.copy",
+    "kind": "capability",
+    "label": "Marketing Copy",
+    "category": "Marketing",
+    "description": "Produce concise persuasive marketing copy and variants.",
+    "classificationGuidance": "Use for ads, landing-page copy, headlines, and CTAs.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "sales.analysis",
+    "kind": "capability",
+    "label": "Sales Analysis",
+    "category": "Sales",
+    "description": "Reason about accounts, discovery, objections, proposals, and buying process.",
+    "classificationGuidance": "Use for sales planning, qualification, and enterprise proposals.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "sales.communication",
+    "kind": "capability",
+    "label": "Sales Communication",
+    "category": "Sales",
+    "description": "Write buyer-facing sales messages and objection responses.",
+    "classificationGuidance": "Use for outreach, follow-up, objection handling, and sales emails.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "recruiting.analysis",
+    "kind": "capability",
+    "label": "Recruiting Analysis",
+    "category": "Recruiting",
+    "description": "Reason against job requirements, interview criteria, and hiring rubrics.",
+    "classificationGuidance": "Use for job descriptions, interview plans, and candidate screening support.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "procurement.analysis",
+    "kind": "capability",
+    "label": "Procurement Analysis",
+    "category": "Procurement",
+    "description": "Compare vendors, RFP requirements, commercial terms, and purchasing tradeoffs.",
+    "classificationGuidance": "Use for vendor comparison, procurement requirements, and RFP work.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "coordination.workflow",
+    "kind": "capability",
+    "label": "Coordination Workflow",
+    "category": "Coordination",
+    "description": "Organize meetings, tasks, owners, decisions, and action workflows.",
+    "classificationGuidance": "Use for agendas, meeting notes, follow-ups, and administrative organization.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "calendar.planning",
+    "kind": "capability",
+    "label": "Calendar Planning",
+    "category": "Coordination",
+    "description": "Plan schedules, sequencing, reminders, and time coordination.",
+    "classificationGuidance": "Use when timing or calendar-style coordination matters.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "knowledge.organization",
+    "kind": "capability",
+    "label": "Knowledge Organization",
+    "category": "Knowledge",
+    "description": "Structure notes, docs, memories, and knowledge-base content.",
+    "classificationGuidance": "Use for knowledge management, KB writing, and information architecture.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "knowledge.retrieval",
+    "kind": "capability",
+    "label": "Knowledge Retrieval",
+    "category": "Knowledge",
+    "description": "Retrieve and synthesize known local, remembered, or indexed context.",
+    "classificationGuidance": "Use for memory, prior-context, or knowledge-base lookup.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "memory.write",
+    "kind": "capability",
+    "label": "Memory Write",
+    "category": "Memory",
+    "description": "Create, update, or curate durable memory records.",
+    "classificationGuidance": "Use only when durable memory updates are authorized.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "strategy.analysis",
+    "kind": "capability",
+    "label": "Strategy Analysis",
+    "category": "Strategy",
+    "description": "Reason about business, organizational, competitive, and scenario tradeoffs.",
+    "classificationGuidance": "Use for strategy, scenarios, and executive decision support.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "market.analysis",
+    "kind": "capability",
+    "label": "Market Analysis",
+    "category": "Strategy",
+    "description": "Analyze markets, segments, competitors, and adoption trends.",
+    "classificationGuidance": "Use when market evidence or competitive landscape matters.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "math.solve",
+    "kind": "capability",
+    "label": "Math Solve",
+    "category": "Math",
+    "description": "Solve mathematical problems and calculations.",
+    "classificationGuidance": "Use for quantitative problem solving.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "math.verify",
+    "kind": "capability",
+    "label": "Math Verify",
+    "category": "Math",
+    "description": "Verify calculations, proofs, derivations, and quantitative claims.",
+    "classificationGuidance": "Use when checking mathematical correctness.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "math.modeling",
+    "kind": "capability",
+    "label": "Math Modeling",
+    "category": "Math",
+    "description": "Build or critique mathematical, statistical, or optimization models.",
+    "classificationGuidance": "Use for quantitative modeling and model formulation.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "science.analysis",
+    "kind": "capability",
+    "label": "Science Analysis",
+    "category": "Science",
+    "description": "Reason about scientific evidence, claims, studies, and uncertainty.",
+    "classificationGuidance": "Use for scientific evidence review and synthesis.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "science.method",
+    "kind": "capability",
+    "label": "Science Method",
+    "category": "Science",
+    "description": "Design or critique scientific methods, experiments, controls, and validity.",
+    "classificationGuidance": "Use for experimental design and methodology critique.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "health.general_info",
+    "kind": "capability",
+    "label": "Health General Info",
+    "category": "Health",
+    "description": "Provide general, non-diagnostic health information.",
+    "classificationGuidance": "Use for general health education within safe boundaries.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "health.safety",
+    "kind": "capability",
+    "label": "Health Safety",
+    "category": "Health",
+    "description": "Recognize safety-sensitive health contexts and prefer care-seeking guidance.",
+    "classificationGuidance": "Use for symptoms, medication concerns, or potentially urgent health questions.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  }
+]

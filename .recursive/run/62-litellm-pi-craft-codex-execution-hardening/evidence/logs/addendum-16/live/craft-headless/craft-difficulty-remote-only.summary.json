@@ -1,0 +1,8 @@
+{
+  "exitCode": 1,
+  "durationMs": 151,
+  "model": "difficulty.remote-only",
+  "containsExpected": false,
+  "outputPreview": "\nnode:internal/modules/run_main:107\n    triggerUncaughtException(\n    ^\nErrorEvent {\n  Symbol(type): 'error',\n  Symbol(kTarget): WebSocket {\n    Symbol(kEvents): SafeMap(3) {\n      'open' => <ref *1> {\n        size: 1,\n        next: Listener {\n          next: undefined,\n          previous: [Circular *1],\n          listener: [Function (anonymous)],\n          flags: 1,\n          callback: [Function (anonymous)]\n        },\n        resistStopPropagation: false\n      },\n      'error' => { size: 0, next: undefined, resistStopPropagation: false },\n      'message' => <ref *2> {\n        size: 1,\n        next: Listener {\n          next: undefined,\n          previous: [Circular *2],\n          listener: [Function (anonymous)],\n          flags: 0,\n          callback: [Function (anonymous)]\n        },\n        resistStopPropagation: false\n      }\n    },\n    Symbol(events.maxEventTargetListeners): 10,\n    Symbol(events.maxEventTargetListenersWarned): false,\n    Symbol(kHandlers): SafeMap(0) {}\n  },\n  ",
+  "resultPath": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-16\\live\\craft-headless\\craft-difficulty-remote-only-result.json"
+}

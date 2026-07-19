@@ -1,0 +1,47 @@
+{
+  "requestCount": 7,
+  "successCount": 7,
+  "failureCount": 0,
+  "totalInputTokens": 77,
+  "totalOutputTokens": 28,
+  "totalTokens": 105,
+  "cachedRequestCount": 0,
+  "totalActualCostUsd": 0,
+  "totalEstimatedCostUsd": 0,
+  "totalEffectiveCostUsd": 0,
+  "averageLatencyMs": 30,
+  "p95LatencyMs": 121,
+  "lastSeenAtMs": 1782261129914,
+  "sourceBreakdown": {
+    "local": {
+      "requestCount": 7,
+      "successCount": 7,
+      "failureCount": 0,
+      "totalInputTokens": 77,
+      "totalOutputTokens": 28,
+      "totalTokens": 105,
+      "cachedRequestCount": 0,
+      "totalActualCostUsd": 0,
+      "totalEstimatedCostUsd": 0,
+      "totalEffectiveCostUsd": 0,
+      "averageLatencyMs": 30,
+      "p95LatencyMs": 121,
+      "lastSeenAtMs": 1782261129914
+    },
+    "remote": {
+      "requestCount": 0,
+      "successCount": 0,
+      "failureCount": 0,
+      "totalInputTokens": 0,
+      "totalOutputTokens": 0,
+      "totalTokens": 0,
+      "cachedRequestCount": 0,
+      "totalActualCostUsd": 0,
+      "totalEstimatedCostUsd": 0,
+      "totalEffectiveCostUsd": 0,
+      "averageLatencyMs": null,
+      "p95LatencyMs": null,
+      "lastSeenAtMs": null
+    }
+  }
+}

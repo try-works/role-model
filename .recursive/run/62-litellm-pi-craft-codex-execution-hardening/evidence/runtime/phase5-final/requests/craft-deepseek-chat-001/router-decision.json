@@ -1,0 +1,1073 @@
+{
+  "requestId": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+  "routingDecisionId": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b",
+  "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+  "selectedModelId": "deepseek/deepseek-v4-flash",
+  "fallbackEndpointIds": [],
+  "strategyLabel": "difficulty",
+  "decision": {
+    "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b",
+    "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+    "app_id": "unknown-app",
+    "org_id": null,
+    "policy_snapshot": {
+      "policy_id": "cost-policy",
+      "strategy": "cost",
+      "compute_preference": "auto",
+      "prefer_local": false,
+      "budget_mode": "disabled",
+      "tie_break_order": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "required_modalities": [
+        "text"
+      ],
+      "require_tools": false,
+      "deny_endpoints": [],
+      "allow_endpoints": [
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      ],
+      "deny_provider_kinds": [],
+      "allow_provider_kinds": [],
+      "budget": {
+        "enabled": false,
+        "currency": "USD"
+      },
+      "privacy": {
+        "allow_remote": true
+      },
+      "targets": {
+        "latency_target_ms": 150,
+        "latency_max_ms": 300,
+        "throughput_target_tps": 40
+      }
+    },
+    "eligibility": [
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "eligible": true,
+        "exclusions": []
+      },
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "POLICY_DENY_ENDPOINT",
+            "detail": "Endpoint is denied by routing policy."
+          }
+        ]
+      },
+      {
+        "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "POLICY_DENY_ENDPOINT",
+            "detail": "Endpoint is denied by routing policy."
+          }
+        ]
+      },
+      {
+        "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "POLICY_DENY_ENDPOINT",
+            "detail": "Endpoint is denied by routing policy."
+          }
+        ]
+      }
+    ],
+    "scored_candidates": [
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "total_score": 0.9382405832320777,
+        "metric_breakdown": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "throughput": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "cost": {
+            "value": 0.9720646415552855,
+            "source": "catalog",
+            "raw": {
+              "cost_per_1k_tokens_est": 0.00027935358444714463,
+              "measured_at_ms": null,
+              "freshness_weight": 1,
+              "neutral_value": 0.5,
+              "estimated_request_usd": 0.0011495400000000001,
+              "input_per_1m": 0.14,
+              "output_per_1m": 0.28,
+              "token_economics_source": "catalog",
+              "canonical_model_id": "deepseek/deepseek-v4-flash",
+              "target_cost_per_request": 0.01,
+              "observed_value": 0.9720646415552855,
+              "effective_value": 0.9720646415552855
+            }
+          },
+          "reliability": {
+            "value": 0.7,
+            "source": "default"
+          },
+          "preference": {
+            "value": 0.6,
+            "source": "declared",
+            "raw": {
+              "cache_affinity": true,
+              "cache_affinity_delta": 0.1
+            }
+          }
+        },
+        "tie_break": {
+          "quality": 0.5,
+          "latency_ms": 250,
+          "reliability": 0.7,
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+        }
+      }
+    ],
+    "chosen_endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "fallback_endpoint_ids": [],
+    "selection_reasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "BUDGET_OPTIMIZATION"
+    ],
+    "used_measured": false,
+    "used_declared": true,
+    "scoring_version": "baseline-v2"
+  },
+  "routingDiagnostics": {
+    "retrievalReceiptId": "conversation-main-retrieval-receipt",
+    "routingModel": {
+      "enabled": false,
+      "endpointId": null,
+      "preferredEndpointIds": [],
+      "ignoredEndpointIds": []
+    },
+    "routingMode": {
+      "source": "runtime-config",
+      "effectiveMode": "difficulty"
+    },
+    "capabilityEligibility": {
+      "requiredInputModalities": [
+        "text"
+      ],
+      "requiredOutputModalities": [
+        "text"
+      ],
+      "requiredCapabilities": [
+        "text.chat"
+      ],
+      "advisoryCapabilities": [],
+      "includedEndpoints": [
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      ],
+      "excludedTargets": []
+    },
+    "difficultyRouting": {
+      "difficulty": "easy",
+      "strategy": "cost",
+      "fallbackApplied": false,
+      "cacheHit": true,
+      "rubricSignals": {
+        "contextTokens": 10,
+        "toolCount": 0,
+        "historyTurnCount": 1,
+        "instructionConstraintCount": 0,
+        "decompositionKeywordCount": 0,
+        "codeOrSchemaBurden": false
+      }
+    },
+    "rewrite": {
+      "requestedModel": "deepseek/deepseek-v4-flash",
+      "downstreamModelId": "deepseek/deepseek-v4-flash",
+      "applied": false,
+      "reason": "requested-model-matches-downstream"
+    },
+    "observedProfile": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "source": "none",
+      "readMode": "per-request"
+    },
+    "catalogEconomics": {
+      "canonicalModelId": "deepseek/deepseek-v4-flash",
+      "tokenEconomicsSource": "catalog",
+      "inputPer1M": 0.14,
+      "outputPer1M": 0.28,
+      "estimatedRequestUsd": 0.0011495400000000001,
+      "cost_per_1k_tokens_est": 0.00027935358444714463
+    },
+    "effectiveMetrics": {
+      "quality": {
+        "value": 0.5,
+        "source": "default"
+      },
+      "latency": {
+        "value": 0.5,
+        "source": "default"
+      },
+      "throughput": {
+        "value": 0.5,
+        "source": "default"
+      },
+      "reliability": {
+        "value": 0.7,
+        "source": "default"
+      },
+      "cost": {
+        "value": 0.9720646415552855,
+        "source": "catalog",
+        "freshnessWeight": 1
+      }
+    },
+    "selection": {
+      "mode": "best-total-score",
+      "scoreTieEpsilon": 0.01,
+      "winnerEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "winnerTotalScore": 0.9382405832320777,
+      "tieBreakOrder": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ]
+    },
+    "throughputPenalty": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "active": false
+    }
+  },
+  "retrievalReceipt": {
+    "receiptId": "conversation-main-retrieval-receipt",
+    "summary": {
+      "selectedTurns": 2,
+      "selectedArtifacts": 1,
+      "omittedTurns": 2,
+      "omittedArtifacts": 2,
+      "estimatedTokens": 240
+    }
+  },
+  "contextEnvelope": {
+    "conversationId": "conversation-main",
+    "latestHandoffId": "handoff-1",
+    "estimatedTokenCount": 240
+  },
+  "request": {
+    "requestId": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+    "clientRequestId": "craft-deepseek-chat-001",
+    "routingDecisionId": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b",
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "conversationId": "conversation-main",
+    "decision": {
+      "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b",
+      "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+      "app_id": "unknown-app",
+      "org_id": null,
+      "policy_snapshot": {
+        "policy_id": "cost-policy",
+        "strategy": "cost",
+        "compute_preference": "auto",
+        "prefer_local": false,
+        "budget_mode": "disabled",
+        "tie_break_order": [
+          "quality",
+          "latency_ms",
+          "reliability",
+          "endpoint_id"
+        ],
+        "required_capabilities": [
+          "text.chat"
+        ],
+        "required_modalities": [
+          "text"
+        ],
+        "require_tools": false,
+        "deny_endpoints": [],
+        "allow_endpoints": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+        ],
+        "deny_provider_kinds": [],
+        "allow_provider_kinds": [],
+        "budget": {
+          "enabled": false,
+          "currency": "USD"
+        },
+        "privacy": {
+          "allow_remote": true
+        },
+        "targets": {
+          "latency_target_ms": 150,
+          "latency_max_ms": 300,
+          "throughput_target_tps": 40
+        }
+      },
+      "eligibility": [
+        {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "eligible": true,
+          "exclusions": []
+        },
+        {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          "eligible": false,
+          "exclusions": [
+            {
+              "code": "POLICY_DENY_ENDPOINT",
+              "detail": "Endpoint is denied by routing policy."
+            }
+          ]
+        },
+        {
+          "endpoint_id": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+          "eligible": false,
+          "exclusions": [
+            {
+              "code": "POLICY_DENY_ENDPOINT",
+              "detail": "Endpoint is denied by routing policy."
+            }
+          ]
+        },
+        {
+          "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+          "eligible": false,
+          "exclusions": [
+            {
+              "code": "POLICY_DENY_ENDPOINT",
+              "detail": "Endpoint is denied by routing policy."
+            }
+          ]
+        }
+      ],
+      "scored_candidates": [
+        {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "total_score": 0.9382405832320777,
+          "metric_breakdown": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "throughput": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "cost": {
+              "value": 0.9720646415552855,
+              "source": "catalog",
+              "raw": {
+                "cost_per_1k_tokens_est": 0.00027935358444714463,
+                "measured_at_ms": null,
+                "freshness_weight": 1,
+                "neutral_value": 0.5,
+                "estimated_request_usd": 0.0011495400000000001,
+                "input_per_1m": 0.14,
+                "output_per_1m": 0.28,
+                "token_economics_source": "catalog",
+                "canonical_model_id": "deepseek/deepseek-v4-flash",
+                "target_cost_per_request": 0.01,
+                "observed_value": 0.9720646415552855,
+                "effective_value": 0.9720646415552855
+              }
+            },
+            "reliability": {
+              "value": 0.7,
+              "source": "default"
+            },
+            "preference": {
+              "value": 0.6,
+              "source": "declared",
+              "raw": {
+                "cache_affinity": true,
+                "cache_affinity_delta": 0.1
+              }
+            }
+          },
+          "tie_break": {
+            "quality": 0.5,
+            "latency_ms": 250,
+            "reliability": 0.7,
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+          }
+        }
+      ],
+      "chosen_endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "fallback_endpoint_ids": [],
+      "selection_reasons": [
+        "BEST_TOTAL_SCORE",
+        "DECLARED_PROFILE_USED",
+        "DEFAULT_PROFILE_USED",
+        "CACHE_AFFINITY_APPLIED",
+        "BUDGET_OPTIMIZATION"
+      ],
+      "used_measured": false,
+      "used_declared": true,
+      "scoring_version": "baseline-v2"
+    },
+    "routingDiagnostics": {
+      "retrievalReceiptId": "conversation-main-retrieval-receipt",
+      "routingModel": {
+        "enabled": false,
+        "endpointId": null,
+        "preferredEndpointIds": [],
+        "ignoredEndpointIds": []
+      },
+      "routingMode": {
+        "source": "runtime-config",
+        "effectiveMode": "difficulty"
+      },
+      "capabilityEligibility": {
+        "requiredInputModalities": [
+          "text"
+        ],
+        "requiredOutputModalities": [
+          "text"
+        ],
+        "requiredCapabilities": [
+          "text.chat"
+        ],
+        "advisoryCapabilities": [],
+        "includedEndpoints": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+        ],
+        "excludedTargets": []
+      },
+      "difficultyRouting": {
+        "difficulty": "easy",
+        "strategy": "cost",
+        "fallbackApplied": false,
+        "cacheHit": true,
+        "rubricSignals": {
+          "contextTokens": 10,
+          "toolCount": 0,
+          "historyTurnCount": 1,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": false
+        }
+      },
+      "rewrite": {
+        "requestedModel": "deepseek/deepseek-v4-flash",
+        "downstreamModelId": "deepseek/deepseek-v4-flash",
+        "applied": false,
+        "reason": "requested-model-matches-downstream"
+      },
+      "observedProfile": {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "source": "none",
+        "readMode": "per-request"
+      },
+      "catalogEconomics": {
+        "canonicalModelId": "deepseek/deepseek-v4-flash",
+        "tokenEconomicsSource": "catalog",
+        "inputPer1M": 0.14,
+        "outputPer1M": 0.28,
+        "estimatedRequestUsd": 0.0011495400000000001,
+        "cost_per_1k_tokens_est": 0.00027935358444714463
+      },
+      "effectiveMetrics": {
+        "quality": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "latency": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "throughput": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "reliability": {
+          "value": 0.7,
+          "source": "default"
+        },
+        "cost": {
+          "value": 0.9720646415552855,
+          "source": "catalog",
+          "freshnessWeight": 1
+        }
+      },
+      "selection": {
+        "mode": "best-total-score",
+        "scoreTieEpsilon": 0.01,
+        "winnerEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "winnerTotalScore": 0.9382405832320777,
+        "tieBreakOrder": [
+          "quality",
+          "latency_ms",
+          "reliability",
+          "endpoint_id"
+        ]
+      },
+      "throughputPenalty": {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "active": false
+      }
+    },
+    "retrievalReceipt": {
+      "receiptId": "conversation-main-retrieval-receipt",
+      "summary": {
+        "selectedTurns": 2,
+        "selectedArtifacts": 1,
+        "omittedTurns": 2,
+        "omittedArtifacts": 2,
+        "estimatedTokens": 240
+      }
+    },
+    "contextEnvelope": {
+      "conversationId": "conversation-main",
+      "latestHandoffId": "handoff-1",
+      "estimatedTokenCount": 240
+    },
+    "trace": {
+      "spans": [
+        {
+          "trace_id": "trace-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "span_id": "span-provider-load-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "span_type": "provider.load",
+          "started_at_ms": 1783449114033,
+          "ended_at_ms": 1783449114038,
+          "status": "ok",
+          "attributes": {
+            "adapter_family": "ai-sdk-openai-compatible",
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+          }
+        },
+        {
+          "trace_id": "trace-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "span_id": "span-provider-decode-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "parent_span_id": "span-provider-load-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "span_type": "provider.decode",
+          "started_at_ms": 1783449114038,
+          "ended_at_ms": 1783449115316,
+          "status": "ok",
+          "attributes": {
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+            "text_delta_count": 1
+          }
+        }
+      ],
+      "events": [
+        {
+          "event_id": "event-provider-load-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "trace_id": "trace-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "span_id": "span-provider-load-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "timestamp_ms": 1783449114034,
+          "event_type": "trace.span.opened",
+          "payload": {
+            "adapter_family": "ai-sdk-openai-compatible",
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+          }
+        },
+        {
+          "event_id": "event-usage-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "trace_id": "trace-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "span_id": "span-provider-decode-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "timestamp_ms": 1783449115316,
+          "event_type": "usage.event.created",
+          "payload": {
+            "input_tokens": 15,
+            "output_tokens": 109
+          }
+        }
+      ]
+    },
+    "usageEvent": {
+      "event_id": "usage-req-2aef80fe-baef-465e-8be3-5830932f226b",
+      "timestamp_ms": 1783449114033,
+      "app_id": "unknown-app",
+      "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+      "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b",
+      "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "model_id": "deepseek/deepseek-v4-flash",
+      "package_id": "provider-openai",
+      "provider_kind": "remote_openai_compat",
+      "tokens_in": 15,
+      "tokens_out": 109,
+      "latency_ms": 1283,
+      "sample_source": "live_request"
+    },
+    "observedPerformance": {
+      "endpointVersion": "run07-registry-v1:default",
+      "sample": {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1783449114033,
+        "latency_ms": 1283,
+        "latency_ms_p95": 1283,
+        "tokens_per_sec": 85,
+        "failure": false,
+        "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+        "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b"
+      },
+      "history": [
+        {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "endpoint_version": "run07-registry-v1:default",
+          "source_type": "live_request",
+          "difficulty_bucket": "easy",
+          "timestamp_ms": 1783449114033,
+          "latency_ms": 1283,
+          "latency_ms_p95": 1283,
+          "tokens_per_sec": 85,
+          "failure": false,
+          "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+          "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b"
+        }
+      ],
+      "profile": {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:default",
+        "measured_at_ms": 1783449114033,
+        "measurement_window": {
+          "started_at_ms": 1783449114033,
+          "ended_at_ms": 1783449114033
+        },
+        "sample_size": 1,
+        "sources": {
+          "live_request_samples": 1,
+          "benchmark_samples": 0
+        },
+        "latency_ms_p50": 1283,
+        "latency_ms_p95": 1283,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.1762914343888821,
+        "tokens_per_sec": 85
+      }
+    },
+    "diagnostics": {
+      "routing": [
+        {
+          "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+          "severity": "info",
+          "message": "Routing diagnostics link request req-2aef80fe-baef-465e-8be3-5830932f226b to retrieval receipt conversation-main-retrieval-receipt."
+        }
+      ],
+      "execution": [],
+      "authAccount": [],
+      "memoryQuality": [
+        {
+          "code": "MEMORY_CONTEXT_OMITTED",
+          "severity": "warning",
+          "message": "Context assembly omitted 2 turns and 2 artifacts."
+        },
+        {
+          "code": "MEMORY_LATEST_HANDOFF_LINKED",
+          "severity": "info",
+          "message": "Context inspection preserves latest handoff handoff-1."
+        }
+      ],
+      "tooling": [],
+      "operator": [
+        {
+          "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+          "severity": "info",
+          "message": "Raw operator captures remain available through the preserved host capture surface."
+        }
+      ]
+    },
+    "capturePolicy": {
+      "environment": "local-dev",
+      "redactionLevel": "strict",
+      "retentionClass": "standard",
+      "structuredInspectionMode": "redacted",
+      "rawCaptureAvailable": true,
+      "structuredInspectionAvailable": true,
+      "redactedFields": [
+        "request.headers.authorization"
+      ],
+      "suppressedFields": [
+        "request.body",
+        "response.body"
+      ]
+    },
+    "executionTelemetry": {
+      "providerFamily": "ai-sdk-openai-compatible",
+      "finishReason": "stop",
+      "stream": {
+        "requested": false,
+        "textDeltas": 1,
+        "toolCallDeltas": 0,
+        "toolArgumentDeltas": 0
+      },
+      "streamSupport": {
+        "text": "delta",
+        "toolCalls": "delta",
+        "toolArguments": "delta"
+      },
+      "promptCaching": {
+        "supported": false,
+        "mode": "unsupported"
+      },
+      "usageSupport": {
+        "inputTokens": true,
+        "outputTokens": true,
+        "cacheReadTokens": false,
+        "cacheWriteTokens": false
+      },
+      "costProvenance": "unavailable"
+    },
+    "executionSemantics": {
+      "sourceClient": "openai.chat.completions",
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai-compatible",
+      "payloadBytes": {
+        "providerRequest": 160,
+        "providerResponse": 1066
+      },
+      "retryCount": 0,
+      "rerouteCount": 0,
+      "cooldownDecision": "not_applied",
+      "idempotencyDecision": "not_needed",
+      "toolSideEffectState": "none"
+    },
+    "cacheObservability": {
+      "promptCacheRequested": false,
+      "promptCacheUsed": false,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "routingCacheAffinity": false
+    },
+    "tooling": {
+      "toolCalls": [],
+      "executions": [],
+      "diagnostics": []
+    },
+    "telemetrySnapshot": {
+      "providerId": "deepseek",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "sourceType": "remote",
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "region": "global",
+      "lifecycleStateAtRequest": "active",
+      "healthStatusAtRequest": "healthy",
+      "requestedModelId": "deepseek/deepseek-v4-flash",
+      "selectedModelId": "deepseek/deepseek-v4-flash",
+      "requestOperation": "chat",
+      "roleIds": [],
+      "toolingUsed": false,
+      "cacheState": "unsupported",
+      "eligibleEndpointIds": [
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash"
+      ],
+      "eligibleModelIds": [
+        "deepseek/deepseek-v4-flash"
+      ],
+      "candidateCostSnapshot": {
+        "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash": {
+          "modelId": "deepseek/deepseek-v4-flash",
+          "providerId": "deepseek",
+          "providerKind": "remote_openai_compat",
+          "sourceType": "remote",
+          "endpointKind": "remote_api",
+          "servingSource": "remote-service",
+          "region": "global",
+          "tokenEconomicsSource": "catalog",
+          "estimatedRequestUsd": 0.0011495400000000001,
+          "costPer1kTokensEst": 0.00027935358444714463,
+          "inputPer1M": 0.14,
+          "outputPer1M": 0.28
+        }
+      },
+      "selectedPricingSnapshot": {
+        "modelId": "deepseek/deepseek-v4-flash",
+        "providerId": "deepseek",
+        "providerAccountId": "deepseek.personal.deepseek-api-key",
+        "sourceType": "remote",
+        "tokenEconomicsSource": "catalog",
+        "estimatedRequestUsd": 0.0011495400000000001,
+        "costPer1kTokensEst": 0.00027935358444714463,
+        "inputPer1M": 0.14,
+        "outputPer1M": 0.28
+      },
+      "selectedUncachedCostUsd": 0.0011495400000000001,
+      "baselineMaxEligibleCostUsd": 0.0011495400000000001,
+      "routingCostSavingsUsd": 0,
+      "cacheCostSavingsUsd": 0,
+      "totalAvoidedCostUsd": 0,
+      "costBaselineSource": "selected_only",
+      "costSavingsSupport": "full",
+      "dimensions": {
+        "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "candidateCount": 1
+      }
+    },
+    "privacyReceipt": {
+      "samplingRate": 1,
+      "retentionTtlHours": 720,
+      "retainUntil": 1786041114046
+    },
+    "inspection": {
+      "request": {
+        "requestId": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+        "clientRequestId": "craft-deepseek-chat-001",
+        "routingDecisionId": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b",
+        "requestCapture": {
+          "headers": {
+            "authorization": "[redacted]"
+          },
+          "body": {
+            "suppressed": true,
+            "reason": "policy.rawCapture.requestBody.disabled"
+          }
+        },
+        "responseCapture": {
+          "statusCode": 200,
+          "body": {
+            "suppressed": true,
+            "reason": "policy.rawCapture.responseBody.disabled"
+          }
+        },
+        "diagnostics": {
+          "routing": [
+            {
+              "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+              "severity": "info",
+              "message": "Routing diagnostics link request req-2aef80fe-baef-465e-8be3-5830932f226b to retrieval receipt conversation-main-retrieval-receipt."
+            }
+          ],
+          "execution": [],
+          "authAccount": [],
+          "memoryQuality": [
+            {
+              "code": "MEMORY_CONTEXT_OMITTED",
+              "severity": "warning",
+              "message": "Context assembly omitted 2 turns and 2 artifacts."
+            },
+            {
+              "code": "MEMORY_LATEST_HANDOFF_LINKED",
+              "severity": "info",
+              "message": "Context inspection preserves latest handoff handoff-1."
+            }
+          ],
+          "tooling": [],
+          "operator": [
+            {
+              "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+              "severity": "info",
+              "message": "Raw operator captures remain available through the preserved host capture surface."
+            }
+          ]
+        },
+        "capturePolicy": {
+          "environment": "local-dev",
+          "redactionLevel": "strict",
+          "retentionClass": "standard",
+          "structuredInspectionMode": "redacted",
+          "rawCaptureAvailable": true,
+          "structuredInspectionAvailable": true,
+          "redactedFields": [
+            "request.headers.authorization"
+          ],
+          "suppressedFields": [
+            "request.body",
+            "response.body"
+          ]
+        }
+      },
+      "endpoint": {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpointVersion": "run07-registry-v1:default",
+        "latestProfile": {
+          "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "endpoint_version": "run07-registry-v1:default",
+          "measured_at_ms": 1783449114033,
+          "measurement_window": {
+            "started_at_ms": 1783449114033,
+            "ended_at_ms": 1783449114033
+          },
+          "sample_size": 1,
+          "sources": {
+            "live_request_samples": 1,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 1283,
+          "latency_ms_p95": 1283,
+          "failure_rate": 0,
+          "freshness_score": 1,
+          "confidence_score": 0.1762914343888821,
+          "tokens_per_sec": 85
+        },
+        "recentSamples": [
+          {
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+            "endpoint_version": "run07-registry-v1:default",
+            "source_type": "live_request",
+            "difficulty_bucket": "easy",
+            "timestamp_ms": 1783449114033,
+            "latency_ms": 1283,
+            "latency_ms_p95": 1283,
+            "tokens_per_sec": 85,
+            "failure": false,
+            "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+            "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b"
+          }
+        ]
+      }
+    },
+    "sourceType": "remote",
+    "providerId": "deepseek",
+    "endpointKind": "remote_api",
+    "servingSource": "remote-service",
+    "healthStatus": "healthy",
+    "status": "active",
+    "roleIds": [
+      "analyst",
+      "coder",
+      "data",
+      "operator",
+      "translator",
+      "writer"
+    ]
+  },
+  "normalizedIntent": null,
+  "role_model": null,
+  "endpointProfile": {
+    "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "latestProfile": {
+      "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "endpoint_version": "run07-registry-v1:default",
+      "measured_at_ms": 1783449114033,
+      "measurement_window": {
+        "started_at_ms": 1783449114033,
+        "ended_at_ms": 1783449114033
+      },
+      "sample_size": 1,
+      "sources": {
+        "live_request_samples": 1,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 1283,
+      "latency_ms_p95": 1283,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.1762914343888821,
+      "tokens_per_sec": 85
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1783449114033,
+        "latency_ms": 1283,
+        "latency_ms_p95": 1283,
+        "tokens_per_sec": 85,
+        "failure": false,
+        "request_id": "req-2aef80fe-baef-465e-8be3-5830932f226b",
+        "routing_decision_id": "decision-req-2aef80fe-baef-465e-8be3-5830932f226b"
+      }
+    ],
+    "difficultyProfiles": {
+      "easy": {
+        "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "endpoint_version": "run07-registry-v1:default",
+        "measured_at_ms": 1783449114033,
+        "measurement_window": {
+          "started_at_ms": 1783449114033,
+          "ended_at_ms": 1783449114033
+        },
+        "sample_size": 1,
+        "sources": {
+          "live_request_samples": 1,
+          "benchmark_samples": 0
+        },
+        "latency_ms_p50": 1283,
+        "latency_ms_p95": 1283,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.1762914343888821,
+        "tokens_per_sec": 85
+      },
+      "medium": null,
+      "hard": null
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "min-samples"
+          ],
+          "profile": {
+            "endpoint_id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+            "endpoint_version": "run07-registry-v1:default",
+            "measured_at_ms": 1783449114033,
+            "measurement_window": {
+              "started_at_ms": 1783449114033,
+              "ended_at_ms": 1783449114033
+            },
+            "sample_size": 1,
+            "sources": {
+              "live_request_samples": 1,
+              "benchmark_samples": 0
+            },
+            "latency_ms_p50": 1283,
+            "latency_ms_p95": 1283,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.1762914343888821,
+            "tokens_per_sec": 85
+          }
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        }
+      }
+    }
+  },
+  "observeRequestPath": "/app/observe/requests/req-2aef80fe-baef-465e-8be3-5830932f226b"
+}

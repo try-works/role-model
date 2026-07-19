@@ -1,0 +1,292 @@
+[
+  {
+    "requestId": "req-29d27760-7133-4658-9a20-77a31b840668",
+    "routingDecisionId": "decision-req-29d27760-7133-4658-9a20-77a31b840668",
+    "requestedModelId": "default.hybrid",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "statusFamily": "success",
+    "normalizedIntent": {
+      "role": "security",
+      "roleHard": false,
+      "task": "security.audit",
+      "taskHard": false,
+      "confidence": 0.72,
+      "capabilities": {
+        "preferred": [
+          "code.read",
+          "security.analysis"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": [
+        "filesystem.read"
+      ],
+      "alternatives": [
+        {
+          "roleId": "coder",
+          "taskType": "coder.review"
+        },
+        {
+          "roleId": "security",
+          "taskType": "security.audit.supply_chain"
+        },
+        {
+          "roleId": "security",
+          "taskType": "security.threat_model"
+        }
+      ]
+    },
+    "candidateCount": 2,
+    "eligibleEndpointIds": [
+      "llama-swap.local.lfm2-5-1-2b-instruct",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ]
+  },
+  {
+    "requestId": "req-8834bc9f-a5cb-437c-9344-88fcd96ac30a",
+    "routingDecisionId": "decision-req-8834bc9f-a5cb-437c-9344-88fcd96ac30a",
+    "requestedModelId": "default.hybrid",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "statusFamily": "success",
+    "normalizedIntent": {
+      "role": "coder",
+      "roleHard": false,
+      "task": "coder.edit",
+      "taskHard": false,
+      "confidence": 0.72,
+      "capabilities": {
+        "preferred": [
+          "code.read",
+          "code.write",
+          "reasoning.multi_step",
+          "tools.command_execution"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": [
+        "filesystem.read",
+        "filesystem.write",
+        "shell.execute"
+      ],
+      "alternatives": [
+        {
+          "roleId": "coder",
+          "taskType": "coder.test.write"
+        },
+        {
+          "roleId": "coder",
+          "taskType": "coder.review"
+        },
+        {
+          "roleId": "coder",
+          "taskType": "coder.debug.root_cause"
+        }
+      ]
+    },
+    "candidateCount": 2,
+    "eligibleEndpointIds": [
+      "llama-swap.local.lfm2-5-1-2b-instruct",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ]
+  },
+  {
+    "requestId": "req-5598e68e-4230-497b-9c76-2b104df2df79",
+    "routingDecisionId": "decision-req-5598e68e-4230-497b-9c76-2b104df2df79",
+    "requestedModelId": "default.hybrid",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "statusFamily": "success",
+    "normalizedIntent": {
+      "role": "researcher",
+      "roleHard": false,
+      "task": "researcher.web_research.current",
+      "taskHard": false,
+      "confidence": 0.72,
+      "capabilities": {
+        "preferred": [
+          "citation.synthesis",
+          "text.chat",
+          "web.search"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": [
+        "web.search",
+        "http.fetch"
+      ],
+      "alternatives": [
+        {
+          "roleId": "researcher",
+          "taskType": "researcher.compare_sources"
+        },
+        {
+          "roleId": "researcher",
+          "taskType": "researcher.web_research"
+        },
+        {
+          "roleId": "researcher",
+          "taskType": "researcher.compare_sources"
+        }
+      ]
+    },
+    "candidateCount": 2,
+    "eligibleEndpointIds": [
+      "llama-swap.local.lfm2-5-1-2b-instruct",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ]
+  },
+  {
+    "requestId": "req-78540e8a-f2fa-4af8-af87-0731123abadd",
+    "routingDecisionId": "decision-req-78540e8a-f2fa-4af8-af87-0731123abadd",
+    "requestedModelId": "default.hybrid",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "statusFamily": "success",
+    "normalizedIntent": {
+      "role": "support",
+      "roleHard": false,
+      "task": "support.ticket.reply",
+      "taskHard": false,
+      "confidence": 0.72,
+      "capabilities": {
+        "preferred": [
+          "communication.user_facing",
+          "reasoning.multi_step",
+          "text.chat"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": null,
+      "alternatives": [
+        {
+          "roleId": "writer",
+          "taskType": "writer.email.write"
+        },
+        {
+          "roleId": "support",
+          "taskType": "support.triage"
+        },
+        {
+          "roleId": "support",
+          "taskType": "support.explain"
+        }
+      ]
+    },
+    "candidateCount": 2,
+    "eligibleEndpointIds": [
+      "llama-swap.local.lfm2-5-1-2b-instruct",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ]
+  },
+  {
+    "requestId": "req-56d82ec0-ee91-449c-94e9-ae832865edf1",
+    "routingDecisionId": "decision-req-56d82ec0-ee91-449c-94e9-ae832865edf1",
+    "requestedModelId": "default.hybrid",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "statusFamily": "success",
+    "normalizedIntent": {
+      "role": "architect",
+      "roleHard": false,
+      "task": "architect.migration.strategy",
+      "taskHard": false,
+      "confidence": 0.72,
+      "capabilities": {
+        "preferred": [
+          "data.schema",
+          "json.schema_adherence",
+          "reasoning.multi_step"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": null,
+      "alternatives": [
+        {
+          "roleId": "data",
+          "taskType": "data.schema.review"
+        },
+        {
+          "roleId": "architect",
+          "taskType": "architect.design"
+        },
+        {
+          "roleId": "architect",
+          "taskType": "architect.review"
+        }
+      ]
+    },
+    "candidateCount": 2,
+    "eligibleEndpointIds": [
+      "llama-swap.local.lfm2-5-1-2b-instruct",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ]
+  },
+  {
+    "requestId": "req-0d980a5e-59e1-41fb-944f-abd1e66649b9",
+    "routingDecisionId": "decision-req-0d980a5e-59e1-41fb-944f-abd1e66649b9",
+    "requestedModelId": "default.hybrid",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "statusFamily": "success",
+    "normalizedIntent": {
+      "role": "product",
+      "roleHard": false,
+      "task": "product.requirements",
+      "taskHard": false,
+      "confidence": 0.72,
+      "capabilities": {
+        "preferred": [
+          "json.schema_adherence",
+          "reasoning.multi_step"
+        ]
+      },
+      "modalities": {
+        "required": [
+          "text"
+        ]
+      },
+      "toolClasses": null,
+      "alternatives": [
+        {
+          "roleId": "planner",
+          "taskType": "planner.requirements"
+        },
+        {
+          "roleId": "product",
+          "taskType": "product.workflow.review"
+        },
+        {
+          "roleId": "product",
+          "taskType": "product.release_notes"
+        }
+      ]
+    },
+    "candidateCount": 2,
+    "eligibleEndpointIds": [
+      "llama-swap.local.lfm2-5-1-2b-instruct",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ]
+  }
+]

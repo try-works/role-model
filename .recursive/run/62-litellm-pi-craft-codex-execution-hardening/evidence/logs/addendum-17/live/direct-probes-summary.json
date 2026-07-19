@@ -1,0 +1,69 @@
+{
+  "generatedAt": "2026-07-10T00:22:31.513Z",
+  "results": [
+    {
+      "name": "direct-chatgpt-chat-no-optional",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 2275,
+      "responsePreview": "ADD17_CHAT_NO_OPTIONAL_OK",
+      "error": null
+    },
+    {
+      "name": "direct-chatgpt-chat-temperature",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 3115,
+      "responsePreview": "ADD17_CHAT_TEMPERATURE_OK",
+      "error": null
+    },
+    {
+      "name": "direct-chatgpt-chat-max-tokens",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 3145,
+      "responsePreview": "ADD17_CHAT_MAX_TOKENS_OK",
+      "error": null
+    },
+    {
+      "name": "direct-chatgpt-chat-max-completion-tokens",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 3099,
+      "responsePreview": "ADD17_CHAT_MAX_COMPLETION_TOKENS_OK",
+      "error": null
+    },
+    {
+      "name": "direct-chatgpt-responses-temperature",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 3185,
+      "responsePreview": "{\"id\":\"chatcmpl_req-f1b5f9c7-140a-49bf-adf2-eab4c226f568\",\"object\":\"response\",\"created_at\":1783642941,\"status\":\"completed\",\"model\":\"chatgpt/gpt-5.4\",\"output\":[{\"type\":\"message\",\"id\":\"msg_chatcmpl_req-f1b5f9c7-140a-49bf-adf2-eab4c226f568\",\"r",
+      "error": null
+    },
+    {
+      "name": "direct-chatgpt-responses-max-output-tokens",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 3226,
+      "responsePreview": "{\"id\":\"chatcmpl_req-a020c134-0836-49b7-8662-6dd666b3e983\",\"object\":\"response\",\"created_at\":1783642944,\"status\":\"completed\",\"model\":\"chatgpt/gpt-5.4\",\"output\":[{\"type\":\"message\",\"id\":\"msg_chatcmpl_req-a020c134-0836-49b7-8662-6dd666b3e983\",\"r",
+      "error": null
+    },
+    {
+      "name": "alias-difficulty-chat-temperature",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 3980,
+      "responsePreview": "ADD17_ALIAS_TEMPERATURE_OK",
+      "error": null
+    },
+    {
+      "name": "alias-difficulty-chat-max-tokens",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 3190,
+      "responsePreview": "",
+      "error": null
+    }
+  ]
+}

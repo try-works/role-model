@@ -1,0 +1,54 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h11-decompose-code-verify",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"run_tests\",\n      \"arguments\": {\n        \"command\": \"pnpm test benchmark-progress\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"The interface BenchmarkRunProgress should have runId, status, completedSteps,",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"run_tests\",\n      \"arguments\": {\n        \"command\": \"pnpm test benchmark-progress\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Benchmark progress API milestones defined: add progress endpoint/status field",
+      "perCaseScore": 0
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Kimi's deliverable provides two bullet points that mention the interface fields and the test command without including extraneous reasoning or meta-evaluation (like 'eligibility check passed'), which complies with the requirement to not submit reasoning prose in the graded JSON. While neither deliverable perfectly formats milestones as structured phase bullets, Kimi's response is more succinct an…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Kimi's deliverable provides two bullet points that mention the interface fields and the test command without including extraneous reasoning or meta-evaluation (like 'eligibility check passed'), which complies with the requirement to not submit reasoning prose in the graded JSON. While neither deliverable perfectly formats milestones as structured phase bullets, Kimi's response is more succinct and avoids violating the MUST NOT rule against reasoning prose. OpenAI's deliverable contains a self-assessment bullet that acts as reasoning, failing the directive to output only the required deliverable. Therefore, Kimi ranks higher.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nPhase 1: bullet milestones to add benchmark progress API. Phase 2: write TypeScript interface BenchmarkRunProgress with runId, status, completedSteps, totalSteps. Phase 3: call run_tests with `pnpm test benchmark-progress`. Use run_tests tool for phase 3.",
+    "exemplarAnswer": "Milestone bullets, BenchmarkRunProgress interface, run_tests tool call\nTool calls: run_tests\nRequired fields: bullets",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Structured phases",
+      "[MUST] includes BenchmarkRunProgress interface fields",
+      "[MUST] run_tests tool emitted.",
+      "[MUST] Emit API tool calls: run_tests",
+      "[MUST] Include JSON keys: bullets",
+      "[SHOULD] Match clues: BenchmarkRunProgress|milestone|phase|run_tests"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 801,
+    "reasoningLength": 9124
+  },
+  "recordedAtMs": 1783936926343
+}

@@ -1,0 +1,3 @@
+alias capability routing > synthesizes prompt_cache_key from session_id when caller omits it
+AssertionError: expected undefined to deeply equal { mode: 'prefer', ... }
+RED verified: FAIL as expected because prompt-cache synthesis from sessionId was not yet implemented.

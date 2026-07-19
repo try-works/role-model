@@ -125,6 +125,20 @@ export interface RuntimeSummary {
     readonly status: "missing" | "ok" | "corrupt";
     readonly message?: string;
   };
+  readonly configuredMembershipReconciliation?: {
+    readonly reconciledAt: string;
+    readonly authorityVersion: 1;
+    readonly inspected: {
+      readonly runtimeEndpoints: number;
+      readonly remoteActivations: number;
+    };
+    readonly pruned: {
+      readonly runtimeEndpoints: number;
+      readonly remoteActivations: number;
+      readonly modelRoleBindings: number;
+    };
+    readonly reasonCodes: readonly string[];
+  } | null;
 }
 
 export interface RuntimeHealthStatus {
@@ -249,6 +263,9 @@ export interface RuntimeAccount {
   readonly modelRoleBindings?: readonly {
     readonly modelId: string;
     readonly roleIds: readonly string[];
+    readonly roleAssignmentMode?: "all" | "include" | "exclude" | "custom";
+    readonly enabledRoleIds?: readonly string[];
+    readonly disabledRoleIds?: readonly string[];
   }[];
   readonly deniedModels?: readonly string[];
   readonly entitlementTags?: readonly string[];
@@ -272,9 +289,16 @@ export interface RuntimeEndpoint {
   readonly servingSource?: string;
   readonly sourceType?: "local" | "remote";
   readonly healthStatus?: string;
+  readonly routingEligible?: boolean;
+  readonly benchmarkEligible?: boolean;
   readonly capabilities?: readonly string[];
   readonly toolCallingSupported?: boolean;
   readonly toolCallingStyle?: string;
+  readonly webSearchSupport?: {
+    readonly mode: "native" | "runtime-fallback" | "unsupported";
+    readonly currentRuntimeContract?: string | null;
+    readonly documentedProviderContract?: string | null;
+  };
 }
 
 export interface RuntimeLocalModel {
@@ -289,6 +313,56 @@ export interface RuntimeLocalModel {
   readonly useModelName?: string | null;
 }
 
+export interface RuntimeModelRoleAssignment {
+  readonly roleAssignmentMode: "all" | "include" | "exclude" | "custom";
+  readonly enabledRoleIds?: readonly string[];
+  readonly disabledRoleIds?: readonly string[];
+  readonly taskOverrides?: Readonly<Record<string, unknown>>;
+  readonly capabilityOverrides?: Readonly<Record<string, readonly string[]>>;
+  readonly modalityOverrides?: Readonly<Record<string, readonly string[]>>;
+  readonly toolClassOverrides?: Readonly<Record<string, readonly string[]>>;
+}
+
+export function roleIdsToExplicitAssignment(
+  roleIds: readonly string[] | undefined,
+  defaultAllRoles = true,
+): RuntimeModelRoleAssignment {
+  if (!roleIds || (defaultAllRoles && roleIds.length === 0)) {
+    return { roleAssignmentMode: "all", enabledRoleIds: [], disabledRoleIds: [] };
+  }
+  return {
+    roleAssignmentMode: roleIds.length === 0 ? "include" : "include",
+    enabledRoleIds: [...roleIds],
+    disabledRoleIds: [],
+  };
+}
+
+function roleIdsToAssignmentPayload(
+  roleIds: readonly string[] | undefined,
+  defaultAllRoles: boolean,
+): Record<string, unknown> {
+  const assignment = roleIdsToExplicitAssignment(roleIds, defaultAllRoles);
+  return {
+    roleIds:
+      assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
+    roleAssignmentMode: assignment.roleAssignmentMode,
+    enabledRoleIds: [...(assignment.enabledRoleIds ?? [])],
+    disabledRoleIds: [...(assignment.disabledRoleIds ?? [])],
+  };
+}
+
+export function explicitAssignmentToRoleIds(
+  assignment: RuntimeModelRoleAssignment,
+): readonly string[] {
+  if (assignment.roleAssignmentMode === "all") {
+    return [];
+  }
+  if (assignment.roleAssignmentMode === "exclude") {
+    return [];
+  }
+  return assignment.enabledRoleIds ?? [];
+}
+
 export interface RuntimeRoleDefinition {
   readonly roleId: string;
   readonly label: string;
@@ -300,6 +374,9 @@ export interface RuntimeRolePolicyRole {
   readonly role_id: string;
   readonly name: string;
   readonly description: string;
+  readonly primaryGroupId?: string;
+  readonly secondaryGroupIds?: readonly string[];
+  readonly riskLevel?: "standard" | "high" | string;
   readonly role_kind: string;
   readonly default_system_instructions: string;
   readonly task_types_supported: readonly string[];
@@ -379,6 +456,7 @@ export interface RuntimeTelemetryComparisonRow extends RuntimeTelemetrySourceSum
   readonly modelId: string | null;
   readonly providerKind?: string | null;
   readonly providerFamily?: string | null;
+  readonly vendorId?: string | null;
   readonly promptCacheSupported?: boolean;
   readonly sourceType: "local" | "remote";
   readonly providerId?: string | null;
@@ -400,8 +478,11 @@ export interface RuntimeTelemetryRequestRecord {
   readonly modelId?: string | null;
   readonly providerKind?: string | null;
   readonly providerFamily?: string | null;
+  readonly vendorId?: string | null;
   readonly sourceType: "local" | "remote";
   readonly providerId?: string | null;
+  readonly executionFamily?: string | null;
+  readonly adapterFamily?: string | null;
   readonly endpointKind?: string | null;
   readonly servingSource?: string | null;
   readonly healthStatus?: string;
@@ -433,6 +514,14 @@ export interface RuntimeTelemetryRequestRecord {
   readonly actualCostUsd?: number | null;
   readonly estimatedCostUsd?: number | null;
   readonly currency?: string | null;
+  readonly taxonomyGroupId?: string | null;
+  readonly taxonomyRoleId?: string | null;
+  readonly taxonomyTaskType?: string | null;
+  readonly taxonomyTaskVariant?: string | null;
+  readonly taxonomyCapabilityIds?: readonly string[];
+  readonly taxonomyModalityIds?: readonly string[];
+  readonly taxonomyToolClassIds?: readonly string[];
+  readonly dimensions?: Record<string, unknown> | null;
 }
 
 export interface RuntimeTelemetryDashboard {
@@ -446,6 +535,171 @@ export interface RuntimeTelemetryStreamEvent {
   readonly emittedAtMs: number;
   readonly summary?: RuntimeTelemetrySummary;
   readonly request: RuntimeTelemetryRequestRecord;
+}
+
+export type RuntimeTelemetryAnalyticsGranularity = "hour" | "day" | "week";
+
+export type RuntimeTelemetryAnalyticsMetric =
+  | "requestCount"
+  | "successCount"
+  | "failureCount"
+  | "inputTokens"
+  | "outputTokens"
+  | "totalTokens"
+  | "cacheHitTokens"
+  | "cacheReadTokens"
+  | "cacheBackedRequestRate"
+  | "cacheHitTokenRate"
+  | "actualCostUsd"
+  | "estimatedCostUsd"
+  | "effectiveCostUsd"
+  | "selectedUncachedCostUsd"
+  | "baselineMaxEligibleCostUsd"
+  | "routingCostSavingsUsd"
+  | "cacheCostSavingsUsd"
+  | "totalAvoidedCostUsd"
+  | "averageLatencyMs"
+  | "p95LatencyMs";
+
+export type RuntimeTelemetryAnalyticsDimension =
+  | "sourceType"
+  | "endpointId"
+  | "modelId"
+  | "providerId"
+  | "providerKind"
+  | "providerFamily"
+  | "providerAccountId"
+  | "requestedRoleId"
+  | "selectedStrategy"
+  | "routingMode"
+  | "difficultyBucket"
+  | "statusFamily"
+  | "requestOperation"
+  | "taxonomyGroupId"
+  | "taxonomyRoleId"
+  | "taxonomyTaskType"
+  | "taxonomyTaskVariant"
+  | "taxonomyCapabilityId"
+  | "taxonomyModalityId"
+  | "taxonomyToolClassId";
+
+export interface RuntimeTelemetryAnalyticsFilters {
+  readonly sourceTypes?: readonly ("local" | "remote")[];
+  readonly endpointIds?: readonly string[];
+  readonly modelIds?: readonly string[];
+  readonly providerIds?: readonly string[];
+  readonly providerKinds?: readonly string[];
+  readonly providerFamilies?: readonly string[];
+  readonly providerAccountIds?: readonly string[];
+  readonly requestedRoleIds?: readonly string[];
+  readonly selectedStrategies?: readonly string[];
+  readonly routingModes?: readonly ("baseline" | "difficulty" | "controller" | "hybrid")[];
+  readonly difficultyBuckets?: readonly ("easy" | "medium" | "hard")[];
+  readonly statusFamilies?: readonly ("success" | "failure" | "unknown")[];
+  readonly requestOperations?: readonly string[];
+  readonly taxonomyGroupIds?: readonly string[];
+  readonly taxonomyRoleIds?: readonly string[];
+  readonly taxonomyTaskTypes?: readonly string[];
+  readonly taxonomyTaskVariants?: readonly string[];
+  readonly taxonomyCapabilityIds?: readonly string[];
+  readonly taxonomyModalityIds?: readonly string[];
+  readonly taxonomyToolClassIds?: readonly string[];
+}
+
+export interface RuntimeTelemetryAnalyticsRanking {
+  readonly dimension: RuntimeTelemetryAnalyticsDimension;
+  readonly metric: RuntimeTelemetryAnalyticsMetric;
+  readonly limit?: number;
+}
+
+export interface RuntimeTelemetryAnalyticsQuery {
+  readonly startAtMs?: number;
+  readonly endAtMs?: number;
+  readonly windowMs?: number;
+  readonly granularity: RuntimeTelemetryAnalyticsGranularity;
+  readonly metrics: readonly RuntimeTelemetryAnalyticsMetric[];
+  readonly breakdown?: RuntimeTelemetryAnalyticsDimension | null;
+  readonly filters?: RuntimeTelemetryAnalyticsFilters;
+  readonly ranking?: RuntimeTelemetryAnalyticsRanking | null;
+}
+
+export type RuntimeTelemetryAnalyticsSupportStatus = "supported" | "partial" | "unsupported";
+
+export interface RuntimeTelemetryAnalyticsMetricSupport {
+  readonly metric: RuntimeTelemetryAnalyticsMetric;
+  readonly status: RuntimeTelemetryAnalyticsSupportStatus;
+  readonly aggregation: string;
+  readonly matchedRowCount: number;
+  readonly supportedRowCount: number;
+  readonly unsupportedRowCount: number;
+  readonly nullValueCount: number;
+  readonly reason: string | null;
+}
+
+export interface RuntimeTelemetryAnalyticsDimensionSupport {
+  readonly dimension: RuntimeTelemetryAnalyticsDimension;
+  readonly status: RuntimeTelemetryAnalyticsSupportStatus;
+  readonly matchedRowCount: number;
+  readonly populatedRowCount: number;
+  readonly sparseRowCount: number;
+  readonly reason: string | null;
+}
+
+export interface RuntimeTelemetryAnalyticsSeries {
+  readonly key: string;
+  readonly label: string;
+  readonly metrics: Readonly<Record<string, number | null>>;
+}
+
+export interface RuntimeTelemetryAnalyticsBucket {
+  readonly startAtMs: number;
+  readonly endAtMs: number;
+  readonly totals: Readonly<Record<string, number | null>>;
+  readonly series: readonly RuntimeTelemetryAnalyticsSeries[];
+}
+
+export interface RuntimeTelemetryAnalyticsRankingRow {
+  readonly key: string;
+  readonly label: string;
+  readonly value: number | null;
+}
+
+export interface RuntimeTelemetryAnalyticsResponse {
+  readonly startAtMs: number;
+  readonly endAtMs: number;
+  readonly appliedQuery?: RuntimeTelemetryAnalyticsQuery;
+  readonly granularity: RuntimeTelemetryAnalyticsGranularity;
+  readonly metrics: readonly RuntimeTelemetryAnalyticsMetric[];
+  readonly breakdown: RuntimeTelemetryAnalyticsDimension | null;
+  readonly buckets: readonly RuntimeTelemetryAnalyticsBucket[];
+  readonly totals: Readonly<Record<string, number | null>>;
+  readonly ranking: {
+    readonly dimension: RuntimeTelemetryAnalyticsDimension;
+    readonly metric: RuntimeTelemetryAnalyticsMetric;
+    readonly rows: readonly RuntimeTelemetryAnalyticsRankingRow[];
+  } | null;
+  readonly labels: Partial<Record<RuntimeTelemetryAnalyticsDimension, Record<string, string>>>;
+  readonly metadata?: {
+    readonly scannedRowCount: number;
+    readonly matchedRowCount: number;
+    readonly aggregationRowCount: number;
+    readonly truncated: boolean;
+    readonly truncationReason: string | null;
+    readonly generatedAtMs?: number;
+    readonly taxonomyCoverage?: {
+      readonly matchedRowCount: number;
+      readonly richerTaxonomyRowCount: number;
+      readonly legacyRowCount: number;
+      readonly coverageRate: number;
+      readonly backfillPerformed: false;
+    };
+  };
+  readonly metricSupport?: Partial<
+    Record<RuntimeTelemetryAnalyticsMetric, RuntimeTelemetryAnalyticsMetricSupport>
+  >;
+  readonly dimensionSupport?: Partial<
+    Record<RuntimeTelemetryAnalyticsDimension, RuntimeTelemetryAnalyticsDimensionSupport>
+  >;
 }
 
 export interface RuntimeEventSourceLike {
@@ -539,6 +793,7 @@ export interface RuntimeActivityCapture {
 export interface RuntimeVersionInfo {
   readonly build_date: string;
   readonly commit: string;
+  readonly release_version?: string;
   readonly version: string;
 }
 
@@ -621,9 +876,45 @@ export interface RuntimeSnapshot {
   readonly roles: readonly RuntimeRoleDefinition[];
 }
 
+export interface ProvidersSnapshot {
+  readonly summary: RuntimeSummary;
+  readonly providers: readonly RuntimeProvider[];
+  readonly accounts: readonly RuntimeAccount[];
+  readonly deviceAuthorizations: readonly RuntimeDeviceAuthorization[];
+  readonly endpoints: readonly RuntimeEndpoint[];
+  readonly models: readonly RuntimeModelRecord[];
+  readonly roles: readonly RuntimeRoleDefinition[];
+}
+
+export interface RuntimeShellSnapshot {
+  readonly summary: RuntimeSummary;
+  readonly controller: RuntimeControllerAssignment | null;
+  readonly configRecord: RuntimeConfigRecord;
+  readonly version: RuntimeVersionInfo;
+}
+
+export interface RuntimeDashboardSnapshot {
+  readonly endpoints: readonly RuntimeEndpoint[];
+  readonly roles: readonly RuntimeRoleDefinition[];
+}
+
 export interface RuntimeRequestDetail {
   readonly requestId: string;
   readonly endpointId: string;
+  readonly effectiveCostUsd?: number;
+  readonly costCalculationBasis?:
+    | "actual_vendor_cost"
+    | "estimated_vendor_cost"
+    | "no_execution_zero"
+    | "unknown";
+  readonly costCalculationVersion?: string;
+  readonly selectedUncachedCostUsd?: number | null;
+  readonly baselineMaxEligibleCostUsd?: number | null;
+  readonly routingCostSavingsUsd?: number;
+  readonly cacheCostSavingsUsd?: number;
+  readonly totalAvoidedCostUsd?: number;
+  readonly costBaselineSource?: string | null;
+  readonly costSavingsSupport?: string | null;
   readonly [key: string]: unknown;
 }
 
@@ -682,6 +973,17 @@ export interface BenchmarkCapability {
   readonly scoresByBucket?: Partial<
     Record<"easy" | "medium" | "hard", { readonly score: number; readonly cases?: number }>
   >;
+  readonly taskScores?: Record<string, number>;
+  readonly roleScores?: Record<string, number>;
+  readonly eligibleRoleScores?: Record<string, number>;
+  readonly groupScores?: Record<string, number>;
+  readonly coverage?: {
+    readonly overallCases: number;
+    readonly roleCases?: Record<string, number>;
+    readonly groupCases?: Record<string, number>;
+    readonly lowCoverageRoleIds?: readonly string[];
+    readonly lowCoverageGroupIds?: readonly string[];
+  };
   readonly benchmarkSamples: number;
   readonly sampleCount: number;
   readonly measuredAtMs: number | null;
@@ -701,6 +1003,9 @@ export interface RouterCandidate {
   readonly healthStatus?: string;
   readonly status?: string;
   readonly controllerEligible?: boolean;
+  readonly executionModeEligible?: boolean;
+  readonly routingEligible?: boolean;
+  readonly benchmarkEligible?: boolean;
   readonly preferred?: boolean;
   readonly ignored?: boolean;
   readonly roleBindings?: readonly string[];
@@ -773,6 +1078,22 @@ export interface BenchmarkSummarySubject {
   >;
   readonly passingCaseIds: readonly string[];
   readonly caseCount: number;
+  readonly taxonomyScores?: {
+    readonly byRole?: Record<string, number>;
+    readonly byTask?: Record<string, number>;
+    readonly byVariant?: Record<string, number>;
+    readonly byCapability?: Record<string, number>;
+    readonly byModality?: Record<string, number>;
+    readonly byToolClass?: Record<string, number>;
+  };
+  readonly taxonomyCoverage?: {
+    readonly byRole?: Record<string, number>;
+    readonly byTask?: Record<string, number>;
+    readonly byVariant?: Record<string, number>;
+    readonly byCapability?: Record<string, number>;
+    readonly byModality?: Record<string, number>;
+    readonly byToolClass?: Record<string, number>;
+  };
 }
 
 export interface BenchmarkSummary {
@@ -852,7 +1173,24 @@ async function extractErrorMessage(response: Response, path: string): Promise<st
         : typeof body.error?.message === "string"
           ? body.error.message
           : JSON.stringify(body);
-    return `Request to ${path} failed with ${status}: ${detail}`;
+    const structuredDetail =
+      typeof body.code === "string"
+        ? `${body.code}${
+            Array.isArray(body.references)
+              ? `: ${body.references
+                  .map((reference: unknown) =>
+                    reference &&
+                    typeof reference === "object" &&
+                    typeof (reference as { path?: unknown }).path === "string"
+                      ? (reference as { path: string }).path
+                      : null,
+                  )
+                  .filter(Boolean)
+                  .join(", ")}`
+              : ""
+          } — ${detail}`
+        : detail;
+    return `Request to ${path} failed with ${status}: ${structuredDetail}`;
   } catch {
     try {
       const text = await response.text();
@@ -872,7 +1210,40 @@ async function fetchJson<TValue>(
   if (!response.ok) {
     throw new Error(await extractErrorMessage(response.clone(), path));
   }
-  return (await response.json()) as TValue;
+  const responseClone = response.clone();
+  try {
+    return (await response.json()) as TValue;
+  } catch {
+    const responseText = await responseClone.text().catch(() => "");
+    const normalizedText = responseText.trimStart();
+    if (normalizedText.startsWith("<!DOCTYPE html") || normalizedText.startsWith("<html")) {
+      throw new Error(`Request to ${path} returned HTML instead of JSON.`);
+    }
+    throw new Error(`Request to ${path} returned an invalid JSON response.`);
+  }
+}
+
+const RUNTIME_SUMMARY_RETRY_DELAYS_MS = [150, 300] as const;
+
+async function sleep(delayMs: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, delayMs));
+}
+
+async function fetchRuntimeSummaryWithRetry(fetcher: RuntimeFetcher): Promise<RuntimeSummary> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RUNTIME_SUMMARY_RETRY_DELAYS_MS.length; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(RUNTIME_SUMMARY_RETRY_DELAYS_MS[attempt - 1]);
+    }
+    try {
+      return await fetchJson<RuntimeSummary>("/api/role-model/runtime/summary", fetcher);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("Request to /api/role-model/runtime/summary failed.");
 }
 
 async function fetchText(
@@ -923,29 +1294,66 @@ async function putJson<TValue>(
   });
 }
 
+export async function fetchRuntimeProviders(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeProvider[]> {
+  return fetchJson<RuntimeProvider[]>("/api/role-model/providers", fetcher);
+}
+
+export async function fetchRuntimeAccounts(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeAccount[]> {
+  return fetchJson<RuntimeAccount[]>("/api/role-model/accounts", fetcher);
+}
+
+export async function fetchRuntimeDeviceAuthorizations(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeDeviceAuthorization[]> {
+  return fetchJson<RuntimeDeviceAuthorization[]>("/api/role-model/accounts/device", fetcher);
+}
+
+export async function fetchRuntimeEndpoints(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeEndpoint[]> {
+  return fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher);
+}
+
+export async function fetchRuntimeRoles(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeRoleDefinition[]> {
+  return fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher);
+}
+
+export async function fetchRuntimeRequests(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeRequestListItem[]> {
+  return fetchJson<RuntimeRequestListItem[]>("/api/role-model/requests", fetcher);
+}
+
+export async function fetchRuntimeModels(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeModelRecord[]> {
+  try {
+    return await fetchJson<RuntimeModelRecord[]>("/api/role-model/models", fetcher);
+  } catch {
+    const modelsResponse = await fetchJson<{ data: RuntimeModelRecord[] }>("/v1/models", fetcher);
+    return modelsResponse.data;
+  }
+}
+
 export async function fetchRuntimeSnapshot(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeSnapshot> {
   const [summary, providers, accounts, deviceAuthorizations, endpoints, roles, requests, models] =
     await Promise.all([
-      fetchJson<RuntimeSummary>("/api/role-model/runtime/summary", fetcher),
-      fetchJson<RuntimeProvider[]>("/api/role-model/providers", fetcher),
-      fetchJson<RuntimeAccount[]>("/api/role-model/accounts", fetcher),
-      fetchJson<RuntimeDeviceAuthorization[]>("/api/role-model/accounts/device", fetcher),
-      fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher),
-      fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher),
-      fetchJson<RuntimeRequestListItem[]>("/api/role-model/requests", fetcher),
-      (async () => {
-        try {
-          return await fetchJson<RuntimeModelRecord[]>("/api/role-model/models", fetcher);
-        } catch {
-          const modelsResponse = await fetchJson<{ data: RuntimeModelRecord[] }>(
-            "/v1/models",
-            fetcher,
-          );
-          return modelsResponse.data;
-        }
-      })(),
+      fetchRuntimeSummaryWithRetry(fetcher),
+      fetchRuntimeProviders(fetcher),
+      fetchRuntimeAccounts(fetcher),
+      fetchRuntimeDeviceAuthorizations(fetcher),
+      fetchRuntimeEndpoints(fetcher),
+      fetchRuntimeRoles(fetcher),
+      fetchRuntimeRequests(fetcher),
+      fetchRuntimeModels(fetcher),
     ]);
 
   return {
@@ -960,10 +1368,79 @@ export async function fetchRuntimeSnapshot(
   };
 }
 
+export async function fetchProvidersSnapshot(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<ProvidersSnapshot> {
+  const [summary, providers, accounts, deviceAuthorizations, endpoints, roles, models] =
+    await Promise.all([
+      fetchRuntimeSummaryWithRetry(fetcher),
+      fetchRuntimeProviders(fetcher),
+      fetchRuntimeAccounts(fetcher),
+      fetchRuntimeDeviceAuthorizations(fetcher),
+      fetchRuntimeEndpoints(fetcher),
+      fetchRuntimeRoles(fetcher),
+      fetchRuntimeModels(fetcher),
+    ]);
+
+  return {
+    summary,
+    providers,
+    accounts,
+    deviceAuthorizations,
+    endpoints,
+    roles,
+    models,
+  };
+}
+
+export async function fetchRuntimeShellSnapshot(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeShellSnapshot> {
+  const [summary, controller, configRecord, version] = await Promise.all([
+    fetchRuntimeSummaryWithRetry(fetcher),
+    fetchControllerAssignment(fetcher),
+    fetchRuntimeConfig(fetcher),
+    fetchVersionInfo(fetcher),
+  ]);
+
+  return {
+    summary,
+    controller,
+    configRecord,
+    version,
+  };
+}
+
+export async function fetchRuntimeDashboardSnapshot(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeDashboardSnapshot> {
+  const [endpoints, roles] = await Promise.all([
+    fetchRuntimeEndpoints(fetcher),
+    fetchRuntimeRoles(fetcher),
+  ]);
+
+  return {
+    endpoints,
+    roles,
+  };
+}
+
+export async function fetchRecentRequestIds(
+  limit = 10,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly string[]> {
+  return fetchJson<readonly string[]>(
+    `/api/role-model/requests/latest-ids?limit=${limit}`,
+    fetcher,
+  );
+}
+
 function buildTelemetryQueryString(input?: {
   readonly limit?: number;
   readonly windowMs?: number;
   readonly endAtMs?: number;
+  readonly startAtMs?: number;
+  readonly filters?: RuntimeTelemetryAnalyticsFilters;
 }): string {
   const params = new URLSearchParams();
   if (typeof input?.limit === "number") {
@@ -975,6 +1452,34 @@ function buildTelemetryQueryString(input?: {
   if (typeof input?.endAtMs === "number") {
     params.set("endAtMs", String(input.endAtMs));
   }
+  if (typeof input?.startAtMs === "number") {
+    params.set("startAtMs", String(input.startAtMs));
+  }
+  const appendFilterValues = (key: string, values?: readonly string[]) => {
+    if (values && values.length > 0) {
+      params.set(key, values.join(","));
+    }
+  };
+  appendFilterValues("sourceTypes", input?.filters?.sourceTypes);
+  appendFilterValues("endpointIds", input?.filters?.endpointIds);
+  appendFilterValues("modelIds", input?.filters?.modelIds);
+  appendFilterValues("providerIds", input?.filters?.providerIds);
+  appendFilterValues("providerKinds", input?.filters?.providerKinds);
+  appendFilterValues("providerFamilies", input?.filters?.providerFamilies);
+  appendFilterValues("providerAccountIds", input?.filters?.providerAccountIds);
+  appendFilterValues("requestedRoleIds", input?.filters?.requestedRoleIds);
+  appendFilterValues("selectedStrategies", input?.filters?.selectedStrategies);
+  appendFilterValues("routingModes", input?.filters?.routingModes);
+  appendFilterValues("difficultyBuckets", input?.filters?.difficultyBuckets);
+  appendFilterValues("statusFamilies", input?.filters?.statusFamilies);
+  appendFilterValues("requestOperations", input?.filters?.requestOperations);
+  appendFilterValues("taxonomyGroupIds", input?.filters?.taxonomyGroupIds);
+  appendFilterValues("taxonomyRoleIds", input?.filters?.taxonomyRoleIds);
+  appendFilterValues("taxonomyTaskTypes", input?.filters?.taxonomyTaskTypes);
+  appendFilterValues("taxonomyTaskVariants", input?.filters?.taxonomyTaskVariants);
+  appendFilterValues("taxonomyCapabilityIds", input?.filters?.taxonomyCapabilityIds);
+  appendFilterValues("taxonomyModalityIds", input?.filters?.taxonomyModalityIds);
+  appendFilterValues("taxonomyToolClassIds", input?.filters?.taxonomyToolClassIds);
   const query = params.toString();
   return query.length > 0 ? `?${query}` : "";
 }
@@ -1000,11 +1505,24 @@ export async function fetchTelemetryRequests(
     readonly limit?: number;
     readonly windowMs?: number;
     readonly endAtMs?: number;
+    readonly startAtMs?: number;
+    readonly filters?: RuntimeTelemetryAnalyticsFilters;
   } = {},
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeTelemetryRequestRecord[]> {
   return fetchJson<RuntimeTelemetryRequestRecord[]>(
     `/api/role-model/telemetry/requests${buildTelemetryQueryString(input)}`,
+    fetcher,
+  );
+}
+
+export async function fetchTelemetryAnalytics(
+  payload: RuntimeTelemetryAnalyticsQuery,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<RuntimeTelemetryAnalyticsResponse> {
+  return postJson<RuntimeTelemetryAnalyticsResponse>(
+    "/api/role-model/telemetry/query",
+    payload,
     fetcher,
   );
 }
@@ -1308,7 +1826,7 @@ export async function clearAllBenchmarkData(
 export async function fetchRuntimeSummary(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeSummary> {
-  return fetchJson<RuntimeSummary>("/api/role-model/runtime/summary", fetcher);
+  return fetchRuntimeSummaryWithRetry(fetcher);
 }
 
 export async function fetchHealthStatus(
@@ -1397,6 +1915,42 @@ export async function upsertRuntimeAccount(
   });
 }
 
+export async function removeRuntimeAccountModel(
+  providerAccountId: string,
+  modelId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{
+  success: boolean;
+  removedAccount: boolean;
+  alreadyAbsent?: boolean;
+  authority?: "account-managed" | "runtime-config-managed" | "absent";
+  pruned?: {
+    modelRoleBindings: number;
+    runtimeEndpoints: number;
+    remoteActivations: number;
+    generatedAliases: number;
+  };
+}> {
+  return fetchJson<{
+    success: boolean;
+    removedAccount: boolean;
+    alreadyAbsent?: boolean;
+    authority?: "account-managed" | "runtime-config-managed" | "absent";
+    pruned?: {
+      modelRoleBindings: number;
+      runtimeEndpoints: number;
+      remoteActivations: number;
+      generatedAliases: number;
+    };
+  }>(
+    `/api/role-model/accounts/${encodeURIComponent(providerAccountId)}/models/${encodeURIComponent(modelId)}`,
+    fetcher,
+    {
+      method: "DELETE",
+    },
+  );
+}
+
 export async function startRuntimeDeviceAuthorization(
   payload: Record<string, unknown>,
   fetcher: RuntimeFetcher = fetch,
@@ -1450,6 +2004,19 @@ export async function updateRuntimeAccountApiKey(
       "content-type": "application/json",
     },
     body: JSON.stringify(payload),
+  });
+}
+
+export async function openRuntimeExternalUrl(
+  url: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{ opened: true; url: string }> {
+  return fetchJson<{ opened: true; url: string }>("/api/role-model/system/open-url", fetcher, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ url }),
   });
 }
 
@@ -1598,7 +2165,7 @@ export async function loadPeerModel(
 ): Promise<{ success: boolean }> {
   return postJson<{ success: boolean }>(
     `/api/role-model/local/peer/models/${encodeURIComponent(modelId)}/load`,
-    roleIds !== undefined ? { roleIds: [...roleIds] } : {},
+    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, true) : {},
     fetcher,
   );
 }
@@ -1610,7 +2177,7 @@ export async function loadLlamaSwapModel(
 ): Promise<{ success: boolean }> {
   return postJson<{ success: boolean }>(
     `/api/role-model/local/llama-swap/models/${encodeURIComponent(modelId)}/load`,
-    roleIds !== undefined ? { roleIds: [...roleIds] } : {},
+    roleIds !== undefined ? roleIdsToAssignmentPayload(roleIds, true) : {},
     fetcher,
   );
 }
@@ -1622,7 +2189,7 @@ export async function setPeerModelRoles(
 ): Promise<{ success: boolean }> {
   return putJson<{ success: boolean }>(
     `/api/role-model/local/peer/models/${encodeURIComponent(modelId)}/roles`,
-    { roleIds: [...roleIds] },
+    roleIdsToAssignmentPayload(roleIds, false),
     fetcher,
   );
 }
@@ -1634,7 +2201,7 @@ export async function setLlamaSwapModelRoles(
 ): Promise<{ success: boolean }> {
   return putJson<{ success: boolean }>(
     `/api/role-model/local/llama-swap/models/${encodeURIComponent(modelId)}/roles`,
-    { roleIds: [...roleIds] },
+    roleIdsToAssignmentPayload(roleIds, false),
     fetcher,
   );
 }
@@ -1740,4 +2307,202 @@ export async function checkPeerHealth(
     `/api/role-model/local/peers/health?url=${encodeURIComponent(url)}`,
     fetcher,
   );
+}
+
+export interface ModelTelemetryRollup {
+  readonly groups: readonly {
+    groupId: string;
+    requestCount: number;
+  }[];
+  readonly roles: readonly {
+    roleId: string;
+    requestCount: number;
+  }[];
+  readonly capabilities: readonly {
+    capabilityId: string;
+    requestCount: number;
+  }[];
+  readonly tasks: readonly {
+    taskType: string;
+    requestCount: number;
+    successRate: number;
+    avgLatencyMs: number | null;
+  }[];
+  readonly strengths: readonly string[];
+  readonly warnings: readonly string[];
+  readonly totalRequests: number;
+  readonly windowDays: number;
+}
+
+export async function fetchModelTelemetryRollup(
+  modelId: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<ModelTelemetryRollup> {
+  const windowDays = 7;
+  const windowMs = windowDays * 24 * 3600 * 1000;
+  const baseFilters = { modelIds: [modelId] } as const;
+  const [taskResponse, groupResponse, roleResponse, capabilityResponse] = await Promise.all([
+    fetchTelemetryAnalytics(
+      {
+        granularity: "day",
+        metrics: ["requestCount", "successCount", "averageLatencyMs"],
+        breakdown: "taxonomyTaskType",
+        filters: baseFilters,
+        windowMs,
+      },
+      fetcher,
+    ),
+    fetchTelemetryAnalytics(
+      {
+        granularity: "day",
+        metrics: ["requestCount"],
+        filters: baseFilters,
+        ranking: {
+          dimension: "taxonomyGroupId",
+          metric: "requestCount",
+          limit: 5,
+        },
+        windowMs,
+      },
+      fetcher,
+    ),
+    fetchTelemetryAnalytics(
+      {
+        granularity: "day",
+        metrics: ["requestCount"],
+        filters: baseFilters,
+        ranking: {
+          dimension: "taxonomyRoleId",
+          metric: "requestCount",
+          limit: 5,
+        },
+        windowMs,
+      },
+      fetcher,
+    ),
+    fetchTelemetryAnalytics(
+      {
+        granularity: "day",
+        metrics: ["requestCount"],
+        filters: baseFilters,
+        ranking: {
+          dimension: "taxonomyCapabilityId",
+          metric: "requestCount",
+          limit: 5,
+        },
+        windowMs,
+      },
+      fetcher,
+    ),
+  ]);
+
+  const taskMap = new Map<
+    string,
+    {
+      requestCount: number;
+      successCount: number;
+      latencyWeightedTotal: number;
+      latencyWeightedCount: number;
+    }
+  >();
+  for (const bucket of taskResponse.buckets ?? []) {
+    for (const series of bucket.series ?? []) {
+      const count = (series.metrics?.requestCount as number) ?? 0;
+      if (count <= 0 || !series.key) {
+        continue;
+      }
+      const success = (series.metrics?.successCount as number) ?? 0;
+      const latency = series.metrics?.averageLatencyMs as number | null | undefined;
+      const existing = taskMap.get(series.key) ?? {
+        requestCount: 0,
+        successCount: 0,
+        latencyWeightedTotal: 0,
+        latencyWeightedCount: 0,
+      };
+      existing.requestCount += count;
+      existing.successCount += success;
+      if (typeof latency === "number" && Number.isFinite(latency)) {
+        existing.latencyWeightedTotal += latency * count;
+        existing.latencyWeightedCount += count;
+      }
+      taskMap.set(series.key, existing);
+    }
+  }
+
+  const tasks = [...taskMap.entries()]
+    .map(([taskType, aggregate]) => ({
+      taskType,
+      requestCount: aggregate.requestCount,
+      successRate: aggregate.requestCount > 0 ? aggregate.successCount / aggregate.requestCount : 0,
+      avgLatencyMs:
+        aggregate.latencyWeightedCount > 0
+          ? Math.round(aggregate.latencyWeightedTotal / aggregate.latencyWeightedCount)
+          : null,
+    }))
+    .sort(
+      (left, right) =>
+        right.requestCount - left.requestCount ||
+        right.successRate - left.successRate ||
+        left.taskType.localeCompare(right.taskType, "en"),
+    );
+
+  const groups = (groupResponse.ranking?.rows ?? [])
+    .filter((row) => typeof row.value === "number" && row.value > 0)
+    .map((row) => ({
+      groupId: row.key,
+      requestCount: row.value as number,
+    }));
+
+  const roles = (roleResponse.ranking?.rows ?? [])
+    .filter((row) => typeof row.value === "number" && row.value > 0)
+    .map((row) => ({
+      roleId: row.key,
+      requestCount: row.value as number,
+    }));
+
+  const capabilities = (capabilityResponse.ranking?.rows ?? [])
+    .filter((row) => typeof row.value === "number" && row.value > 0)
+    .map((row) => ({
+      capabilityId: row.key,
+      requestCount: row.value as number,
+    }));
+
+  const strengths = tasks
+    .filter((task) => task.requestCount > 0 && task.successRate >= 0.95)
+    .slice(0, 2)
+    .map(
+      (task) =>
+        `Strong recent success for ${task.taskType} (${task.requestCount} req, ${Math.round(
+          task.successRate * 100,
+        )}% success).`,
+    );
+
+  const warnings = [...tasks]
+    .sort(
+      (left, right) =>
+        left.successRate - right.successRate || right.requestCount - left.requestCount,
+    )
+    .filter((task) => task.requestCount > 0 && task.successRate < 0.8)
+    .slice(0, 2)
+    .map(
+      (task) =>
+        `Watch ${task.taskType} (${task.requestCount} req, ${Math.round(
+          task.successRate * 100,
+        )}% success).`,
+    );
+
+  const totalRequests =
+    (taskResponse.totals.requestCount as number | null | undefined) ??
+    tasks.reduce((total, task) => total + task.requestCount, 0);
+
+  return {
+    groups,
+    roles,
+    capabilities,
+    tasks,
+    strengths,
+    warnings,
+    totalRequests,
+    windowDays,
+  };
 }

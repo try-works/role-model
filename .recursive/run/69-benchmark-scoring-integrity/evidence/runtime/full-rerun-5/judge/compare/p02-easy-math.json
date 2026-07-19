@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p02-easy-math",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "```json\n{\"answer\": \"4\"}\n```",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "```json\n{\"answer\":\"4\"}\n```",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both models correctly output the JSON with answer '4', meeting all requirements. They are equally correct with no differences in substantive correctness.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both models correctly output the JSON with answer '4', meeting all requirements. They are equally correct with no differences in substantive correctness.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nWhat is 2+2? Answer with just the number.",
+    "exemplarAnswer": "4\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Numeric answer 4 only.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: exact value 4"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 322,
+    "reasoningLength": 1575
+  },
+  "recordedAtMs": 1783935920580
+}

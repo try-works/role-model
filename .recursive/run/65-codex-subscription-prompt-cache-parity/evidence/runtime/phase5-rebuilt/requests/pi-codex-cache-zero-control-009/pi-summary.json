@@ -1,0 +1,25 @@
+{
+  "exitCode": 0,
+  "sessionId": "run65-pi-smoke",
+  "model": "chatgpt/gpt-5.4",
+  "responseId": "chatcmpl_req-c8af339d-d1d7-477f-9c88-ded62f4ca77e",
+  "responseModel": "gpt-5.4",
+  "usage": {
+    "input": 4648,
+    "output": 8,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "totalTokens": 4656,
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0
+    }
+  },
+  "footerPromptTokens": 4648.0,
+  "footerCacheHitRatePercent": 0.0,
+  "expectedFooterText": null,
+  "assistantText": "PI_SMOKE_OK"
+}

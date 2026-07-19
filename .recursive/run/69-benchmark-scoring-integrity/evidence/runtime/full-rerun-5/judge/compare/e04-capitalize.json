@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "e04-capitalize",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"Hello World\"\n}",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"HELLO WORLD\"\n}",
+      "perCaseScore": 0
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "The moonshot model correctly capitalizes 'hello world' to 'Hello World', matching the expected answer. The openai model incorrectly returns 'HELLO WORLD', which is all uppercase, failing the capitalization requirement. Thus, the correct response ranks first.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"The moonshot model correctly capitalizes 'hello world' to 'Hello World', matching the expected answer. The openai model incorrectly returns 'HELLO WORLD', which is all uppercase, failing the capitalization requirement. Thus, the correct response ranks first.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nCapitalize this: hello world",
+    "exemplarAnswer": "Hello World\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Capitalizes hello world.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: Hello World"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 427,
+    "reasoningLength": 1327
+  },
+  "recordedAtMs": 1783935846341
+}

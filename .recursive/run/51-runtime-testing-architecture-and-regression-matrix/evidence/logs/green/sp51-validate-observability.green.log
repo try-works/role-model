@@ -1,0 +1,13 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/51/role-model-router/apps/runtime-host-bridge[39m
+
+(node:2352) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/validate-observability.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 13052[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeObservabilityValidation[2m > [22mproves structured request, capture, metrics, and otel observability over the real host path [33m 13049[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m   Start at [22m 14:10:41
+[2m   Duration [22m 15.56s[2m (transform 1.19s, setup 0ms, collect 1.66s, tests 13.05s, environment 0ms, prepare 336ms)[22m
+

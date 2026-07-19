@@ -1,0 +1,479 @@
+
+> role-model@0.0.0 ci:check D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run runtime:test-critical && corepack pnpm run test:rust && corepack pnpm run smoke
+
+
+> role-model@0.0.0 lint D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening
+> biome check . && corepack pnpm run lint:rust
+
+.\.tmp-craft-headless-addendum14\config\config.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    35 35 │     ],
+    36 36 │     "defaultLlmConnection": "role-model-run62-verification"
+    37    │ - }
+       37 │ + }
+       38 │ +
+
+
+.\.tmp-craft-headless-addendum14\config\themes\haze.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     6  6 │     "mode": "scenic",
+     7  7 │     "backgroundImage": "https://images.pexels.com/photos/764450/pexels-photo-764450.jpeg",
+     8    │ - ··"supportedModes":·[
+     9    │ - ····"dark"
+    10    │ - ··],
+        8 │ + ··"supportedModes":·["dark"],
+    11  9 │     "shikiTheme": {
+    12 10 │       "dark": "github-dark"
+
+
+.\.tmp-craft-headless-addendum14\config\tool-icons\tool-icons.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     2   2 │     "version": 1,
+     3   3 │     "tools": [
+     4     │ - ····{·"id":·"craft-agent",·"displayName":·"Craft·Agent",·"icon":·"craft-agent.svg",·"commands":·["craft-agent"]·},
+         4 │ + ····{
+         5 │ + ······"id":·"craft-agent",
+         6 │ + ······"displayName":·"Craft·Agent",
+         7 │ + ······"icon":·"craft-agent.svg",
+         8 │ + ······"commands":·["craft-agent"]
+         9 │ + ····},
+     5  10 │       { "id": "git", "displayName": "Git", "icon": "git.ico", "commands": ["git"] },
+     6  11 │       { "id": "github", "displayName": "GitHub", "icon": "github.png", "commands": ["gh"] },
+    ······ │
+    10  15 │       { "id": "bun", "displayName": "Bun", "icon": "bun.png", "commands": ["bun", "bunx"] },
+    11  16 │       { "id": "pypi", "displayName": "PyPI", "icon": "pypi.png", "commands": ["pip", "pip3"] },
+    12     │ - ····{·"id":·"rust",·"displayName":·"Rust",·"icon":·"rust.png",·"commands":·["cargo",·"rustc",·"rustup"]·},
+        17 │ + ····{
+        18 │ + ······"id":·"rust",
+        19 │ + ······"displayName":·"Rust",
+        20 │ + ······"icon":·"rust.png",
+        21 │ + ······"commands":·["cargo",·"rustc",·"rustup"]
+        22 │ + ····},
+    13  23 │       { "id": "homebrew", "displayName": "Homebrew", "icon": "homebrew.png", "commands": ["brew"] },
+    14  24 │       { "id": "node", "displayName": "Node.js", "icon": "nodedotjs.png", "commands": ["node"] },
+    15     │ - ····{·"id":·"python",·"displayName":·"Python",·"icon":·"python.ico",·"commands":·["python",·"python3"]·},
+        25 │ + ····{
+        26 │ + ······"id":·"python",
+        27 │ + ······"displayName":·"Python",
+        28 │ + ······"icon":·"python.ico",
+        29 │ + ······"commands":·["python",·"python3"]
+        30 │ + ····},
+    16  31 │       { "id": "deno", "displayName": "Deno", "icon": "deno.png", "commands": ["deno"] },
+    17     │ - ····{·"id":·"ruby",·"displayName":·"Ruby",·"icon":·"ruby.ico",·"commands":·["ruby",·"gem",·"bundle"]·},
+        32 │ + ····{
+        33 │ + ······"id":·"ruby",
+        34 │ + ······"displayName":·"Ruby",
+        35 │ + ······"icon":·"ruby.ico",
+        36 │ + ······"commands":·["ruby",·"gem",·"bundle"]
+        37 │ + ····},
+    18  38 │       { "id": "go", "displayName": "Go", "icon": "go.png", "commands": ["go"] },
+    19  39 │       { "id": "swift", "displayName": "Swift", "icon": "swift.ico", "commands": ["swift", "swiftc"] },
+    20     │ - ····{·"id":·"docker",·"displayName":·"Docker",·"icon":·"docker.png",·"commands":·["docker",·"docker-compose"]·},
+    21     │ - ····{·"id":·"kubernetes",·"displayName":·"Kubernetes",·"icon":·"kubernetes.png",·"commands":·["kubectl",·"k9s"]·},
+    22     │ - ····{·"id":·"terraform",·"displayName":·"Terraform",·"icon":·"terraform.png",·"commands":·["terraform"]·},
+        40 │ + ····{
+        41 │ + ······"id":·"docker",
+        42 │ + ······"displayName":·"Docker",
+        43 │ + ······"icon":·"docker.png",
+        44 │ + ······"commands":·["docker",·"docker-compose"]
+        45 │ + ····},
+        46 │ + ····{
+        47 │ + ······"id":·"kubernetes",
+        48 │ + ······"displayName":·"Kubernetes",
+        49 │ + ······"icon":·"kubernetes.png",
+        50 │ + ······"commands":·["kubectl",·"k9s"]
+        51 │ + ····},
+        52 │ + ····{
+        53 │ + ······"id":·"terraform",
+        54 │ + ······"displayName":·"Terraform",
+        55 │ + ······"icon":·"terraform.png",
+        56 │ + ······"commands":·["terraform"]
+        57 │ + ····},
+    23  58 │       { "id": "aws", "displayName": "AWS", "icon": "amazonaws.png", "commands": ["aws"] },
+    24     │ - ····{·"id":·"gcloud",·"displayName":·"Google·Cloud",·"icon":·"googlecloud.png",·"commands":·["gcloud"]·},
+        59 │ + ····{
+        60 │ + ······"id":·"gcloud",
+        61 │ + ······"displayName":·"Google·Cloud",
+        62 │ + ······"icon":·"googlecloud.png",
+        63 │ + ······"commands":·["gcloud"]
+        64 │ + ····},
+    25  65 │       { "id": "azure", "displayName": "Azure", "icon": "microsoftazure.ico", "commands": ["az"] },
+    26  66 │       { "id": "vercel", "displayName": "Vercel", "icon": "vercel.png", "commands": ["vercel"] },
+    27  67 │       { "id": "netlify", "displayName": "Netlify", "icon": "netlify.png", "commands": ["netlify"] },
+    28     │ - ····{·"id":·"flyio",·"displayName":·"Fly.io",·"icon":·"flydotio.png",·"commands":·["fly",·"flyctl"]·},
+    29     │ - ····{·"id":·"cloudflare",·"displayName":·"Cloudflare",·"icon":·"cloudflare.png",·"commands":·["wrangler"]·},
+        68 │ + ····{
+        69 │ + ······"id":·"flyio",
+        70 │ + ······"displayName":·"Fly.io",
+        71 │ + ······"icon":·"flydotio.png",
+        72 │ + ······"commands":·["fly",·"flyctl"]
+        73 │ + ····},
+        74 │ + ····{
+        75 │ + ······"id":·"cloudflare",
+        76 │ + ······"displayName":·"Cloudflare",
+        77 │ + ······"icon":·"cloudflare.png",
+        78 │ + ······"commands":·["wrangler"]
+        79 │ + ····},
+    30  80 │       { "id": "heroku", "displayName": "Heroku", "icon": "heroku.png", "commands": ["heroku"] },
+    31  81 │       { "id": "stripe", "displayName": "Stripe", "icon": "stripe.png", "commands": ["stripe"] },
+    32     │ - ····{·"id":·"firebase",·"displayName":·"Firebase",·"icon":·"firebase.png",·"commands":·["firebase"]·},
+    33     │ - ····{·"id":·"supabase",·"displayName":·"Supabase",·"icon":·"supabase.png",·"commands":·["supabase"]·},
+        82 │ + ····{
+        83 │ + ······"id":·"firebase",
+        84 │ + ······"displayName":·"Firebase",
+        85 │ + ······"icon":·"firebase.png",
+        86 │ + ······"commands":·["firebase"]
+        87 │ + ····},
+        88 │ + ····{
+        89 │ + ······"id":·"supabase",
+        90 │ + ······"displayName":·"Supabase",
+        91 │ + ······"icon":·"supabase.png",
+        92 │ + ······"commands":·["supabase"]
+        93 │ + ····},
+    34  94 │       { "id": "sentry", "displayName": "Sentry", "icon": "sentry.png", "commands": ["sentry-cli"] },
+    35  95 │       { "id": "1password", "displayName": "1Password", "icon": "1password.png", "commands": ["op"] },
+    ······ │
+    37  97 │       { "id": "gnumake", "displayName": "GNU Make", "icon": "gnumake.png", "commands": ["make"] },
+    38  98 │       { "id": "cmake", "displayName": "CMake", "icon": "cmake.ico", "commands": ["cmake"] },
+    39     │ - ····{·"id":·"turborepo",·"displayName":·"Turborepo",·"icon":·"turborepo.png",·"commands":·["turbo"]·},
+        99 │ + ····{
+       100 │ + ······"id":·"turborepo",
+       101 │ + ······"displayName":·"Turborepo",
+       102 │ + ······"icon":·"turborepo.png",
+       103 │ + ······"commands":·["turbo"]
+       104 │ + ····},
+    40 105 │       { "id": "nx", "displayName": "Nx", "icon": "nx.png", "commands": ["nx"] },
+    41 106 │       { "id": "jest", "displayName": "Jest", "icon": "jest.png", "commands": ["jest"] },
+    ······ │
+    43 108 │       { "id": "pytest", "displayName": "pytest", "icon": "pytest.png", "commands": ["pytest"] },
+    44 109 │       { "id": "eslint", "displayName": "ESLint", "icon": "eslint.png", "commands": ["eslint"] },
+    45     │ - ····{·"id":·"prettier",·"displayName":·"Prettier",·"icon":·"prettier.png",·"commands":·["prettier"]·},
+       110 │ + ····{
+       111 │ + ······"id":·"prettier",
+       112 │ + ······"displayName":·"Prettier",
+       113 │ + ······"icon":·"prettier.png",
+       114 │ + ······"commands":·["prettier"]
+       115 │ + ····},
+    46 116 │       { "id": "webpack", "displayName": "Webpack", "icon": "webpack.png", "commands": ["webpack"] },
+    47 117 │       { "id": "vite", "displayName": "Vite", "icon": "vite.svg", "commands": ["vite"] },
+    48 118 │       { "id": "esbuild", "displayName": "esbuild", "icon": "esbuild.svg", "commands": ["esbuild"] },
+    49     │ - ····{·"id":·"postgresql",·"displayName":·"PostgreSQL",·"icon":·"postgresql.png",·"commands":·["psql"]·},
+       119 │ + ····{
+       120 │ + ······"id":·"postgresql",
+       121 │ + ······"displayName":·"PostgreSQL",
+       122 │ + ······"icon":·"postgresql.png",
+       123 │ + ······"commands":·["psql"]
+       124 │ + ····},
+    50 125 │       { "id": "mysql", "displayName": "MySQL", "icon": "mysql.png", "commands": ["mysql"] },
+    51     │ - ····{·"id":·"redis",·"displayName":·"Redis",·"icon":·"redis.png",·"commands":·["redis-cli",·"redis"]·},
+       126 │ + ····{
+       127 │ + ······"id":·"redis",
+       128 │ + ······"displayName":·"Redis",
+       129 │ + ······"icon":·"redis.png",
+       130 │ + ······"commands":·["redis-cli",·"redis"]
+       131 │ + ····},
+    52 132 │       { "id": "sqlite", "displayName": "SQLite", "icon": "sqlite.jpg", "commands": ["sqlite3"] },
+    53 133 │       { "id": "mongodb", "displayName": "MongoDB", "icon": "mongodb.ico", "commands": ["mongosh"] },
+    54 134 │       { "id": "jq", "displayName": "jq", "icon": "jq.png", "commands": ["jq"] },
+    55 135 │       { "id": "curl", "displayName": "curl", "icon": "curl.svg", "commands": ["curl"] },
+    56     │ - ····{·"id":·"openssh",·"displayName":·"OpenSSH",·"icon":·"openssh.png",·"commands":·["ssh",·"scp"]·},
+    57     │ - ····{·"id":·"xcode",·"displayName":·"Xcode",·"icon":·"xcode.png",·"commands":·["xcodebuild",·"xcrun"]·},
+       136 │ + ····{
+       137 │ + ······"id":·"openssh",
+       138 │ + ······"displayName":·"OpenSSH",
+  11 more lines truncated
+
+
+.\.tmp-craft-headless-addendum14\user-data\electron-log-preload.js format ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     1    │ -
+     2    │ - ······try·{
+     3    │ - ········(function·initialize({·contextBridge,·ipcRenderer·})·{
+     4    │ - ······if·(!ipcRenderer)·{
+     5    │ - ········return;
+     6    │ - ······}
+     7    │ - ······ipcRenderer.on("__ELECTRON_LOG_IPC__",·(_5,·message)·=>·{
+     8    │ - ········window.postMessage({·cmd:·"message",·...message·});
+     9    │ - ······});
+    10    │ - ······ipcRenderer.invoke("__ELECTRON_LOG__",·{·cmd:·"getOptions"·}).catch((e4)·=>·console.error(new·Error(
+    11    │ - ········`electron-log·isn't·initialized·in·the·main·process.·Please·call·log.initialize()·before.·${e4.message}`
+    12    │ - ······)));
+    13    │ - ······const·electronLog2·=·{
+    14    │ - ········sendToMain(message)·{
+    15    │ - ··········try·{
+    16    │ - ············ipcRenderer.send("__ELECTRON_LOG__",·message);
+    17    │ - ··········}·catch·(e4)·{
+    18    │ - ············console.error("electronLog.sendToMain·",·e4,·"data:",·message);
+    19    │ - ············ipcRenderer.send("__ELECTRON_LOG__",·{
+    20    │ - ··············cmd:·"errorHandler",
+    21    │ - ··············error:·{·message:·e4?.message,·stack:·e4?.stack·},
+    22    │ - ··············errorName:·"sendToMain"
+    23    │ - ············});
+    24    │ - ··········}
+    25    │ - ········},
+    26    │ - ········log(...data2)·{
+    27    │ - ··········electronLog2.sendToMain({·data:·data2,·level:·"info"·});
+    28    │ - ········}
+    29    │ - ······};
+    30    │ - ······for·(const·level·of·["error",·"warn",·"info",·"verbose",·"debug",·"silly"])·{
+    31    │ - ········electronLog2[level]·=·(...data2)·=>·electronLog2.sendToMain({
+        1 │ + try·{
+        2 │ + ··(function·initialize({·contextBridge,·ipcRenderer·})·{
+        3 │ + ····if·(!ipcRenderer)·{
+        4 │ + ······return;
+        5 │ + ····}
+        6 │ + ····ipcRenderer.on("__ELECTRON_LOG_IPC__",·(_5,·message)·=>·{
+        7 │ + ······window.postMessage({·cmd:·"message",·...message·});
+        8 │ + ····});
+        9 │ + ····ipcRenderer
+       10 │ + ······.invoke("__ELECTRON_LOG__",·{·cmd:·"getOptions"·})
+       11 │ + ······.catch((e4)·=>
+       12 │ + ········console.error(
+       13 │ + ··········new·Error(
+       14 │ + ············`electron-log·isn't·initialized·in·the·main·process.·Please·call·log.initialize()·before.·${e4.message}`,
+       15 │ + ··········),
+       16 │ + ········),
+       17 │ + ······);
+       18 │ + ····const·electronLog2·=·{
+       19 │ + ······sendToMain(message)·{
+       20 │ + ········try·{
+       21 │ + ··········ipcRenderer.send("__ELECTRON_LOG__",·message);
+       22 │ + ········}·catch·(e4)·{
+       23 │ + ··········console.error("electronLog.sendToMain·",·e4,·"data:",·message);
+       24 │ + ··········ipcRenderer.send("__ELECTRON_LOG__",·{
+       25 │ + ············cmd:·"errorHandler",
+       26 │ + ············error:·{·message:·e4?.message,·stack:·e4?.stack·},
+       27 │ + ············errorName:·"sendToMain",
+       28 │ + ··········});
+       29 │ + ········}
+       30 │ + ······},
+       31 │ + ······log(...data2)·{
+       32 │ + ········electronLog2.sendToMain({·data:·data2,·level:·"info"·});
+       33 │ + ······},
+       34 │ + ····};
+       35 │ + ····for·(const·level·of·["error",·"warn",·"info",·"verbose",·"debug",·"silly"])·{
+       36 │ + ······electronLog2[level]·=·(...data2)·=>
+       37 │ + ········electronLog2.sendToMain({
+    32 38 │             data: data2,
+    33    │ - ··········level
+       39 │ + ··········level,
+    34 40 │           });
+    35    │ - ······}
+    36    │ - ······if·(contextBridge·&&·process.contextIsolated)·{
+    37    │ - ········try·{
+    38    │ - ··········contextBridge.exposeInMainWorld("__electronLog",·electronLog2);
+    39    │ - ········}·catch·{
+    40    │ - ········}
+    41    │ - ······}
+    42    │ - ······if·(typeof·window·===·"object")·{
+    43    │ - ········window.__electronLog·=·electronLog2;
+    44    │ - ······}·else·{
+    45    │ - ········__electronLog·=·electronLog2;
+    46    │ - ······}
+    47    │ - ····})(require('electron'));
+    48    │ - ······}·catch(e)·{
+    49    │ - ········console.error(e);
+    50    │ - ······}
+    51    │ - ····
+       41 │ + ····}
+       42 │ + ····if·(contextBridge·&&·process.contextIsolated)·{
+       43 │ + ······try·{
+       44 │ + ········contextBridge.exposeInMainWorld("__electronLog",·electronLog2);
+       45 │ + ······}·catch·{}
+       46 │ + ····}
+       47 │ + ····if·(typeof·window·===·"object")·{
+       48 │ + ······window.__electronLog·=·electronLog2;
+       49 │ + ····}·else·{
+       50 │ + ······__electronLog·=·electronLog2;
+       51 │ + ····}
+       52 │ + ··})(require("electron"));
+       53 │ + }·catch·(e)·{
+       54 │ + ··console.error(e);
+       55 │ + }
+       56 │ +
+
+
+.\role-model-router\apps\runtime-host-bridge\test\index.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+     3184  3184 │           };
+     3185  3185 │         }
+     3186       │ - ····).createCodexSubscriptionResponsesExecutionAdapter({·networkFetcher:·fetchMock·as·typeof·fetch·});
+           3186 │ + ····).createCodexSubscriptionResponsesExecutionAdapter({
+           3187 │ + ······networkFetcher:·fetchMock·as·typeof·fetch,
+           3188 │ + ····});
+     3187  3189 │
+     3188  3190 │       const result = await adapter.executeRequest({
+    ··········· │
+     3226  3228 │         .map((chunk) => chunk.slice("data: ".length))
+     3227  3229 │         .filter((chunk) => chunk !== "[DONE]")
+     3228       │ - ······.map((chunk)·=>·JSON.parse(chunk)·as·{·choices?:·Array<{·delta?:·Record<string,·unknown>;·finish_reason?:·string·|·null·}>·});
+           3230 │ + ······.map(
+           3231 │ + ········(chunk)·=>
+           3232 │ + ··········JSON.parse(chunk)·as·{
+           3233 │ + ············choices?:·Array<{·delta?:·Record<string,·unknown>;·finish_reason?:·string·|·null·}>;
+           3234 │ + ··········},
+           3235 │ + ······);
+     3229  3236 │       expect(
+     3230  3237 │         payloads.flatMap((payload) =>
+    ··········· │
+     3275  3282 │           };
+     3276  3283 │         }
+     3277       │ - ····).createCodexSubscriptionResponsesExecutionAdapter({·networkFetcher:·fetchMock·as·typeof·fetch·});
+           3284 │ + ····).createCodexSubscriptionResponsesExecutionAdapter({
+           3285 │ + ······networkFetcher:·fetchMock·as·typeof·fetch,
+           3286 │ + ····});
+     3278  3287 │
+     3279  3288 │       const execution = adapter.executeRequest({
+
+
+.\role-model-router\apps\runtime-host-bridge\src\index.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+      320   320 │   const OPENAI_CODEX_DEVICE_USER_CODE_ENDPOINT =
+      321   321 │     "https://auth.openai.com/api/accounts/deviceauth/usercode";
+      322       │ - const·OPENAI_CODEX_DEVICE_TOKEN_ENDPOINT·=
+      323       │ - ··"https://auth.openai.com/api/accounts/deviceauth/token";
+            322 │ + const·OPENAI_CODEX_DEVICE_TOKEN_ENDPOINT·=·"https://auth.openai.com/api/accounts/deviceauth/token";
+      324   323 │   const OPENAI_CODEX_OAUTH_TOKEN_ENDPOINT = "https://auth.openai.com/oauth/token";
+      325   324 │   const OPENAI_CODEX_SUBSCRIPTION_AUTH_MISSING_ERROR =
+    ··········· │
+     9424  9423 │
+     9425  9424 │   function readSsePayloadTexts(transcript: string): readonly string[] {
+     9426       │ - ··return·transcript
+     9427       │ - ····.split(/\r?\n\r?\n/u)
+     9428       │ - ····.flatMap((block)·=>
+     9429       │ - ······block
+     9430       │ - ········.split(/\r?\n/u)
+     9431       │ - ········.map((line)·=>·line.trim())
+     9432       │ - ········.filter((line)·=>·line.startsWith("data:"))
+     9433       │ - ········.map((line)·=>·line.slice("data:".length).trim())
+     9434       │ - ········.filter((line)·=>·line.length·>·0·&&·line·!==·"[DONE]"),
+     9435       │ - ····);
+           9425 │ + ··return·transcript.split(/\r?\n\r?\n/u).flatMap((block)·=>
+           9426 │ + ····block
+           9427 │ + ······.split(/\r?\n/u)
+           9428 │ + ······.map((line)·=>·line.trim())
+           9429 │ + ······.filter((line)·=>·line.startsWith("data:"))
+           9430 │ + ······.map((line)·=>·line.slice("data:".length).trim())
+           9431 │ + ······.filter((line)·=>·line.length·>·0·&&·line·!==·"[DONE]"),
+           9432 │ + ··);
+     9436  9433 │   }
+     9437  9434 │
+    ··········· │
+     9596  9593 │         const responseUsage = asPlainRecord(response?.usage);
+     9597  9594 │         usage.inputTokens =
+     9598       │ - ········typeof·responseUsage?.input_tokens·===·"number"·?·responseUsage.input_tokens·:·usage.inputTokens;
+           9595 │ + ········typeof·responseUsage?.input_tokens·===·"number"
+           9596 │ + ··········?·responseUsage.input_tokens
+           9597 │ + ··········:·usage.inputTokens;
+     9599  9598 │         usage.outputTokens =
+     9600  9599 │           typeof responseUsage?.output_tokens === "number"
+    ··········· │
+     9605  9604 │
+     9606  9605 │     const outputText = textDeltas.length > 0 ? textDeltas.join("") : finalOutputText;
+     9607       │ - ··const·reasoningText·=
+     9608       │ - ····reasoningDeltas.length·>·0·?·reasoningDeltas.join("")·:·finalReasoningText;
+           9606 │ + ··const·reasoningText·=·reasoningDeltas.length·>·0·?·reasoningDeltas.join("")·:·finalReasoningText;
+     9609  9607 │
+     9610  9608 │     return {
+    ··········· │
+     9809  9807 │         return [deltaChunk({ content: payload.delta })];
+     9810  9808 │       }
+     9811       │ - ····if·(
+     9812       │ - ······type·===·"response.function_call_arguments.delta"·&&
+     9813       │ - ······typeof·payload.delta·===·"string"
+     9814       │ - ····)·{
+           9809 │ + ····if·(type·===·"response.function_call_arguments.delta"·&&·typeof·payload.delta·===·"string")·{
+     9815  9810 │         emittedToolCall = true;
+     9816  9811 │         const item = toolItemsByOutputIndex.get(outputIndex);
+    ··········· │
+     9831  9826 │         ];
+     9832  9827 │       }
+     9833       │ - ····if·(
+     9834       │ - ······type·===·"response.function_call_arguments.done"·&&
+     9835       │ - ······typeof·payload.arguments·===·"string"
+     9836       │ - ····)·{
+           9828 │ + ····if·(type·===·"response.function_call_arguments.done"·&&·typeof·payload.arguments·===·"string")·{
+     9837  9829 │         emittedToolCall = true;
+     9838  9830 │         const item = toolItemsByOutputIndex.get(outputIndex);
+    ··········· │
+    10018 10010 │         return [];
+    10019 10011 │       }
+    10020       │ - ····const·role·=·typeof·record.role·===·"string"·&&·record.role·===·"assistant"·?·"assistant"·:·"user";
+          10012 │ + ····const·role·=
+          10013 │ + ······typeof·record.role·===·"string"·&&·record.role·===·"assistant"·?·"assistant"·:·"user";
+    10021 10014 │       const rawContent = record.content;
+    10022 10015 │       const content = Array.isArray(rawContent)
+    ··········· │
+    10095 10088 │           }
+    10096 10089 │         : {}),
+    10097       │ - ····...(typeof·requestBody.temperature·===·"number"·?·{·temperature:·requestBody.temperature·}·:·{}),
+          10090 │ + ····...(typeof·requestBody.temperature·===·"number"
+          10091 │ + ······?·{·temperature:·requestBody.temperature·}
+          10092 │ + ······:·{}),
+    10098 10093 │       ...(typeof requestBody.max_tokens === "number"
+    10099 10094 │         ? { max_output_tokens: requestBody.max_tokens }
+    ··········· │
+    10188 10183 │             ? streamedDownstreamChunks.join("")
+    10189 10184 │             : requestShape === "chat-completions"
+    10190       │ - ··········?·input.requestCapture.body.stream·===·true
+    10191       │ - ············?·createChatCompletionsSseFromCodexResponsesTranscript({
+    10192       │ - ················requestId:·input.requestId,
+    10193       │ - ················requestedModel,
+    10194       │ - ················transcript,
+    10195       │ - ··············})
+    10196       │ - ············:·createChatCompletionsBodyFromCodexResponsesTranscript({
+    10197       │ - ················requestId:·input.requestId,
+    10198       │ - ················requestedModel,
+    10199       │ - ················transcript,
+    10200       │ - ··············})
+    10201       │ - ··········:·input.requestCapture.body.stream·===·true
+    10202       │ - ············?·rawBody
+    10203       │ - ············:·createResponsesBodyFromCodexResponsesTranscript({
+    10204       │ - ················requestId:·input.requestId,
+    10205       │ - ················requestedModel,
+    10206       │ - ················transcript,
+    10207       │ - ··············});
+          10185 │ + ············?·input.requestCapture.body.stream·===·true
+          10186 │ + ··············?·createChatCompletionsSseFromCodexResponsesTranscript({
+          10187 │ + ··················requestId:·input.requestId,
+          10188 │ + ··················requestedModel,
+          10189 │ + ··················transcript,
+          10190 │ + ················})
+          10191 │ + ··············:·createChatCompletionsBodyFromCodexResponsesTranscript({
+          10192 │ + ··················requestId:·input.requestId,
+          10193 │ + ··················requestedModel,
+          10194 │ + ··················transcript,
+          10195 │ + ················})
+          10196 │ + ············:·input.requestCapture.body.stream·===·true
+          10197 │ + ··············?·rawBody
+          10198 │ + ··············:·createResponsesBodyFromCodexResponsesTranscript({
+          10199 │ + ··················requestId:·input.requestId,
+          10200 │ + ··················requestedModel,
+          10201 │ + ··················transcript,
+          10202 │ + ················});
+    10208 10203 │
+    10209 10204 │         return {
+
+
+Checked 749 files in 2s. No fixes applied.
+Found 6 errors.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+
+ ELIFECYCLE  Command failed with exit code 1.
+ ELIFECYCLE  Command failed with exit code 1.

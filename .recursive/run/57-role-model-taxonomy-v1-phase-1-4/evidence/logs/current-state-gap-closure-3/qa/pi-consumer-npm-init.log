@@ -1,0 +1,18 @@
+Wrote to C:\Users\erikb\AppData\Local\Temp\role-model-run57-pi-consumer-qa\package.json:
+
+{
+  "name": "role-model-run57-pi-consumer-qa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
+
+
+

@@ -1,0 +1,55 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/61-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:31772) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/validate-vendors.test.ts (2 tests | 1 failed) 9719ms
+   × runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end 9706ms
+     → expected undefined to match object { deterministic: true, …(3) }
+   ✓ runRuntimeVendorValidation > plans a real-vendor harness with repo-owned mock upstreams 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-vendors.test.ts > runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end
+AssertionError: expected undefined to match object { deterministic: true, …(3) }
+
+- Expected:
+{
+  "categoryCounts": ObjectContaining {
+    "continuation-after-tool-output": Any<Number>,
+    "image-sensitive": Any<Number>,
+    "long-context": Any<Number>,
+    "non-tool-mentions-tools": Any<Number>,
+    "plain-text": Any<Number>,
+    "tool-bearing": Any<Number>,
+  },
+  "clientCaseCounts": {
+    "craft": 100,
+    "pi": 100,
+  },
+  "deterministic": true,
+  "totalCaseCount": 200,
+}
+
++ Received:
+undefined
+
+ ❯ test/validate-vendors.test.ts:716:42
+    714|       };
+    715|     };
+    716|     expect(corpusResult.corpus?.summary).toMatchObject({
+       |                                          ^
+    717|       deterministic: true,
+    718|       totalCaseCount: 200,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  01:14:19
+   Duration  12.78s (transform 1.50s, setup 0ms, collect 2.16s, tests 9.72s, environment 0ms, prepare 259ms)
+
+undefined
+D:\DEV\role-model\.worktrees\61-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/validate-vendors.test.ts

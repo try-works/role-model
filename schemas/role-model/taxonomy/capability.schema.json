@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/capability.schema.json",
+  "title": "Taxonomy Capability",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "description",
+    "classificationGuidance",
+    "authority",
+    "stability"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "const": "capability"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "owner"],
+      "properties": {
+        "scope": {
+          "enum": ["core", "provider", "client", "org", "team", "user"]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "stability": {
+      "enum": ["stable", "experimental", "deprecated"]
+    },
+    "replacement": {
+      "type": "string",
+      "description": "When stability is deprecated, the ID of the replacement entry."
+    },
+    "deprecationReason": {
+      "type": "string",
+      "description": "Human-readable reason for deprecation."
+    },
+    "category": {
+      "type": "string"
+    },
+    "classificationGuidance": {
+      "type": "string"
+    }
+  }
+}

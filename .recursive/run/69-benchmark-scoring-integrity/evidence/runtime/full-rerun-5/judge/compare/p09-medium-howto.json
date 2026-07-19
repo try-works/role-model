@@ -1,0 +1,50 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p09-medium-howto",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"Point the client at `http://localhost:3456/v1` and use a dummy API key (most local runtimes don't validate it).\\n\\nPython (OpenAI SDK):\\n```python\\nfrom openai import OpenAI\\nclient = OpenAI(\\n    base_url=\\\"http://localhost:",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"Set the client’s base URL to your local server, e.g. `http://localhost:3456/v1`.\\n\\nPython:\\n```python\\nfrom openai import OpenAI\\nclient = OpenAI(base_url=\\\"http://localhost:3456/v1\\\", api_key=\\\"dummy\\\")\\n```\\n\\nJavaScript:\\",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both answers correctly explain how to configure an OpenAI-compatible client for a local runtime on port 3456, including required dummy API keys and base URLs. Kimi's answer provides more comprehensive and practical detail (Python, JavaScript, curl examples, notes on path handling and model naming), offering slightly richer technical guidance while remaining fully correct.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both answers correctly explain how to configure an OpenAI-compatible client for a local runtime on port 3456, including required dummy API keys and base URLs. Kimi's answer provides more comprehensive and practical detail (Python, JavaScript, curl examples, notes on path handling and model naming), offering slightly richer technical guidance while remaining fully correct.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nHow do I configure an OpenAI-compatible client to point at a local runtime on port 3456?",
+    "exemplarAnswer": "Accurate explanatory answer to the user question.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Answers the question with relevant technical detail.",
+      "[MUST] Include JSON keys: answer"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 543,
+    "reasoningLength": 3085
+  },
+  "recordedAtMs": 1783936035782
+}

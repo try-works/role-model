@@ -1,0 +1,77 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/60-runtime-ui-paper-linear-review-alignment/role-model-router
+
+ ❯ apps/runtime-ui/app/lib/runtime-api.test.ts (47 tests | 1 failed | 46 skipped) 37ms
+   ↓ fetchRuntimeSnapshot > loads the operator shell data from the runtime control-plane endpoints
+   ↓ fetchLocalModels > preserves local ownership and llama-swap config metadata from the runtime API
+   ↓ fetchDownstreamOpenAIProviderConfig > loads the downstream OpenAI-compatible provider contract for consumer apps
+   ↓ fetchRequestDetail > loads request detail and the linked endpoint profile for the inspector pane
+   ↓ fetchModelTelemetryRollup > aggregates richer taxonomy rollups for model detail telemetry
+   ↓ router APIs > loads the router summary, config, candidates, and decision ledger from router-specific endpoints
+   ↓ router APIs > loads router decision detail from the router decision endpoint
+   ↓ telemetry APIs > loads the canonical telemetry dashboard reads from the role-model telemetry endpoints
+   ↓ telemetry APIs > loads telemetry request rows with limit parameters
+   ↓ telemetry APIs > serializes taxonomy telemetry request filters into the request query string
+   ↓ telemetry APIs > posts the generic telemetry analytics query payload
+   ↓ telemetry APIs > subscribes to canonical telemetry SSE updates and closes the source on cleanup
+   ↓ observe APIs > loads vendor activity metrics for the observe activity page
+   ↓ observe APIs > loads a persisted request/response capture by id
+   ↓ observe APIs > returns null when an activity capture is not found
+   ↓ observe APIs > loads raw log text for observe log consoles
+   ↓ observe APIs > loads vendor version info for the runtime system surface
+   ↓ controller assignment APIs > loads the current global controller assignment
+   ↓ controller assignment APIs > loads a null controller assignment when no controller is configured yet
+   ↓ controller assignment APIs > patches the selected controller candidate
+   ↓ submitWorkbenchChat > posts a chat-completions payload to the runtime workbench path
+   ↓ submitWorkbenchChat > sends routing-mode override as a header instead of leaking it into the OpenAI-compatible body
+   ↓ submitWorkbenchChat > sends endpoint override as a header instead of leaking it into the OpenAI-compatible body
+   ↓ studio vendor API helpers > posts an OpenAI image-generation request
+   ↓ studio vendor API helpers > posts an SDAPI txt2img request
+   ↓ studio vendor API helpers > loads available speech voices for a selected model
+   × studio vendor API helpers > reports a clear error when the voice inventory endpoint returns HTML instead of JSON 35ms
+     → expected [Function] to throw error including 'Request to /v1/audio/voices?model=moo…' but got 'Unexpected token \'<\', "<!DOCTYPE ".…'
+   ↓ studio vendor API helpers > posts a speech-generation request and returns audio bytes as a blob
+   ↓ studio vendor API helpers > posts a multipart transcription request
+   ↓ studio vendor API helpers > posts a rerank request to the selected vendor path
+   ↓ studio vendor API helpers > posts a raw advanced API request to the selected endpoint family
+   ↓ startRuntimeDeviceAuthorization > posts the selected provider account payload to the runtime device-auth start path
+   ↓ reconnectRuntimeAccount > posts the saved account id to the explicit reconnect repair path
+   ↓ removeRuntimeAccountModel > deletes the configured model from the runtime account pool
+   ↓ pollRuntimeDeviceAuthorization > posts the auth request id to the runtime device-auth poll path
+   ↓ updateRuntimeAccountApiKey > posts the saved account id and replacement key to the explicit repair path
+   ↓ activateRuntimeEndpoint > posts endpoint activation payload to the runtime endpoints mutation path
+   ↓ fetchRuntimeConfig > loads the normalized unified runtime config from the runtime control plane
+   ↓ updateRuntimeConfig > puts the normalized unified runtime config to the runtime control plane
+   ↓ role policy APIs > loads the full runtime-managed role policy from the control plane
+   ↓ role policy APIs > posts role creation, puts role updates, and puts task allowlists to the control plane
+   ↓ benchmark display endpoints > fetchBenchmarkSummariesByMode loads full and quick summaries
+   ↓ benchmark display endpoints > fetchBenchmarkRuns loads completed run history
+   ↓ benchmark display endpoints > clearAllBenchmarkData deletes global benchmark state
+   ↓ role assignment helpers > represent default all roles separately from explicit none
+   ↓ role assignment helpers > posts default-all assignment metadata for peer and llama-swap model registration
+   ↓ role assignment helpers > puts explicit empty include assignment metadata when saving no-role local bindings
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/runtime-ui/app/lib/runtime-api.test.ts > studio vendor API helpers > reports a clear error when the voice inventory endpoint returns HTML instead of JSON
+AssertionError: expected [Function] to throw error including 'Request to /v1/audio/voices?model=moo…' but got 'Unexpected token \'<\', "<!DOCTYPE ".…'
+
+Expected: "Request to /v1/audio/voices?model=moonshot%2Fkimi-audio returned HTML instead of JSON."
+Received: "Unexpected token '<', "<!DOCTYPE "... is not valid JSON"
+
+ ❯ apps/runtime-ui/app/lib/runtime-api.test.ts:1639:5
+    1637|     );
+    1638| 
+    1639|     await expect(fetchAudioVoices("moonshot/kimi-audio", fetcher)).rej…
+       |     ^
+    1640|       "Request to /v1/audio/voices?model=moonshot%2Fkimi-audio returne…
+    1641|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 46 skipped (47)
+   Start at  18:27:59
+   Duration  1.65s (transform 216ms, setup 0ms, collect 228ms, tests 37ms, environment 0ms, prepare 531ms)
+

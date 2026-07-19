@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "p14-schema-validate",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Identifies requestedRoleId as missing from the schema and proposes concrete test updates (adding to schema properties, refactoring for conditional assertions, adding missing-field test and schema validation tests), fulfilling all grading criteria and deliverable checklist.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/p14-schema-validate.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/p14-schema-validate/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935505345
+}

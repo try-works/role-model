@@ -1,0 +1,285 @@
+2026-07-08T15:46:40.745Z [PowerShellValidator] Root set to: C:\Users\erikb\AppData\Local\Programs\@craft-agentelectron\resources\app\dist\resources
+2026-07-08T15:46:40.771Z [docs] Synced 17 docs
+2026-07-08T15:46:40.847Z [release-notes] Synced 62 release notes
+2026-07-08T15:46:40.858Z [Permissions] Already up to date: 2026-03-07
+2026-07-08T15:46:40.907Z [config] Synced config-defaults.json from bundled assets
+2026-07-08T15:46:40.956Z [CredentialManager] Backend available: secure-storage (priority 100)
+2026-07-08T15:46:40.958Z [CredentialManager] Using backend: secure-storage
+2026-07-08T15:46:41.182Z [summarize] resetSummarizationClient called (no-op)
+2026-07-08T15:46:41.185Z [ConfigWatcher] Starting for workspace: run-62-verification
+2026-07-08T15:46:41.187Z [ConfigWatcher] Watching global configs: D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\.tmp-craft-headless\config
+2026-07-08T15:46:41.188Z [ConfigWatcher] Setting up workspace watcher for: C:\Users\erikb\.craft-agent\workspaces\run-62-verification
+2026-07-08T15:46:41.189Z [ConfigWatcher] Watching workspace recursively: C:\Users\erikb\.craft-agent\workspaces\run-62-verification
+2026-07-08T15:46:41.190Z [ConfigWatcher] Watching app themes directory: D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\.tmp-craft-headless\config\themes
+2026-07-08T15:46:41.191Z [ConfigWatcher] Watching app permissions directory: D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\.tmp-craft-headless\config\permissions
+2026-07-08T15:46:41.192Z [ConfigWatcher] Known sources: []
+2026-07-08T15:46:41.192Z [ConfigWatcher] Known skills: []
+2026-07-08T15:46:41.193Z [ConfigWatcher] Known themes: ["catppuccin","default","dracula","ghostty","github","gruvbox","haze","night-owl","nord","one-dark-pro","pierre","rose-pine","solarized","tokyo-night","vitesse"]
+2026-07-08T15:46:41.194Z [ConfigWatcher] Started watching files
+2026-07-08T15:46:41.194Z [PERF] configWatcher.start: 8.74ms (ensureDir:1.2ms → watchGlobalConfigs:2.5ms → watchWorkspaceDir:4.0ms → watchAppThemesDir:5.0ms → watchAppPermissionsDir:6.0ms → scanSources:6.7ms → scanSkills:7.3ms → scanAppThemes:7.9ms → initLlmConnectionsHash:8.4ms) {"workspaceId":"run-62-verification"}
+2026-07-08T15:46:41.195Z [event-bus] DEBUG [EventBus] Created for workspace: 2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff
+2026-07-08T15:46:41.195Z [automation-system] DEBUG [AutomationSystem] No automations config found at C:\Users\erikb\.craft-agent\workspaces\run-62-verification\automations.json
+2026-07-08T15:46:41.196Z [event-bus] DEBUG [EventBus] Registered any-handler
+2026-07-08T15:46:41.196Z [prompt-handler] DEBUG [PromptHandler] Subscribed to event bus
+2026-07-08T15:46:41.196Z [event-bus] DEBUG [EventBus] Registered any-handler
+2026-07-08T15:46:41.197Z [retry-scheduler] DEBUG [RetryScheduler] Started
+2026-07-08T15:46:41.197Z [webhook-handler] DEBUG [WebhookHandler] Subscribed to event bus
+2026-07-08T15:46:41.198Z [event-bus] DEBUG [EventBus] Registered any-handler
+2026-07-08T15:46:41.198Z [event-log-handler] DEBUG [EventLogHandler] Subscribed to event bus, logging to C:\Users\erikb\.craft-agent\workspaces\run-62-verification\events.jsonl
+2026-07-08T15:46:41.198Z [automation-system] DEBUG [AutomationSystem] Handlers created and subscribed
+2026-07-08T15:46:41.199Z [automation-system] DEBUG [AutomationSystem] Scheduler started
+2026-07-08T15:46:41.199Z [automation-system] DEBUG [AutomationSystem] Created for workspace: 2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff
+2026-07-08T15:46:41.205Z [PERF] session.listSessions: 3.53ms (readdir:0.6ms → parsed:3.5ms) {"count":3}
+2026-07-08T15:46:58.997Z [ws-rpc-server] INFO  Client connected {"clientId":"c51576c6-c067-456f-8041-82e946cb9a09","webContentsId":null,"workspaceId":null}
+2026-07-08T15:46:59.009Z [ws-rpc-server] INFO  Client disconnected {"clientId":"c51576c6-c067-456f-8041-82e946cb9a09"}
+2026-07-08T15:46:59.013Z [ws-rpc-server] INFO  Client connected {"clientId":"bf6b72f7-0ba1-4758-9223-25f6fc1e3688","webContentsId":null,"workspaceId":"2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff"}
+2026-07-08T15:46:59.033Z [summarize] resetSummarizationClient called (no-op)
+2026-07-08T15:46:59.047Z [jsonl] Failed to read session header: C:\Users\erikb\.craft-agent\workspaces\run-62-verification\sessions\260708-proud-plain\session.jsonl {"errno":-4058,"code":"ENOENT","syscall":"open","path":"C:\\Users\\erikb\\.craft-agent\\workspaces\\run-62-verification\\sessions\\260708-proud-plain\\session.jsonl"}
+2026-07-08T15:46:59.063Z [PersistenceQueue] Wrote session 260708-proud-plain
+2026-07-08T15:46:59.064Z [Mode] Set permission mode to allow for session 260708-proud-plain (changedBy=restore, modeVersion=1)
+2026-07-08T15:46:59.065Z [PERF] rpc.createSession: 29.25ms {"workspaceId":"2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff"}
+2026-07-08T15:46:59.077Z [PERF] session.loadSession: 9.49ms {"sessionId":"260708-proud-plain"}
+2026-07-08T15:46:59.080Z [jsonl] Failed to read session header: D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\~\.craft-agent\workspaces\run-62-verification\sessions\260708-proud-plain\session.jsonl {"errno":-4058,"code":"ENOENT","syscall":"open","path":"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\~\\.craft-agent\\workspaces\\run-62-verification\\sessions\\260708-proud-plain\\session.jsonl"}
+2026-07-08T15:46:59.083Z [PersistenceQueue] Wrote session 260708-proud-plain
+2026-07-08T15:46:59.087Z [PERF] rpc.getSessionMessages: 0.24ms
+2026-07-08T15:46:59.090Z [PERF] session.loadSession: 0.64ms {"sessionId":"260708-proud-plain"}
+2026-07-08T15:46:59.104Z [PersistenceQueue] Wrote session 260708-proud-plain
+2026-07-08T15:46:59.106Z [PersistenceQueue] Session 260708-proud-plain metadata mismatch detected (local preserved, previousSig={"name":"Run)
+2026-07-08T15:46:59.113Z [PersistenceQueue] Wrote session 260708-proud-plain
+2026-07-08T15:46:59.122Z [PERF] sources.buildServers: 0.48ms (credentials.loaded:0.1ms → servers.built:0.5ms) {"count":0,"mcpCount":0,"apiCount":0}
+2026-07-08T15:46:59.126Z session-scoped-tools Merged callbacks for session 260708-proud-plain
+2026-07-08T15:46:59.126Z session-scoped-tools Merged callbacks for session 260708-proud-plain
+2026-07-08T15:46:59.127Z [PERF] agent.create: 7.94ms {"sessionId":"260708-proud-plain"}
+2026-07-08T15:46:59.132Z [pi-event] DEBUG Turn started {"turnIndex":1}
+2026-07-08T15:46:59.133Z session-scoped-tools Merged callbacks for session 260708-proud-plain
+2026-07-08T15:46:59.148Z [ConfigWatcher] config.json changed
+2026-07-08T15:46:59.152Z [ConfigWatcher] LLM connections changed
+2026-07-08T15:46:59.429Z [event-bus] DEBUG [EventBus] Emitting: PermissionModeChange
+2026-07-08T15:46:59.431Z [event-log-handler] DEBUG [EventLogHandler] Logged: PermissionModeChange
+2026-07-08T15:46:59.431Z [event-bus] DEBUG [EventBus] Emitted: PermissionModeChange (0 handlers, 3 any-handlers)
+2026-07-08T15:46:59.431Z [automation-system] DEBUG [AutomationSystem] Emitted 1 events for session 260708-proud-plain: PermissionModeChange
+2026-07-08T15:46:59.633Z [PersistenceQueue] Session 260708-proud-plain metadata mismatch detected (disk preserved, previousSig={"name":"Run)
+2026-07-08T15:46:59.641Z [PersistenceQueue] Wrote session 260708-proud-plain
+2026-07-08T15:47:00.009Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:47:00.010Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:47:00.010Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:47:00.098Z [PERF] rpc.getSessionMessages: 0.30ms
+2026-07-08T15:47:01.009Z [PersistenceQueue] Session 260708-proud-plain metadata mismatch detected (local preserved, previousSig={"name":"Run)
+2026-07-08T15:47:01.024Z [getSystemPrompt] full prompt length: 31520
+2026-07-08T15:47:01.033Z [PERF] session.sendMessage: 1918.18ms (agent.ready:11.6ms → sources.loaded:12.1ms → chat.starting:14.4ms → chat.complete:1918.2ms) {"sessionId":"260708-proud-plain"}
+2026-07-08T15:47:01.036Z [PERF] rpc.getSessionMessages: 0.13ms
+2026-07-08T15:47:01.043Z [ws-rpc-server] INFO  Client disconnected {"clientId":"bf6b72f7-0ba1-4758-9223-25f6fc1e3688"}
+2026-07-08T15:47:01.047Z [PersistenceQueue] Wrote session 260708-proud-plain
+2026-07-08T15:47:01.537Z [PersistenceQueue] Session 260708-proud-plain metadata mismatch detected (disk preserved, previousSig={"name":"Run)
+2026-07-08T15:47:01.550Z [PersistenceQueue] Wrote session 260708-proud-plain
+2026-07-08T15:48:00.056Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:48:00.056Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:48:00.056Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:49:00.059Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:49:00.059Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:49:00.060Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:50:00.070Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:50:00.070Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:50:00.070Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:51:00.069Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:51:00.070Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:51:00.070Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:52:00.077Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:52:00.077Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:52:00.077Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:53:00.064Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:53:00.064Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:53:00.064Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:53:22.161Z [ws-rpc-server] INFO  Client connected {"clientId":"a70c83e7-c9a3-485c-9096-eed2cb81a46e","webContentsId":null,"workspaceId":null}
+2026-07-08T15:53:22.172Z [ws-rpc-server] INFO  Client disconnected {"clientId":"a70c83e7-c9a3-485c-9096-eed2cb81a46e"}
+2026-07-08T15:53:22.176Z [ws-rpc-server] INFO  Client connected {"clientId":"4472132b-8b95-47d5-b38b-9485dfb6a905","webContentsId":null,"workspaceId":"2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff"}
+2026-07-08T15:53:22.193Z [summarize] resetSummarizationClient called (no-op)
+2026-07-08T15:53:22.194Z session-scoped-tools Unregistered callbacks for session 260708-proud-plain
+2026-07-08T15:53:22.204Z [jsonl] Failed to read session header: C:\Users\erikb\.craft-agent\workspaces\run-62-verification\sessions\260708-clear-orbit\session.jsonl {"errno":-4058,"code":"ENOENT","syscall":"open","path":"C:\\Users\\erikb\\.craft-agent\\workspaces\\run-62-verification\\sessions\\260708-clear-orbit\\session.jsonl"}
+2026-07-08T15:53:22.223Z [PersistenceQueue] Wrote session 260708-clear-orbit
+2026-07-08T15:53:22.224Z [Mode] Set permission mode to allow for session 260708-clear-orbit (changedBy=restore, modeVersion=1)
+2026-07-08T15:53:22.224Z [PERF] rpc.createSession: 27.09ms {"workspaceId":"2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff"}
+2026-07-08T15:53:22.232Z [PERF] session.loadSession: 5.77ms {"sessionId":"260708-clear-orbit"}
+2026-07-08T15:53:22.235Z [jsonl] Failed to read session header: D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\~\.craft-agent\workspaces\run-62-verification\sessions\260708-clear-orbit\session.jsonl {"errno":-4058,"code":"ENOENT","syscall":"open","path":"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\~\\.craft-agent\\workspaces\\run-62-verification\\sessions\\260708-clear-orbit\\session.jsonl"}
+2026-07-08T15:53:22.238Z session-scoped-tools Unregistered callbacks for session 260708-proud-plain
+2026-07-08T15:53:22.240Z [PersistenceQueue] Wrote session 260708-clear-orbit
+2026-07-08T15:53:22.242Z [PERF] rpc.getSessionMessages: 0.18ms
+2026-07-08T15:53:22.244Z [PERF] session.loadSession: 0.50ms {"sessionId":"260708-clear-orbit"}
+2026-07-08T15:53:22.254Z [PersistenceQueue] Wrote session 260708-clear-orbit
+2026-07-08T15:53:22.256Z [PersistenceQueue] Session 260708-clear-orbit metadata mismatch detected (local preserved, previousSig={"name":"Run)
+2026-07-08T15:53:22.262Z [PersistenceQueue] Wrote session 260708-clear-orbit
+2026-07-08T15:53:22.266Z [PERF] sources.buildServers: 0.19ms (credentials.loaded:0.0ms → servers.built:0.2ms) {"count":0,"mcpCount":0,"apiCount":0}
+2026-07-08T15:53:22.268Z session-scoped-tools Merged callbacks for session 260708-clear-orbit
+2026-07-08T15:53:22.269Z session-scoped-tools Merged callbacks for session 260708-clear-orbit
+2026-07-08T15:53:22.269Z [PERF] agent.create: 4.49ms {"sessionId":"260708-clear-orbit"}
+2026-07-08T15:53:22.272Z [pi-event] DEBUG Turn started {"turnIndex":1}
+2026-07-08T15:53:22.272Z session-scoped-tools Merged callbacks for session 260708-clear-orbit
+2026-07-08T15:53:22.298Z [ConfigWatcher] config.json changed
+2026-07-08T15:53:22.299Z [ConfigWatcher] LLM connections changed
+2026-07-08T15:53:22.578Z [event-bus] DEBUG [EventBus] Emitting: PermissionModeChange
+2026-07-08T15:53:22.578Z [event-log-handler] DEBUG [EventLogHandler] Logged: PermissionModeChange
+2026-07-08T15:53:22.579Z [event-bus] DEBUG [EventBus] Emitted: PermissionModeChange (0 handlers, 3 any-handlers)
+2026-07-08T15:53:22.579Z [automation-system] DEBUG [AutomationSystem] Emitted 1 events for session 260708-clear-orbit: PermissionModeChange
+2026-07-08T15:53:22.780Z [PersistenceQueue] Session 260708-clear-orbit metadata mismatch detected (disk preserved, previousSig={"name":"Run)
+2026-07-08T15:53:22.787Z [PersistenceQueue] Wrote session 260708-clear-orbit
+2026-07-08T15:53:23.258Z [PERF] rpc.getSessionMessages: 0.15ms
+2026-07-08T15:53:24.168Z [PersistenceQueue] Session 260708-clear-orbit metadata mismatch detected (local preserved, previousSig={"name":"Run)
+2026-07-08T15:53:24.176Z [getSystemPrompt] full prompt length: 31520
+2026-07-08T15:53:24.178Z [PERF] session.sendMessage: 1914.56ms (agent.ready:5.5ms → sources.loaded:5.9ms → chat.starting:7.4ms → chat.complete:1914.6ms) {"sessionId":"260708-clear-orbit"}
+2026-07-08T15:53:24.179Z [PERF] rpc.getSessionMessages: 0.09ms
+2026-07-08T15:53:24.186Z [ws-rpc-server] INFO  Client disconnected {"clientId":"4472132b-8b95-47d5-b38b-9485dfb6a905"}
+2026-07-08T15:53:24.190Z [PersistenceQueue] Wrote session 260708-clear-orbit
+2026-07-08T15:53:24.686Z [PersistenceQueue] Session 260708-clear-orbit metadata mismatch detected (disk preserved, previousSig={"name":"Run)
+2026-07-08T15:53:24.699Z [PersistenceQueue] Wrote session 260708-clear-orbit
+2026-07-08T15:54:00.092Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:54:00.093Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:54:00.093Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:55:00.071Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:55:00.071Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:55:00.072Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:55:05.056Z [ws-rpc-server] INFO  Client connected {"clientId":"f0d84868-9b11-4e43-94eb-bef713398125","webContentsId":null,"workspaceId":null}
+2026-07-08T15:55:05.067Z [ws-rpc-server] INFO  Client disconnected {"clientId":"f0d84868-9b11-4e43-94eb-bef713398125"}
+2026-07-08T15:55:05.070Z [ws-rpc-server] INFO  Client connected {"clientId":"fccb2470-f596-4ea4-a4eb-89462ab3fea0","webContentsId":null,"workspaceId":"2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff"}
+2026-07-08T15:55:05.088Z [summarize] resetSummarizationClient called (no-op)
+2026-07-08T15:55:05.124Z [jsonl] Failed to read session header: C:\Users\erikb\.craft-agent\workspaces\run-62-verification\sessions\260708-rapid-reef\session.jsonl {"errno":-4058,"code":"ENOENT","syscall":"open","path":"C:\\Users\\erikb\\.craft-agent\\workspaces\\run-62-verification\\sessions\\260708-rapid-reef\\session.jsonl"}
+2026-07-08T15:55:05.138Z [PersistenceQueue] Wrote session 260708-rapid-reef
+2026-07-08T15:55:05.139Z [Mode] Set permission mode to allow-all for session 260708-rapid-reef (changedBy=restore, modeVersion=1)
+2026-07-08T15:55:05.139Z [PERF] rpc.createSession: 48.35ms {"workspaceId":"2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff"}
+2026-07-08T15:55:05.147Z [PERF] session.loadSession: 6.22ms {"sessionId":"260708-rapid-reef"}
+2026-07-08T15:55:05.151Z [jsonl] Failed to read session header: D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\~\.craft-agent\workspaces\run-62-verification\sessions\260708-rapid-reef\session.jsonl {"errno":-4058,"code":"ENOENT","syscall":"open","path":"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\~\\.craft-agent\\workspaces\\run-62-verification\\sessions\\260708-rapid-reef\\session.jsonl"}
+2026-07-08T15:55:05.153Z [PersistenceQueue] Wrote session 260708-rapid-reef
+2026-07-08T15:55:05.156Z [PERF] rpc.getSessionMessages: 0.15ms
+2026-07-08T15:55:05.157Z [PERF] session.loadSession: 0.58ms {"sessionId":"260708-rapid-reef"}
+2026-07-08T15:55:05.166Z [PersistenceQueue] Wrote session 260708-rapid-reef
+2026-07-08T15:55:05.168Z [PersistenceQueue] Session 260708-rapid-reef metadata mismatch detected (local preserved, previousSig={"name":"Run)
+2026-07-08T15:55:05.175Z [PersistenceQueue] Wrote session 260708-rapid-reef
+2026-07-08T15:55:05.179Z [PERF] sources.buildServers: 0.17ms (credentials.loaded:0.0ms → servers.built:0.2ms) {"count":0,"mcpCount":0,"apiCount":0}
+2026-07-08T15:55:05.180Z session-scoped-tools Merged callbacks for session 260708-rapid-reef
+2026-07-08T15:55:05.181Z session-scoped-tools Merged callbacks for session 260708-rapid-reef
+2026-07-08T15:55:05.181Z [PERF] agent.create: 3.65ms {"sessionId":"260708-rapid-reef"}
+2026-07-08T15:55:05.183Z [pi-event] DEBUG Turn started {"turnIndex":1}
+2026-07-08T15:55:05.183Z session-scoped-tools Merged callbacks for session 260708-rapid-reef
+2026-07-08T15:55:05.191Z [ConfigWatcher] config.json changed
+2026-07-08T15:55:05.192Z [ConfigWatcher] LLM connections changed
+2026-07-08T15:55:05.686Z [PersistenceQueue] Wrote session 260708-rapid-reef
+2026-07-08T15:55:06.158Z [PERF] rpc.getSessionMessages: 0.23ms
+2026-07-08T15:55:07.125Z [getSystemPrompt] full prompt length: 31520
+2026-07-08T15:55:07.149Z [PersistenceQueue] Wrote session 260708-rapid-reef
+2026-07-08T15:55:07.163Z [PersistenceQueue] Wrote session 260708-rapid-reef
+2026-07-08T15:55:07.166Z [PERF] rpc.getSessionMessages: 0.17ms
+2026-07-08T15:55:07.261Z [PERF] session.sendMessage: 2084.38ms (agent.ready:4.6ms → sources.loaded:4.9ms → chat.starting:6.2ms → chat.complete:2084.4ms) {"sessionId":"260708-rapid-reef"}
+2026-07-08T15:55:07.264Z [ws-rpc-server] INFO  Client disconnected {"clientId":"fccb2470-f596-4ea4-a4eb-89462ab3fea0"}
+2026-07-08T15:55:07.779Z [PersistenceQueue] Wrote session 260708-rapid-reef
+2026-07-08T15:56:00.071Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:56:00.071Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:56:00.072Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:56:17.476Z [ws-rpc-server] INFO  Client connected {"clientId":"0d922e3b-0d55-44d9-8133-59f2d3234ff5","webContentsId":null,"workspaceId":null}
+2026-07-08T15:56:17.514Z [ws-rpc-server] INFO  Client disconnected {"clientId":"0d922e3b-0d55-44d9-8133-59f2d3234ff5"}
+2026-07-08T15:56:17.519Z [ws-rpc-server] INFO  Client connected {"clientId":"7aa9c2be-3261-468f-a675-9c5175b218bb","webContentsId":null,"workspaceId":"2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff"}
+2026-07-08T15:56:17.542Z [summarize] resetSummarizationClient called (no-op)
+2026-07-08T15:56:17.554Z [jsonl] Failed to read session header: C:\Users\erikb\.craft-agent\workspaces\run-62-verification\sessions\260708-fine-hazel\session.jsonl {"errno":-4058,"code":"ENOENT","syscall":"open","path":"C:\\Users\\erikb\\.craft-agent\\workspaces\\run-62-verification\\sessions\\260708-fine-hazel\\session.jsonl"}
+2026-07-08T15:56:17.569Z [PersistenceQueue] Wrote session 260708-fine-hazel
+2026-07-08T15:56:17.570Z [Mode] Set permission mode to allow-all for session 260708-fine-hazel (changedBy=restore, modeVersion=1)
+2026-07-08T15:56:17.570Z [PERF] rpc.createSession: 23.70ms {"workspaceId":"2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff"}
+2026-07-08T15:56:17.583Z [PERF] session.loadSession: 11.93ms {"sessionId":"260708-fine-hazel"}
+2026-07-08T15:56:17.587Z [jsonl] Failed to read session header: D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\~\.craft-agent\workspaces\run-62-verification\sessions\260708-fine-hazel\session.jsonl {"errno":-4058,"code":"ENOENT","syscall":"open","path":"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\~\\.craft-agent\\workspaces\\run-62-verification\\sessions\\260708-fine-hazel\\session.jsonl"}
+2026-07-08T15:56:17.594Z [PersistenceQueue] Wrote session 260708-fine-hazel
+2026-07-08T15:56:17.596Z [PERF] rpc.getSessionMessages: 0.13ms
+2026-07-08T15:56:17.597Z [PERF] session.loadSession: 0.42ms {"sessionId":"260708-fine-hazel"}
+2026-07-08T15:56:17.608Z [PersistenceQueue] Wrote session 260708-fine-hazel
+2026-07-08T15:56:17.609Z [PersistenceQueue] Session 260708-fine-hazel metadata mismatch detected (local preserved, previousSig={"name":"Run)
+2026-07-08T15:56:17.620Z [PersistenceQueue] Wrote session 260708-fine-hazel
+2026-07-08T15:56:17.623Z [PERF] sources.buildServers: 0.27ms (credentials.loaded:0.0ms → servers.built:0.3ms) {"count":0,"mcpCount":0,"apiCount":0}
+2026-07-08T15:56:17.625Z session-scoped-tools Merged callbacks for session 260708-fine-hazel
+2026-07-08T15:56:17.626Z session-scoped-tools Merged callbacks for session 260708-fine-hazel
+2026-07-08T15:56:17.626Z [PERF] agent.create: 4.42ms {"sessionId":"260708-fine-hazel"}
+2026-07-08T15:56:17.628Z [pi-event] DEBUG Turn started {"turnIndex":1}
+2026-07-08T15:56:17.628Z session-scoped-tools Merged callbacks for session 260708-fine-hazel
+2026-07-08T15:56:17.653Z [ConfigWatcher] config.json changed
+2026-07-08T15:56:17.654Z [ConfigWatcher] LLM connections changed
+2026-07-08T15:56:18.143Z [PersistenceQueue] Wrote session 260708-fine-hazel
+2026-07-08T15:56:18.601Z [PERF] rpc.getSessionMessages: 0.14ms
+2026-07-08T15:56:19.610Z [PERF] rpc.getSessionMessages: 0.13ms
+2026-07-08T15:56:19.645Z [getSystemPrompt] full prompt length: 31520
+2026-07-08T15:56:19.662Z [PersistenceQueue] Wrote session 260708-fine-hazel
+2026-07-08T15:56:19.671Z [PersistenceQueue] Wrote session 260708-fine-hazel
+2026-07-08T15:56:20.618Z [PERF] rpc.getSessionMessages: 0.15ms
+2026-07-08T15:56:21.627Z [PERF] rpc.getSessionMessages: 0.15ms
+2026-07-08T15:56:22.635Z [PERF] rpc.getSessionMessages: 0.14ms
+2026-07-08T15:56:23.652Z [PERF] rpc.getSessionMessages: 0.13ms
+2026-07-08T15:56:24.671Z [PERF] rpc.getSessionMessages: 0.12ms
+2026-07-08T15:56:25.691Z [PERF] rpc.getSessionMessages: 0.14ms
+2026-07-08T15:56:26.697Z [PERF] rpc.getSessionMessages: 0.21ms
+2026-07-08T15:56:27.704Z [PERF] rpc.getSessionMessages: 0.12ms
+2026-07-08T15:56:28.724Z [PERF] rpc.getSessionMessages: 0.14ms
+2026-07-08T15:56:28.917Z [PERF] session.sendMessage: 11296.40ms (agent.ready:5.4ms → sources.loaded:5.7ms → chat.starting:6.9ms → chat.complete:11296.4ms) {"sessionId":"260708-fine-hazel"}
+2026-07-08T15:56:28.918Z [PERF] session.loadSession: 0.56ms {"sessionId":"260708-fine-hazel"}
+2026-07-08T15:56:28.919Z [PersistenceQueue] Session 260708-fine-hazel metadata mismatch detected (disk preserved, previousSig={"name":"Run)
+2026-07-08T15:56:28.922Z [PersistenceQueue] Wrote session 260708-fine-hazel
+2026-07-08T15:56:28.927Z [PERF] rpc.getSessionMessages: 0.20ms
+2026-07-08T15:56:28.931Z [ws-rpc-server] INFO  Client disconnected {"clientId":"7aa9c2be-3261-468f-a675-9c5175b218bb"}
+2026-07-08T15:56:29.437Z [PersistenceQueue] Session 260708-fine-hazel metadata mismatch detected (disk preserved, previousSig={"name":"Run)
+2026-07-08T15:56:29.451Z [PersistenceQueue] Wrote session 260708-fine-hazel
+2026-07-08T15:57:00.071Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:57:00.071Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:57:00.071Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:58:00.111Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:58:00.111Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:58:00.111Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T15:59:00.113Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T15:59:00.114Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T15:59:00.114Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T16:00:00.113Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T16:00:00.114Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T16:00:00.114Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T16:00:54.229Z [ws-rpc-server] INFO  Client connected {"clientId":"dd2edc86-7f2c-42d3-b3ce-500411014c9f","webContentsId":null,"workspaceId":null}
+2026-07-08T16:00:54.267Z [ws-rpc-server] INFO  Client disconnected {"clientId":"dd2edc86-7f2c-42d3-b3ce-500411014c9f"}
+2026-07-08T16:00:54.271Z [ws-rpc-server] INFO  Client connected {"clientId":"7b1fd394-761f-4bde-b6d2-6999533d440c","webContentsId":null,"workspaceId":"2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff"}
+2026-07-08T16:00:54.294Z [summarize] resetSummarizationClient called (no-op)
+2026-07-08T16:00:54.304Z [jsonl] Failed to read session header: C:\Users\erikb\.craft-agent\workspaces\run-62-verification\sessions\260709-amber-laurel\session.jsonl {"errno":-4058,"code":"ENOENT","syscall":"open","path":"C:\\Users\\erikb\\.craft-agent\\workspaces\\run-62-verification\\sessions\\260709-amber-laurel\\session.jsonl"}
+2026-07-08T16:00:54.320Z [PersistenceQueue] Wrote session 260709-amber-laurel
+2026-07-08T16:00:54.321Z [Mode] Set permission mode to allow-all for session 260709-amber-laurel (changedBy=restore, modeVersion=1)
+2026-07-08T16:00:54.321Z [PERF] rpc.createSession: 24.82ms {"workspaceId":"2c32c2b7-be58-16be-0e81-d8ee8fb3f6ff"}
+2026-07-08T16:00:54.333Z [PERF] session.loadSession: 7.47ms {"sessionId":"260709-amber-laurel"}
+2026-07-08T16:00:54.336Z [jsonl] Failed to read session header: D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\~\.craft-agent\workspaces\run-62-verification\sessions\260709-amber-laurel\session.jsonl {"errno":-4058,"code":"ENOENT","syscall":"open","path":"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\~\\.craft-agent\\workspaces\\run-62-verification\\sessions\\260709-amber-laurel\\session.jsonl"}
+2026-07-08T16:00:54.343Z [PersistenceQueue] Wrote session 260709-amber-laurel
+2026-07-08T16:00:54.346Z [PERF] rpc.getSessionMessages: 0.12ms
+2026-07-08T16:00:54.347Z [PERF] session.loadSession: 0.46ms {"sessionId":"260709-amber-laurel"}
+2026-07-08T16:00:54.358Z [PersistenceQueue] Wrote session 260709-amber-laurel
+2026-07-08T16:00:54.359Z [PersistenceQueue] Session 260709-amber-laurel metadata mismatch detected (local preserved, previousSig={"name":"Run)
+2026-07-08T16:00:54.377Z [PersistenceQueue] Wrote session 260709-amber-laurel
+2026-07-08T16:00:54.381Z [PERF] sources.buildServers: 0.27ms (credentials.loaded:0.0ms → servers.built:0.3ms) {"count":0,"mcpCount":0,"apiCount":0}
+2026-07-08T16:00:54.383Z session-scoped-tools Merged callbacks for session 260709-amber-laurel
+2026-07-08T16:00:54.383Z session-scoped-tools Merged callbacks for session 260709-amber-laurel
+2026-07-08T16:00:54.383Z [PERF] agent.create: 4.78ms {"sessionId":"260709-amber-laurel"}
+2026-07-08T16:00:54.386Z [pi-event] DEBUG Turn started {"turnIndex":1}
+2026-07-08T16:00:54.386Z session-scoped-tools Merged callbacks for session 260709-amber-laurel
+2026-07-08T16:00:54.397Z [ConfigWatcher] config.json changed
+2026-07-08T16:00:54.399Z [ConfigWatcher] LLM connections changed
+2026-07-08T16:00:54.898Z [PersistenceQueue] Wrote session 260709-amber-laurel
+2026-07-08T16:00:55.357Z [PERF] rpc.getSessionMessages: 0.18ms
+2026-07-08T16:00:56.364Z [PERF] rpc.getSessionMessages: 0.18ms
+2026-07-08T16:00:56.489Z [getSystemPrompt] full prompt length: 31520
+2026-07-08T16:00:56.503Z [PersistenceQueue] Wrote session 260709-amber-laurel
+2026-07-08T16:00:56.514Z [PersistenceQueue] Wrote session 260709-amber-laurel
+2026-07-08T16:00:57.384Z [PERF] rpc.getSessionMessages: 0.12ms
+2026-07-08T16:00:58.390Z [PERF] rpc.getSessionMessages: 0.12ms
+2026-07-08T16:00:59.397Z [PERF] rpc.getSessionMessages: 0.13ms
+2026-07-08T16:01:00.097Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T16:01:00.097Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T16:01:00.097Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)
+2026-07-08T16:01:00.415Z [PERF] rpc.getSessionMessages: 0.13ms
+2026-07-08T16:01:01.421Z [PERF] rpc.getSessionMessages: 0.14ms
+2026-07-08T16:01:02.429Z [PERF] rpc.getSessionMessages: 0.12ms
+2026-07-08T16:01:03.438Z [PERF] rpc.getSessionMessages: 0.16ms
+2026-07-08T16:01:03.484Z [PERF] session.sendMessage: 9106.01ms (agent.ready:5.8ms → sources.loaded:6.2ms → chat.starting:7.7ms → chat.complete:9106.0ms) {"sessionId":"260709-amber-laurel"}
+2026-07-08T16:01:03.485Z [PERF] session.loadSession: 0.66ms {"sessionId":"260709-amber-laurel"}
+2026-07-08T16:01:03.486Z [PersistenceQueue] Session 260709-amber-laurel metadata mismatch detected (disk preserved, previousSig={"name":"Run)
+2026-07-08T16:01:03.489Z [PersistenceQueue] Wrote session 260709-amber-laurel
+2026-07-08T16:01:03.493Z [PERF] rpc.getSessionMessages: 0.14ms
+2026-07-08T16:01:03.497Z [ws-rpc-server] INFO  Client disconnected {"clientId":"7b1fd394-761f-4bde-b6d2-6999533d440c"}
+2026-07-08T16:01:03.994Z [PersistenceQueue] Session 260709-amber-laurel metadata mismatch detected (disk preserved, previousSig={"name":"Run)
+2026-07-08T16:01:04.001Z [PersistenceQueue] Wrote session 260709-amber-laurel
+2026-07-08T16:02:00.133Z [event-bus] DEBUG [EventBus] Emitting: SchedulerTick
+2026-07-08T16:02:00.133Z [event-log-handler] DEBUG [EventLogHandler] Logged: SchedulerTick
+2026-07-08T16:02:00.134Z [event-bus] DEBUG [EventBus] Emitted: SchedulerTick (0 handlers, 3 any-handlers)

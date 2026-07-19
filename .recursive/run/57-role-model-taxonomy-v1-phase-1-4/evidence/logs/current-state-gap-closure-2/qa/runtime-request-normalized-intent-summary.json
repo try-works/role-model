@@ -1,0 +1,44 @@
+[
+  {
+    "requestId": "req-6b11136b-3250-403a-a140-5e1b060a3d40",
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "role": "product",
+    "task": "product.requirements",
+    "diagnostics": 0
+  },
+  {
+    "requestId": "req-8cece940-e91f-4614-a23a-3ba5101894ae",
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "role": "architect",
+    "task": "architect.migration.strategy",
+    "diagnostics": 0
+  },
+  {
+    "requestId": "req-a5884806-9c9e-428e-933e-9176aa5987fc",
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "role": "support",
+    "task": "support.ticket.reply",
+    "diagnostics": 0
+  },
+  {
+    "requestId": "req-1a18c242-7b2f-4682-9aa1-36b05ae2d919",
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "role": "researcher",
+    "task": "researcher.web_research.current",
+    "diagnostics": 0
+  },
+  {
+    "requestId": "req-5a48f0fc-d21e-4d82-b11c-14f1f5afd8dd",
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "role": "coder",
+    "task": "coder.edit",
+    "diagnostics": 0
+  },
+  {
+    "requestId": "req-7c193cf9-81f1-4884-83ba-0e8889658c4a",
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "role": "security",
+    "task": "security.audit",
+    "diagnostics": 0
+  }
+]

@@ -1,0 +1,27 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/66-remote-providers-deferred-request-id-loading/role-model-router/packages/sqlite-memory
+
+(node:39112) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (39 tests) 11625ms
+   ✓ initializeSqliteMemory > does not repeat observation metadata JSON backfills after migration receipt  349ms
+   ✓ initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads  556ms
+   ✓ initializeSqliteMemory > persists and reads segmented observed samples and profiles by difficulty bucket  374ms
+   ✓ initializeSqliteMemory > reads the latest observed profiles for a set of endpoint ids  304ms
+   ✓ initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows  425ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure records latencyMs in telemetry summary average  335ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure preserves caller correlation and request classification for failed rows  318ms
+   ✓ initializeSqliteMemory > restores runtime state from a backup after scoped deletion  315ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting benchmark samples  507ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles  643ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading difficulty classification cache  843ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting difficulty classification cache  547ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading advisory max difficulty recommendations  488ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records  641ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns  688ms
+
+ Test Files  1 passed (1)
+      Tests  39 passed (39)
+   Start at  12:24:21
+   Duration  14.63s (transform 856ms, setup 0ms, collect 1.09s, tests 11.62s, environment 0ms, prepare 764ms)
+

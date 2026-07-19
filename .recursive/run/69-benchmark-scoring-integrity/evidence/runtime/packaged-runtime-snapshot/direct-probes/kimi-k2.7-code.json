@@ -1,0 +1,21 @@
+{
+  "id": "chatcmpl-role-model",
+  "object": "chat.completion",
+  "created": 1783994395,
+  "model": "moonshot/kimi-k2.7-code",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "OK"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 13,
+    "completion_tokens": 21,
+    "total_tokens": 34
+  }
+}

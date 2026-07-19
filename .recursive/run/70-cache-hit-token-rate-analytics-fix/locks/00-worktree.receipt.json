@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "be1ec755930be2ad00da457b8749ded2022ec83adcf0401974aad3faf3a28895",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\70-cache-hit-token-rate-analytics-fix\\.recursive\\run\\70-cache-hit-token-rate-analytics-fix\\00-worktree.md",
+  "locked_at": "2026-07-14T12:16:52Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "33d2283e02b4c66b6a94508985e9db2f27f9801b53bf9c5177f0fcd1963cffe9"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "eeb3267db16ccd209745c90e24b7db5dbcb30c328e15307736be25da429f9a34"
+}

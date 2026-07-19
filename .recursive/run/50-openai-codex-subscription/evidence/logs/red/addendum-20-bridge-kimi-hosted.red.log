@@ -1,0 +1,3 @@
+RED failure before the addendum-20 patch:
+- exact Kimi responses web_search requests mapped to runtime fallback instead of the hosted builtin_function contract
+- passthrough $web_search execution was not modeled, so the bridge could not record the Kimi continuation step correctly

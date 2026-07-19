@@ -28,7 +28,17 @@
     "package_id": { "type": "string" },
     "provider_kind": { "type": "string" },
     "tokens_in": { "type": "integer", "minimum": 0 },
+    "tokens_in_source": {
+      "type": "string",
+      "enum": ["measured", "normalized", "estimated", "unavailable"]
+    },
+    "tokens_in_available": { "type": "boolean" },
     "tokens_out": { "type": "integer", "minimum": 0 },
+    "tokens_out_source": {
+      "type": "string",
+      "enum": ["measured", "normalized", "estimated", "unavailable"]
+    },
+    "tokens_out_available": { "type": "boolean" },
     "latency_ms": { "type": "number", "minimum": 0 },
     "cost_actual": { "type": "number", "minimum": 0 },
     "cost_estimate": { "type": "number", "minimum": 0 },

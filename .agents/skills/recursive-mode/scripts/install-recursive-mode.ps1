@@ -7,6 +7,12 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Shared behavior with install-recursive-mode.py:
+# - bootstraps the canonical .recursive control-plane layout
+# - upserts stable assistant-memory pointers into .cursorrules, CLAUDE.md, and .github/copilot-instructions.md
+# - bootstraps training memory under .recursive/memory/training/
+# - copies recursive-training runtime scripts into .recursive/scripts/
+
 function Write-Utf8NoBom {
   param(
     [Parameter(Mandatory = $true)][string]$Path,
@@ -46,17 +52,54 @@ function Ensure-File {
   }
 }
 
+function Ensure-GitIgnoreLine {
+  param(
+    [Parameter(Mandatory = $true)][string]$RepoRoot,
+    [Parameter(Mandatory = $true)][string]$Line
+  )
+
+  $gitIgnorePath = Join-Path $RepoRoot ".gitignore"
+  $normalizedLine = $Line.Trim()
+  $existing = ""
+  if (Test-Path -LiteralPath $gitIgnorePath) {
+    $existing = Get-Content -LiteralPath $gitIgnorePath -Raw -Encoding UTF8
+    if ($null -eq $existing) {
+      $existing = ""
+    }
+  }
+
+  $existingLines = if ($existing) { $existing -split "`r?`n" } else { @() }
+  foreach ($candidate in $existingLines) {
+    if ($candidate.Trim() -eq $normalizedLine) {
+      Write-Output "[OK] File already up to date: $gitIgnorePath"
+      return
+    }
+  }
+
+  $updated = $existing
+  if ($updated -and -not $updated.EndsWith("`n")) {
+    $updated += "`n"
+  }
+  $updated += "$normalizedLine`n"
+  Write-Utf8NoBom -Path $gitIgnorePath -Content $updated
+  if ($existing) {
+    Write-Output "[OK] Updated file: $gitIgnorePath"
+  } else {
+    Write-Output "[OK] Created file: $gitIgnorePath"
+  }
+}
+
 function Resolve-CanonicalWorkflowPath {
   param([Parameter(Mandatory = $true)][string]$SkillRoot)
 
   $candidates = @(
-    (Join-Path (Join-Path $SkillRoot "references") "bootstrap\RECURSIVE.md"),
-    (Join-Path (Join-Path $SkillRoot ".recursive") "RECURSIVE.md")
+    (Join-Path (Join-Path $SkillRoot ".recursive") "RECURSIVE.md"),
+    (Join-Path (Join-Path $SkillRoot "references") "bootstrap\RECURSIVE.md")
   )
 
   foreach ($candidate in $candidates) {
     if (Test-Path -LiteralPath $candidate) {
-      Write-Output "[INFO] Using canonical workflow template: $candidate"
+      Write-Host "[INFO] Using canonical workflow template: $candidate"
       return $candidate
     }
   }
@@ -104,12 +147,204 @@ function Upsert-MarkedBlock {
   }
 }
 
+function Get-NormalizedPlainOrWrappedContent {
+  param(
+    [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Content,
+    [Parameter(Mandatory = $true)][string]$StartMarker,
+    [Parameter(Mandatory = $true)][string]$EndMarker
+  )
+
+  $startIndex = $Content.IndexOf($StartMarker, [System.StringComparison]::Ordinal)
+  $endIndex = $Content.LastIndexOf($EndMarker, [System.StringComparison]::Ordinal)
+  if ($startIndex -lt 0 -or $endIndex -lt 0 -or $endIndex -lt $startIndex) {
+    return $Content.TrimEnd("`r", "`n")
+  }
+
+  $prefix = $Content.Substring(0, $startIndex).TrimEnd("`r", "`n")
+  if (-not [string]::IsNullOrWhiteSpace($prefix)) {
+    return $prefix
+  }
+
+  $bodyStart = $startIndex + $StartMarker.Length
+  return $Content.Substring($bodyStart, $endIndex - $bodyStart).Trim("`r", "`n")
+}
+
+function Sync-PlainFile {
+  param(
+    [Parameter(Mandatory = $true)][string]$Path,
+    [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Content
+  )
+
+  $normalized = $Content.TrimEnd("`r", "`n") + "`n"
+  $existing = ""
+  if (Test-Path -LiteralPath $Path) {
+    $existing = Get-Content -LiteralPath $Path -Raw -Encoding UTF8
+    if ($null -eq $existing) {
+      $existing = ""
+    }
+  }
+
+  if ($existing -ne $normalized) {
+    Write-Utf8NoBom -Path $Path -Content $normalized
+    Write-Output "[OK] Updated file: $Path"
+  } else {
+    Write-Output "[OK] File already up to date: $Path"
+  }
+}
+
+function Upsert-OrMigrateCanonical {
+  param(
+    [Parameter(Mandatory = $true)][string]$FilePath,
+    [Parameter(Mandatory = $true)][string]$StartMarker,
+    [Parameter(Mandatory = $true)][string]$EndMarker,
+    [Parameter(Mandatory = $true)][string]$BlockBody
+  )
+
+  $existing = ""
+  if (Test-Path -LiteralPath $FilePath) {
+    $existing = Get-Content -LiteralPath $FilePath -Raw -Encoding UTF8
+    if ($null -eq $existing) { $existing = "" }
+  }
+
+  $block = "$StartMarker`r`n$BlockBody`r`n$EndMarker"
+  $pattern = "(?s)$([regex]::Escape($StartMarker)).*?$([regex]::Escape($EndMarker))"
+
+  if ([regex]::IsMatch($existing, $pattern)) {
+    $updated = [regex]::Replace(
+      $existing,
+      $pattern,
+      [System.Text.RegularExpressions.MatchEvaluator] { param($m) $block }
+    )
+  } elseif ([string]::IsNullOrWhiteSpace($existing)) {
+    $updated = "$block`r`n"
+  } elseif ($existing.TrimEnd("`r", "`n") -eq $BlockBody.TrimEnd("`r", "`n")) {
+    # Plain-installed canonical content — wrap in markers without duplication.
+    $updated = "$block`r`n"
+  } else {
+    $trimmed = $existing.TrimEnd("`r", "`n")
+    $updated = "$trimmed`r`n`r`n$block`r`n"
+  }
+
+  if ($updated -ne $existing) {
+    Write-Utf8NoBom -Path $FilePath -Content $updated
+    Write-Output "[OK] Updated file: $FilePath"
+  } else {
+    Write-Output "[OK] File already up to date: $FilePath"
+  }
+}
+
+function Get-RecursiveRouterPolicyJson {
+  @'
+{
+  "version": 1,
+  "defaults": {
+    "when_role_unconfigured": "ask",
+    "when_cli_unavailable": "fallback-local",
+    "when_model_unknown": "ask",
+    "allow_auto_assign_if_single_cli": false,
+    "probe_timeout_ms": 50000,
+    "invoke_timeout_ms": 180000
+  },
+  "role_routes": {
+    "orchestrator": {
+      "enabled": true,
+      "mode": "local-only",
+      "cli": null,
+      "model": null,
+      "fallback": "local-controller"
+    },
+    "analyst": {
+      "enabled": true,
+      "mode": "external-cli",
+      "cli": null,
+      "model": null,
+      "fallback": "self-audit"
+    },
+    "planner": {
+      "enabled": true,
+      "mode": "external-cli",
+      "cli": null,
+      "model": null,
+      "fallback": "self-audit"
+    },
+    "implementer": {
+      "enabled": false,
+      "mode": "external-cli",
+      "cli": null,
+      "model": null,
+      "fallback": "local-controller"
+    },
+    "code-reviewer": {
+      "enabled": true,
+      "mode": "external-cli",
+      "cli": null,
+      "model": null,
+      "fallback": "self-audit"
+    },
+    "memory-auditor": {
+      "enabled": true,
+      "mode": "external-cli",
+      "cli": null,
+      "model": null,
+      "fallback": "self-audit"
+    },
+    "tester": {
+      "enabled": true,
+      "mode": "external-cli",
+      "cli": null,
+      "model": null,
+      "fallback": "self-audit"
+    }
+  },
+  "cli_overrides": {},
+  "custom_clis": []
+}
+'@
+}
+
+function Ensure-RouterConfigScaffold {
+  param([Parameter(Mandatory = $true)][string]$RepoRoot)
+
+  $configRoot = Join-Path (Join-Path $RepoRoot ".recursive") "config"
+  $policyPath = Join-Path $configRoot "recursive-router.json"
+  $discoveryPath = Join-Path $configRoot "recursive-router-discovered.json"
+  $legacyPolicyPath = Join-Path $configRoot "recursive-router-cli.json"
+  $legacyDiscoveryPath = Join-Path $configRoot "recursive-router-cli-discovered.json"
+
+  Ensure-Directory -Path $configRoot
+  if (Test-Path -LiteralPath $policyPath) {
+    try {
+      $null = (Get-Content -LiteralPath $policyPath -Raw -Encoding UTF8) | ConvertFrom-Json
+    } catch {
+      throw "Existing routing policy is invalid JSON and will not be overwritten: $policyPath"
+    }
+  } elseif (Test-Path -LiteralPath $legacyPolicyPath) {
+    try {
+      $legacyPolicyRaw = Get-Content -LiteralPath $legacyPolicyPath -Raw -Encoding UTF8
+      $null = $legacyPolicyRaw | ConvertFrom-Json
+    } catch {
+      throw "Existing legacy routing policy is invalid JSON and will not be migrated: $legacyPolicyPath"
+    }
+    Write-Utf8NoBom -Path $policyPath -Content $legacyPolicyRaw
+    Remove-Item -LiteralPath $legacyPolicyPath -Force
+    Write-Output "[OK] Migrated legacy router policy: $policyPath"
+  } else {
+    Write-Utf8NoBom -Path $policyPath -Content (Get-RecursiveRouterPolicyJson)
+    Write-Output "[OK] Created file: $policyPath"
+  }
+
+  if ((-not (Test-Path -LiteralPath $discoveryPath)) -and (Test-Path -LiteralPath $legacyDiscoveryPath)) {
+    Move-Item -LiteralPath $legacyDiscoveryPath -Destination $discoveryPath -Force
+    Write-Output "[OK] Migrated legacy router discovery: $discoveryPath"
+  }
+}
+
 function Get-MemoryRouterBody {
   @'
 ## Memory Router
 
 This file is the durable memory router for the repository.
-It is not a knowledge dump. Store durable memory in sharded docs under `domains/`, `patterns/`, `incidents/`, `episodes/`, `skills/`, or `archive/`.
+It is not a knowledge dump. Store durable memory in sharded docs under `domains/`, `patterns/`, `incidents/`, `episodes/`, `training/`, `skills/`, or `archive/`.
 
 Control-plane docs are not memory docs:
 - `/.recursive/RECURSIVE.md`
@@ -123,6 +358,8 @@ Control-plane docs are not memory docs:
 
 - Read this file before loading any other memory docs.
 - Load only the memory docs relevant to the current task.
+- If the task may benefit from prior recursive-mode experiential learnings, use this index to identify the relevant docs under `/.recursive/memory/training/` and `/.recursive/memory/domains/`.
+- The optional `recursive-training-sync.py` helper is read-only; it prints startup guidance about what to read, but does not modify `MEMORY.md` or the memory plane.
 - If the task plans delegated review, subagent help, review bundles, smoke-harness portability work, or capability-sensitive execution, read `/.recursive/memory/skills/SKILLS.md` and then load the relevant skill-memory shards.
 - If Phase 8 will need to promote durable lessons, first capture run-local skill usage in the run artifact and only then promote generalized conclusions into skill-memory shards.
 - Prefer `Status: CURRENT` docs for planning and execution.
@@ -135,6 +372,7 @@ Control-plane docs are not memory docs:
 - `patterns/` - reusable playbooks and solution patterns
 - `incidents/` - recurring failure signatures and fixes
 - `episodes/` - distilled lessons from specific runs
+- `training/` - extracted experiential learnings promoted from completed recursive-mode runs
 - `skills/` - durable skill and capability memory, routed via `skills/SKILLS.md`
 - `archive/` - historical or deprecated memory docs
 
@@ -144,6 +382,7 @@ Control-plane docs are not memory docs:
 - Any doc whose `Owns-Paths` or `Watch-Paths` overlaps final changed code paths must be reviewed in Phase 8.
 - Affected `CURRENT` docs should be downgraded to `SUSPECT` until revalidated against final code, `STATE.md`, and `DECISIONS.md`.
 - If changed paths have no owning domain doc, create one or record the uncovered-path follow-up in `08-memory-impact.md`.
+- Training memory docs should keep their canonical content under `/.recursive/memory/training/`, use the memory index as the discovery surface, and record source runs plus watch-path or applicability guidance.
 - Skill-memory docs should record source runs, last validated date, environment notes, and current trust/fit guidance.
 - If a run materially teaches the repo something about skill availability, delegated-review quality, review-bundle usage, or toolchain fallback behavior, Phase 8 must either create/refresh a skill-memory shard or record why no durable lesson was promoted.
 - If the repo itself is a reusable skill/workflow distribution, durable memory must remain generalized. Do not store current-session run residue or temp-environment observations as if they were universal truth.
@@ -197,6 +436,42 @@ Keep this file concise. Link to child docs instead of duplicating them.
 '@
 }
 
+function Get-CursorRulesMemoryPointersBody {
+  @'
+# recursive-mode memory pointers
+# Canonical repository memory lives under `/.recursive/memory/`.
+# Read `/.recursive/memory/MEMORY.md` before loading any other memory docs.
+# Load only the memory docs relevant to the current task.
+# When repository experiential memory may help, run:
+#   python .recursive/scripts/recursive-training-loader.py --repo-root . --query "<task>" --files "<path1,path2>"
+# This file is only a pointer surface; the canonical memory store remains `/.recursive/memory/`.
+'@
+}
+
+function Get-ClaudeMemoryPointersBody {
+  @'
+## recursive-mode memory pointers
+
+- Canonical repository memory lives under `/.recursive/memory/`.
+- Read `/.recursive/memory/MEMORY.md` before loading any other memory docs.
+- Load only the memory docs relevant to the current task.
+- When repository experiential memory may help, run `python .recursive/scripts/recursive-training-loader.py --repo-root . --query "<task>" --files "<path1,path2>"`.
+- Treat this file as a pointer only; the canonical memory store remains `/.recursive/memory/`.
+'@
+}
+
+function Get-CopilotMemoryPointersBody {
+  @'
+## recursive-mode memory pointers
+
+- Canonical repository memory lives under `/.recursive/memory/`.
+- Read `/.recursive/memory/MEMORY.md` before loading any other memory docs.
+- Load only the memory docs relevant to the current task.
+- When repository experiential memory may help, run `python .recursive/scripts/recursive-training-loader.py --repo-root . --query "<task>" --files "<path1,path2>"`.
+- Treat this file as a pointer only; the canonical memory store remains `/.recursive/memory/`.
+'@
+}
+
 function Get-SkillDiscoveryMemoryDoc {
   @'
 Type: `pattern`
@@ -205,8 +480,8 @@ Scope: `How recursive-mode runs should discover, evaluate, and record external s
 Owns-Paths:
 Watch-Paths:
 - `/.recursive/RECURSIVE.md`
-- `/SKILL.md`
-- `/README.md`
+- `/.recursive/memory/skills/SKILLS.md`
+- `/.recursive/run/`
 Source-Runs:
 - `none (generic repository guidance)`
 Validated-At-Commit: `generic-repository-guidance`
@@ -261,9 +536,8 @@ Scope: `How the main agent verifies delegated review or audit work before accept
 Owns-Paths:
 Watch-Paths:
 - `/.recursive/RECURSIVE.md`
-- `/skills/recursive-subagent/SKILL.md`
-- `/agents/code-reviewer.md`
-- `/agents/implementer.md`
+- `/.recursive/memory/skills/SKILLS.md`
+- `/.recursive/run/`
 Source-Runs:
 - `none (generic repository guidance)`
 Validated-At-Commit: `generic-repository-guidance`
@@ -316,10 +590,9 @@ Scope: `How Phase 8 captures run-local skill usage and promotes only durable les
 Owns-Paths:
 Watch-Paths:
 - `/.recursive/RECURSIVE.md`
-- `/references/artifact-template.md`
-- `/scripts/recursive-closeout.py`
-- `/scripts/lint-recursive-run.py`
-- `/scripts/recursive-status.py`
+- `/.recursive/memory/MEMORY.md`
+- `/.recursive/memory/skills/SKILLS.md`
+- `/.recursive/run/`
 Source-Runs:
 - `none (generic repository guidance)`
 Validated-At-Commit: `generic-repository-guidance`
@@ -381,7 +654,7 @@ It exists to reduce blind doc-by-doc scanning. It is not a second workflow spec.
 3. Read `/.recursive/DECISIONS.md` when prior rationale or relevant earlier work matters.
 4. Read `/.recursive/memory/MEMORY.md` when task context may depend on durable memory.
 5. Read `/.recursive/memory/skills/SKILLS.md` when the task may use delegated review, subagents, review bundles, smoke-harness portability work, or other capability-sensitive execution.
-6. Read `/.recursive/README.md` for repo-maintainer/bootstrap notes when changing the package itself.
+6. Read the recursive-mode package README or maintainer notes from the installed skill directory or source package checkout when changing the package itself.
 
 ## Task Routing
 
@@ -390,21 +663,33 @@ It exists to reduce blind doc-by-doc scanning. It is not a second workflow spec.
   - `/.recursive/STATE.md`
   - `/.recursive/DECISIONS.md`
   - `/.recursive/memory/MEMORY.md`
+- Authoring a new recursive-mode spec or `00-requirements.md`:
+  - `/.recursive/STATE.md`
+  - `/.recursive/DECISIONS.md`
+  - `/.recursive/memory/MEMORY.md`
+  - the installed `recursive-spec` skill
+  - relevant code and tests for the requested area
+- Benchmarking recursive-mode against a non-recursive baseline:
+  - Install the separate optional `recursive-benchmark` add-on only when the user explicitly asks for benchmarking.
+  - Prefer `find-skills` when available; otherwise use `npx skills add <recursive-benchmark-package-or-repo> --full-depth`.
+  - The default exported `recursive-mode` package intentionally excludes benchmark fixtures and benchmark skill files.
+  - After the benchmark add-on is installed, follow its packaged fixture and harness docs.
 - Working on reusable package/bootstrap/docs for this repo:
-  - `/.recursive/README.md`
-  - `/README.md`
-  - `/scripts/install-recursive-mode.py`
-  - `/scripts/install-recursive-mode.ps1`
+  - the recursive-mode package README or maintainer notes from the installed skill directory or source package checkout
+  - the recursive-mode installer scripts from the installed skill directory or source package checkout
 - Working on phase artifact structure or lint expectations:
-  - `/references/artifact-template.md`
-  - `/scripts/lint-recursive-run.py`
-  - `/scripts/recursive-status.py`
-- Working on delegated review or subagent behavior:
+  - the recursive-mode artifact template from the installed skill directory or source package checkout
+  - the recursive-mode lint/status helpers from the installed skill directory or source package checkout
+- Working on delegated review, subagent behavior, or routed CLI delegation:
   - `/.recursive/memory/skills/SKILLS.md`
-  - `/skills/recursive-subagent/SKILL.md`
-  - `/skills/recursive-review-bundle/SKILL.md`
+  - `/.recursive/config/recursive-router.json`
+  - `/.recursive/config/recursive-router-discovered.json`
+  - the installed `recursive-router`, `recursive-subagent`, and `recursive-review-bundle` skills
 - Working on memory behavior:
   - `/.recursive/memory/MEMORY.md`
+  - the installed `recursive-training` skill
+  - `/.recursive/scripts/recursive-training-loader.py`
+  - `/.recursive/memory/training/`
   - `/.recursive/memory/skills/SKILLS.md`
 
 ## Non-Canonical Bridges
@@ -446,10 +731,24 @@ Resolution rule:
 - If the user refers to a plan, create a new run only when a unique source plan/requirements artifact can be identified from repo docs or immediate task context.
 - If the command is ambiguous, ask for the run id or the repo path of the source plan/requirements artifact.
 
+Spec-authoring rule:
+
+- If the user asks to create a plan, help plan, create a spec, or write requirements for a new recursive run, prefer `recursive-spec` before orchestration.
+- `recursive-spec` should confirm the user wants spec help, ask what they want to do, read `STATE.md`, `DECISIONS.md`, `MEMORY.md`, and relevant code/tests, keep the draft in temporary non-repo storage, then create the new run only after the requirements are approved.
+
+Benchmark rule:
+
+- If the user asks to benchmark recursive-mode, compare recursive vs non-recursive execution, or generate a recursive-mode benchmark report, install and use the separate optional `recursive-benchmark` add-on on demand instead of assuming benchmark fixtures ship with the default recursive-mode package.
+- Prefer `find-skills` when available. Otherwise use `npx skills add <recursive-benchmark-package-or-repo> --full-depth`.
+
 Audit delegation rule:
 
 - If subagents are available and the audit/review context bundle is complete, delegated audit/review is the default path.
 - If the controller still chooses `self-audit`, record a concrete `Delegation Override Reason` in the audited phase artifact.
+
+Router rule:
+
+- If the user asks to route delegated work through another transport/model, configure or inspect `/.recursive/config/recursive-router.json`, refresh `/.recursive/config/recursive-router-discovered.json`, re-read both immediately before choosing the delegated CLI/model, and use `recursive-router` before dispatching the delegated role.
 '@
 }
 
@@ -464,8 +763,10 @@ $recursiveRoot = Join-Path $resolvedRepoRoot ".recursive"
 $codexRoot = Join-Path $resolvedRepoRoot ".codex"
 $agentRoot = Join-Path $resolvedRepoRoot ".agent"
 $memoryRoot = Join-Path $recursiveRoot "memory"
+$trainingMemoryRoot = Join-Path $memoryRoot "training"
 $skillMemoryRoot = Join-Path $memoryRoot "skills"
 $runRoot = Join-Path $recursiveRoot "run"
+$configRoot = Join-Path $recursiveRoot "config"
 
 $recursivePath = Join-Path $recursiveRoot "RECURSIVE.md"
 $recursiveAgentsPath = Join-Path $recursiveRoot "AGENTS.md"
@@ -476,6 +777,10 @@ $skillMemoryRouterPath = Join-Path $skillMemoryRoot "SKILLS.md"
 $skillDiscoveryPath = Join-Path (Join-Path $skillMemoryRoot "usage") "skill-discovery-and-evaluation.md"
 $delegatedVerificationPath = Join-Path (Join-Path $skillMemoryRoot "patterns") "delegated-verification-and-refresh.md"
 $phase8SkillMemoryPath = Join-Path (Join-Path $skillMemoryRoot "patterns") "phase8-skill-memory-promotion.md"
+$cursorRulesPath = Join-Path $resolvedRepoRoot ".cursorrules"
+$claudePath = Join-Path $resolvedRepoRoot "CLAUDE.md"
+$githubRoot = Join-Path $resolvedRepoRoot ".github"
+$copilotInstructionsPath = Join-Path $githubRoot "copilot-instructions.md"
 $codexAgentsPath = Join-Path $codexRoot "AGENTS.md"
 $rootAgentsPath = Join-Path $resolvedRepoRoot "AGENTS.md"
 $plansPath = Join-Path $agentRoot "PLANS.md"
@@ -488,22 +793,70 @@ $agentsStartMarker = "<!-- RECURSIVE-MODE-AGENTS:START -->"
 $agentsEndMarker = "<!-- RECURSIVE-MODE-AGENTS:END -->"
 $plansStartMarker = "<!-- RECURSIVE-MODE-PLANS-BRIDGE:START -->"
 $plansEndMarker = "<!-- RECURSIVE-MODE-PLANS-BRIDGE:END -->"
+$cursorRulesStartMarker = "# RECURSIVE-MODE-MEMORY-POINTERS:START"
+$cursorRulesEndMarker = "# RECURSIVE-MODE-MEMORY-POINTERS:END"
+$repoMarkdownStartMarker = "<!-- RECURSIVE-MODE-MEMORY-POINTERS:START -->"
+$repoMarkdownEndMarker = "<!-- RECURSIVE-MODE-MEMORY-POINTERS:END -->"
 
 Ensure-Directory -Path $recursiveRoot
 Ensure-Directory -Path $codexRoot
 Ensure-Directory -Path $agentRoot
+Ensure-Directory -Path $githubRoot
 Ensure-Directory -Path $memoryRoot
+Ensure-Directory -Path $trainingMemoryRoot
 Ensure-Directory -Path $skillMemoryRoot
 Ensure-Directory -Path $runRoot
+Ensure-Directory -Path $configRoot
 foreach ($subdir in @("domains", "patterns", "incidents", "episodes", "archive")) {
   $full = Join-Path $memoryRoot $subdir
   Ensure-Directory -Path $full
   Ensure-File -Path (Join-Path $full ".gitkeep") -Content ""
 }
+Ensure-File -Path (Join-Path $trainingMemoryRoot ".gitkeep") -Content ""
 foreach ($subdir in @("availability", "usage", "issues", "patterns")) {
   $full = Join-Path $skillMemoryRoot $subdir
   Ensure-Directory -Path $full
   Ensure-File -Path (Join-Path $full ".gitkeep") -Content ""
+}
+
+$scriptsDest = Join-Path $recursiveRoot "scripts"
+Ensure-Directory -Path $scriptsDest
+$trainingScripts = @(
+  "recursive-training-grpo.py",
+  "recursive-training-grpo.ps1",
+  "recursive-training-phase8-trigger.py",
+  "recursive-training-phase8-trigger.ps1",
+  "recursive-training-extract.py",
+  "recursive-training-extract.ps1",
+  "recursive-training-sync.py",
+  "recursive-training-sync.ps1",
+  "recursive-training-loader.py",
+  "recursive-training-loader.ps1",
+  "recursive-training-mcp.py",
+  "recursive-training-mcp.ps1"
+)
+$skillScriptsDir = $PSScriptRoot
+foreach ($scriptName in $trainingScripts) {
+  $src = Join-Path $skillScriptsDir $scriptName
+  $dst = Join-Path $scriptsDest $scriptName
+  if (Test-Path -LiteralPath $src) {
+    $content = Get-Content -LiteralPath $src -Raw -Encoding UTF8
+    $existing = ""
+    if (Test-Path -LiteralPath $dst) {
+      $existing = Get-Content -LiteralPath $dst -Raw -Encoding UTF8
+      if ($null -eq $existing) {
+        $existing = ""
+      }
+    }
+    if ($existing -ne $content) {
+      Write-Utf8NoBom -Path $dst -Content $content
+      Write-Output "[OK] Copied training script: $dst"
+    } else {
+      Write-Output "[OK] Up to date: $dst"
+    }
+  } else {
+    Write-Output "[WARN] Missing training script in skill repo: $src"
+  }
 }
 
 Ensure-File -Path (Join-Path $runRoot ".gitkeep") -Content ""
@@ -530,6 +883,11 @@ Ensure-File -Path $delegatedVerificationPath -Content (Get-DelegatedVerification
 Ensure-File -Path $phase8SkillMemoryPath -Content (Get-Phase8SkillMemoryDoc)
 Ensure-File -Path $codexAgentsPath -Content "# AGENTS.md`n"
 Ensure-File -Path $plansPath -Content "# PLANS.md`n"
+Ensure-File -Path $cursorRulesPath -Content ""
+Ensure-File -Path $claudePath -Content ""
+Ensure-File -Path $copilotInstructionsPath -Content ""
+Ensure-GitIgnoreLine -RepoRoot $resolvedRepoRoot -Line "/.recursive/config/recursive-router-discovered.json"
+Ensure-RouterConfigScaffold -RepoRoot $resolvedRepoRoot
 
 Upsert-MarkedBlock `
   -FilePath $recursiveAgentsPath `
@@ -546,6 +904,21 @@ Upsert-MarkedBlock `
   -StartMarker $memoryStartMarker `
   -EndMarker $memoryEndMarker `
   -BlockBody ((Get-SkillMemoryRouterBody).TrimEnd("`r", "`n"))
+Upsert-MarkedBlock `
+  -FilePath $cursorRulesPath `
+  -StartMarker $cursorRulesStartMarker `
+  -EndMarker $cursorRulesEndMarker `
+  -BlockBody ((Get-CursorRulesMemoryPointersBody).TrimEnd("`r", "`n"))
+Upsert-MarkedBlock `
+  -FilePath $claudePath `
+  -StartMarker $repoMarkdownStartMarker `
+  -EndMarker $repoMarkdownEndMarker `
+  -BlockBody ((Get-ClaudeMemoryPointersBody).TrimEnd("`r", "`n"))
+Upsert-MarkedBlock `
+  -FilePath $copilotInstructionsPath `
+  -StartMarker $repoMarkdownStartMarker `
+  -EndMarker $repoMarkdownEndMarker `
+  -BlockBody ((Get-CopilotMemoryPointersBody).TrimEnd("`r", "`n"))
 
 if (-not (Test-Path -LiteralPath $agentsBlockPath)) {
   throw "Missing AGENTS bridge template: $agentsBlockPath"
@@ -572,18 +945,15 @@ Upsert-MarkedBlock `
   -BlockBody ((Get-PlansBridgeBody).TrimEnd("`r", "`n"))
 
 if (-not $SkipRecursiveUpdate) {
-  $canonicalResolved = [System.IO.Path]::GetFullPath($canonicalWorkflowPath)
-  $recursiveResolved = [System.IO.Path]::GetFullPath($recursivePath)
-  if ($canonicalResolved -eq $recursiveResolved) {
-    Write-Output "[INFO] Skipped RECURSIVE.md self-upsert because source and destination are the same file."
-  } else {
-    $canonicalBody = (Get-Content -LiteralPath $canonicalWorkflowPath -Raw -Encoding UTF8).TrimEnd("`r", "`n")
-    Upsert-MarkedBlock `
-      -FilePath $recursivePath `
-      -StartMarker $recursiveStartMarker `
-      -EndMarker $recursiveEndMarker `
-      -BlockBody $canonicalBody
-  }
+  $canonicalBody = Get-NormalizedPlainOrWrappedContent `
+    -Content (Get-Content -LiteralPath $canonicalWorkflowPath -Raw -Encoding UTF8) `
+    -StartMarker $recursiveStartMarker `
+    -EndMarker $recursiveEndMarker
+  Upsert-OrMigrateCanonical `
+    -FilePath $recursivePath `
+    -StartMarker $recursiveStartMarker `
+    -EndMarker $recursiveEndMarker `
+    -BlockBody $canonicalBody.TrimEnd("`r", "`n")
 } else {
   Write-Output "[INFO] Skipped RECURSIVE.md update by configuration."
 }

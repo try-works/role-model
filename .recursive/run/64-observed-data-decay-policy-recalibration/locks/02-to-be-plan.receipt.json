@@ -1,0 +1,13 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "c64b01c7a6dae1a2f8ba03bef75f95d23a11b1e2fbce1dd47b469a72288e8736",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\64-observed-data-decay-policy-recalibration\\.recursive\\run\\64-observed-data-decay-policy-recalibration\\02-to-be-plan.md",
+  "locked_at": "2026-07-11T22:45:54Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "d4361f9ee9b42dfce2efd50d5427c214537e9a9c90879926fb6b28f2c03b5540",
+    "00-worktree.md": "de05484ed3f8efe511a4a7417a61c4fc2cd427daa4711ca85380eea5dab68c3d",
+    "01-as-is.md": "7275220e6e77eb7e72cfe3590ee106cf9aa153d5b33d9405c9759e268582c4b3"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "cd9be57d0b9e0a659fe8bbc73ad5d587a1b653bc41bf25b2c6f96e9b20f1da4b"
+}

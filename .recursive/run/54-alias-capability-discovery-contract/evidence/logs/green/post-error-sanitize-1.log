@@ -1,0 +1,15 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge
+
+(node:50876) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/alias-capability-routing.test.ts (2 tests) 30ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  07:15:06
+   Duration  2.96s (transform 1.36s, setup 0ms, collect 2.01s, tests 30ms, environment 0ms, prepare 347ms)

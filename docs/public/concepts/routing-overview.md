@@ -60,7 +60,8 @@ Declared profiles still matter, but mainly as the baseline shape for eligibility
 
 The smoke request asks for:
 
-- `code.edit`
+- `coder.edit`
+- `code.read` and `code.write`
 - text output
 - tool support
 - balanced strategy
@@ -77,8 +78,8 @@ The candidate set contains three endpoints:
 
 Why the exclusions happen:
 
-- `acp.remote.general` does not provide the required `code.edit` capability
-- `mcp.remote.embedder` does not provide the required `code.edit` capability
+- `acp.remote.general` does not provide the required `code.read` and `code.write` capabilities
+- `mcp.remote.embedder` does not provide the required `code.read` and `code.write` capabilities
 
 Both exclusions are recorded as `CAPABILITY_MISSING`.
 

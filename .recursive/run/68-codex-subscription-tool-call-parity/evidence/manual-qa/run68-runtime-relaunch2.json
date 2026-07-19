@@ -1,0 +1,12 @@
+{
+  "pid": 25172,
+  "port": 57686,
+  "scopeId": "run68-manual-qa-20260712-235024",
+  "stateRoot": "C:/Users/erikb/AppData/Local/Role Model Runtime/state",
+  "scopeTarget": "C:/Users/erikb/AppData/Local/Role Model Runtime/state/run68-manual-qa-20260712-235024",
+  "executable": "D:/DEV/role-model/.worktrees/68-codex-subscription-tool-call-parity/role-model-router/dist/release/win32-x64/role-model-runtime.exe",
+  "staticRoot": "D:/DEV/role-model/.worktrees/68-codex-subscription-tool-call-parity/role-model-router/dist/release/win32-x64/build/client",
+  "stdout": "D:/DEV/role-model/.worktrees/68-codex-subscription-tool-call-parity/.recursive/run/68-codex-subscription-tool-call-parity/evidence/manual-qa/run68-runtime-relaunch2.stdout.log",
+  "stderr": "D:/DEV/role-model/.worktrees/68-codex-subscription-tool-call-parity/.recursive/run/68-codex-subscription-tool-call-parity/evidence/manual-qa/run68-runtime-relaunch2.stderr.log",
+  "launchedAt": "2026-07-13T00:17:52.9877680+08:00"
+}

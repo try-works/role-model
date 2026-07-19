@@ -1,0 +1,21 @@
+provider    model                       context  max-out  thinking  images
+role-model  baseline.decision-only      262.1K   128K     no        yes   
+role-model  baseline.hybrid             262.1K   128K     no        yes   
+role-model  baseline.remote-only        262.1K   128K     no        yes   
+role-model  chatgpt/gpt-5.4             1.1M     128K     no        yes   
+role-model  controller.decision-only    262.1K   128K     no        yes   
+role-model  controller.hybrid           262.1K   128K     no        yes   
+role-model  controller.remote-only      262.1K   128K     no        yes   
+role-model  deepseek/deepseek-v4-flash  1M       384K     no        no    
+role-model  deepseek/deepseek-v4-pro    1M       384K     no        no    
+role-model  default.decision-only       262.1K   128K     no        yes   
+role-model  default.hybrid              262.1K   128K     no        yes   
+role-model  default.remote-only         262.1K   128K     no        yes   
+role-model  difficulty.decision-only    262.1K   128K     no        yes   
+role-model  difficulty.hybrid           262.1K   128K     no        yes   
+role-model  difficulty.remote-only      262.1K   128K     no        yes   
+role-model  hybrid.decision-only        262.1K   128K     no        yes   
+role-model  hybrid.hybrid               262.1K   128K     no        yes   
+role-model  hybrid.remote-only          262.1K   128K     no        yes   
+role-model  moonshot/kimi-k2.7-code     262.1K   262.1K   no        yes   
+Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76

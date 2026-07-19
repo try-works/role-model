@@ -1,0 +1,14 @@
+(node:22304) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+[Error: EBUSY: resource busy or locked, rmdir 'C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa-3462\runtime-qa-3462\codex-subscription\8998d9d3-bd8b-4118-b86b-d2a46e6cdd70'] {
+  errno: -4082,
+  code: 'EBUSY',
+  syscall: 'rmdir',
+  path: 'C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa-3462\\runtime-qa-3462\\codex-subscription\\8998d9d3-bd8b-4118-b86b-d2a46e6cdd70'
+}
+
+Node.js v24.11.0

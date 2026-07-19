@@ -2,6 +2,738 @@
 
 ## Recursive Run Index
 
+### Run `74-kimi-k3-kimi-code-oauth-support`
+
+- Run folder: `/.recursive/run/74-kimi-k3-kimi-code-oauth-support/`
+- Worktree: `.worktrees/74-kimi-k3-kimi-code-oauth-support`
+- Branch: `recursive/74-kimi-k3-kimi-code-oauth-support`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added first-class Kimi Code K3 catalog support with canonical operator id `moonshot/kimi-k3`, exported limits `contextWindow = 1048576` and `maxOutputTokens = 131072`, and hidden economics authority `moonshotai/kimi-k3`
+  - extended Moonshot and Kimi Code provider surfaces plus remote-health comparable aliases so `moonshot/kimi-k3`, `kimi-k3`, and `k3` all reconcile through the existing Moonshot/Kimi model path
+  - centralized provider-openai Kimi request policy so canonical `moonshot/kimi-k3` maps upstream to `k3` and the current fixed-temperature Kimi Code chat-completions models omit caller-supplied `temperature`
+  - added strict RED/GREEN regression coverage across catalog export, alias/economics resolution, provider surfaces, and provider-openai request shaping, then completed live repo-path Kimi OAuth verification on Friday, July 17, 2026, through the worktree runtime-host bridge
+- Why:
+  - K3 was absent from the shipped catalog, provider surfaces, comparable aliases, and canonical-to-upstream execution seam
+  - live Kimi endpoint discovery also proved the inherited K2.7 fixed-temperature assumption was wrong, so a K3-only patch would have left the broader Kimi Code family inconsistent
+- How:
+  - implemented with strict TDD across the catalog, alias/economics, runtime-host, and provider-openai seams
+  - used direct live Kimi API discovery during implementation to resolve the real request contract, then verified the final behavior through the repo runtime path with copied persisted Kimi OAuth state and captured upstream wire bodies
+- What was not done:
+  - no new provider, provider variant family, or OAuth flow was introduced
+  - no tier-specific context-window publication or entitlement-aware catalog split was added; the catalog keeps the documented provider-maximum K3 limit
+- Known issues / follow-ups:
+  - the copied Phase 5 runtime state predated K3 and initially allowed only `moonshot/kimi-k2.7-code`, so the isolated QA copy had to add `moonshot/kimi-k3` to the account's allowed-model list before endpoint activation; that copied-state enablement step was verification setup, not a product-source code change
+
+### Run `72-standalone-runtime-config-authority-and-alias-rematerialization`
+
+- Run folder: `/.recursive/run/72-standalone-runtime-config-authority-and-alias-rematerialization/`
+- Worktree: `.worktrees/72-standalone-runtime-config-authority-and-alias-rematerialization`
+- Branch: `recursive/72-standalone-runtime-config-authority-and-alias-rematerialization`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - made the standalone runtime path that owns `:3456` pass and honor one canonical unified runtime config path at `<runtimeStateRoot>/state/runtime-config.yaml`
+  - added deterministic standalone legacy-config migration so an obsolete root-level `runtime-config.yaml` is copied forward only when the canonical state-path file is missing
+  - repaired canonical primary alias materialization so startup reruns it after the authoritative inventory bootstrap, allowing env-backed persisted endpoints to expand `baseline.remote-only` and the other primary aliases back to the full healthy remote pool on restart
+  - added strict-TDD launcher, backend, and packaged-runtime regressions, including a rebuilt standalone executable restart proof
+- Why:
+  - the packaged standalone runtime could preserve stale singleton canonical aliases because the launcher and backend could observe competing config authorities and because alias materialization originally ran before restart bootstrap restored the live routable remote inventory
+  - request-time routing policy was already correct; the bug was stale canonical alias truth narrowing the candidate pool before normal routing logic ran
+- How:
+  - implemented with strict TDD across the standalone launcher seam, the backend authority-normalization and alias-rematerialization seam, and a Windows packaged-runtime restart regression
+  - verified with focused RED/GREEN evidence, the broader router floor, Go launcher tests, and rebuilt-runtime packaged restart proof against representative persisted state
+- What was not done:
+  - no provider-specific OpenAI, DeepSeek, or Moonshot routing hack was introduced
+  - no request-time `allowEndpoints` bypass or forced endpoint override was added
+  - no manual cleanup of user runtime files or SQLite state became part of the fix
+- Known issues / follow-ups:
+  - rebuilt packaged-runtime closeout currently proves authoritative alias-pool truth on the real executable; the direct request-level `allowEndpoints` proof remains cleanest at the owning backend seam under the current models-only mock upstream harness
+
+### Run `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
+
+- Run folder: `/.recursive/run/71-runtime-startup-lifecycle-and-health-truth-reconciliation/`
+- Worktree: `.worktrees/71-runtime-startup-lifecycle-and-health-truth-reconciliation`
+- Branch: `recursive/71-runtime-startup-lifecycle-and-health-truth-reconciliation`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - repaired startup reconciliation so durable remote endpoint intent is reapplied on every boot instead of short-circuiting when SQLite already contains endpoint rows
+  - separated maintenance-only provider-account truth from endpoint-backed configured remote inventory, keeping `deepseek.capture.account` and maintenance-only local-openai peer credentials out of configured remote connections
+  - published backend-owned `routingEligible` and `benchmarkEligible` truth on endpoints and router candidates, then switched the Models, Providers, Router, Candidates, and Benchmark surfaces to consume that canonical readiness contract
+  - removed the router overview’s implicit three-row shortlist so `/app/router` now renders the full routing-eligible list by default
+  - copied-state rebuilt-runtime QA plus follow-up live operator proof on `127.0.0.1:3461` confirmed maintenance-only account separation, truthful cross-surface readiness alignment, and four visible configured remote candidates on `/app/router` after fresh bundle reload
+- Why:
+  - startup previously allowed stale or maintenance-only provider-account rows to surface as remote provider connections and let a non-empty SQLite endpoint table mask missing durable endpoint activation intent
+  - the runtime UI was not consuming one canonical readiness contract, so the same configured model could appear healthy on Models while appearing offline or ineligible on Router, Candidates, and Benchmark
+- How:
+  - implemented with strict TDD across host-bridge restart reconciliation, backend HTTP contract, benchmark guard, and runtime-ui inventory or readiness helpers
+  - verified with focused RED and GREEN regressions, typecheck and build proof for both affected apps, and rebuilt-runtime cold-start plus restart evidence against a copied persisted state root
+- What was not done:
+  - no provider-specific DeepSeek, Moonshot, Kimi, or OpenAI UI special-case was introduced
+  - no generic remote-health timeout or retry-policy redesign landed beyond making canonical health and eligibility truth consistent
+  - no manual SQLite cleanup step became part of the normal operator workflow
+- Known issues / follow-ups:
+  - direct `dist/cli-entry.js` launch against the built graph still hits pre-existing workspace export-condition gaps, so retained Phase 5 proof used the implementation-commit bridge CLI through `tsx` with rebuilt dependencies and rebuilt client assets
+  - restart probe outcomes remain live-provider dependent; the durable contract is that backend health and eligibility stay internally consistent and idempotent after reconciliation, not that every provider becomes healthy on restart
+
+### Run `70-cache-hit-token-rate-analytics-fix`
+
+- Run folder: `/.recursive/run/70-cache-hit-token-rate-analytics-fix/`
+- Worktree: `.worktrees/70-cache-hit-token-rate-analytics-fix`
+- Branch: `recursive/70-cache-hit-token-rate-analytics-fix`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - repaired the backend `cacheHitTokenRate` metric so cache-supported rows now aggregate `cacheReadTokens / inputTokens` instead of double-counting cached tokens in the denominator
+  - preserved the existing shared OpenAI-family normalization contract across Codex Subscription, direct OpenAI-compatible, LiteLLM-backed, and Kimi-shaped paths instead of introducing a provider-specific analytics fork
+  - updated the shared Overview and Observe cache-efficiency charts so mixed absolute token totals and fractional hit rate render on split left and right Y axes
+  - proved the repaired backend math and the shared dual-axis operator outcome on the rebuilt runtime, including a separate supported-zero cache control
+- Why:
+  - the prior telemetry query contract halved operator-visible cache-hit token rate whenever cached tokens were already included in total input tokens
+  - fixing the backend denominator alone would still leave the shared Overview and Observe charts misleading because they plotted absolute token volume and fractional rate on one axis
+- How:
+  - implemented with strict TDD across the owning host-bridge analytics regression and the shared runtime-ui chart-definition or chart-model or renderer seams
+  - verified with focused RED or GREEN regressions, unchanged provider-openai and LiteLLM regression controls, package builds, rebuilt-runtime backend query proof, live Overview and Observe chart evidence, and a supported-zero cache-supported miss control
+- What was not done:
+  - no provider token-normalization rewrite landed
+  - no provider-specific analytics branch or new cache dashboard was introduced
+  - no route-local page hack replaced the shared chart stack
+- Known issues / follow-ups:
+  - future cache metrics that mix absolute totals and fractional rates should opt into the same split-axis presentation rather than reusing a single-axis line chart
+  - if a future non-OpenAI-family provider starts contributing cache-hit token rows, verify its `inputTokens` semantics before assuming the shared denominator rule still applies unchanged
+
+### Run `69-benchmark-scoring-integrity`
+
+- Run folder: `/.recursive/run/69-benchmark-scoring-integrity/`
+- Worktree: `.worktrees/69-benchmark-scoring-integrity`
+- Branch: `recursive/69-benchmark-scoring-integrity`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - repaired benchmark scoring integrity without banning judge-subject overlap: overlap remains allowed, but the judge path no longer applies overlap-only strictness
+  - restored authored deliverable truth for benchmark grading by preserving literal `code_fence` outputs, deriving structured-summary scaffolds from the authoritative per-case schema, validating suite-contract coherence fail-closed, and aligning contradictory case data such as `h15-max-signal-v3` and `p17-tools-multi-hard`
+  - made benchmark grading treat recorded API `tool_calls` as authoritative benchmark metadata so a valid tool-required case is not zeroed only because the extracted deliverable repeats `tool_calls`
+  - added the narrow runtime closeout unblockers required for final verification receipts: preserved scaffold tool-call ids, repaired stale bridge-local Kimi OAuth from fresher standalone-runtime tokens on restart, and allowed benchmark-owned subject or judge or compare or judge-probe executions to bypass ordinary execution-failure cooldown deny lists
+  - closed the run with fresh `VALID` quick and full runtime reruns on `2026-07-13` that included both `moonshot/kimi-k2.7-code` and `chatgpt/gpt-5.4`
+- Why:
+  - the user needed benchmark scores to reflect model behavior rather than benchmark-owned serialization, suite-contract, or grading asymmetry defects
+  - final verification had to include GPT and Kimi in both quick and full runtime benchmark runs, so the runtime closeout path also had to recover Kimi availability and prevent benchmark-internal cooldown poisoning
+- How:
+  - implemented with strict TDD across `bench-routing`, `bench-judge`, and the runtime-host-bridge benchmark seams
+  - verified first with focused RED or GREEN regressions and broader benchmark-owned suites, then with fresh live runtime quick and full reruns plus direct Kimi endpoint proof
+- What was not done:
+  - no provider-ranking tweak or prompt hack was added to inflate a specific model score
+  - no judge-subject overlap prohibition was introduced
+  - no broad benchmark redesign beyond the owned scoring, suite-integrity, and verification unblockers landed
+- Known issues / follow-ups:
+  - remaining low scores in the final quick and full reruns are still possible and should be treated as model-output misses unless a later `VALID` rerun plus judge-artifact inspection proves a new benchmark defect
+  - benchmark validation should be run against a live run id or a full runtime artifact root; copied result-only folders miss compare and grading-brief gates and can misclassify a rerun
+
+### Run `68-codex-subscription-tool-call-parity`
+
+- Run folder: `/.recursive/run/68-codex-subscription-tool-call-parity/`
+- Worktree: `.worktrees/68-codex-subscription-tool-call-parity`
+- Branch: `recursive/68-codex-subscription-tool-call-parity`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - repaired routed cross-provider tool-call parity by keeping one portable continuation history internally while rendering it surface-specifically at the last hop: Codex Subscription exact-model requests now use official Responses typed replay items and named-tool forced `tool_choice`, while chat-completions-compatible Kimi or DeepSeek or LiteLLM targets continue to receive assistant `tool_calls` plus `tool` messages
+  - preserved caller-owned `parallel_tool_calls` from ingress through adapter-execution, runtime-host-bridge, and provider-openai instead of silently forcing Codex defaults
+  - restored native Codex non-stream tool-call parity on both `/v1/chat/completions` and `/v1/responses`, and moved Codex tool-bearing benchmark subject turns onto the Responses seam
+  - verified rebuilt packaged-runtime parity with a direct exact-model `/v1/responses` continuation probe plus Pi CLI proof on exact `chatgpt/gpt-5.4` and alias `difficulty.remote-only`, where the retained alias proof correctly selected DeepSeek Pro rather than Codex
+- Why:
+  - the prior runtime contract could still fail real tool-call continuations on the live Codex Subscription seam because forced tool choice and typed replay items were still malformed at the final provider hop
+  - the user required a generic cross-provider repair grounded in official OpenAI Responses semantics and verified through both exact-model and alias routing
+- How:
+  - implemented with strict TDD across provider-openai, runtime-host-bridge, benchmark-runner, and the shared execution contract
+  - verified with focused RED or GREEN regressions for request-side policy, route-switch rendering, forced-tool request shape, typed replay ingress, and benchmark subject routing, then rebuilt the packaged runtime and captured direct plus Pi-backed live receipts
+- What was not done:
+  - no provider-specific routing preference was added to force aliases onto Codex
+  - no second LiteLLM-only request contract or router-hosted tool executor was introduced
+  - no prompt-cache redesign was introduced beyond preserving the earlier run-65 behavior
+- Known issues / follow-ups:
+  - live alias proof may legitimately land on DeepSeek or another non-Codex provider depending on current routing and must be recorded as the selected provider rather than treated as a failure
+  - on Windows, packaged-runtime relaunch with spaced paths can fail under `Start-Process` argument splitting; prefer `ProcessStartInfo.ArgumentList` for rebuilt-runtime QA
+
+### Run `67-runtime-ui-route-startup-performance-hardening`
+
+- Run folder: `/.recursive/run/67-runtime-ui-route-startup-performance-hardening/`
+- Worktree: `.worktrees/67-runtime-ui-route-startup-performance-hardening`
+- Branch: `recursive/67-runtime-ui-route-startup-performance-hardening`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - `/app/models` now boots from a route-owned narrow fetch set, defers request evidence, and reports deferred request counts truthfully as `null` / `Unavailable` instead of fabricating zero-value startup metrics
+  - `/app/router`, `/app/router/controller`, `/app/connect`, `/app/connect/upstream`, `/app/system/peers`, and the Studio startup routes no longer boot through `fetchRuntimeSnapshot()`, with a new source-based `P0` regression guard plus a seeded browser regression for `/app/connect`
+  - non-QA runtime startup paths now expose `GET /api/role-model/requests/latest-ids?limit=10`, and packaging validation waits for `/api/role-model/runtime/summary` before account and endpoint checks while also asserting the latest-ids seam
+- Why:
+  - run 66 fixed the providers page only, but many other operator routes still inherited the same rich request-ledger startup cost through the broad shared snapshot helper
+  - rebuilt-runtime parity still lagged the QA helper because non-QA startup omitted `listRecentRequestIds`, and packaged validation could still fail on a control-plane readiness race after `/healthz`
+- How:
+  - implemented with strict TDD across runtime-ui and runtime-host-bridge using focused RED/GREEN proof, broader owning suites, `runtime:validate-ui`, `runtime:test-browser`, `runtime:validate-packaging`, and rebuilt packaged-runtime persisted-state proof
+  - preserved the existing rich `/api/role-model/requests` contract and the run-66 providers baseline while moving first paint onto route-owned narrower startup contracts
+- What was not done:
+  - no rich request-ledger or telemetry product redesign beyond startup-latency hardening
+  - no widening of already-narrow `P1` routes back onto the broad snapshot helper
+  - no durable vendor-binary changes from packaging byproducts
+- Known issues / follow-ups:
+  - the persisted standalone runtime state used for Phase 5 on `2026-07-12` had zero configured accounts/endpoints and `latestRequestIds = [null]`; rebuilt-runtime QA therefore used `/app/router/controller` as the extra live `P0` checkpoint while the seeded browser floor continued to cover `/app/connect`
+
+### Run `66-remote-providers-deferred-request-id-loading`
+
+- Run folder: `/.recursive/run/66-remote-providers-deferred-request-id-loading/`
+- Worktree: `.worktrees/66-remote-providers-deferred-request-id-loading`
+- Branch: `recursive/66-remote-providers-deferred-request-id-loading`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - split the providers-page bootstrap away from the broad shared runtime snapshot so `/app/remote/providers` no longer waits on rich recent-request history during initial load
+  - added `GET /api/role-model/requests/latest-ids?limit=10` as the lightweight providers-page follow-up contract, backed by a new SQLite ids-only read path that selects only `request_id` and does not parse `observation_json`
+  - kept the existing rich `/api/role-model/requests` and request-detail surfaces unchanged for Observe and debugging flows
+  - wired `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts` to forward `listRecentRequestIds`, so the stock Playwright QA harness exercises the live lightweight latest-ids success path
+  - verified on the rebuilt runtime that the providers page becomes visible before the deferred latest-ids call completes and that a failed deferred latest-ids fetch does not clear the already-loaded page
+- Why:
+  - `/app/remote/providers` was blocked for more than a minute because initial load waited on `/api/role-model/requests`, which selected and parsed large `runtime_observations.observation_json` rows even though the page did not need rich request history to become usable
+  - the providers page needed a narrow recent-request seam that matched its actual requirement instead of inheriting the cost of the canonical inspection ledger
+- How:
+  - implemented with strict TDD across runtime-ui, runtime-host-bridge, and sqlite-memory
+  - verified with focused owning suites, the broader Phase 4 runtime validator and Playwright floor, reopened QA-helper success-path coverage through `start-for-qa.ts`, and rebuilt-runtime Phase 5 proof using delayed and failed latest-ids browser interception against the live worktree runtime
+- What was not done:
+  - no redesign of Observe request-ledger, request-detail, or telemetry analytics ownership
+  - no historical cleanup of existing large `runtime_observations.observation_json` rows
+  - no generic optimization of every `fetchRuntimeSnapshot()` consumer beyond the providers-page route split
+- Known issues / follow-ups: none
+
+### Run `65-codex-subscription-prompt-cache-parity`
+
+- Run folder: `/.recursive/run/65-codex-subscription-prompt-cache-parity/`
+- Worktree: `.worktrees/65-codex-subscription-prompt-cache-parity`
+- Branch: `recursive/65-codex-subscription-prompt-cache-parity`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/03-implementation-summary.upstream-gap.00-requirements.addendum-01.md`, `addenda/03-implementation-summary.upstream-gap.02-to-be-plan.addendum-01.md`
+- What changed:
+  - repaired `provider-openai` so OpenAI-family prompt caching is advertised as implicit support, nested OpenAI cache detail fields are preserved, Kimi top-level `usage.cached_tokens` is normalized, and chat-completions `prompt_cache_key` forwarding is truthful
+  - repaired native Codex Subscription bridge shaping so both streamed and non-streamed downstream OpenAI-compatible responses preserve supported-zero and hit cache facts instead of collapsing into permanent `0%` or unsupported semantics
+  - replaced the old generic cache-affinity heuristic with per-domain continuity state that preserves endpoint-local restore semantics and keeps warmed-domain routing preference advisory rather than inventing a synthetic shared cache
+  - extended downstream Pi compatibility so runtime discovery preserves prompt-cache plus session-affinity hints, and the Pi package now honors `ROLE_MODEL_ENDPOINT` for runtime request and inspection commands
+  - verified rebuilt-runtime exact-model Codex, exact-model DeepSeek, and alias-backed `difficulty.remote-only` `A -> B -> A` continuity through live Pi evidence, request-detail receipts, telemetry query proof, and Observe screenshot proof
+- Why:
+  - Pi showed permanent `0%` cache on the Codex Subscription path even when upstream cache hits were occurring, while DeepSeek already proved the downstream cache display could work
+  - the router needed truthful per-domain cache continuity for alias-backed return-to-`A` behavior without claiming cross-provider shared cache reuse
+  - later user clarification required explicit live alias proof, official provider-doc crosswalk evidence, and an explicit Kimi blocker record rather than implicit notes
+- How:
+  - implemented with strict TDD across provider-openai, host-bridge, protocol-routing, runtime-observability, Pi package, and runtime-ui telemetry contract tests
+  - verified with focused package suites, rebuilt-runtime Pi receipts, canonical request-detail and telemetry API cross-checks, and an Observe requests screenshot
+  - grounded the final proof against official OpenAI, LiteLLM, DeepSeek, and Kimi documentation captured in the run-65 provider-doc crosswalk
+- What was not done:
+  - LiteLLM execution ownership was not replaced or forked; the shared OpenAI-family builder remained the owning execution path
+  - no cross-provider shared cache, LiteLLM proxy-cache emulation, or separate cache-only dashboard was introduced
+  - Kimi was not made routing-eligible in the rebuilt QA runtime because it still had zero benchmark samples and therefore no eligible target
+- Known issues / follow-ups:
+  - if future work wants live Kimi cache proof, it must first make Kimi routing-eligible in the active runtime and record the exact benchmark-data or policy change that enabled it
+  - when alias continuity proof includes an image-bearing turn, reusing the same local Pi session file can carry image modality forward and keep the alias on Codex; future proofs should reuse the logical session id but refresh local session storage on the return leg
+
+### Run `64-observed-data-decay-policy-recalibration`
+
+- Run folder: `/.recursive/run/64-observed-data-decay-policy-recalibration/`
+- Worktree: `.worktrees/64-observed-data-decay-policy-recalibration`
+- Branch: `recursive/64-observed-data-decay-policy-recalibration`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - replaced the old five-metric observed-data halflife contract with a canonical `metric_decay_percent_per_day` config surface for `latency` and `throughput` only; host-bridge config normalization still accepts legacy halflife keys for compatibility, but canonical render/readback now emits only the narrowed contract
+  - changed router-core freshness aging from minute-scale halflife math to a 10%-per-day retained-deviation loss curve for latency and throughput, using one owning decay path for both local and remote candidates
+  - removed ordinary time decay from benchmark or measured quality, measured reliability, and measured cost so those signals no longer drift toward neutral solely because their evidence is old
+  - extended effective-metric diagnostics so request-detail and routing receipts now distinguish time-decayed metrics from pass-through metrics with explicit freshness source, time-decay-applied, and decay-rate facts
+  - added RED-first regression coverage across host-bridge config truth, router-core scoring, and protocol-routing outcomes so the repaired policy is locked in at every owning layer
+- Why:
+  - the earlier run-64 implementation left the config surface, router scoring, and diagnostics semantically inconsistent with the locked requirements
+  - stale benchmark or cost evidence was still being neutralized by age, while the active config truth still implied five live halflife knobs even though the intended policy only ages latency and throughput
+  - operators and future contributors needed one durable ledger entry stating which observed metrics age, how quickly they age, and which metrics explicitly do not
+- How:
+  - repaired with strict TDD: added failing host-bridge, core, and protocol-routing tests before fixing the shared type, host-bridge config, router-core scoring, and diagnostic surfaces
+  - verified with focused observed-data suites, the broader router-owned verification floor (`schemas:validate`, host-bridge `tsc`, host-bridge observed-data plus config tests, core observed-data plus routing-intent tests, full protocol-routing tests, `runtime:validate-routing`, and host-bridge `test:router`), plus deterministic agent-operated Phase-5 proof for config truth and route outcomes
+  - reopened the invalid run artifacts, corrected the stale Phase 0 worktree receipt, rewrote the broken Phase 2-4 records, and closed the run through Phases 5-8 with the canonical recursive lock tooling
+- What was not done:
+  - no throughput-SLA redesign was introduced; its penalty and hard-deny behavior remain separate from the slower throughput decay curve
+  - no benchmark-quality precedence redesign was introduced beyond preventing freshness metadata from neutralizing benchmark-backed quality
+  - no context-window, cooldown, capability-eligibility, UI, or packaging behavior was changed in this run
+- Known issues / follow-ups:
+  - if future routing work wants reliability aging back, it should be a separate run with its own explicit contract and diagnostics rather than reviving hidden halflife knobs
+  - legacy `metric_halflives` input remains accepted for compatibility today; if runtime configs are later migrated cleanly, a future cleanup run can remove that compatibility path explicitly
+
+### Run `63-router-backend-regression-and-telemetry-surface-hardening`
+
+- Run folder: `/.recursive/run/63-router-backend-regression-and-telemetry-surface-hardening/`
+- Worktree: `.worktrees/63-router-backend-regression-and-telemetry-surface-hardening`
+- Branch: `recursive/63-router-backend-regression-and-telemetry-surface-hardening`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added a first-class root `runtime:test-router` regression lane, a matching `test:router` subset in `@role-model-router/runtime-host-bridge`, and CI workflow coverage for that lane; updated the runtime testing architecture and regression matrix docs to make the lane the canonical router-focused backend floor
+  - added package-level Vitest entrypoints plus deterministic temp-dir round-trip and negative-linkage coverage for `@role-model-router/trace` and `@role-model-router/usage`; `readTraceArtifacts()` now tolerates a missing `trace-events.jsonl` when no events were emitted
+  - hardened telemetry analytics refresh behavior across dashboard, Observe Requests, and Observe Routing by moving stale-response reuse onto shared stale-refresh resolution that emits bounded structured diagnostics, shows a visible cached-data warning, and clears stale-chart state after a later successful refresh
+  - strengthened rebuilt-runtime request-analytics coverage so `/app/observe/requests` now proves filter narrowing, query-param restoration after reload, and request-detail drill-in using uniquely seeded telemetry rows instead of render-only assertions
+  - reopened the runtime-ui implementation/test/QA phases once the audit found remaining `R4` and `R5` gaps, then closed those gaps without changing the earlier router-lane, trace/usage, CI, or docs scope
+- Why:
+  - router-affecting backend changes still lacked one explicit regression lane that future contributors and CI could run without inferring scope from omnibus suites
+  - trace and usage artifact helpers were part of the routing-explanation contract but still had no direct package-level regression floor
+  - telemetry-heavy routes could silently reuse stale chart data, leave the stale warning stuck after recovery, and omit the structured diagnostics needed for operator-facing degraded-refresh truth
+  - the existing request-analytics browser net proved rendering but not the actual operator behaviors required by the run, and persisted QA telemetry made naive assertions brittle
+- How:
+  - implemented with strict TDD for the router-lane, trace/usage package coverage, and the reopened stale-refresh helper repair
+  - verified with focused runtime-host router tests, trace and usage package tests, `runtime:validate-routing`, `runtime:validate-observability`, runtime-ui suite/build proof, and rebuilt-runtime Playwright request-analytics coverage
+  - reread the locked requirements and plan during the reopen so the repaired runtime-ui delta stayed confined to the missing `R4` and `R5` behaviors
+- What was not done:
+  - packaged-runtime verification was not rerun because no packaging-affecting files changed
+  - no router strategy, provider-capability, or telemetry contract redesign was introduced beyond the regression and degraded-refresh hardening needed by the run
+  - GitHub-hosted CI was not executed from this local worktree; merge-time CI still needs to validate the final branch
+- Known issues / follow-ups:
+  - the shared-surface Playwright screenshot helper still points at the historical run-60 evidence folder, so browser-proof captures can dirty tracked prior-run artifacts; redirect that helper to a generic ignored evidence path in a future harness-hygiene pass
+  - if future router-owned backend surfaces are added, keep `runtime:test-router`, `/.github/workflows/ci.yml`, and the testing docs aligned so the dedicated lane does not drift back into an implicit catch-all
+
+### Session `2026-07-10` — recursive-mode package refresh and scaffold reconciliation
+
+- What changed:
+  - ran `npx skills add https://github.com/try-works/recursive-mode --skill recursive-mode` on local `main`, then restored the full project skill package under `/.agents/skills/recursive-mode/` because the install reduced the tracked package to a lone `SKILL.md`
+  - reconciled the repo-owned recursive scaffold to the current upstream bootstrap contract: `/.recursive/RECURSIVE.md` now follows `recursive-mode-audit-v2`, `/.recursive/config/recursive-router.json` now exists, `/.recursive/scripts/recursive-training-*` now exist, and `/.recursive/memory/training/` is now present
+  - updated the live bridge/router docs (`/.recursive/AGENTS.md`, `/.codex/AGENTS.md`, `/.agent/PLANS.md`) and refreshed the durable memory router so the new router/training surfaces are discoverable without turning `MEMORY.md` into a session dump
+- Why:
+  - the repo’s tracked recursive-mode package had drifted behind the current upstream template, and the direct `skills add` install path did not preserve the tracked supporting files that the installed root skill references
+  - the bootstrap upsert would have replaced important repo-owned control-plane and memory blocks, so the scaffold had to be updated in a way that preserved local state, decisions, and curated memory links
+- How:
+  - cloned the upstream recursive-mode package, ran its installer against a temporary preview copy of the repo, compared the generated scaffold to the live repo, then manually applied only the required deltas
+  - treated `/.recursive/STATE.md`, `/.recursive/DECISIONS.md`, and `/.recursive/memory/MEMORY.md` as repo-owned documents and updated them manually instead of letting the bootstrap overwrite their marked blocks wholesale
+- What was not done:
+  - did not run the bootstrap installer directly against the live repo after confirming that it would clobber the existing `MEMORY.md` router block
+  - did not delete existing promoted skill-memory shards that are still repo-specific guidance beyond the upstream default template
+- Known issues / follow-ups:
+  - if a future `npx skills add ... --skill recursive-mode` install again collapses the tracked project skill package to a root `SKILL.md`, follow the install with a package-integrity check or adjust the upstream packaging behavior
+  - keep the repo-owned skill-memory index curated separately from the upstream default template when this repository intentionally carries additional promoted skill-memory shards
+
+### Session `2026-07-06` — Codex Subscription routing hardening and release refresh
+
+- What changed:
+  - preserved OpenAI chat-completions `tool_choice` through adapter-execution and provider-openai so forced function-tool selection reaches compatible OpenAI and Codex Subscription targets instead of being dropped before provider execution
+  - temporarily added Codex Subscription first-attempt pinning for tool-bearing and non-text turns, while keeping the broader eligible endpoint pool available for reroute after retry or fallback; this policy is superseded by Run 62 addendum 16, which keeps ordinary alias routing provider-agnostic and uses endpoint/model metadata plus benchmark/measured performance instead of provider-family preference
+  - hardened upstream failure classification and cooldown handling so timeout, network, rate-limit, quota, provider-auth, and upstream-5xx failures can drive retry or reroute with escalating endpoint cooldown windows; repaired Codex auth now clears stale provider-auth cooldowns
+  - made session bootstrap treat peer auto-reload degradation as advisory so remote-only readiness is not blocked by `peer reload incomplete`
+  - changed `docs-site-deploy.yml` so missing Cloudflare secrets emit a skip notice and keep the workflow green instead of failing the merged `main` commit on an environment-only deploy precondition
+  - changed `build-binaries.yml` so artifact attestation remains mandatory but now retries transient Rekor/Sigstore timeouts three times with backoff before failing the release matrix job
+- Why:
+  - routed Codex Subscription requests could lose forced tool intent, mis-handle tool-heavy or multimodal turns, and stay artificially denied after recoverable execution failures
+  - remote-only operators could see a false degraded readiness summary when local peer reload lagged even though the runtime was otherwise execution-ready
+  - release gating on GitHub should fail for broken builds or broken deploy logic, not for an intentionally absent Pages credential in repositories or forks that still need docs-build validation
+  - release publication should not fail on the first transient transparency-log timeout when the produced archive is otherwise valid and GitHub's attestation dependency is temporarily slow
+- How:
+  - verified with targeted host/provider tests, full local `corepack pnpm run ci:check`, rebuilt-runtime probes on `:3456`, and live exact-model plus alias requests that executed GPT 5.4 tool calls through the Codex Subscription path
+  - added repo-owned workflow contract tests for docs deploy and binary release attestation behavior, verified the new release test red/green against the workflow YAML, and used the failed tag-run Rekor timeout logs to confirm the retry target before rerunning local CI
+- What was not done:
+  - no new provider families or generic hosted-browser/tool runtime were introduced
+  - invalid-request responses still fail fast instead of falling back to a different endpoint
+- Known issues / follow-ups:
+  - docs, runtime routing memory, release notes, and GitHub workflow guidance need to stay aligned whenever Codex Subscription execution metadata, cooldown policy, or release automation posture change again
+  - if artifact attestation still fails after all three retries, inspect GitHub job logs for Sigstore/Rekor service health before assuming a packaging regression
+
+### Run `62-litellm-pi-craft-codex-execution-hardening`
+
+- Run folder: `/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/`
+- Worktree: `.worktrees/62-litellm-pi-craft-codex-execution-hardening`
+- Branch: `recursive/62-litellm-pi-craft-codex-execution-hardening`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - locked addenda through addendum 18, including Pi cooldown retry, reasoning stream routing/runtime, native Codex Responses transport, provider-agnostic routing preferences, Codex parameter sanitization, assistant-history content-part conversion, and failure-capture parity
+- What changed:
+  - expanded the shared routed execution contract so Responses ingress preserves `tool_choice`, reasoning/thinking controls, `previous_response_id`, prompt-cache hints, and session-affinity hints through `runtime-host-bridge`, `adapter-execution`, and `provider-openai`
+  - replaced the Codex app-server execution path for OpenAI Codex Subscription with the native ChatGPT Codex Responses transport, reporting `providerId = openai`, `vendorId = chatgpt-codex-responses`, and `adapterFamily = codex-subscription-responses`
+  - normalized downstream streaming so provider reasoning deltas are forwarded as OpenAI-compatible `reasoning_content` when the upstream emits them, while missing GPT/Codex reasoning deltas are recorded as provider unavailability rather than fabricated progress
+  - removed Codex Subscription first-attempt routing preference from ordinary alias routing; Codex Subscription remains represented by provider, vendor, execution-family, adapter, and endpoint-capability metadata while alias selection stays provider-agnostic and score-driven
+  - added selected-backend parameter policy receipts for Codex Subscription so unsupported optional OpenAI-compatible fields such as `temperature` and max-token variants are sanitized after endpoint selection instead of leaking into the ChatGPT Codex Responses backend
+  - fixed role-aware Chat Completions to Responses history conversion so replayed assistant history becomes `output_text` or `refusal`, while user input remains `input_text` or `input_image`
+  - taught unified runtime config and the managed LiteLLM vendor layer to preserve additive upstream `router_settings` and `litellm_settings` blocks instead of collapsing managed config to `model_list` alone
+  - extended canonical observability and SQLite telemetry with execution-semantics receipts for source client, execution family, adapter family, payload bytes, retry/reroute counts, cooldown/idempotency decisions, parameter sanitization, routed failure observations, and tool side-effect state, and kept request-detail reconstruction on the same canonical surfaces
+  - extended `runtime:validate-vendors` into a deterministic 200-case Pi/Craft corpus with stable machine-readable per-case routing, payload, and idempotency fields
+  - corrected provider identity semantics across telemetry, request detail, validator corpus, runtime UI, and rebuilt-runtime proof so LiteLLM and `ai-sdk-*` labels remain vendor or adapter facts instead of being recorded as providers
+- Why:
+  - Pi, Craft, and routed provider execution were still dropping important Responses semantics before provider execution, leaving Codex and LiteLLM-backed paths behaviorally inconsistent
+  - the Codex app-server path buffered or obscured the native streaming/error surface, while Pi's implementation showed the correct ChatGPT Codex Responses transport contract
+  - Codex Subscription selection still depended on static compatibility checks in places where runtime endpoint metadata should have been authoritative
+  - Pi multi-turn sessions exposed that assistant history cannot be translated with the same `input_text` content parts used for user input
+  - Codex Subscription and direct OpenAI-compatible backends accept different optional parameters, so selected adapter policy had to be explicit and inspectable
+  - routed provider failures were being persisted as anonymous `routing.failed.pre-execution` rows even after endpoint selection, making failures materially less inspectable than successes
+  - the runtime lacked one canonical receipt layer for diagnosing payload growth, execution-family selection, retry/fallback state, and downstream request semantics across this integration surface
+  - the earlier run-62 remediation receipts were semantically invalid because they allowed adapter labels such as `litellm-proxy` and `ai-sdk-openai` to stand in for provider identity
+- How:
+  - implemented with strict TDD and focused RED/GREEN coverage across provider-openai, runtime-host ingress mapping, native Codex Responses execution, Codex compatibility routing, parameter sanitization, assistant-history conversion, failure persistence, LiteLLM config pass-through, execution-semantics persistence, and the deterministic Pi/Craft corpus harness
+  - verified locally with impacted package suites, impacted runtime-host suites, `runtime:test-critical`, `runtime:validate-ui`, `runtime:validate-observability`, `runtime:validate-vendors`, package rebuilds, and rebuilt-runtime isolated-state QA using live Pi/Craft alias requests on `difficulty.remote-only`
+  - kept the earlier packaged-runtime live proof as supplemental confidence while making rebuilt-runtime verification the authoritative Phase-5 sign-off because the user explicitly required rebuilt-runtime QA
+- What was not done:
+  - no Pi upstream or Craft upstream patches were introduced; the fixes stayed inside the shared runtime contract and owning provider/runtime layers
+  - no second trace store or UI-only inspection silo was created; the work extended the existing request-detail and telemetry-ledger surfaces
+  - no generic hosted browser/tool runtime was introduced for DeepSeek or other providers
+  - no historical telemetry backfill was attempted for old sparse failure rows that did not persist selected-endpoint context
+- Known issues / follow-ups:
+  - rebuilt-runtime post-activation inventory truth currently comes from `/api/role-model/endpoints` and `/v1/models`; `/healthz` bootstrap inventory remains startup-scoped and should not be treated as the authoritative post-activation inventory surface for this QA pattern
+  - the degraded-primary rebuilt-runtime proof showed successful pre-dispatch failover selection to a surviving family, but it did not produce a live non-zero `rerouteCount`; if a future run needs an in-flight reroute proof specifically, induce it explicitly rather than inferring it from pre-dispatch pool pruning
+  - GitHub-hosted CI was not executed from this local worktree; merge-time CI still needs to confirm the final change set
+  - the addendum 18 controlled live failure harness failed pre-execution with `VENDOR_NOT_CONFIGURED`; selected-endpoint failure-capture parity is proven by automated TDD and should get a clean live induced-provider-failure proof in a future dedicated harness if needed
+  - whenever execution semantics change again, keep provider identity, vendor identity, execution family, and adapter family as separate receipts; do not let validator or UI surfaces regress back to adapter-as-provider classification
+
+### Run `60-runtime-ui-paper-linear-review-alignment`
+
+- Run folder: `/.recursive/run/60-runtime-ui-paper-linear-review-alignment/`
+- Worktree: `.worktrees/60-runtime-ui-paper-linear-review-alignment`
+- Branch: `recursive/60-runtime-ui-paper-linear-review-alignment`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - Phase-5 addenda: rollback, route matrix, QA-fail remediation
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - replaced the older Apple-reference runtime-ui styling contract with the Paper Linear review design-system authority and rewrote the repo-owned `runtime-ui/DESIGN_SYSTEM.md` to match that baseline
+  - retokenized the shared runtime shell, theme wiring, pill/select/text styling, and Recharts-backed telemetry/chart primitives so route families consume one Paper-driven design system instead of mixed route-local styling
+  - realigned every shipped runtime page family against the authoritative Paper runtime-page board, including Overview, Studio, Local, Remote, Models, Router, Observe, Connect, and System surfaces
+  - repaired late manual-QA regressions discovered after the page-by-page audit: fixed shell-contained scrolling, hid the content-frame scrollbar, reduced wasted chart margin, added runtime-summary retry resilience, normalized advanced-controls affordances, and unified grouped role-selection behavior across Remote and Models
+  - removed review-only preview/mock scaffolds after approval so the shipped runtime remains live-data-driven rather than carrying Paper-review fixtures
+- Why:
+  - the shipped runtime UI and repo-owned design docs had drifted away from the current Paper/Linear source of truth, causing inconsistent tokens, stale typography, mismatched route layouts, and route-specific styling that bypassed the shared design system
+  - the run needed to re-establish one visual authority, push it into the shared primitives first, and then bring the real runtime pages into parity without breaking rebuilt-runtime behavior
+- How:
+  - implemented with strict TDD on shared design-system and route regressions, rebuilt-runtime browser verification, Playwright regression coverage, and a hybrid Phase-5 rerun that paired agent-operated browser evidence with explicit user approval of the page-by-page screenshot matrix
+- What was not done:
+  - the run did not edit the Paper file itself; Paper remains the visual authority consumed by the repo
+  - no mock telemetry or preview-only route data remains in the shipped runtime after the approval pass
+- Known issues / follow-ups:
+  - the Paper file is now slightly behind the latest approved implementation details; the repo-owned design system and runtime implementation are the current shipped truth until the Paper file is refreshed
+  - the run’s earlier Phase 3-5 base receipts predated the stricter audited-artifact template and rely on locked Phase-5 addenda to express the final hybrid QA truth
+
+### Run `57-role-model-taxonomy-v1-phase-1-4`
+
+- Run folder: `/.recursive/run/57-role-model-taxonomy-v1-phase-1-4/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+- What changed:
+  - added Role-Model Taxonomy V1 for proposal phases 1-4: versioned canonical groups, roles, task types, capabilities, modalities, tool classes, schemas, generated docs, runtime taxonomy APIs, role/task metadata validation, and router/controller use of hard versus advisory request intent
+  - updated the runtime UI's existing Models, Roles, Router, and Observe surfaces so model role assignment defaults to all roles with group-aware controls and task drill-down instead of creating a separate taxonomy app
+  - updated `@try-works/pi-role-model` with compact taxonomy data, progressive group/role/task classification, runtime taxonomy discovery, package snapshot fallback, and `role_model.intent` injection into real Pi provider requests for known Role-Model aliases
+  - Phase 5 found and repaired real integration defects: QA fallback downstream discovery lacked the rich Pi-compatible contract, Pi short-lived RPC discovery needed close-connection fetches, and Pi classification metadata was not wired into provider transport
+- Why:
+  - the router and consumers need a shared, versioned, human-readable taxonomy so Pi and other agents can classify request intent consistently and the runtime can use that metadata to filter and score routing candidates
+  - How:
+  - implemented with strict TDD, proposal-derived golden taxonomy parity, schema/data tests, runtime discovery/routing tests, runtime UI tests, Pi package tests, docs/static checks, rebuilt runtime packaging, and real local Pi QA against a rebuilt runtime
+- What was not done:
+  - proposal Phase 5 taxonomy-aware benchmarks and Phase 6 taxonomy-aware telemetry/observability rollups remain deferred; only reserved schema/link points and current surface reachability were verified
+  - `pi-role-model` still does not start, stop, install, update, or own the Role-Model runtime process, call the launcher path, or read/sync Pi provider credentials
+- Known issues / follow-ups:
+  - Phase 5 QA addendum 01 closed the original QA-runtime backend limitation: managed local and remote mock vendors now start healthy, advertise canonical taxonomy capabilities, and the real local Pi prompt completed through the runtime with `requestedRoleId=security`, `roleIds=[security]`, `ROLE_POLICY_APPLIED`, and `TASK_POLICY_APPLIED` in telemetry/request detail
+  - run 58 remains draft for proposal phases 5 and 6: taxonomy-aware benchmark scoring and taxonomy-level telemetry/observability
+
+### Run `58-role-model-taxonomy-v1-benchmark-telemetry`
+
+- Run folder: `/.recursive/run/58-role-model-taxonomy-v1-benchmark-telemetry/`
+- Worktree: `.worktrees/58-taxonomy-benchmark-telemetry`
+- Branch: `recursive/58-role-model-taxonomy-v1-benchmark-telemetry`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md` (applied to STATE.md)
+  - `08-memory-impact.md`
+- What changed:
+  - Implemented proposal Phase 5 (taxonomy-aware benchmarks) and Phase 6 (taxonomy-aware telemetry):
+    - 4 taxonomy benchmark/telemetry schemas, 15 tagged benchmark cases across 4 minimum task types
+    - 6-dimension taxonomy score aggregation in benchmark pipeline
+    - Per-task benchmark scoring in router (configurable blend weights)
+    - Taxonomy dimension extraction in protocol-types, recording in observation bundles
+    - Telemetry analytics taxonomy dimensions (taxonomyRoleId, taxonomyTaskType)
+    - Benchmark UI taxonomy filters, observe routing taxonomy inputs, model telemetry rollup
+    - Privacy receipt, retention cleanup with indexed column, configurable telemetry advisory scoring
+    - Difficulty classifier fallback to controller modelId
+  - Architecture: single extraction source in protocol-types, dimension registry, configurable weights, re-exported linkage modules
+  - 257+ tests across 7 packages (21 new), all green. All 3 packages build clean.
+- Why:
+  - Benchmark scores must be differentiated by taxonomy dimension so model performance can be compared within role/task/capability categories
+  - Telemetry must record taxonomy dimensions for filtering, aggregation, and advisory performance signals without silently changing routing policy
+- How:
+  - Implemented with strict TDD (RED→GREEN across 5 test files). Additive/extension pattern — all changes extend existing code without replacing run 57 behavior.
+- What was not done:
+  - Live Pi-driven E2E verification incomplete: `litellm` Python binary not available in QA environment, blocking remote model execution. Code verified through unit/integration tests.
+  - Full model telemetry rollup (R10): live API function exists, shows static data until telemetry accumulates from successful executions.
+- Known issues / follow-ups:
+  - QA runtime requires `litellm` binary on PATH for remote execution. Without it, all requests return VENDOR_NOT_CONFIGURED.
+  - Pi uses run 57 pi-role-model extension by default; run 58 extension installed but classification not verified live.
+  - Adding a new taxonomy dimension touches 12+ files across all layers.
+
+### Run `59-observe-taxonomy-analytics-completion`
+
+- Run folder: `/.recursive/run/59-observe-taxonomy-analytics-completion/`
+- Worktree: `.worktrees/59-observe-taxonomy-analytics-completion`
+- Branch: `recursive/59-observe-taxonomy-analytics-completion`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - completed the richer taxonomy telemetry/operator surface that run 58 left partial:
+    - canonical taxonomy extraction now preserves original role/task hints, normalized role/task, group/variant/capability/modality/tool-class dimensions, alternatives, and source/confidence metadata
+    - richer taxonomy dimensions are persisted and queried through the runtime telemetry ledger instead of only being reparsed from raw observations
+    - Observe Requests and Observe Routing now expose richer taxonomy graphs and URL-backed filters
+    - `/app/models` now shows richer taxonomy telemetry rollups plus benchmark-advisory role/group evidence
+    - request detail now renders structured taxonomy, telemetry-handling, and cost-audit sections
+  - completed Pi/runtime parity for the repo-owned Pi package:
+    - added runtime-owned `/role-model requests` and `/role-model explain latest`
+    - refreshed effective taxonomy on startup, setup, and alias refresh
+    - made runtime inspection honor `ROLE_MODEL_ENDPOINT`
+    - kept the package read-only with no runtime-process or credential ownership
+  - repaired three real defects found during verification:
+    - `runtime-inspection.ts` ignored `ROLE_MODEL_ENDPOINT`
+    - rebuilt runtime could crash on late committed-response errors with `ERR_HTTP_HEADERS_SENT`
+    - Observe analytics reparsed large raw observation bundles, causing minute-scale page loads and `database is locked` follow-on behavior
+  - repaired a later rebuilt-runtime router defect where measured quality shadowed benchmark task/role/group quality; live receipts now emit benchmark precedence reasons correctly
+- Why:
+  - the original proposal Phase 6 operator-facing taxonomy telemetry work and the run-58 requirements were not actually complete in shipped Observe, model-rollup, request-detail, and Pi diagnostic surfaces
+  - live rebuilt-runtime QA exposed both correctness and performance gaps that had to be fixed before the richer taxonomy telemetry story could be considered complete
+- How:
+  - implemented with strict TDD and late-phase repair discipline: RED→GREEN evidence for telemetry contract, Observe UI, request detail, Pi runtime inspection, telemetry-ledger denormalization/performance, and benchmark-precedence routing
+  - verified with focused builds/tests, rebuilt-runtime browser/manual QA on `:3462`, live Pi command/prompt receipts, live benchmark-routing reruns, and a final handoff proof on rebuilt runtime `:3456`
+- What was not done:
+  - no benchmark-program redesign, benchmark retagging, or new top-level navigation was added
+  - Pi still does not own runtime startup, runtime upgrades, or credential syncing
+- Known issues / follow-ups:
+  - residual Observe latency is now ordinary client/chart fan-out rather than raw-bundle reparsing, but it is still slower than a minimal empty page because the dashboard fans out many analytics reads
+  - the local Pi CLI on Windows may still emit the known libuv teardown assertion after otherwise successful commands; the package behavior and runtime receipts remain the source of truth
+
+### Session `260624-clever-seal` — Post-Implementation Audit, Gap Closure, and E2E Verification
+
+- Date: 2026-06-24
+- What was done:
+  - **Addendum 08 (F6-F10 closure):** Rewired classifier to always use group-first scoring (28/28 roles). Added context signals (tools, images, files) wired through entire classification pipeline. Fixed `normalizedIntent` not appearing in decision detail API. Captured browser UI screenshots. Created one-to-one E2E coverage table.
+  - **Addendum 09 (R4.1-R12.1 closure):** Added `replacement`/`deprecationReason` to all 7 entity schemas. Added `role_model` snake_case wire contract to decision detail API alongside existing camelCase `normalizedIntent`. Deepened classifier context (tool name→role mapping, file extension→role mapping). Generated classification guide from taxonomy data. Added docs consistency validation.
+  - **Addendum 10 (benchmark quality fix):** Found and fixed `getQualityMetric` ignoring `benchmarkCapability.overallScore`. Before fix: all models got quality 0.500 default. After fix: v4-pro 0.925, kimi 1.000, v4-flash 0.833. Routing shifted from v4-flash 89% → v4-pro 90%.
+  - **Addendum 11 (providers role display):** Fixed "No roles assigned" bug on providers page where `binding.roleIds` was read directly instead of using `buildModelRoleSelection` for all assignment modes.
+  - **R10.1 (docs generation):** Created `scripts/generate-taxonomy-docs.ts` that produces 6 markdown tables from canonical JSON. Added auto-generation markers to `taxonomy-v1.md`.
+  - **E2E verification:** 88-prompt Pi→Role-Model routing test across all 28 roles, 5 aliases. 184,946 tokens, 83/88 successful. Benchmark run with v4-pro 1.0, kimi 1.0, v4-flash 0.75 across 12 hard coding cases.
+- Why:
+  - Post-implementation audit (addendum 15) found 5 gaps (F6-F10). Addendum 17 found 7 more (R4.1-R12.1). All 12 gaps closed with strict TDD.
+  - Benchmark quality not feeding routing was causing all models to appear equal, neutralizing the value of benchmark runs.
+- How:
+  - Strict TDD: RED → GREEN evidence for all changes. 71 pi-role-model tests, 23 core tests, 446 host-bridge tests all green.
+  - Live verification: rebuilt runtime on :3456, ran benchmarks against DeepSeek v4-flash/v4-pro and Kimi k2.7, verified routing with 88 prompts.
+- Decisions recorded:
+  - camelCase vs snake_case: codebase maintains clean split — external/wire = snake_case (proposal contract, schemas, HTTP body), internal/TypeScript = camelCase. `toProposalWireContract()` adapter bridges both in API responses.
+  - `MetricSource` type extended with `"benchmark"` for quality metric provenance.
+  - `EndpointCandidate` type extended with `benchmarkCapability?: { overallScore?: number }`.
+  - Classification fields (`positiveSignals`, `negativeSignals`, `summary`) added to all 28 roles in canonical data.
+  - Compact chunk size guardrail raised from 16KB to 20KB to accommodate classification data.
+- What was deferred:
+  - P2.1: Effective taxonomy lacks caller-scoped RBAC filtering (acceptable for V1).
+  - P2.2: No explicit unsupported taxonomy version rejection logic (minor).
+  - Pi CLI crashes on Windows (libuv assertion, pre-existing).
+- Artifacts created:
+  - 10 new addenda (08-11, 16-19, closeout-01)
+  - 1 generation script (`scripts/generate-taxonomy-docs.ts`)
+  - Multiple evidence logs, screenshots, and routing analysis reports
+
+### Run `56-pi-role-model-gap-closure`
+
+- Run folder: `/.recursive/run/56-pi-role-model-gap-closure/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+- What changed:
+  - closed the audited proposal/addendum gaps in `packages/pi-role-model`: typed runtime discovery, endpoint trust checks, fail-closed auth-required handling, conservative provider metadata fallbacks, degraded model diagnostics, richer `/role-model status` and `/role-model doctor`, idempotent refresh/setup behavior, Pi `setModel` alias selection, expanded README/package README/skill guidance, and `pi-package` manifest metadata
+  - prepared and published the public npm package as `@try-works/pi-role-model@0.1.0`; docs now prefer `pi install @try-works/pi-role-model` while preserving local worktree install instructions
+  - Phase 5 found a real Pi/Role-Model prompt compatibility defect where Pi sent `developer` messages; the run returned to TDD and added `compat.supportsDeveloperRole: false` to provider and alias model objects before re-running real Pi prompts
+- Why:
+  - run 55 created the first package, but follow-up audit showed it was not yet proposal-complete for discovery, trust, auth, diagnostics, alias semantics, docs, and local-device Pi verification
+- How:
+  - implemented with strict TDD for code behavior and static tests for docs/metadata/safety; verified with package build/tests, proposal/addendum traceability, package safety scans, real Pi package install/list/load, RPC command execution, real Role-Model prompt traffic, remote-block checks, auth-required fake-runtime checks, and remove/reinstall runtime-boundary checks
+- What was not done:
+  - no managed runtime installation, launch, stop, upgrade, browser-opening launcher call, credential sync, Pi auth-file read, hidden benchmark command, or Pi upstream change was added
+- Known issues / follow-ups:
+  - local Pi on Windows still prints a libuv teardown assertion after some successful CLI commands (`install`, `list`, `--help`, `--list-models`, `remove`); run 56 records this as a Pi CLI caveat because package state changes, model output, RPC commands, and prompts all verified correctly
+  - `pi -p "/role-model status"` does not execute extension slash commands; Phase 5 used Pi RPC for extension command QA and `pi -p` for actual model prompts
+
+### Run `55-pi-role-model-package`
+
+- Run folder: `/.recursive/run/55-pi-role-model-package/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added the first repo-owned Pi package, `packages/pi-role-model`, with Pi package manifest, extension, role-model skill, command dispatcher, external runtime discovery, downstream OpenAI discovery parsing, provider registration, alias persistence, package README, and root README install guidance
+  - Phase 5 drove the real local Pi executable to install the package, load the skill, invoke setup/status/doctor/ui/alias commands, list `role-model` models, choose `default.decision-only`, send a no-tools prompt through the alias, and confirm the Role-Model runtime recorded the request
+- Why:
+  - to make Pi consume Role-Model as an externally running OpenAI-compatible provider without copying credentials, starting runtimes, or reimplementing routing inside Pi
+- How:
+  - implemented through strict TDD with late Phase 5 RED/GREEN repairs for Pi model-list fields, Pi command handler shape, alias persistence, command-surface coverage, and package README coverage
+- What was not done:
+  - managed runtime install/start/upgrade, Role-Model launcher invocation, credential sync, benchmark commands, npm publication, and Pi upstream changes remain deferred
+- Known issues / follow-ups:
+  - local Pi on Windows prints a libuv teardown assertion after successful `install`, `list`, and `--list-models` output; package command invocation and prompt smoke completed successfully
+  - command notification output is UI-facing and silent in non-interactive `pi -p` receipts, so Phase 5 relies on command exit codes, alias state, model listing, tests, and runtime request receipts for verification
+
 ### Run `00-baseline`
 
 - Run folder: `/.recursive/run/00-baseline/`
@@ -969,7 +1701,7 @@
 - What was not done:
   - the run did not widen into new routing-strategy modes, broad repo-wide formatter remediation, or a QA-launcher runtime-config persistence redesign
 - Known issues / follow-ups:
-  - the QA launcher still has no `unifiedRuntimeConfigPath`, so browser proof remains suitable for live operator workflows but not for runtime-config-save plus downstream alias-routing proof
+  - resolved in run 49 Phase 5 Addendum 19: the QA launcher now seeds and passes `unifiedRuntimeConfigPath`, so runtime-config save and routing-strategy browser proof are covered by the live QA harness
   - the broader worktree still contains unrelated status noise outside run 34 scope, including older nested `role-model-router/.recursive/run/*` history and a Python `__pycache__` artifact
 
 ### Run `35-runtime-ui-connect-declutter`
@@ -1142,6 +1874,36 @@
   - the live `moonshot/kimi-k2.6` warning on `:3456` remains correct until the persisted operator config is changed
   - the broader Windows host-bridge suite still has an unrelated OAuth temp-file rename `EPERM` flake outside run-47 scope
 
+### Run `48-runtime-ui-design-system-apple-theme`
+
+- Run folder: `/.recursive/run/48-runtime-ui-design-system-apple-theme/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - `addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-01.md`
+- What changed:
+  - replaced the remaining Swiss-authority runtime-ui contract with the repo-owned Apple-inspired design baseline documented in `role-model-router/apps/runtime-ui/DESIGN_APPLE_REFERENCE.md` and `DESIGN_SYSTEM.md`
+  - standardized the operator shell on explicit Light/Dark themes, sidebar-owned theme switching, Apple typography tokens, transparent semantic status pills, no shared internal divider lines, and themed shared controls including custom selects
+  - repaired the shared shell-header contract, route action plumbing, and packaged-runtime asset-sync path so rebuilt runtime-ui assets and route headers stay stable on the packaged operator surface
+  - completed late packaged-runtime QA remediations including sidebar containment, divider and eyebrow removal, route rollout verification, and the final Remote Providers select-chevron alignment fix
+- Why:
+  - the previous runtime-ui baseline no longer matched the approved design reference, still carried Swiss-era wording and token drift, and exposed packaged-runtime UI failures that only appeared after the browser QA pass
+- How:
+  - implemented the refresh with strict RED/GREEN coverage on shared design-system slices, rebuilt the SEA runtime repeatedly against the worktree, ran controller-owned packaged-runtime route and screenshot QA on `:3457`, and closed the run only after explicit user approval of the final browser state
+- What was not done:
+  - the run did not redesign route architecture, backend provider onboarding semantics, or non-UI runtime subsystems beyond the stability work needed to serve the corrected frontend baseline
+- Known issues / follow-ups:
+  - controller-owned screenshot capture in this environment remained light-mode only, so final dark-mode and persistence acceptance stayed hybrid with explicit user sign-off plus deterministic theme tests
+  - root-level runtime-ui screenshot copies and temporary QA runtime state remain local validation residue rather than product-source changes
+
 ### Run `39-runtime-session-rehydration-model-inventory`
 
 - Run folder: `/.recursive/run/39-runtime-session-rehydration-model-inventory/`
@@ -1252,3 +2014,224 @@
   - no npm distribution channel was introduced; installation remains source checkout or released binaries with install scripts
 - Known issues / follow-ups:
   - GitHub release publication still depends on real tag pushes plus repo-side permissions and environment policy; keep the operations docs aligned whenever workflows or release assets change
+
+### Run `49-runtime-telemetry-analytics-charts`
+
+- Run folder: `/.recursive/run/49-runtime-telemetry-analytics-charts/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-01.md` through `addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-04.md`
+- What changed:
+  - added backend-owned historical telemetry analytics over persisted request-time facts, including effective/request cost, avoided cost, cache-hit tokens, routing strategy, difficulty, role, model, endpoint, provider, status, and latency dimensions
+  - added `POST /api/role-model/telemetry/query` plus runtime UI chart models for `/app`, `/app/observe/requests`, and `/app/observe/routing`; chart display remains out of setup/config routes
+  - extended the runtime UI design system with Apple-themed chart tokens, chart palette, shared chart primitives, themed selects/listboxes, typography/control repairs, quiet shell panels, light/dark support, and route-wide design-system adherence
+  - repaired run 49 Phase 5 gaps through addenda: restored run 48 Apple-theme shell contract, fixed broken routes, removed redundant panels/dividers/header refresh buttons, repaired dropdown/listbox theming and keyboard behavior, enforced per-chart color uniqueness, normalized fact-card type, merged overview telemetry controls into the header, and cleaned Connect/System redundant components
+  - repaired routing strategy persistence/readback and derived alias consistency so strategy plus execution mode determine the effective routing alias; `/api/role-model/router/candidates` is now the canonical configured candidate source with execution-mode eligibility metadata used by Router and Models -> Benchmark
+  - repaired benchmark startup so execution-mode-ineligible endpoints are excluded in the UI and rejected synchronously by the backend instead of producing instant blank benchmark failures
+- Why:
+  - FAS-7 required future-proof backend telemetry storage/querying plus chart-led operator analytics, and Phase 5 found that the chart work had regressed the approved run 48 Apple-themed runtime UI contract and exposed routing/config/candidate truth gaps
+- How:
+  - implemented with strict RED/GREEN TDD for backend, persistence, runtime UI, design-system, route, routing strategy, canonical candidates, and benchmark guard slices; rebuilt the runtime UI; verified direct APIs and all chart pages in the in-app browser; completed hybrid manual QA with operator approval on `2026-06-18`
+- What was not done:
+  - the run did not add charts to Router, Models, Local, Remote, or Connect setup pages; analytics charts intentionally live only on `/app` and Observe analytics pages
+  - the Phase 5 QA launcher still disables vendor startup, so fresh successful live-completion chart generation was not possible in that harness
+- Known issues / follow-ups:
+  - dashboard graph E2E proved fresh router probes are ingested into analytics through failed request rows; successful token/cost/cache chart metrics were verified from seeded successful telemetry rows rather than fresh successful completions because vendor execution is disabled in the QA launcher
+  - build assets under `role-model-router/apps/runtime-ui/build/` are QA byproducts and should remain untracked
+
+### Run `50-openai-codex-subscription`
+
+- Run folder: `/.recursive/run/50-openai-codex-subscription/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/02-to-be-plan.addendum-01.md` through `addenda/02-to-be-plan.addendum-27.md`
+  - implementation addenda `addenda/03-implementation-summary.addendum-01.md` through `addenda/03-implementation-summary.addendum-27.md` where present
+- What changed:
+  - collapsed operator-facing OpenAI inventory to one provider surface with `API Key` plus `Codex Subscription`, suppressing the duplicate raw `chatgpt` provider row
+  - added a Codex-managed device-code/Auth-cache path for OpenAI subscription onboarding with truthful lifecycle semantics: connected accounts can remain `Connected, no endpoint` / `entitlement-missing` when the cached ChatGPT session does not grant the direct OpenAI Platform API scopes needed by the current runtime transport
+  - curated OpenAI subscription support to the GPT `5.3+` family and verified hosted web-search/function-tool request surfaces for those supported OpenAI models
+  - expanded the same run into routing/control-plane repairs discovered during rebuilt-runtime QA: canonical strategy × execution-mode alias matrix generation, strict legacy `craft-ask` removal, controller timeout/budget/compatibility repair, role-first task-detail UI, non-controller requested-role routing repair, and transport-aware hosted-search capability handling across OpenAI, Kimi, and DeepSeek
+  - normalized DeepSeek DSML search markup into consumer-visible tool calls instead of extending the router runtime into a hosted browser/tool host
+  - repaired `runtime:validate-ui` teardown so the validator shuts down its backend after the HTTP server closes and exits cleanly
+  - updated routing interaction documentation in `/docs/architecture/09-runtime-routing-strategy-interactions.md` to match the current alias matrix, roles/tasks hierarchy, capability metadata, and routing-decision flow
+- Why:
+  - the original requirement was to add a real `Codex Subscription` path under OpenAI without duplicating providers or pretending ChatGPT/Codex auth is the same as an OpenAI API key
+  - live rebuilt-runtime QA exposed coupled runtime truth gaps in alias synthesis, restart health, controller routing, requested-role handling, hosted-search capability semantics, and validator cleanup that had to be repaired before the OpenAI provider work could be considered production-ready
+- How:
+  - implemented with strict RED/GREEN TDD across provider synthesis, auth-cache onboarding, lifecycle truthfulness, hosted-search/tool-surface handling, alias-matrix persistence, controller compatibility, requested-role handling, and validator cleanup
+  - verified through focused host/runtime-ui suites, broader impacted bridge suites, live rebuilt-runtime probes, rebuilt browser/operator proof, and hybrid manual QA with operator approval on `2026-06-20`
+- What was not done:
+  - the runtime still does not convert `Codex Subscription` into a direct OpenAI Platform API transport when the cached ChatGPT/Codex session lacks those scopes; the truthful block is intentional
+  - the router runtime still does not become a generic hosted browser/tool executor for all providers; consumer-visible tool-call normalization remains the chosen boundary for DeepSeek DSML search flows
+- Known issues / follow-ups:
+  - final operator acceptance is anchored to the rebuilt runtime on `:3462` because an older runtime was still listening on `:3461` during intermediate QA
+  - temporary runtime logs and rebuilt UI assets remain verification byproducts and should not be mistaken for new durable product-source requirements beyond the validated behaviors they prove
+
+### Run `51-runtime-testing-architecture-and-regression-matrix`
+
+- Run folder: `/.recursive/run/51-runtime-testing-architecture-and-regression-matrix/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/00-worktree.upstream-gap.00-requirements.addendum-01.md`, `addenda/01-as-is.upstream-gap.00-worktree.addendum-01.md`, `addenda/01-as-is.upstream-gap.00-worktree.addendum-02.md`
+- What changed:
+  - established a repo-owned runtime testing architecture with a 6-layer taxonomy (unit, integration, validator, browser E2E, rebuilt-runtime, packaged-runtime), named root commands, and a changed-path regression matrix
+  - added config-driven test discovery via `vitest.config.ts` (host-bridge) and `vite.config.ts` `test.include` (runtime-ui) so all checked-in tests are reachable by default
+  - added named root commands: `runtime:test-critical`, `runtime:test-validators`, `runtime:test-browser`, `runtime:test-full`; added `runtime:test-critical` to CI workflow
+  - created a distinct `validate-observability.ts` entrypoint that reuses `runRuntimeUiValidation` with a temporary runtime config, replacing the silent alias of `runtime:validate-observability` to `runtime:validate-host`
+  - added a Playwright browser E2E harness (`playwright.config.ts`, `e2e/runtime-shell.spec.ts`) that builds the runtime UI, starts a seeded QA server on port 3462, and exercises providers + session-readiness pages against real runtime HTTP data
+  - fixed orphaned test issues: routing bootstrap timeouts (60s), tool expectation corrections, theme key name fix
+  - added `data-testid` stable selectors to provider maintenance cards for future E2E tests
+  - created `docs/architecture/10-runtime-testing-architecture.md` and `docs/operations/04-runtime-testing-matrix.md`
+- Why:
+  - the repository had strong focused tests and runtime validators but lacked a durable testing architecture that future runs could apply consistently; this run closes that gap with executable commands, reusable harness patterns, and concrete regression coverage
+- How:
+  - implemented with pragmatic TDD (strict RED/GREEN for executable code, pragmatic exceptions for config-only changes); all test suites green (host-bridge 383 tests, runtime-ui 190 tests, critical regression 168 tests + validators, browser E2E 1 test); agent-operated QA via Playwright on rebuilt runtime
+- What was not done:
+  - SP51-B (shared harness extraction) was partially addressed; a standalone shared harness module was not extracted because `validate-ui.ts` already exports a reusable entrypoint
+  - `build-binaries.yml` packaged-runtime verification contract update was deferred; existing `runtime:validate-packaging` remains available and documented
+  - cross-links from `docs/operations/01-router-runtime-hardening-playbook.md` and `docs/operations/02-ci-and-release-flow.md` to the new testing matrix were deferred
+- Known issues / follow-ups:
+  - full repo `biome lint` has 41 pre-existing errors in unchanged files; all 11 changed source files pass individually
+  - Playwright browser E2E uses port 3462 to avoid conflicts with any existing runtime on 3456
+  - README hero, acknowledgements, and screenshot guidance from addenda remain preserved as upstream inputs for a future README implementation run
+
+### Run `52-codex-subscription-benchmark-tool-path`
+
+- Run folder: `/.recursive/run/52-codex-subscription-benchmark-tool-path/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `03.5-code-review.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/00-requirements.root-cause-handoff.md`
+- What changed:
+  - fixed Codex Subscription benchmark tool path crash on packaged runtime by replacing `createRuntimeToolRegistry` with `createRequestScopedToolRegistry` at the Codex call site (index.ts:12916)
+  - exported `createRequestScopedToolRegistry` for direct unit testing
+  - added 6 new tests: registry unit test, executeToolCalls integration, buildCodexDynamicTools compatibility, no-FS-access invariant, non-tool regression guard, packaging regression guard
+- Why:
+  - the Codex Subscription branch called `createRuntimeToolRegistry` which reads `testdata/router-runtime/mcp-connectors.json`, a file excluded from production packaging by `package-sea.ts`, causing ENOENT crashes on packaged runtime when benchmark cases included function tools
+- How:
+  - strict TDD (RED: 4 tests fail because `createRequestScopedToolRegistry` not exported; GREEN: export + call site replacement, all 5 pass); full suite green (lint 0 errors, build pass, test pass, test:critical 80 tests); delegated code review APPROVE; live benchmark on packaged runtime completed 12/12 cases without ENOENT
+- What was not done:
+  - no changes to non-Codex paths, packaging rules, or benchmark scoring
+  - Codex app-server WebSocket "did not return a thread id" failures are a separate issue unrelated to this fix
+- Known issues / follow-ups:
+  - some benchmark cases scored 0 due to model not producing expected tool calls (model quality issue, not a crash)
+  - Codex app-server WebSocket thread id issue remains as a separate follow-up
+
+### Run `53-runtime-telemetry-analytics-contract-hardening`
+
+- Run folder: `/.recursive/run/53-runtime-telemetry-analytics-contract-hardening/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+  - addenda `addenda/00-worktree.upstream-gap.00-requirements.addendum-01.md`, `addenda/00-worktree.location-correction.addendum-02.md`, `addenda/05-manual-qa.horizontal-ranking-legend.addendum-03.md`, and `addenda/05-manual-qa.horizontal-ranking-plot-height.addendum-04.md`
+- What changed:
+  - hardened `/api/role-model/telemetry/query` into a backend-owned analytics contract with `appliedQuery`, slice metadata, metric support, dimension support, full-slice aggregation, and aligned shared filters
+  - separated analytics aggregation semantics from request-ledger pagination so chart aggregation no longer inherits the default 50-row ledger cap
+  - added shared runtime UI semantic chart-state handling for populated, loading, refreshing, empty, unsupported, partial, truncated, and error cases
+  - updated the runtime UI design system and telemetry chart primitives so horizontal ranking charts use bottom legends for long labels and a concrete plot height for Recharts rendering
+  - updated `/docs/architecture/11-runtime-ui-telemetry-graph-matrix.md` from audit matrix to the post-run telemetry architecture reference
+- Why:
+  - telemetry charts could show misleading empty shells, aggregate only recent ledger rows, hide sparse or unsupported metric truth, and diverge from request-ledger filters
+  - browser QA found horizontal ranking labels could not fit on the left axis and then found the bottom-legend change could leave charts visually blank without a concrete plot height
+- How:
+  - strict RED/GREEN TDD for backend analytics contract and UI semantic chart states, plus follow-up RED/GREEN coverage for horizontal ranking legend and plot-height regressions
+  - verified with focused backend/UI tests, runtime-ui critical tests, host TypeScript build, runtime UI production build, SEA packaging, packaged-runtime API checks, in-app browser DOM verification, and hybrid manual QA with operator approval on `2026-06-21`
+- What was not done:
+  - no separate analytics database or warehouse was introduced; telemetry remains backed by existing runtime SQLite state
+  - no fake chart data was shipped; temporary QA telemetry was inserted only into the isolated run-53 QA runtime state and removed after sign-off
+- Known issues / follow-ups:
+  - fresh successful live-completion telemetry was not generated in the decision-only QA runtime because no routable endpoints were configured; populated successful/cost/cache chart review used isolated temporary QA telemetry
+  - the pre-existing host-bridge validator timeout baseline in `test/validate-observability.test.ts` and `test/validate-ui.test.ts` remains outside Run 53 scope
+
+### Run `54-alias-capability-discovery-contract`
+
+- Run folder: `/.recursive/run/54-alias-capability-discovery-contract/`
+- Artifacts:
+  - `00-requirements.md`
+  - `00-worktree.md`
+  - `01-as-is.md`
+  - `01.5-root-cause.md`
+  - `02-to-be-plan.md`
+  - `03-implementation-summary.md`
+  - `04-test-summary.md`
+  - `05-manual-qa.md`
+  - `06-decisions-update.md`
+  - `07-state-update.md`
+  - `08-memory-impact.md`
+- What changed:
+  - added a shared model capability resolver so runtime-specific IDs such as `chatgpt/gpt-5.4` resolve through canonical GPT metadata while preserving the public runtime ID
+  - added a versioned rich downstream discovery contract at `/api/role-model/downstream/openai` with exact model and alias records, safe/max limits, declared versus routable layers, modalities, tool/function-calling, structured output, reasoning, advisory caching, freshness, sanitization, and Pi-style mapping hints
+  - added request capability inference and alias endpoint filtering before scoring, so image/video/tool/structured-output/reasoning-control requests route only to compatible targets or return stable `no_eligible_target`
+  - added schema, fixtures, generated protocol types, focused tests, and architecture docs for downstream alias and endpoint capability resolution
+  - repaired a Phase 4 clarification gap so every configured downstream alias is discoverable even when its current routable endpoint pool is empty
+  - enriched `/v1/models` with compact additive capability metadata (`context_window`, `max_tokens`, Pi-compatible `input`, full modalities, capability names, `role_model.discovery_url`, and `role_model.capability_revision`) so downstream consumers that start from an OpenAI-compatible model list can auto-discover conservative alias capabilities before following the rich contract
+- Why:
+  - Pi and other OpenAI-compatible downstream consumers need accurate role-model alias capabilities instead of stale static defaults such as `128000 / 16384`
+  - mixed aliases such as `hybrid.hybrid` can contain models with different modalities and capability controls, so discovery and routing must distinguish guaranteed, available, conditional, declared, and currently routable support
+- How:
+  - strict TDD with RED/GREEN evidence for resolver, discovery, request inference, routing eligibility, compact `/v1/models` metadata, and the all-alias empty-pool regression
+  - verified via focused runtime-host tests, schema validation, generated type/build checks, docs build, updated worktree runtime probes on `127.0.0.1:3456`, Pi configured-endpoint mapping evidence for both `/v1/models` and `/api/role-model/downstream/openai`, and agent-operated Pi alias-matrix QA with at least three successful prompts per alias
+- What was not done:
+  - Pi itself was not changed in this repository; the role-model endpoint now exposes enough compact `/v1/models` metadata for Pi alias configuration, while richer downstream consumers can still follow `role_model.discovery_url`
+  - role-model was not expanded into a generic hosted browser/tool executor
+- Known issues / follow-ups:
+  - Pi noninteractive smoke processes can remain alive after role-model completes the backend request; role-model telemetry is the authoritative backend receipt for this QA path
+  - inherited `runtime-host-bridge` validator timeouts in `test/validate-observability.test.ts` and `test/validate-ui.test.ts` remain outside Run 54 scope
+# Run 76 configured membership authority (2026-07-17)
+
+- Configured remote membership is keyed by exact `{providerAccountId, modelId}`. SQLite `allowed_models_json` owns manual accounts; a matching YAML LiteLLM provider owns the full membership set for its reserved `*.litellm` account id.
+- Runtime endpoints, remote activation intent, role bindings, generated aliases, inventory, health, and UI cards are derived and must never add membership.
+- Eject and ordinary config mutation share serialized atomic YAML replacement. Explicit references block before mutation; successful eject returns authority/prune receipts; rollback failure is typed indeterminate; startup sanitation emits a durable reason-coded receipt.
+
+# Run 77 runtime responsiveness and compact catalog boundaries (2026-07-18)
+
+- Canonical mutation truth and essential route identity may gate UI completion; request history, full router candidates, profile enrichment, and benchmark history are advisory and must load independently or converge after the operator regains control.
+- SQLite summary/list paths must select dedicated projected columns through matching recency indexes. Large JSON observation blobs are detail-only and must never be parsed to reconstruct fields already persisted as columns.
+- The normalized catalog is stored and packaged as a versioned compact wire representation and is hydrated only through the catalog package boundary. Direct production or test JSON imports are prohibited so omitted defaults and provenance remain deterministic.
+- Once an HTTP streaming response is committed, bridge failures must terminate or end that response and preserve runtime health; they must not attempt a second JSON response or mutate headers. Provider-specific model rewriting remains explicit and regression-tested, including Moonshot Kimi K3 mapping.

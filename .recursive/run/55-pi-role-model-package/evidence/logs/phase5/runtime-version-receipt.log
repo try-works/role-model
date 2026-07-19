@@ -1,0 +1,8 @@
+GET http://127.0.0.1:3456/api/version
+Status: PASS
+Body:
+{
+  "version": "1.0",
+  "commit": "runtime-derived",
+  "build_date": "runtime-derived"
+}

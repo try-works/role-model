@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "role-model.taxonomy.schema.v1",
+  "taxonomyVersion": "1.0.0-alpha.1",
+  "databaseVersion": 1,
+  "contentRevision": "taxonomy-v1-alpha.1",
+  "classificationContractVersion": "role-model.classification.v1",
+  "entryCounts": {
+    "groups": 6,
+    "roles": 28,
+    "capabilities": 46,
+    "modalities": 9,
+    "toolClasses": 15,
+    "intentPresets": 0,
+    "taskTypes": 280
+  },
+  "groups": [
+    {
+      "id": "engineering",
+      "label": "Engineering",
+      "description": "Software, systems, runtime, testing, security, and data implementation work.",
+      "roleIds": [
+        "coder",
+        "architect",
+        "operator",
+        "tester",
+        "security",
+        "data"
+      ],
+      "secondaryRoleIds": [],
+      "next": "/api/role-model/taxonomy/groups/engineering/roles"
+    },
+    {
+      "id": "product_design",
+      "label": "Product And Design",
+      "description": "Product planning, requirements, user workflows, interface design, and structured analysis.",
+      "roleIds": [
+        "product",
+        "designer",
+        "planner",
+        "analyst"
+      ],
+      "secondaryRoleIds": [],
+      "next": "/api/role-model/taxonomy/groups/product_design/roles"
+    },
+    {
+      "id": "knowledge_research",
+      "label": "Knowledge And Research",
+      "description": "Research, learning, memory, scientific reasoning, mathematical reasoning, and evidence synthesis.",
+      "roleIds": [
+        "researcher",
+        "knowledge",
+        "scientist",
+        "mathematician",
+        "educator"
+      ],
+      "secondaryRoleIds": [
+        "health"
+      ],
+      "next": "/api/role-model/taxonomy/groups/knowledge_research/roles"
+    },
+    {
+      "id": "business",
+      "label": "Business",
+      "description": "Strategy, marketing, sales, finance, procurement, and commercial work.",
+      "roleIds": [
+        "strategist",
+        "marketer",
+        "seller",
+        "finance",
+        "procurement"
+      ],
+      "secondaryRoleIds": [
+        "legal",
+        "recruiter"
+      ],
+      "next": "/api/role-model/taxonomy/groups/business/roles"
+    },
+    {
+      "id": "communication",
+      "label": "Communication",
+      "description": "Writing, translation, creative work, user support, coordination, and follow-up communication.",
+      "roleIds": [
+        "writer",
+        "translator",
+        "creative",
+        "support",
+        "coordinator"
+      ],
+      "secondaryRoleIds": [],
+      "next": "/api/role-model/taxonomy/groups/communication/roles"
+    },
+    {
+      "id": "governance_safety",
+      "label": "Governance And Safety",
+      "description": "Legal, health, recruiting, safety, risk, compliance, and governance-sensitive work.",
+      "roleIds": [
+        "legal",
+        "health",
+        "recruiter"
+      ],
+      "secondaryRoleIds": [
+        "security",
+        "finance"
+      ],
+      "next": "/api/role-model/taxonomy/groups/governance_safety/roles"
+    }
+  ],
+  "next": {
+    "groups": "/api/role-model/taxonomy/groups",
+    "roles": "/api/role-model/taxonomy/roles?view=summary",
+    "classificationGuide": "/api/role-model/taxonomy/classification-guide"
+  }
+}

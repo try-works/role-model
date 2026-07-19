@@ -1,0 +1,12 @@
+(node:25048) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{
+  "baseUrl": "http://127.0.0.1:54884",
+  "host": "127.0.0.1",
+  "port": 54884,
+  "repoRoot": "D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading",
+  "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\run66-phase5-rebuilt-799f053dfa89431ca64e2fb529c7e225\\state",
+  "runtimeConfigPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\run66-phase5-rebuilt-799f053dfa89431ca64e2fb529c7e225\\state\\runtime-config.yaml",
+  "staticRoot": "D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading\\role-model-router\\apps\\runtime-ui\\build\\client",
+  "pid": 25048
+}

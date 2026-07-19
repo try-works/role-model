@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "p01-easy-greet",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The response is a valid JSON object with the required key 'answer' and the value is a friendly greeting in one sentence, which fully meets the user instruction.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p01-easy-greet.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/p01-easy-greet/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783934818643
+}

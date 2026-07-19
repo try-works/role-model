@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "h07-multi-turn-sla-guard",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The code is a complete TypeScript guard function that correctly implements sole-candidate fallback when the only allow-listed endpoint is hard-denied exclusively by throughput SLA. It references throughput SLA, sole candidate, and fallback allow, matching the multi-turn context and keyword clues (throughput, sla, sole, candidate, fallback, allow). No placeholders or malformed patches are present.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h07-multi-turn-sla-guard.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/h07-multi-turn-sla-guard/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935702909
+}

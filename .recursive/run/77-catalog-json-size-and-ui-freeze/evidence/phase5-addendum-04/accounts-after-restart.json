@@ -1,0 +1,14 @@
+{
+  "pid": 43768,
+  "runtimeHealthStatus": 200,
+  "providerAccountId": "moonshot.personal.kimi-code",
+  "authMode": "oauth2-device-code",
+  "accountStatus": "active",
+  "accountHealthStatus": "healthy",
+  "rotationState": "stable",
+  "credentialBackend": "local-file",
+  "credentialRef": "oauth/moonshot/moonshot.personal.kimi-code",
+  "allowedModels": [
+    "moonshot/kimi-k3"
+  ]
+}

@@ -1,0 +1,863 @@
+diff --git a/role-model-router/apps/runtime-host-bridge/src/index.ts b/role-model-router/apps/runtime-host-bridge/src/index.ts
+index b702239d..14e9aab8 100644
+--- a/role-model-router/apps/runtime-host-bridge/src/index.ts
++++ b/role-model-router/apps/runtime-host-bridge/src/index.ts
+@@ -422,6 +422,9 @@ interface OpenAIChatCompletionsBody {
+   readonly messages: readonly OpenAIChatCompletionsMessage[];
+   readonly tools?: readonly OpenAIChatCompletionsTool[];
+   readonly tool_choice?: RuntimeExecutionToolChoice;
++  readonly reasoning_effort?: string;
++  readonly reasoning?: Record<string, unknown>;
++  readonly thinking?: Record<string, unknown>;
+   readonly stream?: boolean;
+   readonly max_tokens?: number;
+   readonly temperature?: number;
+@@ -457,8 +460,8 @@ function asPlainRecord(value: unknown): Record<string, unknown> | undefined {
+     : undefined;
+ }
+
+-function readResponsesReasoningRequest(
+-  body: OpenAIResponsesBody,
++function readOpenAIReasoningRequest(
++  body: Pick<OpenAIResponsesBody, "reasoning_effort" | "reasoning" | "thinking">,
+ ): RuntimeExecutionRequest["reasoning"] | undefined {
+   if (typeof body.reasoning_effort === "string") {
+     return {
+@@ -485,6 +488,9 @@ function readResponsesReasoningRequest(
+   return undefined;
+ }
+
++const readResponsesReasoningRequest = readOpenAIReasoningRequest;
++const readChatCompletionsReasoningRequest = readOpenAIReasoningRequest;
++
+ function readResponsesPromptCacheRequest(
+   body: OpenAIResponsesBody,
+ ): RuntimeExecutionRequest["promptCache"] | undefined {
+@@ -597,14 +603,7 @@ export interface BridgeControllerAssignment {
+ export interface BridgeExecutionPlan {
+   readonly routingRequest: Parameters<typeof routeRuntimeRequest>[0]["request"];
+   readonly fallbackAllowEndpoints?: readonly string[];
+-  readonly executionRequest: {
+-    readonly messages: readonly OpenAIChatCompletionsMessage[];
+-    readonly tools?: readonly RuntimeExecutionToolDefinition[];
+-    readonly toolChoice?: RuntimeExecutionToolChoice;
+-    readonly stream?: boolean;
+-    readonly maxOutputTokens?: number;
+-    readonly temperature?: number;
+-  };
++  readonly executionRequest: RuntimeExecutionRequest;
+   readonly routingModel?: RoutingModelSelection;
+   readonly routingDiagnostics?: Pick<
+     RuntimeRoutingDiagnostics,
+@@ -1970,6 +1969,7 @@ type BridgeStreamMetadata = {
+   readonly endpointId: string;
+   readonly adapterFamily: string;
+   readonly routingDecisionId?: string;
++  readonly reasoningRequested?: boolean;
+ };
+ type BridgeStreamWriter = (
+   chunk: Record<string, unknown>,
+@@ -7583,6 +7583,7 @@ export function mapChatCompletionsRequest(
+     preferredCodexRoutingModel,
+   });
+   const sessionAffinity = buildBridgeExecutionSessionAffinity(requestOptions);
++  const reasoning = readChatCompletionsReasoningRequest(body);
+
+   return {
+     routingRequest: pinnedCodexExecution.routingRequest,
+@@ -7595,6 +7596,7 @@ export function mapChatCompletionsRequest(
+         ? { toolChoice: body.tool_choice }
+         : {}),
+       ...(sessionAffinity ? { sessionAffinity } : {}),
++      ...(reasoning ? { reasoning } : {}),
+       ...(requestOptions?.transportPreference
+         ? { transportPreference: requestOptions.transportPreference }
+         : {}),
+@@ -11725,6 +11727,36 @@ function isReasoningOnlyChatCompletionsChunk(payload: Record<string, unknown>):
+   return sawReasoningOnlyDelta;
+ }
+
++function countChatCompletionsReasoningDeltas(payload: Record<string, unknown>): number {
++  if (!Array.isArray(payload.choices)) {
++    return 0;
++  }
++  let count = 0;
++  for (const choice of payload.choices) {
++    if (typeof choice !== "object" || choice === null) {
++      continue;
++    }
++    const delta = (choice as { delta?: Record<string, unknown> }).delta;
++    if (
++      delta &&
++      typeof delta === "object" &&
++      typeof delta.reasoning_content === "string" &&
++      delta.reasoning_content.length > 0
++    ) {
++      count += 1;
++    }
++  }
++  return count;
++}
++
++function hasForwardedReasoningControl(body: Record<string, unknown>): boolean {
++  return (
++    typeof body.reasoning_effort === "string" ||
++    asPlainRecord(body.reasoning) !== undefined ||
++    asPlainRecord(body.thinking) !== undefined
++  );
++}
++
+ async function readProviderStreamTranscript(
+   response: Response,
+   streamWriter: BridgeStreamWriter,
+@@ -11767,7 +11799,11 @@ async function readProviderStreamTranscript(
+       } catch {
+         continue;
+       }
+-      if (!hasForwardedDownstreamSafeChunk && isReasoningOnlyChatCompletionsChunk(payload)) {
++      if (
++        !metadata.reasoningRequested &&
++        !hasForwardedDownstreamSafeChunk &&
++        isReasoningOnlyChatCompletionsChunk(payload)
++      ) {
+         continue;
+       }
+       hasForwardedDownstreamSafeChunk = true;
+@@ -11821,7 +11857,11 @@ async function replayProviderStreamTranscript(
+     } catch {
+       continue;
+     }
+-    if (!hasForwardedDownstreamSafeChunk && isReasoningOnlyChatCompletionsChunk(payload)) {
++    if (
++      !metadata.reasoningRequested &&
++      !hasForwardedDownstreamSafeChunk &&
++      isReasoningOnlyChatCompletionsChunk(payload)
++    ) {
+       continue;
+     }
+     hasForwardedDownstreamSafeChunk = true;
+@@ -12639,6 +12679,23 @@ function createChatCompletionsStreamChunks(
+   };
+
+   return [
++    ...(result.reasoningText && result.reasoningText.length > 0
++      ? [
++          {
++            ...baseChunk,
++            choices: [
++              {
++                index: 0,
++                delta: {
++                  role: "assistant",
++                  reasoning_content: result.reasoningText,
++                },
++                finish_reason: null,
++              },
++            ],
++          },
++        ]
++      : []),
+     {
+       ...baseChunk,
+       choices: [
+@@ -18479,9 +18536,11 @@ export async function createRuntimeBridgeBackend(
+       routingTimeMs,
+     });
+     let streamedChunkCount = 0;
++    let streamedReasoningDeltaCount = 0;
+     const trackedStreamWriter: BridgeStreamWriter | undefined = streamWriter
+       ? async (chunk, metadata) => {
+           streamedChunkCount += 1;
++          streamedReasoningDeltaCount += countChatCompletionsReasoningDeltas(chunk);
+           await streamWriter(chunk, metadata);
+         }
+       : undefined;
+@@ -18587,6 +18646,7 @@ export async function createRuntimeBridgeBackend(
+       });
+     };
+     const deniedEndpointIds = [...(plan.routingRequest.denyEndpoints ?? [])];
++    const streamReasoningRequested = Boolean(plan.executionRequest.reasoning);
+     let { routed, deniedEndpointIds: initialDeniedEndpointIds } =
+       routeExecutionRequest(deniedEndpointIds);
+     if (routed.decision.chosen_endpoint_id.trim().length === 0) {
+@@ -18668,6 +18728,7 @@ export async function createRuntimeBridgeBackend(
+                         endpointId: target.endpointId,
+                         adapterFamily: target.adapterFamily,
+                         routingDecisionId,
++                        reasoningRequested: streamReasoningRequested,
+                       });
+                     },
+                     abortSignal,
+@@ -18723,6 +18784,7 @@ export async function createRuntimeBridgeBackend(
+                           endpointId: target.endpointId,
+                           adapterFamily: target.adapterFamily,
+                           routingDecisionId,
++                          reasoningRequested: streamReasoningRequested,
+                         });
+                       },
+                     }
+@@ -18987,6 +19049,7 @@ export async function createRuntimeBridgeBackend(
+           endpointId: target.endpointId,
+           adapterFamily: target.adapterFamily,
+           routingDecisionId,
++          reasoningRequested: streamReasoningRequested,
+         });
+         if (!rawBody.includes("data:")) {
+           return {
+@@ -19319,6 +19382,18 @@ export async function createRuntimeBridgeBackend(
+         executionSnapshot.roleDefinitions,
+         executionSnapshot.taskDefinitions,
+       );
++      const reasoningRequested = Boolean(plan.executionRequest.reasoning);
++      const syntheticReasoningDeltaCount =
++        plan.executionRequest.stream &&
++        execution.normalized.reasoningText &&
++        streamedReasoningDeltaCount === 0
++          ? 1
++          : 0;
++      const reasoningDeltaCount = streamedReasoningDeltaCount + syntheticReasoningDeltaCount;
++      const reasoningUnavailableReason =
++        reasoningRequested && !execution.normalized.reasoningText
++          ? "provider_returned_no_reasoning"
++          : undefined;
+       const bundle = createRuntimeObservationBundle({
+         decision: routed.decision,
+         clientRequestId: executionOptions?.requestOptions?.clientRequestId,
+@@ -19384,6 +19459,23 @@ export async function createRuntimeBridgeBackend(
+           retryCount: executionSemanticsReceipt.retryCount,
+           rerouteCount: executionSemanticsReceipt.rerouteCount,
+           cooldownDecision: executionSemanticsReceipt.cooldownDecision,
++          ...(reasoningRequested || execution.normalized.reasoningText
++            ? {
++                reasoning: {
++                  requested: reasoningRequested,
++                  controlForwarded: hasForwardedReasoningControl(execution.requestCapture.body),
++                  deltaCount: reasoningDeltaCount,
++                  streamSuppressed:
++                    reasoningRequested &&
++                    Boolean(plan.executionRequest.stream) &&
++                    Boolean(execution.normalized.reasoningText) &&
++                    reasoningDeltaCount === 0,
++                  ...(reasoningUnavailableReason
++                    ? { unavailableReason: reasoningUnavailableReason }
++                    : {}),
++                },
++              }
++            : {}),
+           ...(executionSemanticsReceipt.failedAttempts.length > 0
+             ? { failedAttempts: executionSemanticsReceipt.failedAttempts }
+             : {}),
+diff --git a/role-model-router/apps/runtime-host-bridge/test/index.test.ts b/role-model-router/apps/runtime-host-bridge/test/index.test.ts
+index 2d2df06e..80cd84f3 100644
+--- a/role-model-router/apps/runtime-host-bridge/test/index.test.ts
++++ b/role-model-router/apps/runtime-host-bridge/test/index.test.ts
+@@ -6328,6 +6328,101 @@ describe("runtime-host-bridge", () => {
+     expect(result.executionRequest.transportPreference).toBe("sse");
+   });
+
++  test("maps chat-completions reasoning effort into the execution request", () => {
++    const reasoningRegistry: EndpointRegistryResult = {
++      ...registry,
++      endpoints: registry.endpoints.map((endpoint) =>
++        endpoint.identity.endpoint_id === "moonshot.personal.primary.global.kimi-k2.5"
++          ? {
++              ...endpoint,
++              declared: {
++                ...endpoint.declared,
++                capabilities: [...endpoint.declared.capabilities, "reasoning"],
++              },
++            }
++          : endpoint,
++      ),
++    };
++
++    const result = (
++      bridge as {
++        mapChatCompletionsRequest: (
++          value: EndpointRegistryResult,
++          body: Record<string, unknown>,
++          requestId: string,
++        ) => {
++          routingRequest: {
++            requiredCapabilities: readonly string[];
++          };
++          executionRequest: Record<string, unknown>;
++        };
++      }
++    ).mapChatCompletionsRequest(
++      reasoningRegistry,
++      {
++        model: "moonshot/kimi-k2.5",
++        messages: [{ role: "user", content: "Use high reasoning effort." }],
++        reasoning_effort: "high",
++      },
++      "chat-reasoning-effort-001",
++    );
++
++    expect(result.routingRequest.requiredCapabilities).toContain("reasoning.effort_control");
++    expect(result.executionRequest.reasoning).toEqual({
++      effort: "high",
++    });
++  });
++
++  test("maps chat-completions thinking controls into the execution request", () => {
++    const reasoningRegistry: EndpointRegistryResult = {
++      ...registry,
++      endpoints: registry.endpoints.map((endpoint) =>
++        endpoint.identity.endpoint_id === "moonshot.personal.primary.global.kimi-k2.5"
++          ? {
++              ...endpoint,
++              declared: {
++                ...endpoint.declared,
++                capabilities: [...endpoint.declared.capabilities, "reasoning"],
++              },
++            }
++          : endpoint,
++      ),
++    };
++
++    const thinking = {
++      type: "enabled",
++      budget_tokens: 1024,
++    };
++    const result = (
++      bridge as {
++        mapChatCompletionsRequest: (
++          value: EndpointRegistryResult,
++          body: Record<string, unknown>,
++          requestId: string,
++        ) => {
++          routingRequest: {
++            requiredCapabilities: readonly string[];
++          };
++          executionRequest: Record<string, unknown>;
++        };
++      }
++    ).mapChatCompletionsRequest(
++      reasoningRegistry,
++      {
++        model: "moonshot/kimi-k2.5",
++        messages: [{ role: "user", content: "Use explicit thinking controls." }],
++        thinking,
++      },
++      "chat-thinking-control-001",
++    );
++
++    expect(result.routingRequest.requiredCapabilities).toContain("reasoning.control");
++    expect(result.executionRequest.reasoning).toEqual({
++      channel: "thinking",
++      raw: thinking,
++    });
++  });
++
+   test("treats unknown stable role_model task metadata as advisory before routing", () => {
+     const result = (
+       bridge as {
+@@ -9258,6 +9353,104 @@ describe("runtime-host-bridge", () => {
+     }
+   });
+
++  test("emits reasoning_content before visible content for synthetic chat-completions streams", async () => {
++    expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
++
++    const server = await (
++      bridge as {
++        startBridgeServer: (options: {
++          host: string;
++          port: number;
++          registry: EndpointRegistryResult;
++          executeChatCompletions: (
++            body: Record<string, unknown>,
++            requestId: string,
++            streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
++          ) => Promise<{
++            model: string;
++            endpointId: string;
++            adapterFamily: string;
++            outputText: string;
++            reasoningText?: string;
++            finishReason: string;
++            usage: {
++              inputTokens: number;
++              outputTokens: number;
++            };
++          }>;
++        }) => Promise<{ port: number; close(): Promise<void> }>;
++      }
++    ).startBridgeServer({
++      host: "127.0.0.1",
++      port: 0,
++      registry,
++      executeChatCompletions: async () => ({
++        model: "moonshot/kimi-k2.5",
++        endpointId: "moonshot.personal.primary.global.kimi-k2.5",
++        adapterFamily: "ai-sdk-openai",
++        outputText: "Ready",
++        reasoningText: "I should answer briefly.",
++        finishReason: "stop",
++        usage: {
++          inputTokens: 1,
++          outputTokens: 1,
++        },
++      }),
++    });
++
++    try {
++      const response = await fetch(`http://127.0.0.1:${server.port}/v1/chat/completions`, {
++        method: "POST",
++        headers: {
++          "content-type": "application/json",
++        },
++        body: JSON.stringify({
++          model: "moonshot/kimi-k2.5",
++          stream: true,
++          messages: [{ role: "user", content: "Stream this." }],
++          reasoning_effort: "high",
++        }),
++      });
++
++      expect(response.status).toBe(200);
++      const transcript = await response.text();
++      const payloads = transcript
++        .trim()
++        .split("\n\n")
++        .map((entry) => entry.trim())
++        .filter((entry) => entry && entry !== "data: [DONE]")
++        .map((entry) => entry.replace(/^data:\s*/, ""))
++        .map((entry) => JSON.parse(entry) as Record<string, unknown>);
++
++      expect(payloads[0]).toMatchObject({
++        choices: [
++          {
++            index: 0,
++            delta: {
++              role: "assistant",
++              reasoning_content: "I should answer briefly.",
++            },
++            finish_reason: null,
++          },
++        ],
++      });
++      expect(JSON.stringify(payloads[0])).not.toContain('"content"');
++      expect(payloads[1]).toMatchObject({
++        choices: [
++          {
++            index: 0,
++            delta: {
++              content: "Ready",
++            },
++            finish_reason: null,
++          },
++        ],
++      });
++    } finally {
++      await server.close();
++    }
++  });
++
+   test("forwards x-role-model-routing-mode to chat-completions execution", async () => {
+     expect(typeof (bridge as { startBridgeServer?: unknown }).startBridgeServer).toBe("function");
+
+@@ -20908,7 +21101,7 @@ describe("runtime-host-bridge", () => {
+     }
+   });
+
+-  test("suppresses reasoning-only upstream SSE chunks until downstream-safe content is available", async () => {
++  test("forwards reasoning-only upstream SSE chunks when chat-completions opted into reasoning", async () => {
+     expect(
+       typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
+     ).toBe("function");
+@@ -21030,6 +21223,7 @@ describe("runtime-host-bridge", () => {
+         {
+           model: "deepseek/deepseek-v4-flash",
+           stream: true,
++          reasoning_effort: "high",
+           messages: [{ role: "user", content: "Say Ready." }],
+         },
+         "req-stream-normalization-001",
+@@ -21038,6 +21232,154 @@ describe("runtime-host-bridge", () => {
+         },
+       );
+
++      expect(result.outputText).toBe("Ready");
++      expect(streamedChunks.length).toBeGreaterThan(0);
++      expect(streamedChunks[0]).toMatchObject({
++        choices: [
++          expect.objectContaining({
++            delta: expect.objectContaining({ reasoning_content: "Thinking..." }),
++          }),
++        ],
++      });
++      expect(JSON.stringify(streamedChunks[0])).not.toContain('"content"');
++      expect(streamedChunks[1]).toMatchObject({
++        choices: [
++          expect.objectContaining({ delta: expect.objectContaining({ content: "Ready" }) }),
++        ],
++      });
++    } finally {
++      await rm(credentialFile, { force: true });
++    }
++  });
++
++  test("suppresses reasoning-only upstream SSE chunks until downstream-safe content is available when reasoning is not requested", async () => {
++    expect(
++      typeof (bridge as { createRuntimeBridgeBackend?: unknown }).createRuntimeBridgeBackend,
++    ).toBe("function");
++
++    const runtimeStateRoot = path.join(
++      os.tmpdir(),
++      "role-model-stream-normalization-no-reasoning-tests",
++    );
++    const scopeId = "runtime-stream-normalization-no-reasoning-tests";
++    const credentialDir = path.join(runtimeStateRoot, scopeId, "credentials", "oauth", "deepseek");
++    const credentialFile = path.join(credentialDir, "deepseek.personal.apikey.json");
++    await rm(runtimeStateRoot, { recursive: true, force: true });
++    await mkdir(credentialDir, { recursive: true });
++    await writeFile(
++      credentialFile,
++      JSON.stringify({ access_token: "sk-<redacted>" }),
++      "utf8",
++    );
++
++    const streamedChunks: Array<Record<string, unknown>> = [];
++    try {
++      const backend = await (
++        bridge as {
++          createRuntimeBridgeBackend: (options: {
++            repoRoot: string;
++            runtimeStateRoot: string;
++            scopeId: string;
++            networkFetcher?: typeof fetch;
++          }) => Promise<{
++            executeChatCompletions: (
++              body: Record<string, unknown>,
++              requestId: string,
++              streamWriter?: (chunk: Record<string, unknown>) => void | Promise<void>,
++            ) => Promise<{
++              model: string;
++              endpointId: string;
++              outputText: string;
++              finishReason: string;
++            }>;
++            upsertProviderAccount?: (body: Record<string, unknown>) => Promise<unknown>;
++            activateEndpoint?: (body: Record<string, unknown>) => Promise<unknown>;
++          }>;
++        }
++      ).createRuntimeBridgeBackend({
++        repoRoot,
++        fixtureRoot: testFixtureRoot,
++        runtimeStateRoot,
++        scopeId,
++        networkFetcher: async (input) => {
++          const url =
++            typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
++          if (url === "https://api.deepseek.com/chat/completions") {
++            const encoder = new TextEncoder();
++            return new Response(
++              new ReadableStream({
++                start(controller) {
++                  controller.enqueue(
++                    encoder.encode(
++                      'data: {"id":"chatcmpl-deepseek-stream","object":"chat.completion.chunk","created":1,"model":"deepseek/deepseek-v4-flash","choices":[{"index":0,"delta":{"reasoning_content":"Thinking..."}}]}\n\n',
++                    ),
++                  );
++                  controller.enqueue(
++                    encoder.encode(
++                      'data: {"id":"chatcmpl-deepseek-stream","object":"chat.completion.chunk","created":1,"model":"deepseek/deepseek-v4-flash","choices":[{"index":0,"delta":{"content":"Ready"}}]}\n\n',
++                    ),
++                  );
++                  controller.enqueue(encoder.encode("data: [DONE]\n\n"));
++                  controller.close();
++                },
++              }),
++              { status: 200, headers: { "content-type": "text/event-stream; charset=utf-8" } },
++            );
++          }
++          throw new Error(`Unexpected network request: ${url}`);
++        },
++      });
++
++      await backend.upsertProviderAccount?.({
++        providerAccountId: "deepseek.personal.apikey",
++        providerId: "deepseek",
++        providerKind: "provider-openai",
++        orgScope: "personal",
++        accountScope: "workspace-default",
++        credentialRef: {
++          backend: "local-file",
++          ref: "oauth/deepseek/deepseek.personal.apikey",
++        },
++        authMode: "api-key-static",
++        regionPolicy: { mode: "prefer", regions: ["global"] },
++        baseUrlOverride: "https://api.deepseek.com",
++        allowedModels: ["deepseek/deepseek-v4-flash"],
++        modelRoleBindings: [
++          {
++            modelId: "deepseek/deepseek-v4-flash",
++            roleAssignmentMode: "all",
++            roleIds: [],
++            enabledRoleIds: [],
++            disabledRoleIds: [],
++          },
++        ],
++        deniedModels: [],
++        entitlementTags: ["chat"],
++        budgetPolicyRef: "budget.default",
++        quotaPolicyRef: "quota.default",
++        status: "active",
++        healthStatus: "healthy",
++        rotationState: "stable",
++      });
++
++      await backend.activateEndpoint?.({
++        providerAccountId: "deepseek.personal.apikey",
++        modelId: "deepseek/deepseek-v4-flash",
++        region: "global",
++      });
++
++      const result = await backend.executeChatCompletions(
++        {
++          model: "deepseek/deepseek-v4-flash",
++          stream: true,
++          messages: [{ role: "user", content: "Say Ready." }],
++        },
++        "req-stream-normalization-no-reasoning-001",
++        async (chunk) => {
++          streamedChunks.push(chunk);
++        },
++      );
++
+       expect(result.outputText).toBe("Ready");
+       expect(streamedChunks.length).toBeGreaterThan(0);
+       expect(streamedChunks[0]).toMatchObject({
+diff --git a/role-model-router/packages/provider-openai/src/index.ts b/role-model-router/packages/provider-openai/src/index.ts
+index 1441aaa9..382f5059 100644
+--- a/role-model-router/packages/provider-openai/src/index.ts
++++ b/role-model-router/packages/provider-openai/src/index.ts
+@@ -142,6 +142,37 @@ function toOpenAIReasoning(
+   };
+ }
+
++function toOpenAIChatCompletionsReasoning(
++  reasoning: ProviderAdapterExecutionContext["executionRequest"]["reasoning"],
++): Record<string, unknown> | undefined {
++  if (!reasoning) {
++    return undefined;
++  }
++
++  if (reasoning.channel === "thinking") {
++    return {
++      thinking: {
++        ...(reasoning.raw ?? {}),
++        ...(typeof reasoning.effort === "string" ? { effort: reasoning.effort } : {}),
++      },
++    };
++  }
++
++  if (typeof reasoning.effort === "string") {
++    return {
++      reasoning_effort: reasoning.effort,
++    };
++  }
++
++  if (reasoning.raw) {
++    return {
++      reasoning: reasoning.raw,
++    };
++  }
++
++  return undefined;
++}
++
+ function toOpenAIChatTools(
+   tools: NonNullable<ProviderAdapterExecutionContext["executionRequest"]["tools"]>,
+ ): Array<Record<string, unknown>> {
+@@ -647,6 +678,7 @@ export function buildOpenAIRequest(
+     const usesKimiBuiltinHostedWebSearch = hasOnlyKimiBuiltinHostedTools(
+       input.executionRequest.tools,
+     );
++    const reasoning = toOpenAIChatCompletionsReasoning(input.executionRequest.reasoning);
+     return {
+       providerFamily: input.target.providerId,
+       endpointId: input.target.endpointId,
+@@ -670,6 +702,7 @@ export function buildOpenAIRequest(
+         ...(input.executionRequest.toolChoice !== undefined
+           ? { tool_choice: input.executionRequest.toolChoice }
+           : {}),
++        ...(reasoning ?? {}),
+         ...(usesKimiBuiltinHostedWebSearch
+           ? {
+               thinking: {
+diff --git a/role-model-router/packages/provider-openai/test/index.test.ts b/role-model-router/packages/provider-openai/test/index.test.ts
+index f16b6f97..91402192 100644
+--- a/role-model-router/packages/provider-openai/test/index.test.ts
++++ b/role-model-router/packages/provider-openai/test/index.test.ts
+@@ -593,6 +593,57 @@ describe("OpenAI provider adapter", () => {
+     });
+   });
+
++  test("forwards chat-completions reasoning controls to the downstream OpenAI request body", () => {
++    const target = {
++      endpointId: "deepseek.personal.primary.global.deepseek-v4-pro",
++      modelId: "deepseek/deepseek-v4-pro",
++      providerId: "deepseek",
++      providerKind: "provider-openai",
++      providerAccountId: "deepseek.personal.primary",
++      adapterFamily: "ai-sdk-openai-compatible",
++      authFamily: "api-key",
++      apiBase: "https://api.deepseek.test/v1",
++      requestShapeHints: {
++        providerShape: "openai.chat.completions",
++        bodyKeys: ["temperature", "max_tokens", "reasoning_effort"],
++        headerKeys: ["Authorization"],
++      },
++      candidate: {
++        identity: {
++          endpoint_id: "deepseek.personal.primary.global.deepseek-v4-pro",
++          provider_kind: "remote_openai_compat",
++        },
++      },
++      account: {
++        credentialRef: {
++          backend: "env",
++          ref: "DEEPSEEK_API_KEY",
++        },
++      },
++    };
++
++    const executionRequest = {
++      messages: [{ role: "user", content: "Use high reasoning effort." }],
++      reasoning: {
++        effort: "high",
++      },
++    };
++
++    const adapter = createOpenAIProviderAdapter();
++    const capabilities = adapter.negotiateCapabilities({ target, executionRequest });
++    const requestCapture = buildOpenAIRequest({
++      target,
++      executionRequest,
++      capabilities,
++    });
++
++    expect(requestCapture.providerFamily).toBe("deepseek");
++    expect(requestCapture.url).toBe("https://api.deepseek.test/v1/chat/completions");
++    expect(requestCapture.body.reasoning_effort).toBe("high");
++    expect(requestCapture.body.reasoning).toBeUndefined();
++    expect(requestCapture.body.thinking).toBeUndefined();
++  });
++
+   test("forwards responses tool_choice, reasoning, continuation, and session-affinity hints", () => {
+     const target = {
+       endpointId: "openai.personal.primary.global.gpt-5.4",
+diff --git a/role-model-router/packages/runtime-observability/src/index.ts b/role-model-router/packages/runtime-observability/src/index.ts
+index dadfb800..6a01c0ae 100644
+--- a/role-model-router/packages/runtime-observability/src/index.ts
++++ b/role-model-router/packages/runtime-observability/src/index.ts
+@@ -294,6 +294,15 @@ export interface RuntimeExecutionCooldownReceipt {
+   readonly errorPreview?: Readonly<Record<string, unknown>>;
+ }
+
++export interface RuntimeReasoningStreamReceipt {
++  readonly requested: boolean;
++  readonly controlForwarded: boolean;
++  readonly deltaCount: number;
++  readonly outputTokens?: number;
++  readonly streamSuppressed: boolean;
++  readonly unavailableReason?: string;
++}
++
+ export interface RuntimeDiagnostic {
+   readonly code: string;
+   readonly severity: "info" | "warning" | "error";
+@@ -347,6 +356,7 @@ export interface RuntimeObservationBundleInput {
+     readonly cooldownDecision?: string;
+     readonly idempotencyDecision?: string;
+     readonly toolSideEffectState?: string;
++    readonly reasoning?: RuntimeReasoningStreamReceipt;
+     readonly failedAttempts?: readonly RuntimeExecutionFailedAttemptReceipt[];
+     readonly executionCooldowns?: readonly RuntimeExecutionCooldownReceipt[];
+   };
+@@ -455,6 +465,7 @@ export interface RuntimeObservationBundle {
+     readonly cooldownDecision: string;
+     readonly idempotencyDecision: string;
+     readonly toolSideEffectState: string;
++    readonly reasoning?: RuntimeReasoningStreamReceipt;
+     readonly failedAttempts?: readonly RuntimeExecutionFailedAttemptReceipt[];
+     readonly executionCooldowns?: readonly RuntimeExecutionCooldownReceipt[];
+   };
+@@ -726,6 +737,26 @@ function readMeasuredPayloadBytes(value: number | undefined): number | undefined
+     : undefined;
+ }
+
++function buildReasoningStreamReceipt(
++  value: RuntimeReasoningStreamReceipt | undefined,
++): RuntimeReasoningStreamReceipt | undefined {
++  if (!value) {
++    return undefined;
++  }
++  return {
++    requested: Boolean(value.requested),
++    controlForwarded: Boolean(value.controlForwarded),
++    deltaCount: readNonNegativeCount(value.deltaCount),
++    ...(typeof value.outputTokens === "number" && Number.isFinite(value.outputTokens)
++      ? { outputTokens: readNonNegativeCount(value.outputTokens) }
++      : {}),
++    streamSuppressed: Boolean(value.streamSuppressed),
++    ...(typeof value.unavailableReason === "string" && value.unavailableReason.length > 0
++      ? { unavailableReason: value.unavailableReason }
++      : {}),
++  };
++}
++
+ function cloneReadonlyRecord(
+   value: Readonly<Record<string, unknown>> | undefined,
+ ): Record<string, unknown> | undefined {
+@@ -767,6 +798,7 @@ function buildExecutionSemantics(
+         ? { errorPreview: cloneReadonlyRecord(cooldown.errorPreview) }
+         : {}),
+     }));
++  const reasoning = buildReasoningStreamReceipt(input.executionSemantics?.reasoning);
+   return {
+     ...(input.executionSemantics?.sourceClient
+       ? { sourceClient: input.executionSemantics.sourceClient }
+@@ -793,6 +825,7 @@ function buildExecutionSemantics(
+       input.executionSemantics?.idempotencyDecision ??
+       (toolSideEffectState === "none" ? "not_needed" : "tool_replay_guard_required"),
+     toolSideEffectState,
++    ...(reasoning ? { reasoning } : {}),
+     ...(failedAttempts && failedAttempts.length > 0 ? { failedAttempts } : {}),
+     ...(executionCooldowns && executionCooldowns.length > 0 ? { executionCooldowns } : {}),
+   };
+diff --git a/role-model-router/packages/runtime-observability/test/index.test.ts b/role-model-router/packages/runtime-observability/test/index.test.ts
+index 32504545..cc6070e4 100644
+--- a/role-model-router/packages/runtime-observability/test/index.test.ts
++++ b/role-model-router/packages/runtime-observability/test/index.test.ts
+@@ -368,6 +368,13 @@ describe("runtime-observability", () => {
+           rerouteCount: 2,
+           cooldownDecision: "skipped-no-failure",
+           idempotencyDecision: "tool_replay_guard_required",
++          reasoning: {
++            requested: true,
++            controlForwarded: true,
++            deltaCount: 2,
++            outputTokens: 17,
++            streamSuppressed: false,
++          },
+           failedAttempts: [
+             {
+               attemptId: "attempt-1",
+@@ -435,6 +442,13 @@ describe("runtime-observability", () => {
+           cooldownDecision: "skipped-no-failure",
+           idempotencyDecision: "tool_replay_guard_required",
+           toolSideEffectState: "executed",
++          reasoning: {
++            requested: true,
++            controlForwarded: true,
++            deltaCount: 2,
++            outputTokens: 17,
++            streamSuppressed: false,
++          },
+           failedAttempts: [
+             expect.objectContaining({
+               attemptId: "attempt-1",

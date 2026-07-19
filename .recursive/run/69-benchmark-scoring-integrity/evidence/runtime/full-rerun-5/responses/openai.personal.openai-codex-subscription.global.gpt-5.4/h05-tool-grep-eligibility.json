@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "h05-tool-grep-eligibility",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-h05-tool-grep-eligibility-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Eligibility is determined by the evaluateEligibility helper in src/router.ts, which is both defined and invoked from routing logic.\",\n    \"To validate eligibility behavior, review the helper’s conditions and its call sites in src/router.ts to confirm required criteria, inputs, and edge-case handling.\"\n  ]\n}",
+  "rawResponse": "```json\n{\"bullets\":[\"Eligibility is determined by the evaluateEligibility helper in src/router.ts, which is both defined and invoked from routing logic.\",\"To validate eligibility behavior, review the helper’s conditions and its call sites in src/router.ts to confirm required criteria, inputs, and edge-case handling.\"]}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Eligibility is determined by the evaluateEligibility helper in src/router.ts, which is both defined and invoked from routing logic.\",\n    \"To validate eligibility behavior, review the helper’s conditions and its call sites in src/router.ts to confirm required criteria, inputs, and edge-case handling.\"\n  ]\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 8087,
+  "failure": false,
+  "recordedAtMs": 1783934692232
+}

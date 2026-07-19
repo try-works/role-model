@@ -23,7 +23,7 @@ describe("judge-brief", () => {
     expect(transcript.length).toBeGreaterThan(240);
   });
 
-  test("p17 checklist includes @@ hunk requirement for apply_patch", () => {
+  test("p17 checklist includes unified diff or Codex patch requirement for apply_patch", () => {
     const caseItem = routingCapabilitySuite.cases.find(
       (item) => item.case_id === "p17-tools-multi-hard",
     );
@@ -32,11 +32,12 @@ describe("judge-brief", () => {
       throw new Error("Expected benchmark case p17-tools-multi-hard.");
     }
     const checklist = buildJudgeDeliverablesChecklist(caseItem);
-    expect(checklist.some((line) => line.includes("@@ hunk"))).toBe(true);
+    expect(checklist.some((line) => line.includes("Codex patch envelope"))).toBe(true);
+    expect(checklist.some((line) => line.includes("line numbers are optional"))).toBe(true);
   });
 
-  test("quick suite cases expose authored example_deliverable at suite 3.2", () => {
-    expect(routingCapabilitySuite.suite_version).toBe("3.2");
+  test("quick suite cases expose authored example_deliverable at suite 3.4", () => {
+    expect(routingCapabilitySuite.suite_version).toBe("3.4");
     const quickCases = routingCapabilitySuite.cases.filter((item) => item.quick_benchmark);
     expect(quickCases.length).toBe(12);
     for (const caseItem of quickCases) {
@@ -54,6 +55,45 @@ describe("judge-brief", () => {
     }
     const brief = buildJudgeGradingBrief(caseItem);
     expect(brief.exemplarQuality).toBe("authored");
+    expect(brief.exemplarAnswer).toContain("```typescript");
     expect(brief.exemplarAnswer).toContain("withLock");
+  });
+
+  test("rejects contradictory authored exemplars for code-fence benchmark cases", () => {
+    expect(() =>
+      buildJudgeGradingBrief({
+        case_id: "h01-implement-two-sum",
+        category: "code-implementation",
+        messages: [{ role: "user", content: "return one fenced code block" }],
+        expected_response: "function twoSum",
+        grading_criteria: "Must define twoSum",
+        example_deliverable: '{\n  "code": "function twoSum() {}"\n}',
+      }),
+    ).toThrow(/code_fence|example_deliverable|contradict/i);
+  });
+
+  test("h15 uses one coherent structured-json deliverable contract", () => {
+    const caseItem = routingCapabilitySuite.cases.find(
+      (item) => item.case_id === "h15-max-signal-v3",
+    );
+    expect(caseItem).toBeTruthy();
+    if (!caseItem) {
+      throw new Error("Expected benchmark case h15-max-signal-v3.");
+    }
+    const brief = buildJudgeGradingBrief(caseItem);
+    expect(brief.deliverablesChecklist.some((line) => line.includes("A/B/C/D"))).toBe(false);
+    expect(brief.exemplarAnswer).toContain('"patch_summary"');
+    expect(brief.exemplarAnswer).toContain('"test_snippet"');
+  });
+
+  test("omits trivial regex accept patterns from judge checklist prose", () => {
+    const caseItem = routingCapabilitySuite.cases.find((item) => item.case_id === "e06-timezone");
+    expect(caseItem).toBeTruthy();
+    if (!caseItem) {
+      throw new Error("Expected benchmark case e06-timezone.");
+    }
+    const checklist = buildJudgeDeliverablesChecklist(caseItem);
+    expect(checklist.some((line) => line.includes(".+"))).toBe(false);
+    expect(checklist.some((line) => line.includes("Match patterns"))).toBe(false);
   });
 });

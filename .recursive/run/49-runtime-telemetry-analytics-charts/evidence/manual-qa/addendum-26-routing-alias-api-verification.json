@@ -1,0 +1,12 @@
+{
+  "runtimeConfigAlias": "hybrid.remote-only",
+  "runtimeStrategy": "hybrid",
+  "runtimeExecutionMode": "remote_only",
+  "routerAlias": "hybrid.remote-only",
+  "modelIds": [],
+  "downstreamRecommendedModel": "hybrid.remote-only",
+  "downstreamAvailableModels": [
+    null
+  ],
+  "staleMixedPresent": false
+}

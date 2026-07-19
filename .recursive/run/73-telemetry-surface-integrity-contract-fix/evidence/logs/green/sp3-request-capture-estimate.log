@@ -1,0 +1,14 @@
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/packages/provider-openai
+
+ ✓ test/index.test.ts (29 tests) 27ms
+
+ Test Files  1 passed (1)
+      Tests  29 passed (29)
+   Start at  03:53:55
+   Duration  1.22s (transform 238ms, setup 0ms, collect 259ms, tests 27ms, environment 0ms, prepare 352ms)
+

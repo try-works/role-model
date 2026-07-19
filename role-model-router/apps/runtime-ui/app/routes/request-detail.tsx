@@ -11,7 +11,15 @@ import {
   SectionCard,
   StatusPill,
 } from "../components/page-primitives";
-import { secondaryButtonClassName } from "../lib/design-system";
+import {
+  bodyStrongTextClassName,
+  compactTitleClassName,
+  inlineTitleClassName,
+  metaTextClassName,
+  secondaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
+} from "../lib/design-system";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { fetchRequestDetail } from "../lib/runtime-api";
 import { useShellHeaderOverride } from "../lib/shell-header-context";
@@ -62,6 +70,55 @@ function pickBoolean(record: Record<string, unknown>, ...keys: string[]): boolea
   return null;
 }
 
+type TokenSource = "measured" | "normalized" | "estimated" | "unavailable";
+
+export interface TokenTruthDisplay {
+  readonly available: boolean;
+  readonly source: TokenSource;
+  readonly value: number | null;
+  readonly text: string;
+}
+
+export function readTokenTruth(
+  usageEvent: Record<string, unknown>,
+  direction: "input" | "output",
+): TokenTruthDisplay {
+  const prefix = direction === "input" ? "tokens_in" : "tokens_out";
+  const value = pickNumber(
+    usageEvent,
+    prefix,
+    direction === "input" ? "inputTokens" : "outputTokens",
+    direction === "input" ? "promptTokens" : "completionTokens",
+  );
+  const sourceCandidate = pickString(usageEvent, `${prefix}_source`);
+  const source: TokenSource =
+    sourceCandidate === "measured" ||
+    sourceCandidate === "normalized" ||
+    sourceCandidate === "estimated" ||
+    sourceCandidate === "unavailable"
+      ? sourceCandidate
+      : "unavailable";
+  const available = pickBoolean(usageEvent, `${prefix}_available`) === true;
+
+  if (!available || source === "unavailable" || value === null) {
+    return {
+      available: false,
+      source: "unavailable",
+      value: null,
+      text: "n/a · unavailable",
+    };
+  }
+
+  return { available: true, source, value, text: `${value} · ${source}` };
+}
+
+export function readPromptCacheRequestSource(
+  cacheObservability: Record<string, unknown>,
+): "explicit" | "synthesized" | null {
+  const source = pickString(cacheObservability, "promptCacheRequestSource");
+  return source === "explicit" || source === "synthesized" ? source : null;
+}
+
 function formatDateTime(value: number | null): string {
   if (value === null) {
     return "n/a";
@@ -78,8 +135,33 @@ function formatUsd(value: number | null): string {
   return `$${value.toFixed(4)}`;
 }
 
+function formatPercent(value: number | null): string {
+  if (value === null) {
+    return "n/a";
+  }
+
+  return `${(value * 100).toFixed(0)}%`;
+}
+
 function renderMetricValue(value: string | number | null): string | number {
   return value ?? "n/a";
+}
+
+function readStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter((entry): entry is string => typeof entry === "string" && entry.length > 0);
+}
+
+function readTaxonomyStringList(...values: unknown[]): string[] {
+  for (const value of values) {
+    const list = readStringList(value);
+    if (list.length > 0) {
+      return list;
+    }
+  }
+  return [];
 }
 
 export default function RequestDetailRoute() {
@@ -117,7 +199,9 @@ export default function RequestDetailRoute() {
   const endpointIdentity =
     asRecord(latestProfile.endpoint_identity ?? latestProfile.endpointIdentity) ?? {};
   const usageEvent = asRecord(request.usageEvent) ?? {};
+  const telemetrySnapshot = asRecord(request.telemetrySnapshot) ?? {};
   const executionTelemetry = asRecord(request.executionTelemetry) ?? {};
+  const executionSemantics = asRecord(request.executionSemantics) ?? {};
   const executionStream = asRecord(executionTelemetry.stream) ?? {};
   const executionStreamSupport = asRecord(executionTelemetry.streamSupport) ?? {};
   const executionPromptCaching = asRecord(executionTelemetry.promptCaching) ?? {};
@@ -136,11 +220,17 @@ export default function RequestDetailRoute() {
   const inspection = asRecord(request.inspection) ?? {};
   const inspectionRequest = asRecord(inspection.request) ?? {};
   const inspectionEndpoint = asRecord(inspection.endpoint) ?? {};
+  const capturePolicy =
+    asRecord(request.capturePolicy) ?? asRecord(inspectionRequest.capturePolicy) ?? {};
+  const privacyReceipt = asRecord(request.privacyReceipt) ?? {};
+  const observationAvailability = asRecord(request.observationAvailability) ?? {};
   const requestCapture = asRecord(inspectionRequest.requestCapture) ?? {};
   const responseCapture = asRecord(inspectionRequest.responseCapture) ?? {};
   const toolCalls = Array.isArray(tooling.toolCalls) ? tooling.toolCalls : [];
   const toolExecutions = Array.isArray(tooling.executions) ? tooling.executions : [];
   const toolDiagnostics = Array.isArray(tooling.diagnostics) ? tooling.diagnostics : [];
+  const captureRedactedFields = readStringList(capturePolicy.redactedFields);
+  const captureSuppressedFields = readStringList(capturePolicy.suppressedFields);
   const sourceType =
     pickString(request, "sourceType") ??
     (pickString(endpointIdentity, "endpoint_kind", "endpointKind") === "remote_api"
@@ -149,18 +239,50 @@ export default function RequestDetailRoute() {
         ? "local"
         : null);
   const latencyMs = pickNumber(usageEvent, "latency_ms", "latencyMs");
-  const inputTokens = pickNumber(usageEvent, "tokens_in", "inputTokens", "promptTokens");
-  const outputTokens = pickNumber(usageEvent, "tokens_out", "outputTokens", "completionTokens");
+  const inputTokenTruth = readTokenTruth(usageEvent, "input");
+  const outputTokenTruth = readTokenTruth(usageEvent, "output");
+  const inputTokens = inputTokenTruth.value;
+  const outputTokens = outputTokenTruth.value;
   const totalTokens =
-    pickNumber(usageEvent, "total_tokens", "totalTokens") ??
-    (() => {
-      const promptTokens = inputTokens ?? 0;
-      const completionTokens = outputTokens ?? 0;
-      return promptTokens > 0 || completionTokens > 0 ? promptTokens + completionTokens : null;
-    })();
+    inputTokenTruth.available && outputTokenTruth.available
+      ? (pickNumber(usageEvent, "total_tokens", "totalTokens") ??
+        (inputTokens ?? 0) + (outputTokens ?? 0))
+      : null;
+  const pickCostNumber = (...keys: string[]): number | null =>
+    pickNumber(request, ...keys) ??
+    pickNumber(telemetrySnapshot, ...keys) ??
+    pickNumber(usageEvent, ...keys);
+  const pickCostString = (...keys: string[]): string | null =>
+    pickString(request, ...keys) ?? pickString(telemetrySnapshot, ...keys);
   const actualCostUsd = pickNumber(usageEvent, "cost_actual", "actualCostUsd");
   const estimatedCostUsd = pickNumber(usageEvent, "cost_estimate", "estimatedCostUsd");
+  const effectiveCostUsd = pickCostNumber("effectiveCostUsd", "effective_cost_usd");
+  const selectedUncachedCostUsd = pickCostNumber(
+    "selectedUncachedCostUsd",
+    "selected_uncached_cost_usd",
+  );
+  const baselineMaxEligibleCostUsd = pickCostNumber(
+    "baselineMaxEligibleCostUsd",
+    "baseline_max_eligible_cost_usd",
+  );
+  const routingCostSavingsUsd = pickCostNumber("routingCostSavingsUsd", "routing_cost_savings_usd");
+  const cacheCostSavingsUsd = pickCostNumber("cacheCostSavingsUsd", "cache_cost_savings_usd");
+  const totalAvoidedCostUsd = pickCostNumber("totalAvoidedCostUsd", "total_avoided_cost_usd");
+  const costCalculationBasis = pickCostString("costCalculationBasis", "cost_calculation_basis");
+  const costCalculationVersion = pickCostString(
+    "costCalculationVersion",
+    "cost_calculation_version",
+  );
+  const costBaselineSource = pickCostString("costBaselineSource", "cost_baseline_source");
+  const costSavingsSupport = pickCostString("costSavingsSupport", "cost_savings_support");
+  const providerId =
+    pickString(request, "providerId") ?? pickString(telemetrySnapshot, "providerId");
   const providerFamily = pickString(executionTelemetry, "providerFamily");
+  const vendorId =
+    pickString(executionTelemetry, "vendorId") ??
+    pickString(asRecord(responseCapture.vendorMetadata) ?? {}, "vendorId");
+  const executionFamily = pickString(executionSemantics, "executionFamily");
+  const adapterFamily = pickString(executionSemantics, "adapterFamily");
   const finishReason = pickString(executionTelemetry, "finishReason");
   const promptCacheSupported =
     pickBoolean(request, "promptCacheSupported") ??
@@ -169,6 +291,7 @@ export default function RequestDetailRoute() {
   const promptCacheRequested =
     pickBoolean(cacheObservability, "promptCacheRequested") ??
     pickBoolean(request, "promptCacheRequested");
+  const promptCacheRequestSource = readPromptCacheRequestSource(cacheObservability);
   const promptCacheUsed =
     pickBoolean(cacheObservability, "promptCacheUsed") ?? pickBoolean(request, "promptCacheUsed");
   const cacheStatus = !promptCacheSupported
@@ -179,6 +302,9 @@ export default function RequestDetailRoute() {
         ? "miss"
         : "ready";
   const responseStatus = asNumber(responseCapture.statusCode);
+  const samplingRate = pickNumber(privacyReceipt, "samplingRate");
+  const retentionTtlHours = pickNumber(privacyReceipt, "retentionTtlHours");
+  const retainUntil = pickNumber(privacyReceipt, "retainUntil");
   const createdAtMs =
     pickNumber(request, "createdAtMs") ?? pickNumber(usageEvent, "timestamp_ms", "timestampMs");
   const measuredAtMs =
@@ -264,20 +390,120 @@ export default function RequestDetailRoute() {
         `decomposition ${pickNumber(difficultySignals, "decompositionKeywordCount") ?? 0}`,
       ].join(" • ")
     : null;
+  const taxonomyDimensions =
+    asRecord(request.taxonomyDimensions) ??
+    asRecord(telemetrySnapshot.taxonomyDimensions) ??
+    asRecord(request.taxonomy_dimensions) ??
+    null;
+  const normalizedIntent =
+    asRecord(request.normalizedIntent) ?? asRecord(request.normalized_intent) ?? {};
+  const originalRoleHint =
+    pickString(taxonomyDimensions ?? {}, "taxonomy_original_role_hint_id") ??
+    pickString(normalizedIntent, "originalRoleHintId");
+  const originalTaskType =
+    pickString(taxonomyDimensions ?? {}, "taxonomy_original_task_type") ??
+    pickString(normalizedIntent, "originalTaskType");
+  const taxonomyGroupId =
+    pickString(taxonomyDimensions ?? {}, "taxonomy_group_id") ??
+    pickString(request, "taxonomyGroupId") ??
+    pickString(normalizedIntent, "groupId");
+  const taxonomyRoleId =
+    pickString(taxonomyDimensions ?? {}, "taxonomy_role_id") ??
+    pickString(request, "taxonomyRoleId") ??
+    pickString(normalizedIntent, "roleId");
+  const taxonomyTaskType =
+    pickString(taxonomyDimensions ?? {}, "taxonomy_task_type") ??
+    pickString(request, "taxonomyTaskType") ??
+    pickString(normalizedIntent, "taskType");
+  const taxonomyTaskVariant =
+    pickString(taxonomyDimensions ?? {}, "taxonomy_task_variant") ??
+    pickString(request, "taxonomyTaskVariant") ??
+    pickString(normalizedIntent, "taskVariant");
+  const taxonomyCapabilityIds = readTaxonomyStringList(
+    taxonomyDimensions?.taxonomy_capability_ids,
+    request.taxonomyCapabilityIds,
+  );
+  const taxonomyModalityIds = readTaxonomyStringList(
+    taxonomyDimensions?.taxonomy_modality_ids,
+    request.taxonomyModalityIds,
+  );
+  const taxonomyToolClassIds = readTaxonomyStringList(
+    taxonomyDimensions?.taxonomy_tool_class_ids,
+    request.taxonomyToolClassIds,
+  );
+  const taxonomyRoleSource = pickString(taxonomyDimensions ?? {}, "taxonomy_role_source");
+  const taxonomyTaskSource = pickString(taxonomyDimensions ?? {}, "taxonomy_task_source");
+  const taxonomyClassificationSource = pickString(
+    taxonomyDimensions ?? {},
+    "taxonomy_classification_source",
+  );
+  const taxonomyConfidence = pickNumber(taxonomyDimensions ?? {}, "taxonomy_confidence");
+  const taxonomyTaskConfidence = pickNumber(taxonomyDimensions ?? {}, "taxonomy_task_confidence");
+  const taxonomyAlternativeRoleIds = readStringList(
+    taxonomyDimensions?.taxonomy_alternative_role_ids,
+  );
+  const taxonomyAlternativeTaskTypes = readStringList(
+    taxonomyDimensions?.taxonomy_alternative_task_types,
+  );
+  const taxonomyVersion = pickString(taxonomyDimensions ?? {}, "taxonomy_version");
+  const taxonomyContentRevision = pickString(taxonomyDimensions ?? {}, "taxonomy_content_revision");
+  const classificationContractVersion = pickString(
+    taxonomyDimensions ?? {},
+    "classification_contract_version",
+  );
+  const observationSource = pickString(observationAvailability, "source");
+  const observationReason = pickString(observationAvailability, "reason");
+  const rawObservationAvailable =
+    pickBoolean(observationAvailability, "rawObservationAvailable") ??
+    Object.keys(inspectionRequest).length > 0;
+  const structuredInspectionAvailable =
+    pickBoolean(observationAvailability, "structuredInspectionAvailable") ??
+    pickBoolean(capturePolicy, "structuredInspectionAvailable");
+  const rawCaptureAvailable = pickBoolean(capturePolicy, "rawCaptureAvailable");
+  const captureEnvironment = pickString(capturePolicy, "environment");
+  const captureRedactionLevel = pickString(capturePolicy, "redactionLevel");
+  const captureRetentionClass = pickString(capturePolicy, "retentionClass");
+  const captureStructuredInspectionMode = pickString(capturePolicy, "structuredInspectionMode");
+  const hasRequestCapture = Object.keys(requestCapture).length > 0;
+  const hasResponseCapture = Object.keys(responseCapture).length > 0;
+  const taxonomyPresent =
+    [
+      originalRoleHint,
+      originalTaskType,
+      taxonomyGroupId,
+      taxonomyRoleId,
+      taxonomyTaskType,
+      taxonomyTaskVariant,
+      taxonomyRoleSource,
+      taxonomyTaskSource,
+      taxonomyClassificationSource,
+      taxonomyVersion,
+      taxonomyContentRevision,
+      classificationContractVersion,
+    ].some((value) => value !== null) ||
+    taxonomyCapabilityIds.length > 0 ||
+    taxonomyModalityIds.length > 0 ||
+    taxonomyToolClassIds.length > 0 ||
+    taxonomyAlternativeRoleIds.length > 0 ||
+    taxonomyAlternativeTaskTypes.length > 0;
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <FactCard
           label="Endpoint"
           value={endpointId}
+          className="xl:col-span-2"
           detail="Endpoint id currently associated with the captured request."
           emphasis
+          valueClassName={inlineTitleClassName}
         />
         <FactCard
           label="Correlation"
           value={renderMetricValue(clientRequestId)}
+          className="xl:col-span-2"
           detail="Caller-supplied correlation id preserved alongside the canonical request ledger id."
+          valueClassName={inlineTitleClassName}
         />
         <FactCard
           label="Source"
@@ -285,9 +511,29 @@ export default function RequestDetailRoute() {
           detail="Canonical source family used by the telemetry ledger."
         />
         <FactCard
+          label="Provider"
+          value={renderMetricValue(providerId)}
+          detail="Actual provider identity for the selected endpoint."
+        />
+        <FactCard
           label="Provider family"
           value={renderMetricValue(providerFamily)}
-          detail="Execution adapter family preserved in the canonical telemetry contract."
+          detail="Provider semantic family preserved in the canonical telemetry contract."
+        />
+        <FactCard
+          label="Vendor"
+          value={renderMetricValue(vendorId)}
+          detail="Optional intermediary execution vendor such as LiteLLM."
+        />
+        <FactCard
+          label="Execution path"
+          value={renderMetricValue(executionFamily)}
+          detail="High-level routed execution family selected for this request."
+        />
+        <FactCard
+          label="Adapter"
+          value={renderMetricValue(adapterFamily)}
+          detail="Concrete adapter implementation used to shape and execute the provider request."
         />
         <FactCard
           label="Latency"
@@ -297,21 +543,31 @@ export default function RequestDetailRoute() {
         <FactCard
           label="Tokens"
           value={renderMetricValue(totalTokens)}
-          detail="Total token usage when the provider exposed prompt/completion accounting."
+          detail={
+            inputTokenTruth.available && outputTokenTruth.available
+              ? `Input ${inputTokenTruth.source}; output ${outputTokenTruth.source}.`
+              : "Token usage is unavailable; numeric placeholders are not treated as measured usage."
+          }
         />
         <FactCard
           label="Cost"
-          value={formatUsd(actualCostUsd ?? estimatedCostUsd)}
+          value={formatUsd(effectiveCostUsd)}
           detail={
-            actualCostUsd !== null
-              ? "Actual USD cost from the execution receipt."
-              : "Estimated USD cost from the persisted runtime usage event."
+            costCalculationBasis || costCalculationVersion
+              ? `Stored effective cost • ${costCalculationBasis ?? "unknown basis"} • ${
+                  costCalculationVersion ?? "unknown version"
+                }`
+              : "Stored authoritative per-request effective cost."
           }
         />
         <FactCard
           label="Cache"
           value={renderMetricValue(cacheStatus)}
-          detail="Captured cache posture using explicit support semantics rather than zero-only inference."
+          detail={
+            promptCacheRequestSource
+              ? `Captured cache posture; request key source: ${promptCacheRequestSource}.`
+              : "Captured cache posture using explicit support semantics rather than zero-only inference."
+          }
         />
       </div>
 
@@ -332,6 +588,210 @@ export default function RequestDetailRoute() {
         </div>
       </SectionCard>
 
+      <SectionCard
+        title="Taxonomy classification"
+        description="Structured original, normalized, and derived taxonomy evidence captured with this request."
+      >
+        {taxonomyPresent ? (
+          <div className="space-y-4">
+            <div className="grid gap-4 xl:grid-cols-3">
+              <div className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-4">
+                <p className={compactTitleClassName}>Original request hints</p>
+                <dl className="mt-3 space-y-3 text-sm">
+                  <div>
+                    <dt className={utilityLabelClassName}>Original role hint</dt>
+                    <dd className={`mt-1 ${supportingTextClassName}`}>
+                      {renderMetricValue(originalRoleHint)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className={utilityLabelClassName}>Original task type</dt>
+                    <dd className={`mt-1 ${supportingTextClassName}`}>
+                      {renderMetricValue(originalTaskType)}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+              <div className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-4">
+                <p className={compactTitleClassName}>Normalized classification</p>
+                <dl className="mt-3 space-y-3 text-sm">
+                  {[
+                    ["Taxonomy group", taxonomyGroupId],
+                    ["Taxonomy role", taxonomyRoleId],
+                    ["Taxonomy task", taxonomyTaskType],
+                    ["Task variant", taxonomyTaskVariant],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <dt className={utilityLabelClassName}>{label}</dt>
+                      <dd className={`mt-1 ${supportingTextClassName}`}>
+                        {renderMetricValue(value)}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+              <div className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-4">
+                <p className={compactTitleClassName}>Derived analytics tags</p>
+                <dl className="mt-3 space-y-3 text-sm">
+                  {[
+                    [
+                      "Derived capabilities",
+                      taxonomyCapabilityIds.length > 0 ? taxonomyCapabilityIds.join(", ") : null,
+                    ],
+                    [
+                      "Derived modalities",
+                      taxonomyModalityIds.length > 0 ? taxonomyModalityIds.join(", ") : null,
+                    ],
+                    [
+                      "Derived tool classes",
+                      taxonomyToolClassIds.length > 0 ? taxonomyToolClassIds.join(", ") : null,
+                    ],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <dt className={utilityLabelClassName}>{label}</dt>
+                      <dd className={`mt-1 ${supportingTextClassName}`}>
+                        {renderMetricValue(value)}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+            <dl className="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
+              {[
+                ["Classification source", taxonomyClassificationSource],
+                ["Role source", taxonomyRoleSource],
+                ["Task source", taxonomyTaskSource],
+                ["Confidence", taxonomyConfidence === null ? null : String(taxonomyConfidence)],
+                [
+                  "Task confidence",
+                  taxonomyTaskConfidence === null ? null : String(taxonomyTaskConfidence),
+                ],
+                [
+                  "Alternative roles",
+                  taxonomyAlternativeRoleIds.length > 0
+                    ? taxonomyAlternativeRoleIds.join(", ")
+                    : null,
+                ],
+                [
+                  "Alternative tasks",
+                  taxonomyAlternativeTaskTypes.length > 0
+                    ? taxonomyAlternativeTaskTypes.join(", ")
+                    : null,
+                ],
+                ["Taxonomy version", taxonomyVersion],
+                ["Content revision", taxonomyContentRevision],
+                ["Classification contract", classificationContractVersion],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+                >
+                  <dt className={utilityLabelClassName}>{label}</dt>
+                  <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ) : (
+          <EmptyState label="This request predates the richer taxonomy contract." />
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Cost audit"
+        description="Stored per-request cost calculation and savings metadata used by analytics and request detail surfaces."
+      >
+        <dl className="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
+          {[
+            ["Effective cost", formatUsd(effectiveCostUsd)],
+            ["Selected uncached cost", formatUsd(selectedUncachedCostUsd)],
+            ["Baseline max eligible", formatUsd(baselineMaxEligibleCostUsd)],
+            ["Routing savings", formatUsd(routingCostSavingsUsd)],
+            ["Cache savings", formatUsd(cacheCostSavingsUsd)],
+            ["Total avoided cost", formatUsd(totalAvoidedCostUsd)],
+            ["Calculation basis", costCalculationBasis],
+            ["Calculation version", costCalculationVersion],
+            ["Baseline source", costBaselineSource],
+            ["Savings support", costSavingsSupport],
+            [
+              "Raw actual cost",
+              actualCostUsd === null ? null : `${formatUsd(actualCostUsd)} provenance`,
+            ],
+            [
+              "Raw estimated cost",
+              estimatedCostUsd === null ? null : `${formatUsd(estimatedCostUsd)} provenance`,
+            ],
+          ].map(([label, value]) => (
+            <div
+              key={label}
+              className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel-muted)] p-3"
+            >
+              <dt className={utilityLabelClassName}>{label}</dt>
+              <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
+            </div>
+          ))}
+        </dl>
+      </SectionCard>
+
+      <SectionCard
+        title="Telemetry handling"
+        description="Sampling, retention, redaction, and inspection-availability receipts for this request."
+      >
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            <StatusPill tone={rawObservationAvailable ? "success" : "warning"}>
+              {rawObservationAvailable ? "Raw observation retained" : "Ledger fallback only"}
+            </StatusPill>
+            <StatusPill tone={structuredInspectionAvailable ? "accent" : "neutral"}>
+              {structuredInspectionAvailable
+                ? "Structured inspection available"
+                : "No structured inspection"}
+            </StatusPill>
+            <StatusPill tone={rawCaptureAvailable ? "accent" : "neutral"}>
+              {rawCaptureAvailable ? "Raw capture allowed" : "Raw capture unavailable"}
+            </StatusPill>
+          </div>
+          <dl className="grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
+            {[
+              ["Observation source", observationSource],
+              ["Capture environment", captureEnvironment],
+              ["Sampling rate", formatPercent(samplingRate)],
+              [
+                "Retention TTL",
+                retentionTtlHours === null
+                  ? null
+                  : `${retentionTtlHours} hour${retentionTtlHours === 1 ? "" : "s"}`,
+              ],
+              ["Retain until", formatDateTime(retainUntil)],
+              ["Redaction level", captureRedactionLevel],
+              ["Retention class", captureRetentionClass],
+              ["Inspection mode", captureStructuredInspectionMode],
+              [
+                "Redacted fields",
+                captureRedactedFields.length > 0 ? captureRedactedFields.join(", ") : null,
+              ],
+              [
+                "Suppressed fields",
+                captureSuppressedFields.length > 0 ? captureSuppressedFields.join(", ") : null,
+              ],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="rounded-[var(--rm-radius-field)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+              >
+                <dt className={utilityLabelClassName}>{label}</dt>
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className={supportingTextClassName}>
+            {observationReason ??
+              "This request detail view combines canonical telemetry ledger facts with any preserved runtime observation bundle still inside retention."}
+          </p>
+        </div>
+      </SectionCard>
+
       <div className="grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
         <SectionCard
           title="Telemetry summary"
@@ -342,18 +802,17 @@ export default function RequestDetailRoute() {
               ["Provider", providerKind],
               ["Model", modelId],
               ["Finish reason", finishReason],
-              ["Input tokens", inputTokens === null ? null : String(inputTokens)],
-              ["Output tokens", outputTokens === null ? null : String(outputTokens)],
+              ["Input tokens", inputTokenTruth.text],
+              ["Output tokens", outputTokenTruth.text],
+              ["Cache request source", promptCacheRequestSource],
               ["Response status", responseStatus === null ? null : String(responseStatus)],
               ["Recorded", formatDateTime(createdAtMs)],
               ["Profile measured", formatDateTime(measuredAtMs)],
               ["Stream deltas", streamSummary.length > 0 ? streamSummary : null],
             ].map(([label, value]) => (
-              <div key={label} className="border-b border-[var(--rm-border)] pb-3">
-                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                  {label}
-                </dt>
-                <dd className="mt-1 font-medium text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+              <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
+                <dt className={utilityLabelClassName}>{label}</dt>
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
@@ -378,16 +837,14 @@ export default function RequestDetailRoute() {
                   : "No recent samples",
               ],
             ].map(([label, value]) => (
-              <div key={label} className="border-b border-[var(--rm-border)] pb-3">
-                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                  {label}
-                </dt>
-                <dd className="mt-1 font-medium text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+              <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
+                <dt className={utilityLabelClassName}>{label}</dt>
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
           <div className="mt-4">
-            <p className="mb-2 font-medium text-[var(--rm-fg)]">Latest profile snapshot</p>
+            <p className={`mb-2 ${compactTitleClassName}`}>Latest profile snapshot</p>
             <CodeBlock>{JSON.stringify(latestProfile, null, 2)}</CodeBlock>
           </div>
         </SectionCard>
@@ -420,11 +877,9 @@ export default function RequestDetailRoute() {
               ["Hybrid final strategy", hybridStrategy],
               ["Rubric signals", rubricSignalSummary],
             ].map(([label, value]) => (
-              <div key={label} className="border-b border-[var(--rm-border)] pb-3">
-                <dt className="text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-                  {label}
-                </dt>
-                <dd className="mt-1 font-medium text-[var(--rm-fg)]">{renderMetricValue(value)}</dd>
+              <div key={label} className="rounded-[var(--rm-radius-md)] bg-[var(--rm-panel)] p-3">
+                <dt className={utilityLabelClassName}>{label}</dt>
+                <dd className={`mt-1 ${bodyStrongTextClassName}`}>{renderMetricValue(value)}</dd>
               </div>
             ))}
           </dl>
@@ -441,7 +896,7 @@ export default function RequestDetailRoute() {
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between">
-              <p className="font-medium text-[var(--rm-fg)]">Tool calls</p>
+              <p className={compactTitleClassName}>Tool calls</p>
               <StatusPill tone={toolCalls.length > 0 ? "accent" : "neutral"}>
                 {toolCalls.length}
               </StatusPill>
@@ -453,9 +908,9 @@ export default function RequestDetailRoute() {
                 toolCalls.map((toolCall, index) => (
                   <div
                     key={String((asRecord(toolCall)?.toolCallId as string | undefined) ?? index)}
-                    className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+                    className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                   >
-                    <p className="font-medium text-[var(--rm-fg)]">
+                    <p className={compactTitleClassName}>
                       {String(asRecord(toolCall)?.toolName ?? "unknown")}
                     </p>
                     <CodeBlock className="mt-3 text-xs">
@@ -469,7 +924,7 @@ export default function RequestDetailRoute() {
 
           <div>
             <div className="flex items-center justify-between">
-              <p className="font-medium text-[var(--rm-fg)]">Execution receipts</p>
+              <p className={compactTitleClassName}>Execution receipts</p>
               <StatusPill tone={toolExecutions.length > 0 ? "success" : "neutral"}>
                 {toolExecutions.length}
               </StatusPill>
@@ -483,10 +938,10 @@ export default function RequestDetailRoute() {
                   return (
                     <div
                       key={String(executionRecord.executionId ?? index)}
-                      className="rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
+                      className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-3"
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-[var(--rm-fg)]">
+                        <p className={compactTitleClassName}>
                           {String(executionRecord.toolName ?? "Unnamed tool")}
                         </p>
                         {executionRecord.status ? (
@@ -497,7 +952,7 @@ export default function RequestDetailRoute() {
                           </StatusPill>
                         ) : null}
                       </div>
-                      <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                      <p className={`mt-2 ${supportingTextClassName}`}>
                         {String(executionRecord.connectorId ?? "Unknown connector")}
                       </p>
                     </div>
@@ -515,18 +970,29 @@ export default function RequestDetailRoute() {
 
       <DisclosureSection summary="Captures and profile">
         <div className="space-y-4">
+          {!rawObservationAvailable ? (
+            <EmptyState label="Raw observation capture has expired; request detail is reconstructed from the canonical telemetry ledger." />
+          ) : null}
           <div className="grid gap-4 xl:grid-cols-2">
             <div>
-              <p className="mb-2 font-medium text-[var(--rm-fg)]">Request capture</p>
-              <CodeBlock>{JSON.stringify(requestCapture, null, 2)}</CodeBlock>
+              <p className={`mb-2 ${compactTitleClassName}`}>Request capture</p>
+              {hasRequestCapture ? (
+                <CodeBlock>{JSON.stringify(requestCapture, null, 2)}</CodeBlock>
+              ) : (
+                <EmptyState label="No preserved request capture is available for this request." />
+              )}
             </div>
             <div>
-              <p className="mb-2 font-medium text-[var(--rm-fg)]">Response capture</p>
-              <CodeBlock>{JSON.stringify(responseCapture, null, 2)}</CodeBlock>
+              <p className={`mb-2 ${compactTitleClassName}`}>Response capture</p>
+              {hasResponseCapture ? (
+                <CodeBlock>{JSON.stringify(responseCapture, null, 2)}</CodeBlock>
+              ) : (
+                <EmptyState label="No preserved response capture is available for this request." />
+              )}
             </div>
           </div>
           <div>
-            <p className="mb-2 font-medium text-[var(--rm-fg)]">Endpoint profile history</p>
+            <p className={`mb-2 ${compactTitleClassName}`}>Endpoint profile history</p>
             <CodeBlock>{JSON.stringify({ latestProfile, recentSamples }, null, 2)}</CodeBlock>
           </div>
         </div>

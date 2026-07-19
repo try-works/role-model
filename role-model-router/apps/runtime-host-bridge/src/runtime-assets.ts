@@ -33,6 +33,25 @@ function asBuffer(value: ArrayBuffer | Buffer): Buffer {
   return Buffer.isBuffer(value) ? value : Buffer.from(value);
 }
 
+function readOptionalSeaAsset(
+  assetReader: RuntimeAssetReader,
+  assetKey: string,
+): ArrayBuffer | Buffer | undefined {
+  try {
+    return assetReader.getRawAsset(assetKey);
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "ERR_SINGLE_EXECUTABLE_APPLICATION_ASSET_NOT_FOUND"
+    ) {
+      return undefined;
+    }
+    throw error;
+  }
+}
+
 async function accessIfExists(filePath: string): Promise<boolean> {
   try {
     await access(filePath);
@@ -55,9 +74,9 @@ export async function resolveLlamaSwapCommand(
   const assetReader = options.assetReader ?? DEFAULT_ASSET_READER;
   if (assetReader.isSea) {
     const rawAsset =
-      assetReader.getRawAsset(definition.assetKey) ??
+      readOptionalSeaAsset(assetReader, definition.assetKey) ??
       (() => {
-        const compressed = assetReader.getRawAsset(`${definition.assetKey}.gz`);
+        const compressed = readOptionalSeaAsset(assetReader, `${definition.assetKey}.gz`);
         return compressed ? gunzipSync(asBuffer(compressed)) : undefined;
       })();
     if (rawAsset) {

@@ -1,0 +1,34 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/components/local-model-role-picker.test.tsx [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 37[2mms[22m[39m
+[31m   [31m×[31m LocalModelRolePicker[2m > [22mshows grouped roles with an all-roles default checkbox[39m[32m 35[2mms[22m[39m
+[31m     → expected '<div class="rounded-[var(--rm-radius-…' to contain 'All roles'[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/local-model-role-picker.test.tsx > LocalModelRolePicker > shows grouped roles with an all-roles default checkbox
+AssertionError: expected '<div class="rounded-[var(--rm-radius-…' to contain 'All roles'
+
+Expected: "All roles"
+Received: "<div class="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] space-y-3 p-4"><div class="flex flex-wrap items-center justify-between gap-2"><p class="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--rm-muted)]">Runtime roles</p><a class="text-xs text-[var(--rm-accent)] underline-offset-2 hover:underline" href="/app/models/roles" data-discover="true">Manage role definitions</a></div><p class="text-sm text-[var(--rm-secondary)]">Roles control which routing tasks can select this model.</p><ul class="space-y-2"><li><label class="flex cursor-pointer items-start gap-3 text-sm text-[var(--rm-fg)]"><input type="checkbox" class="mt-1"/><span><span class="font-semibold">Coder</span><span class="mt-1 block text-[var(--rm-secondary)]">Code work.</span></span></label></li><li><label class="flex cursor-pointer items-start gap-3 text-sm text-[var(--rm-fg)]"><input type="checkbox" class="mt-1"/><span><span class="font-semibold">Writer</span><span class="mt-1 block text-[var(--rm-secondary)]">Writing work.</span></span></label></li></ul></div>"
+
+ ❯ app/components/local-model-role-picker.test.tsx:56:20
+     54|     );
+     55| 
+     56|     expect(markup).toContain("All roles");
+       |                    ^
+     57|     expect(markup).toContain("Engineering");
+     58|     expect(markup).toContain("Communication");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 12:17:13
+[2m   Duration [22m 1.26s[2m (transform 86ms, setup 0ms, collect 327ms, tests 37ms, environment 0ms, prepare 347ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/components/local-model-role-picker.test.tsx

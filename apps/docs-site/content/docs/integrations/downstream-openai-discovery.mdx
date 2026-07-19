@@ -1,0 +1,77 @@
+---
+title: Downstream OpenAI discovery
+description: How Role-Model exposes aliases, capabilities, and conservative limits to Pi and other OpenAI-compatible consumers.
+---
+
+# Downstream OpenAI discovery
+
+Role-Model exposes OpenAI-compatible discovery surfaces so downstream clients can discover routable aliases
+without reading runtime internals.
+
+Pi uses this contract through the `@try-works/pi-role-model` package, but the same idea applies to other
+OpenAI-compatible consumers.
+
+## Discovery surfaces
+
+Role-Model exposes two related surfaces:
+
+| Endpoint | Purpose |
+| --- | --- |
+| `/v1/models` | compact OpenAI-compatible model list for broad client compatibility |
+| `/api/role-model/downstream/openai` | richer Role-Model discovery contract for aliases, capability metadata, and downstream setup |
+
+Use `/v1/models` when a client only understands the standard model-list shape.
+
+Use `/api/role-model/downstream/openai` when a client can consume Role-Model-specific alias and capability
+metadata.
+
+## What aliases describe
+
+Each downstream alias describes a routable Role-Model posture rather than one fixed provider model.
+
+Discovery records can include:
+
+- conservative `context_window` and output-token limits
+- Pi-compatible input affordances such as text and image support
+- required or supported capabilities
+- whether tools, structured output, reasoning, or hosted features are available
+- sanitized endpoint information for diagnostics
+
+The runtime computes this from registry state, catalog metadata, runtime alias config, endpoint readiness, and
+the current routing strategy inputs.
+
+## Conservative limits
+
+An alias can span more than one endpoint. Its published limits are intentionally conservative so a downstream
+client does not send a request that only part of the alias pool can handle.
+
+For example, if an alias can route across multiple endpoints, the alias should publish the safe aggregate
+context and output limits for the currently routable set, not the biggest limit seen anywhere in the pool.
+
+## Capability-aware routing
+
+Discovery is not only descriptive. The runtime also uses inferred request capabilities before scoring.
+
+For chat and responses requests, Role-Model can infer requirements from payload shape, including:
+
+- text or image input
+- tool use
+- structured output
+- reasoning
+- hosted search or provider-native tool requests
+
+Those inferred requirements appear in routing diagnostics such as `routingDiagnostics.capabilityEligibility`.
+That makes it possible to explain why an endpoint was excluded before scoring.
+
+## Sanitized endpoint identifiers
+
+Rich discovery avoids exposing credential-shaped account labels as downstream endpoint ids.
+
+Downstream clients should treat discovery ids as diagnostic handles, not as credential material or stable
+provider-account secrets.
+
+## Read next
+
+- [Pi integration](/integrations/pi)
+- [Routing modes, locality, and execution](/router/routing-modes-locality-and-execution)
+- [Candidate selection and eligibility](/router/candidate-selection-and-eligibility)

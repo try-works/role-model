@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "t03-tools-agent-plan",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 0,
+  "parsedRationale": "Missing required JSON keys (plan, patch_summary, strategy_improvements) in the final deliverable; only tool calls provided.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/t03-tools-agent-plan.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/t03-tools-agent-plan/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935597856
+}

@@ -1,0 +1,9 @@
+{
+  "id": "pi-alias-image-001",
+  "requestId": "req-462d0f38-396e-40b3-b8e4-80e6705f7ab8",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "providerId": "openai",
+  "statusCode": 200,
+  "outputText": "IMAGE_OK"
+}

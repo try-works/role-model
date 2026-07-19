@@ -1,0 +1,21 @@
+
+> @role-model-router/runtime-observability@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\runtime-observability
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/packages/runtime-observability
+
+(node:28900) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:8252) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/otel.test.ts (1 test) 380ms
+   ✓ runtime-observability otel mapping > derives a deterministic OpenTelemetry export from canonical role-model artifacts  378ms
+ ✓ test/index.test.ts (6 tests) 1156ms
+   ✓ runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates  400ms
+
+ Test Files  2 passed (2)
+      Tests  7 passed (7)
+   Start at  03:56:52
+   Duration  2.80s (transform 598ms, setup 0ms, collect 1.38s, tests 1.54s, environment 1ms, prepare 580ms)
+

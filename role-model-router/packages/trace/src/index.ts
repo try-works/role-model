@@ -33,7 +33,16 @@ export async function readTraceArtifacts(outputDir: string): Promise<{
   const spans = JSON.parse(
     await readFile(path.join(outputDir, "trace-spans.json"), "utf8"),
   ) as TraceSpanRecord[];
-  const events = (await readFile(path.join(outputDir, "trace-events.jsonl"), "utf8"))
+  let eventsRaw = "";
+  try {
+    eventsRaw = await readFile(path.join(outputDir, "trace-events.jsonl"), "utf8");
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw err;
+    }
+    // trace-events.jsonl may not exist when no events were written
+  }
+  const events = eventsRaw
     .split(/\r?\n/u)
     .map((line) => line.trim())
     .filter(Boolean)

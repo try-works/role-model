@@ -1,0 +1,616 @@
+
+> role-model@0.0.0 build D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix
+> corepack pnpm run types:generate && corepack pnpm -r --if-present build
+
+
+> role-model@0.0.0 types:generate D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types
+
+Generated types for benchmark-run.schema.json
+Generated types for benchmark-suite.schema.json
+Generated types for capability-taxonomy.schema.json
+Generated types for declared-capability-profile.schema.json
+Generated types for downstream-openai-discovery.schema.json
+Generated types for endpoint-identity.schema.json
+Generated types for judge-score.schema.json
+Generated types for model-pack-manifest.schema.json
+Generated types for observed-performance-profile.schema.json
+Generated types for package-manifest.schema.json
+Generated types for planspec.schema.json
+Generated types for role-binding.schema.json
+Generated types for role-definition.schema.json
+Generated types for router-decision.schema.json
+Generated types for routing-policy.schema.json
+Generated types for task-definition.schema.json
+Generated types for task-execution-profile.schema.json
+Generated types for trace-event.schema.json
+Generated types for trace-span.schema.json
+Generated types for usage-event.schema.json
+Formatted 1 file in 36ms. Fixed 1 file.
+Scope: 43 of 44 workspace projects
+packages/packaging build$ tsc -p tsconfig.json
+packages/pi-role-model build$ tsc --noEmit -p tsconfig.json
+apps/docs-site build$ react-router build && npm run types:check && node ./scripts/materialize-search-index.mjs
+packages/protocol-types build$ tsc -p tsconfig.json
+packages/packaging build: Done
+packages/schema-tools build$ tsc -p tsconfig.json
+packages/protocol-types build: Done
+packages/store-contract build$ tsc -p tsconfig.json
+packages/store-contract build: Done
+role-model-router/apps/runtime-ui build$ react-router build && tsc --noEmit
+packages/pi-role-model build: Done
+role-model-router/packages/bench-core build$ tsc -p tsconfig.json
+packages/schema-tools build: Done
+role-model-router/packages/bench-judge build$ tsc -p tsconfig.json
+role-model-router/packages/bench-core build: Done
+role-model-router/packages/catalog build$ tsc -p tsconfig.json
+role-model-router/packages/bench-judge build: Done
+.../packages/process-supervisor build$ tsc -p tsconfig.json
+role-model-router/apps/runtime-ui build: vite v7.3.2 building client environment for production...
+role-model-router/apps/runtime-ui build: transforming...
+apps/docs-site build: [MDX] generated files in 6.035100000000057ms
+role-model-router/packages/catalog build: Done
+role-model-router/packages/runtime-web build$ tsc -p tsconfig.json
+apps/docs-site build: [MDX] generated files in 5.696700000000419ms
+apps/docs-site build: [MDX] generated files in 2.9404999999997017ms
+apps/docs-site build: vite v8.0.10 building client environment for production...
+apps/docs-site build: [MDX] generated files in 3.095600000000559ms
+apps/docs-site build: [2K
+.../packages/process-supervisor build: Done
+role-model-router/packages/tool-registry build$ tsc -p tsconfig.json
+role-model-router/packages/runtime-web build: Done
+.../packages/vendor-abstraction build$ tsc -p tsconfig.json
+role-model-router/packages/tool-registry build: Done
+.../packages/vendor-abstraction build: Done
+apps/docs-site build: transforming...✓ 2246 modules transformed.
+apps/docs-site build: rendering chunks...
+apps/docs-site build: computing gzip size...
+apps/docs-site build: build/client/.vite/manifest.json                                       28.78 kB │ gzip:  3.12 kB
+apps/docs-site build: build/client/assets/runtime-overview-WUpVyoOR.png                     218.07 kB
+apps/docs-site build: build/client/assets/root-BjmB36fm.css                                  80.30 kB │ gzip: 13.37 kB
+apps/docs-site build: build/client/assets/full-ZUGm99_m.js                                    0.00 kB │ gzip:  0.02 kB
+apps/docs-site build: build/client/assets/index-BeW4qblQ.js                                   0.00 kB │ gzip:  0.02 kB
+apps/docs-site build: build/client/assets/mdx-BNRw8oVt.js                                     0.00 kB │ gzip:  0.02 kB
+apps/docs-site build: build/client/assets/search-CSZo5aTn.js                                  0.00 kB │ gzip:  0.02 kB
+apps/docs-site build: build/client/assets/remove-undefined-CTqT55E9-CEhwT_UK.js               0.20 kB │ gzip:  0.16 kB
+apps/docs-site build: build/client/assets/jsx-runtime-B37CQREX.js                             0.42 kB │ gzip:  0.29 kB
+apps/docs-site build: build/client/assets/fetch-CZTZgNEB.js                                   0.44 kB │ gzip:  0.29 kB
+apps/docs-site build: build/client/assets/chunk-bqFK08oC.js                                   0.69 kB │ gzip:  0.42 kB
+apps/docs-site build: build/client/assets/algolia-_6BuK-IQ.js                                 0.77 kB │ gzip:  0.49 kB
+apps/docs-site build: build/client/assets/search-DEDyBNxK.js                                  0.99 kB │ gzip:  0.53 kB
+apps/docs-site build: build/client/assets/orama-cloud-legacy-CC2n-yU_.js                      1.11 kB │ gzip:  0.58 kB
+apps/docs-site build: build/client/assets/search-default-hR82aom8.js                          1.15 kB │ gzip:  0.63 kB
+apps/docs-site build: build/client/assets/orama-cloud-Dv5atMv7.js                             1.17 kB │ gzip:  0.60 kB
+apps/docs-site build: build/client/assets/policy-and-observability-BhOZSXix.js                5.63 kB │ gzip:  1.31 kB
+apps/docs-site build: build/client/assets/roles-tasks-and-capabilities-QKjZM8Ms.js            6.33 kB │ gzip:  1.44 kB
+apps/docs-site build: build/client/assets/overview-DL0sFI9Z.js                                6.65 kB │ gzip:  1.42 kB
+apps/docs-site build: build/client/assets/endpoints-and-profiles-DZ-ej84O.js                  6.65 kB │ gzip:  1.44 kB
+apps/docs-site build: build/client/assets/install-hAjN9fao.js                                 6.91 kB │ gzip:  1.81 kB
+apps/docs-site build: build/client/assets/first-request-and-decision-QJ0LImHg.js              8.31 kB │ gzip:  1.69 kB
+apps/docs-site build: build/client/assets/quickstart-CJdBEnmM.js                              8.37 kB │ gzip:  1.93 kB
+apps/docs-site build: build/client/assets/protocol-lifecycle-fSMJKa20.js                      9.15 kB │ gzip:  2.05 kB
+apps/docs-site build: build/client/assets/runtime-ui-tour-DPDck6k5.js                        10.09 kB │ gzip:  2.11 kB
+apps/docs-site build: build/client/assets/run-full-benchmark-AWxdNziL.js                     11.24 kB │ gzip:  2.23 kB
+apps/docs-site build: build/client/assets/models-and-role-activation-2URDe6Zg.js             11.78 kB │ gzip:  2.36 kB
+apps/docs-site build: build/client/assets/mixedbread-uXJPCjNC.js                             11.95 kB │ gzip:  5.37 kB
+apps/docs-site build: build/client/assets/first-launch-and-connect-models-WWce-kQc.js        11.95 kB │ gzip:  2.62 kB
+apps/docs-site build: build/client/assets/provider-connections-gVqNcpv_.js                   12.17 kB │ gzip:  2.27 kB
+apps/docs-site build: build/client/assets/preload-helper-CzZtDwiq.js                         12.18 kB │ gzip:  4.43 kB
+apps/docs-site build: build/client/assets/observe-and-telemetry-analytics-TXIMlRHD.js        12.39 kB │ gzip:  2.37 kB
+apps/docs-site build: build/client/assets/overview-MFGZi6sz.js                               12.39 kB │ gzip:  2.35 kB
+apps/docs-site build: build/client/assets/trace-and-usage-artifacts-BnQTaqCY.js              12.52 kB │ gzip:  2.17 kB
+apps/docs-site build: build/client/assets/capability-taxonomy-M011pOBT.js                    12.65 kB │ gzip:  2.33 kB
+apps/docs-site build: build/client/assets/protocol-r0dmstfX.js                               13.37 kB │ gzip:  2.43 kB
+apps/docs-site build: build/client/assets/router-decision-artifact-BN1oozDE.js               13.37 kB │ gzip:  2.41 kB
+apps/docs-site build: build/client/assets/declared-capability-profiles-CwCrm5Kf.js           13.60 kB │ gzip:  2.43 kB
+apps/docs-site build: build/client/assets/downstream-openai-discovery-BEQKUr3r.js            14.07 kB │ gzip:  2.61 kB
+apps/docs-site build: build/client/assets/benchmarks-and-evaluation-DDBBiM4v.js              14.68 kB │ gzip:  2.70 kB
+apps/docs-site build: build/client/assets/routing-controls-and-decision-review-CGM7WMtY.js   15.33 kB │ gzip:  2.79 kB
+apps/docs-site build: build/client/assets/protocol-to-router-mapping-BBL6e6Zz.js             15.40 kB │ gzip:  2.79 kB
+apps/docs-site build: build/client/assets/routing-policy-202Ihj8J.js                         15.60 kB │ gzip:  2.80 kB
+apps/docs-site build: build/client/assets/how-routing-works-end-to-end-DklWJpyb.js           16.81 kB │ gzip:  3.13 kB
+apps/docs-site build: build/client/assets/install-BD7LNwDd.js                                16.90 kB │ gzip:  3.23 kB
+apps/docs-site build: build/client/assets/protocol-object-model-Db75M9Xb.js                  17.59 kB │ gzip:  3.09 kB
+apps/docs-site build: build/client/assets/reason-codes-and-rejection-taxonomy-BDnVYHLC.js    18.10 kB │ gzip:  2.72 kB
+apps/docs-site build: build/client/assets/canonical-schemas-reference-eTT_qeNw.js            18.29 kB │ gzip:  2.80 kB
+apps/docs-site build: build/client/assets/routing-overview-DWSudOB8.js                       18.41 kB │ gzip:  3.33 kB
+apps/docs-site build: build/client/assets/how-role-model-works-daDm3pug.js                   18.53 kB │ gzip:  3.34 kB
+apps/docs-site build: build/client/assets/core-vocabulary-DwS9D1GS.js                        18.63 kB │ gzip:  3.17 kB
+apps/docs-site build: build/client/assets/protocol-overview-DwqH9oFq.js                      19.05 kB │ gzip:  3.41 kB
+apps/docs-site build: build/client/assets/observed-performance-profiles-oDcCFM5E.js          19.57 kB │ gzip:  3.26 kB
+apps/docs-site build: build/client/assets/docs-DuzB8Py1.js                                   21.02 kB │ gzip:  3.90 kB
+apps/docs-site build: build/client/assets/endpoint-identity-DuG0EMPf.js                      22.26 kB │ gzip:  3.45 kB
+apps/docs-site build: build/client/assets/pi-BEzW_0gT.js                                     22.99 kB │ gzip:  4.22 kB
+apps/docs-site build: build/client/assets/root-BPAATooy.js                                   24.91 kB │ gzip:  8.39 kB
+apps/docs-site build: build/client/assets/choose-routing-strategy-B92PTyf6.js                26.41 kB │ gzip:  4.25 kB
+apps/docs-site build: build/client/assets/fallbacks-failures-and-observability-CJYAhwZe.js   27.78 kB │ gzip:  4.61 kB
+apps/docs-site build: build/client/assets/candidate-selection-and-eligibility-Cf6_LVRC.js    29.06 kB │ gzip:  4.44 kB
+apps/docs-site build: build/client/assets/introduction-B00Fl6xq.js                           29.46 kB │ gzip:  4.86 kB
+apps/docs-site build: build/client/assets/scoring-tie-breaks-and-decisions-BXA7gR-4.js       30.07 kB │ gzip:  4.87 kB
+apps/docs-site build: build/client/assets/routing-modes-locality-and-execution-DamcYx3e.js   39.32 kB │ gzip:  5.65 kB
+apps/docs-site build: build/client/assets/strategy-modes-and-tradeoffs-MolmhfQb.js           48.70 kB │ gzip:  7.07 kB
+apps/docs-site build: build/client/assets/es2015-B692ofsD.js                                 61.65 kB │ gzip: 21.10 kB
+apps/docs-site build: build/client/assets/orama-static-j7_IV24U.js                           62.73 kB │ gzip: 21.59 kB
+apps/docs-site build: build/client/assets/docs-D70CUjt0.js                                   64.22 kB │ gzip: 21.73 kB
+apps/docs-site build: build/client/assets/dist-D-xxxXck.js                                   82.94 kB │ gzip: 27.42 kB
+apps/docs-site build: build/client/assets/remark-CW-4A0sf.js                                 89.89 kB │ gzip: 25.74 kB
+apps/docs-site build: build/client/assets/chunk-EVOBXE3Y-BVHgNXQf.js                        118.01 kB │ gzip: 38.59 kB
+apps/docs-site build: build/client/assets/entry.client-Ci5FUk0_.js                          183.20 kB │ gzip: 58.03 kB
+apps/docs-site build: build/client/assets/search-Ddm80bT9.js                                227.67 kB │ gzip: 70.51 kB
+apps/docs-site build: build/client/assets/roles-and-tasks-CUYDLTti.js                       705.50 kB │ gzip: 88.81 kB
+apps/docs-site build: [plugin builtin:vite-reporter] 
+apps/docs-site build: (!) Some chunks are larger than 500 kB after minification. Consider:
+apps/docs-site build: - Using dynamic import() to code-split the application
+apps/docs-site build: - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+apps/docs-site build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+apps/docs-site build: [33m[PLUGIN_TIMINGS] Warning:[0m Your build spent significant time in plugins. Here is a breakdown:
+apps/docs-site build:   - react-router:dot-server (32%)
+apps/docs-site build:   - react-router:inject-hmr-runtime (23%)
+apps/docs-site build:   - react-router:hmr-runtime (21%)
+apps/docs-site build:   - react-router:virtual-modules (12%)
+apps/docs-site build: See https://rolldown.rs/options/checks#plugintimings for more details.
+apps/docs-site build: ✓ built in 8.77s
+apps/docs-site build: [MDX] generated files in 2.1994999999988067ms
+apps/docs-site build: vite v8.0.10 building ssr environment for production...
+apps/docs-site build: [MDX] generated files in 2.406299999998737ms
+apps/docs-site build: [2K
+apps/docs-site build: transforming...✓ 484 modules transformed.
+apps/docs-site build: rendering chunks...
+apps/docs-site build: ✓ 2 assets cleaned from React Router server build.
+apps/docs-site build: build\client\assets\runtime-overview-WUpVyoOR.png
+apps/docs-site build: build\server\assets\server-build-BjmB36fm.css
+apps/docs-site build: Prerender (data): / -> build\client\_root.data
+apps/docs-site build: Prerender (html): / -> build\client\index.html
+apps/docs-site build: Prerender (data): /api/search -> build\client\api\search.data
+apps/docs-site build: Prerender (resource): /api/search -> build\client\api\search
+apps/docs-site build: Prerender (data): /llms.txt -> build\client\llms.txt.data
+apps/docs-site build: Prerender (resource): /llms.txt -> build\client\llms.txt
+apps/docs-site build: Prerender (data): /llms-full.txt -> build\client\llms-full.txt.data
+apps/docs-site build: Prerender (resource): /llms-full.txt -> build\client\llms-full.txt
+apps/docs-site build: Prerender (data): /core-vocabulary -> build\client\core-vocabulary.data
+apps/docs-site build: Prerender (html): /core-vocabulary -> build\client\core-vocabulary\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/core-vocabulary/content.md -> build\client\llms.mdx\docs\core-vocabulary\content.md
+apps/docs-site build: Prerender (data): / -> build\client\_root.data
+apps/docs-site build: Prerender (html): / -> build\client\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/content.md -> build\client\llms.mdx\docs\content.md
+apps/docs-site build: Prerender (data): /install -> build\client\install.data
+apps/docs-site build: Prerender (html): /install -> build\client\install\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/install/content.md -> build\client\llms.mdx\docs\install\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/install/content.md -> build\client\llms.mdx\docs\install\content.md
+apps/docs-site build: Prerender (data): /introduction -> build\client\introduction.data
+apps/docs-site build: Prerender (html): /introduction -> build\client\introduction\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/introduction/content.md -> build\client\llms.mdx\docs\introduction\content.md
+apps/docs-site build: Prerender (data): /protocol-lifecycle -> build\client\protocol-lifecycle.data
+apps/docs-site build: Prerender (html): /protocol-lifecycle -> build\client\protocol-lifecycle\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol-lifecycle/content.md -> build\client\llms.mdx\docs\protocol-lifecycle\content.md
+apps/docs-site build: Prerender (data): /protocol-object-model -> build\client\protocol-object-model.data
+apps/docs-site build: Prerender (html): /protocol-object-model -> build\client\protocol-object-model\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object-model\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol-object-model/content.md -> build\client\llms.mdx\docs\protocol-object-model\content.md
+apps/docs-site build: Prerender (data): /quickstart -> build\client\quickstart.data
+apps/docs-site build: Prerender (html): /quickstart -> build\client\quickstart\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/quickstart/content.md -> build\client\llms.mdx\docs\quickstart\content.md
+apps/docs-site build: Prerender (data): /runtime/benchmarks-and-evaluation -> build\client\runtime\benchmarks-and-evaluation.data
+apps/docs-site build: Prerender (html): /runtime/benchmarks-and-evaluation -> build\client\runtime\benchmarks-and-evaluation\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md -> build\client\llms.mdx\docs\runtime\benchmarks-and-evaluation\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/benchmarks-and-evaluation/content.md -> build\client\llms.mdx\docs\runtime\benchmarks-and-evaluation\content.md
+apps/docs-site build: Prerender (data): /runtime/models-and-role-activation -> build\client\runtime\models-and-role-activation.data
+apps/docs-site build: Prerender (html): /runtime/models-and-role-activation -> build\client\runtime\models-and-role-activation\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/models-and-role-activation/content.md -> build\client\llms.mdx\docs\runtime\models-and-role-activation\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/models-and-role-activation/content.md -> build\client\llms.mdx\docs\runtime\models-and-role-activation\content.md
+apps/docs-site build: Prerender (data): /runtime/observe-and-telemetry-analytics -> build\client\runtime\observe-and-telemetry-analytics.data
+apps/docs-site build: Prerender (html): /runtime/observe-and-telemetry-analytics -> build\client\runtime\observe-and-telemetry-analytics\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/observe-and-telemetry-analytics/content.md -> build\client\llms.mdx\docs\runtime\observe-and-telemetry-analytics\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/observe-and-telemetry-analytics/content.md -> build\client\llms.mdx\docs\runtime\observe-and-telemetry-analytics\content.md
+apps/docs-site build: Prerender (data): /runtime/provider-connections -> build\client\runtime\provider-connections.data
+apps/docs-site build: Prerender (html): /runtime/provider-connections -> build\client\runtime\provider-connections\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/provider-connections/content.md -> build\client\llms.mdx\docs\runtime\provider-connections\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/provider-connections/content.md -> build\client\llms.mdx\docs\runtime\provider-connections\content.md
+apps/docs-site build: Prerender (data): /runtime/routing-controls-and-decision-review -> build\client\runtime\routing-controls-and-decision-review.data
+apps/docs-site build: Prerender (html): /runtime/routing-controls-and-decision-review -> build\client\runtime\routing-controls-and-decision-review\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md -> build\client\llms.mdx\docs\runtime\routing-controls-and-decision-review\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/routing-controls-and-decision-review/content.md -> build\client\llms.mdx\docs\runtime\routing-controls-and-decision-review\content.md
+apps/docs-site build: Prerender (data): /runtime/runtime-ui-tour -> build\client\runtime\runtime-ui-tour.data
+apps/docs-site build: Prerender (html): /runtime/runtime-ui-tour -> build\client\runtime\runtime-ui-tour\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/runtime/runtime-ui-tour/content.md -> build\client\llms.mdx\docs\runtime\runtime-ui-tour\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/runtime/runtime-ui-tour/content.md -> build\client\llms.mdx\docs\runtime\runtime-ui-tour\content.md
+apps/docs-site build: Prerender (data): /router/candidate-selection-and-eligibility -> build\client\router\candidate-selection-and-eligibility.data
+apps/docs-site build: Prerender (html): /router/candidate-selection-and-eligibility -> build\client\router\candidate-selection-and-eligibility\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/candidate-selection-and-eligibility/content.md -> build\client\llms.mdx\docs\router\candidate-selection-and-eligibility\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/candidate-selection-and-eligibility/content.md -> build\client\llms.mdx\docs\router\candidate-selection-and-eligibility\content.md
+apps/docs-site build: Prerender (data): /router/fallbacks-failures-and-observability -> build\client\router\fallbacks-failures-and-observability.data
+apps/docs-site build: Prerender (html): /router/fallbacks-failures-and-observability -> build\client\router\fallbacks-failures-and-observability\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/fallbacks-failures-and-observability/content.md -> build\client\llms.mdx\docs\router\fallbacks-failures-and-observability\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/fallbacks-failures-and-observability/content.md -> build\client\llms.mdx\docs\router\fallbacks-failures-and-observability\content.md
+apps/docs-site build: Prerender (data): /router/how-routing-works-end-to-end -> build\client\router\how-routing-works-end-to-end.data
+apps/docs-site build: Prerender (html): /router/how-routing-works-end-to-end -> build\client\router\how-routing-works-end-to-end\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\router\how-routing-works-end-to-end\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/how-routing-works-end-to-end/content.md -> build\client\llms.mdx\docs\router\how-routing-works-end-to-end\content.md
+apps/docs-site build: Prerender (data): /router/overview -> build\client\router\overview.data
+apps/docs-site build: Prerender (html): /router/overview -> build\client\router\overview\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/overview/content.md -> build\client\llms.mdx\docs\router\overview\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/overview/content.md -> build\client\llms.mdx\docs\router\overview\content.md
+apps/docs-site build: Prerender (data): /router/protocol-to-router-mapping -> build\client\router\protocol-to-router-mapping.data
+apps/docs-site build: Prerender (html): /router/protocol-to-router-mapping -> build\client\router\protocol-to-router-mapping\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\router\protocol-to-router-mapping\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/protocol-to-router-mapping/content.md -> build\client\llms.mdx\docs\router\protocol-to-router-mapping\content.md
+apps/docs-site build: Prerender (data): /router/routing-modes-locality-and-execution -> build\client\router\routing-modes-locality-and-execution.data
+apps/docs-site build: Prerender (html): /router/routing-modes-locality-and-execution -> build\client\router\routing-modes-locality-and-execution\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/routing-modes-locality-and-execution/content.md -> build\client\llms.mdx\docs\router\routing-modes-locality-and-execution\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/routing-modes-locality-and-execution/content.md -> build\client\llms.mdx\docs\router\routing-modes-locality-and-execution\content.md
+apps/docs-site build: Prerender (data): /router/scoring-tie-breaks-and-decisions -> build\client\router\scoring-tie-breaks-and-decisions.data
+apps/docs-site build: Prerender (html): /router/scoring-tie-breaks-and-decisions -> build\client\router\scoring-tie-breaks-and-decisions\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md -> build\client\llms.mdx\docs\router\scoring-tie-breaks-and-decisions\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/scoring-tie-breaks-and-decisions/content.md -> build\client\llms.mdx\docs\router\scoring-tie-breaks-and-decisions\content.md
+apps/docs-site build: Prerender (data): /router/strategy-modes-and-tradeoffs -> build\client\router\strategy-modes-and-tradeoffs.data
+apps/docs-site build: Prerender (html): /router/strategy-modes-and-tradeoffs -> build\client\router\strategy-modes-and-tradeoffs\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md -> build\client\llms.mdx\docs\router\strategy-modes-and-tradeoffs\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/router/strategy-modes-and-tradeoffs/content.md -> build\client\llms.mdx\docs\router\strategy-modes-and-tradeoffs\content.md
+apps/docs-site build: Prerender (data): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference.data
+apps/docs-site build: Prerender (html): /reference/canonical-schemas-reference -> build\client\reference\canonical-schemas-reference\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs\reference\canonical-schemas-reference\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/canonical-schemas-reference/content.md -> build\client\llms.mdx\docs\reference\canonical-schemas-reference\content.md
+apps/docs-site build: Prerender (data): /reference/overview -> build\client\reference\overview.data
+apps/docs-site build: Prerender (html): /reference/overview -> build\client\reference\overview\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/overview/content.md -> build\client\llms.mdx\docs\reference\overview\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/overview/content.md -> build\client\llms.mdx\docs\reference\overview\content.md
+apps/docs-site build: Prerender (data): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejection-taxonomy.data
+apps/docs-site build: Prerender (html): /reference/reason-codes-and-rejection-taxonomy -> build\client\reference\reason-codes-and-rejection-taxonomy\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.mdx\docs\reference\reason-codes-and-rejection-taxonomy\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/reference/reason-codes-and-rejection-taxonomy/content.md -> build\client\llms.mdx\docs\reference\reason-codes-and-rejection-taxonomy\content.md
+apps/docs-site build: Prerender (data): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy.data
+apps/docs-site build: Prerender (html): /protocol/capability-taxonomy -> build\client\protocol\capability-taxonomy\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol\capability-taxonomy\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/capability-taxonomy/content.md -> build\client\llms.mdx\docs\protocol\capability-taxonomy\content.md
+apps/docs-site build: Prerender (data): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles.data
+apps/docs-site build: Prerender (html): /protocol/declared-capability-profiles -> build\client\protocol\declared-capability-profiles\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs\protocol\declared-capability-profiles\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/declared-capability-profiles/content.md -> build\client\llms.mdx\docs\protocol\declared-capability-profiles\content.md
+apps/docs-site build: Prerender (data): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity.data
+apps/docs-site build: Prerender (html): /protocol/endpoint-identity -> build\client\protocol\endpoint-identity\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\endpoint-identity\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/endpoint-identity/content.md -> build\client\llms.mdx\docs\protocol\endpoint-identity\content.md
+apps/docs-site build: Prerender (data): /protocol -> build\client\protocol.data
+apps/docs-site build: Prerender (html): /protocol -> build\client\protocol\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/content.md -> build\client\llms.mdx\docs\protocol\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/content.md -> build\client\llms.mdx\docs\protocol\content.md
+apps/docs-site build: Prerender (data): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles.data
+apps/docs-site build: Prerender (html): /protocol/observed-performance-profiles -> build\client\protocol\observed-performance-profiles\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\docs\protocol\observed-performance-profiles\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/observed-performance-profiles/content.md -> build\client\llms.mdx\docs\protocol\observed-performance-profiles\content.md
+apps/docs-site build: Prerender (data): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks.data
+apps/docs-site build: Prerender (html): /protocol/roles-and-tasks -> build\client\protocol\roles-and-tasks\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\roles-and-tasks\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/roles-and-tasks/content.md -> build\client\llms.mdx\docs\protocol\roles-and-tasks\content.md
+apps/docs-site build: Prerender (data): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact.data
+apps/docs-site build: Prerender (html): /protocol/router-decision-artifact -> build\client\protocol\router-decision-artifact\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\protocol\router-decision-artifact\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/router-decision-artifact/content.md -> build\client\llms.mdx\docs\protocol\router-decision-artifact\content.md
+apps/docs-site build: Prerender (data): /protocol/routing-policy -> build\client\protocol\routing-policy.data
+apps/docs-site build: Prerender (html): /protocol/routing-policy -> build\client\protocol\routing-policy\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\routing-policy\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/routing-policy/content.md -> build\client\llms.mdx\docs\protocol\routing-policy\content.md
+apps/docs-site build: Prerender (data): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts.data
+apps/docs-site build: Prerender (html): /protocol/trace-and-usage-artifacts -> build\client\protocol\trace-and-usage-artifacts\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> build\client\llms.mdx\docs\protocol\trace-and-usage-artifacts\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/protocol/trace-and-usage-artifacts/content.md -> build\client\llms.mdx\docs\protocol\trace-and-usage-artifacts\content.md
+apps/docs-site build: Prerender (data): /integrations/downstream-openai-discovery -> build\client\integrations\downstream-openai-discovery.data
+apps/docs-site build: Prerender (html): /integrations/downstream-openai-discovery -> build\client\integrations\downstream-openai-discovery\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/integrations/downstream-openai-discovery/content.md -> build\client\llms.mdx\docs\integrations\downstream-openai-discovery\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/integrations/downstream-openai-discovery/content.md -> build\client\llms.mdx\docs\integrations\downstream-openai-discovery\content.md
+apps/docs-site build: Prerender (data): /integrations/pi -> build\client\integrations\pi.data
+apps/docs-site build: Prerender (html): /integrations/pi -> build\client\integrations\pi\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/integrations/pi/content.md -> build\client\llms.mdx\docs\integrations\pi\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/integrations/pi/content.md -> build\client\llms.mdx\docs\integrations\pi\content.md
+apps/docs-site build: Prerender (data): /get-started/choose-routing-strategy -> build\client\get-started\choose-routing-strategy.data
+apps/docs-site build: Prerender (html): /get-started/choose-routing-strategy -> build\client\get-started\choose-routing-strategy\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/choose-routing-strategy/content.md -> build\client\llms.mdx\docs\get-started\choose-routing-strategy\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/choose-routing-strategy/content.md -> build\client\llms.mdx\docs\get-started\choose-routing-strategy\content.md
+apps/docs-site build: Prerender (data): /get-started/first-launch-and-connect-models -> build\client\get-started\first-launch-and-connect-models.data
+apps/docs-site build: Prerender (html): /get-started/first-launch-and-connect-models -> build\client\get-started\first-launch-and-connect-models\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/first-launch-and-connect-models/content.md -> build\client\llms.mdx\docs\get-started\first-launch-and-connect-models\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/first-launch-and-connect-models/content.md -> build\client\llms.mdx\docs\get-started\first-launch-and-connect-models\content.md
+apps/docs-site build: Prerender (data): /get-started/first-request-and-decision -> build\client\get-started\first-request-and-decision.data
+apps/docs-site build: Prerender (html): /get-started/first-request-and-decision -> build\client\get-started\first-request-and-decision\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/first-request-and-decision/content.md -> build\client\llms.mdx\docs\get-started\first-request-and-decision\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/first-request-and-decision/content.md -> build\client\llms.mdx\docs\get-started\first-request-and-decision\content.md
+apps/docs-site build: Prerender (data): /get-started/install -> build\client\get-started\install.data
+apps/docs-site build: Prerender (html): /get-started/install -> build\client\get-started\install\index.html
+role-model-router/apps/runtime-ui build: ✓ 2372 modules transformed.
+apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/install/content.md -> build\client\llms.mdx\docs\get-started\install\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/install/content.md -> build\client\llms.mdx\docs\get-started\install\content.md
+apps/docs-site build: Prerender (data): /get-started/run-full-benchmark -> build\client\get-started\run-full-benchmark.data
+apps/docs-site build: Prerender (html): /get-started/run-full-benchmark -> build\client\get-started\run-full-benchmark\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/get-started/run-full-benchmark/content.md -> build\client\llms.mdx\docs\get-started\run-full-benchmark\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/get-started/run-full-benchmark/content.md -> build\client\llms.mdx\docs\get-started\run-full-benchmark\content.md
+apps/docs-site build: Prerender (data): /concepts/endpoints-and-profiles -> build\client\concepts\endpoints-and-profiles.data
+apps/docs-site build: Prerender (html): /concepts/endpoints-and-profiles -> build\client\concepts\endpoints-and-profiles\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/endpoints-and-profiles/content.md -> build\client\llms.mdx\docs\concepts\endpoints-and-profiles\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/endpoints-and-profiles/content.md -> build\client\llms.mdx\docs\concepts\endpoints-and-profiles\content.md
+apps/docs-site build: Prerender (data): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works.data
+apps/docs-site build: Prerender (html): /concepts/how-role-model-works -> build\client\concepts\how-role-model-works\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/how-role-model-works/content.md -> build\client\llms.mdx\docs\concepts\how-role-model-works\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/how-role-model-works/content.md -> build\client\llms.mdx\docs\concepts\how-role-model-works\content.md
+apps/docs-site build: Prerender (data): /concepts/policy-and-observability -> build\client\concepts\policy-and-observability.data
+apps/docs-site build: Prerender (html): /concepts/policy-and-observability -> build\client\concepts\policy-and-observability\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/policy-and-observability/content.md -> build\client\llms.mdx\docs\concepts\policy-and-observability\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/policy-and-observability/content.md -> build\client\llms.mdx\docs\concepts\policy-and-observability\content.md
+apps/docs-site build: Prerender (data): /concepts/protocol-overview -> build\client\concepts\protocol-overview.data
+apps/docs-site build: Prerender (html): /concepts/protocol-overview -> build\client\concepts\protocol-overview\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/protocol-overview/content.md -> build\client\llms.mdx\docs\concepts\protocol-overview\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/protocol-overview/content.md -> build\client\llms.mdx\docs\concepts\protocol-overview\content.md
+apps/docs-site build: Prerender (data): /concepts/roles-tasks-and-capabilities -> build\client\concepts\roles-tasks-and-capabilities.data
+apps/docs-site build: Prerender (html): /concepts/roles-tasks-and-capabilities -> build\client\concepts\roles-tasks-and-capabilities\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md -> build\client\llms.mdx\docs\concepts\roles-tasks-and-capabilities\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/roles-tasks-and-capabilities/content.md -> build\client\llms.mdx\docs\concepts\roles-tasks-and-capabilities\content.md
+apps/docs-site build: Prerender (data): /concepts/routing-overview -> build\client\concepts\routing-overview.data
+apps/docs-site build: Prerender (html): /concepts/routing-overview -> build\client\concepts\routing-overview\index.html
+apps/docs-site build: Prerender (data): /llms.mdx/docs/concepts/routing-overview/content.md -> build\client\llms.mdx\docs\concepts\routing-overview\content.md.data
+apps/docs-site build: Prerender (resource): /llms.mdx/docs/concepts/routing-overview/content.md -> build\client\llms.mdx\docs\concepts\routing-overview\content.md
+apps/docs-site build: Prerender (html): SPA Fallback -> build\client\__spa-fallback.html
+apps/docs-site build: Removing the server build in D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\apps\docs-site\build\server due to ssr:false
+apps/docs-site build: computing gzip size...
+apps/docs-site build: build/server/.vite/manifest.json                                       34.39 kB │ gzip:   3.82 kB
+apps/docs-site build: build/server/assets/runtime-overview-WUpVyoOR.png                     218.07 kB
+apps/docs-site build: build/server/assets/server-build-BjmB36fm.css                          80.30 kB │ gzip:  13.37 kB
+apps/docs-site build: build/server/assets/pi-DAU5Xt7X.js                                      0.19 kB │ gzip:   0.14 kB
+apps/docs-site build: build/server/assets/docs-JWU7MsKk.js                                    0.19 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/install-CDy_k22D.js                                 0.20 kB │ gzip:   0.14 kB
+apps/docs-site build: build/server/assets/install-DryAn5l8.js                                 0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/overview-D_tys8yt.js                                0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/overview-DaPxjq9e.js                                0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/protocol-C15oPyMK.js                                0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/quickstart-CHogQaRj.js                              0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/introduction-DpukyDsx.js                            0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/routing-policy-DyH_sbVS.js                          0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/core-vocabulary-CFVE6Ji_.js                         0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/roles-and-tasks-Co-Y_vVo.js                         0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/runtime-ui-tour-CcwkBNVi.js                         0.20 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/routing-overview-BxwzsZ01.js                        0.21 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/endpoint-identity-ZTtUsca7.js                       0.21 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/protocol-overview-uOuFlIHt.js                       0.21 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/protocol-lifecycle-CWezWAkQ.js                      0.21 kB │ gzip:   0.15 kB
+apps/docs-site build: build/server/assets/run-full-benchmark-BPIlcsi_.js                      0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/capability-taxonomy-D6Wqnh0g.js                     0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/how-role-model-works-BpVCN--F.js                    0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/provider-connections-Da72BjUp.js                    0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/protocol-object-model-BlFZUKZr.js                   0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/endpoints-and-profiles-CZ5MZANL.js                  0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/choose-routing-strategy-WrCfbkqs.js                 0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/policy-and-observability-urw6o3YH.js                0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/router-decision-artifact-YlbSwx6y.js                0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/benchmarks-and-evaluation-BGhfnKkg.js               0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/trace-and-usage-artifacts-BXPVJtyV.js               0.21 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/first-request-and-decision-oYgSt0o-.js              0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/models-and-role-activation-CrFyhjrA.js              0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/protocol-to-router-mapping-DUSLV6R7.js              0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/canonical-schemas-reference-BJeTQlq1.js             0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/downstream-openai-discovery-C2Pq-oUR.js             0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/declared-capability-profiles-9kgOF7Xn.js            0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/how-routing-works-end-to-end-BaSOz4gC.js            0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/roles-tasks-and-capabilities-50o4CUJx.js            0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/strategy-modes-and-tradeoffs-2eB5AdKn.js            0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/observed-performance-profiles-vzmV6OIO.js           0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/first-launch-and-connect-models-DiMzi8DE.js         0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/observe-and-telemetry-analytics-iZqR9kMR.js         0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/scoring-tie-breaks-and-decisions-Gmnx5iJW.js        0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/candidate-selection-and-eligibility-DHd9Sn9q.js     0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/reason-codes-and-rejection-taxonomy-gu3x9VNv.js     0.22 kB │ gzip:   0.16 kB
+apps/docs-site build: build/server/assets/fallbacks-failures-and-observability-BznAVi6o.js    0.23 kB │ gzip:   0.17 kB
+apps/docs-site build: build/server/assets/routing-controls-and-decision-review-BgB8yXkw.js    0.23 kB │ gzip:   0.17 kB
+apps/docs-site build: build/server/assets/routing-modes-locality-and-execution-D2pMnVE_.js    0.23 kB │ gzip:   0.17 kB
+apps/docs-site build: build/server/assets/remove-undefined-CTqT55E9-Dk60y8Hj.js               0.59 kB │ gzip:   0.35 kB
+apps/docs-site build: build/server/assets/fetch-D9F5G62h.js                                   0.89 kB │ gzip:   0.51 kB
+apps/docs-site build: build/server/assets/chunk-CYJPkc-J-DmpvDrhQ.js                          1.25 kB │ gzip:   0.65 kB
+apps/docs-site build: build/server/assets/chunk-BGC-wIje.js                                   1.40 kB │ gzip:   0.66 kB
+apps/docs-site build: build/server/assets/algolia-Cv0IVvsa.js                                 1.55 kB │ gzip:   0.78 kB
+apps/docs-site build: build/server/assets/search-Di09xnxL.js                                  2.15 kB │ gzip:   0.94 kB
+apps/docs-site build: build/server/assets/search-default-Cx1JlRjA.js                          2.18 kB │ gzip:   0.90 kB
+apps/docs-site build: build/server/assets/orama-cloud-legacy-DDMK4KlT.js                      2.28 kB │ gzip:   0.91 kB
+apps/docs-site build: build/server/assets/orama-cloud-CbHMXpKB.js                             2.33 kB │ gzip:   0.92 kB
+apps/docs-site build: build/server/assets/orama-static-kT1ynPrk.js                            3.90 kB │ gzip:   1.56 kB
+apps/docs-site build: build/server/assets/policy-and-observability-DqsFsLRD.js                7.25 kB │ gzip:   1.57 kB
+apps/docs-site build: build/server/assets/roles-tasks-and-capabilities-D6Fc5b80.js            8.14 kB │ gzip:   1.73 kB
+apps/docs-site build: build/server/assets/overview-CUBLQIig.js                                8.29 kB │ gzip:   1.70 kB
+apps/docs-site build: build/server/assets/endpoints-and-profiles-D1vz45RN.js                  8.37 kB │ gzip:   1.72 kB
+apps/docs-site build: build/server/assets/install-BujL4KeW.js                                 8.77 kB │ gzip:   2.13 kB
+apps/docs-site build: build/server/assets/first-request-and-decision-BdQ-plYY.js             10.29 kB │ gzip:   1.98 kB
+apps/docs-site build: build/server/assets/quickstart-CHXYD-8J.js                             10.89 kB │ gzip:   2.30 kB
+apps/docs-site build: build/server/assets/protocol-lifecycle-DldRu7r5.js                     11.26 kB │ gzip:   2.33 kB
+apps/docs-site build: build/server/assets/runtime-ui-tour-D_BPGOyH.js                        12.79 kB │ gzip:   2.45 kB
+apps/docs-site build: build/server/assets/run-full-benchmark-02I44X6R.js                     13.70 kB │ gzip:   2.57 kB
+apps/docs-site build: build/server/assets/models-and-role-activation-JoCkoIe9.js             14.22 kB │ gzip:   2.59 kB
+apps/docs-site build: build/server/assets/provider-connections-Ct_FqRTl.js                   14.29 kB │ gzip:   2.53 kB
+apps/docs-site build: build/server/assets/first-launch-and-connect-models-CGvtkrCT.js        14.80 kB │ gzip:   2.99 kB
+apps/docs-site build: build/server/assets/overview-wL6vWRdJ.js                               15.16 kB │ gzip:   2.62 kB
+apps/docs-site build: build/server/assets/mixedbread-C2dhHj_X.js                             15.17 kB │ gzip:   6.25 kB
+apps/docs-site build: build/server/assets/observe-and-telemetry-analytics-CMRSVjuj.js        15.32 kB │ gzip:   2.67 kB
+apps/docs-site build: build/server/assets/capability-taxonomy-Chg7Ex-J.js                    15.49 kB │ gzip:   2.58 kB
+apps/docs-site build: build/server/assets/trace-and-usage-artifacts-DGLg392X.js              15.70 kB │ gzip:   2.48 kB
+apps/docs-site build: build/server/assets/protocol-DA2L6n54.js                               16.28 kB │ gzip:   2.72 kB
+apps/docs-site build: build/server/assets/router-decision-artifact-MSzdN1xX.js               16.49 kB │ gzip:   2.67 kB
+apps/docs-site build: build/server/assets/declared-capability-profiles-a79_Tc7l.js           16.52 kB │ gzip:   2.72 kB
+apps/docs-site build: build/server/assets/downstream-openai-discovery-EFN1zktI.js            16.73 kB │ gzip:   2.89 kB
+apps/docs-site build: build/server/assets/benchmarks-and-evaluation-Rp2704Ry.js              17.63 kB │ gzip:   3.03 kB
+apps/docs-site build: build/server/assets/protocol-to-router-mapping-SEpY5EK3.js             18.15 kB │ gzip:   2.99 kB
+apps/docs-site build: build/server/assets/routing-controls-and-decision-review-B5vNAqf7.js   18.23 kB │ gzip:   3.05 kB
+apps/docs-site build: build/server/assets/routing-policy-CY6YSPC2.js                         19.24 kB │ gzip:   2.99 kB
+apps/docs-site build: build/server/assets/how-routing-works-end-to-end-Ci_c6BWj.js           20.50 kB │ gzip:   3.43 kB
+apps/docs-site build: build/server/assets/install-nw3n_rwz.js                                21.34 kB │ gzip:   3.54 kB
+apps/docs-site build: build/server/assets/protocol-object-model-DPRCtdD2.js                  21.39 kB │ gzip:   3.46 kB
+apps/docs-site build: build/server/assets/core-vocabulary-X3LKIrqc.js                        21.63 kB │ gzip:   3.46 kB
+apps/docs-site build: build/server/assets/canonical-schemas-reference-BOdYeagG.js            22.25 kB │ gzip:   3.13 kB
+apps/docs-site build: build/server/assets/reason-codes-and-rejection-taxonomy-CTyrrY1W.js    22.27 kB │ gzip:   3.06 kB
+apps/docs-site build: build/server/assets/how-role-model-works-CoLaIg9E.js                   22.44 kB │ gzip:   3.63 kB
+apps/docs-site build: build/server/assets/routing-overview-BlTpKuFM.js                       22.55 kB │ gzip:   3.61 kB
+apps/docs-site build: build/server/assets/protocol-overview-DfdvPjG3.js                      22.96 kB │ gzip:   3.71 kB
+apps/docs-site build: build/server/assets/observed-performance-profiles-CJ3GMn24.js          23.74 kB │ gzip:   3.48 kB
+apps/docs-site build: build/server/assets/docs-C_2pQIyH.js                                   25.30 kB │ gzip:   4.26 kB
+apps/docs-site build: build/server/assets/endpoint-identity-CuzPqz9u.js                      27.36 kB │ gzip:   3.79 kB
+apps/docs-site build: build/server/assets/pi-BWdS95S-.js                                     27.40 kB │ gzip:   4.42 kB
+apps/docs-site build: build/server/assets/choose-routing-strategy-DX5Y4L0I.js                31.35 kB │ gzip:   4.52 kB
+apps/docs-site build: build/server/assets/fallbacks-failures-and-observability-Dx6keuE1.js   32.98 kB │ gzip:   4.93 kB
+apps/docs-site build: build/server/assets/candidate-selection-and-eligibility-CYmbEemg.js    34.32 kB │ gzip:   4.74 kB
+apps/docs-site build: build/server/assets/introduction-zxuyuKzu.js                           34.76 kB │ gzip:   5.26 kB
+apps/docs-site build: build/server/assets/scoring-tie-breaks-and-decisions-BB5tv2nn.js       36.71 kB │ gzip:   5.23 kB
+apps/docs-site build: build/server/assets/routing-modes-locality-and-execution-C9vPaV-U.js   46.46 kB │ gzip:   5.96 kB
+apps/docs-site build: build/server/assets/strategy-modes-and-tradeoffs-Bas5mgpp.js           57.94 kB │ gzip:   7.42 kB
+apps/docs-site build: build/server/index.js                                                 372.71 kB │ gzip:  89.51 kB
+apps/docs-site build: build/server/assets/remark-DmD561_2.js                                383.60 kB │ gzip:  81.28 kB
+apps/docs-site build: build/server/assets/search-D9MiD8UZ.js                                509.64 kB │ gzip: 122.51 kB
+apps/docs-site build: build/server/assets/roles-and-tasks-BLCQuLpm.js                       861.20 kB │ gzip:  92.03 kB
+apps/docs-site build: [33m[PLUGIN_TIMINGS] Warning:[0m Your build spent significant time in plugins. Here is a breakdown:
+apps/docs-site build:   - fumadocs-mdx (40%)
+apps/docs-site build:   - react-router:split-route-modules (17%)
+apps/docs-site build:   - react-router:dot-server (15%)
+apps/docs-site build:   - react-router:dot-client (8%)
+apps/docs-site build:   - react-router:inject-hmr-runtime (4%)
+apps/docs-site build: See https://rolldown.rs/options/checks#plugintimings for more details.
+apps/docs-site build: ✓ built in 6.08s
+role-model-router/apps/runtime-ui build: rendering chunks...
+role-model-router/apps/runtime-ui build: computing gzip size...
+role-model-router/apps/runtime-ui build: build/client/.vite/manifest.json                           23.76 kB │ gzip:   2.17 kB
+role-model-router/apps/runtime-ui build: build/client/assets/root-q40MYD75.css                      53.91 kB │ gzip:  10.27 kB
+role-model-router/apps/runtime-ui build: build/client/assets/index-CgUeC-Zx.js                       0.15 kB │ gzip:   0.15 kB
+role-model-router/apps/runtime-ui build: build/client/assets/live-refresh-DcaagJbF.js                0.16 kB │ gzip:   0.14 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-models-DEleTGZf.js                0.16 kB │ gzip:   0.16 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-candidate-labels-DZOqVj1T.js     0.67 kB │ gzip:   0.41 kB
+role-model-router/apps/runtime-ui build: build/client/assets/shell-header-context-BBtNcHzJ.js        0.78 kB │ gzip:   0.40 kB
+role-model-router/apps/runtime-ui build: build/client/assets/not-found-BM8wPDSc.js                   1.03 kB │ gzip:   0.55 kB
+role-model-router/apps/runtime-ui build: build/client/assets/routing-mode-0L6xYTH_.js                1.04 kB │ gzip:   0.48 kB
+role-model-router/apps/runtime-ui build: build/client/assets/legacy-redirect-Bh8_0Ivo.js             1.19 kB │ gzip:   0.43 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-matrix-AWS8YQxR.js                1.29 kB │ gzip:   0.52 kB
+role-model-router/apps/runtime-ui build: build/client/assets/llama-swap-setup-DjrOlpYQ.js            1.50 kB │ gzip:   0.74 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-choose-DFfoz3Ce.js                1.98 kB │ gzip:   0.84 kB
+role-model-router/apps/runtime-ui build: build/client/assets/integrations-downstream-CD_Gc500.js     2.52 kB │ gzip:   1.02 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-swap-BAJk047e.js                  3.39 kB │ gzip:   1.38 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-runtime-config-Cq0R_Rgy.js      3.45 kB │ gzip:   1.54 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-decisions-Bhn7zSHo.js            3.62 kB │ gzip:   1.42 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-policy-DuRGSEgP.js                3.74 kB │ gzip:   1.61 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-peers-ByYk3q14.js                 4.03 kB │ gzip:   1.65 kB
+role-model-router/apps/runtime-ui build: build/client/assets/root-Dzd8TfHK.js                        4.03 kB │ gzip:   1.74 kB
+role-model-router/apps/runtime-ui build: build/client/assets/integrations-upstream-DcwT8Gxd.js       4.09 kB │ gzip:   1.58 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-logs-_ZS01IAc.js                  4.27 kB │ gzip:   1.68 kB
+role-model-router/apps/runtime-ui build: build/client/assets/system-peers-DmeZWGeW.js                4.32 kB │ gzip:   1.70 kB
+role-model-router/apps/runtime-ui build: build/client/assets/studio-rerank-CBiml19f.js               4.34 kB │ gzip:   1.88 kB
+role-model-router/apps/runtime-ui build: build/client/assets/app-layout-Dbx7s5FO.js                  4.46 kB │ gzip:   1.86 kB
+role-model-router/apps/runtime-ui build: build/client/assets/observe-activity-BqFGUrPZ.js            4.52 kB │ gzip:   1.75 kB
+role-model-router/apps/runtime-ui build: build/client/assets/runtime-ymIeb6IE.js                     4.57 kB │ gzip:   1.66 kB
+role-model-router/apps/runtime-ui build: build/client/assets/studio-images-2s2jeojg.js               4.80 kB │ gzip:   1.94 kB
+role-model-router/apps/runtime-ui build: build/client/assets/observe-logs-CUQqvBGC.js                4.84 kB │ gzip:   1.85 kB
+role-model-router/apps/runtime-ui build: build/client/assets/session-readiness-smvYH8ay.js           4.85 kB │ gzip:   1.71 kB
+role-model-router/apps/runtime-ui build: build/client/assets/llama-swap-setup-hint-Dtu_6ATu.js       5.42 kB │ gzip:   1.96 kB
+role-model-router/apps/runtime-ui build: build/client/assets/endpoints-Dnwr4SUp.js                   5.55 kB │ gzip:   1.95 kB
+role-model-router/apps/runtime-ui build: build/client/assets/studio-advanced-D3gmPoXO.js             5.58 kB │ gzip:   2.22 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-controller-CO9jhuTH.js          5.66 kB │ gzip:   1.94 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-candidates-N91SRlKd.js           5.67 kB │ gzip:   2.03 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-peer-models-hsHUl73S.js           5.80 kB │ gzip:   2.05 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-model-role-picker-BkS-CnPP.js     5.84 kB │ gzip:   2.20 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-decision-detail-DttMLum-.js      5.93 kB │ gzip:   1.97 kB
+role-model-router/apps/runtime-ui build: build/client/assets/studio-audio-CTXTyYMZ.js                6.25 kB │ gzip:   2.45 kB
+role-model-router/apps/runtime-ui build: build/client/assets/workbench-XCrj85Uo.js                   7.03 kB │ gzip:   2.61 kB
+role-model-router/apps/runtime-ui build: build/client/assets/local-llama-swap-models-D2vfCPTH.js     7.17 kB │ gzip:   2.44 kB
+role-model-router/apps/runtime-ui build: build/client/assets/page-primitives-DNUAHhDm.js             7.59 kB │ gzip:   2.80 kB
+role-model-router/apps/runtime-ui build: build/client/assets/dashboard-DHuCu5om.js                   7.89 kB │ gzip:   2.95 kB
+role-model-router/apps/runtime-ui build: build/client/assets/observe-routing-DkiQzijM.js             8.17 kB │ gzip:   3.06 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-routing-strategy-npK0YHa_.js    8.67 kB │ gzip:   3.03 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-config-D3mOynXh.js               8.94 kB │ gzip:   2.33 kB
+role-model-router/apps/runtime-ui build: build/client/assets/requests-D-9fu-TQ.js                    9.51 kB │ gzip:   3.41 kB
+role-model-router/apps/runtime-ui build: build/client/assets/router-DnKTsHz0.js                      9.55 kB │ gzip:   2.79 kB
+role-model-router/apps/runtime-ui build: build/client/assets/runtime-api-Dqdl6jFE.js                14.42 kB │ gzip:   3.65 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-roles-F6RnS7oi.js              16.17 kB │ gzip:   4.39 kB
+role-model-router/apps/runtime-ui build: build/client/assets/request-detail-CJooz-e1.js             20.47 kB │ gzip:   6.11 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-models-DS9XQXQd.js             22.12 kB │ gzip:   6.15 kB
+role-model-router/apps/runtime-ui build: build/client/assets/view-models-B-FjAvMD.js                23.51 kB │ gzip:   7.30 kB
+role-model-router/apps/runtime-ui build: build/client/assets/cn-B5V-leUE.js                         26.34 kB │ gzip:   8.26 kB
+role-model-router/apps/runtime-ui build: build/client/assets/design-system-Bn_edxSD.js              26.47 kB │ gzip:   8.43 kB
+role-model-router/apps/runtime-ui build: build/client/assets/control-benchmark-0HrfT8wK.js          28.99 kB │ gzip:   8.59 kB
+role-model-router/apps/runtime-ui build: build/client/assets/providers-CXP8AohA.js                  30.40 kB │ gzip:   8.34 kB
+role-model-router/apps/runtime-ui build: build/client/assets/chunk-EVOBXE3Y-CbLStoMq.js            128.07 kB │ gzip:  43.13 kB
+role-model-router/apps/runtime-ui build: build/client/assets/entry.client-CUjFWg5_.js              190.57 kB │ gzip:  60.05 kB
+role-model-router/apps/runtime-ui build: build/client/assets/telemetry-route-models-RojDjR1C.js    434.22 kB │ gzip: 116.75 kB
+role-model-router/apps/runtime-ui build: ✓ built in 16.68s
+role-model-router/apps/runtime-ui build: vite v7.3.2 building ssr environment for production...
+role-model-router/apps/runtime-ui build: transforming...
+apps/docs-site build: npm warn Unknown env config "recursive". This will stop working in the next major version of npm.
+apps/docs-site build: npm warn Unknown env config "verify-deps-before-run". This will stop working in the next major version of npm.
+apps/docs-site build: > types:check
+apps/docs-site build: > react-router typegen && fumadocs-mdx && tsc --noEmit
+role-model-router/apps/runtime-ui build: ✓ 9 modules transformed.
+role-model-router/apps/runtime-ui build: rendering chunks...
+role-model-router/apps/runtime-ui build: build/server/.vite/manifest.json                0.23 kB
+role-model-router/apps/runtime-ui build: build/server/assets/server-build-q40MYD75.css  53.91 kB
+role-model-router/apps/runtime-ui build: build/server/index.js                          69.31 kB
+role-model-router/apps/runtime-ui build: ✓ 1 asset cleaned from React Router server build.
+role-model-router/apps/runtime-ui build: build\server\assets\server-build-q40MYD75.css
+role-model-router/apps/runtime-ui build: SPA Mode: Generated build\client\index.html
+role-model-router/apps/runtime-ui build: Removing the server build in D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\apps\runtime-ui\build\server due to ssr:false
+role-model-router/apps/runtime-ui build: ✓ built in 603ms
+apps/docs-site build: [MDX] generated files in 4.565200000000004ms
+apps/docs-site build: [MDX] generated files in 5.419499999999971ms
+apps/docs-site build: Materialized search index at D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\apps\docs-site\build\client\api\search.json
+role-model-router/apps/runtime-ui build: Done
+apps/docs-site build: Done
+role-model-router/apps/bench-cli build$ tsc -p tsconfig.json
+role-model-router/packages/bench-routing build$ tsc -p tsconfig.json
+role-model-router/packages/core build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build$ tsc -p tsconfig.json
+role-model-router/apps/bench-cli build: Done
+.../packages/provider-account build$ tsc -p tsconfig.json
+.../packages/profile-aggregator build: Done
+role-model-router/packages/trace build$ tsc -p tsconfig.json
+role-model-router/packages/core build: Done
+role-model-router/packages/usage build$ tsc -p tsconfig.json
+role-model-router/packages/bench-routing build: Done
+.../packages/vendor-litellm build$ tsc -p tsconfig.json
+.../packages/provider-account build: Done
+.../packages/vendor-llama-swap build$ tsc -p tsconfig.json
+role-model-router/packages/trace build: Done
+role-model-router/packages/usage build: Done
+.../packages/vendor-litellm build: Done
+.../packages/vendor-llama-swap build: Done
+role-model-router/packages/openai-compat build$ tsc -p tsconfig.json
+role-model-router/packages/provider-acp build$ tsc -p tsconfig.json
+role-model-router/packages/provider-cli build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build$ tsc -p tsconfig.json
+role-model-router/packages/provider-mcp build: Done
+role-model-router/packages/provider-cli build: Done
+role-model-router/packages/provider-acp build: Done
+role-model-router/packages/roles build$ tsc -p tsconfig.json
+role-model-router/packages/sqlite-memory build$ tsc -p tsconfig.json
+role-model-router/packages/tasks build$ tsc -p tsconfig.json
+role-model-router/packages/openai-compat build: Done
+role-model-router/packages/tasks build: Done
+role-model-router/packages/roles build: Done
+role-model-router/packages/sqlite-memory build: Done
+.../packages/context-envelope build$ tsc -p tsconfig.json
+role-model-router/apps/router-devtools build$ tsc -p tsconfig.json
+role-model-router/apps/router-devtools build: Done
+.../packages/context-envelope build: Done
+.../packages/retrieval-receipt build$ tsc -p tsconfig.json
+.../packages/retrieval-receipt build: Done
+.../packages/endpoint-registry build$ tsc -p tsconfig.json
+.../packages/endpoint-registry build: Done
+.../packages/protocol-routing build$ tsc -p tsconfig.json
+.../packages/protocol-routing build: Done
+packages/conformance build$ tsc -p tsconfig.json
+packages/conformance build: Done
+.../packages/adapter-execution build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build$ tsc -p tsconfig.json
+.../packages/provider-anthropic build: Done
+.../packages/adapter-execution build: Done
+.../packages/provider-openai build$ tsc -p tsconfig.json
+.../packages/runtime-observability build$ tsc -p tsconfig.json
+.../packages/runtime-observability build: Done
+.../packages/provider-openai build: Done
+role-model-router/apps/gateway-smoke build$ tsc -p tsconfig.json
+.../packages/provider-litellm build$ tsc -p tsconfig.json
+.../packages/provider-litellm build: Done
+role-model-router/apps/gateway-smoke build: Done
+.../apps/runtime-host-bridge build$ tsc -p tsconfig.json
+.../apps/runtime-host-bridge build: Done

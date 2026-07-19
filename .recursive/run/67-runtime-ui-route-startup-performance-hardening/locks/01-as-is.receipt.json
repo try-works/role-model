@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "48d23a72e7b574c756ea80eaadc1ece989d6f1d93f741d8767950d7767227b70",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\67-runtime-ui-route-startup-performance-hardening\\.recursive\\run\\67-runtime-ui-route-startup-performance-hardening\\01-as-is.md",
+  "locked_at": "2026-07-12T12:44:14Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "bc79360aedc7c2479101991adb179c69de1d3e1b347805161435011a5ab1c6fe",
+    "00-worktree.md": "d8434fb5c3af7cc7a32f04e193245e8500355db242999eb70e1d5f549afb2356"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "dac1eaf0c248c7ae53429d35c9c788ea35e872234c1a699b63194b290f5e2ddf"
+}

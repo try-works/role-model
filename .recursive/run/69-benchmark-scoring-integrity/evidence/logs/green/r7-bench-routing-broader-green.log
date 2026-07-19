@@ -1,0 +1,21 @@
+
+> @role-model-router/bench-routing@0.0.0 test D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity\role-model-router\packages\bench-routing
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity/role-model-router/packages/bench-routing[39m
+
+ [32m✓[39m src/diff-validator.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m test/answer-format.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/reasoning-extraction.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/answer-format.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m test/subject-prompt.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/judge-brief.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m test/judge-brief.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/index.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m57 passed[39m[22m[90m (57)[39m
+[2m   Start at [22m 15:23:51
+[2m   Duration [22m 1.88s[2m (transform 1.12s, setup 0ms, collect 2.71s, tests 154ms, environment 4ms, prepare 4.39s)[22m
+

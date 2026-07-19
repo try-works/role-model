@@ -1,0 +1,51 @@
+
+> @try-works/pi-role-model@0.1.1 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model
+> vitest run "--" "extension.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [32m✓[39m test/docs-and-safety.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m test/package-manifest.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/taxonomy-classification.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m test/alias-store.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m test/downstream-openai.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m test/commands.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m test/runtime-discovery.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m test/taxonomy-data-files.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [31m❯[39m test/extension.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 29[2mms[22m[39m
+[31m   [31m×[31m Pi extension registration[2m > [22mregisters one role-model command without auto-registering the provider at startup[39m[32m 23[2mms[22m[39m
+[31m     → expected 1 to be +0 // Object.is equality[39m
+   [32m✓[39m Pi extension registration[2m > [22mpasses Pi setModel into alias selection command dependencies[32m 3[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/extension.test.ts > Pi extension registration > registers one role-model command without auto-registering the provider at startup
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ test/extension.test.ts:33:28
+     31|     });
+     32| 
+     33|     expect(discoveryCalls).toBe(0);
+       |                            ^
+     34|     expect(providers).toEqual([]);
+     35|     expect(commands).toHaveLength(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m9 passed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m38 passed[39m[22m[90m (39)[39m
+[2m   Start at [22m 13:35:24
+[2m   Duration [22m 1.88s[2m (transform 1.07s, setup 0ms, collect 2.36s, tests 267ms, environment 4ms, prepare 4.08s)[22m
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @try-works/pi-role-model@0.1.1 test: `vitest run "--" "extension.test.ts"`
+Exit status 1

@@ -1,0 +1,39 @@
+Scope: all 44 workspace projects
+(node:44668) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ WARN  There are cyclic workspace dependencies: D:\wt\rm61\role-model-router\packages\adapter-execution, D:\wt\rm61\role-model-router\packages\provider-anthropic
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +558
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 558, reused 551, downloaded 0, added 4
+Progress: resolved 558, reused 552, downloaded 0, added 42
+Progress: resolved 558, reused 552, downloaded 0, added 64
+Progress: resolved 558, reused 552, downloaded 0, added 145
+Progress: resolved 558, reused 552, downloaded 0, added 213
+Progress: resolved 558, reused 552, downloaded 0, added 261
+Progress: resolved 558, reused 552, downloaded 0, added 328
+Progress: resolved 558, reused 552, downloaded 0, added 356
+Progress: resolved 558, reused 552, downloaded 0, added 412
+Progress: resolved 558, reused 552, downloaded 0, added 518
+Progress: resolved 558, reused 552, downloaded 0, added 555
+Progress: resolved 558, reused 552, downloaded 0, added 556
+Progress: resolved 558, reused 552, downloaded 0, added 557
+Progress: resolved 558, reused 552, downloaded 0, added 558, done
+
+devDependencies:
++ @biomejs/biome 1.9.4
++ @types/node 22.19.17
++ ajv 8.18.0
++ ajv-formats 3.0.1
++ commander 13.1.0
++ esbuild 0.25.12
++ json-schema-to-typescript 15.0.4
++ postject 1.0.0-alpha.6
++ tsx 4.21.0
++ typescript 5.9.3
++ vitest 3.2.4
+
+╭ Warning ─────────────────────────────────────────────────────────────────────╮│                                                                              ││   Ignored build scripts: @biomejs/biome, esbuild, sharp, workerd.            ││   Run "pnpm approve-builds" to pick which dependencies should be allowed     ││   to run scripts.                                                            ││                                                                              │╰──────────────────────────────────────────────────────────────────────────────╯
+
+Done in 17s using pnpm v10.6.5

@@ -1,0 +1,17 @@
+{
+  "checkedAt": "2026-06-17T18:43:51.313Z",
+  "hasApiFamily": false,
+  "hasCompatibilityPosture": false,
+  "hasConnectionContract": true,
+  "hasConsumerSetup": true,
+  "hasMcpBoundary": false,
+  "hasRouteError": false,
+  "hasToolCalling": false,
+  "headings": [
+    "Connection contract",
+    "Consumer setup"
+  ],
+  "mainClientWidth": 691,
+  "mainScrollWidth": 1650,
+  "url": "http://127.0.0.1:3456/app/connect/downstream"
+}

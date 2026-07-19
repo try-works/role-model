@@ -1,0 +1,81 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/apps/runtime-ui
+
+ ❯ app/components/telemetry-charts.test.tsx (13 tests | 4 failed) 85ms
+   × telemetry chart layout contract > exports bounded data-dependent geometry and shared plot values 10ms
+     → resolveTelemetryChartLayout is not a function
+   ✓ TelemetryChartCard > keeps populated chart content visible while a background refresh is in progress 27ms
+   ✓ TelemetryChartCard > renders stable loading and empty states without fake chart data 3ms
+   ✓ TelemetryChartCard > keeps empty chart states compact instead of reserving full plot height 2ms
+   ✓ TelemetryChartCard > uses tighter empty-state padding so compact analytics cards do not create oversized blank panels 1ms
+   ✓ TelemetryChartCard > keeps populated chart content visible for partial telemetry warnings 6ms
+   ✓ TelemetryChartCard > replaces the chart body for blocking unsupported states 1ms
+   ✓ TelemetryAnalyticsChartCard > renders a per-card error state when a chart query fails 2ms
+   × TelemetryLineTimeSeriesChart > renders dual y axes for mixed-unit cache efficiency charts 14ms
+     → expected '<div class="h-[280px] w-full"><div da…' to contain 'data-testid="telemetry-chart-plot"'
+   ✓ TelemetryLineTimeSeriesChart > keeps same-unit line charts on a single y axis 2ms
+   × shared area and bar time-series geometry > renders data-dependent dual axes and inset legend for area charts 6ms
+     → expected 1 to be 2 // Object.is equality
+   × shared area and bar time-series geometry > renders data-dependent dual axes and inset legend for bar charts 4ms
+     → expected 1 to be 2 // Object.is equality
+   ✓ TelemetryRankingBarChart > places horizontal chart labels in a bottom legend instead of a left category axis 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/telemetry-charts.test.tsx > telemetry chart layout contract > exports bounded data-dependent geometry and shared plot values
+TypeError: resolveTelemetryChartLayout is not a function
+ ❯ app/components/telemetry-charts.test.tsx:70:21
+     68| describe("telemetry chart layout contract", () => {
+     69|   test("exports bounded data-dependent geometry and shared plot values…
+     70|     const compact = resolveTelemetryChartLayout({
+       |                     ^
+     71|       leftTickLabels: ["0", "8"],
+     72|       rightTickLabels: [],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  app/components/telemetry-charts.test.tsx > TelemetryLineTimeSeriesChart > renders dual y axes for mixed-unit cache efficiency charts
+AssertionError: expected '<div class="h-[280px] w-full"><div da…' to contain 'data-testid="telemetry-chart-plot"'
+
+Expected: "data-testid="telemetry-chart-plot""
+Received: "<div class="h-[280px] w-full"><div data-recharts="ResponsiveContainer" data-width="100%"><div data-recharts="LineChart"><div data-recharts="CartesianGrid"></div><div data-recharts="XAxis" data-datakey="bucketLabel"></div><div data-recharts="YAxis" data-yaxisid="left" data-width="36"></div><div data-recharts="YAxis" data-orientation="right" data-yaxisid="right" data-width="36"></div><div data-recharts="Tooltip"></div><div data-recharts="Legend"></div><div data-recharts="Line" data-datakey="cacheHitTokens" data-name="Cache hit tokens" data-yaxisid="left" data-type="monotone"></div><div data-recharts="Line" data-datakey="cacheHitTokenRate" data-name="Cache hit token rate" data-yaxisid="right" data-type="monotone"></div></div></div></div>"
+
+ ❯ app/components/telemetry-charts.test.tsx:272:20
+    270|     expect(markup.match(/data-recharts=\"YAxis\"/g)?.length).toBe(2);
+    271|     expect(markup).toContain('data-recharts="YAxis" data-orientation="…
+    272|     expect(markup).toContain('data-testid="telemetry-chart-plot"');
+       |                    ^
+    273|     expect(markup).toContain('data-testid="telemetry-chart-legend"');
+    274|     expect(markup).toContain(`height:${telemetryChartLayoutContract.pl…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  app/components/telemetry-charts.test.tsx > shared area and bar time-series geometry > renders data-dependent dual axes and inset legend for area charts
+ FAIL  app/components/telemetry-charts.test.tsx > shared area and bar time-series geometry > renders data-dependent dual axes and inset legend for bar charts
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ app/components/telemetry-charts.test.tsx:370:60
+    368|     const markup = renderToStaticMarkup(<Chart model={dualAxisModel} /…
+    369| 
+    370|     expect(markup.match(/data-recharts="YAxis"/g)?.length).toBe(2);
+       |                                                            ^
+    371|     expect(markup).toContain('data-recharts="YAxis" data-orientation="…
+    372|     expect(markup).toMatch(/data-recharts="YAxis"[^>]*data-width="[5-9…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 9 passed (13)
+   Start at  04:10:02
+   Duration  1.85s (transform 240ms, setup 0ms, collect 575ms, tests 85ms, environment 0ms, prepare 385ms)
+
+undefined
+D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/components/telemetry-charts.test.tsx

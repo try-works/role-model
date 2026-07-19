@@ -1,0 +1,4 @@
+
+> pi-role-model@0.0.0 build D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model
+> tsc --noEmit -p tsconfig.json
+

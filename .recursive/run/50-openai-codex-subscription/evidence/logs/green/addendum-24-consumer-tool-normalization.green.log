@@ -1,0 +1,17 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge
+
+(node:34108) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (115 tests | 110 skipped) 1804ms
+   ✓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-flash web-search requests as consumer-managed tool calls  412ms
+   ✓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-pro web-search requests as consumer-managed tool calls  302ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_search markup into consumer-visible tool calls  336ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_open markup into consumer-visible tool calls  408ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_browse markup into consumer-visible tool calls  341ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed | 110 skipped (115)
+   Start at  22:03:55
+   Duration  5.18s (transform 1.76s, setup 0ms, collect 2.30s, tests 1.80s, environment 0ms, prepare 393ms)
+

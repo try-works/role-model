@@ -1,0 +1,35 @@
+{
+  "capturedAt": "2026-07-09T19:10:54.1633153+08:00",
+  "processes": [
+    {
+      "Id": 12604,
+      "ProcessName": "Craft Agents",
+      "Path": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe"
+    },
+    {
+      "Id": 22268,
+      "ProcessName": "Craft Agents",
+      "Path": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe"
+    },
+    {
+      "Id": 23044,
+      "ProcessName": "Craft Agents",
+      "Path": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe"
+    },
+    {
+      "Id": 25460,
+      "ProcessName": "Craft Agents",
+      "Path": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe"
+    },
+    {
+      "Id": 62776,
+      "ProcessName": "role-model-runtime",
+      "Path": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe"
+    }
+  ],
+  "listeners": {
+    "LocalAddress": "127.0.0.1",
+    "LocalPort": 3456,
+    "OwningProcess": 62776
+  }
+}

@@ -1,0 +1,19 @@
+
+> @role-model-router/vendor-litellm@0.0.0 test D:\wt\rm61\role-model-router\packages\vendor-litellm
+> vitest run
+
+
+ RUN  v3.2.4 D:/wt/rm61/role-model-router/packages/vendor-litellm
+
+ ✓ test/index.test.ts (12 tests) 3759ms
+   ✓ vendor-litellm > starts a managed LiteLLM vendor and captures cost plus cache metadata from responses  1145ms
+   ✓ vendor-litellm > captures response cost from LiteLLM headers when the proxy strips hidden params  813ms
+   ✓ vendor-litellm > captures cache status from LiteLLM headers when the proxy omits hidden cache markers  559ms
+   ✓ vendor-litellm > forwards fallback model ids into the LiteLLM request body  457ms
+   ✓ vendor-litellm > streams chat-completions deltas through the managed LiteLLM vendor  486ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  21:13:51
+   Duration  7.17s (transform 716ms, setup 0ms, collect 1.47s, tests 3.76s, environment 1ms, prepare 668ms)
+

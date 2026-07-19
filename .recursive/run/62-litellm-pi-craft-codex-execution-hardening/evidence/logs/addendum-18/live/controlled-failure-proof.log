@@ -1,0 +1,3 @@
+Error: expected endpoint deepseek.personal.addendum18-failure-capture.global.addendum18-failure-capture, got routing.failed.pre-execution
+    at main (file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/scripts/addendum18-live-failure-proof.mjs:138:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)

@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "e01-yes-no",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Deliverable is a valid JSON object with key 'answer' and value 'yes', meeting the requirement to answer yes or no only. No placeholders, diff artifacts, or extra prose in the graded section.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/e01-yes-no.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/e01-yes-no/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783934771946
+}

@@ -1,0 +1,13 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/packages/sqlite-memory[39m
+
+(node:38476) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/index.test.ts [2m([22m[2m25 tests[22m[2m)[22m[33m 3829[2mms[22m[39m
+   [33m[2m✓[22m[39m initializeSqliteMemory[2m > [22mpersistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures [33m 304[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m25 passed[39m[22m[90m (25)[39m
+[2m   Start at [22m 12:46:30
+[2m   Duration [22m 5.61s[2m (transform 546ms, setup 0ms, collect 638ms, tests 3.83s, environment 0ms, prepare 330ms)[22m
+

@@ -7,16 +7,18 @@ import {
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
 } from "../components/page-primitives";
 import {
   fieldClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeSnapshot,
-  fetchRuntimeSnapshot,
+  fetchRuntimeModels,
   submitImageGeneration,
   submitSdApiTxt2Img,
 } from "../lib/runtime-api";
@@ -35,12 +37,14 @@ type ImageResult =
       readonly rawPayload: string;
     };
 
+const formFieldLabelClassName = utilityLabelClassName;
+
 export default function StudioImagesRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"openai" | "sdapi">("openai");
   const [model, setModel] = useState("");
-  const [prompt, setPrompt] = useState("A Swiss-style operator console poster.");
+  const [prompt, setPrompt] = useState("A calm operator console poster.");
   const [size, setSize] = useState("1024x1024");
   const [width, setWidth] = useState("1024");
   const [height, setHeight] = useState("1024");
@@ -48,10 +52,10 @@ export default function StudioImagesRoute() {
   const [result, setResult] = useState<ImageResult | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then((value) => {
-        setSnapshot(value);
-        setModel((current) => current || value.models[0]?.id || "");
+    void fetchRuntimeModels()
+      .then((models) => {
+        setSnapshot({ models });
+        setModel((current) => current || models[0]?.id || "");
       })
       .catch((value: unknown) =>
         setError(
@@ -159,33 +163,23 @@ export default function StudioImagesRoute() {
             <LoadingState label="Loading image request context…" />
           ) : (
             <form className="space-y-4" onSubmit={onSubmit}>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Mode</span>
-                <select
-                  className={fieldClassName}
-                  value={mode}
-                  onChange={(event) => setMode(event.target.value as "openai" | "sdapi")}
-                >
-                  <option value="openai">OpenAI-style generation</option>
-                  <option value="sdapi">SDAPI txt2img</option>
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Model</span>
-                <select
-                  className={fieldClassName}
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                >
-                  {modelOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
+              <SelectField
+                label="Mode"
+                value={mode}
+                onChange={(value) => setMode(value as "openai" | "sdapi")}
+              >
+                <option value="openai">OpenAI-style generation</option>
+                <option value="sdapi">SDAPI txt2img</option>
+              </SelectField>
+              <SelectField label="Model" value={model} onChange={setModel}>
+                {modelOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
+              <label className="grid gap-2">
+                <span className={formFieldLabelClassName}>Prompt</span>
                 <textarea
                   className={`${fieldClassName} min-h-36`}
                   value={prompt}
@@ -193,22 +187,15 @@ export default function StudioImagesRoute() {
                 />
               </label>
               {mode === "openai" ? (
-                <label className="grid gap-2 text-sm">
-                  <span className="font-medium text-[var(--rm-fg)]">Size</span>
-                  <select
-                    className={fieldClassName}
-                    value={size}
-                    onChange={(event) => setSize(event.target.value)}
-                  >
-                    <option value="1024x1024">1024x1024</option>
-                    <option value="1536x1024">1536x1024</option>
-                    <option value="1024x1536">1024x1536</option>
-                  </select>
-                </label>
+                <SelectField label="Size" value={size} onChange={setSize}>
+                  <option value="1024x1024">1024x1024</option>
+                  <option value="1536x1024">1536x1024</option>
+                  <option value="1024x1536">1024x1536</option>
+                </SelectField>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-                  <label className="grid gap-2 text-sm">
-                    <span className="font-medium text-[var(--rm-fg)]">Width</span>
+                  <label className="grid gap-2">
+                    <span className={formFieldLabelClassName}>Width</span>
                     <input
                       className={fieldClassName}
                       inputMode="numeric"
@@ -216,8 +203,8 @@ export default function StudioImagesRoute() {
                       onChange={(event) => setWidth(event.target.value)}
                     />
                   </label>
-                  <label className="grid gap-2 text-sm">
-                    <span className="font-medium text-[var(--rm-fg)]">Height</span>
+                  <label className="grid gap-2">
+                    <span className={formFieldLabelClassName}>Height</span>
                     <input
                       className={fieldClassName}
                       inputMode="numeric"
@@ -262,7 +249,7 @@ export default function StudioImagesRoute() {
             title="Raw response"
             description="Payloads stay adjacent to the stage so operators can compare visual output and transport details together."
           >
-            <CodeBlock className="min-h-60 text-sm">
+            <CodeBlock className="min-h-60">
               {result?.rawPayload ?? '{\n  "status": "No image request yet"\n}'}
             </CodeBlock>
           </SectionCard>

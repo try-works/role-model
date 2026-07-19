@@ -1,0 +1,41 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/60-runtime-ui-paper-linear-review-alignment/role-model-router
+
+ ❯ apps/runtime-ui/app/routes/studio-audio.test.ts (2 tests | 2 failed) 11ms
+   × studio audio voice inventory state > treats the HTML fallback parse error as an unavailable voice inventory 8ms
+     → (0 , isVoiceInventoryUnavailableError) is not a function
+   × studio audio voice inventory state > does not hide real runtime voice inventory errors 1ms
+     → (0 , isVoiceInventoryUnavailableError) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  apps/runtime-ui/app/routes/studio-audio.test.ts > studio audio voice inventory state > treats the HTML fallback parse error as an unavailable voice inventory
+TypeError: (0 , isVoiceInventoryUnavailableError) is not a function
+ ❯ apps/runtime-ui/app/routes/studio-audio.test.ts:8:7
+      6|   test("treats the HTML fallback parse error as an unavailable voice i…
+      7|     expect(
+      8|       isVoiceInventoryUnavailableError(
+       |       ^
+      9|         "Request to /v1/audio/voices?model=moonshot%2Fkimi-audio retur…
+     10|       ),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  apps/runtime-ui/app/routes/studio-audio.test.ts > studio audio voice inventory state > does not hide real runtime voice inventory errors
+TypeError: (0 , isVoiceInventoryUnavailableError) is not a function
+ ❯ apps/runtime-ui/app/routes/studio-audio.test.ts:15:12
+     13| 
+     14|   test("does not hide real runtime voice inventory errors", () => {
+     15|     expect(isVoiceInventoryUnavailableError("Request to /v1/audio/voic…
+       |            ^
+     16|       false,
+     17|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  18:27:59
+   Duration  1.95s (transform 283ms, setup 0ms, collect 518ms, tests 11ms, environment 0ms, prepare 238ms)
+

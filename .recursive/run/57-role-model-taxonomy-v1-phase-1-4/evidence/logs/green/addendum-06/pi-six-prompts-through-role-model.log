@@ -1,0 +1,19 @@
+
+===== PROMPT 1 =====
+Review this diff for security risks and likely regressions.
+local llama summary
+===== PROMPT 2 =====
+Implement this small bug fix and add a regression test.
+local llama summary
+===== PROMPT 3 =====
+Compare current public documentation for this API and cite differences.
+local llama summary
+===== PROMPT 4 =====
+Turn these support notes into a clear customer reply.
+local llama summary
+===== PROMPT 5 =====
+Inspect this schema and propose a migration plan.
+local llama summary
+===== PROMPT 6 =====
+Create product requirements and acceptance criteria for this workflow.
+local llama summary

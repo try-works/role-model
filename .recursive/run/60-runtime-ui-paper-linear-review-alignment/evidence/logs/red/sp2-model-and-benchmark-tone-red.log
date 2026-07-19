@@ -1,0 +1,2407 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/60-runtime-ui-paper-linear-review-alignment/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/design-system.test.ts (57 tests | 2 failed) 196ms
+   ✓ runtime design system > defines navigation groups and layout templates for every runtime route 6ms
+   ✓ runtime design system > uses analytics charts as the primary Observe entry point 2ms
+   ✓ runtime design system > keeps the shell on the Paper Linear baseline with explicit chart tokens 2ms
+   ✓ runtime design system > chart tokens used together resolve to distinct visual colors in each theme 1ms
+   ✓ runtime design system > global shell chrome keeps legacy vendor ui out of the main runtime contract 67ms
+   ✓ runtime design system > studio implementation targets render repo-owned workspace sections instead of placeholder blueprints 17ms
+   ✓ runtime design system > integration and system implementation targets render live upstream and peer surfaces 9ms
+   ✓ runtime design system > router implementation targets render repo-owned routing explanation surfaces 1ms
+   ✓ runtime design system > router, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler 1ms
+   ✓ runtime design system > providers surface exposes explicit in-place maintenance actions for saved remote accounts 1ms
+   ✓ runtime design system > providers surface uses an explicit save-cancel modal for api-key maintenance 1ms
+   ✓ runtime design system > providers surface keeps oauth reconnect as a one-click saved-account action 0ms
+   ✓ runtime design system > providers maintenance flows call explicit repair APIs instead of generic account writes 0ms
+   ✓ runtime design system > providers saved-account cards use canonical lifecycle rows and bounded archived diagnostics 1ms
+   ✓ runtime design system > runtime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics 1ms
+   ✓ runtime design system > router routes preserve empty-state and observe-link affordances 1ms
+   ✓ runtime design system > merged router overview stays observational while routing strategy owns editing controls 2ms
+   ✓ runtime design system > router overview presents runtime-config posture as source of truth 1ms
+   ✓ runtime design system > router overview lists the concrete candidate endpoints behind routing posture 1ms
+   ✓ runtime design system > routing strategy benchmark advisory does not leak JSX control flow as page text 0ms
+   ✓ runtime design system > routing strategy settings separate saved posture from draft edits and refresh derived state after save 1ms
+   ✓ runtime design system > meta-guidance panels stay removed from overview and observe routes 0ms
+   ✓ runtime design system > design system doc marks the converted pages as live routes 2ms
+   ✓ runtime design system > control routes tolerate an unassigned controller before endpoint activation 1ms
+   ✓ runtime design system > applies the Paper Linear palette, Inter typography, and explicit theme contract in shared app chrome 1ms
+   ✓ runtime design system > shared panels and provider selectors are owned by Apple-theme primitives 1ms
+   ✓ runtime design system > router strategy execution mode uses the themed select primitive 0ms
+   ✓ runtime design system > production UI dropdowns use themed select primitives instead of native selects 2ms
+   ✓ runtime design system > shared route effects avoid action identity loops and peer refresh feedback 0ms
+   ✓ runtime design system > keeps shared states on solid token-backed pills and no section divider chrome 1ms
+   × runtime design system > configured model chips follow the Paper tone map instead of generic success pills 25ms
+     → expected 'import { useEffect, useMemo, useState…' to contain '<StatusPill tone={card.toolCallingSup…'
+   × runtime design system > benchmark score badges use a dedicated centered circular badge instead of loose pill text 5ms
+     → expected 'import { useCallback, useEffect, useM…' to contain 'const benchmarkScoreBadgeClassName ='
+   ✓ runtime design system > remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy 16ms
+   ✓ runtime design system > runtime roles route preserves role-first drill-down language for task detail 1ms
+   ✓ runtime design system > local setup surfaces stay discoverable from navigation and empty registry states 1ms
+   ✓ runtime design system > observe and local log surfaces render structured ledgers rather than raw iframe placeholders 1ms
+   ✓ runtime design system > observe ownership keeps requests canonical and raw-host surfaces adjacent 1ms
+   ✓ runtime design system > requests and request detail stay telemetry-first while exposing raw-host handoffs 1ms
+   ✓ runtime design system > routing analytics controls expose richer taxonomy pivots for observe charts 0ms
+   ✓ runtime design system > activity route frames raw-host metrics as adjacent to canonical telemetry 0ms
+   ✓ runtime design system > logs route exposes request-detail handoffs while preserving raw-host framing 0ms
+   ✓ runtime design system > registry and system layouts avoid redundant KPI strips and placeholder note panels 1ms
+   ✓ runtime design system > dashboard is chart-led and keeps routing analytics as a first-class handoff 0ms
+   ✓ runtime design system > overview metadata and design doc describe a telemetry-first summary with an interaction rail 1ms
+   ✓ runtime design system > workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces 0ms
+   ✓ runtime design system > request detail and model detail expose structured taxonomy evidence rather than raw-only telemetry 1ms
+   ✓ runtime design system > request detail route renders authoritative stored cost metadata 1ms
+   ✓ runtime design system > shell header owns route metadata and page actions without duplicate page headers 3ms
+   ✓ runtime design system > shell headers do not render section eyebrow labels 1ms
+   ✓ runtime design system > routes do not register refresh controls as shell header actions 0ms
+   ✓ runtime design system > long fact-card values use compact text roles instead of display value typography 1ms
+   ✓ runtime design system > production UI sources do not bypass Apple theme token primitives 3ms
+   ✓ runtime design system > production UI sources keep the approved Apple radius grammar 1ms
+   ✓ runtime design system > production UI sources avoid unsupported Apple typography weight 500 1ms
+   ✓ runtime design system > chart primitives use shared design-system geometry and type tokens 1ms
+   ✓ runtime design system > telemetry chart states are shared design-system vocabulary 1ms
+   ✓ runtime design system > runtime route definitions stay slim and future scaffolds avoid duplicate header props 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > configured model chips follow the Paper tone map instead of generic success pills
+AssertionError: expected 'import { useEffect, useMemo, useState…' to contain '<StatusPill tone={card.toolCallingSup…'
+
+- Expected
++ Received
+
+- <StatusPill tone={card.toolCallingSupported ? "accent" : "neutral"}>
++ import { useEffect, useMemo, useState } from "react";
++ import { Link } from "react-router";
++
++ import { LocalModelRolePicker } from "../components/local-model-role-picker";
++ import {
++   CodeBlock,
++   DisclosureSection,
++   EmptyState,
++   ErrorState,
++   FactCard,
++   LoadingState,
++   SectionCard,
++   StatusPill,
++ } from "../components/page-primitives";
++ import {
++   foregroundEmphasisClassName,
++   mutedPanelClassName,
++   primaryButtonClassName,
++   secondaryButtonClassName,
++   supportingTextClassName,
++ } from "../lib/design-system";
++ import {
++   type ModelTelemetryRollup,
++   type RouterCandidate,
++   type RuntimeAccount,
++   type RuntimeControllerAssignment,
++   type RuntimeModelRoleAssignment,
++   type RuntimeRolePolicy,
++   type RuntimeSnapshot,
++   fetchControllerAssignment,
++   fetchModelTelemetryRollup,
++   fetchRolePolicy,
++   fetchRouterCandidates,
++   fetchRuntimeSnapshot,
++   removeRuntimeAccountModel,
++   unloadLocalModel,
++   unloadPeerModel,
++   upsertRuntimeAccount,
++ } from "../lib/runtime-api";
++ import { buildConfiguredModelCards, buildConfiguredModelMetadataRows } from "../lib/view-models";
++
++ function resolveRoleIdsFromAssignment(
++   binding: NonNullable<RuntimeAccount["modelRoleBindings"]>[number] | undefined,
++   allRoleIds: readonly string[],
++ ): string[] {
++   if (!binding || binding.roleAssignmentMode === "all") {
++     return [...allRoleIds];
++   }
++   if (binding.roleAssignmentMode === "exclude") {
++     const disabledRoleIds = new Set(binding.disabledRoleIds ?? []);
++     return allRoleIds.filter((roleId) => !disabledRoleIds.has(roleId));
++   }
++   if (binding.roleAssignmentMode === "include" || binding.roleAssignmentMode === "custom") {
++     return [...(binding.enabledRoleIds ?? binding.roleIds)];
++   }
++   return [...binding.roleIds];
++ }
++
++ function getAccountRoleIdsForModel(
++   account: RuntimeAccount,
++   modelId: string,
++   allRoleIds: readonly string[],
++ ): string[] {
++   const binding = account.modelRoleBindings?.find((entry) => entry.modelId === modelId);
++   return resolveRoleIdsFromAssignment(binding, allRoleIds);
++ }
++
++ export function buildModelRoleAssignmentForSelection(
++   selectedRoleIds: readonly string[],
++   allRoleIds: readonly string[],
++ ): RuntimeModelRoleAssignment {
++   const selected = [...new Set(selectedRoleIds)].sort((left, right) =>
++     left.localeCompare(right, "en"),
++   );
++   const knownRoleIds = allRoleIds.filter((roleId) => selected.includes(roleId));
++   if (allRoleIds.length > 0 && knownRoleIds.length === allRoleIds.length) {
++     return { roleAssignmentMode: "all", enabledRoleIds: [], disabledRoleIds: [] };
++   }
++   if (knownRoleIds.length === 0) {
++     return { roleAssignmentMode: "include", enabledRoleIds: [], disabledRoleIds: [] };
++   }
++   const disabledRoleIds = allRoleIds.filter((roleId) => !knownRoleIds.includes(roleId));
++   return {
++     roleAssignmentMode: "exclude",
++     enabledRoleIds: [],
++     disabledRoleIds,
++   };
++ }
++
++ export function resolveConfiguredModelEjectLabel(hasLocalPeerEndpoint: boolean): string {
++   return hasLocalPeerEndpoint ? "Eject from router" : "Eject from pool";
++ }
++
++ export function createAccountMutationPayload(
++   account: RuntimeAccount,
++   modelId: string,
++   roleIds: readonly string[],
++   allRoleIds: readonly string[] = [],
++ ): Record<string, unknown> {
++   const otherBindings = (account.modelRoleBindings ?? []).filter(
++     (binding) => binding.modelId !== modelId,
++   );
++   const assignment = buildModelRoleAssignmentForSelection(roleIds, allRoleIds);
++   const nextBinding = {
++     modelId,
++     roleIds:
++       assignment.roleAssignmentMode === "include" ? [...(assignment.enabledRoleIds ?? [])] : [],
++     ...assignment,
++   };
++   return {
++     providerAccountId: account.providerAccountId,
++     providerId: account.providerId,
++     providerKind: account.providerKind,
++     orgScope: account.orgScope ?? "personal",
++     accountScope: account.accountScope ?? "workspace-default",
++     credentialRef: account.credentialRef,
++     authMode: account.authMode,
++     regionPolicy: account.regionPolicy ?? { mode: "prefer", regions: ["global"] },
++     baseUrlOverride: account.baseUrlOverride ?? null,
++     allowedModels: [...(account.allowedModels ?? [])],
++     modelRoleBindings: [...otherBindings, nextBinding],
++     deniedModels: [...(account.deniedModels ?? [])],
++     entitlementTags: [...(account.entitlementTags ?? [])],
++     budgetPolicyRef: account.budgetPolicyRef ?? "budget.default",
++     quotaPolicyRef: account.quotaPolicyRef ?? "quota.default",
++     status: account.status ?? "active",
++     healthStatus: account.healthStatus ?? "healthy",
++     rotationState: account.rotationState ?? "stable",
++   };
++ }
++
++ export default function ControlModelsRoute() {
++   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
++   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
++   const [rolePolicy, setRolePolicy] = useState<RuntimeRolePolicy | null>(null);
++   const [controllerLoaded, setControllerLoaded] = useState(false);
++   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
++   const [draftRolesByAccountId, setDraftRolesByAccountId] = useState<Record<string, string[]>>({});
++   const [savingAccountId, setSavingAccountId] = useState<string | null>(null);
++   const [removingTargetKey, setRemovingTargetKey] = useState<string | null>(null);
++   const [statusMessage, setStatusMessage] = useState<string | null>(null);
++   const [error, setError] = useState<string | null>(null);
++   const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
++   const [telemetryRollup, setTelemetryRollup] = useState<ModelTelemetryRollup | null>(null);
++
++   useEffect(() => {
++     void Promise.all([
++       fetchRuntimeSnapshot(),
++       fetchControllerAssignment(),
++       fetchRolePolicy(),
++       fetchRouterCandidates(),
++     ])
++       .then(([nextSnapshot, nextController, nextRolePolicy, nextCandidates]) => {
++         setSnapshot(nextSnapshot);
++         setController(nextController);
++         setRolePolicy(nextRolePolicy);
++         setCandidates(nextCandidates);
++         setControllerLoaded(true);
++       })
++       .catch((value: unknown) =>
++         setError(value instanceof Error ? value.message : "Could not load configured models."),
++       );
++   }, []);
++
++   const cards = useMemo(
++     () =>
++       snapshot
++         ? buildConfiguredModelCards({
++             models: snapshot.models,
++             endpoints: snapshot.endpoints,
++             accounts: snapshot.accounts,
++             requests: snapshot.requests,
++             controller,
++           })
++         : [],
++     [controller, snapshot],
++   );
++
++   const selectedCard = cards.find((card) => card.modelId === selectedModelId) ?? null;
++
++   useEffect(() => {
++     if (selectedCard) {
++       void fetchModelTelemetryRollup(selectedCard.modelId).then(setTelemetryRollup, () =>
++         setTelemetryRollup(null),
++       );
++     } else {
++       setTelemetryRollup(null);
++     }
++   }, [selectedCard]);
++   const selectedEndpoints =
++     snapshot && selectedCard
++       ? snapshot.endpoints.filter((endpoint) => endpoint.modelId === selectedCard.modelId)
++       : [];
++   const selectedLlamaSwapEndpoints = selectedEndpoints.filter(
++     (endpoint) => endpoint.sourceType === "local" && endpoint.localModelSource === "llama-swap",
++   );
++   const selectedCapabilities = [
++     ...new Set([
++       ...(selectedCard?.capabilities ?? []),
++       ...selectedEndpoints.flatMap((endpoint) => endpoint.capabilities ?? []),
++     ]),
++   ].sort((left, right) => left.localeCompare(right, "en"));
++   const selectedToolStyles = [
++     ...new Set(
++       selectedEndpoints
++         .filter((endpoint) => endpoint.toolCallingSupported)
++         .map((endpoint) => endpoint.toolCallingStyle ?? "unknown"),
++     ),
++   ].sort((left, right) => left.localeCompare(right, "en"));
++   const selectedMetadataRows = selectedCard ? buildConfiguredModelMetadataRows(selectedCard) : [];
++   const allRuntimeRoleIds = useMemo(
++     () => (rolePolicy?.roleDefinitions ?? []).map((role) => role.role_id),
++     [rolePolicy],
++   );
++   const selectedModelAccounts = useMemo(
++     () =>
++       snapshot && selectedCard
++         ? snapshot.accounts.filter((account) => {
++             const hasBinding = (account.modelRoleBindings ?? []).some(
++               (binding) => binding.modelId === selectedCard.modelId,
++             );
++             const allowsModel = (account.allowedModels ?? []).includes(selectedCard.modelId);
++             const wildcardPeerEndpoint =
++               (account.allowedModels ?? []).length === 0 &&
++               snapshot.endpoints.some(
++                 (endpoint) =>
++                   endpoint.modelId === selectedCard.modelId &&
++                   endpoint.providerAccountId === account.providerAccountId,
++               );
++             return allowsModel || hasBinding || wildcardPeerEndpoint;
++           })
++         : [],
++     [selectedCard, snapshot],
++   );
++
++   useEffect(() => {
++     if (!selectedCard) {
++       setDraftRolesByAccountId({});
++       return;
++     }
++     setDraftRolesByAccountId(
++       Object.fromEntries(
++         selectedModelAccounts.map((account) => [
++           account.providerAccountId,
++           getAccountRoleIdsForModel(account, selectedCard.modelId, allRuntimeRoleIds),
++         ]),
++       ),
++     );
++   }, [allRuntimeRoleIds, selectedCard, selectedModelAccounts]);
++
++   const saveAccountRoles = async (account: RuntimeAccount) => {
++     if (!selectedCard) {
++       return;
++     }
++     setSavingAccountId(account.providerAccountId);
++     setStatusMessage(null);
++     try {
++       await upsertRuntimeAccount(
++         createAccountMutationPayload(
++           account,
++           selectedCard.modelId,
++           draftRolesByAccountId[account.providerAccountId] ?? [],
++           allRuntimeRoleIds,
++         ),
++       );
++       const [nextSnapshot, nextRolePolicy] = await Promise.all([
++         fetchRuntimeSnapshot(),
++         fetchRolePolicy(),
++       ]);
++       setSnapshot(nextSnapshot);
++       setRolePolicy(nextRolePolicy);
++       setError(null);
++       setStatusMessage(`Updated roles for ${account.providerAccountId}.`);
++     } catch (value) {
++       setError(value instanceof Error ? value.message : "Could not update model roles.");
++     } finally {
++       setSavingAccountId(null);
++     }
++   };
++
++   const refreshModelState = async () => {
++     const [nextSnapshot, nextController, nextRolePolicy, nextCandidates] = await Promise.all([
++       fetchRuntimeSnapshot(),
++       fetchControllerAssignment(),
++       fetchRolePolicy(),
++       fetchRouterCandidates(),
++     ]);
++     setSnapshot(nextSnapshot);
++     setController(nextController);
++     setRolePolicy(nextRolePolicy);
++     setCandidates(nextCandidates);
++   };
++
++   const removeConfiguredModel = async (account: RuntimeAccount) => {
++     if (!selectedCard) {
++       return;
++     }
++     const removalKey = `account:${account.providerAccountId}`;
++     const usesLocalPeerEndpoint = selectedEndpoints.some(
++       (endpoint) =>
++         endpoint.providerAccountId === account.providerAccountId && endpoint.sourceType === "local",
++     );
++     setRemovingTargetKey(removalKey);
++     setStatusMessage(null);
++     try {
++       if (usesLocalPeerEndpoint) {
++         await unloadPeerModel(selectedCard.modelId);
++         await refreshModelState();
++         setStatusMessage(`Removed ${selectedCard.modelId} from the peer-backed router pool.`);
++       } else {
++         const result = await removeRuntimeAccountModel(
++           account.providerAccountId,
++           selectedCard.modelId,
++         );
++         await refreshModelState();
++         setStatusMessage(
++           result.removedAccount
++             ? `Removed ${selectedCard.modelId} and deleted ${account.providerAccountId} because it was the last configured model on that account.`
++             : `Removed ${selectedCard.modelId} from ${account.providerAccountId}.`,
++         );
++       }
++       setError(null);
++     } catch (value) {
++       setError(value instanceof Error ? value.message : "Could not remove the configured model.");
++     } finally {
++       setRemovingTargetKey(null);
++     }
++   };
++
++   const unloadSelectedLocalModel = async () => {
++     if (!selectedCard) {
++       return;
++     }
++     setRemovingTargetKey(`local:${selectedCard.modelId}`);
++     setStatusMessage(null);
++     try {
++       await unloadLocalModel(selectedCard.modelId);
++       await refreshModelState();
++       setStatusMessage(`Unloaded ${selectedCard.modelId} from the local runtime pool.`);
++       setError(null);
++     } catch (value) {
++       setError(value instanceof Error ? value.message : "Could not unload the local model.");
++     } finally {
++       setRemovingTargetKey(null);
++     }
++   };
++
++   if (error) {
++     return <ErrorState label={error} />;
++   }
++   if (!snapshot || !controllerLoaded) {
++     return <LoadingState label="Loading configured model cards…" />;
++   }
++
++   const toolCapableCount = cards.filter((card) => card.toolCallingSupported).length;
++   const activeModelCount = cards.filter((card) => card.status === "active").length;
++
++   const capabilityByModelId = new Map<string, number>();
++   const benchmarkCapabilityByModelId = new Map<
++     string,
++     NonNullable<RouterCandidate["benchmarkCapability"]>
++   >();
++   for (const candidate of candidates) {
++     const benchmarkCapability = candidate.benchmarkCapability;
++     const score = benchmarkCapability?.overallScore;
++     if (typeof score !== "number") {
++       continue;
++     }
++     const current = capabilityByModelId.get(candidate.modelId);
++     if (current === undefined || score > current) {
++       capabilityByModelId.set(candidate.modelId, score);
++       if (benchmarkCapability) {
++         benchmarkCapabilityByModelId.set(candidate.modelId, benchmarkCapability);
++       }
++     }
++   }
++
++   const selectedBenchmarkCapability = selectedCard
++     ? (benchmarkCapabilityByModelId.get(selectedCard.modelId) ?? null)
++     : null;
++   const benchmarkAssignedRoleRows = (rolePolicy?.roleDefinitions ?? [])
++     .filter(
++       (role) =>
++         selectedCard?.roleIds.includes(role.role_id) &&
++         typeof selectedBenchmarkCapability?.eligibleRoleScores?.[role.role_id] === "number",
++     )
++     .map((role) => ({
++       roleId: role.role_id,
++       label: role.name,
++       score: selectedBenchmarkCapability?.eligibleRoleScores?.[role.role_id] ?? 0,
++     }));
++   const benchmarkSuggestedRoleRows = (rolePolicy?.roleDefinitions ?? [])
++     .filter(
++       (role) =>
++         !selectedCard?.roleIds.includes(role.role_id) &&
++         typeof selectedBenchmarkCapability?.roleScores?.[role.role_id] === "number",
++     )
++     .map((role) => ({
++       roleId: role.role_id,
++       label: role.name,
++       score: selectedBenchmarkCapability?.roleScores?.[role.role_id] ?? 0,
++       lowCoverage: (selectedBenchmarkCapability?.coverage?.lowCoverageRoleIds ?? []).includes(
++         role.role_id,
++       ),
++     }))
++     .sort((left, right) => right.score - left.score);
++   const benchmarkGroupRows = Object.entries(selectedBenchmarkCapability?.groupScores ?? {})
++     .map(([groupId, score]) => ({
++       groupId,
++       score,
++       lowCoverage: (selectedBenchmarkCapability?.coverage?.lowCoverageGroupIds ?? []).includes(
++         groupId,
++       ),
++     }))
++     .sort((left, right) => right.score - left.score);
++
++   return (
++     <>
++       <div className="space-y-6">
++         {statusMessage ? (
++           <SectionCard
++             title="Last model change"
++             description="Recent inventory mutations are reported here after the runtime snapshot refreshes."
++           >
++             <p className={supportingTextClassName}>{statusMessage}</p>
++           </SectionCard>
++         ) : null}
++         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
++           <FactCard
++             label="Configured models"
++             value={cards.length}
++             detail="Every configured model appears once in the merged inventory."
++             emphasis
++           />
++           <FactCard
++             label="Active models"
++             value={activeModelCount}
++             detail="Models whose endpoint summary currently resolves to active."
++           />
++           <FactCard
++             label="Tool-capable"
++             value={toolCapableCount}
++             detail="Models with at least one tool-calling capable endpoint."
++           />
++           <FactCard
++             label="Observed requests"
++             value={snapshot.requests.length}
++             detail="Request count currently available to the inventory as runtime context."
++           />
++         </div>
++
++         {!controller ? (
++           <SectionCard
++             title="Controller pending"
++             description="The runtime-config editor can leave the system in a valid pre-activation state before any controller candidate exists."
++           >
++             <EmptyState label="Activate a local or remote endpoint, then assign it from Router > Controller." />
++           </SectionCard>
++         ) : null}
++
++         <SectionCard
++           title="Model inventory"
++           description="Every configured model appears once, with local and remote endpoint state merged into a card-based registry."
++         >
++           {cards.length === 0 ? (
++             <>
++               <EmptyState label="No configured models are available yet." />
++               <div className="mt-4 flex flex-wrap gap-3">
++                 <Link className={secondaryButtonClassName} to="/app/local/choose">
++                   Open Local Models
++                 </Link>
++                 <Link className={secondaryButtonClassName} to="/app/local/endpoints">
++                   Open Local Endpoints
++                 </Link>
++                 <Link className={secondaryButtonClassName} to="/app/remote/providers">
++                   Open Providers
++                 </Link>
++               </div>
++             </>
++           ) : (
++             <div className="grid gap-4 xl:grid-cols-2">
++               {cards.map((card) => {
++                 const capabilityScore = capabilityByModelId.get(card.modelId);
++                 return (
++                   <article
++                     key={card.modelId}
++                     className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-5"
++                   >
++                     <div className="flex flex-wrap items-start justify-between gap-3">
++                       <div>
++                         <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
++                           {card.sourceSummary}
++                         </p>
++                         <h3 className="mt-2 text-lg font-semibold text-[var(--rm-fg)]">
++                           {card.displayName}
++                         </h3>
++                         <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">
++                           {card.modelId}
++                         </p>
++                       </div>
++                       <StatusPill
++                         tone={
++                           card.controllerState === "active"
++                             ? "accent"
++                             : card.status === "active"
++                               ? "success"
++                               : "warning"
++                         }
++                       >
++                         {card.controllerState === "active" ? "controller" : card.status}
++                       </StatusPill>
++                     </div>
++
++                     <div className="mt-4 flex flex-wrap gap-2">
++                       <StatusPill tone={card.toolCallingSupported ? "success" : "neutral"}>
++                         {card.toolCallingSupported ? "tool calling" : "no tool calling"}
++                       </StatusPill>
++                       <StatusPill tone={card.endpointCount > 0 ? "neutral" : "warning"}>
++                         {card.endpointCount} endpoint{card.endpointCount === 1 ? "" : "s"}
++                       </StatusPill>
++                       <StatusPill tone={card.requestCount > 0 ? "neutral" : "warning"}>
++                         {card.requestCount} request{card.requestCount === 1 ? "" : "s"}
++                       </StatusPill>
++                       {typeof capabilityScore === "number" ? (
++                         <StatusPill tone="success">
++                           Capability {Math.round(capabilityScore * 100)}%
++                         </StatusPill>
++                       ) : null}
++                     </div>
++
++                     <div className="mt-4 grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
++                       <p>
++                         <span className={foregroundEmphasisClassName}>Roles:</span>{" "}
++                         {card.roleIds.join(", ") || "None"}
++                       </p>
++                       <p>
++                         <span className={foregroundEmphasisClassName}>Endpoints:</span>{" "}
++                         {card.endpointIds.join(", ") || "None"}
++                       </p>
++                     </div>
++
++                     {typeof capabilityScore === "number" ? (
++                       <p className="mt-3 text-xs text-[var(--rm-accent-fg,var(--rm-secondary))]">
++                         Advisory: scores {Math.round(capabilityScore * 100)}% on routing capability
++                         benchmark.
++                         {card.requestCount > 0
++                           ? ` Based on ${card.requestCount} request${card.requestCount === 1 ? "" : "s"}.`
++                           : ""}
++                       </p>
++                     ) : null}
++
++                     <div className="mt-5 flex flex-wrap gap-2">
++                       <button
++                         className={secondaryButtonClassName}
++                         type="button"
++                         onClick={() => setSelectedModelId(card.modelId)}
++                       >
++                         Inspect
++                       </button>
++                       {typeof capabilityScore === "number" ? (
++                         <Link className={secondaryButtonClassName} to="/app/models/benchmark">
++                           View benchmark
++                         </Link>
++                       ) : null}
++                     </div>
++                   </article>
++                 );
++               })}
++             </div>
++           )}
++         </SectionCard>
++       </div>
++
++       {selectedCard ? (
++         <div className="fixed inset-0 z-50 overflow-y-auto bg-[var(--rm-accent-ghost)] p-4 backdrop-blur-[1px]">
++           <div className="mx-auto max-w-5xl rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-6 shadow-[var(--rm-shadow-card)]">
++             <div className="flex flex-wrap items-start justify-between gap-4">
++               <div>
++                 <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
++                   Model inspection
++                 </p>
++                 <h2 className="mt-2 text-2xl font-light tracking-tight text-[var(--rm-fg)]">
++                   {selectedCard.displayName}
++                 </h2>
++                 <p className="mt-2 break-all text-sm text-[var(--rm-secondary)]">
++                   {selectedCard.modelId}
++                 </p>
++               </div>
++               <button
++                 className={secondaryButtonClassName}
++                 type="button"
++                 onClick={() => setSelectedModelId(null)}
++               >
++                 Close
++               </button>
++             </div>
++
++             <div className="mt-6 space-y-4">
++               <div className={`${mutedPanelClassName} p-4`}>
++                 <p className={foregroundEmphasisClassName}>Roles and controller</p>
++                 <div className="mt-3 flex flex-wrap gap-2">
++                   {selectedCard.roleIds.length === 0 ? (
++                     <StatusPill tone="warning">No roles</StatusPill>
++                   ) : (
++                     selectedCard.roleIds.map((roleId) => (
++                       <StatusPill key={roleId} tone="neutral">
++                         {roleId}
++                       </StatusPill>
++                     ))
++                   )}
++                   <StatusPill
++                     tone={selectedCard.controllerState === "active" ? "accent" : "neutral"}
++                   >
++                     {selectedCard.controllerState}
++                   </StatusPill>
++                 </div>
++                 <p className="mt-3 text-sm text-[var(--rm-secondary)]">
++                   Runtime roles are authored in Control &gt; Roles and assigned per backing account
++                   here.
++                 </p>
++               </div>
++
++               <div className={`${mutedPanelClassName} p-4`}>
++                 <p className={foregroundEmphasisClassName}>Benchmark role fit (advisory)</p>
++                 <p className="mt-2 text-sm text-[var(--rm-secondary)]">
++                   Benchmark evidence can recommend strong roles and groups for this model, but it
++                   does not change runtime eligibility or save role assignments automatically.
++                 </p>
++                 {selectedBenchmarkCapability ? (
++                   <div className="mt-4 space-y-4">
++                     <div className="space-y-2">
++                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
++                         Assigned role evidence
++                       </p>
++                       <div className="flex flex-wrap gap-2">
++                         {benchmarkAssignedRoleRows.length > 0 ? (
++                           benchmarkAssignedRoleRows.map((role) => (
++                             <StatusPill key={role.roleId} tone="success">
++                               {role.label} • {Math.round(role.score * 100)}%
++                             </StatusPill>
++                           ))
++                         ) : (
++                           <StatusPill tone="warning">
++                             No assigned-role benchmark evidence yet
++                           </StatusPill>
++                         )}
++                       </div>
++                     </div>
++                     <div className="space-y-2">
++                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
++                         Unassigned recommendations
++                       </p>
++                       <div className="flex flex-wrap gap-2">
++                         {benchmarkSuggestedRoleRows.length > 0 ? (
++                           benchmarkSuggestedRoleRows.map((role) => (
++                             <StatusPill
++                               key={role.roleId}
++                               tone={role.lowCoverage ? "warning" : "neutral"}
++                             >
++                               {role.label} • {Math.round(role.score * 100)}%
++                               {role.lowCoverage ? " • low coverage" : ""}
++                             </StatusPill>
++                           ))
++                         ) : (
++                           <StatusPill tone="neutral">No unassigned benchmark evidence</StatusPill>
++                         )}
++                       </div>
++                     </div>
++                     <div className="space-y-2">
++                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-muted)]">
++                         Group evidence
++                       </p>
++                       <div className="flex flex-wrap gap-2">
++                         {benchmarkGroupRows.length > 0 ? (
++                           benchmarkGroupRows.map((group) => (
++                             <StatusPill
++                               key={group.groupId}
++                               tone={group.lowCoverage ? "warning" : "neutral"}
++                             >
++                               {group.groupId} • {Math.round(group.score * 100)}%
++                               {group.lowCoverage ? " • low coverage" : ""}
++                             </StatusPill>
++                           ))
++                         ) : (
++                           <StatusPill tone="neutral">No group benchmark evidence</StatusPill>
++                         )}
++                       </div>
++                     </div>
++                   </div>
++                 ) : (
++                   <p className="mt-4 text-sm text-[var(--rm-secondary)]">
++                     No routing benchmark evidence is available for this model yet.
++                   </p>
++                 )}
++               </div>
++
++               <div className={`${mutedPanelClassName} p-4`}>
++                 <div className="flex flex-wrap items-start justify-between gap-3">
++                   <div>
++                     <p className={foregroundEmphasisClassName}>
++                       Backing account role bindings
++                     </p>
++                     <p className="mt-2 text-sm text-[var(--rm-secondary)]">
++                       Assign live runtime roles per provider account for this model. These bindings
++                       feed router-visible endpoint role coverage directly.
++                     </p>
++                   </div>
++                   <Link className={secondaryButtonClassName} to="/app/models/roles">
++                     Manage role definitions
++                   </Link>
++                 </div>
++                 {selectedModelAccounts.length === 0 ? (
++                   <p className="mt-4 text-sm text-[var(--rm-secondary)]">
++                     No backing provider accounts currently expose this model.
++                   </p>
++                 ) : (
++                   <div className="mt-4 space-y-4">
++                     {selectedModelAccounts.map((account) => {
++                       const hasLocalPeerEndpoint = selectedEndpoints.some(
++                         (endpoint) =>
++                           endpoint.providerAccountId === account.providerAccountId &&
++                           endpoint.sourceType === "local",
++                       );
++                       return (
++                         <div
++                           key={account.providerAccountId}
++                           className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] p-4"
++                         >
++                           <div className="flex flex-wrap items-start justify-between gap-3">
++                             <div>
++                               <p className={foregroundEmphasisClassName}>
++                                 {account.providerAccountId}
++                               </p>
++                               <p className="mt-1 text-sm text-[var(--rm-secondary)]">
++                                 {account.providerId} · {account.authMode ?? "unknown auth"}
++                               </p>
++                             </div>
++                             <StatusPill
++                               tone={account.healthStatus === "healthy" ? "success" : "warning"}
++                             >
++                               {account.healthStatus ?? "unknown"}
++                             </StatusPill>
++                           </div>
++                           <div className="mt-4">
++                             <LocalModelRolePicker
++                               rolePolicy={rolePolicy}
++                               selectedRoleIds={
++                                 draftRolesByAccountId[account.providerAccountId] ?? []
++                               }
++                               defaultAllRoles={allRuntimeRoleIds.length > 0}
++                               benchmarkCapability={selectedBenchmarkCapability}
++                               onChange={(roleIds) =>
++                                 setDraftRolesByAccountId((current) => ({
++                                   ...current,
++                                   [account.providerAccountId]: [...roleIds],
++                                 }))
++                               }
++                             />
++                           </div>
++                           <div className="mt-4 flex flex-wrap gap-3">
++                             <button
++                               className={primaryButtonClassName}
++                               type="button"
++                               disabled={
++                                 savingAccountId === account.providerAccountId ||
++                                 removingTargetKey === `account:${account.providerAccountId}`
++                               }
++                               onClick={() => void saveAccountRoles(account)}
++                             >
++                               {savingAccountId === account.providerAccountId
++                                 ? "Saving…"
++                                 : "Save bindings"}
++                             </button>
++                             <button
++                               className={secondaryButtonClassName}
++                               type="button"
++                               disabled={
++                                 removingTargetKey === `account:${account.providerAccountId}`
++                               }
++                               onClick={() => void removeConfiguredModel(account)}
++                             >
++                               {removingTargetKey === `account:${account.providerAccountId}`
++                                 ? "Removing…"
++                                 : resolveConfiguredModelEjectLabel(hasLocalPeerEndpoint)}
++                             </button>
++                           </div>
++                         </div>
++                       );
++                     })}
++                   </div>
++                 )}
++               </div>
++
++               {selectedLlamaSwapEndpoints.length > 0 ? (
++                 <div className={`${mutedPanelClassName} p-4`}>
++                   <div className="flex flex-wrap items-start justify-between gap-3">
++                     <div>
++                       <p className={foregroundEmphasisClassName}>Local runtime pool</p>
++                       <p className="mt-2 text-sm text-[var(--rm-secondary)]">
++                         This model is currently loaded through the managed local runtime pool.
++                       </p>
++                     </div>
++                     <button
++                       className={secondaryButtonClassName}
++                       type="button"
++                       disabled={removingTargetKey === `local:${selectedCard.modelId}`}
++                       onClick={() => void unloadSelectedLocalModel()}
++                     >
++                       {removingTargetKey === `local:${selectedCard.modelId}`
++                         ? "Unloading…"
++                         : "Unload local model"}
++                     </button>
++                   </div>
++                 </div>
++               ) : null}
++
++               <DisclosureSection summary="Capabilities">
++                 <div className="flex flex-wrap gap-2">
++                   {selectedCapabilities.length === 0 ? (
++                     <StatusPill tone="warning">No declared capabilities</StatusPill>
++                   ) : (
++                     selectedCapabilities.map((capability) => (
++                       <StatusPill key={capability} tone="neutral">
++                         {capability}
++                       </StatusPill>
++                     ))
++                   )}
++                 </div>
++               </DisclosureSection>
++
++               <DisclosureSection summary="Metrics">
++                 <div className="grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
++                   <p>
++                     <span className={foregroundEmphasisClassName}>Requests observed:</span>{" "}
++                     {selectedCard.requestCount}
++                   </p>
++                   <p>
++                     <span className={foregroundEmphasisClassName}>Configured endpoints:</span>{" "}
++                     {selectedCard.endpointCount}
++                   </p>
++                   <p>
++                     <span className={foregroundEmphasisClassName}>Source mix:</span>{" "}
++                     {selectedCard.sourceSummary}
++                   </p>
++                   <p>
++                     <span className={foregroundEmphasisClassName}>Status:</span>{" "}
++                     {selectedCard.status}
++                   </p>
++                 </div>
++               </DisclosureSection>
++
++               <DisclosureSection summary="Model specifications">
++                 <div className="grid gap-3 md:grid-cols-2 text-sm text-[var(--rm-secondary)]">
++                   {selectedMetadataRows.map((row) => (
++                     <p key={row.label}>
++                       <span className={foregroundEmphasisClassName}>{row.label}:</span>{" "}
++                       {row.value}
++                     </p>
++                   ))}
++                 </div>
++               </DisclosureSection>
++
++               <DisclosureSection summary="Tooling / MCP">
++                 <div className="flex flex-wrap gap-2">
++                   <StatusPill tone={selectedCard.toolCallingSupported ? "success" : "warning"}>
++                     {selectedCard.toolCallingSupported
++                       ? "tool calling enabled"
++                       : "tool calling unavailable"}
++                   </StatusPill>
++                   {selectedToolStyles.map((style) => (
++                     <StatusPill key={style} tone="neutral">
++                       {style}
++                     </StatusPill>
++                   ))}
++                 </div>
++               </DisclosureSection>
++
++               <DisclosureSection summary="Telemetry taxonomy rollup (advisory)">
++                 {telemetryRollup && telemetryRollup.totalRequests > 0 ? (
++                   <div className="space-y-3 text-sm">
++                     <p className="text-xs text-[var(--rm-muted)]">
++                       Based on {telemetryRollup.totalRequests} request
++                       {telemetryRollup.totalRequests === 1 ? "" : "s"} over the last{" "}
++                       {telemetryRollup.windowDays} days.
++                     </p>
++                     <div className="grid gap-4 xl:grid-cols-3">
++                       <div className="space-y-2">
++                         <p className={foregroundEmphasisClassName}>Recent groups</p>
++                         <div className="flex flex-wrap gap-2">
++                           {telemetryRollup.groups.length > 0 ? (
++                             telemetryRollup.groups.map((group) => (
++                               <StatusPill key={group.groupId} tone="neutral">
++                                 {group.groupId} • {group.requestCount}
++                               </StatusPill>
++                             ))
++                           ) : (
++                             <StatusPill tone="warning">No recent groups</StatusPill>
++                           )}
++                         </div>
++                       </div>
++                       <div className="space-y-2">
++                         <p className={foregroundEmphasisClassName}>Recent roles</p>
++                         <div className="flex flex-wrap gap-2">
++                           {telemetryRollup.roles.length > 0 ? (
++                             telemetryRollup.roles.map((role) => (
++                               <StatusPill key={role.roleId} tone="neutral">
++                                 {role.roleId} • {role.requestCount}
++                               </StatusPill>
++                             ))
++                           ) : (
++                             <StatusPill tone="warning">No recent roles</StatusPill>
++                           )}
++                         </div>
++                       </div>
++                       <div className="space-y-2">
++                         <p className={foregroundEmphasisClassName}>Recent capabilities</p>
++                         <div className="flex flex-wrap gap-2">
++                           {telemetryRollup.capabilities.length > 0 ? (
++                             telemetryRollup.capabilities.map((capability) => (
++                               <StatusPill key={capability.capabilityId} tone="neutral">
++                                 {capability.capabilityId} • {capability.requestCount}
++                               </StatusPill>
++                             ))
++                           ) : (
++                             <StatusPill tone="warning">No recent capabilities</StatusPill>
++                           )}
++                         </div>
++                       </div>
++                     </div>
++                     <div className="space-y-2">
++                       {telemetryRollup.tasks.map((task) => (
++                         <div
++                           key={task.taskType}
++                           className="flex flex-wrap items-center justify-between gap-2 rounded border border-[var(--rm-border)] p-2"
++                         >
++                           <div className="min-w-0">
++                             <p className="font-mono text-xs text-[var(--rm-fg)]">{task.taskType}</p>
++                             <p className="text-xs text-[var(--rm-secondary)]">
++                               {task.requestCount} req{" "}
++                               {task.avgLatencyMs !== null ? `• avg ${task.avgLatencyMs}ms` : ""}
++                             </p>
++                           </div>
++                           <div className="flex gap-1">
++                             <StatusPill
++                               tone={
++                                 task.successRate >= 0.95
++                                   ? "success"
++                                   : task.successRate < 0.8
++                                     ? "warning"
++                                     : "neutral"
++                               }
++                             >
++                               {Math.round(task.successRate * 100)}%
++                             </StatusPill>
++                           </div>
++                         </div>
++                       ))}
++                     </div>
++                     <div className="grid gap-4 xl:grid-cols-2">
++                       <div className="space-y-2">
++                         <p className={foregroundEmphasisClassName}>Observed strengths</p>
++                         {telemetryRollup.strengths.length > 0 ? (
++                           telemetryRollup.strengths.map((strength) => (
++                             <p key={strength} className="text-[var(--rm-secondary)]">
++                               {strength}
++                             </p>
++                           ))
++                         ) : (
++                           <p className="text-[var(--rm-secondary)]">
++                             No high-confidence strengths have emerged from recent telemetry yet.
++                           </p>
++                         )}
++                       </div>
++                       <div className="space-y-2">
++                         <p className={foregroundEmphasisClassName}>Observed warnings</p>
++                         {telemetryRollup.warnings.length > 0 ? (
++                           telemetryRollup.warnings.map((warning) => (
++                             <p key={warning} className="text-[var(--rm-secondary)]">
++                               {warning}
++                             </p>
++                           ))
++                         ) : (
++                           <p className="text-[var(--rm-secondary)]">
++                             No warning-level patterns are visible in the recent telemetry slice.
++                           </p>
++                         )}
++                       </div>
++                     </div>
++                   </div>
++                 ) : (
++                   <p className={supportingTextClassName}>
++                     No taxonomy-tagged telemetry data available yet for this model. Send requests to
++                     populate taxonomy rollups, per-task performance, and advisory warnings.
++                   </p>
++                 )}
++               </DisclosureSection>
++             </div>
++
++             <div className="mt-4 flex flex-wrap gap-3">
++               <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
++                 Edit runtime config
++               </Link>
++               <Link className={secondaryButtonClassName} to="/app/models/roles">
++                 Edit runtime roles
++               </Link>
++               <Link className={secondaryButtonClassName} to="/app/remote/providers">
++                 Review providers
++               </Link>
++             </div>
++             <div className="mt-4">
++               <p className="mb-2 font-semibold text-[var(--rm-fg)]">Endpoint and model ids</p>
++               <CodeBlock>
++                 {JSON.stringify(
++                   {
++                     modelId: selectedCard.modelId,
++                     endpointIds: selectedCard.endpointIds,
++                     endpoints: selectedEndpoints,
++                   },
++                   null,
++                   2,
++                 )}
++               </CodeBlock>
++             </div>
++           </div>
++         </div>
++       ) : null}
++     </>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:990:33
+    988| 
+    989|   test("configured model chips follow the Paper tone map instead of ge…
+    990|     expect(controlModelsSource).toContain(
+       |                                 ^
+    991|       '<StatusPill tone={card.toolCallingSupported ? "accent" : "neutr…
+    992|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > benchmark score badges use a dedicated centered circular badge instead of loose pill text
+AssertionError: expected 'import { useCallback, useEffect, useM…' to contain 'const benchmarkScoreBadgeClassName ='
+
+- Expected
++ Received
+
+- const benchmarkScoreBadgeClassName =
++ import { useCallback, useEffect, useMemo, useState } from "react";
++
++ import {
++   EmptyState,
++   ErrorState,
++   FactCard,
++   LoadingState,
++   SectionCard,
++   SelectField,
++   StatusPill,
++ } from "../components/page-primitives";
++ import { computeLatencyPercentiles } from "../lib/benchmark-latency";
++ import {
++   describeHardBlend,
++   filterBenchmarkRunnableCandidates,
++   isBenchmarkRunnableCandidate,
++   resolveSubjectFromSummary,
++ } from "../lib/benchmark-model-cards";
++ import {
++   listRowClassName,
++   mutedPanelClassName,
++   primaryButtonClassName,
++   secondaryButtonClassName,
++ } from "../lib/design-system";
++ import { formatScore, formatScoreFraction } from "../lib/format-score";
++ import {
++   type BenchmarkCaseAuditEntry,
++   type BenchmarkCaseComparison,
++   type BenchmarkEndpointGrade,
++   type BenchmarkRunListEntry,
++   type BenchmarkRunProgress,
++   type BenchmarkRunResult,
++   type BenchmarkSuite,
++   type BenchmarkSummariesByMode,
++   type BenchmarkSummary,
++   type BenchmarkSummarySubject,
++   type RouterCandidate,
++   type RuntimeSummary,
++   clearAllBenchmarkData,
++   clearBenchmarkEndpointData,
++   fetchActiveBenchmarkRun,
++   fetchBenchmarkPreferences,
++   fetchBenchmarkRunProgress,
++   fetchBenchmarkRuns,
++   fetchBenchmarkSuite,
++   fetchBenchmarkSummariesByMode,
++   fetchBenchmarkSummary,
++   fetchRouterCandidates,
++   fetchRuntimeSummary,
++   startCapabilityBenchmark,
++   updateBenchmarkPreferences,
++ } from "../lib/runtime-api";
++
++ const BENCHMARK_POLL_MS = 1500;
++ const BENCHMARK_STALL_MS = 90_000;
++ const ACTIVE_BENCHMARK_RUN_KEY = "role-model.benchmark.activeRunId";
++
++ const EMPTY_BENCHMARK_SUMMARY: BenchmarkSummary = {
++   runId: null,
++   completedAtMs: null,
++   mode: null,
++   suiteId: null,
++   suiteVersion: null,
++   judgeEndpointId: null,
++   judgeModelId: null,
++   artifactRoot: null,
++   subjects: [],
++   caseComparisons: [],
++   caseAudits: [],
++   manifest: null,
++ };
++
++ function formatElapsed(ms: number): string {
++   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
++   const minutes = Math.floor(totalSeconds / 60);
++   const seconds = totalSeconds % 60;
++   return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
++ }
++
++ function describeBenchmarkProgress(progress: BenchmarkRunProgress): {
++   readonly phaseLabel: string;
++   readonly detail: string;
++ } {
++   if (progress.runPhase === "execution") {
++     return {
++       phaseLabel: "Phase 1 of 3 · Recording responses",
++       detail: [
++         progress.currentEndpointModelId
++           ? `model ${progress.endpointIndex}/${progress.endpointCount}: ${progress.currentEndpointModelId}`
++           : null,
++         progress.currentCaseId
++           ? `case ${progress.caseIndex}/${progress.caseCount} (${progress.currentCaseId})`
++           : null,
++         progress.currentPhase === "execute"
++           ? "running benchmark cases and saving deliverables"
++           : "preparing execution pass",
++       ]
++         .filter(Boolean)
++         .join(" • "),
++     };
++   }
++
++   if (progress.runPhase === "compare") {
++     return {
++       phaseLabel: "Phase 3 of 3 · Head-to-head compare",
++       detail: [
++         progress.currentCaseId
++           ? `case ${progress.caseIndex}/${progress.caseCount} (${progress.currentCaseId})`
++           : null,
++         progress.currentPhase === "compare"
++           ? "ranking subjects for this case"
++           : "preparing compare pass",
++       ]
++         .filter(Boolean)
++         .join(" • "),
++     };
++   }
++
++   return {
++     phaseLabel: "Phase 2 of 3 · Judge grading",
++     detail: [
++       progress.currentEndpointModelId
++         ? `model ${progress.endpointIndex}/${progress.endpointCount}: ${progress.currentEndpointModelId}`
++         : null,
++       progress.currentCaseId
++         ? `case ${progress.caseIndex}/${progress.caseCount} (${progress.currentCaseId})`
++         : null,
++       progress.currentPhase === "judge"
++         ? "scoring recorded deliverables"
++         : "grading saved responses",
++     ]
++       .filter(Boolean)
++       .join(" • "),
++   };
++ }
++
++ function asRecord(value: unknown): Record<string, unknown> | null {
++   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
++ }
++
++ function pickNumber(record: Record<string, unknown> | null, ...keys: string[]): number | null {
++   for (const key of keys) {
++     const value = record?.[key];
++     if (typeof value === "number" && Number.isFinite(value)) {
++       return value;
++     }
++   }
++   return null;
++ }
++
++ function formatLatencyMs(value: number | null | undefined): string {
++   if (typeof value !== "number" || !Number.isFinite(value)) {
++     return "n/a";
++   }
++   return `${Math.round(value)} ms`;
++ }
++
++ function resolveJudgeLabel(
++   summary: BenchmarkSummary,
++   candidates: readonly RouterCandidate[],
++ ): string | null {
++   return (
++     summary.judgeModelId ??
++     candidates.find((candidate) => candidate.endpointId === summary.judgeEndpointId)?.modelId ??
++     summary.judgeEndpointId ??
++     null
++   );
++ }
++
++ function collectEndpointLatencies(input: {
++   readonly endpointId: string;
++   readonly caseResults: BenchmarkEndpointGrade["caseResults"] | null;
++   readonly caseAudits: readonly BenchmarkCaseAuditEntry[] | undefined;
++ }): readonly number[] {
++   const fromCaseResults = (input.caseResults ?? [])
++     .map((caseResult) => caseResult.latencyMs)
++     .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
++   if (fromCaseResults.length > 0) {
++     return fromCaseResults;
++   }
++   return (input.caseAudits ?? [])
++     .filter((audit) => audit.endpointId === input.endpointId)
++     .map((audit) => audit.latencyMs)
++     .filter((value): value is number => typeof value === "number" && Number.isFinite(value));
++ }
++
++ function EndpointModeRunSnapshot({
++   title,
++   summary,
++   endpointId,
++   judgeLabel,
++ }: {
++   readonly title: string;
++   readonly summary: BenchmarkSummary;
++   readonly endpointId: string;
++   readonly judgeLabel: string | null;
++ }) {
++   if (!summary.runId) {
++     return (
++       <div className={`${mutedPanelClassName} p-3`}>
++         <p className="text-sm font-semibold text-[var(--rm-fg)]">{title}</p>
++         <p className="mt-2 text-sm text-[var(--rm-secondary)]">No completed run yet.</p>
++       </div>
++     );
++   }
++
++   const subject = resolveSubjectFromSummary(summary, endpointId);
++   const completedAtLabel = summary.completedAtMs
++     ? new Date(summary.completedAtMs).toLocaleString()
++     : "unknown";
++
++   return (
++     <div className={`${mutedPanelClassName} p-3`}>
++       <p className="text-sm font-semibold text-[var(--rm-fg)]">{title}</p>
++       <p className="mt-1 text-xs text-[var(--rm-secondary)]">
++         Completed {completedAtLabel}
++         {judgeLabel ? ` • judge: ${judgeLabel}` : ""}
++       </p>
++       {subject ? (
++         <>
++           <p className="mt-2 text-sm font-semibold text-[var(--rm-fg)]">
++             {formatScore(subject.overallScore)} overall
++           </p>
++           <p className="mt-1 text-sm text-[var(--rm-secondary)]">
++             easy {formatScore(subject.scoresByBucket.easy.score)} • medium{" "}
++             {formatScore(subject.scoresByBucket.medium.score)} • hard{" "}
++             {formatScore(subject.scoresByBucket.hard.score)}
++           </p>
++         </>
++       ) : (
++         <p className="mt-2 text-sm text-[var(--rm-secondary)]">
++           This endpoint was not graded in the last {summary.mode ?? "benchmark"} run.
++         </p>
++       )}
++     </div>
++   );
++ }
++
++ function describeRoutingImpact(candidate: RouterCandidate): string {
++   const profile = asRecord(candidate.latestProfile);
++   const sources = asRecord(profile?.sources);
++   const advisory = asRecord(candidate.advisoryMaxDifficultyRecommendation);
++   const qualityScore = pickNumber(
++     profile,
++     "judge_score",
++     "quality_score",
++     "judgeScore",
++     "qualityScore",
++   );
++   const benchmarkSamples = pickNumber(sources, "benchmark_samples", "benchmarkSamples") ?? 0;
++   const recommended =
++     typeof advisory?.recommended_max_difficulty === "string"
++       ? advisory.recommended_max_difficulty
++       : typeof advisory?.recommendedMaxDifficulty === "string"
++         ? advisory.recommendedMaxDifficulty
++         : null;
++   const minQuality =
++     pickNumber(advisory, "min_quality_score", "minQualityScore") ??
++     pickNumber(asRecord(advisory?.thresholds), "min_quality_score", "minQualityScore");
++
++   const parts: string[] = [];
++   if (qualityScore !== null) {
++     parts.push(
++       `Router ranks this candidate using a ${formatScore(qualityScore)} quality score (from benchmark judge grades).`,
++     );
++   }
++   if (recommended) {
++     parts.push(
++       `Difficulty routing treats ${recommended} as the recommended max prompt difficulty for this endpoint.`,
++     );
++     if (minQuality !== null) {
++       parts.push(
++         `Per-bucket quality must stay above ${formatScore(minQuality)} to raise that ceiling.`,
++       );
++     }
++   }
++   if (benchmarkSamples > 0) {
++     parts.push(
++       `${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"} are merged into the observed profile used on future routing decisions.`,
++     );
++   }
++   const hardBlendDetail = describeHardBlend(candidate);
++   if (hardBlendDetail) {
++     parts.push(hardBlendDetail);
++   }
++   return parts.length > 0
++     ? parts.join(" ")
++     : "Run a benchmark to write judge scores into this endpoint's observed routing profile.";
++ }
++
++ interface ModelScoreRow {
++   readonly endpointId: string;
++   readonly modelId: string;
++   readonly sourceType: string;
++   readonly overallScore: number | null;
++   readonly scoresByBucket: BenchmarkSummarySubject["scoresByBucket"] | null;
++   readonly profileQualityScore: number | null;
++   readonly benchmarkSamples: number;
++   readonly latencyP50: number | null;
++   readonly latencyP95: number | null;
++   readonly caseResults: BenchmarkEndpointGrade["caseResults"] | null;
++   readonly candidate: RouterCandidate;
++ }
++
++ function buildModelScoreRows(
++   candidates: readonly RouterCandidate[],
++   result: BenchmarkRunResult | null,
++   summary: BenchmarkSummary | null,
++ ): ModelScoreRow[] {
++   const gradeByEndpoint = new Map<
++     string,
++     {
++       overallScore: number;
++       scoresByBucket: BenchmarkSummarySubject["scoresByBucket"];
++       caseResults: BenchmarkEndpointGrade["caseResults"] | null;
++     }
++   >();
++
++   for (const subject of summary?.subjects ?? []) {
++     gradeByEndpoint.set(subject.endpointId, {
++       overallScore: subject.overallScore,
++       scoresByBucket: subject.scoresByBucket,
++       caseResults: null,
++     });
++   }
++   for (const grade of result?.endpointGrades ?? []) {
++     gradeByEndpoint.set(grade.endpointId, {
++       overallScore: grade.overallScore,
++       scoresByBucket: grade.byDifficulty,
++       caseResults: grade.caseResults,
++     });
++   }
++
++   const rows: ModelScoreRow[] = [];
++   for (const candidate of candidates) {
++     const grade = gradeByEndpoint.get(candidate.endpointId);
++     const profile = asRecord(candidate.latestProfile);
++     const sources = asRecord(profile?.sources);
++     const profileQualityScore = pickNumber(profile, "judge_score", "quality_score");
++     const benchmarkSamples = pickNumber(sources, "benchmark_samples") ?? 0;
++     const capability = candidate.benchmarkCapability;
++     const caseResults = grade?.caseResults ?? null;
++     const { p50: latencyP50, p95: latencyP95 } = computeLatencyPercentiles(
++       collectEndpointLatencies({
++         endpointId: candidate.endpointId,
++         caseResults,
++         caseAudits: summary?.caseAudits,
++       }),
++     );
++
++     if (!grade && !capability && benchmarkSamples === 0 && profileQualityScore === null) {
++       continue;
++     }
++
++     rows.push({
++       endpointId: candidate.endpointId,
++       modelId: candidate.modelId,
++       sourceType: candidate.sourceType,
++       overallScore: grade?.overallScore ?? capability?.overallScore ?? profileQualityScore,
++       scoresByBucket:
++         grade?.scoresByBucket ??
++         (capability?.scoresByBucket
++           ? {
++               easy: {
++                 score: capability.scoresByBucket.easy?.score ?? 0,
++                 cases: capability.scoresByBucket.easy?.cases ?? 0,
++               },
++               medium: {
++                 score: capability.scoresByBucket.medium?.score ?? 0,
++                 cases: capability.scoresByBucket.medium?.cases ?? 0,
++               },
++               hard: {
++                 score: capability.scoresByBucket.hard?.score ?? 0,
++                 cases: capability.scoresByBucket.hard?.cases ?? 0,
++               },
++             }
++           : null),
++       profileQualityScore,
++       benchmarkSamples,
++       latencyP50,
++       latencyP95,
++       caseResults,
++       candidate,
++     });
++   }
++
++   return rows.sort((left, right) => right.modelId.localeCompare(left.modelId, "en"));
++ }
++
++ export default function ControlBenchmarkRoute() {
++   const [suite, setSuite] = useState<BenchmarkSuite | null>(null);
++   const [candidates, setCandidates] = useState<readonly RouterCandidate[] | null>(null);
++   const [selectedEndpointIds, setSelectedEndpointIds] = useState<string[]>([]);
++   const [judgeEndpointId, setJudgeEndpointId] = useState<string>("");
++   const [mode, setMode] = useState<"quick" | "full">("quick");
++   const [running, setRunning] = useState(false);
++   const [activeRunId, setActiveRunId] = useState<string | null>(null);
++   const [progress, setProgress] = useState<BenchmarkRunProgress | null>(null);
++   const [result, setResult] = useState<BenchmarkRunResult | null>(null);
++   const [lastSummary, setLastSummary] = useState<BenchmarkSummary | null>(null);
++   const [summariesByMode, setSummariesByMode] = useState<BenchmarkSummariesByMode | null>(null);
++   const [runHistory, setRunHistory] = useState<readonly BenchmarkRunListEntry[]>([]);
++   const [error, setError] = useState<string | null>(null);
++   const [runtimeSummary, setRuntimeSummary] = useState<RuntimeSummary | null>(null);
++   const [clearingEndpointId, setClearingEndpointId] = useState<string | null>(null);
++   const [clearingAll, setClearingAll] = useState(false);
++   const [nowMs, setNowMs] = useState(() => Date.now());
++   const [taxonomyFilterRole, setTaxonomyFilterRole] = useState<string>("");
++   const [taxonomyFilterTask, setTaxonomyFilterTask] = useState<string>("");
++   const [taxonomyFilterCapability, setTaxonomyFilterCapability] = useState<string>("");
++
++   const resolveJudgeEndpointId = useCallback(
++     (candidateValue: readonly RouterCandidate[], savedJudgeEndpointId?: string): string => {
++       const healthy = filterBenchmarkRunnableCandidates(candidateValue).filter(
++         (candidate) => candidate.healthStatus !== "offline",
++       );
++       if (
++         savedJudgeEndpointId &&
++         healthy.some((candidate) => candidate.endpointId === savedJudgeEndpointId)
++       ) {
++         return savedJudgeEndpointId;
++       }
++       return (
++         healthy.find((candidate) => candidate.sourceType === "remote")?.endpointId ??
++         healthy[0]?.endpointId ??
++         ""
++       );
++     },
++     [],
++   );
++
++   const refreshBenchmarkState = useCallback(async () => {
++     const [summary, byMode, runs, candidateValue] = await Promise.all([
++       fetchBenchmarkSummary(),
++       fetchBenchmarkSummariesByMode(),
++       fetchBenchmarkRuns(),
++       fetchRouterCandidates(),
++     ]);
++     setLastSummary(summary);
++     setSummariesByMode(byMode);
++     setRunHistory(runs);
++     setCandidates(candidateValue);
++     return { summary, byMode, runs, candidateValue };
++   }, []);
++
++   useEffect(() => {
++     void Promise.all([
++       fetchBenchmarkSuite(),
++       fetchRouterCandidates(),
++       fetchBenchmarkSummary(),
++       fetchBenchmarkSummariesByMode(),
++       fetchBenchmarkRuns(),
++       fetchBenchmarkPreferences(),
++       fetchRuntimeSummary(),
++     ])
++       .then(
++         ([
++           suiteValue,
++           candidateValue,
++           summaryValue,
++           summariesByModeValue,
++           runHistoryValue,
++           preferences,
++           runtimeSummaryValue,
++         ]) => {
++           setSuite(suiteValue);
++           setCandidates(candidateValue);
++           setLastSummary(summaryValue);
++           setSummariesByMode(summariesByModeValue);
++           setRunHistory(runHistoryValue);
++           setRuntimeSummary(runtimeSummaryValue);
++           const healthy = candidateValue.filter(
++             (candidate) =>
++               isBenchmarkRunnableCandidate(candidate) && candidate.healthStatus !== "offline",
++           );
++           setSelectedEndpointIds(healthy.map((candidate) => candidate.endpointId));
++           setJudgeEndpointId(resolveJudgeEndpointId(candidateValue, preferences.judgeEndpointId));
++           setError(null);
++         },
++       )
++       .catch((value: unknown) =>
++         setError(value instanceof Error ? value.message : "Could not load benchmark data."),
++       );
++   }, [resolveJudgeEndpointId]);
++
++   useEffect(() => {
++     if (!suite || !candidates) {
++       return;
++     }
++
++     let cancelled = false;
++
++     const resumeActiveRun = async () => {
++       try {
++         const activeRun = await fetchActiveBenchmarkRun();
++         const storedRunId = sessionStorage.getItem(ACTIVE_BENCHMARK_RUN_KEY);
++         const runId = activeRun?.runId ?? storedRunId;
++         if (!runId) {
++           return;
++         }
++
++         const snapshot = await fetchBenchmarkRunProgress(runId);
++         if (cancelled) {
++           return;
++         }
++
++         if (snapshot.status === "running") {
++           setActiveRunId(runId);
++           setRunning(true);
++           setProgress(snapshot);
++           sessionStorage.setItem(ACTIVE_BENCHMARK_RUN_KEY, runId);
++           return;
++         }
++
++         sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         if (snapshot.status === "completed" && snapshot.result) {
++           setResult(snapshot.result);
++           void refreshBenchmarkState();
++         }
++       } catch {
++         sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++       }
++     };
++
++     void resumeActiveRun();
++     return () => {
++       cancelled = true;
++     };
++   }, [candidates, refreshBenchmarkState, suite]);
++
++   const eligibleCaseCount = useMemo(() => {
++     if (!suite) {
++       return 0;
++     }
++     if (mode === "quick") {
++       return suite.cases.filter((item) => item.benchmark_eligible && item.quick_benchmark).length;
++     }
++     return suite.cases.filter((item) => item.benchmark_eligible).length;
++   }, [mode, suite]);
++
++   const runnableCandidates = useMemo(
++     () => (candidates ? filterBenchmarkRunnableCandidates(candidates) : []),
++     [candidates],
++   );
++
++   const runnableEndpointIds = useMemo(
++     () => new Set(runnableCandidates.map((candidate) => candidate.endpointId)),
++     [runnableCandidates],
++   );
++
++   useEffect(() => {
++     if (!candidates) {
++       return;
++     }
++     setSelectedEndpointIds((current) =>
++       current.filter((endpointId) => runnableEndpointIds.has(endpointId)),
++     );
++     if (judgeEndpointId && !runnableEndpointIds.has(judgeEndpointId)) {
++       setJudgeEndpointId(resolveJudgeEndpointId(runnableCandidates));
++     }
++   }, [
++     candidates,
++     judgeEndpointId,
++     resolveJudgeEndpointId,
++     runnableCandidates,
++     runnableEndpointIds,
++   ]);
++
++   const gradedEndpointCount = selectedEndpointIds.length;
++
++   const judgeSubjectOverlap =
++     judgeEndpointId.length > 0 && selectedEndpointIds.includes(judgeEndpointId);
++
++   const canRunBenchmark =
++     Boolean(suite) &&
++     gradedEndpointCount >= 2 &&
++     judgeEndpointId.length > 0 &&
++     runnableEndpointIds.has(judgeEndpointId) &&
++     !running;
++
++   const modelScoreRows = useMemo(
++     () => (candidates ? buildModelScoreRows(candidates, result, lastSummary) : []),
++     [candidates, lastSummary, result],
++   );
++
++   const compareByCaseId = useMemo(() => {
++     const map = new Map<string, BenchmarkCaseComparison>();
++     for (const entry of lastSummary?.caseComparisons ?? []) {
++       map.set(entry.caseId, entry);
++     }
++     return map;
++   }, [lastSummary]);
++
++   const toggleEndpoint = (endpointId: string) => {
++     setSelectedEndpointIds((current) =>
++       current.includes(endpointId)
++         ? current.filter((value) => value !== endpointId)
++         : [...current, endpointId],
++     );
++   };
++
++   const runBenchmark = useCallback(async () => {
++     const runnableSelectedEndpointIds = selectedEndpointIds.filter((endpointId) =>
++       runnableEndpointIds.has(endpointId),
++     );
++     if (runnableSelectedEndpointIds.length < 2) {
++       setError("Select at least two endpoints for compare-capable benchmark runs.");
++       return;
++     }
++     if (!judgeEndpointId || !runnableEndpointIds.has(judgeEndpointId)) {
++       setError("Select a judge endpoint.");
++       return;
++     }
++     setRunning(true);
++     setError(null);
++     setProgress(null);
++     setActiveRunId(null);
++     try {
++       await updateBenchmarkPreferences({ judgeEndpointId });
++       const started = await startCapabilityBenchmark({
++         endpointIds: runnableSelectedEndpointIds,
++         judgeEndpointId,
++         mode,
++         useJudge: true,
++       });
++       sessionStorage.setItem(ACTIVE_BENCHMARK_RUN_KEY, started.runId);
++       setActiveRunId(started.runId);
++     } catch (value: unknown) {
++       setError(value instanceof Error ? value.message : "Benchmark run failed.");
++       setRunning(false);
++       sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++     }
++   }, [judgeEndpointId, mode, runnableEndpointIds, selectedEndpointIds]);
++
++   const clearEndpointRoutingProfile = useCallback(
++     async (endpointId: string) => {
++       setClearingEndpointId(endpointId);
++       setError(null);
++       try {
++         await clearBenchmarkEndpointData(endpointId);
++         await refreshBenchmarkState();
++         if (result) {
++           setResult({
++             ...result,
++             endpointGrades: result.endpointGrades.filter(
++               (grade) => grade.endpointId !== endpointId,
++             ),
++           });
++         }
++       } catch (value: unknown) {
++         setError(
++           value instanceof Error
++             ? value.message
++             : "Could not clear routing profile for this model.",
++         );
++       } finally {
++         setClearingEndpointId(null);
++       }
++     },
++     [refreshBenchmarkState, result],
++   );
++
++   const handleClearAllBenchmarkData = useCallback(async () => {
++     const confirmed = window.confirm(
++       "Clear all benchmark data? This removes every benchmark run, artifact, and routing profile sample. This cannot be undone.",
++     );
++     if (!confirmed) {
++       return;
++     }
++
++     setClearingAll(true);
++     setError(null);
++     try {
++       await clearAllBenchmarkData();
++       setResult(null);
++       await refreshBenchmarkState();
++     } catch (value: unknown) {
++       setError(value instanceof Error ? value.message : "Could not clear all benchmark data.");
++     } finally {
++       setClearingAll(false);
++     }
++   }, [refreshBenchmarkState]);
++
++   useEffect(() => {
++     if (!running) {
++       return;
++     }
++     const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
++     return () => window.clearInterval(timer);
++   }, [running]);
++
++   useEffect(() => {
++     if (!activeRunId) {
++       return;
++     }
++     let cancelled = false;
++
++     const poll = async () => {
++       try {
++         const snapshot = await fetchBenchmarkRunProgress(activeRunId);
++         if (cancelled) {
++           return;
++         }
++         setProgress(snapshot);
++         if (snapshot.status === "completed" && snapshot.result) {
++           setResult(snapshot.result);
++           void refreshBenchmarkState();
++           setRunning(false);
++           setActiveRunId(null);
++           sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         } else if (snapshot.status === "failed") {
++           setError(snapshot.errorMessage ?? "Benchmark run failed.");
++           setRunning(false);
++           setActiveRunId(null);
++           sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         }
++       } catch (value: unknown) {
++         if (!cancelled) {
++           setError(value instanceof Error ? value.message : "Could not read benchmark progress.");
++           setRunning(false);
++           setActiveRunId(null);
++           sessionStorage.removeItem(ACTIVE_BENCHMARK_RUN_KEY);
++         }
++       }
++     };
++
++     void poll();
++     const timer = window.setInterval(() => void poll(), BENCHMARK_POLL_MS);
++     return () => {
++       cancelled = true;
++       window.clearInterval(timer);
++     };
++   }, [activeRunId, refreshBenchmarkState]);
++
++   const progressPercent = progress
++     ? progress.totalSteps > 0
++       ? Math.min(100, Math.round((progress.completedSteps / progress.totalSteps) * 100))
++       : 0
++     : 0;
++   const progressStalled = Boolean(
++     progress && progress.status === "running" && nowMs - progress.updatedAtMs >= BENCHMARK_STALL_MS,
++   );
++   const progressDescription = progress ? describeBenchmarkProgress(progress) : null;
++
++   if (error && !suite && !candidates) {
++     return <ErrorState label={error} />;
++   }
++   if (!suite || !candidates) {
++     return <LoadingState label="Loading capability benchmark…" />;
++   }
++
++   const lastRunLabel = lastSummary?.completedAtMs
++     ? new Date(lastSummary.completedAtMs).toLocaleString()
++     : null;
++   const judgeLabel = lastSummary ? resolveJudgeLabel(lastSummary, candidates) : null;
++   const fullSummary = summariesByMode?.full ?? EMPTY_BENCHMARK_SUMMARY;
++   const quickSummary = summariesByMode?.quick ?? EMPTY_BENCHMARK_SUMMARY;
++   const fullJudgeLabel = fullSummary.runId ? resolveJudgeLabel(fullSummary, candidates) : null;
++   const quickJudgeLabel = quickSummary.runId ? resolveJudgeLabel(quickSummary, candidates) : null;
++
++   return (
++     <div className="space-y-6">
++       <SectionCard
++         title="Model scores and routing profiles"
++         description="Each benchmark run grades model output, then writes judge scores into observed endpoint profiles. Router uses those profiles for candidate quality ranking and difficulty ceilings on later requests."
++       >
++         {lastRunLabel ? (
++           <p className="mb-4 text-sm text-[var(--rm-secondary)]">
++             Last completed run: {lastRunLabel}
++             {lastSummary?.mode ? ` • ${lastSummary.mode} suite` : ""}
++             {judgeLabel ? ` • judge: ${judgeLabel}` : ""}
++           </p>
++         ) : null}
++
++         {modelScoreRows.length === 0 ? (
++           <EmptyState label="No benchmark scores are in routing profiles yet. Run the benchmark below to grade each model and update observed profiles." />
++         ) : (
++           <div className="space-y-4">
++             {modelScoreRows.map((row) => (
++               <div key={row.endpointId} className={listRowClassName}>
++                 <div className="space-y-3">
++                   <div>
++                     <p className="font-semibold text-[var(--rm-fg)]">{row.modelId}</p>
++                     <p className="text-sm text-[var(--rm-secondary)]">{row.endpointId}</p>
++                   </div>
++
++                   <div className="grid gap-2 text-sm text-[var(--rm-secondary)] md:grid-cols-2">
++                     <p>
++                       <span className="font-semibold text-[var(--rm-fg)]">Benchmark overall:</span>{" "}
++                       {row.caseResults?.length
++                         ? formatScoreFraction(row.overallScore, row.caseResults.length)
++                         : formatScore(row.overallScore)}
++                     </p>
++                     <p>
++                       <span className="font-semibold text-[var(--rm-fg)]">
++                         Profile quality score:
++                       </span>{" "}
++                       {formatScore(row.profileQualityScore)}
++                       {row.benchmarkSamples > 0
++                         ? ` (${row.benchmarkSamples} benchmark sample${row.benchmarkSamples === 1 ? "" : "s"})`
++                         : ""}
++                     </p>
++                     <p>
++                       <span className="font-semibold text-[var(--rm-fg)]">Benchmark latency:</span>{" "}
++                       p50 {formatLatencyMs(row.latencyP50)} • p95 {formatLatencyMs(row.latencyP95)}
++                     </p>
++                   </div>
++
++                   {row.scoresByBucket ? (
++                     <p className="text-sm text-[var(--rm-secondary)]">
++                       <span className="font-semibold text-[var(--rm-fg)]">By difficulty:</span> easy{" "}
++                       {formatScore(row.scoresByBucket.easy.score)} • medium{" "}
++                       {formatScore(row.scoresByBucket.medium.score)} • hard{" "}
++                       {formatScore(row.scoresByBucket.hard.score)}
++                     </p>
++                   ) : null}
++
++                   <p className="text-sm leading-6 text-[var(--rm-secondary)]">
++                     <span className="font-semibold text-[var(--rm-fg)]">Routing impact:</span>{" "}
++                     {describeRoutingImpact(row.candidate)}
++                   </p>
++
++                   <div className="grid gap-3 md:grid-cols-2">
++                     <EndpointModeRunSnapshot
++                       title="Last full run"
++                       summary={fullSummary}
++                       endpointId={row.endpointId}
++                       judgeLabel={fullJudgeLabel}
++                     />
++                     <EndpointModeRunSnapshot
++                       title="Last quick run (12 hard)"
++                       summary={quickSummary}
++                       endpointId={row.endpointId}
++                       judgeLabel={quickJudgeLabel}
++                     />
++                   </div>
++
++                   {row.caseResults && row.caseResults.length > 0 ? (
++                     <details className="text-sm text-[var(--rm-secondary)]">
++                       <summary className="cursor-pointer font-semibold text-[var(--rm-fg)]">
++                         Per-case benchmark results
++                       </summary>
++                       <div className="mt-3 space-y-2">
++                         {row.caseResults.map((caseResult) => {
++                           const compareResult = compareByCaseId.get(caseResult.caseId);
++                           return (
++                             <div
++                               key={caseResult.caseId}
++                               className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] p-3"
++                             >
++                               <p className="font-semibold text-[var(--rm-fg)]">
++                                 {caseResult.caseId} • {formatScore(caseResult.score)} •{" "}
++                                 {caseResult.difficultyBucket} •{" "}
++                                 {formatLatencyMs(caseResult.latencyMs)}
++                               </p>
++                               <div className="mt-1 flex flex-wrap gap-2 text-xs">
++                                 {caseResult.gradingMethod ? (
++                                   <StatusPill tone="neutral">{caseResult.gradingMethod}</StatusPill>
++                                 ) : null}
++                                 {caseResult.judgeUnavailable ? (
++                                   <StatusPill tone="warning">judge unavailable</StatusPill>
++                                 ) : null}
++                                 {caseResult.parseSuccess === false ? (
++                                   <StatusPill tone="warning">parse failed</StatusPill>
++                                 ) : null}
++                                 {caseResult.cappedByValidator ? (
++                                   <StatusPill tone="warning">validator cap</StatusPill>
++                                 ) : null}
++                               </div>
++                               <p>{caseResult.rationale}</p>
++                               {compareResult ? (
++                                 <p className="mt-2 text-xs text-[var(--rm-secondary)]">
++                                   <span className="font-semibold text-[var(--rm-fg)]">
++                                     Head-to-head ranking:
++                                   </span>{" "}
++                                   {compareResult.relativeRanking.join(" › ")}
++                                   {" — "}
++                                   {compareResult.rationale}
++                                 </p>
++                               ) : null}
++                             </div>
++                           );
++                         })}
++                       </div>
++                     </details>
++                   ) : null}
++                 </div>
++
++                 <div className="flex flex-col items-end gap-2">
++                   <div className="flex flex-wrap items-start justify-end gap-2">
++                     <StatusPill tone={row.sourceType === "remote" ? "accent" : "neutral"}>
++                       {row.sourceType}
++                     </StatusPill>
++                     <StatusPill tone="success">{formatScore(row.overallScore)}</StatusPill>
++                   </div>
++                   <button
++                     type="button"
++                     className={secondaryButtonClassName}
++                     disabled={running || clearingEndpointId === row.endpointId}
++                     onClick={() => void clearEndpointRoutingProfile(row.endpointId)}
++                   >
++                     {clearingEndpointId === row.endpointId
++                       ? "Clearing routing profile…"
++                       : "Clear routing profile"}
++                   </button>
++                 </div>
++               </div>
++             ))}
++           </div>
++         )}
++       </SectionCard>
++
++       {modelScoreRows.length > 0 ? (
++         <SectionCard
++           title="Taxonomy dimensions"
++           description="View benchmark scores aggregated by taxonomy dimension. Select a dimension to see per-model scores."
++         >
++           {(() => {
++             const allRoles = new Set<string>();
++             const allTasks = new Set<string>();
++             const allCapabilities = new Set<string>();
++             for (const row of modelScoreRows) {
++               const subject = lastSummary?.subjects.find((s) => s.endpointId === row.endpointId);
++               if (subject?.taxonomyScores) {
++                 for (const k of Object.keys(subject.taxonomyScores.byRole ?? {})) allRoles.add(k);
++                 for (const k of Object.keys(subject.taxonomyScores.byTask ?? {})) allTasks.add(k);
++                 for (const k of Object.keys(subject.taxonomyScores.byCapability ?? {}))
++                   allCapabilities.add(k);
++               }
++             }
++             const hasTaxonomyData =
++               allRoles.size > 0 || allTasks.size > 0 || allCapabilities.size > 0;
++
++             const getFilteredScores = (
++               dimension: "byRole" | "byTask" | "byCapability",
++               filterValue: string,
++             ): Array<{
++               modelId: string;
++               endpointId: string;
++               score: number;
++             }> => {
++               if (!filterValue) return [];
++               return modelScoreRows
++                 .map((row) => {
++                   const subject = lastSummary?.subjects.find(
++                     (s) => s.endpointId === row.endpointId,
++                   );
++                   const score = subject?.taxonomyScores?.[dimension]?.[filterValue];
++                   return score !== undefined
++                     ? {
++                         modelId: row.modelId,
++                         endpointId: row.endpointId,
++                         score,
++                       }
++                     : null;
++                 })
++                 .filter(
++                   (
++                     entry,
++                   ): entry is {
++                     modelId: string;
++                     endpointId: string;
++                     score: number;
++                   } => entry !== null,
++                 )
++                 .sort((a, b) => b.score - a.score);
++             };
++
++             return hasTaxonomyData ? (
++               <div className="space-y-4">
++                 <p className="text-sm text-[var(--rm-secondary)]">
++                   These scores are advisory and reflect benchmark performance within specific
++                   taxonomy categories. They do not override routing policy.
++                 </p>
++                 <div className="grid gap-3 md:grid-cols-3">
++                   <SelectField
++                     label="Filter by role"
++                     value={taxonomyFilterRole}
++                     onChange={(value) => {
++                       setTaxonomyFilterRole(value);
++                       setTaxonomyFilterTask("");
++                       setTaxonomyFilterCapability("");
++                     }}
++                   >
++                     <option value="">All roles</option>
++                     {[...allRoles].sort().map((role) => (
++                       <option key={role} value={role}>
++                         {role}
++                       </option>
++                     ))}
++                   </SelectField>
++                   <SelectField
++                     label="Filter by task"
++                     value={taxonomyFilterTask}
++                     onChange={(value) => {
++                       setTaxonomyFilterTask(value);
++                       setTaxonomyFilterRole("");
++                       setTaxonomyFilterCapability("");
++                     }}
++                   >
++                     <option value="">All tasks</option>
++                     {[...allTasks].sort().map((task) => (
++                       <option key={task} value={task}>
++                         {task}
++                       </option>
++                     ))}
++                   </SelectField>
++                   <SelectField
++                     label="Filter by capability"
++                     value={taxonomyFilterCapability}
++                     onChange={(value) => {
++                       setTaxonomyFilterCapability(value);
++                       setTaxonomyFilterRole("");
++                       setTaxonomyFilterTask("");
++                     }}
++                   >
++                     <option value="">All capabilities</option>
++                     {[...allCapabilities].sort().map((cap) => (
++                       <option key={cap} value={cap}>
++                         {cap}
++                       </option>
++                     ))}
++                   </SelectField>
++                 </div>
++
++                 {(() => {
++                   const roleScores = getFilteredScores("byRole", taxonomyFilterRole);
++                   const taskScores = getFilteredScores("byTask", taxonomyFilterTask);
++                   const capScores = getFilteredScores("byCapability", taxonomyFilterCapability);
++                   const activeScores =
++                     roleScores.length > 0
++                       ? { label: `Role: ${taxonomyFilterRole}`, scores: roleScores }
++                       : taskScores.length > 0
++                         ? { label: `Task: ${taxonomyFilterTask}`, scores: taskScores }
++                         : capScores.length > 0
++                           ? { label: `Capability: ${taxonomyFilterCapability}`, scores: capScores }
++                           : null;
++
++                   return activeScores ? (
++                     <div className="space-y-2">
++                       <p className="text-xs font-semibold uppercase tracking-wider text-[var(--rm-secondary)]">
++                         {activeScores.label}
++                       </p>
++                       {activeScores.scores.map((entry) => (
++                         <div
++                           key={entry.endpointId}
++                           className="flex items-center justify-between rounded-lg border border-[var(--rm-border)] p-3"
++                         >
++                           <div>
++                             <p className="font-semibold text-[var(--rm-fg)]">{entry.modelId}</p>
++                             <p className="text-xs text-[var(--rm-secondary)]">{entry.endpointId}</p>
++                           </div>
++                           <StatusPill tone="success">{formatScore(entry.score)}</StatusPill>
++                         </div>
++                       ))}
++                     </div>
++                   ) : taxonomyFilterRole || taxonomyFilterTask || taxonomyFilterCapability ? (
++                     <EmptyState label="No benchmark data for the selected taxonomy dimension." />
++                   ) : (
++                     <EmptyState label="Select a taxonomy dimension above to see per-model benchmark scores." />
++                   );
++                 })()}
++               </div>
++             ) : (
++               <EmptyState label="No taxonomy dimension data available yet. Run a benchmark with taxonomy-tagged cases to populate dimension scores." />
++             );
++           })()}
++         </SectionCard>
++       ) : null}
++
++       <SectionCard
++         title="Run capability benchmark"
++         description="Grade configured endpoints against the routing capability suite. Scores above are written into each endpoint's observed profile for future routing."
++       >
++         {runtimeSummary ? (
++           <p className="mb-4 text-sm text-[var(--rm-secondary)]">
++             Runtime scope: {runtimeSummary.scopeId ?? "unknown"} • endpoints:{" "}
++             {runtimeSummary.endpointCount}
++             {runtimeSummary.runtimeStateRoot ? ` • state: ${runtimeSummary.runtimeStateRoot}` : ""}
++           </p>
++         ) : null}
++         {judgeSubjectOverlap ? (
++           <p className="mb-4 text-sm text-[var(--rm-warning-fg,orange)]">
++             Judge endpoint is also a benchmark subject. Expect slower grading and higher judge
++             failure risk — prefer a dedicated judge when available.
++           </p>
++         ) : null}
++         <div className="grid gap-4 md:grid-cols-3">
++           <FactCard
++             label="Suite"
++             value={suite.cases.filter((item) => item.benchmark_eligible).length}
++             detail={`${suite.suite_id} v${suite.suite_version}`}
++             emphasis
++           />
++           <FactCard
++             label="Run size"
++             value={eligibleCaseCount}
++             detail={
++               mode === "quick"
++                 ? "Hard subset: code, tools, and multi-step cases."
++                 : "Full eligible benchmark set."
++             }
++           />
++           <FactCard
++             label="Judge"
++             value={
++               candidates.find((candidate) => candidate.endpointId === judgeEndpointId)?.modelId ??
++               "not selected"
++             }
++             detail="Grading-only endpoint; scores stored deliverables after execution completes."
++           />
++         </div>
++
++         <div className="mt-4 grid gap-4 md:grid-cols-2">
++           <SelectField
++             label="Benchmark mode"
++             value={mode}
++             onChange={(value) => setMode(value === "full" ? "full" : "quick")}
++           >
++             <option value="quick">Quick (12 hard cases)</option>
++             <option value="full">Full (all eligible cases)</option>
++           </SelectField>
++           <SelectField
++             label="Judge endpoint (grading only)"
++             value={judgeEndpointId}
++             onChange={(value) => {
++               setJudgeEndpointId(value);
++               void updateBenchmarkPreferences({ judgeEndpointId: value }).catch(() => undefined);
++             }}
++           >
++             {runnableCandidates.map((candidate) => (
++               <option key={candidate.endpointId} value={candidate.endpointId}>
++                 {candidate.modelId} ({candidate.sourceType})
++               </option>
++             ))}
++           </SelectField>
++         </div>
++
++         <div className="mt-4 space-y-2">
++           <p className="text-sm font-semibold text-[var(--rm-fg)]">Endpoints to grade</p>
++           <div className="space-y-2">
++             {candidates.map((candidate) => (
++               <label
++                 key={candidate.endpointId}
++                 className={`${mutedPanelClassName} flex items-start gap-3 p-3 ${
++                   isBenchmarkRunnableCandidate(candidate)
++                     ? "cursor-pointer"
++                     : "cursor-not-allowed opacity-60"
++                 }`}
++               >
++                 <input
++                   type="checkbox"
++                   checked={selectedEndpointIds.includes(candidate.endpointId)}
++                   disabled={!isBenchmarkRunnableCandidate(candidate)}
++                   onChange={() => toggleEndpoint(candidate.endpointId)}
++                 />
++                 <span className="space-y-1">
++                   <span className="block font-semibold text-[var(--rm-fg)]">
++                     {candidate.modelId}
++                   </span>
++                   <span className="block text-sm text-[var(--rm-secondary)]">
++                     {candidate.endpointId}
++                   </span>
++                   {!isBenchmarkRunnableCandidate(candidate) ? (
++                     <span className="block text-xs font-semibold uppercase tracking-[0.18em] text-[var(--rm-secondary)]">
++                       Excluded by current execution mode
++                     </span>
++                   ) : null}
++                 </span>
++               </label>
++             ))}
++           </div>
++         </div>
++
++         <div className="mt-6">
++           <button
++             type="button"
++             className={primaryButtonClassName}
++             disabled={running || !canRunBenchmark}
++             onClick={() => void runBenchmark()}
++           >
++             {running
++               ? "Running benchmark…"
++               : `Run ${mode} benchmark (${gradedEndpointCount} model${gradedEndpointCount === 1 ? "" : "s"}, ${eligibleCaseCount} cases)`}
++           </button>
++         </div>
++
++         {running ? (
++           <div className={`${mutedPanelClassName} mt-4 space-y-3 p-4`}>
++             <div className="flex flex-wrap items-center justify-between gap-2">
++               <p className="font-semibold text-[var(--rm-fg)]">
++                 {progressDescription?.phaseLabel ?? "Benchmark in progress"}
++               </p>
++               <StatusPill tone={progressStalled ? "warning" : "accent"}>
++                 {progressStalled ? "No recent updates" : "Running"}
++               </StatusPill>
++             </div>
++             <div className="h-2 overflow-hidden rounded-full bg-[var(--rm-border)]">
++               <div
++                 className="h-full rounded-full bg-[var(--rm-accent)] transition-all duration-500"
++                 style={{ width: `${progressPercent}%` }}
++               />
++             </div>
++             <p className="text-sm text-[var(--rm-secondary)]">
++               {progress
++                 ? `${progress.completedSteps} / ${progress.totalSteps} steps (${progressPercent}%) • elapsed ${formatElapsed(nowMs - progress.startedAtMs)}`
++                 : "Starting benchmark run…"}
++             </p>
++             {progressDescription ? (
++               <p className="text-sm text-[var(--rm-fg)]">{progressDescription.detail}</p>
++             ) : null}
++             {progressStalled ? (
++               <p className="text-sm text-[var(--rm-warning)]">
++                 No progress update in the last 90 seconds. The run may still be waiting on a slow
++                 model response.
++               </p>
++             ) : null}
++           </div>
++         ) : null}
++
++         {error ? <p className="mt-4 text-sm text-[var(--rm-error)]">{error}</p> : null}
++       </SectionCard>
++
++       <SectionCard
++         title="Run history"
++         description="Completed benchmark runs stored on this runtime. Global clear removes artifacts and routing profile samples for every model."
++       >
++         {runHistory.length === 0 ? (
++           <EmptyState label="No completed benchmark runs yet." />
++         ) : (
++           <div className="space-y-3">
++             {runHistory.map((run) => (
++               <div key={run.runId} className={listRowClassName}>
++                 <div>
++                   <p className="font-semibold text-[var(--rm-fg)]">{run.runId}</p>
++                   <p className="text-sm text-[var(--rm-secondary)]">
++                     {run.mode} • {run.caseCount} cases • {run.endpointIds.length} model
++                     {run.endpointIds.length === 1 ? "" : "s"}
++                   </p>
++                   <p className="text-sm text-[var(--rm-secondary)]">
++                     {new Date(run.completedAtMs).toLocaleString()} • {run.suiteId}
++                   </p>
++                 </div>
++                 <StatusPill tone={run.mode === "quick" ? "accent" : "neutral"}>
++                   {run.mode}
++                 </StatusPill>
++               </div>
++             ))}
++           </div>
++         )}
++
++         <div className="mt-6">
++           <button
++             type="button"
++             className={secondaryButtonClassName}
++             disabled={running || clearingAll}
++             onClick={() => void handleClearAllBenchmarkData()}
++           >
++             {clearingAll ? "Clearing all benchmark data…" : "Clear all benchmark data"}
++           </button>
++         </div>
++       </SectionCard>
++     </div>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:1003:36
+    1001| 
+    1002|   test("benchmark score badges use a dedicated centered circular badge…
+    1003|     expect(controlBenchmarkSource).toContain("const benchmarkScoreBadg…
+       |                                    ^
+    1004|     expect(controlBenchmarkSource).toContain("items-center justify-cen…
+    1005|     expect(controlBenchmarkSource).toContain("[font-variant-numeric:ta…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 55 passed (57)
+   Start at  21:01:03
+   Duration  3.60s (transform 1.16s, setup 0ms, collect 1.80s, tests 196ms, environment 0ms, prepare 574ms)
+
+undefined
+D:\DEV\role-model\.worktrees\60-runtime-ui-paper-linear-review-alignment\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/design-system.test.ts

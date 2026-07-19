@@ -1,0 +1,37 @@
+{
+  "addendum": 20,
+  "timestamp": "2026-06-17T22:45:00+02:00",
+  "runtime": "http://127.0.0.1:3456",
+  "runtimeConfig": {
+    "routingStrategy": "baseline",
+    "executionMode": "local_only",
+    "aliasId": "mixed.local-remote",
+    "configuredModelIds": [
+      "lfm2.5-1.2b-instruct",
+      "openai/gpt-4.1-mini-fast"
+    ]
+  },
+  "checks": [
+    {
+      "route": "/app/router",
+      "result": "pass",
+      "assertions": [
+        "Fact card displays configured strategy baseline.",
+        "Fact card displays configured execution mode local_only.",
+        "Alias inventory displays Configured models, not Resolved models.",
+        "Alias inventory includes the two runtime-config alias model hints.",
+        "Candidate expansion is shown as diagnostic count only."
+      ]
+    },
+    {
+      "route": "/app/router/strategy",
+      "result": "pass",
+      "assertions": [
+        "Benchmark-informed difficulty advisory renders.",
+        "Candidate advisory card renders.",
+        "Literal candidates.length control-flow text is absent.",
+        "Literal ) : ( control-flow text is absent."
+      ]
+    }
+  ]
+}

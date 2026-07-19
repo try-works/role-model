@@ -29,7 +29,45 @@
       "localNotes": ["Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"]
     },
     "moonshot/kimi-k2.7-code": {
+      "capabilities": ["code.edit"],
       "localNotes": ["Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"]
+    },
+    "moonshot/kimi-k3": {
+      "capabilities": ["code.edit"],
+      "localNotes": ["Moonshot Open Platform catalog slice with Kimi Code OAuth onboarding support"]
+    },
+    "deepseek/deepseek-v4-flash": {
+      "capabilities": ["code.edit"]
+    },
+    "deepseek/deepseek-v4-pro": {
+      "capabilities": ["code.edit"]
+    },
+    "openai/gpt-5.3-codex": {
+      "capabilities": ["code.edit"]
+    },
+    "openai/gpt-5.3-codex-spark": {
+      "capabilities": ["code.edit"]
+    },
+    "openai/gpt-5.3-chat-latest": {
+      "capabilities": ["code.edit"]
+    },
+    "openai/gpt-5.4": {
+      "capabilities": ["code.edit"]
+    },
+    "openai/gpt-5.4-mini": {
+      "capabilities": ["code.edit"]
+    },
+    "openai/gpt-5.4-nano": {
+      "capabilities": ["code.edit"]
+    },
+    "openai/gpt-5.4-pro": {
+      "capabilities": ["code.edit"]
+    },
+    "openai/gpt-5.5": {
+      "capabilities": ["code.edit"]
+    },
+    "openai/gpt-5.5-pro": {
+      "capabilities": ["code.edit"]
     }
   }
 }

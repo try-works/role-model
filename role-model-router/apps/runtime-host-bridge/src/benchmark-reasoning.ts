@@ -17,6 +17,10 @@ export interface BenchmarkChatCompletionsExecutionResult {
       readonly arguments: string;
     };
   }[];
+  readonly toolExecutions?: readonly {
+    readonly toolName: string;
+    readonly status?: string;
+  }[];
 }
 
 export const BENCHMARK_FINAL_ANSWER_PROMPT =

@@ -1,0 +1,1564 @@
+{
+  "requestId": "req-4932396c-0253-4541-935f-5e8832c290f7",
+  "routingDecisionId": "decision-req-4932396c-0253-4541-935f-5e8832c290f7",
+  "selectedEndpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+  "selectedModelId": "openai/gpt-4.1-mini-fast",
+  "fallbackEndpointIds": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "strategyLabel": "difficulty",
+  "decision": {
+    "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7",
+    "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+    "app_id": "unknown-app",
+    "org_id": null,
+    "policy_snapshot": {
+      "policy_id": "cost-policy",
+      "strategy": "cost",
+      "compute_preference": "auto",
+      "prefer_local": false,
+      "budget_mode": "disabled",
+      "tie_break_order": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "required_modalities": [
+        "text"
+      ],
+      "require_tools": true,
+      "deny_endpoints": [],
+      "allow_endpoints": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ],
+      "deny_provider_kinds": [],
+      "allow_provider_kinds": [],
+      "budget": {
+        "enabled": false,
+        "currency": "USD"
+      },
+      "privacy": {
+        "allow_remote": true
+      },
+      "targets": {
+        "latency_target_ms": 150,
+        "latency_max_ms": 300,
+        "throughput_target_tps": 40
+      }
+    },
+    "eligibility": [
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "eligible": true,
+        "exclusions": []
+      },
+      {
+        "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        "eligible": true,
+        "exclusions": []
+      },
+      {
+        "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+        "eligible": false,
+        "exclusions": [
+          {
+            "code": "POLICY_DENY_ENDPOINT",
+            "detail": "Endpoint is denied by routing policy."
+          }
+        ]
+      }
+    ],
+    "scored_candidates": [
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "total_score": 0.8818065614574472,
+        "metric_breakdown": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.9815919461876028,
+            "source": "measured",
+            "raw": {
+              "latency_ms_p50": 3,
+              "latency_ms_p95": 3,
+              "effective_latency_ms": 3,
+              "measured_at_ms": 1783602853656,
+              "freshness_weight": 0.9992055070097797,
+              "neutral_value": 0.5,
+              "observed_value": 0.9819748718447459,
+              "effective_value": 0.9815919461876028
+            }
+          },
+          "throughput": {
+            "value": 0.9990074754517747,
+            "source": "measured",
+            "raw": {
+              "tokens_per_sec": 1667,
+              "measured_at_ms": 1783602853656,
+              "freshness_weight": 0.9980149509035494,
+              "neutral_value": 0.5,
+              "observed_value": 1,
+              "effective_value": 0.9990074754517747
+            }
+          },
+          "cost": {
+            "value": 0.8428877769835597,
+            "source": "catalog",
+            "raw": {
+              "cost_per_1k_tokens_est": 0.0015711222301644033,
+              "measured_at_ms": 1783602853656,
+              "freshness_weight": 1,
+              "neutral_value": 0.5,
+              "estimated_request_usd": 0.006594,
+              "input_per_1m": 0.4,
+              "output_per_1m": 1.6,
+              "token_economics_source": "catalog",
+              "canonical_model_id": "openai/gpt-4.1-mini-fast",
+              "target_cost_per_request": 0.01,
+              "observed_value": 0.8428877769835597,
+              "effective_value": 0.8428877769835597
+            }
+          },
+          "reliability": {
+            "value": 0.9998808023713426,
+            "source": "measured",
+            "raw": {
+              "failure_rate": 0,
+              "measured_at_ms": 1783602853656,
+              "freshness_weight": 0.9996026745711417,
+              "neutral_value": 0.7,
+              "observed_value": 1,
+              "effective_value": 0.9998808023713426
+            }
+          },
+          "preference": {
+            "value": 0.6,
+            "source": "declared",
+            "raw": {
+              "cache_affinity": true,
+              "cache_affinity_delta": 0.1
+            }
+          }
+        },
+        "tie_break": {
+          "quality": 0.5,
+          "latency_ms": 3,
+          "reliability": 0.9998808023713426,
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        }
+      },
+      {
+        "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        "total_score": 0.3824457896776435,
+        "metric_breakdown": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.9520384153545021,
+            "source": "measured",
+            "raw": {
+              "latency_ms_p50": 8,
+              "latency_ms_p95": 8,
+              "effective_latency_ms": 8,
+              "measured_at_ms": 1783602853363,
+              "freshness_weight": 0.9985293000273411,
+              "neutral_value": 0.5,
+              "observed_value": 0.9527042074199772,
+              "effective_value": 0.9520384153545021
+            }
+          },
+          "throughput": {
+            "value": 0.9981636523105528,
+            "source": "measured",
+            "raw": {
+              "tokens_per_sec": 250,
+              "measured_at_ms": 1783602853363,
+              "freshness_weight": 0.9963273046211057,
+              "neutral_value": 0.5,
+              "observed_value": 1,
+              "effective_value": 0.9981636523105528
+            }
+          },
+          "cost": {
+            "value": 0,
+            "source": "catalog",
+            "raw": {
+              "cost_per_1k_tokens_est": 0.014699189897545865,
+              "measured_at_ms": 1783602853363,
+              "freshness_weight": 1,
+              "neutral_value": 0.5,
+              "estimated_request_usd": 0.0616925,
+              "input_per_1m": 2.5,
+              "output_per_1m": 15,
+              "token_economics_source": "catalog",
+              "canonical_model_id": "chatgpt/gpt-5.4",
+              "target_cost_per_request": 0.01,
+              "observed_value": 0,
+              "effective_value": 0
+            }
+          },
+          "reliability": {
+            "value": 0.999779313833461,
+            "source": "measured",
+            "raw": {
+              "failure_rate": 0,
+              "measured_at_ms": 1783602853363,
+              "freshness_weight": 0.99926437944487,
+              "neutral_value": 0.7,
+              "observed_value": 1,
+              "effective_value": 0.999779313833461
+            }
+          },
+          "preference": {
+            "value": 0.6,
+            "source": "declared",
+            "raw": {
+              "cache_affinity": true,
+              "cache_affinity_delta": 0.1
+            }
+          }
+        },
+        "tie_break": {
+          "quality": 0.5,
+          "latency_ms": 8,
+          "reliability": 0.999779313833461,
+          "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        }
+      }
+    ],
+    "chosen_endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "fallback_endpoint_ids": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "selection_reasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "BUDGET_OPTIMIZATION",
+      "LOW_LATENCY_TARGET_MET",
+      "FALLBACK_CHAIN_COMPUTED"
+    ],
+    "used_measured": true,
+    "used_declared": true,
+    "scoring_version": "baseline-v2"
+  },
+  "routingDiagnostics": {
+    "retrievalReceiptId": "conversation-main-retrieval-receipt",
+    "routingModel": {
+      "enabled": false,
+      "endpointId": null,
+      "preferredEndpointIds": [],
+      "ignoredEndpointIds": []
+    },
+    "aliasResolution": {
+      "requestedModel": "difficulty.remote-only",
+      "aliasId": "difficulty.remote-only",
+      "resolvedModelIds": [
+        "chatgpt/gpt-5.4",
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "allowEndpoints": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ]
+    },
+    "routingMode": {
+      "source": "alias-default",
+      "aliasMode": "difficulty",
+      "effectiveMode": "difficulty"
+    },
+    "capabilityEligibility": {
+      "requiredInputModalities": [
+        "text"
+      ],
+      "requiredOutputModalities": [
+        "text"
+      ],
+      "requiredCapabilities": [
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "advisoryCapabilities": [],
+      "includedEndpoints": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ],
+      "excludedTargets": []
+    },
+    "difficultyRouting": {
+      "difficulty": "easy",
+      "strategy": "cost",
+      "fallbackApplied": false,
+      "cacheInvalidated": true,
+      "cacheInvalidationReasons": [
+        "code-or-schema-change",
+        "tool-count-delta"
+      ],
+      "rubricSignals": {
+        "contextTokens": 101,
+        "toolCount": 33,
+        "historyTurnCount": 2,
+        "instructionConstraintCount": 0,
+        "decompositionKeywordCount": 0,
+        "codeOrSchemaBurden": true
+      }
+    },
+    "rewrite": {
+      "requestedModel": "difficulty.remote-only",
+      "downstreamModelId": "openai/gpt-4.1-mini-fast",
+      "applied": true,
+      "reason": "requested-model-rewritten-for-selected-endpoint"
+    },
+    "observedProfile": {
+      "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "source": "runtime-state",
+      "readMode": "per-request",
+      "measuredAtMs": 1783602853656,
+      "difficultyBucket": "easy",
+      "bucketOverrideApplied": true
+    },
+    "catalogEconomics": {
+      "canonicalModelId": "openai/gpt-4.1-mini-fast",
+      "tokenEconomicsSource": "catalog",
+      "inputPer1M": 0.4,
+      "outputPer1M": 1.6,
+      "estimatedRequestUsd": 0.006594,
+      "cost_per_1k_tokens_est": 0.0015711222301644033
+    },
+    "effectiveMetrics": {
+      "quality": {
+        "value": 0.5,
+        "source": "default"
+      },
+      "latency": {
+        "value": 0.9815919461876028,
+        "source": "measured",
+        "measuredAtMs": 1783602853656,
+        "freshnessWeight": 0.9992055070097797
+      },
+      "throughput": {
+        "value": 0.9990074754517747,
+        "source": "measured",
+        "measuredAtMs": 1783602853656,
+        "freshnessWeight": 0.9980149509035494
+      },
+      "reliability": {
+        "value": 0.9998808023713426,
+        "source": "measured",
+        "measuredAtMs": 1783602853656,
+        "freshnessWeight": 0.9996026745711417
+      },
+      "cost": {
+        "value": 0.8428877769835597,
+        "source": "catalog",
+        "measuredAtMs": 1783602853656,
+        "freshnessWeight": 1
+      }
+    },
+    "selection": {
+      "mode": "best-total-score",
+      "scoreTieEpsilon": 0.01,
+      "scoreDelta": 0.4993607717798037,
+      "winnerEndpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "winnerTotalScore": 0.8818065614574472,
+      "runnerUpEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "runnerUpTotalScore": 0.3824457896776435,
+      "tieBreakOrder": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ]
+    },
+    "throughputPenalty": {
+      "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "active": false
+    }
+  },
+  "retrievalReceipt": {
+    "receiptId": "conversation-main-retrieval-receipt",
+    "summary": {
+      "selectedTurns": 2,
+      "selectedArtifacts": 1,
+      "omittedTurns": 2,
+      "omittedArtifacts": 2,
+      "estimatedTokens": 240
+    }
+  },
+  "contextEnvelope": {
+    "conversationId": "conversation-main",
+    "latestHandoffId": "handoff-1",
+    "estimatedTokenCount": 240
+  },
+  "request": {
+    "requestId": "req-4932396c-0253-4541-935f-5e8832c290f7",
+    "clientRequestId": "run62-craft-chat-alias-tools-001",
+    "routingDecisionId": "decision-req-4932396c-0253-4541-935f-5e8832c290f7",
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "conversationId": "conversation-main",
+    "decision": {
+      "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7",
+      "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+      "app_id": "unknown-app",
+      "org_id": null,
+      "policy_snapshot": {
+        "policy_id": "cost-policy",
+        "strategy": "cost",
+        "compute_preference": "auto",
+        "prefer_local": false,
+        "budget_mode": "disabled",
+        "tie_break_order": [
+          "quality",
+          "latency_ms",
+          "reliability",
+          "endpoint_id"
+        ],
+        "required_capabilities": [
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "required_modalities": [
+          "text"
+        ],
+        "require_tools": true,
+        "deny_endpoints": [],
+        "allow_endpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "deny_provider_kinds": [],
+        "allow_provider_kinds": [],
+        "budget": {
+          "enabled": false,
+          "currency": "USD"
+        },
+        "privacy": {
+          "allow_remote": true
+        },
+        "targets": {
+          "latency_target_ms": 150,
+          "latency_max_ms": 300,
+          "throughput_target_tps": 40
+        }
+      },
+      "eligibility": [
+        {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "eligible": true,
+          "exclusions": []
+        },
+        {
+          "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+          "eligible": true,
+          "exclusions": []
+        },
+        {
+          "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
+          "eligible": false,
+          "exclusions": [
+            {
+              "code": "POLICY_DENY_ENDPOINT",
+              "detail": "Endpoint is denied by routing policy."
+            }
+          ]
+        }
+      ],
+      "scored_candidates": [
+        {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "total_score": 0.8818065614574472,
+          "metric_breakdown": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.9815919461876028,
+              "source": "measured",
+              "raw": {
+                "latency_ms_p50": 3,
+                "latency_ms_p95": 3,
+                "effective_latency_ms": 3,
+                "measured_at_ms": 1783602853656,
+                "freshness_weight": 0.9992055070097797,
+                "neutral_value": 0.5,
+                "observed_value": 0.9819748718447459,
+                "effective_value": 0.9815919461876028
+              }
+            },
+            "throughput": {
+              "value": 0.9990074754517747,
+              "source": "measured",
+              "raw": {
+                "tokens_per_sec": 1667,
+                "measured_at_ms": 1783602853656,
+                "freshness_weight": 0.9980149509035494,
+                "neutral_value": 0.5,
+                "observed_value": 1,
+                "effective_value": 0.9990074754517747
+              }
+            },
+            "cost": {
+              "value": 0.8428877769835597,
+              "source": "catalog",
+              "raw": {
+                "cost_per_1k_tokens_est": 0.0015711222301644033,
+                "measured_at_ms": 1783602853656,
+                "freshness_weight": 1,
+                "neutral_value": 0.5,
+                "estimated_request_usd": 0.006594,
+                "input_per_1m": 0.4,
+                "output_per_1m": 1.6,
+                "token_economics_source": "catalog",
+                "canonical_model_id": "openai/gpt-4.1-mini-fast",
+                "target_cost_per_request": 0.01,
+                "observed_value": 0.8428877769835597,
+                "effective_value": 0.8428877769835597
+              }
+            },
+            "reliability": {
+              "value": 0.9998808023713426,
+              "source": "measured",
+              "raw": {
+                "failure_rate": 0,
+                "measured_at_ms": 1783602853656,
+                "freshness_weight": 0.9996026745711417,
+                "neutral_value": 0.7,
+                "observed_value": 1,
+                "effective_value": 0.9998808023713426
+              }
+            },
+            "preference": {
+              "value": 0.6,
+              "source": "declared",
+              "raw": {
+                "cache_affinity": true,
+                "cache_affinity_delta": 0.1
+              }
+            }
+          },
+          "tie_break": {
+            "quality": 0.5,
+            "latency_ms": 3,
+            "reliability": 0.9998808023713426,
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast"
+          }
+        },
+        {
+          "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+          "total_score": 0.3824457896776435,
+          "metric_breakdown": {
+            "quality": {
+              "value": 0.5,
+              "source": "default"
+            },
+            "latency": {
+              "value": 0.9520384153545021,
+              "source": "measured",
+              "raw": {
+                "latency_ms_p50": 8,
+                "latency_ms_p95": 8,
+                "effective_latency_ms": 8,
+                "measured_at_ms": 1783602853363,
+                "freshness_weight": 0.9985293000273411,
+                "neutral_value": 0.5,
+                "observed_value": 0.9527042074199772,
+                "effective_value": 0.9520384153545021
+              }
+            },
+            "throughput": {
+              "value": 0.9981636523105528,
+              "source": "measured",
+              "raw": {
+                "tokens_per_sec": 250,
+                "measured_at_ms": 1783602853363,
+                "freshness_weight": 0.9963273046211057,
+                "neutral_value": 0.5,
+                "observed_value": 1,
+                "effective_value": 0.9981636523105528
+              }
+            },
+            "cost": {
+              "value": 0,
+              "source": "catalog",
+              "raw": {
+                "cost_per_1k_tokens_est": 0.014699189897545865,
+                "measured_at_ms": 1783602853363,
+                "freshness_weight": 1,
+                "neutral_value": 0.5,
+                "estimated_request_usd": 0.0616925,
+                "input_per_1m": 2.5,
+                "output_per_1m": 15,
+                "token_economics_source": "catalog",
+                "canonical_model_id": "chatgpt/gpt-5.4",
+                "target_cost_per_request": 0.01,
+                "observed_value": 0,
+                "effective_value": 0
+              }
+            },
+            "reliability": {
+              "value": 0.999779313833461,
+              "source": "measured",
+              "raw": {
+                "failure_rate": 0,
+                "measured_at_ms": 1783602853363,
+                "freshness_weight": 0.99926437944487,
+                "neutral_value": 0.7,
+                "observed_value": 1,
+                "effective_value": 0.999779313833461
+              }
+            },
+            "preference": {
+              "value": 0.6,
+              "source": "declared",
+              "raw": {
+                "cache_affinity": true,
+                "cache_affinity_delta": 0.1
+              }
+            }
+          },
+          "tie_break": {
+            "quality": 0.5,
+            "latency_ms": 8,
+            "reliability": 0.999779313833461,
+            "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4"
+          }
+        }
+      ],
+      "chosen_endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "fallback_endpoint_ids": [
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ],
+      "selection_reasons": [
+        "BEST_TOTAL_SCORE",
+        "DECLARED_PROFILE_USED",
+        "MEASURED_PROFILE_USED",
+        "DEFAULT_PROFILE_USED",
+        "CACHE_AFFINITY_APPLIED",
+        "BUDGET_OPTIMIZATION",
+        "LOW_LATENCY_TARGET_MET",
+        "FALLBACK_CHAIN_COMPUTED"
+      ],
+      "used_measured": true,
+      "used_declared": true,
+      "scoring_version": "baseline-v2"
+    },
+    "routingDiagnostics": {
+      "retrievalReceiptId": "conversation-main-retrieval-receipt",
+      "routingModel": {
+        "enabled": false,
+        "endpointId": null,
+        "preferredEndpointIds": [],
+        "ignoredEndpointIds": []
+      },
+      "aliasResolution": {
+        "requestedModel": "difficulty.remote-only",
+        "aliasId": "difficulty.remote-only",
+        "resolvedModelIds": [
+          "chatgpt/gpt-5.4",
+          "openai/gpt-4.1-mini-fast"
+        ],
+        "allowEndpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ]
+      },
+      "routingMode": {
+        "source": "alias-default",
+        "aliasMode": "difficulty",
+        "effectiveMode": "difficulty"
+      },
+      "capabilityEligibility": {
+        "requiredInputModalities": [
+          "text"
+        ],
+        "requiredOutputModalities": [
+          "text"
+        ],
+        "requiredCapabilities": [
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "advisoryCapabilities": [],
+        "includedEndpoints": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "excludedTargets": []
+      },
+      "difficultyRouting": {
+        "difficulty": "easy",
+        "strategy": "cost",
+        "fallbackApplied": false,
+        "cacheInvalidated": true,
+        "cacheInvalidationReasons": [
+          "code-or-schema-change",
+          "tool-count-delta"
+        ],
+        "rubricSignals": {
+          "contextTokens": 101,
+          "toolCount": 33,
+          "historyTurnCount": 2,
+          "instructionConstraintCount": 0,
+          "decompositionKeywordCount": 0,
+          "codeOrSchemaBurden": true
+        }
+      },
+      "rewrite": {
+        "requestedModel": "difficulty.remote-only",
+        "downstreamModelId": "openai/gpt-4.1-mini-fast",
+        "applied": true,
+        "reason": "requested-model-rewritten-for-selected-endpoint"
+      },
+      "observedProfile": {
+        "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "source": "runtime-state",
+        "readMode": "per-request",
+        "measuredAtMs": 1783602853656,
+        "difficultyBucket": "easy",
+        "bucketOverrideApplied": true
+      },
+      "catalogEconomics": {
+        "canonicalModelId": "openai/gpt-4.1-mini-fast",
+        "tokenEconomicsSource": "catalog",
+        "inputPer1M": 0.4,
+        "outputPer1M": 1.6,
+        "estimatedRequestUsd": 0.006594,
+        "cost_per_1k_tokens_est": 0.0015711222301644033
+      },
+      "effectiveMetrics": {
+        "quality": {
+          "value": 0.5,
+          "source": "default"
+        },
+        "latency": {
+          "value": 0.9815919461876028,
+          "source": "measured",
+          "measuredAtMs": 1783602853656,
+          "freshnessWeight": 0.9992055070097797
+        },
+        "throughput": {
+          "value": 0.9990074754517747,
+          "source": "measured",
+          "measuredAtMs": 1783602853656,
+          "freshnessWeight": 0.9980149509035494
+        },
+        "reliability": {
+          "value": 0.9998808023713426,
+          "source": "measured",
+          "measuredAtMs": 1783602853656,
+          "freshnessWeight": 0.9996026745711417
+        },
+        "cost": {
+          "value": 0.8428877769835597,
+          "source": "catalog",
+          "measuredAtMs": 1783602853656,
+          "freshnessWeight": 1
+        }
+      },
+      "selection": {
+        "mode": "best-total-score",
+        "scoreTieEpsilon": 0.01,
+        "scoreDelta": 0.4993607717798037,
+        "winnerEndpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "winnerTotalScore": 0.8818065614574472,
+        "runnerUpEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        "runnerUpTotalScore": 0.3824457896776435,
+        "tieBreakOrder": [
+          "quality",
+          "latency_ms",
+          "reliability",
+          "endpoint_id"
+        ]
+      },
+      "throughputPenalty": {
+        "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "active": false
+      }
+    },
+    "retrievalReceipt": {
+      "receiptId": "conversation-main-retrieval-receipt",
+      "summary": {
+        "selectedTurns": 2,
+        "selectedArtifacts": 1,
+        "omittedTurns": 2,
+        "omittedArtifacts": 2,
+        "estimatedTokens": 240
+      }
+    },
+    "contextEnvelope": {
+      "conversationId": "conversation-main",
+      "latestHandoffId": "handoff-1",
+      "estimatedTokenCount": 240
+    },
+    "trace": {
+      "spans": [
+        {
+          "trace_id": "trace-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "span_id": "span-provider-load-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+          "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "span_type": "provider.load",
+          "started_at_ms": 1783602854142,
+          "ended_at_ms": 1783602854147,
+          "status": "ok",
+          "attributes": {
+            "adapter_family": "litellm-proxy",
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast"
+          }
+        },
+        {
+          "trace_id": "trace-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "span_id": "span-provider-decode-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "parent_span_id": "span-provider-load-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+          "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "span_type": "provider.decode",
+          "started_at_ms": 1783602854147,
+          "ended_at_ms": 1783602854152,
+          "status": "ok",
+          "attributes": {
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "text_delta_count": 1
+          }
+        }
+      ],
+      "events": [
+        {
+          "event_id": "event-provider-load-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "trace_id": "trace-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "span_id": "span-provider-load-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+          "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "timestamp_ms": 1783602854143,
+          "event_type": "trace.span.opened",
+          "payload": {
+            "adapter_family": "litellm-proxy",
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast"
+          }
+        },
+        {
+          "event_id": "event-usage-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "trace_id": "trace-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "span_id": "span-provider-decode-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+          "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7",
+          "timestamp_ms": 1783602854152,
+          "event_type": "usage.event.created",
+          "payload": {
+            "input_tokens": 14,
+            "output_tokens": 5,
+            "cost_usd": 0.0042
+          }
+        }
+      ]
+    },
+    "usageEvent": {
+      "event_id": "usage-req-4932396c-0253-4541-935f-5e8832c290f7",
+      "timestamp_ms": 1783602854142,
+      "app_id": "unknown-app",
+      "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+      "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7",
+      "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "model_id": "openai/gpt-4.1-mini-fast",
+      "package_id": "provider-openai",
+      "provider_kind": "remote_openai_compat",
+      "tokens_in": 14,
+      "tokens_out": 5,
+      "latency_ms": 3,
+      "cost_actual": 0.0042,
+      "cost_estimate": 0.0042,
+      "currency": "USD",
+      "sample_source": "live_request"
+    },
+    "observedPerformance": {
+      "endpointVersion": "run07-registry-v1:custom-base-url",
+      "sample": {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "live_request",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1783602854142,
+        "latency_ms": 3,
+        "latency_ms_p95": 3,
+        "tokens_per_sec": 1667,
+        "cost_per_1k_tokens_est": 0.0042,
+        "failure": false,
+        "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+        "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7"
+      },
+      "history": [
+        {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "source_type": "live_request",
+          "difficulty_bucket": "easy",
+          "timestamp_ms": 1783602852361,
+          "latency_ms": 3,
+          "latency_ms_p95": 3,
+          "tokens_per_sec": 1667,
+          "cost_per_1k_tokens_est": 0.0042,
+          "failure": false,
+          "request_id": "req-c25ee331-bf6c-4be9-b198-15f4c0db7e31",
+          "routing_decision_id": "decision-req-c25ee331-bf6c-4be9-b198-15f4c0db7e31"
+        },
+        {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "source_type": "live_request",
+          "difficulty_bucket": "hard",
+          "timestamp_ms": 1783602852847,
+          "latency_ms": 2,
+          "latency_ms_p95": 2,
+          "tokens_per_sec": 2500,
+          "cost_per_1k_tokens_est": 0.0042,
+          "failure": false,
+          "request_id": "req-cfbe1340-f8e4-4bac-b900-76832b19e6bf",
+          "routing_decision_id": "decision-req-cfbe1340-f8e4-4bac-b900-76832b19e6bf"
+        },
+        {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "source_type": "live_request",
+          "difficulty_bucket": "easy",
+          "timestamp_ms": 1783602853656,
+          "latency_ms": 3,
+          "latency_ms_p95": 3,
+          "tokens_per_sec": 1667,
+          "cost_per_1k_tokens_est": 0.0042,
+          "failure": false,
+          "request_id": "req-6350c3f5-bf9f-46d5-826f-6bd5890d230d",
+          "routing_decision_id": "decision-req-6350c3f5-bf9f-46d5-826f-6bd5890d230d"
+        },
+        {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "source_type": "live_request",
+          "difficulty_bucket": "easy",
+          "timestamp_ms": 1783602854142,
+          "latency_ms": 3,
+          "latency_ms_p95": 3,
+          "tokens_per_sec": 1667,
+          "cost_per_1k_tokens_est": 0.0042,
+          "failure": false,
+          "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+          "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7"
+        }
+      ],
+      "profile": {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1783602854142,
+        "measurement_window": {
+          "started_at_ms": 1783602852361,
+          "ended_at_ms": 1783602854142
+        },
+        "sample_size": 4,
+        "sources": {
+          "live_request_samples": 4,
+          "benchmark_samples": 0
+        },
+        "latency_ms_p50": 3,
+        "latency_ms_p95": 3,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.4093360343955374,
+        "tokens_per_sec": 1667,
+        "cost_per_1k_tokens_est": 0.0042,
+        "currency": "USD"
+      }
+    },
+    "diagnostics": {
+      "routing": [
+        {
+          "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+          "severity": "info",
+          "message": "Routing diagnostics link request req-4932396c-0253-4541-935f-5e8832c290f7 to retrieval receipt conversation-main-retrieval-receipt."
+        }
+      ],
+      "execution": [],
+      "authAccount": [],
+      "memoryQuality": [
+        {
+          "code": "MEMORY_CONTEXT_OMITTED",
+          "severity": "warning",
+          "message": "Context assembly omitted 2 turns and 2 artifacts."
+        },
+        {
+          "code": "MEMORY_LATEST_HANDOFF_LINKED",
+          "severity": "info",
+          "message": "Context inspection preserves latest handoff handoff-1."
+        }
+      ],
+      "tooling": [],
+      "operator": [
+        {
+          "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+          "severity": "info",
+          "message": "Raw operator captures remain available through the preserved host capture surface."
+        }
+      ]
+    },
+    "capturePolicy": {
+      "environment": "local-dev",
+      "redactionLevel": "strict",
+      "retentionClass": "standard",
+      "structuredInspectionMode": "redacted",
+      "rawCaptureAvailable": true,
+      "structuredInspectionAvailable": true,
+      "redactedFields": [
+        "request.headers.authorization"
+      ],
+      "suppressedFields": [
+        "request.body",
+        "response.body"
+      ]
+    },
+    "executionTelemetry": {
+      "providerFamily": "openai",
+      "vendorId": "litellm",
+      "finishReason": "stop",
+      "stream": {
+        "requested": false,
+        "textDeltas": 1,
+        "toolCallDeltas": 0,
+        "toolArgumentDeltas": 0
+      },
+      "streamSupport": {
+        "text": "delta",
+        "toolCalls": "delta",
+        "toolArguments": "delta"
+      },
+      "promptCaching": {
+        "supported": true,
+        "mode": "implicit"
+      },
+      "usageSupport": {
+        "inputTokens": true,
+        "outputTokens": true,
+        "cacheReadTokens": true,
+        "cacheWriteTokens": true
+      },
+      "costProvenance": "actual"
+    },
+    "executionSemantics": {
+      "sourceClient": "openai.chat.completions",
+      "executionFamily": "vendor-litellm",
+      "adapterFamily": "litellm-proxy",
+      "payloadBytes": {
+        "ingress": 5871,
+        "translated": 4921,
+        "providerCanonical": 5866,
+        "providerWire": 5866,
+        "providerResponse": 288
+      },
+      "retryCount": 0,
+      "rerouteCount": 0,
+      "cooldownDecision": "not_applied",
+      "idempotencyDecision": "not_needed",
+      "toolSideEffectState": "none"
+    },
+    "cacheObservability": {
+      "promptCacheRequested": false,
+      "promptCacheUsed": true,
+      "cacheReadTokens": 0,
+      "cacheWriteTokens": 0,
+      "routingCacheAffinity": false
+    },
+    "tooling": {
+      "toolCalls": [],
+      "executions": [],
+      "diagnostics": []
+    },
+    "telemetrySnapshot": {
+      "providerId": "openai",
+      "providerAccountId": "openai.litellm",
+      "sourceType": "remote",
+      "endpointKind": "remote_api",
+      "servingSource": "vendor-litellm",
+      "region": "global",
+      "lifecycleStateAtRequest": "active",
+      "healthStatusAtRequest": "healthy",
+      "requestedModelId": "difficulty.remote-only",
+      "selectedModelId": "openai/gpt-4.1-mini-fast",
+      "requestOperation": "chat",
+      "roleIds": [],
+      "toolingUsed": false,
+      "cacheState": "hit",
+      "eligibleEndpointIds": [
+        "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ],
+      "eligibleModelIds": [
+        "openai/gpt-4.1-mini-fast",
+        "chatgpt/gpt-5.4"
+      ],
+      "candidateCostSnapshot": {
+        "openai.litellm.global.openai-gpt-4-1-mini-fast": {
+          "modelId": "openai/gpt-4.1-mini-fast",
+          "providerId": "openai",
+          "providerKind": "remote_openai_compat",
+          "sourceType": "remote",
+          "endpointKind": "remote_api",
+          "servingSource": "vendor-litellm",
+          "region": "global",
+          "tokenEconomicsSource": "catalog",
+          "estimatedRequestUsd": 0.006594,
+          "costPer1kTokensEst": 0.0015711222301644033,
+          "inputPer1M": 0.4,
+          "outputPer1M": 1.6
+        },
+        "openai.personal.openai-codex-subscription.global.gpt-5.4": {
+          "modelId": "chatgpt/gpt-5.4",
+          "providerId": null,
+          "providerKind": "remote_openai_compat",
+          "sourceType": "remote",
+          "endpointKind": "remote_api",
+          "servingSource": "remote-service",
+          "region": "global",
+          "tokenEconomicsSource": "catalog",
+          "estimatedRequestUsd": 0.0616925,
+          "costPer1kTokensEst": 0.014699189897545865,
+          "inputPer1M": 2.5,
+          "outputPer1M": 15
+        }
+      },
+      "selectedPricingSnapshot": {
+        "modelId": "openai/gpt-4.1-mini-fast",
+        "providerId": "openai",
+        "providerAccountId": "openai.litellm",
+        "sourceType": "remote",
+        "tokenEconomicsSource": "catalog",
+        "estimatedRequestUsd": 0.006594,
+        "costPer1kTokensEst": 0.0015711222301644033,
+        "inputPer1M": 0.4,
+        "outputPer1M": 1.6
+      },
+      "selectedUncachedCostUsd": 0.006594,
+      "baselineMaxEligibleCostUsd": 0.0616925,
+      "routingCostSavingsUsd": 0.055098,
+      "cacheCostSavingsUsd": 0,
+      "totalAvoidedCostUsd": 0.055098,
+      "costBaselineSource": "eligible_candidate_max",
+      "costSavingsSupport": "full",
+      "dimensions": {
+        "selectedEndpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "candidateCount": 2
+      }
+    },
+    "privacyReceipt": {
+      "samplingRate": 1,
+      "retentionTtlHours": 720,
+      "retainUntil": 1786194854157
+    },
+    "inspection": {
+      "request": {
+        "requestId": "req-4932396c-0253-4541-935f-5e8832c290f7",
+        "clientRequestId": "run62-craft-chat-alias-tools-001",
+        "routingDecisionId": "decision-req-4932396c-0253-4541-935f-5e8832c290f7",
+        "requestCapture": {
+          "headers": {
+            "authorization": "[redacted]",
+            "x-client-request-id": "run62-craft-chat-alias-tools-001"
+          },
+          "body": {
+            "suppressed": true,
+            "reason": "policy.rawCapture.requestBody.disabled"
+          }
+        },
+        "responseCapture": {
+          "statusCode": 200,
+          "body": {
+            "suppressed": true,
+            "reason": "policy.rawCapture.responseBody.disabled"
+          }
+        },
+        "diagnostics": {
+          "routing": [
+            {
+              "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+              "severity": "info",
+              "message": "Routing diagnostics link request req-4932396c-0253-4541-935f-5e8832c290f7 to retrieval receipt conversation-main-retrieval-receipt."
+            }
+          ],
+          "execution": [],
+          "authAccount": [],
+          "memoryQuality": [
+            {
+              "code": "MEMORY_CONTEXT_OMITTED",
+              "severity": "warning",
+              "message": "Context assembly omitted 2 turns and 2 artifacts."
+            },
+            {
+              "code": "MEMORY_LATEST_HANDOFF_LINKED",
+              "severity": "info",
+              "message": "Context inspection preserves latest handoff handoff-1."
+            }
+          ],
+          "tooling": [],
+          "operator": [
+            {
+              "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+              "severity": "info",
+              "message": "Raw operator captures remain available through the preserved host capture surface."
+            }
+          ]
+        },
+        "capturePolicy": {
+          "environment": "local-dev",
+          "redactionLevel": "strict",
+          "retentionClass": "standard",
+          "structuredInspectionMode": "redacted",
+          "rawCaptureAvailable": true,
+          "structuredInspectionAvailable": true,
+          "redactedFields": [
+            "request.headers.authorization"
+          ],
+          "suppressedFields": [
+            "request.body",
+            "response.body"
+          ]
+        }
+      },
+      "endpoint": {
+        "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpointVersion": "run07-registry-v1:custom-base-url",
+        "latestProfile": {
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          "endpoint_version": "run07-registry-v1:custom-base-url",
+          "measured_at_ms": 1783602854142,
+          "measurement_window": {
+            "started_at_ms": 1783602852361,
+            "ended_at_ms": 1783602854142
+          },
+          "sample_size": 4,
+          "sources": {
+            "live_request_samples": 4,
+            "benchmark_samples": 0
+          },
+          "latency_ms_p50": 3,
+          "latency_ms_p95": 3,
+          "failure_rate": 0,
+          "freshness_score": 1,
+          "confidence_score": 0.4093360343955374,
+          "tokens_per_sec": 1667,
+          "cost_per_1k_tokens_est": 0.0042,
+          "currency": "USD"
+        },
+        "recentSamples": [
+          {
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "source_type": "live_request",
+            "difficulty_bucket": "easy",
+            "timestamp_ms": 1783602852361,
+            "latency_ms": 3,
+            "latency_ms_p95": 3,
+            "tokens_per_sec": 1667,
+            "cost_per_1k_tokens_est": 0.0042,
+            "failure": false,
+            "request_id": "req-c25ee331-bf6c-4be9-b198-15f4c0db7e31",
+            "routing_decision_id": "decision-req-c25ee331-bf6c-4be9-b198-15f4c0db7e31"
+          },
+          {
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "source_type": "live_request",
+            "difficulty_bucket": "hard",
+            "timestamp_ms": 1783602852847,
+            "latency_ms": 2,
+            "latency_ms_p95": 2,
+            "tokens_per_sec": 2500,
+            "cost_per_1k_tokens_est": 0.0042,
+            "failure": false,
+            "request_id": "req-cfbe1340-f8e4-4bac-b900-76832b19e6bf",
+            "routing_decision_id": "decision-req-cfbe1340-f8e4-4bac-b900-76832b19e6bf"
+          },
+          {
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "source_type": "live_request",
+            "difficulty_bucket": "easy",
+            "timestamp_ms": 1783602853656,
+            "latency_ms": 3,
+            "latency_ms_p95": 3,
+            "tokens_per_sec": 1667,
+            "cost_per_1k_tokens_est": 0.0042,
+            "failure": false,
+            "request_id": "req-6350c3f5-bf9f-46d5-826f-6bd5890d230d",
+            "routing_decision_id": "decision-req-6350c3f5-bf9f-46d5-826f-6bd5890d230d"
+          },
+          {
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "source_type": "live_request",
+            "difficulty_bucket": "easy",
+            "timestamp_ms": 1783602854142,
+            "latency_ms": 3,
+            "latency_ms_p95": 3,
+            "tokens_per_sec": 1667,
+            "cost_per_1k_tokens_est": 0.0042,
+            "failure": false,
+            "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+            "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7"
+          }
+        ]
+      }
+    },
+    "sourceType": "remote",
+    "providerId": "openai",
+    "endpointKind": "remote_api",
+    "servingSource": "vendor-litellm",
+    "healthStatus": "healthy",
+    "status": "active",
+    "roleIds": [
+      "analyst",
+      "architect",
+      "coder",
+      "coordinator",
+      "creative",
+      "data",
+      "designer",
+      "educator",
+      "finance",
+      "health",
+      "knowledge",
+      "legal",
+      "marketer",
+      "mathematician",
+      "operator",
+      "planner",
+      "procurement",
+      "product",
+      "recruiter",
+      "researcher",
+      "scientist",
+      "security",
+      "seller",
+      "strategist",
+      "support",
+      "tester",
+      "translator",
+      "writer"
+    ]
+  },
+  "normalizedIntent": null,
+  "role_model": null,
+  "endpointProfile": {
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "latestProfile": {
+      "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "endpoint_version": "run07-registry-v1:custom-base-url",
+      "measured_at_ms": 1783602854142,
+      "measurement_window": {
+        "started_at_ms": 1783602852361,
+        "ended_at_ms": 1783602854142
+      },
+      "sample_size": 4,
+      "sources": {
+        "live_request_samples": 4,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 3,
+      "latency_ms_p95": 3,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.4093360343955374,
+      "tokens_per_sec": 1667,
+      "cost_per_1k_tokens_est": 0.0042,
+      "currency": "USD"
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "live_request",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1783602852361,
+        "latency_ms": 3,
+        "latency_ms_p95": 3,
+        "tokens_per_sec": 1667,
+        "cost_per_1k_tokens_est": 0.0042,
+        "failure": false,
+        "request_id": "req-c25ee331-bf6c-4be9-b198-15f4c0db7e31",
+        "routing_decision_id": "decision-req-c25ee331-bf6c-4be9-b198-15f4c0db7e31"
+      },
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "live_request",
+        "difficulty_bucket": "hard",
+        "timestamp_ms": 1783602852847,
+        "latency_ms": 2,
+        "latency_ms_p95": 2,
+        "tokens_per_sec": 2500,
+        "cost_per_1k_tokens_est": 0.0042,
+        "failure": false,
+        "request_id": "req-cfbe1340-f8e4-4bac-b900-76832b19e6bf",
+        "routing_decision_id": "decision-req-cfbe1340-f8e4-4bac-b900-76832b19e6bf"
+      },
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "live_request",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1783602853656,
+        "latency_ms": 3,
+        "latency_ms_p95": 3,
+        "tokens_per_sec": 1667,
+        "cost_per_1k_tokens_est": 0.0042,
+        "failure": false,
+        "request_id": "req-6350c3f5-bf9f-46d5-826f-6bd5890d230d",
+        "routing_decision_id": "decision-req-6350c3f5-bf9f-46d5-826f-6bd5890d230d"
+      },
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "source_type": "live_request",
+        "difficulty_bucket": "easy",
+        "timestamp_ms": 1783602854142,
+        "latency_ms": 3,
+        "latency_ms_p95": 3,
+        "tokens_per_sec": 1667,
+        "cost_per_1k_tokens_est": 0.0042,
+        "failure": false,
+        "request_id": "req-4932396c-0253-4541-935f-5e8832c290f7",
+        "routing_decision_id": "decision-req-4932396c-0253-4541-935f-5e8832c290f7"
+      }
+    ],
+    "difficultyProfiles": {
+      "easy": {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1783602854142,
+        "measurement_window": {
+          "started_at_ms": 1783602852361,
+          "ended_at_ms": 1783602854142
+        },
+        "sample_size": 3,
+        "sources": {
+          "live_request_samples": 3,
+          "benchmark_samples": 0
+        },
+        "latency_ms_p50": 3,
+        "latency_ms_p95": 3,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.3525828687777642,
+        "tokens_per_sec": 1667,
+        "cost_per_1k_tokens_est": 0.0042,
+        "currency": "USD"
+      },
+      "medium": null,
+      "hard": {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "endpoint_version": "run07-registry-v1:custom-base-url",
+        "measured_at_ms": 1783602852847,
+        "measurement_window": {
+          "started_at_ms": 1783602852847,
+          "ended_at_ms": 1783602852847
+        },
+        "sample_size": 1,
+        "sources": {
+          "live_request_samples": 1,
+          "benchmark_samples": 0
+        },
+        "latency_ms_p50": 2,
+        "latency_ms_p95": 2,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.1762914343888821,
+        "tokens_per_sec": 2500,
+        "cost_per_1k_tokens_est": 0.0042,
+        "currency": "USD"
+      }
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "min-samples"
+          ],
+          "profile": {
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1783602854142,
+            "measurement_window": {
+              "started_at_ms": 1783602852361,
+              "ended_at_ms": 1783602854142
+            },
+            "sample_size": 3,
+            "sources": {
+              "live_request_samples": 3,
+              "benchmark_samples": 0
+            },
+            "latency_ms_p50": 3,
+            "latency_ms_p95": 3,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.3525828687777642,
+            "tokens_per_sec": 1667,
+            "cost_per_1k_tokens_est": 0.0042,
+            "currency": "USD"
+          }
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "min-samples"
+          ],
+          "profile": {
+            "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+            "endpoint_version": "run07-registry-v1:custom-base-url",
+            "measured_at_ms": 1783602852847,
+            "measurement_window": {
+              "started_at_ms": 1783602852847,
+              "ended_at_ms": 1783602852847
+            },
+            "sample_size": 1,
+            "sources": {
+              "live_request_samples": 1,
+              "benchmark_samples": 0
+            },
+            "latency_ms_p50": 2,
+            "latency_ms_p95": 2,
+            "failure_rate": 0,
+            "freshness_score": 1,
+            "confidence_score": 0.1762914343888821,
+            "tokens_per_sec": 2500,
+            "cost_per_1k_tokens_est": 0.0042,
+            "currency": "USD"
+          }
+        }
+      }
+    }
+  },
+  "observeRequestPath": "/app/observe/requests/req-4932396c-0253-4541-935f-5e8832c290f7"
+}

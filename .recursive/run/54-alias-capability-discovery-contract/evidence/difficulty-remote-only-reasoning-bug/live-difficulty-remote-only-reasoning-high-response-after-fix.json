@@ -1,0 +1,11 @@
+{
+  "status": 200,
+  "model": "deepseek/deepseek-v4-flash",
+  "finish_reason": "stop",
+  "content": "Great! So, what can I help you with? Are you working on a specific project, debugging some code, or just looking for general guidance? Let me know the details, and I'll dive right in.",
+  "usage": {
+    "prompt_tokens": 57,
+    "completion_tokens": 127,
+    "total_tokens": 184
+  }
+}

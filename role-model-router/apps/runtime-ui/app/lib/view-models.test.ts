@@ -9,6 +9,7 @@ import {
   buildConfiguredModelCards,
   buildConfiguredModelMetadataRows,
   buildConfiguredProviderRows,
+  buildConfiguredRemoteConnectionRows,
   buildCredentialLifecycleAccountRows,
   buildCredentialLifecycleBanner,
   buildCredentialReadinessRows,
@@ -413,6 +414,54 @@ describe("buildCredentialLifecycleAccountRows", () => {
       },
     ]);
   });
+
+  test("treats Codex Subscription as a standard connected account that can activate an endpoint", () => {
+    expect(
+      buildCredentialLifecycleAccountRows({
+        credentialLifecycle: {
+          authority: {
+            state: "authoritative",
+            bootstrapStatus: "ready",
+          },
+          counts: {
+            executionReady: 0,
+            connectedNoEndpoint: 1,
+            pendingAuthorization: 0,
+            expiredAuth: 0,
+            credentialsMissing: 0,
+            envUnresolved: 0,
+            archivedStale: 0,
+          },
+          accounts: [
+            {
+              logicalAccountId: "openai.personal.codex-subscription",
+              providerAccountId: "openai.personal.codex-subscription",
+              providerId: "openai",
+              sourceProvenance: ["manual"],
+              authMode: "oauth2-device-code",
+              credentialStorageMode: "oauth-local",
+              credentialBackendCanonical: "local-file",
+              lifecycleState: "connected-no-endpoint",
+              reasonCode: "active-without-endpoint",
+              blocking: true,
+              activeEndpointIds: [],
+              configuredModelIds: ["chatgpt/gpt-5.3-codex"],
+              availableActions: ["activate-endpoint"],
+            },
+          ],
+          providerRollups: [],
+          archivedArtifacts: [],
+        },
+      } as never),
+    ).toEqual([
+      expect.objectContaining({
+        key: "openai.personal.codex-subscription",
+        lifecycleLabel: "Connected, no endpoint",
+        reasonLabel: "Credential is usable but no endpoint is active",
+        availableActionsLabel: "Activate endpoint",
+      }),
+    ]);
+  });
 });
 
 describe("buildArchivedArtifactRows", () => {
@@ -622,7 +671,7 @@ describe("buildConfiguredModelCards", () => {
         sourceSummary: "local",
         endpointCount: 1,
         requestCount: 0,
-        status: "active",
+        status: "healthy",
         roleIds: ["developer"],
         toolCallingSupported: true,
         controllerState: "active",
@@ -637,7 +686,7 @@ describe("buildConfiguredModelCards", () => {
         sourceSummary: "remote",
         endpointCount: 1,
         requestCount: 1,
-        status: "active",
+        status: "healthy",
         roleIds: ["general.chat"],
         toolCallingSupported: true,
         controllerState: "eligible",
@@ -650,6 +699,79 @@ describe("buildConfiguredModelCards", () => {
           outputPer1M: 12,
           currency: "USD",
         },
+      }),
+    ]);
+  });
+
+  test("keeps request counts unset when request evidence is still deferred", () => {
+    expect(
+      buildConfiguredModelCards({
+        models: [
+          {
+            id: "moonshot/kimi-k2.5",
+            endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
+            displayName: "Kimi K2.5",
+          },
+        ],
+        endpoints: [
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
+            roleIds: ["general.chat"],
+            status: "active",
+            servingSource: "remote-service",
+          },
+        ],
+        accounts: [
+          {
+            providerAccountId: "moonshot.personal.primary",
+            providerId: "moonshot",
+          },
+        ],
+        controller: null,
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        modelId: "moonshot/kimi-k2.5",
+        requestCount: null,
+      }),
+    ]);
+  });
+
+  test("derives model status from endpoint health instead of lifecycle activation state", () => {
+    expect(
+      buildConfiguredModelCards({
+        models: [
+          {
+            id: "moonshot/kimi-k2.5",
+            endpoint_ids: ["moonshot.personal.primary.global.kimi-k2.5"],
+            displayName: "Kimi K2.5",
+            capabilities: ["text.chat"],
+            modalities: ["text"],
+            contextWindow: 262144,
+            maxOutputTokens: 16384,
+          },
+        ],
+        endpoints: [
+          {
+            endpointId: "moonshot.personal.primary.global.kimi-k2.5",
+            modelId: "moonshot/kimi-k2.5",
+            providerId: "moonshot",
+            roleIds: ["general.chat"],
+            status: "active",
+            healthStatus: "offline",
+            sourceType: "remote",
+            servingSource: "remote-service",
+            toolCallingSupported: true,
+          },
+        ],
+        accounts: [],
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        modelId: "moonshot/kimi-k2.5",
+        status: "offline",
       }),
     ]);
   });
@@ -1158,6 +1280,8 @@ describe("buildConfiguredProviderRows", () => {
         activeEndpointCount: 1,
         healthStatuses: ["credentials-missing", "healthy"],
         pendingDeviceAuthorizationCount: 1,
+        envUnresolvedAccountCount: 0,
+        expiredAuthAccountCount: 0,
         credentialsMissingAccountCount: 0,
         connectedWithoutEndpointCount: 1,
         readyAccountCount: 1,
@@ -1203,9 +1327,47 @@ describe("buildConfiguredProviderRows", () => {
       expect.objectContaining({
         providerId: "moonshot",
         pendingDeviceAuthorizationCount: 2,
+        envUnresolvedAccountCount: 6,
+        expiredAuthAccountCount: 1,
         credentialsMissingAccountCount: 5,
         connectedWithoutEndpointCount: 3,
         readyAccountCount: 4,
+      }),
+    ]);
+  });
+
+  test("preserves env-unresolved and reconnect-required provider lifecycle counts from fallback account inference", () => {
+    expect(
+      buildConfiguredProviderRows({
+        accounts: [
+          {
+            providerAccountId: "openrouter.personal.primary",
+            providerId: "openrouter",
+            authMode: "api-key-static",
+            healthStatus: "env-unresolved",
+            status: "disabled",
+            allowedModels: ["openrouter/gpt-4.1-mini"],
+          },
+          {
+            providerAccountId: "openrouter.personal.backup",
+            providerId: "openrouter",
+            authMode: "oauth2-device-code",
+            healthStatus: "expired-auth",
+            status: "disabled",
+            allowedModels: ["openrouter/gpt-4.1-mini"],
+          },
+        ],
+        endpoints: [],
+        deviceAuthorizations: [],
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        providerId: "openrouter",
+        envUnresolvedAccountCount: 1,
+        expiredAuthAccountCount: 1,
+        credentialsMissingAccountCount: 0,
+        connectedWithoutEndpointCount: 0,
+        readyAccountCount: 0,
       }),
     ]);
   });
@@ -1271,6 +1433,82 @@ describe("buildProviderMaintenanceRows", () => {
         availableActionsLabel: "Update API key",
         activeEndpointCount: 0,
         allowedModels: ["moonshot/kimi-k2.6"],
+      }),
+    ]);
+  });
+});
+
+describe("buildConfiguredRemoteConnectionRows", () => {
+  test("shows only configured remote endpoints and their models, excluding maintenance-only and local accounts", () => {
+    expect(
+      buildConfiguredRemoteConnectionRows({
+        accounts: [
+          {
+            providerAccountId: "deepseek.capture.account",
+            providerId: "deepseek",
+            authMode: "api-key-static",
+            baseUrlOverride: null,
+            allowedModels: ["deepseek/chat-capture-v1"],
+          },
+          {
+            providerAccountId: "local-openai-compatible.personal.123",
+            providerId: "local-openai-compatible",
+            authMode: "api-key-static",
+            baseUrlOverride: "http://127.0.0.1:1234/v1",
+            allowedModels: ["local/model-a"],
+          },
+          {
+            providerAccountId: "openai.personal.primary",
+            providerId: "openai",
+            authMode: "oauth2-device-code",
+            baseUrlOverride: null,
+            allowedModels: ["chatgpt/gpt-5.4"],
+          },
+        ],
+        endpoints: [
+          {
+            endpointId: "local-openai-compatible.personal.123.local.model-a",
+            providerAccountId: "local-openai-compatible.personal.123",
+            providerId: "local-openai-compatible",
+            modelId: "local/model-a",
+            sourceType: "local",
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
+          },
+          {
+            endpointId: "openai.personal.primary.global.gpt-5.4",
+            providerAccountId: "openai.personal.primary",
+            providerId: "openai",
+            modelId: "chatgpt/gpt-5.4",
+            sourceType: "remote",
+            status: "active",
+            healthStatus: "healthy",
+            routingEligible: true,
+            benchmarkEligible: true,
+          },
+        ],
+        models: [
+          {
+            id: "chatgpt/gpt-5.4",
+            displayName: "GPT-5.4",
+            endpoint_ids: ["openai.personal.primary.global.gpt-5.4"],
+          },
+        ],
+      }),
+    ).toEqual([
+      expect.objectContaining({
+        providerAccountId: "openai.personal.primary",
+        providerId: "openai",
+        endpointCount: 1,
+        endpoints: [
+          expect.objectContaining({
+            endpointId: "openai.personal.primary.global.gpt-5.4",
+            modelId: "chatgpt/gpt-5.4",
+            displayName: "GPT-5.4",
+          }),
+        ],
       }),
     ]);
   });
@@ -1579,18 +1817,18 @@ describe("telemetry view models", () => {
       {
         label: "Requests",
         value: "3",
-        detail: "1 local / 2 remote in the current telemetry window",
+        detail: "1 local · 2 remote",
       },
-      { label: "Failures", value: "1", detail: "2 successful requests recorded" },
+      { label: "Failures", value: "1", detail: "2 successful requests" },
       {
         label: "Latency",
         value: "420 ms avg",
-        detail: "880 ms p95 / 420 ms avg across structured telemetry",
+        detail: "880 ms p95 · 420 ms avg",
       },
       {
         label: "Tokens",
         value: "126",
-        detail: "1 cached request and $0.0053 effective cost recorded",
+        detail: "1 cached · $0.0053 effective",
       },
     ]);
   });
@@ -1674,6 +1912,7 @@ describe("telemetry view models", () => {
           modelId: "openai/gpt-4.1-mini-fast",
           sourceType: "remote",
           providerFamily: "ai-sdk-openai",
+          providerId: "openai",
           createdAtMs: 1_770_000_000_100,
           latencyMs: 880,
           totalTokens: 80,
@@ -1698,8 +1937,8 @@ describe("telemetry view models", () => {
         requestId: "req-002",
         routingDecisionLabel: "route-002",
         sourceLabel: "Remote",
-        statusLabel: "504 upstream_timeout",
-        providerFamilyLabel: "ai-sdk-openai",
+        statusLabel: "504 Upstream timeout",
+        providerFamilyLabel: "openai",
         finishReasonLabel: "length",
         cacheLabel: "Cache hit",
         streamLabel: "4 text deltas / 1 tool / 2 args",
@@ -1718,6 +1957,46 @@ describe("telemetry view models", () => {
         latencyLabel: "280 ms",
         tokenLabel: "46 tokens",
         costLabel: "$0.0011 est.",
+      }),
+    ]);
+  });
+
+  test("prefers descriptive failure summaries over raw error-class slugs for failed request rows", () => {
+    expect(
+      buildTelemetryRequestRows([
+        {
+          requestId: "req-003",
+          endpointId: "routing.failed.pre-execution",
+          modelId: "difficulty.remote-only",
+          sourceType: "remote",
+          createdAtMs: 1_770_000_000_200,
+          latencyMs: 952,
+          totalTokens: 0,
+          actualCostUsd: 0,
+          estimatedCostUsd: 0,
+          errorClass: "execution_failed",
+          statusCode: 400,
+          finishReason: null,
+          promptCacheSupported: true,
+          promptCacheRequested: false,
+          promptCacheUsed: false,
+          streamTextDeltaCount: 0,
+          streamTextSupported: false,
+          streamToolCallDeltaCount: 0,
+          streamToolCallSupported: false,
+          streamToolArgumentDeltaCount: 0,
+          streamToolArgumentSupported: false,
+          dimensions: {
+            errorContext: {
+              message: "No eligible remote endpoint satisfied alias difficulty.remote-only.",
+            },
+          },
+        },
+      ]),
+    ).toEqual([
+      expect.objectContaining({
+        requestId: "req-003",
+        statusLabel: "400 No eligible remote endpoint satisfied alias difficulty.remote-only.",
       }),
     ]);
   });

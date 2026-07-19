@@ -1,0 +1,80 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-host-bridge[39m
+
+(node:26584) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mderives hybrid mode when both vendor sections are populated[32m 24[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mderives decision-only mode when no vendor sections are active[32m 1[2mms[22m[39m
+ [31m×[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mpreserves explicit execution mode from parsed YAML and normalized API payloads[32m 16[2mms[22m[39m
+[31m   → expected 'local_only' to be 'hybrid' // Object.is equality[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mderives remote-only mode when only the LiteLLM section is populated[32m 2[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mpreserves advanced real-vendor settings for llama-swap and litellm[32m 3[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mleaves process startup timeouts unset unless the unified config specifies them[32m 2[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mnormalizes object input and round-trips advanced vendor settings back to config text[32m 21[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mparses observed-data policy and round-trips it back to config text[32m 8[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mrejects invalid observed-data throughput SLA policy values[32m 3[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mparses difficulty-learning policy and round-trips it back to config text[32m 5[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mparses model-alias policy and round-trips it back to config text[32m 2[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mrejects invalid model-alias definitions[32m 3[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mparses difficulty-classifier policy, alias difficulty mode, and max-difficulty settings[32m 5[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mparses and renders controller config for intelligent aliases[32m 2[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mrejects invalid difficulty-classifier and max-difficulty settings[32m 2[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22mmerges partial runtime config patches without dropping existing routing strategy[32m 4[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts[2m > [22munified runtime config[2m > [22maccepts routing_strategy alias in partial runtime config patches[32m 2[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided[33m 403[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend[33m 349[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mmerges partial runtime config updates without dropping existing routing strategy[33m 344[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mclears stale alias drift warnings after the canonical config removes the stale hint[33m 1550[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mcreates and updates unified runtime config when the configured path does not exist yet[33m 352[2mms[22m[39m
+ [31m×[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpersists explicit hybrid execution mode from routing strategy updates[33m 830[2mms[22m[39m
+[31m   → expected 'local_only' to be 'hybrid' // Object.is equality[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mdoes not mark all candidates ignored when routing guidance has no preferred endpoints[33m 385[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpreserves synthesized activated endpoint models across runtime config updates[33m 457[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mreturns no controller assignment when the unified config has no endpoints yet[32m 277[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces normalized provider docs and npm metadata through listProviders[33m 566[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22mpreserves manual account authority and provenance on exact runtime-config account-id collision[33m 1172[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts[2m > [22mruntime-host-bridge unified runtime backend[2m > [22msurfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config[33m 1050[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/backend-unified-runtime-config.test.ts > runtime-host-bridge unified runtime backend > persists explicit hybrid execution mode from routing strategy updates
+AssertionError: expected 'local_only' to be 'hybrid' // Object.is equality
+
+Expected: "hybrid"
+Received: "local_only"
+
+ ❯ test/backend-unified-runtime-config.test.ts:452:43
+    450|     });
+    451| 
+    452|     expect(updated.config?.executionMode).toBe("hybrid");
+       |                                           ^
+    453|     await expect(readFile(unifiedRuntimeConfigPath, "utf8")).resolves.…
+    454|       "execution_mode: hybrid",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  test/unified-runtime-config.test.ts > unified runtime config > preserves explicit execution mode from parsed YAML and normalized API payloads
+AssertionError: expected 'local_only' to be 'hybrid' // Object.is equality
+
+Expected: "hybrid"
+Received: "local_only"
+
+ ❯ test/unified-runtime-config.test.ts:71:7
+
+     69|       path: ./models/lfm2.5-1.2b-instruct.gguf
+     70| `).executionMode,
+     71|     ).toBe("hybrid");
+       |       ^
+     72| 
+     73|     const normalized = normalizeUnifiedRuntimeConfigInput({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m27 passed[39m[22m[90m (29)[39m
+[2m   Start at [22m 23:31:05
+[2m   Duration [22m 10.69s[2m (transform 1.60s, setup 0ms, collect 2.63s, tests 7.85s, environment 1ms, prepare 610ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/unified-runtime-config.test.ts test/backend-unified-runtime-config.test.ts --reporter=verbose

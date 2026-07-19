@@ -1,0 +1,17 @@
+(node:40840) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `role-model-runtime --trace-warnings ...` to show where the warning was created)
+node:internal/util/parse_args/parse_args:388
+        throw new ERR_PARSE_ARGS_UNEXPECTED_POSITIONAL(token.value);
+              ^
+
+TypeError [ERR_PARSE_ARGS_UNEXPECTED_POSITIONAL]: Unexpected argument 'Model'. This command does not take positional arguments
+    at node:internal/util/parse_args/parse_args:388:15
+    at Array.forEach (<anonymous>)
+    at parseArgs (node:internal/util/parse_args/parse_args:379:3)
+    at main (./dist/sea/cli.cjs:38142:48)
+    at ./dist/sea/cli.cjs:38224:6
+    at embedderRunCjs (node:internal/main/embedding:89:10) {
+  code: 'ERR_PARSE_ARGS_UNEXPECTED_POSITIONAL'
+}
+
+Node.js v24.11.0

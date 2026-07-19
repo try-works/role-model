@@ -1,0 +1,23 @@
+
+> role-model@0.0.0 docs:taxonomy-v1-check D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4
+> node ./scripts/check-public-taxonomy-v1-docs.mjs && corepack pnpm --filter @role-model/docs-site run docs:taxonomy-v1-check
+
+public docs taxonomy V1 content is missing description for coder.edit
+public docs taxonomy V1 content is missing classifier.useWhen for coder.edit
+public docs taxonomy V1 content is missing classifier.doNotUseWhen for coder.edit
+public docs taxonomy V1 content is missing description for security.audit
+public docs taxonomy V1 content is missing classifier.useWhen for security.audit
+public docs taxonomy V1 content is missing classifier.doNotUseWhen for security.audit
+public docs taxonomy V1 content is missing description for researcher.web_research.current
+public docs taxonomy V1 content is missing classifier.useWhen for researcher.web_research.current
+public docs taxonomy V1 content is missing classifier.doNotUseWhen for researcher.web_research.current
+public docs taxonomy V1 content is missing description for support.ticket.reply
+public docs taxonomy V1 content is missing classifier.useWhen for support.ticket.reply
+public docs taxonomy V1 content is missing classifier.doNotUseWhen for support.ticket.reply
+public docs taxonomy V1 content is missing description for architect.migration.strategy
+public docs taxonomy V1 content is missing classifier.useWhen for architect.migration.strategy
+public docs taxonomy V1 content is missing classifier.doNotUseWhen for architect.migration.strategy
+public docs taxonomy V1 content is missing description for product.requirements
+public docs taxonomy V1 content is missing classifier.useWhen for product.requirements
+public docs taxonomy V1 content is missing classifier.doNotUseWhen for product.requirements
+ ELIFECYCLE  Command failed with exit code 1.

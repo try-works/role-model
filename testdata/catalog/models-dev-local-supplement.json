@@ -148,6 +148,48 @@
           "label": "Long context reasoning"
         }
       ]
+    },
+    {
+      "modelId": "moonshot/kimi-k3",
+      "providerId": "moonshot",
+      "displayName": "Kimi K3",
+      "version": "2026-07-16",
+      "capabilities": ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+      "modalities": ["text", "image", "video"],
+      "contextWindow": 1048576,
+      "maxOutputTokens": 131072,
+      "requestShapeHints": {
+        "providerShape": "openai.chat.completions",
+        "bodyKeys": ["max_tokens", "tools", "reasoning_effort"],
+        "headerKeys": ["Authorization"]
+      },
+      "experimentalModes": [
+        {
+          "modeId": "reasoning.long-context",
+          "label": "Long context reasoning"
+        }
+      ]
+    },
+    {
+      "modelId": "moonshotai/kimi-k3",
+      "providerId": "moonshotai",
+      "displayName": "Kimi K3",
+      "version": "2026-07-16",
+      "capabilities": ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+      "modalities": ["text", "image", "video"],
+      "contextWindow": 1048576,
+      "maxOutputTokens": 131072,
+      "pricing": {
+        "inputPer1M": 3,
+        "outputPer1M": 15,
+        "currency": "USD"
+      },
+      "experimentalModes": [
+        {
+          "modeId": "reasoning.long-context",
+          "label": "Long context reasoning"
+        }
+      ]
     }
   ]
 }

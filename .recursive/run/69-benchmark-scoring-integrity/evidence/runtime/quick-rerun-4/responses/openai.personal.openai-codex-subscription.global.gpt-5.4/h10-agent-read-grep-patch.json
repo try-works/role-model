@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "h10-agent-read-grep-patch",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h10-agent-read-grep-patch-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"*** Begin Patch\\n*** Update File: src/router.ts\\n@@\\n-export function createRouter(config: RouterConfig): Router {\\n+// Minor comment fix\\n+export function createRouter(config: RouterConfig): Router {\\n*** End Patch\"\n      }\n    }\n  ]\n}",
+  "rawResponse": "",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"*** Begin Patch\\n*** Update File: src/router.ts\\n@@\\n-export function createRouter(config: RouterConfig): Router {\\n+// Minor comment fix\\n+export function createRouter(config: RouterConfig): Router {\\n*** End Patch\"\n      }\n    }\n  ]\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 11485,
+  "failure": false,
+  "recordedAtMs": 1783931792896
+}

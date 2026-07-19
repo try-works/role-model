@@ -1,0 +1,52 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h02-fix-async-counter",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "```typescript\nclass AsyncLock {\n  private locked = false;\n  private queue: Array<() => void> = [];\n\n  async acquire(): Promise<() => void> {\n    return new Promise((resolve) => {\n      const release = () => {\n        const next = this.queue",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "```typescript\nlet count = 0;\n\nclass Mutex {\n  private locked = false;\n  private waiters: Array<() => void> = [];\n\n  async runExclusive<T>(fn: () => Promise<T> | T): Promise<T> {\n    await this.acquire();\n    try {\n      return await fn();\n ",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both solutions correctly implement a mutex/lock with a queue of waiters to serialize increment operations, guaranteeing the final count of 3. They satisfy all MUST requirements (fix race, complete runnable TypeScript, no placeholders). The approaches are equally valid and substantively correct; the ranking order is arbitrary as they are effectively equivalent in correctness.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both solutions correctly implement a mutex/lock with a queue of waiters to serialize increment operations, guaranteeing the final count of 3. They satisfy all MUST requirements (fix race, complete runnable TypeScript, no placeholders). The approaches are equally valid and substantively correct; the ranking order is arbitrary as they are effectively equivalent in correctness.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nFix this async race so count reliably prints 3. Serialize increments with a mutex/lock/queue:\n```ts\nlet count = 0;\nasync function increment() {\n  const current = count;\n  await Promise.resolve();\n  count = current + 1;\n}\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count);\n```\nOutput one complete ```typescript fence with runnable fixed code only.",
+    "exemplarAnswer": "```typescript\nlet count = 0;\nlet chain = Promise.resolve();\nfunction withLock<T>(fn: () => Promise<T>): Promise<T> {\n  const run = chain.then(fn);\n  chain = run.catch(() => undefined);\n  return run;\n}\nasync function increment() {\n  await withLock(async () => {\n    const current = count;\n    await Promise.resolve();\n    count = current + 1;\n  });\n}\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count);\n```",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must fix race on shared count (mutex, semaphore, queue, or atomic increment pattern)",
+      "[MUST] Final code should reliably reach count 3.",
+      "[SHOULD] Match clues: Mutex|mutex|lock|queue|semaphore|atomic|Promise\\.resolve",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 546,
+    "reasoningLength": 11670
+  },
+  "recordedAtMs": 1783936663485
+}

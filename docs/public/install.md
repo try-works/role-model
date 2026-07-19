@@ -1,6 +1,6 @@
 # Install the router
 
-For normal users, the easiest way to run `role-model-router` is to install a packaged release.
+For normal users, the easiest way to run `role-model` is to install a packaged release.
 
 Building from source is still supported, but it requires Node.js 24, `pnpm`, and Go.
 
@@ -12,8 +12,8 @@ Building from source is still supported, but it requires Node.js 24, `pnpm`, and
 curl -fsSL https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.sh | sh
 ```
 
-This installs the latest release bundle under `~/.local/share/role-model-router/` and creates a
-`role-model-router` launcher in `~/.local/bin`.
+This installs the latest release bundle under `~/.local/share/role-model/` and creates a
+`role-model` launcher in `~/.local/bin`.
 
 ### Windows
 
@@ -21,31 +21,44 @@ This installs the latest release bundle under `~/.local/share/role-model-router/
 irm https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.ps1 | iex
 ```
 
-This installs the latest release bundle under `%LOCALAPPDATA%\Programs\RoleModelRouter\` and creates a
-`role-model-router.cmd` launcher.
+This installs the latest release bundle under `%LOCALAPPDATA%\Programs\role-model\` and creates a
+`role-model.cmd` launcher.
 
-If your shell cannot find `role-model-router` immediately after installation, open a new terminal so it picks
+If your shell cannot find `role-model` immediately after installation, open a new terminal so it picks
 up the updated `PATH`.
 
 ## Manual downloads
 
 Every tagged release should publish one archive per supported platform:
 
-- `role-model-router-linux-x64.tar.gz`
-- `role-model-router-darwin-x64.tar.gz`
-- `role-model-router-darwin-arm64.tar.gz`
-- `role-model-router-win32-x64.zip`
+- `role-model-linux-x64.tar.gz`
+- `role-model-darwin-x64.tar.gz`
+- `role-model-darwin-arm64.tar.gz`
+- `role-model-win32-x64.zip`
 - `SHA256SUMS.txt`
 
 After extracting the archive:
 
-- Windows: run `Role-Model.bat` or `role-model-runtime.exe`
-- macOS/Linux: run `role-model-runtime`
+- Windows: run `role-model.bat` or `role-model.exe`
+- macOS/Linux: run `role-model`
 
 Before running a manual download, verify its checksum against `SHA256SUMS.txt`.
 
 When launched without extra runtime arguments, the packaged runtime opens the local UI in your default
 browser.
+
+## Runtime channels
+
+Stable production packages run as `role-model` at `http://127.0.0.1:3456`. Stage candidates run as
+`role-model-stage` at `http://127.0.0.1:3457`, and development packages run as `role-model-dev` at
+`http://127.0.0.1:3458`. Each channel has its own state root and can run concurrently on one device.
+
+Pi keeps the production endpoint by default. To use a candidate explicitly:
+
+```bash
+ROLE_MODEL_ENDPOINT=http://127.0.0.1:3457 pi # stage
+ROLE_MODEL_ENDPOINT=http://127.0.0.1:3458 pi # development
+```
 
 ## Source builds
 

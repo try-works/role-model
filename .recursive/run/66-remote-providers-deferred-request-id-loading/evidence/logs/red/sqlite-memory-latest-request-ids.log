@@ -1,0 +1,108 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/66-remote-providers-deferred-request-id-loading/role-model-router/packages/sqlite-memory
+
+(node:26348) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (39 tests | 3 failed | 36 skipped) 40ms
+   ↓ initializeSqliteMemory > creates the planned schema, WAL mode, and initial migration receipt under the runtime state root
+   ↓ initializeSqliteMemory > persists validated provider accounts by credential reference without storing raw secrets
+   ↓ initializeSqliteMemory > upserts and lists provider accounts for runtime control-plane reads
+   ↓ initializeSqliteMemory > persists runtime-managed endpoint activations for dynamic registry materialization
+   ↓ initializeSqliteMemory > persists and reads the global controller assignment for the runtime control plane
+   ↓ initializeSqliteMemory > persists device-auth session state for runtime OAuth polling
+   ↓ initializeSqliteMemory > records explicit maintenance defaults and idempotent migration behavior
+   ↓ initializeSqliteMemory > does not repeat observation metadata JSON backfills after migration receipt
+   ↓ initializeSqliteMemory > persists and reloads the continuity rows needed for bounded context assembly
+   ↓ initializeSqliteMemory > persists retrieval receipts for later routing diagnostics
+   ↓ initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads
+   × initializeSqliteMemory > listRecentRuntimeRequestIds > returns latest request ids in recency order without parsing observation_json 32ms
+     → expected 'undefined' to be 'function' // Object.is equality
+   × initializeSqliteMemory > listRecentRuntimeRequestIds > enforces limit 10 for the lightweight latest-id query 2ms
+     → expected 'undefined' to be 'function' // Object.is equality
+   × initializeSqliteMemory > listRecentRuntimeRequestIds > returns an empty array when no runtime observations exist 2ms
+     → expected 'undefined' to be 'function' // Object.is equality
+   ↓ initializeSqliteMemory > stores and reads conversation-level difficulty classification cache entries
+   ↓ initializeSqliteMemory > persists and reads segmented observed samples and profiles by difficulty bucket
+   ↓ initializeSqliteMemory > derives an advisory max-difficulty recommendation from bucketed observed profiles
+   ↓ initializeSqliteMemory > reads the latest observed profiles for a set of endpoint ids
+   ↓ initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows
+   ↓ initializeSqliteMemory > persistRuntimeTelemetryFailure records latencyMs in telemetry summary average
+   ↓ initializeSqliteMemory > persistRuntimeTelemetryFailure preserves caller correlation and request classification for failed rows
+   ↓ initializeSqliteMemory > persistRuntimeTelemetryFailure preserves routed provider failure context and structured observation
+   ↓ initializeSqliteMemory > persistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures
+   ↓ initializeSqliteMemory > persistRuntimeObservationBundle projects telemetry handling receipts into the telemetry ledger
+   ↓ initializeSqliteMemory > persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger
+   ↓ initializeSqliteMemory > exports persisted runtime state for operator drills
+   ↓ initializeSqliteMemory > restores runtime state from a backup after scoped deletion
+   ↓ initializeSqliteMemory > persists throughput penalty state and expires it after the penalty window
+   ↓ clearAllObservedBenchmarkData > removes all benchmark samples across endpoints and clears profiles
+   ↓ persistObservedBenchmarkSample benchmark_mode > retains benchmark_mode on readback for quick benchmark samples
+   ↓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting benchmark samples
+   ↓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles
+   ↓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading difficulty classification cache
+   ↓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting difficulty classification cache
+   ↓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading advisory max difficulty recommendations
+   ↓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records
+   ↓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns
+   ↓ clearObservedBenchmarkDataForEndpoint > removes benchmark samples and clears the endpoint profile when no live samples remain
+   ↓ runRuntimeStateValidation > validates provider accounts and initializes SQLite through the local validation path
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > listRecentRuntimeRequestIds > returns latest request ids in recency order without parsing observation_json
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ test/index.test.ts:1083:9
+    1081|           }
+    1082|         ).listRecentRuntimeRequestIds,
+    1083|       ).toBe("function");
+       |         ^
+    1084| 
+    1085|       const listRecentRuntimeRequestIds = (
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > listRecentRuntimeRequestIds > enforces limit 10 for the lightweight latest-id query
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ test/index.test.ts:1135:9
+    1133|           }
+    1134|         ).listRecentRuntimeRequestIds,
+    1135|       ).toBe("function");
+       |         ^
+    1136| 
+    1137|       const listRecentRuntimeRequestIds = (
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/index.test.ts > initializeSqliteMemory > listRecentRuntimeRequestIds > returns an empty array when no runtime observations exist
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ test/index.test.ts:1187:9
+    1185|           }
+    1186|         ).listRecentRuntimeRequestIds,
+    1187|       ).toBe("function");
+       |         ^
+    1188| 
+    1189|       const listRecentRuntimeRequestIds = (
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 36 skipped (39)
+   Start at  12:08:50
+   Duration  3.15s (transform 867ms, setup 0ms, collect 1.10s, tests 40ms, environment 0ms, prepare 725ms)
+
+undefined
+D:\DEV\role-model\.worktrees\66-remote-providers-deferred-request-id-loading\role-model-router\packages\sqlite-memory:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts -t listRecentRuntimeRequestIds

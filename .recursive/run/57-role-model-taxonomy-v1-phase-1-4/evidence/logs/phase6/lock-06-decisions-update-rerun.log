@@ -1,0 +1,3 @@
+[FAIL] Refusing to lock .recursive\run\57-role-model-taxonomy-v1-phase-1-4\06-decisions-update.md
+Workflow Profile: recursive-mode-audit-v1
+- Worktree Diff Audit does not account for actual changed files from git diff: docs/protocol/taxonomy-v1.md, packages/pi-role-model/data/taxonomy/compact-classification-guide.json, packages/pi-role-model/data/taxonomy/compact-groups.json, packages/pi-role-model/data/taxonomy/compact-manifest.json, packages/pi-role-model/data/taxonomy/compact-role-summaries.json ...

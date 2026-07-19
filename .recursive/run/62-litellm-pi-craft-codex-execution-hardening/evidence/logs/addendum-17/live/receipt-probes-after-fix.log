@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "name": "receipt-chat-completions-after-fix",
+      "clientRequestId": "add17-after-fix-receipt-chat-completions",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 2676
+    },
+    {
+      "name": "receipt-responses-after-fix",
+      "clientRequestId": "add17-after-fix-receipt-responses",
+      "status": 200,
+      "ok": true,
+      "elapsedMs": 5398
+    }
+  ]
+}

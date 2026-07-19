@@ -15,6 +15,10 @@
     "@role-model/protocol-types": "workspace:*"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^3.1.2"
   }
 }

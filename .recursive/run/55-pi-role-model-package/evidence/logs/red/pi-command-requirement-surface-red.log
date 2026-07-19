@@ -1,0 +1,48 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/55-pi-role-model-package[39m
+
+ [31m❯[39m packages/pi-role-model/test/commands.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 29[2mms[22m[39m
+   [32m✓[39m role-model command dispatcher[2m > [22mhandles help through one command with internal subcommands[32m 3[2mms[22m[39m
+   [32m✓[39m role-model command dispatcher[2m > [22mreports status and doctor results from the configured endpoint[32m 3[2mms[22m[39m
+[31m   [31m×[31m role-model command dispatcher[2m > [22msupports setup, ui, recommended alias, use alias, and refresh workflows[39m[32m 20[2mms[22m[39m
+[31m     → expected { ok: false, …(1) } to match object { ok: true, text: StringContaining{…} }[39m
+   [32m✓[39m role-model command dispatcher[2m > [22mlists and chooses aliases without leaking secrets[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/pi-role-model/test/commands.test.ts > role-model command dispatcher > supports setup, ui, recommended alias, use alias, and refresh workflows
+AssertionError: expected { ok: false, …(1) } to match object { ok: true, text: StringContaining{…} }
+
+- Expected
++ Received
+
+  {
+-   "ok": true,
+-   "text": StringContaining "http://127.0.0.1:3456",
++   "ok": false,
++   "text": "Unknown /role-model command: ui
++
++ /role-model setup - discover the local Role-Model runtime and register the provider
++ /role-model status - show runtime and discovery status
++ /role-model doctor - run endpoint diagnostics
++ /role-model alias list - list Role-Model aliases visible to Pi
++ /role-model alias choose <alias> - choose the alias Pi should use
++ /role-model alias current - show the selected alias",
+  }
+
+ ❯ packages/pi-role-model/test/commands.test.ts:104:5
+    102|       text: expect.stringContaining("role-model/auto"),
+    103|     });
+    104|     await expect(handler("ui")).resolves.toMatchObject({
+       |     ^
+    105|       ok: true,
+    106|       text: expect.stringContaining("http://127.0.0.1:3456"),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 13:48:43
+[2m   Duration [22m 1.08s[2m (transform 122ms, setup 0ms, collect 122ms, tests 29ms, environment 0ms, prepare 382ms)[22m
+

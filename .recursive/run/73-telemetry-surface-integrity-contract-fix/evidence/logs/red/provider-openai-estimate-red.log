@@ -1,0 +1,3 @@
+OpenAI provider adapter > estimates input tokens when streamed usage is absent and labels provenance
+AssertionError: expected 0 to be greater than 0
+RED verified: FAIL as expected because usage fallback and provenance labels were not yet implemented.

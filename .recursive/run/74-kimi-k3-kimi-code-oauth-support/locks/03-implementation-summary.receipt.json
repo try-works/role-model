@@ -1,0 +1,14 @@
+{
+  "artifact": "03-implementation-summary.md",
+  "artifact_hash": "8caad5af957c535d98cd4f370453c26c87e752af644e079347e6d5e5c6e12323",
+  "artifact_path": "D:\\DEV\\role-model\\.recursive\\run\\74-kimi-k3-kimi-code-oauth-support\\03-implementation-summary.md",
+  "locked_at": "2026-07-17T01:21:45Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "1f53babcd69f541a71d2dc7436390b79bbe3122f6d6657522b32fbf6ec075d7f",
+    "00-worktree.md": "401864a512f5e364f36ba46bbc7ef467dc5e82fb64787c2856c61c5ffda45199",
+    "01-as-is.md": "61dc84d92e84d45c2fedec6e21ae0149fdde5d4cc32a4d284f4fb05f348e5d8a",
+    "02-to-be-plan.md": "46295de2c53d5479d1891ba3aa4a2672e4ad220f0edb99c7e4558c61f3035364"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "227157261394587b3da848c829c3b7826ad0e4789054002e33acd60876de40ab"
+}

@@ -1,0 +1,20 @@
+(node:28384) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+[Phase5QA] Resetting runtime state...
+[Phase5QA] repoRoot: D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts
+[Phase5QA] runtimeStateRoot: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa-phase5
+[Phase5QA] fixtureRoot: D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\testdata\router-runtime\fixtures
+[Phase5QA] runtimeConfigPath: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa-phase5\runtime-config.yaml
+[Phase5QA] Ready at http://127.0.0.1:3456
+[Phase5QA] Routes:
+  http://127.0.0.1:3456/app
+  http://127.0.0.1:3456/app/observe/requests
+  http://127.0.0.1:3456/app/observe/routing
+Endpoint-registry diagnostics: [
+  {
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "severity": "error",
+    "code": "PROVIDER_ACCOUNT_NOT_FOUND",
+    "message": "Provider account openai.litellm is not present in the runtime account set."
+  }
+]

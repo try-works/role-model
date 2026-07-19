@@ -1,0 +1,9 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/downstream-openai-discovery.test.ts (2 tests) 36ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  07:23:35
+   Duration  1.19s (transform 123ms, setup 0ms, collect 133ms, tests 36ms, environment 0ms, prepare 357ms)

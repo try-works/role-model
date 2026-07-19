@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/task-type.schema.json",
+  "title": "Taxonomy Task Type",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "description",
+    "primaryRole",
+    "compatibleRoles",
+    "requiredCapabilities",
+    "preferredCapabilities",
+    "requiredModalities",
+    "toolClasses",
+    "classifier",
+    "authority",
+    "stability"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "const": "task_type"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "owner"],
+      "properties": {
+        "scope": {
+          "enum": ["core", "provider", "client", "org", "team", "user"]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "stability": {
+      "enum": ["stable", "experimental", "deprecated"]
+    },
+    "replacement": {
+      "type": "string",
+      "description": "When stability is deprecated, the ID of the replacement entry."
+    },
+    "deprecationReason": {
+      "type": "string",
+      "description": "Human-readable reason for deprecation."
+    },
+    "primaryRole": {
+      "type": "string"
+    },
+    "compatibleRoles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requiredCapabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "preferredCapabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requiredModalities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "toolClasses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "classifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["useWhen", "doNotUseWhen"],
+      "properties": {
+        "useWhen": { "type": "string", "minLength": 1 },
+        "doNotUseWhen": { "type": "string", "minLength": 1 }
+      }
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

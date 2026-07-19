@@ -1,0 +1,11 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP7
+TDD Mode: strict
+Timestamp: 2026-07-18T01:41:13Z
+Command: corepack pnpm --filter @role-model-router/catalog exec vitest run test/index.test.ts -t "canonical hydrated file boundary"
+Exit code: 1
+
+RED verified: PASS
+Expected: tracked v2 artifact loads through one public file boundary with hydrated provenance/defaults.
+Actual: readNormalizedCatalogFile was undefined.
+Vitest summary: 1 failed, 15 skipped; duration 1.42s.

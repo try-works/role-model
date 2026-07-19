@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
 
 import { runCatalogExportCli } from "../src/cli.ts";
+import * as catalogModule from "../src/index.ts";
 import {
   deriveLiteLLMProviders,
   deriveVendorVersionLedger,
@@ -98,6 +99,142 @@ describe("deriveCapabilities", () => {
 });
 
 describe("normalizeCatalogSnapshot", () => {
+  test("round-trips compact catalog omissions through the versioned hydration boundary", () => {
+    const serializeNormalizedCatalog = (catalogModule as { serializeNormalizedCatalog?: unknown })
+      .serializeNormalizedCatalog;
+    const hydrateNormalizedCatalog = (catalogModule as { hydrateNormalizedCatalog?: unknown })
+      .hydrateNormalizedCatalog;
+    expect(serializeNormalizedCatalog).toBeTypeOf("function");
+    expect(hydrateNormalizedCatalog).toBeTypeOf("function");
+    if (
+      typeof serializeNormalizedCatalog !== "function" ||
+      typeof hydrateNormalizedCatalog !== "function"
+    ) {
+      return;
+    }
+
+    const source = {
+      vendor: "models.dev",
+      commit: "pinned-test",
+      capturedAt: "2026-07-18T00:00:00Z",
+      schemaVersion: "models.dev.v1",
+    };
+    const normalized = {
+      catalogVersion: "1",
+      source,
+      providers: [
+        {
+          providerId: "default-provider",
+          displayName: "Default Provider",
+          npmPackage: "@ai-sdk/openai-compatible",
+          providerKind: "provider-default",
+          authFamily: "api-key",
+          adapterFamily: "ai-sdk-openai-compatible",
+          apiBase: "https://example.test/v1",
+          docsUrl: null,
+          envVars: [],
+          supportedAuthModes: [],
+          controlPlaneRequirements: [],
+          localOverrideApplied: false,
+          upstreamProvenance: source,
+        },
+      ],
+      models: [
+        {
+          modelId: "default-provider/model",
+          providerId: "default-provider",
+          providerKind: "provider-default",
+          authFamily: "api-key",
+          displayName: "Model",
+          version: "1",
+          capabilities: ["text.chat"],
+          modalities: ["text"],
+          contextWindow: 1000,
+          maxOutputTokens: 100,
+          pricing: null,
+          requestShapeHints: null,
+          experimentalModes: [],
+          extendsProvenance: { baseModelId: null, chain: [] },
+          localOverrideApplied: false,
+          localNotes: [],
+          upstreamProvenance: source,
+        },
+      ],
+    } as const;
+
+    const serialized = (serializeNormalizedCatalog as (value: unknown) => unknown)(normalized) as {
+      catalogVersion: string;
+      providers: readonly Record<string, unknown>[];
+      models: readonly Record<string, unknown>[];
+    };
+    expect(serialized.catalogVersion).toBe("2");
+    expect(serialized.providers[0]).not.toHaveProperty("upstreamProvenance");
+    expect(serialized.providers[0]).not.toHaveProperty("localOverrideApplied");
+    expect(serialized.models[0]).not.toHaveProperty("upstreamProvenance");
+    expect(serialized.models[0]).not.toHaveProperty("experimentalModes");
+    expect(serialized.models[0]).not.toHaveProperty("extendsProvenance");
+    expect((hydrateNormalizedCatalog as (value: unknown) => unknown)(serialized)).toEqual(
+      normalized,
+    );
+  });
+
+  test("keeps the tracked compact catalog at least forty percent below the pinned baseline", async () => {
+    const hydrateNormalizedCatalog = (catalogModule as { hydrateNormalizedCatalog?: unknown })
+      .hydrateNormalizedCatalog;
+    expect(hydrateNormalizedCatalog).toBeTypeOf("function");
+    if (typeof hydrateNormalizedCatalog !== "function") {
+      return;
+    }
+    const catalogPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "packages",
+      "catalog",
+      "data",
+      "normalized-catalog.json",
+    );
+    const raw = await readFile(catalogPath, "utf8");
+    const hydrated = (
+      hydrateNormalizedCatalog as (value: unknown) => {
+        providers: readonly unknown[];
+        models: readonly unknown[];
+      }
+    )(JSON.parse(raw));
+
+    expect(Buffer.byteLength(raw)).toBeLessThanOrEqual(Math.floor(5_434_995 * 0.6));
+    expect(hydrated.providers).toHaveLength(146);
+    expect(hydrated.models).toHaveLength(5_270);
+  });
+
+  test("loads the tracked compact artifact through the canonical hydrated file boundary", async () => {
+    const readNormalizedCatalogFile = (catalogModule as { readNormalizedCatalogFile?: unknown })
+      .readNormalizedCatalogFile;
+    expect(readNormalizedCatalogFile).toBeTypeOf("function");
+    if (typeof readNormalizedCatalogFile !== "function") {
+      return;
+    }
+    const catalogPath = path.join(
+      repoRoot,
+      "role-model-router",
+      "packages",
+      "catalog",
+      "data",
+      "normalized-catalog.json",
+    );
+    const hydrated = await (
+      readNormalizedCatalogFile as (filePath: string) => Promise<{
+        source: unknown;
+        providers: readonly Record<string, unknown>[];
+        models: readonly Record<string, unknown>[];
+      }>
+    )(catalogPath);
+
+    expect(hydrated.providers[0]?.upstreamProvenance).toEqual(hydrated.source);
+    expect(hydrated.models[0]?.upstreamProvenance).toEqual(hydrated.source);
+    expect(hydrated.models[0]?.experimentalModes).toEqual([]);
+    expect(hydrated.models[0]?.extendsProvenance).toEqual({ baseModelId: null, chain: [] });
+  });
+
   test("preserves upstream provenance while layering role-model enrichment", () => {
     const snapshot = JSON.parse(`{
       "source": {
@@ -337,6 +474,54 @@ describe("normalizeCatalogSnapshot", () => {
     });
   });
 
+  test("normalizes moonshot/kimi-k3 operator slice with documented limits and capabilities", () => {
+    const snapshot = JSON.parse(`{
+      "source": {
+        "vendor": "models.dev",
+        "commit": "moonshot-k3-test",
+        "capturedAt": "2026-07-16T12:00:00Z",
+        "schemaVersion": "models.dev.v1"
+      },
+      "providers": [
+        {
+          "providerId": "moonshot",
+          "displayName": "Moonshot AI",
+          "npmPackage": "@ai-sdk/openai-compatible",
+          "apiBase": "https://api.moonshot.ai/v1",
+          "envVars": ["MOONSHOT_API_KEY"],
+          "adapterFamilyHint": "ai-sdk-openai-compatible"
+        }
+      ],
+      "models": [
+        {
+          "modelId": "moonshot/kimi-k3",
+          "providerId": "moonshot",
+          "displayName": "Kimi K3",
+          "version": "2026-07-16",
+          "capabilities": ["text.chat", "tools.function_calling", "reasoning", "structured.output"],
+          "modalities": ["text", "image", "video"],
+          "contextWindow": 1048576,
+          "maxOutputTokens": 131072
+        }
+      ]
+    }`);
+    const catalog = normalizeCatalogSnapshot(snapshot, {});
+    const kimiModel = catalog.models.find((model) => model.modelId === "moonshot/kimi-k3");
+    expect(kimiModel).toMatchObject({
+      modelId: "moonshot/kimi-k3",
+      providerId: "moonshot",
+      displayName: "Kimi K3",
+      capabilities: expect.arrayContaining([
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+      ]),
+      modalities: expect.arrayContaining(["text", "image", "video"]),
+      contextWindow: 1048576,
+      maxOutputTokens: 131072,
+    });
+  });
   test("preserves provider docs and npm compatibility metadata for downstream consumers", () => {
     const snapshot = JSON.parse(`{
       "source": {
@@ -458,6 +643,24 @@ describe("runCatalogExportCli", () => {
 
     expect(result.normalizedCatalogPath).toBe(path.join(outputDir, "normalized-catalog.json"));
     expect(result.vendorLedgerPath).toBe(path.join(outputDir, "vendor-version-ledger.json"));
+  });
+
+  test("exports moonshot/kimi-k3 from local supplement into normalized catalog", async () => {
+    const outputDir = await mkdtemp(path.join(os.tmpdir(), "role-model-catalog-k3-"));
+    const result = await runCatalogExportCli({ repoRoot, outputDir });
+    const catalog = JSON.parse(await readFile(result.normalizedCatalogPath, "utf8")) as {
+      models: Array<{
+        modelId: string;
+        contextWindow: number;
+        maxOutputTokens: number;
+        capabilities: string[];
+      }>;
+    };
+    const k3 = catalog.models.find((model) => model.modelId === "moonshot/kimi-k3");
+    expect(k3).toBeDefined();
+    expect(k3?.contextWindow).toBe(1048576);
+    expect(k3?.maxOutputTokens).toBe(131072);
+    expect(k3?.capabilities).toEqual(expect.arrayContaining(["code.edit"]));
   });
 
   test("rewrites tracked package-data catalog artifacts alongside the runtime-output export", async () => {

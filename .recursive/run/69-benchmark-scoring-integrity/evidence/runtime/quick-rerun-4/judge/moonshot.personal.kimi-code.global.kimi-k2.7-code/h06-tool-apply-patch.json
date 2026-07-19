@@ -1,0 +1,15 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "h06-tool-apply-patch",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Diff contains ---/+++ headers and @@ hunk, correctly changes MODE to 'difficulty' in src/config.ts. apply_patch called with valid patch, meeting all required criteria.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h06-tool-apply-patch.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/h06-tool-apply-patch/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783931902820
+}

@@ -1,0 +1,170 @@
+[
+  {
+    "requestId": "req-51549845-30d6-4787-ba6f-ed61e79d0bcc",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "difficultyBucket": "hard",
+    "taxonomyRoleId": "coder",
+    "taxonomyTaskType": "coder.test.write",
+    "totalTokens": 177643,
+    "telemetryEligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "telemetryEligibleModelIds": [
+      "chatgpt/gpt-5.4"
+    ],
+    "decisionTopLevelKeys": "requestId,routingDecisionId,selectedEndpointId,selectedModelId,fallbackEndpointIds,strategyLabel,decision,routingDiagnostics,retrievalReceipt,contextEnvelope,request,normalizedIntent,role_model,endpointProfile,observeRequestPath",
+    "containsDeepseek": true,
+    "containsOpenai": true,
+    "containsNoEligible": true,
+    "containsContext": true,
+    "containsCapability": true,
+    "jsonPreview": "{\r\n  \"requestId\": \"req-51549845-30d6-4787-ba6f-ed61e79d0bcc\",\r\n  \"routingDecisionId\": \"decision-req-51549845-30d6-4787-ba6f-ed61e79d0bcc\",\r\n  \"selectedEndpointId\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n  \"selectedModelId\": \"chatgpt/gpt-5.4\",\r\n  \"fallbackEndpointIds\": [],\r\n  \"strategyLabel\": \"difficulty\",\r\n  \"decision\": {\r\n    \"routing_decision_id\": \"decision-req-51549845-30d6-4787-ba6f-ed61e79d0bcc\",\r\n    \"request_id\": \"req-51549845-30d6-4787-ba6f-ed61e79d0bcc\",\r\n    \"app_id\": \"unknown-app\",\r\n    \"org_id\": null,\r\n    \"policy_snapshot\": {\r\n      \"policy_id\": \"quality-policy\",\r\n      \"strategy\": \"quality\",\r\n      \"compute_preference\": \"auto\",\r\n      \"prefer_local\": false,\r\n      \"budget_mode\": \"disabled\",\r\n      \"tie_break_order\": [\r\n        \"quality\",\r\n        \"latency_ms\",\r\n        \"reliability\",\r\n        \"endpoint_id\"\r\n      ],\r\n      \"required_capabilities\": [\r\n        \"reasoning.effort_control\",\r\n        \"text.chat\",\r\n        \"tools.function_calling\"\r\n      ],\r\n      \"required_modalities\": [\r\n        \"text\"\r\n      ],\r\n      \"require_tools\": true,\r\n      \"deny_endpoints\": [],\r\n      \"allow_endpoints\": [\r\n        \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\r\n      ],\r\n      \"deny_provider_kinds\": [],\r\n      \"allow_provider_kinds\": [],\r\n      \"budget\": {\r\n        \"enabled\": false,\r\n        \"currency\": \"USD\"\r\n      },\r\n      \"privacy\": {\r\n        \"allow_remote\": true\r\n      },\r\n      \"targets\": {\r\n        \"latency_target_ms\": 150,\r\n        \"latency_max_ms\": 300,\r\n        \"throughput_target_tps\": 40\r\n      }\r\n    },\r\n    \"eligibility\": [\r\n      {\r\n        \"endpoint_id\": \"deepseek.personal.deepseek-api-key.global.deepseek-v4-pro\",\r\n        \"eligible\": false,\r\n        \"exclusions\": [\r\n          {\r\n            \"code\": \"POLICY_DENY_ENDPOINT\",\r\n            \"detail\": \"Endpoint is denied by routing policy.\"\r\n          }\r\n        ]\r\n      },\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"eligible\": true,\r\n        \"exclusions\": []\r\n      }\r\n    ],\r\n    \"scored_candidates\": [\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"total_score\": 0.8464983131248215,\r\n        \"metric_breakdown\": {\r\n          \"quality\": {\r\n            \"value\": 0.9993223306594562,\r\n            \"source\": \"benchmark\",\r\n            \"raw\": {\r\n              \"benchmark_quality_score\": 1,\r\n              \"benchmark_role_score\": 1,\r\n              \"benchmark_gro"
+  },
+  {
+    "requestId": "req-fcbed767-bf7e-4a46-8c10-dad03be5d066",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "difficultyBucket": "hard",
+    "taxonomyRoleId": "coder",
+    "taxonomyTaskType": "coder.test.write",
+    "totalTokens": 175372,
+    "telemetryEligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "telemetryEligibleModelIds": [
+      "chatgpt/gpt-5.4"
+    ],
+    "decisionTopLevelKeys": "requestId,routingDecisionId,selectedEndpointId,selectedModelId,fallbackEndpointIds,strategyLabel,decision,routingDiagnostics,retrievalReceipt,contextEnvelope,request,normalizedIntent,role_model,endpointProfile,observeRequestPath",
+    "containsDeepseek": true,
+    "containsOpenai": true,
+    "containsNoEligible": true,
+    "containsContext": true,
+    "containsCapability": true,
+    "jsonPreview": "{\r\n  \"requestId\": \"req-fcbed767-bf7e-4a46-8c10-dad03be5d066\",\r\n  \"routingDecisionId\": \"decision-req-fcbed767-bf7e-4a46-8c10-dad03be5d066\",\r\n  \"selectedEndpointId\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n  \"selectedModelId\": \"chatgpt/gpt-5.4\",\r\n  \"fallbackEndpointIds\": [],\r\n  \"strategyLabel\": \"difficulty\",\r\n  \"decision\": {\r\n    \"routing_decision_id\": \"decision-req-fcbed767-bf7e-4a46-8c10-dad03be5d066\",\r\n    \"request_id\": \"req-fcbed767-bf7e-4a46-8c10-dad03be5d066\",\r\n    \"app_id\": \"unknown-app\",\r\n    \"org_id\": null,\r\n    \"policy_snapshot\": {\r\n      \"policy_id\": \"quality-policy\",\r\n      \"strategy\": \"quality\",\r\n      \"compute_preference\": \"auto\",\r\n      \"prefer_local\": false,\r\n      \"budget_mode\": \"disabled\",\r\n      \"tie_break_order\": [\r\n        \"quality\",\r\n        \"latency_ms\",\r\n        \"reliability\",\r\n        \"endpoint_id\"\r\n      ],\r\n      \"required_capabilities\": [\r\n        \"reasoning.effort_control\",\r\n        \"text.chat\",\r\n        \"tools.function_calling\"\r\n      ],\r\n      \"required_modalities\": [\r\n        \"text\"\r\n      ],\r\n      \"require_tools\": true,\r\n      \"deny_endpoints\": [],\r\n      \"allow_endpoints\": [\r\n        \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\r\n      ],\r\n      \"deny_provider_kinds\": [],\r\n      \"allow_provider_kinds\": [],\r\n      \"budget\": {\r\n        \"enabled\": false,\r\n        \"currency\": \"USD\"\r\n      },\r\n      \"privacy\": {\r\n        \"allow_remote\": true\r\n      },\r\n      \"targets\": {\r\n        \"latency_target_ms\": 150,\r\n        \"latency_max_ms\": 300,\r\n        \"throughput_target_tps\": 40\r\n      }\r\n    },\r\n    \"eligibility\": [\r\n      {\r\n        \"endpoint_id\": \"deepseek.personal.deepseek-api-key.global.deepseek-v4-pro\",\r\n        \"eligible\": false,\r\n        \"exclusions\": [\r\n          {\r\n            \"code\": \"POLICY_DENY_ENDPOINT\",\r\n            \"detail\": \"Endpoint is denied by routing policy.\"\r\n          }\r\n        ]\r\n      },\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"eligible\": true,\r\n        \"exclusions\": []\r\n      }\r\n    ],\r\n    \"scored_candidates\": [\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"total_score\": 0.8464720768610631,\r\n        \"metric_breakdown\": {\r\n          \"quality\": {\r\n            \"value\": 0.9993542501472625,\r\n            \"source\": \"benchmark\",\r\n            \"raw\": {\r\n              \"benchmark_quality_score\": 1,\r\n              \"benchmark_role_score\": 1,\r\n              \"benchmark_gro"
+  },
+  {
+    "requestId": "req-729e1119-b7f6-4f39-b6e1-77322740b626",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "difficultyBucket": "hard",
+    "taxonomyRoleId": "coder",
+    "taxonomyTaskType": "coder.test.write",
+    "totalTokens": 166652,
+    "telemetryEligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "telemetryEligibleModelIds": [
+      "chatgpt/gpt-5.4"
+    ],
+    "decisionTopLevelKeys": "requestId,routingDecisionId,selectedEndpointId,selectedModelId,fallbackEndpointIds,strategyLabel,decision,routingDiagnostics,retrievalReceipt,contextEnvelope,request,normalizedIntent,role_model,endpointProfile,observeRequestPath",
+    "containsDeepseek": true,
+    "containsOpenai": true,
+    "containsNoEligible": true,
+    "containsContext": true,
+    "containsCapability": true,
+    "jsonPreview": "{\r\n  \"requestId\": \"req-729e1119-b7f6-4f39-b6e1-77322740b626\",\r\n  \"routingDecisionId\": \"decision-req-729e1119-b7f6-4f39-b6e1-77322740b626\",\r\n  \"selectedEndpointId\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n  \"selectedModelId\": \"chatgpt/gpt-5.4\",\r\n  \"fallbackEndpointIds\": [],\r\n  \"strategyLabel\": \"difficulty\",\r\n  \"decision\": {\r\n    \"routing_decision_id\": \"decision-req-729e1119-b7f6-4f39-b6e1-77322740b626\",\r\n    \"request_id\": \"req-729e1119-b7f6-4f39-b6e1-77322740b626\",\r\n    \"app_id\": \"unknown-app\",\r\n    \"org_id\": null,\r\n    \"policy_snapshot\": {\r\n      \"policy_id\": \"quality-policy\",\r\n      \"strategy\": \"quality\",\r\n      \"compute_preference\": \"auto\",\r\n      \"prefer_local\": false,\r\n      \"budget_mode\": \"disabled\",\r\n      \"tie_break_order\": [\r\n        \"quality\",\r\n        \"latency_ms\",\r\n        \"reliability\",\r\n        \"endpoint_id\"\r\n      ],\r\n      \"required_capabilities\": [\r\n        \"reasoning.effort_control\",\r\n        \"text.chat\",\r\n        \"tools.function_calling\"\r\n      ],\r\n      \"required_modalities\": [\r\n        \"text\"\r\n      ],\r\n      \"require_tools\": true,\r\n      \"deny_endpoints\": [],\r\n      \"allow_endpoints\": [\r\n        \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\r\n      ],\r\n      \"deny_provider_kinds\": [],\r\n      \"allow_provider_kinds\": [],\r\n      \"budget\": {\r\n        \"enabled\": false,\r\n        \"currency\": \"USD\"\r\n      },\r\n      \"privacy\": {\r\n        \"allow_remote\": true\r\n      },\r\n      \"targets\": {\r\n        \"latency_target_ms\": 150,\r\n        \"latency_max_ms\": 300,\r\n        \"throughput_target_tps\": 40\r\n      }\r\n    },\r\n    \"eligibility\": [\r\n      {\r\n        \"endpoint_id\": \"deepseek.personal.deepseek-api-key.global.deepseek-v4-pro\",\r\n        \"eligible\": false,\r\n        \"exclusions\": [\r\n          {\r\n            \"code\": \"POLICY_DENY_ENDPOINT\",\r\n            \"detail\": \"Endpoint is denied by routing policy.\"\r\n          }\r\n        ]\r\n      },\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"eligible\": true,\r\n        \"exclusions\": []\r\n      }\r\n    ],\r\n    \"scored_candidates\": [\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"total_score\": 0.8462893369500546,\r\n        \"metric_breakdown\": {\r\n          \"quality\": {\r\n            \"value\": 0.9993073330505144,\r\n            \"source\": \"benchmark\",\r\n            \"raw\": {\r\n              \"benchmark_quality_score\": 1,\r\n              \"benchmark_role_score\": 1,\r\n              \"benchmark_gro"
+  },
+  {
+    "requestId": "req-c49f43cc-d400-4abb-ba0d-566b1e3f42bb",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "difficultyBucket": "hard",
+    "taxonomyRoleId": "coder",
+    "taxonomyTaskType": "coder.test.write",
+    "totalTokens": 163854,
+    "telemetryEligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "telemetryEligibleModelIds": [
+      "chatgpt/gpt-5.4"
+    ],
+    "decisionTopLevelKeys": "requestId,routingDecisionId,selectedEndpointId,selectedModelId,fallbackEndpointIds,strategyLabel,decision,routingDiagnostics,retrievalReceipt,contextEnvelope,request,normalizedIntent,role_model,endpointProfile,observeRequestPath",
+    "containsDeepseek": true,
+    "containsOpenai": true,
+    "containsNoEligible": true,
+    "containsContext": true,
+    "containsCapability": true,
+    "jsonPreview": "{\r\n  \"requestId\": \"req-c49f43cc-d400-4abb-ba0d-566b1e3f42bb\",\r\n  \"routingDecisionId\": \"decision-req-c49f43cc-d400-4abb-ba0d-566b1e3f42bb\",\r\n  \"selectedEndpointId\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n  \"selectedModelId\": \"chatgpt/gpt-5.4\",\r\n  \"fallbackEndpointIds\": [],\r\n  \"strategyLabel\": \"difficulty\",\r\n  \"decision\": {\r\n    \"routing_decision_id\": \"decision-req-c49f43cc-d400-4abb-ba0d-566b1e3f42bb\",\r\n    \"request_id\": \"req-c49f43cc-d400-4abb-ba0d-566b1e3f42bb\",\r\n    \"app_id\": \"unknown-app\",\r\n    \"org_id\": null,\r\n    \"policy_snapshot\": {\r\n      \"policy_id\": \"quality-policy\",\r\n      \"strategy\": \"quality\",\r\n      \"compute_preference\": \"auto\",\r\n      \"prefer_local\": false,\r\n      \"budget_mode\": \"disabled\",\r\n      \"tie_break_order\": [\r\n        \"quality\",\r\n        \"latency_ms\",\r\n        \"reliability\",\r\n        \"endpoint_id\"\r\n      ],\r\n      \"required_capabilities\": [\r\n        \"reasoning.effort_control\",\r\n        \"text.chat\",\r\n        \"tools.function_calling\"\r\n      ],\r\n      \"required_modalities\": [\r\n        \"text\"\r\n      ],\r\n      \"require_tools\": true,\r\n      \"deny_endpoints\": [],\r\n      \"allow_endpoints\": [\r\n        \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\r\n      ],\r\n      \"deny_provider_kinds\": [],\r\n      \"allow_provider_kinds\": [],\r\n      \"budget\": {\r\n        \"enabled\": false,\r\n        \"currency\": \"USD\"\r\n      },\r\n      \"privacy\": {\r\n        \"allow_remote\": true\r\n      },\r\n      \"targets\": {\r\n        \"latency_target_ms\": 150,\r\n        \"latency_max_ms\": 300,\r\n        \"throughput_target_tps\": 40\r\n      }\r\n    },\r\n    \"eligibility\": [\r\n      {\r\n        \"endpoint_id\": \"deepseek.personal.deepseek-api-key.global.deepseek-v4-pro\",\r\n        \"eligible\": false,\r\n        \"exclusions\": [\r\n          {\r\n            \"code\": \"POLICY_DENY_ENDPOINT\",\r\n            \"detail\": \"Endpoint is denied by routing policy.\"\r\n          }\r\n        ]\r\n      },\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"eligible\": true,\r\n        \"exclusions\": []\r\n      }\r\n    ],\r\n    \"scored_candidates\": [\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"total_score\": 0.8462230483035986,\r\n        \"metric_breakdown\": {\r\n          \"quality\": {\r\n            \"value\": 0.9992884905393487,\r\n            \"source\": \"benchmark\",\r\n            \"raw\": {\r\n              \"benchmark_quality_score\": 1,\r\n              \"benchmark_role_score\": 1,\r\n              \"benchmark_gro"
+  },
+  {
+    "requestId": "req-2e366dca-34ea-474f-bcb5-3220207ca2ae",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "difficultyBucket": "hard",
+    "taxonomyRoleId": "coder",
+    "taxonomyTaskType": "coder.test.write",
+    "totalTokens": 161029,
+    "telemetryEligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "telemetryEligibleModelIds": [
+      "chatgpt/gpt-5.4"
+    ],
+    "decisionTopLevelKeys": "requestId,routingDecisionId,selectedEndpointId,selectedModelId,fallbackEndpointIds,strategyLabel,decision,routingDiagnostics,retrievalReceipt,contextEnvelope,request,normalizedIntent,role_model,endpointProfile,observeRequestPath",
+    "containsDeepseek": true,
+    "containsOpenai": true,
+    "containsNoEligible": true,
+    "containsContext": true,
+    "containsCapability": true,
+    "jsonPreview": "{\r\n  \"requestId\": \"req-2e366dca-34ea-474f-bcb5-3220207ca2ae\",\r\n  \"routingDecisionId\": \"decision-req-2e366dca-34ea-474f-bcb5-3220207ca2ae\",\r\n  \"selectedEndpointId\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n  \"selectedModelId\": \"chatgpt/gpt-5.4\",\r\n  \"fallbackEndpointIds\": [],\r\n  \"strategyLabel\": \"difficulty\",\r\n  \"decision\": {\r\n    \"routing_decision_id\": \"decision-req-2e366dca-34ea-474f-bcb5-3220207ca2ae\",\r\n    \"request_id\": \"req-2e366dca-34ea-474f-bcb5-3220207ca2ae\",\r\n    \"app_id\": \"unknown-app\",\r\n    \"org_id\": null,\r\n    \"policy_snapshot\": {\r\n      \"policy_id\": \"quality-policy\",\r\n      \"strategy\": \"quality\",\r\n      \"compute_preference\": \"auto\",\r\n      \"prefer_local\": false,\r\n      \"budget_mode\": \"disabled\",\r\n      \"tie_break_order\": [\r\n        \"quality\",\r\n        \"latency_ms\",\r\n        \"reliability\",\r\n        \"endpoint_id\"\r\n      ],\r\n      \"required_capabilities\": [\r\n        \"reasoning.effort_control\",\r\n        \"text.chat\",\r\n        \"tools.function_calling\"\r\n      ],\r\n      \"required_modalities\": [\r\n        \"text\"\r\n      ],\r\n      \"require_tools\": true,\r\n      \"deny_endpoints\": [],\r\n      \"allow_endpoints\": [\r\n        \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\r\n      ],\r\n      \"deny_provider_kinds\": [],\r\n      \"allow_provider_kinds\": [],\r\n      \"budget\": {\r\n        \"enabled\": false,\r\n        \"currency\": \"USD\"\r\n      },\r\n      \"privacy\": {\r\n        \"allow_remote\": true\r\n      },\r\n      \"targets\": {\r\n        \"latency_target_ms\": 150,\r\n        \"latency_max_ms\": 300,\r\n        \"throughput_target_tps\": 40\r\n      }\r\n    },\r\n    \"eligibility\": [\r\n      {\r\n        \"endpoint_id\": \"deepseek.personal.deepseek-api-key.global.deepseek-v4-pro\",\r\n        \"eligible\": false,\r\n        \"exclusions\": [\r\n          {\r\n            \"code\": \"POLICY_DENY_ENDPOINT\",\r\n            \"detail\": \"Endpoint is denied by routing policy.\"\r\n          }\r\n        ]\r\n      },\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"eligible\": true,\r\n        \"exclusions\": []\r\n      }\r\n    ],\r\n    \"scored_candidates\": [\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"total_score\": 0.8462020611371005,\r\n        \"metric_breakdown\": {\r\n          \"quality\": {\r\n            \"value\": 0.999353480978987,\r\n            \"source\": \"benchmark\",\r\n            \"raw\": {\r\n              \"benchmark_quality_score\": 1,\r\n              \"benchmark_role_score\": 1,\r\n              \"benchmark_grou"
+  },
+  {
+    "requestId": "req-8902ebeb-79ea-4f91-8b0c-79075729c658",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "difficultyBucket": "hard",
+    "taxonomyRoleId": "coder",
+    "taxonomyTaskType": "coder.test.write",
+    "totalTokens": 158419,
+    "telemetryEligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "telemetryEligibleModelIds": [
+      "chatgpt/gpt-5.4"
+    ],
+    "decisionTopLevelKeys": "requestId,routingDecisionId,selectedEndpointId,selectedModelId,fallbackEndpointIds,strategyLabel,decision,routingDiagnostics,retrievalReceipt,contextEnvelope,request,normalizedIntent,role_model,endpointProfile,observeRequestPath",
+    "containsDeepseek": true,
+    "containsOpenai": true,
+    "containsNoEligible": true,
+    "containsContext": true,
+    "containsCapability": true,
+    "jsonPreview": "{\r\n  \"requestId\": \"req-8902ebeb-79ea-4f91-8b0c-79075729c658\",\r\n  \"routingDecisionId\": \"decision-req-8902ebeb-79ea-4f91-8b0c-79075729c658\",\r\n  \"selectedEndpointId\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n  \"selectedModelId\": \"chatgpt/gpt-5.4\",\r\n  \"fallbackEndpointIds\": [],\r\n  \"strategyLabel\": \"difficulty\",\r\n  \"decision\": {\r\n    \"routing_decision_id\": \"decision-req-8902ebeb-79ea-4f91-8b0c-79075729c658\",\r\n    \"request_id\": \"req-8902ebeb-79ea-4f91-8b0c-79075729c658\",\r\n    \"app_id\": \"unknown-app\",\r\n    \"org_id\": null,\r\n    \"policy_snapshot\": {\r\n      \"policy_id\": \"quality-policy\",\r\n      \"strategy\": \"quality\",\r\n      \"compute_preference\": \"auto\",\r\n      \"prefer_local\": false,\r\n      \"budget_mode\": \"disabled\",\r\n      \"tie_break_order\": [\r\n        \"quality\",\r\n        \"latency_ms\",\r\n        \"reliability\",\r\n        \"endpoint_id\"\r\n      ],\r\n      \"required_capabilities\": [\r\n        \"reasoning.effort_control\",\r\n        \"text.chat\",\r\n        \"tools.function_calling\"\r\n      ],\r\n      \"required_modalities\": [\r\n        \"text\"\r\n      ],\r\n      \"require_tools\": true,\r\n      \"deny_endpoints\": [],\r\n      \"allow_endpoints\": [\r\n        \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\r\n      ],\r\n      \"deny_provider_kinds\": [],\r\n      \"allow_provider_kinds\": [],\r\n      \"budget\": {\r\n        \"enabled\": false,\r\n        \"currency\": \"USD\"\r\n      },\r\n      \"privacy\": {\r\n        \"allow_remote\": true\r\n      },\r\n      \"targets\": {\r\n        \"latency_target_ms\": 150,\r\n        \"latency_max_ms\": 300,\r\n        \"throughput_target_tps\": 40\r\n      }\r\n    },\r\n    \"eligibility\": [\r\n      {\r\n        \"endpoint_id\": \"deepseek.personal.deepseek-api-key.global.deepseek-v4-pro\",\r\n        \"eligible\": false,\r\n        \"exclusions\": [\r\n          {\r\n            \"code\": \"POLICY_DENY_ENDPOINT\",\r\n            \"detail\": \"Endpoint is denied by routing policy.\"\r\n          }\r\n        ]\r\n      },\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"eligible\": true,\r\n        \"exclusions\": []\r\n      }\r\n    ],\r\n    \"scored_candidates\": [\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"total_score\": 0.8452668858916955,\r\n        \"metric_breakdown\": {\r\n          \"quality\": {\r\n            \"value\": 0.9993265608357331,\r\n            \"source\": \"benchmark\",\r\n            \"raw\": {\r\n              \"benchmark_quality_score\": 1,\r\n              \"benchmark_role_score\": 1,\r\n              \"benchmark_gro"
+  },
+  {
+    "requestId": "req-4e4984bd-2159-4919-8ba6-649f89d4c6b3",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "difficultyBucket": "hard",
+    "taxonomyRoleId": "coder",
+    "taxonomyTaskType": "coder.test.write",
+    "totalTokens": 155812,
+    "telemetryEligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "telemetryEligibleModelIds": [
+      "chatgpt/gpt-5.4"
+    ],
+    "decisionTopLevelKeys": "requestId,routingDecisionId,selectedEndpointId,selectedModelId,fallbackEndpointIds,strategyLabel,decision,routingDiagnostics,retrievalReceipt,contextEnvelope,request,normalizedIntent,role_model,endpointProfile,observeRequestPath",
+    "containsDeepseek": true,
+    "containsOpenai": true,
+    "containsNoEligible": true,
+    "containsContext": true,
+    "containsCapability": true,
+    "jsonPreview": "{\r\n  \"requestId\": \"req-4e4984bd-2159-4919-8ba6-649f89d4c6b3\",\r\n  \"routingDecisionId\": \"decision-req-4e4984bd-2159-4919-8ba6-649f89d4c6b3\",\r\n  \"selectedEndpointId\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n  \"selectedModelId\": \"chatgpt/gpt-5.4\",\r\n  \"fallbackEndpointIds\": [],\r\n  \"strategyLabel\": \"difficulty\",\r\n  \"decision\": {\r\n    \"routing_decision_id\": \"decision-req-4e4984bd-2159-4919-8ba6-649f89d4c6b3\",\r\n    \"request_id\": \"req-4e4984bd-2159-4919-8ba6-649f89d4c6b3\",\r\n    \"app_id\": \"unknown-app\",\r\n    \"org_id\": null,\r\n    \"policy_snapshot\": {\r\n      \"policy_id\": \"quality-policy\",\r\n      \"strategy\": \"quality\",\r\n      \"compute_preference\": \"auto\",\r\n      \"prefer_local\": false,\r\n      \"budget_mode\": \"disabled\",\r\n      \"tie_break_order\": [\r\n        \"quality\",\r\n        \"latency_ms\",\r\n        \"reliability\",\r\n        \"endpoint_id\"\r\n      ],\r\n      \"required_capabilities\": [\r\n        \"reasoning.effort_control\",\r\n        \"text.chat\",\r\n        \"tools.function_calling\"\r\n      ],\r\n      \"required_modalities\": [\r\n        \"text\"\r\n      ],\r\n      \"require_tools\": true,\r\n      \"deny_endpoints\": [],\r\n      \"allow_endpoints\": [\r\n        \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\r\n      ],\r\n      \"deny_provider_kinds\": [],\r\n      \"allow_provider_kinds\": [],\r\n      \"budget\": {\r\n        \"enabled\": false,\r\n        \"currency\": \"USD\"\r\n      },\r\n      \"privacy\": {\r\n        \"allow_remote\": true\r\n      },\r\n      \"targets\": {\r\n        \"latency_target_ms\": 150,\r\n        \"latency_max_ms\": 300,\r\n        \"throughput_target_tps\": 40\r\n      }\r\n    },\r\n    \"eligibility\": [\r\n      {\r\n        \"endpoint_id\": \"deepseek.personal.deepseek-api-key.global.deepseek-v4-pro\",\r\n        \"eligible\": false,\r\n        \"exclusions\": [\r\n          {\r\n            \"code\": \"POLICY_DENY_ENDPOINT\",\r\n            \"detail\": \"Endpoint is denied by routing policy.\"\r\n          }\r\n        ]\r\n      },\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"eligible\": true,\r\n        \"exclusions\": []\r\n      }\r\n    ],\r\n    \"scored_candidates\": [\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"total_score\": 0.8442739520187234,\r\n        \"metric_breakdown\": {\r\n          \"quality\": {\r\n            \"value\": 0.9993054103127157,\r\n            \"source\": \"benchmark\",\r\n            \"raw\": {\r\n              \"benchmark_quality_score\": 1,\r\n              \"benchmark_role_score\": 1,\r\n              \"benchmark_gro"
+  },
+  {
+    "requestId": "req-35a7a957-ee9c-4c04-89db-b238e3bdad60",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "difficultyBucket": "hard",
+    "taxonomyRoleId": "coder",
+    "taxonomyTaskType": "coder.test.write",
+    "totalTokens": 152864,
+    "telemetryEligibleEndpointIds": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "telemetryEligibleModelIds": [
+      "chatgpt/gpt-5.4"
+    ],
+    "decisionTopLevelKeys": "requestId,routingDecisionId,selectedEndpointId,selectedModelId,fallbackEndpointIds,strategyLabel,decision,routingDiagnostics,retrievalReceipt,contextEnvelope,request,normalizedIntent,role_model,endpointProfile,observeRequestPath",
+    "containsDeepseek": true,
+    "containsOpenai": true,
+    "containsNoEligible": true,
+    "containsContext": true,
+    "containsCapability": true,
+    "jsonPreview": "{\r\n  \"requestId\": \"req-35a7a957-ee9c-4c04-89db-b238e3bdad60\",\r\n  \"routingDecisionId\": \"decision-req-35a7a957-ee9c-4c04-89db-b238e3bdad60\",\r\n  \"selectedEndpointId\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n  \"selectedModelId\": \"chatgpt/gpt-5.4\",\r\n  \"fallbackEndpointIds\": [],\r\n  \"strategyLabel\": \"difficulty\",\r\n  \"decision\": {\r\n    \"routing_decision_id\": \"decision-req-35a7a957-ee9c-4c04-89db-b238e3bdad60\",\r\n    \"request_id\": \"req-35a7a957-ee9c-4c04-89db-b238e3bdad60\",\r\n    \"app_id\": \"unknown-app\",\r\n    \"org_id\": null,\r\n    \"policy_snapshot\": {\r\n      \"policy_id\": \"quality-policy\",\r\n      \"strategy\": \"quality\",\r\n      \"compute_preference\": \"auto\",\r\n      \"prefer_local\": false,\r\n      \"budget_mode\": \"disabled\",\r\n      \"tie_break_order\": [\r\n        \"quality\",\r\n        \"latency_ms\",\r\n        \"reliability\",\r\n        \"endpoint_id\"\r\n      ],\r\n      \"required_capabilities\": [\r\n        \"reasoning.effort_control\",\r\n        \"text.chat\",\r\n        \"tools.function_calling\"\r\n      ],\r\n      \"required_modalities\": [\r\n        \"text\"\r\n      ],\r\n      \"require_tools\": true,\r\n      \"deny_endpoints\": [],\r\n      \"allow_endpoints\": [\r\n        \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\r\n      ],\r\n      \"deny_provider_kinds\": [],\r\n      \"allow_provider_kinds\": [],\r\n      \"budget\": {\r\n        \"enabled\": false,\r\n        \"currency\": \"USD\"\r\n      },\r\n      \"privacy\": {\r\n        \"allow_remote\": true\r\n      },\r\n      \"targets\": {\r\n        \"latency_target_ms\": 150,\r\n        \"latency_max_ms\": 300,\r\n        \"throughput_target_tps\": 40\r\n      }\r\n    },\r\n    \"eligibility\": [\r\n      {\r\n        \"endpoint_id\": \"deepseek.personal.deepseek-api-key.global.deepseek-v4-pro\",\r\n        \"eligible\": false,\r\n        \"exclusions\": [\r\n          {\r\n            \"code\": \"POLICY_DENY_ENDPOINT\",\r\n            \"detail\": \"Endpoint is denied by routing policy.\"\r\n          }\r\n        ]\r\n      },\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"eligible\": true,\r\n        \"exclusions\": []\r\n      }\r\n    ],\r\n    \"scored_candidates\": [\r\n      {\r\n        \"endpoint_id\": \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\r\n        \"total_score\": 0.844199878406502,\r\n        \"metric_breakdown\": {\r\n          \"quality\": {\r\n            \"value\": 0.9992873369393164,\r\n            \"source\": \"benchmark\",\r\n            \"raw\": {\r\n              \"benchmark_quality_score\": 1,\r\n              \"benchmark_role_score\": 1,\r\n              \"benchmark_grou"
+  }
+]

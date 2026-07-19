@@ -1,0 +1,489 @@
+> {"id":"models","type":"get_available_models"}
+< {"id":"models","type":"response","command":"get_available_models","success":true,"data":{"models":[{"id":"deepseek-v4-flash","name":"DeepSeek V4 Flash","api":"openai-completions","provider":"deepseek","baseUrl":"https://api.deepseek.com","compat":{"requiresReasoningContentOnAssistantMessages":true,"thinkingFormat":"deepseek"},"reasoning":true,"thinkingLevelMap":{"minimal":null,"low":null,"medium":null,"high":"high","xhigh":"max"},"input":["text"],"cost":{"input":0.14,"output":0.28,"cacheRead":0.0028,"cacheWrite":0},"contextWindow":1000000,"maxTokens":384000},{"id":"deepseek-v4-pro","name":"DeepSeek V4 Pro","api":"openai-completions","provider":"deepseek","baseUrl":"https://api.deepseek.com","compat":{"requiresReasoningContentOnAssistantMessages":true,"thinkingFormat":"deepseek"},"reasoning":true,"thinkingLevelMap":{"minimal":null,"low":null,"medium":null,"high":"high","xhigh":"max"},"input":["text"],"cost":{"input":0.435,"output":0.87,"cacheRead":0.003625,"cacheWrite":0},"contextWindow":1000000,"maxTokens":384000},{"id":"baseline.decision-only","name":"baseline.decision-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"baseline.hybrid","name":"baseline.hybrid","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"baseline.local-only","name":"baseline.local-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":32768,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"baseline.remote-only","name":"baseline.remote-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"controller.decision-only","name":"controller.decision-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"controller.hybrid","name":"controller.hybrid","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"controller.local-only","name":"controller.local-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":32768,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"controller.remote-only","name":"controller.remote-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"default.decision-only","name":"default.decision-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"default.hybrid","name":"default.hybrid","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"default.local-only","name":"default.local-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":32768,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"default.remote-only","name":"default.remote-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"difficulty.decision-only","name":"difficulty.decision-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"difficulty.hybrid","name":"difficulty.hybrid","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"difficulty.local-only","name":"difficulty.local-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":32768,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"difficulty.remote-only","name":"difficulty.remote-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"hybrid.decision-only","name":"hybrid.decision-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"hybrid.hybrid","name":"hybrid.hybrid","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"hybrid.local-only","name":"hybrid.local-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":32768,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"hybrid.remote-only","name":"hybrid.remote-only","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"lfm2.5-1.2b-instruct","name":"lfm2.5-1.2b-instruct","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":32768,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}},{"id":"openai/gpt-4.1-mini-fast","name":"openai/gpt-4.1-mini-fast","api":"openai-completions","provider":"role-model","baseUrl":"http://127.0.0.1:4567/v1","reasoning":false,"input":["text"],"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0},"contextWindow":1047576,"maxTokens":8192,"compat":{"supportsDeveloperRole":false}}]}}
+ROLE_MODEL_MODELS [
+  {
+    "id": "baseline.decision-only",
+    "name": "baseline.decision-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "baseline.hybrid",
+    "name": "baseline.hybrid",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "baseline.local-only",
+    "name": "baseline.local-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 32768,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "baseline.remote-only",
+    "name": "baseline.remote-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "controller.decision-only",
+    "name": "controller.decision-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "controller.hybrid",
+    "name": "controller.hybrid",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "controller.local-only",
+    "name": "controller.local-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 32768,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "controller.remote-only",
+    "name": "controller.remote-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "default.decision-only",
+    "name": "default.decision-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "default.hybrid",
+    "name": "default.hybrid",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "default.local-only",
+    "name": "default.local-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 32768,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "default.remote-only",
+    "name": "default.remote-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "difficulty.decision-only",
+    "name": "difficulty.decision-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "difficulty.hybrid",
+    "name": "difficulty.hybrid",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "difficulty.local-only",
+    "name": "difficulty.local-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 32768,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "difficulty.remote-only",
+    "name": "difficulty.remote-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "hybrid.decision-only",
+    "name": "hybrid.decision-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "hybrid.hybrid",
+    "name": "hybrid.hybrid",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "hybrid.local-only",
+    "name": "hybrid.local-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 32768,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "hybrid.remote-only",
+    "name": "hybrid.remote-only",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "lfm2.5-1.2b-instruct",
+    "name": "lfm2.5-1.2b-instruct",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 32768,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  },
+  {
+    "id": "openai/gpt-4.1-mini-fast",
+    "name": "openai/gpt-4.1-mini-fast",
+    "api": "openai-completions",
+    "provider": "role-model",
+    "baseUrl": "http://127.0.0.1:4567/v1",
+    "reasoning": false,
+    "input": [
+      "text"
+    ],
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0
+    },
+    "contextWindow": 1047576,
+    "maxTokens": 8192,
+    "compat": {
+      "supportsDeveloperRole": false
+    }
+  }
+]
+ERR Assertion failed: !(handERR le->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76

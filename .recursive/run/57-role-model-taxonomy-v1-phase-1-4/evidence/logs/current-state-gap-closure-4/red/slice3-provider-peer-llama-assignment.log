@@ -1,0 +1,135 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/lib/runtime-api.test.ts [2m([22m[2m43 tests[22m[2m | [22m[31m2 failed[39m[2m)[22m[32m 85[2mms[22m[39m
+   [32m✓[39m fetchRuntimeSnapshot[2m > [22mloads the operator shell data from the runtime control-plane endpoints[32m 13[2mms[22m[39m
+   [32m✓[39m fetchLocalModels[2m > [22mpreserves local ownership and llama-swap config metadata from the runtime API[32m 1[2mms[22m[39m
+   [32m✓[39m fetchDownstreamOpenAIProviderConfig[2m > [22mloads the downstream OpenAI-compatible provider contract for consumer apps[32m 1[2mms[22m[39m
+   [32m✓[39m fetchRequestDetail[2m > [22mloads request detail and the linked endpoint profile for the inspector pane[32m 1[2mms[22m[39m
+   [32m✓[39m router APIs[2m > [22mloads the router summary, config, candidates, and decision ledger from router-specific endpoints[32m 2[2mms[22m[39m
+   [32m✓[39m router APIs[2m > [22mloads router decision detail from the router decision endpoint[32m 1[2mms[22m[39m
+   [32m✓[39m telemetry APIs[2m > [22mloads the canonical telemetry dashboard reads from the role-model telemetry endpoints[32m 2[2mms[22m[39m
+   [32m✓[39m telemetry APIs[2m > [22mloads telemetry request rows with limit parameters[32m 1[2mms[22m[39m
+   [32m✓[39m telemetry APIs[2m > [22mposts the generic telemetry analytics query payload[32m 2[2mms[22m[39m
+   [32m✓[39m telemetry APIs[2m > [22msubscribes to canonical telemetry SSE updates and closes the source on cleanup[32m 4[2mms[22m[39m
+   [32m✓[39m observe APIs[2m > [22mloads vendor activity metrics for the observe activity page[32m 1[2mms[22m[39m
+   [32m✓[39m observe APIs[2m > [22mloads a persisted request/response capture by id[32m 1[2mms[22m[39m
+   [32m✓[39m observe APIs[2m > [22mreturns null when an activity capture is not found[32m 0[2mms[22m[39m
+   [32m✓[39m observe APIs[2m > [22mloads raw log text for observe log consoles[32m 1[2mms[22m[39m
+   [32m✓[39m observe APIs[2m > [22mloads vendor version info for the runtime system surface[32m 1[2mms[22m[39m
+   [32m✓[39m controller assignment APIs[2m > [22mloads the current global controller assignment[32m 1[2mms[22m[39m
+   [32m✓[39m controller assignment APIs[2m > [22mloads a null controller assignment when no controller is configured yet[32m 1[2mms[22m[39m
+   [32m✓[39m controller assignment APIs[2m > [22mpatches the selected controller candidate[32m 1[2mms[22m[39m
+   [32m✓[39m submitWorkbenchChat[2m > [22mposts a chat-completions payload to the runtime workbench path[32m 1[2mms[22m[39m
+   [32m✓[39m submitWorkbenchChat[2m > [22msends routing-mode override as a header instead of leaking it into the OpenAI-compatible body[32m 1[2mms[22m[39m
+   [32m✓[39m submitWorkbenchChat[2m > [22msends endpoint override as a header instead of leaking it into the OpenAI-compatible body[32m 1[2mms[22m[39m
+   [32m✓[39m studio vendor API helpers[2m > [22mposts an OpenAI image-generation request[32m 1[2mms[22m[39m
+   [32m✓[39m studio vendor API helpers[2m > [22mposts an SDAPI txt2img request[32m 1[2mms[22m[39m
+   [32m✓[39m studio vendor API helpers[2m > [22mloads available speech voices for a selected model[32m 1[2mms[22m[39m
+   [32m✓[39m studio vendor API helpers[2m > [22mposts a speech-generation request and returns audio bytes as a blob[32m 2[2mms[22m[39m
+   [32m✓[39m studio vendor API helpers[2m > [22mposts a multipart transcription request[32m 2[2mms[22m[39m
+   [32m✓[39m studio vendor API helpers[2m > [22mposts a rerank request to the selected vendor path[32m 1[2mms[22m[39m
+   [32m✓[39m studio vendor API helpers[2m > [22mposts a raw advanced API request to the selected endpoint family[32m 1[2mms[22m[39m
+   [32m✓[39m startRuntimeDeviceAuthorization[2m > [22mposts the selected provider account payload to the runtime device-auth start path[32m 1[2mms[22m[39m
+   [32m✓[39m reconnectRuntimeAccount[2m > [22mposts the saved account id to the explicit reconnect repair path[32m 1[2mms[22m[39m
+   [32m✓[39m pollRuntimeDeviceAuthorization[2m > [22mposts the auth request id to the runtime device-auth poll path[32m 1[2mms[22m[39m
+   [32m✓[39m updateRuntimeAccountApiKey[2m > [22mposts the saved account id and replacement key to the explicit repair path[32m 1[2mms[22m[39m
+   [32m✓[39m activateRuntimeEndpoint[2m > [22mposts endpoint activation payload to the runtime endpoints mutation path[32m 1[2mms[22m[39m
+   [32m✓[39m fetchRuntimeConfig[2m > [22mloads the normalized unified runtime config from the runtime control plane[32m 1[2mms[22m[39m
+   [32m✓[39m updateRuntimeConfig[2m > [22mputs the normalized unified runtime config to the runtime control plane[32m 1[2mms[22m[39m
+   [32m✓[39m role policy APIs[2m > [22mloads the full runtime-managed role policy from the control plane[32m 1[2mms[22m[39m
+   [32m✓[39m role policy APIs[2m > [22mposts role creation, puts role updates, and puts task allowlists to the control plane[32m 2[2mms[22m[39m
+   [32m✓[39m benchmark display endpoints[2m > [22mfetchBenchmarkSummariesByMode loads full and quick summaries[32m 2[2mms[22m[39m
+   [32m✓[39m benchmark display endpoints[2m > [22mfetchBenchmarkRuns loads completed run history[32m 1[2mms[22m[39m
+   [32m✓[39m benchmark display endpoints[2m > [22mclearAllBenchmarkData deletes global benchmark state[32m 1[2mms[22m[39m
+   [32m✓[39m role assignment helpers[2m > [22mrepresent default all roles separately from explicit none[32m 0[2mms[22m[39m
+[31m   [31m×[31m role assignment helpers[2m > [22mposts default-all assignment metadata for peer and llama-swap model registration[39m[32m 22[2mms[22m[39m
+[31m     → expected [ { …(2) }, { …(2) } ] to deeply equal [ { …(2) }, { …(2) } ][39m
+[31m   [31m×[31m role assignment helpers[2m > [22mputs explicit empty include assignment metadata when saving no-role local bindings[39m[32m 3[2mms[22m[39m
+[31m     → expected [ { …(2) }, { …(2) } ] to deeply equal [ { …(2) }, { …(2) } ][39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/runtime-api.test.ts > role assignment helpers > posts default-all assignment metadata for peer and llama-swap model registration
+AssertionError: expected [ { …(2) }, { …(2) } ] to deeply equal [ { …(2) }, { …(2) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "body": {
+-       "disabledRoleIds": [],
+-       "enabledRoleIds": [],
+-       "roleAssignmentMode": "all",
+        "roleIds": [],
+      },
+      "url": "/api/role-model/local/peer/models/local-peer-model/load",
+    },
+    {
+      "body": {
+-       "disabledRoleIds": [],
+-       "enabledRoleIds": [],
+-       "roleAssignmentMode": "all",
+        "roleIds": [],
+      },
+      "url": "/api/role-model/local/llama-swap/models/local-llama-model/load",
+    },
+  ]
+
+ ❯ app/lib/runtime-api.test.ts:2074:22
+    2072|     await loadLlamaSwapModel("local-llama-model", [], fetcher);
+    2073| 
+    2074|     expect(requests).toEqual([
+       |                      ^
+    2075|       {
+    2076|         url: "/api/role-model/local/peer/models/local-peer-model/load",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/lib/runtime-api.test.ts > role assignment helpers > puts explicit empty include assignment metadata when saving no-role local bindings
+AssertionError: expected [ { …(2) }, { …(2) } ] to deeply equal [ { …(2) }, { …(2) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "body": {
+-       "disabledRoleIds": [],
+-       "enabledRoleIds": [],
+-       "roleAssignmentMode": "include",
+        "roleIds": [],
+      },
+      "url": "/api/role-model/local/peer/models/local-peer-model/roles",
+    },
+    {
+      "body": {
+-       "disabledRoleIds": [],
+-       "enabledRoleIds": [],
+-       "roleAssignmentMode": "include",
+        "roleIds": [],
+      },
+      "url": "/api/role-model/local/llama-swap/models/local-llama-model/roles",
+    },
+  ]
+
+ ❯ app/lib/runtime-api.test.ts:2108:22
+    2106|     await setLlamaSwapModelRoles("local-llama-model", [], fetcher);
+    2107| 
+    2108|     expect(requests).toEqual([
+       |                      ^
+    2109|       {
+    2110|         url: "/api/role-model/local/peer/models/local-peer-model/roles…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m41 passed[39m[22m[90m (43)[39m
+[2m   Start at [22m 02:09:20
+[2m   Duration [22m 1.29s[2m (transform 155ms, setup 0ms, collect 185ms, tests 85ms, environment 0ms, prepare 302ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/runtime-api.test.ts

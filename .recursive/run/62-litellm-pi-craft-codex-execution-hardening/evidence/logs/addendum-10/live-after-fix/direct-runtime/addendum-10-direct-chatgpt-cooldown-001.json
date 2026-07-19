@@ -1,0 +1,7 @@
+{
+  "model": "chatgpt/gpt-5.4",
+  "id": "addendum-10-direct-chatgpt-cooldown-001",
+  "status": 400,
+  "durationMs": 389,
+  "body": "{\"error\":{\"type\":\"routing_error\",\"code\":\"no_eligible_target\",\"message\":\"All eligible endpoints for model chatgpt/gpt-5.4 are temporarily unavailable after recent execution failures.\",\"requestedModel\":\"chatgpt/gpt-5.4\",\"deniedEndpointIds\":[\"openai.personal.openai-codex-subscription.global.gpt-5.4\"],\"executionCooldowns\":[{\"endpointId\":\"openai.personal.openai-codex-subscription.global.gpt-5.4\",\"active\":true,\"failureCount\":1,\"cooldownUntilMs\":1783554135282,\"lastFailureAtMs\":1783553835282,\"lastErrorClass\":\"upstream_timeout\",\"sourceAttemptId\":\"addendum-10-live-cooldown:attempt:1\",\"sourceRequestId\":\"addendum-10-live-cooldown\",\"sourceRoutingDecisionId\":\"decision-addendum-10-live-cooldown\",\"errorPreview\":{\"message\":\"addendum 10 live verification cooldown\",\"statusCode\":503}}]}}\n"
+}

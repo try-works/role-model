@@ -1,0 +1,8 @@
+{
+  "pid": 62252,
+  "exe": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+  "argString": "--repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456",
+  "stdout": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\runtime\\runtime.relaunch.stdout.log",
+  "stderr": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\runtime\\runtime.relaunch.stderr.log",
+  "launchedAt": "2026-07-09T09:42:25.6936063+08:00"
+}

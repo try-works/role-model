@@ -1,0 +1,50 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p06-medium-explain",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"A reverse proxy is a server that sits between clients and backend services, accepting client requests and forwarding them to the appropriate backend server. It hides the identity and topology of backend services from clients,",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"A reverse proxy is a server that sits in front of one or more backend services, receives client requests, and forwards them to the appropriate backend. To the client, it appears to be the server; to the backend, it appears to",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "Both answers correctly explain what a reverse proxy does and when to place one in front of an LLM runtime, satisfying all checklist requirements. The OpenAI GPT-5.4 response includes additional technical nuance (e.g., streaming management via SSE/WebSocket/gRPC, multi-tenancy, cost-aware routing, and canary deployment patterns) that directly addresses LLM‑specific operational needs. While the Kim…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\"\n  ],\n  \"rationale\": \"Both answers correctly explain what a reverse proxy does and when to place one in front of an LLM runtime, satisfying all checklist requirements. The OpenAI GPT-5.4 response includes additional technical nuance (e.g., streaming management via SSE/WebSocket/gRPC, multi-tenancy, cost-aware routing, and canary deployment patterns) that directly addresses LLM‑specific operational needs. While the Kimi‑K2.7‑Code answer is accurate and well‑structured, it lacks this level of LLM‑focused detail, making the GPT‑5.4 response marginally more substantive and complete.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nExplain what a reverse proxy does and when you would put one in front of an LLM runtime.",
+    "exemplarAnswer": "Accurate explanatory answer to the user question.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Answers the question with relevant technical detail.",
+      "[MUST] Include JSON keys: answer"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 732,
+    "reasoningLength": 4811
+  },
+  "recordedAtMs": 1783935983255
+}

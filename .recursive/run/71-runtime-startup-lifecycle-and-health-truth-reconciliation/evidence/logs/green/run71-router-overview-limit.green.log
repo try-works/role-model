@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/71-runtime-startup-lifecycle-and-health-truth-reconciliation/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/router-candidate-labels.test.ts (5 tests) 25ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  07:13:33
+   Duration  943ms (transform 55ms, setup 0ms, collect 66ms, tests 25ms, environment 0ms, prepare 294ms)
+

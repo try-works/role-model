@@ -1,0 +1,4 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+

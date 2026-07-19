@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "p18-tools-agent",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Calls required tool_calls: list_endpoints, get_metrics for both local.lfm2.5-8b-a1b and remote.deepseek-v4-flash. Answer recommends routing based on latency and error rates, meets checklist.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p18-tools-agent.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/p18-tools-agent/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935044227
+}

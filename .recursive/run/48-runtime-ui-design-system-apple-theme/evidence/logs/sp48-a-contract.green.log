@@ -1,0 +1,24 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\48-runtime-ui-design-system-apple-theme\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/48-runtime-ui-design-system-apple-theme/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/view-models.test.ts [2m([22m[2m32 tests[22m[2m)[22m[33m 554[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts [2m([22m[2m39 tests[22m[2m)[22m[33m 1256[2mms[22m[39m
+ [32m✓[39m app/lib/device-authorization.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 386[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-latency.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m app/lib/provider-account-state.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts [2m([22m[2m33 tests[22m[2m)[22m[33m 2568[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract [33m 1128[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints [33m 387[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces [33m 317[2mms[22m[39m
+ [32m✓[39m app/lib/router-candidate-labels.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[32m126 passed[39m[22m[90m (126)[39m
+[2m   Start at [22m 20:28:43
+[2m   Duration [22m 45.12s[2m (transform 26.93s, setup 0ms, collect 42.95s, tests 4.82s, environment 4ms, prepare 22.97s)[22m
+

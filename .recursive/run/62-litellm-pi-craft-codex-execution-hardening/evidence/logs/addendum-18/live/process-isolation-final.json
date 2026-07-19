@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-07-10T03:22:27.3553726Z",
+  "serverPid": 48696,
+  "serverConnections": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 62784,
+      "State": 5,
+      "OwningProcess": 48696
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 57764,
+      "State": 5,
+      "OwningProcess": 48696
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50701,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "0.0.0.0",
+      "RemotePort": 0,
+      "State": 2,
+      "OwningProcess": 48696
+    }
+  ],
+  "clientProcesses": [
+    {
+      "LocalPort": 62784,
+      "State": 5,
+      "ProcessId": 7016,
+      "ExecutablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "CommandLine": "\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-pre-read-main-dll --metrics-shmem-handle=2120,i,65691780541939837,13671999960312605478,524288 --field-trial-handle=1820,i,7620933072432548973,1461232407100839195,262144 --variations-seed-version=20260630-171645.651000-production --pseudonymization-salt-handle=1840,i,7775427661786290919,12896125093235042439,4 --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2128 /prefetch:11"
+    },
+    {
+      "LocalPort": 57764,
+      "State": 5,
+      "ProcessId": 37208,
+      "ExecutablePath": "D:\\cursor\\Cursor.exe",
+      "CommandLine": "\"D:\\cursor\\Cursor.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --user-data-dir=\"C:\\Users\\erikb\\AppData\\Roaming\\Cursor\" --standard-schemes=vscode-webview,vscode-file,cursor-rpc-devtools --enable-sandbox --secure-schemes=vscode-webview,vscode-file,cursor-rpc-devtools,sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=vscode-webview,vscode-file,cursor-rpc-devtools,sentry-ipc --fetch-schemes=vscode-webview,vscode-file,cursor-rpc-devtools,sentry-ipc --service-worker-schemes=vscode-webview --code-cache-schemes=vscode-webview,vscode-file --field-trial-handle=1852,i,7785481981203602711,13344295148210100656,262144 --enable-features=DocumentPolicyIncludeJSCallStacksInCrashReports,EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=CalculateNativeWinOcclusion,LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=2124 /prefetch:11"
+    }
+  ],
+  "disturbingRunPhaseProcesses": []
+}

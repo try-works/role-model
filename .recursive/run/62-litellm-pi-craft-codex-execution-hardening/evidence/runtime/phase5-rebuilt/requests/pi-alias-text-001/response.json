@@ -1,0 +1,42 @@
+{
+  "statusCode": 200,
+  "ok": true,
+  "headers": {
+    "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-origin": "*",
+    "connection": "keep-alive",
+    "content-length": "375",
+    "content-type": "application/json",
+    "date": "Tue, 07 Jul 2026 18:50:21 GMT",
+    "keep-alive": "timeout=5",
+    "x-role-model-adapter-family": "ai-sdk-openai-compatible",
+    "x-role-model-endpoint-id": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "x-role-model-routing-decision-id": "decision-req-be5ccf36-2ece-4792-baa2-36edd25e582c"
+  },
+  "body": {
+    "id": "f4a7d826-a611-4366-a5ec-512ff1326112",
+    "object": "response",
+    "created_at": 1783450221,
+    "status": "completed",
+    "model": "deepseek/deepseek-v4-flash",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_f4a7d826-a611-4366-a5ec-512ff1326112",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "No endpoint given."
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 14,
+      "output_tokens": 401,
+      "total_tokens": 415
+    }
+  }
+}

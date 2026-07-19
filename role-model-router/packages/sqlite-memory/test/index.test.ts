@@ -1,3 +1,5 @@
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { mkdtemp, readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -6,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
+import { readNormalizedCatalogFile } from "@role-model-router/catalog";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 import { runRuntimeAdapterValidation } from "../../adapter-execution/src/cli.ts";
 import { createRuntimeObservationBundle } from "../../runtime-observability/src/index.ts";
@@ -21,11 +24,13 @@ import {
   persistObservedBenchmarkSample,
   persistProviderAccounts,
   persistRetrievalReceipt,
+  persistRuntimeObservationBundle,
   persistRuntimeTelemetryFailure,
   readConversationContinuity,
   readLatestObservedProfile,
   readObservedPerformanceSamples,
   readRetrievalReceipts,
+  readRuntimeObservationBundle,
   readRuntimeTelemetrySummary,
   resolveSqliteMemoryLocation,
 } from "../src/index.ts";
@@ -37,6 +42,15 @@ const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
 async function readJson<T>(relativePath: string): Promise<T> {
   const filePath = path.join(repoRoot, relativePath);
   return JSON.parse(await readFile(filePath, "utf8")) as T;
+}
+
+function requireChildStdout(
+  child: ReturnType<typeof spawn>,
+): NonNullable<ReturnType<typeof spawn>["stdout"]> {
+  if (!child.stdout) {
+    throw new Error("Expected child process stdout to be piped.");
+  }
+  return child.stdout;
 }
 
 describe("initializeSqliteMemory", () => {
@@ -81,13 +95,26 @@ describe("initializeSqliteMemory", () => {
       ]),
     );
     expect(journalMode.journal_mode.toLowerCase()).toBe("wal");
-    expect(migrations).toEqual([{ migration_id: "run06-v1-initial-schema" }]);
+    expect(migrations).toEqual([
+      { migration_id: "run06-v1-initial-schema" },
+      { migration_id: "run62-observation-metadata-backfill-v1" },
+      { migration_id: "run62-telemetry-metadata-backfill-v1" },
+      { migration_id: "run77-observed-profile-indexes-v1" },
+      { migration_id: "run77-recent-observations-index-v1" },
+    ]);
   });
 
   test("persists validated provider accounts by credential reference without storing raw secrets", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
-    const catalog = await readJson(
-      "role-model-router/packages/catalog/data/normalized-catalog.json",
+    const catalog = await readNormalizedCatalogFile(
+      path.join(
+        repoRoot,
+        "role-model-router",
+        "packages",
+        "catalog",
+        "data",
+        "normalized-catalog.json",
+      ),
     );
     const fixture = await readJson<{ accounts: unknown[] }>(
       "testdata/router-runtime/fixtures/provider-accounts.json",
@@ -602,6 +629,193 @@ describe("initializeSqliteMemory", () => {
     );
   });
 
+  test("does not repeat observation metadata JSON backfills after migration receipt", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-backfill-receipt",
+    });
+    const observationBackfillMigrationId = "run62-observation-metadata-backfill-v1";
+    const telemetryBackfillMigrationId = "run62-telemetry-metadata-backfill-v1";
+    const observationJson = JSON.stringify({
+      clientRequestId: "client-legacy-1",
+      observedPerformance: {
+        sample: {
+          source_type: "live_request",
+        },
+      },
+      executionSemantics: {
+        sourceClient: "pi",
+        executionFamily: "remote",
+        adapterFamily: "codex-subscription-responses",
+        payloadBytes: {
+          ingress: 111,
+          translated: 222,
+          providerCanonical: 333,
+          providerWire: 444,
+          providerResponse: 555,
+        },
+        cooldownDecision: "none",
+        idempotencyDecision: "new",
+        toolSideEffectState: "none",
+      },
+      executionTelemetry: {
+        vendorId: "chatgpt-codex-responses",
+      },
+      taxonomyDimensions: {},
+    });
+
+    const seedDatabase = new DatabaseSync(initialized.databasePath);
+    seedDatabase
+      .prepare(
+        "INSERT INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
+      )
+      .run(
+        "req-legacy-backfill",
+        "decision-legacy-backfill",
+        "endpoint-legacy",
+        "conversation-legacy",
+        1_000,
+        observationJson,
+      );
+    seedDatabase
+      .prepare(
+        `INSERT INTO runtime_telemetry_records (
+          request_id,
+          routing_decision_id,
+          endpoint_id,
+          conversation_id,
+          created_at_ms,
+          input_tokens,
+          output_tokens,
+          total_tokens,
+          prompt_cache_requested,
+          prompt_cache_used,
+          cache_read_tokens,
+          cache_write_tokens,
+          tool_call_count,
+          tool_execution_count,
+          cost_provenance
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        "req-legacy-backfill",
+        "decision-legacy-backfill",
+        "endpoint-legacy",
+        "conversation-legacy",
+        1_000,
+        1,
+        2,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "unavailable",
+      );
+    seedDatabase
+      .prepare("DELETE FROM migration_receipts WHERE migration_id IN (?, ?)")
+      .run(observationBackfillMigrationId, telemetryBackfillMigrationId);
+    seedDatabase.close();
+
+    initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-backfill-receipt",
+    });
+
+    const firstBackfillDatabase = new DatabaseSync(initialized.databasePath);
+    const receipts = firstBackfillDatabase
+      .prepare(
+        "SELECT migration_id FROM migration_receipts WHERE migration_id IN (?, ?) ORDER BY migration_id",
+      )
+      .all(observationBackfillMigrationId, telemetryBackfillMigrationId) as Array<{
+      migration_id: string;
+    }>;
+    const observationAfterFirstBackfill = firstBackfillDatabase
+      .prepare(
+        "SELECT client_request_id, request_class, taxonomy_role_id, taxonomy_task_type FROM runtime_observations WHERE request_id = ?",
+      )
+      .get("req-legacy-backfill") as {
+      client_request_id: string | null;
+      request_class: string | null;
+      taxonomy_role_id: string | null;
+      taxonomy_task_type: string | null;
+    };
+    const telemetryAfterFirstBackfill = firstBackfillDatabase
+      .prepare(
+        "SELECT client_request_id, request_class, source_client, execution_family, adapter_family, vendor_id, request_payload_bytes, response_payload_bytes FROM runtime_telemetry_records WHERE request_id = ?",
+      )
+      .get("req-legacy-backfill") as {
+      client_request_id: string | null;
+      request_class: string | null;
+      source_client: string | null;
+      execution_family: string | null;
+      adapter_family: string | null;
+      vendor_id: string | null;
+      request_payload_bytes: number | null;
+      response_payload_bytes: number | null;
+    };
+
+    expect(receipts.map((row) => row.migration_id)).toEqual([
+      observationBackfillMigrationId,
+      telemetryBackfillMigrationId,
+    ]);
+    expect(observationAfterFirstBackfill).toEqual({
+      client_request_id: null,
+      request_class: null,
+      taxonomy_role_id: null,
+      taxonomy_task_type: null,
+    });
+    expect(telemetryAfterFirstBackfill).toEqual({
+      client_request_id: null,
+      request_class: null,
+      source_client: null,
+      execution_family: null,
+      adapter_family: null,
+      vendor_id: null,
+      request_payload_bytes: null,
+      response_payload_bytes: null,
+    });
+    firstBackfillDatabase.close();
+
+    initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-backfill-receipt",
+    });
+
+    const secondBackfillDatabase = new DatabaseSync(initialized.databasePath);
+    const observationAfterSecondBackfill = secondBackfillDatabase
+      .prepare(
+        "SELECT client_request_id, request_class, taxonomy_role_id, taxonomy_task_type FROM runtime_observations WHERE request_id = ?",
+      )
+      .get("req-legacy-backfill");
+    const telemetryAfterSecondBackfill = secondBackfillDatabase
+      .prepare(
+        "SELECT client_request_id, request_class, source_client, execution_family, adapter_family, vendor_id, request_payload_bytes, response_payload_bytes FROM runtime_telemetry_records WHERE request_id = ?",
+      )
+      .get("req-legacy-backfill");
+    secondBackfillDatabase.close();
+
+    expect(observationAfterSecondBackfill).toEqual({
+      client_request_id: null,
+      request_class: null,
+      taxonomy_role_id: null,
+      taxonomy_task_type: null,
+    });
+    expect(telemetryAfterSecondBackfill).toEqual({
+      client_request_id: null,
+      request_class: null,
+      source_client: null,
+      execution_family: null,
+      adapter_family: null,
+      vendor_id: null,
+      request_payload_bytes: null,
+      response_payload_bytes: null,
+    });
+  });
+
   test("persists and reloads the continuity rows needed for bounded context assembly", async () => {
     const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
     const fixture = await readJson<{
@@ -866,6 +1080,266 @@ describe("initializeSqliteMemory", () => {
       endpoint_id: validation.decision.chosen_endpoint_id,
       sample_size: 2,
     });
+  });
+
+  describe("listRecentRuntimeObservations", () => {
+    test("uses the projected client request id without reading the observation JSON blob", async () => {
+      const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+      const initialized = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "workspace-dev-recent-observation-projection",
+      });
+      const database = new DatabaseSync(initialized.databasePath);
+      database
+        .prepare(
+          "INSERT INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          "req-projected",
+          "decision-projected",
+          "endpoint-projected",
+          "conversation-projected",
+          1000,
+          "client-projected",
+          "not-json-and-intentionally-large".repeat(100_000),
+        );
+      database.close();
+
+      expect(
+        sqliteMemory.listRecentRuntimeObservations({
+          databasePath: initialized.databasePath,
+          limit: 1,
+        }),
+      ).toEqual([
+        {
+          requestId: "req-projected",
+          clientRequestId: "client-projected",
+          routingDecisionId: "decision-projected",
+          endpointId: "endpoint-projected",
+          createdAtMs: 1000,
+        },
+      ]);
+    });
+
+    test("uses the covering recency index for ordered summaries", async () => {
+      const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+      const initialized = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "workspace-dev-recent-observation-query-plan",
+      });
+      const database = new DatabaseSync(initialized.databasePath);
+      const plan = database
+        .prepare(
+          "EXPLAIN QUERY PLAN SELECT request_id, client_request_id, routing_decision_id, endpoint_id, created_at_ms FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
+        )
+        .all(20) as Array<{ detail: string }>;
+      database.close();
+
+      expect(plan.map((row) => row.detail).join("\n")).toContain(
+        "runtime_observations_created_at_idx",
+      );
+      expect(plan.map((row) => row.detail).join("\n")).not.toContain(
+        "USE TEMP B-TREE FOR ORDER BY",
+      );
+    });
+  });
+
+  describe("listRecentRuntimeRequestIds", () => {
+    test("returns latest request ids in recency order without parsing observation_json", async () => {
+      expect(
+        typeof (
+          sqliteMemory as {
+            listRecentRuntimeRequestIds?: unknown;
+          }
+        ).listRecentRuntimeRequestIds,
+      ).toBe("function");
+
+      const listRecentRuntimeRequestIds = (
+        sqliteMemory as {
+          listRecentRuntimeRequestIds?: unknown;
+        }
+      ).listRecentRuntimeRequestIds;
+      if (typeof listRecentRuntimeRequestIds !== "function") {
+        return;
+      }
+
+      const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+      const initialized = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "workspace-dev-latest-request-ids",
+      });
+      const database = new DatabaseSync(initialized.databasePath);
+      const insertObservation = database.prepare(
+        "INSERT INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
+      );
+      insertObservation.run(
+        "req-001",
+        "decision-001",
+        "endpoint-001",
+        "conversation-001",
+        1000,
+        "{",
+      );
+      insertObservation.run(
+        "req-002",
+        "decision-002",
+        "endpoint-002",
+        "conversation-002",
+        2000,
+        '{"clientRequestId":"client-002"}',
+      );
+      insertObservation.run(
+        "req-003",
+        "decision-003",
+        "endpoint-003",
+        "conversation-003",
+        3000,
+        "not-json",
+      );
+      database.close();
+
+      expect(
+        (
+          listRecentRuntimeRequestIds as (input: {
+            databasePath: string;
+            limit?: number;
+          }) => readonly string[]
+        )({
+          databasePath: initialized.databasePath,
+          limit: 10,
+        }),
+      ).toEqual(["req-003", "req-002", "req-001"]);
+    });
+
+    test("enforces limit 10 for the lightweight latest-id query", async () => {
+      expect(
+        typeof (
+          sqliteMemory as {
+            listRecentRuntimeRequestIds?: unknown;
+          }
+        ).listRecentRuntimeRequestIds,
+      ).toBe("function");
+
+      const listRecentRuntimeRequestIds = (
+        sqliteMemory as {
+          listRecentRuntimeRequestIds?: unknown;
+        }
+      ).listRecentRuntimeRequestIds;
+      if (typeof listRecentRuntimeRequestIds !== "function") {
+        return;
+      }
+
+      const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+      const initialized = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "workspace-dev-latest-request-ids-limit",
+      });
+      const database = new DatabaseSync(initialized.databasePath);
+      const insertObservation = database.prepare(
+        "INSERT INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
+      );
+      for (let index = 1; index <= 12; index += 1) {
+        insertObservation.run(
+          `req-${index.toString().padStart(3, "0")}`,
+          `decision-${index.toString().padStart(3, "0")}`,
+          `endpoint-${index.toString().padStart(3, "0")}`,
+          `conversation-${index.toString().padStart(3, "0")}`,
+          index,
+          "{",
+        );
+      }
+      database.close();
+
+      expect(
+        (
+          listRecentRuntimeRequestIds as (input: {
+            databasePath: string;
+            limit?: number;
+          }) => readonly string[]
+        )({
+          databasePath: initialized.databasePath,
+          limit: 10,
+        }),
+      ).toHaveLength(10);
+    });
+
+    test("returns an empty array when no runtime observations exist", async () => {
+      expect(
+        typeof (
+          sqliteMemory as {
+            listRecentRuntimeRequestIds?: unknown;
+          }
+        ).listRecentRuntimeRequestIds,
+      ).toBe("function");
+
+      const listRecentRuntimeRequestIds = (
+        sqliteMemory as {
+          listRecentRuntimeRequestIds?: unknown;
+        }
+      ).listRecentRuntimeRequestIds;
+      if (typeof listRecentRuntimeRequestIds !== "function") {
+        return;
+      }
+
+      const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+      const initialized = initializeSqliteMemory({
+        runtimeStateRoot,
+        scopeId: "workspace-dev-latest-request-ids-empty",
+      });
+
+      expect(
+        (
+          listRecentRuntimeRequestIds as (input: {
+            databasePath: string;
+            limit?: number;
+          }) => readonly string[]
+        )({
+          databasePath: initialized.databasePath,
+          limit: 10,
+        }),
+      ).toEqual([]);
+    });
+  });
+
+  test("uses matching indexes for endpoint profile and sample ordering", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-observed-profile-query-plans",
+    });
+    const database = new DatabaseSync(initialized.databasePath);
+    const cases = [
+      {
+        sql: "EXPLAIN QUERY PLAN SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+        params: ["endpoint-1"],
+        indexName: "observed_performance_samples_endpoint_time_idx",
+      },
+      {
+        sql: "EXPLAIN QUERY PLAN SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+        params: ["endpoint-1", "hard"],
+        indexName: "observed_performance_samples_difficulty_time_idx",
+      },
+      {
+        sql: "EXPLAIN QUERY PLAN SELECT profile_json FROM observed_profile_snapshots WHERE endpoint_id = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+        params: ["endpoint-1"],
+        indexName: "observed_profile_snapshots_endpoint_time_idx",
+      },
+      {
+        sql: "EXPLAIN QUERY PLAN SELECT profile_json FROM observed_profile_snapshots_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY measured_at_ms DESC, snapshot_id DESC LIMIT 1",
+        params: ["endpoint-1", "hard"],
+        indexName: "observed_profile_snapshots_difficulty_time_idx",
+      },
+    ] as const;
+
+    for (const queryCase of cases) {
+      const plan = database.prepare(queryCase.sql).all(...queryCase.params) as Array<{
+        detail: string;
+      }>;
+      const detail = plan.map((row) => row.detail).join("\n");
+      expect(detail).toContain(queryCase.indexName);
+      expect(detail).not.toContain("USE TEMP B-TREE FOR ORDER BY");
+    }
+    database.close();
   });
 
   test("stores and reads conversation-level difficulty classification cache entries", async () => {
@@ -1357,6 +1831,51 @@ describe("initializeSqliteMemory", () => {
       requestId: "req-telemetry-remote-001",
       routingDecisionId: "decision-telemetry-remote-001",
       endpointId: "openai.personal.primary.us-east-1.fast",
+      routingDiagnostics: {
+        ...baseBundle.routingDiagnostics,
+        routingMode: {
+          source: "alias-default",
+          aliasMode: "hybrid",
+          effectiveMode: "hybrid",
+        },
+        difficultyRouting: {
+          difficulty: "easy",
+          strategy: "cost",
+          fallbackApplied: false,
+          rubricSignals: {
+            contextTokens: 32,
+            toolCount: 0,
+            historyTurnCount: 1,
+            instructionConstraintCount: 0,
+            decompositionKeywordCount: 0,
+            codeOrSchemaBurden: false,
+          },
+        },
+        controllerRouting: {
+          active: true,
+          acceptedDirectives: {
+            requestedRoleId: "coder.patch",
+            strategy: "quality",
+            preferLocal: true,
+          },
+        },
+        hybridArbitration: {
+          active: true,
+          difficultyStrategy: "cost",
+          finalStrategy: "quality",
+          controllerChangedPlan: true,
+          dominantSignal: "controller",
+        },
+        rolePolicy: {
+          requestedRoleId: "coder.patch",
+          appliedRoleId: "coder.patch",
+          defaultSystemInstructionsApplied: true,
+          toolPolicyMode: "limited",
+          allowedTools: ["run_tests"],
+          outputContracts: ["review.checklist"],
+          safetyPolicyRefs: ["safety.review"],
+        },
+      },
       usageEvent: {
         ...baseBundle.usageEvent,
         request_id: "req-telemetry-remote-001",
@@ -1365,7 +1884,11 @@ describe("initializeSqliteMemory", () => {
         model_id: "openai/gpt-4.1-mini-fast",
         provider_kind: "remote_openai_compat",
         tokens_in: 120,
+        tokens_in_source: "normalized",
+        tokens_in_available: true,
         tokens_out: 48,
+        tokens_out_source: "normalized",
+        tokens_out_available: true,
         latency_ms: 840,
         cost_actual: 0.0042,
         cost_estimate: 0.0042,
@@ -1394,6 +1917,7 @@ describe("initializeSqliteMemory", () => {
       },
       cacheObservability: {
         promptCacheRequested: true,
+        promptCacheRequestSource: "explicit",
         promptCacheUsed: true,
         cacheReadTokens: 16,
         cacheWriteTokens: 8,
@@ -1437,6 +1961,57 @@ describe("initializeSqliteMemory", () => {
           },
         ],
         executions: [],
+      },
+      telemetrySnapshot: {
+        providerId: "openai",
+        providerAccountId: "openai.personal",
+        sourceType: "remote",
+        endpointKind: "remote_api",
+        servingSource: "remote-service",
+        region: "us-east-1",
+        lifecycleStateAtRequest: "active",
+        healthStatusAtRequest: "healthy",
+        requestedModelId: "mixed.local-remote",
+        requestOperation: "chat",
+        roleIds: ["coder.patch", "general.chat"],
+        toolingUsed: true,
+        cacheState: "hit",
+        eligibleEndpointIds: [
+          "openai.personal.primary.us-east-1.fast",
+          "llama-swap.local.local-mock-llama",
+        ],
+        eligibleModelIds: ["openai/gpt-4.1-mini-fast", "local/mock-llama"],
+        candidateCostSnapshot: {
+          "openai.personal.primary.us-east-1.fast": {
+            modelId: "openai/gpt-4.1-mini-fast",
+            providerId: "openai",
+            sourceType: "remote",
+            estimatedRequestUsd: 0.0062,
+          },
+          "llama-swap.local.local-mock-llama": {
+            modelId: "local/mock-llama",
+            providerId: "llama-swap",
+            sourceType: "local",
+            estimatedRequestUsd: 0.0116,
+          },
+        },
+        selectedPricingSnapshot: {
+          modelId: "openai/gpt-4.1-mini-fast",
+          providerId: "openai",
+          sourceType: "remote",
+          estimatedRequestUsd: 0.0062,
+        },
+        selectedUncachedCostUsd: 0.0062,
+        baselineMaxEligibleCostUsd: 0.0116,
+        routingCostSavingsUsd: 0.0054,
+        cacheCostSavingsUsd: 0.002,
+        totalAvoidedCostUsd: 0.0074,
+        costBaselineSource: "eligible_candidate_max",
+        costSavingsSupport: "full",
+        dimensions: {
+          requestedModelFamily: "mixed.local-remote",
+          chartSourceLabel: "Remote",
+        },
       },
       inspection: {
         ...baseBundle.inspection,
@@ -1538,6 +2113,48 @@ describe("initializeSqliteMemory", () => {
         ...baseBundle.tooling,
         toolCalls: [],
         executions: [],
+      },
+      telemetrySnapshot: {
+        providerId: "llama-swap",
+        providerAccountId: null,
+        sourceType: "local",
+        endpointKind: "local_engine",
+        servingSource: "local-process",
+        region: "local",
+        lifecycleStateAtRequest: "active",
+        healthStatusAtRequest: "healthy",
+        requestedModelId: "local/mock-llama",
+        requestOperation: "chat",
+        roleIds: ["general.chat"],
+        toolingUsed: false,
+        cacheState: "unsupported",
+        eligibleEndpointIds: ["llama-swap.local.local-mock-llama"],
+        eligibleModelIds: ["local/mock-llama"],
+        candidateCostSnapshot: {
+          "llama-swap.local.local-mock-llama": {
+            modelId: "local/mock-llama",
+            providerId: "llama-swap",
+            sourceType: "local",
+            estimatedRequestUsd: 0.0011,
+          },
+        },
+        selectedPricingSnapshot: {
+          modelId: "local/mock-llama",
+          providerId: "llama-swap",
+          sourceType: "local",
+          estimatedRequestUsd: 0.0011,
+        },
+        selectedUncachedCostUsd: 0.0011,
+        baselineMaxEligibleCostUsd: 0.0011,
+        routingCostSavingsUsd: 0,
+        cacheCostSavingsUsd: 0,
+        totalAvoidedCostUsd: 0,
+        costBaselineSource: "selected_only",
+        costSavingsSupport: "partial",
+        dimensions: {
+          requestedModelFamily: "local/mock-llama",
+          chartSourceLabel: "Local",
+        },
       },
       inspection: {
         ...baseBundle.inspection,
@@ -1680,6 +2297,19 @@ describe("initializeSqliteMemory", () => {
         endpointId: "llama-swap.local.local-mock-llama",
         modelId: "local/mock-llama",
         providerKind: "local_openai_compat",
+        sourceType: "local",
+        endpointKind: "local_engine",
+        servingSource: "local-process",
+        requestedModelId: "local/mock-llama",
+        requestOperation: "chat",
+        statusFamily: "failure",
+        toolingUsed: false,
+        cacheState: "unsupported",
+        selectedUncachedCostUsd: 0.0011,
+        baselineMaxEligibleCostUsd: 0.0011,
+        routingCostSavingsUsd: 0,
+        cacheCostSavingsUsd: 0,
+        totalAvoidedCostUsd: 0,
         latencyMs: 1200,
         inputTokens: 32,
         outputTokens: 0,
@@ -1711,13 +2341,26 @@ describe("initializeSqliteMemory", () => {
         endpointId: "openai.personal.primary.us-east-1.fast",
         modelId: "openai/gpt-4.1-mini-fast",
         providerKind: "remote_openai_compat",
+        sourceType: "remote",
+        endpointKind: "remote_api",
+        servingSource: "remote-service",
+        requestedModelId: "mixed.local-remote",
+        requestOperation: "chat",
+        statusFamily: "success",
+        toolingUsed: true,
+        cacheState: "hit",
         latencyMs: 840,
         inputTokens: 120,
+        inputTokensSource: "normalized",
+        inputTokensAvailable: true,
         outputTokens: 48,
+        outputTokensSource: "normalized",
+        outputTokensAvailable: true,
         totalTokens: 168,
         errorClass: null,
         statusCode: 200,
         promptCacheRequested: true,
+        promptCacheRequestSource: "explicit",
         promptCacheUsed: true,
         promptCacheSupported: true,
         providerFamily: "ai-sdk-openai",
@@ -1736,8 +2379,102 @@ describe("initializeSqliteMemory", () => {
         costProvenance: "actual",
         actualCostUsd: 0.0042,
         estimatedCostUsd: 0.0042,
+        effectiveCostUsd: 0.0042,
+        costCalculationBasis: "actual_vendor_cost",
+        costCalculationVersion: "run49.v1",
+        difficultyBucket: "easy",
+        routingMode: "hybrid",
+        requestedRoleId: "coder.patch",
+        selectedStrategy: "quality",
+        providerId: "openai",
+        providerAccountId: "openai.personal",
+        healthStatusAtRequest: "healthy",
+        selectedUncachedCostUsd: 0.0062,
+        baselineMaxEligibleCostUsd: 0.0116,
+        routingCostSavingsUsd: 0.0054,
+        cacheCostSavingsUsd: 0.002,
+        totalAvoidedCostUsd: 0.0074,
+        costBaselineSource: "eligible_candidate_max",
+        costSavingsSupport: "full",
       }),
     ]);
+
+    const controllerFallbackTimestampMs = Date.now();
+    const controllerFallbackBundle = {
+      ...baseBundle,
+      requestId: "req-telemetry-controller-fallback-001",
+      routingDecisionId: "decision-telemetry-controller-fallback-001",
+      endpointId: "openai.personal.primary.us-east-1.fast",
+      routingDiagnostics: {
+        ...baseBundle.routingDiagnostics,
+        routingMode: {
+          source: "runtime-config",
+          effectiveMode: "controller",
+        },
+        controllerRouting: {
+          active: true,
+        },
+      },
+      usageEvent: {
+        ...baseBundle.usageEvent,
+        request_id: "req-telemetry-controller-fallback-001",
+        routing_decision_id: "decision-telemetry-controller-fallback-001",
+        endpoint_id: "openai.personal.primary.us-east-1.fast",
+        model_id: "openai/gpt-4.1-mini-fast",
+        provider_kind: "remote_openai_compat",
+        tokens_in: 20,
+        tokens_out: 5,
+        latency_ms: 320,
+        timestamp_ms: controllerFallbackTimestampMs,
+      },
+      observedPerformance: {
+        ...baseBundle.observedPerformance,
+        sample: {
+          ...baseBundle.observedPerformance.sample,
+          request_id: "req-telemetry-controller-fallback-001",
+          routing_decision_id: "decision-telemetry-controller-fallback-001",
+          endpoint_id: "openai.personal.primary.us-east-1.fast",
+          timestamp_ms: controllerFallbackTimestampMs,
+          latency_ms: 320,
+          latency_ms_p95: 320,
+        },
+      },
+    } as ReturnType<typeof createRuntimeObservationBundle>;
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: controllerFallbackBundle,
+    });
+
+    expect(
+      (
+        sqliteMemory as {
+          listRuntimeTelemetryRecords(input: {
+            databasePath: string;
+            windowMs?: number;
+            limit?: number;
+          }): Array<Record<string, number | string | boolean | null>>;
+        }
+      )
+        .listRuntimeTelemetryRecords({
+          databasePath: validation.databasePath,
+          windowMs: 60_000,
+          limit: 10,
+        })
+        .find((record) => record.requestId === "req-telemetry-controller-fallback-001"),
+    ).toEqual(
+      expect.objectContaining({
+        routingMode: "controller",
+        selectedStrategy: "balanced",
+      }),
+    );
   });
 
   test("persistRuntimeTelemetryFailure records latencyMs in telemetry summary average", async () => {
@@ -1769,6 +2506,77 @@ describe("initializeSqliteMemory", () => {
         failureCount: 1,
         averageLatencyMs: 850,
       }),
+    );
+  });
+
+  test("keeps positive legacy token counts available when provenance metadata is absent", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-legacy-token-truth",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+    const {
+      tokens_in_source: _inputSource,
+      tokens_in_available: _inputAvailable,
+      tokens_out_source: _outputSource,
+      tokens_out_available: _outputAvailable,
+      ...legacyUsageEvent
+    } = bundle.usageEvent;
+
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: {
+        ...bundle,
+        usageEvent: {
+          ...legacyUsageEvent,
+          tokens_in: 120,
+          tokens_out: 48,
+        },
+      },
+    });
+
+    expect(
+      listRuntimeTelemetryRecords({
+        databasePath: validation.databasePath,
+        windowMs: 60_000,
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          requestId: bundle.requestId,
+          inputTokens: 120,
+          inputTokensSource: "unavailable",
+          inputTokensAvailable: true,
+          outputTokens: 48,
+          outputTokensSource: "unavailable",
+          outputTokensAvailable: true,
+          totalTokens: 168,
+        }),
+      ]),
     );
   });
 
@@ -1809,6 +2617,525 @@ describe("initializeSqliteMemory", () => {
           sourceType: "local",
         }),
       ]),
+    );
+  });
+
+  test("persistRuntimeTelemetryFailure preserves routed provider failure context and structured observation", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    const requestId = "req-failure-routed-provider-001";
+    const routingDecisionId = "decision-req-failure-routed-provider-001";
+    const endpointId = "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro";
+    const failureObservation = {
+      requestId,
+      routingDecisionId,
+      endpointId,
+      conversationId: "conversation-main",
+      statusFamily: "failure",
+      usageEvent: {
+        request_id: requestId,
+        routing_decision_id: routingDecisionId,
+        endpoint_id: endpointId,
+        model_id: "deepseek/deepseek-v4-pro",
+        provider_kind: null,
+        tokens_in: 0,
+        tokens_out: 0,
+        latency_ms: 1626,
+        cost_actual: null,
+        cost_estimate: null,
+        currency: "USD",
+        error_class: "quota_exhausted",
+        timestamp_ms: Date.now(),
+      },
+      capturePolicy: {
+        environment: "runtime-failure",
+        redactionLevel: "strict",
+        retentionClass: "standard",
+        structuredInspectionMode: "summary",
+        rawCaptureAvailable: false,
+        structuredInspectionAvailable: true,
+        redactedFields: ["request.headers.authorization"],
+        suppressedFields: [],
+      },
+      executionSemantics: {
+        sourceClient: "openai.chat.completions",
+        executionFamily: "remote-service",
+        adapterFamily: "ai-sdk-openai-compatible",
+        retryCount: 0,
+        rerouteCount: 0,
+        cooldownDecision: "not_applied",
+        failedAttempts: [
+          {
+            failedEndpointId: endpointId,
+            failureClass: "quota_exhausted",
+            failurePhase: "provider_execution",
+            retryable: false,
+            fallbackEligible: true,
+            errorPreview: {
+              message: "Insufficient Balance",
+              statusCode: 402,
+            },
+          },
+        ],
+      },
+    };
+
+    persistRuntimeTelemetryFailure({
+      databasePath: validation.databasePath,
+      requestId,
+      routingDecisionId,
+      endpointId,
+      modelId: "deepseek/deepseek-v4-pro",
+      requestedModelId: "difficulty.remote-only",
+      selectedModelId: "deepseek/deepseek-v4-pro",
+      statusCode: 402,
+      errorClass: "quota_exhausted",
+      latencyMs: 1626,
+      clientRequestId: "client-routed-failure-001",
+      requestClass: "live_request",
+      sourceType: "remote",
+      providerId: "deepseek",
+      providerFamily: "deepseek",
+      vendorId: "direct-openai-compatible",
+      providerAccountId: "deepseek.personal.deepseek-api-key",
+      endpointKind: "remote_api",
+      servingSource: "remote-service",
+      region: "global",
+      lifecycleStateAtRequest: "active",
+      healthStatusAtRequest: "healthy",
+      routingMode: "difficulty",
+      selectedStrategy: "quality",
+      sourceClient: "openai.chat.completions",
+      executionFamily: "remote-service",
+      adapterFamily: "ai-sdk-openai-compatible",
+      requestPayloadBytes: 128,
+      ingressPayloadBytes: 120,
+      translatedPayloadBytes: 121,
+      providerCanonicalPayloadBytes: 122,
+      providerWirePayloadBytes: 123,
+      responsePayloadBytes: 96,
+      retryCount: 0,
+      rerouteCount: 0,
+      cooldownDecision: "not_applied",
+      idempotencyDecision: "not_needed",
+      toolSideEffectState: "none",
+      roleIds: ["coder"],
+      eligibleEndpointIds: ["openai.personal.openai-codex-subscription.global.gpt-5.4", endpointId],
+      eligibleModelIds: ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-pro"],
+      dimensions: {
+        selectedEndpointId: endpointId,
+        candidateCount: 2,
+        failurePhase: "provider_execution",
+        fallbackEligible: true,
+        retryable: false,
+        errorPreview: {
+          message: "Insufficient Balance",
+          statusCode: 402,
+        },
+      },
+      observation: failureObservation,
+    });
+
+    expect(
+      listRuntimeTelemetryRecords({
+        databasePath: validation.databasePath,
+        windowMs: 60_000,
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          requestId,
+          routingDecisionId,
+          endpointId,
+          modelId: "deepseek/deepseek-v4-pro",
+          requestedModelId: "difficulty.remote-only",
+          selectedModelId: "deepseek/deepseek-v4-pro",
+          providerId: "deepseek",
+          providerFamily: "deepseek",
+          vendorId: "direct-openai-compatible",
+          providerAccountId: "deepseek.personal.deepseek-api-key",
+          endpointKind: "remote_api",
+          servingSource: "remote-service",
+          region: "global",
+          lifecycleStateAtRequest: "active",
+          healthStatusAtRequest: "healthy",
+          routingMode: "difficulty",
+          selectedStrategy: "quality",
+          sourceClient: "openai.chat.completions",
+          executionFamily: "remote-service",
+          adapterFamily: "ai-sdk-openai-compatible",
+          requestPayloadBytes: 128,
+          ingressPayloadBytes: 120,
+          translatedPayloadBytes: 121,
+          providerCanonicalPayloadBytes: 122,
+          providerWirePayloadBytes: 123,
+          responsePayloadBytes: 96,
+          retryCount: 0,
+          rerouteCount: 0,
+          cooldownDecision: "not_applied",
+          idempotencyDecision: "not_needed",
+          toolSideEffectState: "none",
+          roleIds: ["coder"],
+          eligibleEndpointIds: [
+            "openai.personal.openai-codex-subscription.global.gpt-5.4",
+            endpointId,
+          ],
+          eligibleModelIds: ["chatgpt/gpt-5.4", "deepseek/deepseek-v4-pro"],
+          rawCaptureAvailable: false,
+          structuredInspectionAvailable: true,
+          statusCode: 402,
+          errorClass: "quota_exhausted",
+        }),
+      ]),
+    );
+    expect(
+      readRuntimeObservationBundle({ databasePath: validation.databasePath, requestId }),
+    ).toEqual(
+      expect.objectContaining({
+        requestId,
+        routingDecisionId,
+        endpointId,
+        statusFamily: "failure",
+        executionSemantics: expect.objectContaining({
+          adapterFamily: "ai-sdk-openai-compatible",
+          failedAttempts: [
+            expect.objectContaining({
+              failedEndpointId: endpointId,
+              failureClass: "quota_exhausted",
+              fallbackEligible: true,
+            }),
+          ],
+        }),
+      }),
+    );
+  });
+
+  test("persistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+
+    persistRuntimeTelemetryFailure({
+      databasePath: validation.databasePath,
+      requestId: "req-failure-cost-001",
+      endpointId: "routing.failed.pre-execution",
+      modelId: "mixed.local-remote",
+      statusCode: 400,
+      errorClass: "execution_failed",
+      latencyMs: 120,
+      clientRequestId: "req-client-failure-cost-001",
+      requestClass: "live_request",
+      sourceType: "remote",
+    });
+
+    const database = new DatabaseSync(validation.databasePath);
+    const columns = database
+      .prepare("PRAGMA table_info(runtime_telemetry_records)")
+      .all() as Array<{
+      name: string;
+    }>;
+    const persistedRow = database
+      .prepare(
+        "SELECT effective_cost_usd, cost_calculation_basis, cost_calculation_version, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available FROM runtime_telemetry_records WHERE request_id = ?",
+      )
+      .get("req-failure-cost-001") as
+      | {
+          effective_cost_usd: number;
+          cost_calculation_basis: string;
+          cost_calculation_version: string;
+          sampling_rate: number | null;
+          retention_ttl_hours: number | null;
+          retain_until_ms: number | null;
+          redaction_level: string | null;
+          retention_class: string | null;
+          structured_inspection_mode: string | null;
+          raw_capture_available: number;
+          structured_inspection_available: number;
+        }
+      | undefined;
+    database.close();
+
+    expect(columns.map((column) => column.name)).toEqual(
+      expect.arrayContaining([
+        "effective_cost_usd",
+        "cost_calculation_basis",
+        "cost_calculation_version",
+        "sampling_rate",
+        "retention_ttl_hours",
+        "retain_until_ms",
+        "redaction_level",
+        "retention_class",
+        "structured_inspection_mode",
+        "raw_capture_available",
+        "structured_inspection_available",
+      ]),
+    );
+    expect(persistedRow).toEqual({
+      effective_cost_usd: 0,
+      cost_calculation_basis: "no_execution_zero",
+      cost_calculation_version: "run49.v1",
+      sampling_rate: null,
+      retention_ttl_hours: null,
+      retain_until_ms: null,
+      redaction_level: null,
+      retention_class: null,
+      structured_inspection_mode: null,
+      raw_capture_available: 0,
+      structured_inspection_available: 0,
+    });
+  });
+
+  test("persistRuntimeObservationBundle projects telemetry handling receipts into the telemetry ledger", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+      telemetryConfig: {
+        samplingRate: 0.25,
+        retentionTtlHours: 48,
+      },
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    const database = new DatabaseSync(validation.databasePath);
+    const persistedRow = database
+      .prepare(
+        "SELECT sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available FROM runtime_telemetry_records WHERE request_id = ?",
+      )
+      .get(validation.decision.request_id) as
+      | {
+          sampling_rate: number;
+          retention_ttl_hours: number;
+          retain_until_ms: number;
+          redaction_level: string;
+          retention_class: string;
+          structured_inspection_mode: string;
+          raw_capture_available: number;
+          structured_inspection_available: number;
+        }
+      | undefined;
+    database.close();
+
+    expect(persistedRow).toEqual({
+      sampling_rate: 0.25,
+      retention_ttl_hours: 48,
+      retain_until_ms: bundle.privacyReceipt.retainUntil,
+      redaction_level: "strict",
+      retention_class: "standard",
+      structured_inspection_mode: bundle.capturePolicy.structuredInspectionMode,
+      raw_capture_available: bundle.capturePolicy.rawCaptureAvailable ? 1 : 0,
+      structured_inspection_available: 1,
+    });
+  });
+
+  test("persistRuntimeObservationBundle projects execution semantics receipts into the telemetry ledger", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      clientRequestId: "client-semantic-001",
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      capturePolicy: policy,
+      executionSemantics: {
+        sourceClient: "openai.responses",
+        payloadBytes: {
+          ingress: 111,
+          translated: 222,
+          providerCanonical: 333,
+          providerWire: 280,
+          providerResponse: 444,
+        },
+        retryCount: 1,
+        rerouteCount: 2,
+        cooldownDecision: "skipped-no-failure",
+        idempotencyDecision: "tool_replay_guard_required",
+        failedAttempts: [
+          {
+            attemptId: "attempt-1",
+            requestId: validation.decision.request_id,
+            routingDecisionId: validation.decision.routing_decision_id,
+            failedEndpointId: validation.execution.target.endpointId,
+            providerId: validation.execution.target.providerId,
+            providerFamily: validation.execution.target.providerId,
+            executionFamily: validation.execution.target.candidate.identity.serving_source,
+            adapterFamily: validation.execution.target.adapterFamily,
+            statusCode: 503,
+            failureClass: "upstream_timeout",
+            retryable: true,
+            fallbackEligible: true,
+            failurePhase: "provider_execution",
+            cooldownRecorded: true,
+            cooldownFailureCount: 1,
+            cooldownUntilMs: 1_750_000_000_000,
+            errorPreview: {
+              message: "Provider request timed out.",
+            },
+          },
+        ],
+      },
+      tooling: {
+        toolCalls: [
+          {
+            name: "apply_patch",
+            arguments: {
+              file: "src/router.ts",
+            },
+            providerToolId: "provider-tool-1",
+          },
+        ],
+        executions: [
+          {
+            toolCallId: "provider-tool-1",
+            toolName: "apply_patch",
+            connectorId: "filesystem",
+            connectorKind: "local",
+            status: "succeeded",
+            output: {
+              patched: true,
+            },
+            diagnostics: [],
+          },
+        ],
+      },
+    });
+
+    (
+      sqliteMemory as {
+        persistRuntimeObservationBundle(input: {
+          databasePath: string;
+          observation: ReturnType<typeof createRuntimeObservationBundle>;
+        }): void;
+      }
+    ).persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    const database = new DatabaseSync(validation.databasePath);
+    const persistedRow = database
+      .prepare(
+        "SELECT provider_family, vendor_id, source_client, execution_family, adapter_family, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state FROM runtime_telemetry_records WHERE request_id = ?",
+      )
+      .get(validation.decision.request_id) as
+      | {
+          provider_family: string;
+          vendor_id: string | null;
+          source_client: string;
+          execution_family: string;
+          adapter_family: string;
+          ingress_payload_bytes: number;
+          translated_payload_bytes: number;
+          provider_canonical_payload_bytes: number;
+          provider_wire_payload_bytes: number;
+          response_payload_bytes: number;
+          retry_count: number;
+          reroute_count: number;
+          cooldown_decision: string;
+          idempotency_decision: string;
+          tool_side_effect_state: string;
+        }
+      | undefined;
+    database.close();
+
+    expect(persistedRow).toEqual({
+      provider_family: validation.execution.target.providerId,
+      vendor_id: validation.execution.normalized.vendorMetadata?.vendorId ?? null,
+      source_client: "openai.responses",
+      execution_family: validation.execution.target.candidate.identity.serving_source,
+      adapter_family: validation.execution.target.adapterFamily,
+      ingress_payload_bytes: 111,
+      translated_payload_bytes: 222,
+      provider_canonical_payload_bytes: 333,
+      provider_wire_payload_bytes: 280,
+      response_payload_bytes: 444,
+      retry_count: 1,
+      reroute_count: 2,
+      cooldown_decision: "skipped-no-failure",
+      idempotency_decision: "tool_replay_guard_required",
+      tool_side_effect_state: "executed",
+    });
+
+    const persistedObservation = readRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      requestId: validation.decision.request_id,
+    });
+    expect(persistedObservation).toEqual(
+      expect.objectContaining({
+        executionSemantics: expect.objectContaining({
+          failedAttempts: [
+            expect.objectContaining({
+              attemptId: "attempt-1",
+              failedEndpointId: validation.execution.target.endpointId,
+              failureClass: "upstream_timeout",
+              cooldownRecorded: true,
+              cooldownFailureCount: 1,
+            }),
+          ],
+        }),
+      }),
     );
   });
 
@@ -2207,6 +3534,500 @@ describe("persistObservedBenchmarkSample benchmark_mode", () => {
     });
     expect(samples).toHaveLength(1);
     expect(samples[0]?.benchmark_mode).toBe("quick");
+  });
+
+  test("retries through a transient sqlite write lock when persisting benchmark samples", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-benchmark-lock-retry",
+    });
+    const endpointId = "local.test.model.locked";
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        initialized.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(requireChildStdout(locker), "data");
+      persistObservedBenchmarkSample({
+        databasePath: initialized.databasePath,
+        sample: {
+          endpoint_id: endpointId,
+          endpoint_version: "v1",
+          source_type: "benchmark",
+          benchmark_mode: "full",
+          difficulty_bucket: "hard",
+          timestamp_ms: 3_000,
+          latency_ms: 700,
+          judge_score: 0.82,
+          request_id: "full-hard-locked-1",
+        },
+      });
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+
+    const samples = readObservedPerformanceSamples({
+      databasePath: initialized.databasePath,
+      endpointId,
+    });
+    expect(samples).toHaveLength(1);
+    expect(samples[0]?.benchmark_mode).toBe("full");
+    expect(samples[0]?.judge_score).toBe(0.82);
+  });
+
+  test("retries through a transient sqlite write lock when persisting runtime observation bundles", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-observation-lock-retry",
+    });
+
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-observation-lock-retry",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        initialized.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(requireChildStdout(locker), "data");
+      expect(() =>
+        persistRuntimeObservationBundle({
+          databasePath: initialized.databasePath,
+          observation: bundle,
+        }),
+      ).not.toThrow();
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+  });
+
+  test("waits through a transient sqlite lock when reading difficulty classification cache", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-difficulty-cache-lock-read",
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        initialized.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(requireChildStdout(locker), "data");
+      expect(
+        sqliteMemory.readDifficultyClassificationCache({
+          databasePath: initialized.databasePath,
+          conversationId: "bench-conversation",
+        }),
+      ).toBeNull();
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+  });
+
+  test("retries through a transient sqlite write lock when persisting difficulty classification cache", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-difficulty-cache-lock-write",
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        initialized.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(requireChildStdout(locker), "data");
+      expect(() =>
+        sqliteMemory.upsertDifficultyClassificationCache({
+          databasePath: initialized.databasePath,
+          cache: {
+            conversationId: "bench-conversation",
+            difficulty: "easy",
+            fallbackApplied: false,
+            cachedAtMs: 1_000,
+            expiresAtMs: 2_000,
+            rubricSignals: {
+              codeIndicators: 0,
+              toolCount: 0,
+              historyTurnCount: 0,
+              instructionConstraintCount: 0,
+              contextTokens: 0,
+            },
+          },
+        }),
+      ).not.toThrow();
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+
+    expect(
+      sqliteMemory.readDifficultyClassificationCache({
+        databasePath: initialized.databasePath,
+        conversationId: "bench-conversation",
+      }),
+    ).toMatchObject({
+      difficulty: "easy",
+      fallbackApplied: false,
+    });
+  });
+
+  test("waits through a transient sqlite lock when reading advisory max difficulty recommendations", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const initialized = initializeSqliteMemory({
+      runtimeStateRoot,
+      scopeId: "workspace-dev-advisory-lock-read",
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        initialized.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(requireChildStdout(locker), "data");
+      expect(
+        sqliteMemory.readAdvisoryMaxDifficultyRecommendation({
+          databasePath: initialized.databasePath,
+          endpointId: "remote.test.endpoint",
+          thresholds: {
+            minSamples: 1,
+            maxFailureRate: 0.5,
+            minQualityScore: 0.5,
+            minTokensPerSec: 1,
+          },
+        }),
+      ).toMatchObject({
+        recommendedMaxDifficulty: null,
+      });
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+  });
+
+  test("waits through a transient sqlite lock when listing runtime telemetry records", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-telemetry-lock-read",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        validation.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(requireChildStdout(locker), "data");
+      expect(
+        sqliteMemory.listRuntimeTelemetryRecords({
+          databasePath: validation.databasePath,
+          windowMs: 60_000,
+          limit: 10,
+        }),
+      ).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            requestId: validation.decision.request_id,
+          }),
+        ]),
+      );
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
+  });
+
+  test("waits through a transient sqlite lock when reading batched observation telemetry columns", async () => {
+    const runtimeStateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-runtime-state-"));
+    const validation = await runRuntimeAdapterValidation({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "workspace-dev-observation-columns-lock-read",
+    });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const bundle = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {
+        "redaction.level": "strict",
+        "retention.class": "standard",
+      },
+      capturePolicy: policy,
+    });
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: bundle,
+    });
+
+    const locker = spawn(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        [
+          'import { DatabaseSync } from "node:sqlite";',
+          "const databasePath = process.argv[1];",
+          "const database = new DatabaseSync(databasePath);",
+          'database.exec("PRAGMA journal_mode = WAL");',
+          'database.exec("BEGIN IMMEDIATE");',
+          'process.stdout.write("locked\\n");',
+          "setTimeout(() => {",
+          "  try {",
+          '    database.exec("COMMIT");',
+          "  } finally {",
+          "    database.close();",
+          "    process.exit(0);",
+          "  }",
+          "}, 250);",
+        ].join(" "),
+        validation.databasePath,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+
+    try {
+      await once(requireChildStdout(locker), "data");
+      expect(
+        sqliteMemory.readObservationTelemetryColumnsBatch({
+          databasePath: validation.databasePath,
+          requestIds: [validation.decision.request_id],
+        }),
+      ).toEqual(
+        new Map([
+          [
+            validation.decision.request_id,
+            {
+              clientRequestId: null,
+              requestClass: "live_request",
+              taxonomyRoleId: null,
+              taxonomyTaskType: null,
+            },
+          ],
+        ]),
+      );
+      await once(locker, "exit");
+    } finally {
+      if (!locker.killed) {
+        locker.kill("SIGTERM");
+      }
+    }
   });
 });
 

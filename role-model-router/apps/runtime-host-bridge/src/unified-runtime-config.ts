@@ -4,10 +4,30 @@ export type UnifiedRuntimeExecutionMode = "decision_only" | "hybrid" | "local_on
 
 export type UnifiedRuntimeDifficultyBucket = "easy" | "medium" | "hard";
 export type UnifiedRuntimeAliasRoutingMode = "basic" | "difficulty" | "intelligent" | "hybrid";
+export const DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS = 15_000;
+
+const primaryRoutingAliasPrefixes = [
+  "default",
+  "baseline",
+  "controller",
+  "difficulty",
+  "hybrid",
+] as const;
+const primaryRoutingAliasExecutionSuffixes = [
+  "decision-only",
+  "local-only",
+  "remote-only",
+  "hybrid",
+] as const;
+const legacyPrimaryRoutingAliasIds = new Set<string>([
+  "mixed.local-remote",
+  ...primaryRoutingAliasExecutionSuffixes.map((suffix) => `craft-ask.${suffix}`),
+]);
 
 export interface UnifiedRuntimeConfigModel {
   readonly modelId: string;
   readonly path: string;
+  readonly capabilities: readonly string[];
   readonly contextWindow: number | null;
   readonly command: string | null;
   readonly proxyBaseUrl: string | null;
@@ -28,6 +48,7 @@ export interface UnifiedRuntimeConfigProviderMapping {
   readonly modelId: string;
   readonly litellmModel: string;
   readonly litellmParams: Readonly<Record<string, UnifiedRuntimeJSONValue>>;
+  readonly capabilities: readonly string[];
   readonly maxDifficulty?: UnifiedRuntimeDifficultyBucket | null;
 }
 
@@ -98,12 +119,9 @@ export interface UnifiedRuntimeObservedDataConfig {
       readonly minTokensPerSec: number;
     };
   };
-  readonly metricHalflives: {
-    readonly qualityMs: number;
-    readonly latencyMs: number;
-    readonly throughputMs: number;
-    readonly reliabilityMs: number;
-    readonly costMs: number;
+  readonly metricDecayPercentPerDay: {
+    readonly latency: number;
+    readonly throughput: number;
   };
   readonly throughputSla: {
     readonly enabled: boolean;
@@ -141,12 +159,9 @@ export const DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG: UnifiedRuntimeObserve
       minTokensPerSec: 22,
     },
   },
-  metricHalflives: {
-    qualityMs: 15 * 60_000,
-    latencyMs: 5 * 60_000,
-    throughputMs: 2 * 60_000,
-    reliabilityMs: 10 * 60_000,
-    costMs: 30 * 60_000,
+  metricDecayPercentPerDay: {
+    latency: 10,
+    throughput: 10,
   },
   throughputSla: {
     enabled: true,
@@ -178,12 +193,71 @@ export interface UnifiedRuntimeConfig {
   readonly liteLLM: {
     readonly enabled: boolean;
     readonly providers: readonly UnifiedRuntimeConfigProvider[];
+    readonly routerSettings: Readonly<Record<string, UnifiedRuntimeJSONValue>>;
+    readonly litellmSettings: Readonly<Record<string, UnifiedRuntimeJSONValue>>;
     readonly process: UnifiedRuntimeProcessConfig;
+  };
+}
+
+export function removeUnifiedRuntimeConfigProviderModel(
+  config: UnifiedRuntimeConfig,
+  providerAccountId: string,
+  modelId: string,
+): { config: UnifiedRuntimeConfig; removed: boolean; removedAccount: boolean } {
+  const providerIndex = config.liteLLM.providers.findIndex(
+    (provider) => `${provider.providerId}.litellm` === providerAccountId,
+  );
+  if (providerIndex < 0) {
+    return { config, removed: false, removedAccount: true };
+  }
+  const provider = config.liteLLM.providers[providerIndex];
+  if (!provider.modelMappings.some((mapping) => mapping.modelId === modelId)) {
+    return { config, removed: false, removedAccount: provider.modelMappings.length === 0 };
+  }
+  const modelMappings = provider.modelMappings.filter((mapping) => mapping.modelId !== modelId);
+  const providers =
+    modelMappings.length === 0
+      ? config.liteLLM.providers.filter((_, index) => index !== providerIndex)
+      : config.liteLLM.providers.map((entry, index) =>
+          index === providerIndex
+            ? {
+                ...entry,
+                modelMappings,
+                modelNames: modelMappings.map((mapping) => mapping.modelId),
+              }
+            : entry,
+        );
+  return {
+    config: { ...config, liteLLM: { ...config.liteLLM, providers } },
+    removed: true,
+    removedAccount: modelMappings.length === 0,
+  };
+}
+
+export function rewriteUnifiedRuntimeConfigController(
+  config: UnifiedRuntimeConfig,
+  controller: Pick<UnifiedRuntimeControllerConfig, "endpointId" | "modelId" | "sourceType"> | null,
+): UnifiedRuntimeConfig {
+  if (controller === null) {
+    const { controller: _controller, ...rest } = config;
+    return rest;
+  }
+
+  return {
+    ...config,
+    controller: {
+      enabled: config.controller?.enabled ?? true,
+      sourceType: controller.sourceType,
+      endpointId: controller.endpointId,
+      modelId: controller.modelId,
+      timeoutMs: config.controller?.timeoutMs ?? DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS,
+    },
   };
 }
 
 interface RawLlamaSwapModel {
   readonly path?: string;
+  readonly capabilities?: readonly string[];
   readonly context_window?: number;
   readonly command?: string;
   readonly proxy?: string;
@@ -196,6 +270,7 @@ interface RawLiteLLMProvider {
   readonly api_key?: string;
   readonly model_list?: ReadonlyArray<{
     readonly model_name?: string;
+    readonly capabilities?: readonly string[];
     readonly max_difficulty?: string;
     readonly litellm_params?: Readonly<Record<string, unknown>>;
   }>;
@@ -203,6 +278,8 @@ interface RawLiteLLMProvider {
 
 interface RawUnifiedRuntimeConfig {
   readonly version?: string;
+  readonly execution_mode?: string;
+  readonly executionMode?: string;
   readonly routing?: {
     readonly strategy?: string;
   };
@@ -259,6 +336,10 @@ interface RawUnifiedRuntimeConfig {
         readonly min_tokens_per_sec?: number;
       };
     };
+    readonly metric_decay_percent_per_day?: {
+      readonly latency?: number;
+      readonly throughput?: number;
+    };
     readonly metric_halflives?: {
       readonly quality_ms?: number;
       readonly latency_ms?: number;
@@ -283,6 +364,8 @@ interface RawUnifiedRuntimeConfig {
   };
   readonly litellm_proxy?: {
     readonly providers?: Readonly<Record<string, RawLiteLLMProvider>>;
+    readonly router_settings?: Readonly<Record<string, unknown>>;
+    readonly litellm_settings?: Readonly<Record<string, unknown>>;
     readonly command?: string;
     readonly args?: readonly string[];
     readonly env?: Readonly<Record<string, string>>;
@@ -368,6 +451,21 @@ function readAliasRoutingMode(value: unknown, path: string): UnifiedRuntimeAlias
     return value;
   }
   throw new Error(`${path} must be basic, difficulty, intelligent, or hybrid.`);
+}
+
+function readExecutionMode(value: unknown, path: string): UnifiedRuntimeExecutionMode | null {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  if (
+    value === "decision_only" ||
+    value === "hybrid" ||
+    value === "local_only" ||
+    value === "remote_only"
+  ) {
+    return value;
+  }
+  throw new Error(`${path} must be decision_only, hybrid, local_only, or remote_only.`);
 }
 
 function readClassifierSourceType(value: unknown, path: string): "local" | "remote" {
@@ -488,6 +586,7 @@ function normalizeLlamaSwapModelInput(
   return {
     modelId,
     path,
+    capabilities: readStringArray(value.capabilities),
     contextWindow: readPositiveNumber(
       "contextWindow" in value ? value.contextWindow : value.context_window,
     ),
@@ -578,6 +677,7 @@ function normalizeLiteLLMProviderMappingInput(
       ...litellmParams,
       model: litellmModel,
     },
+    capabilities: readStringArray(value.capabilities),
     maxDifficulty: readDifficultyBucket(
       "maxDifficulty" in value
         ? value.maxDifficulty
@@ -645,6 +745,8 @@ function normalizeLiteLLMInput(value: unknown): UnifiedRuntimeConfig["liteLLM"] 
     return {
       enabled: false,
       providers: [],
+      routerSettings: {},
+      litellmSettings: {},
       process: normalizeProcessConfigInput(undefined),
     };
   }
@@ -672,10 +774,30 @@ function normalizeLiteLLMInput(value: unknown): UnifiedRuntimeConfig["liteLLM"] 
     "process" in value && value.process && typeof value.process === "object"
       ? value.process
       : value;
+  const normalizedRouterSettings = normalizeJSONValue(
+    "routerSettings" in value
+      ? value.routerSettings
+      : "router_settings" in value
+        ? value.router_settings
+        : undefined,
+  );
+  const normalizedLiteLLMSettings = normalizeJSONValue(
+    "litellmSettings" in value
+      ? value.litellmSettings
+      : "litellm_settings" in value
+        ? value.litellm_settings
+        : undefined,
+  );
 
   return {
     enabled: providers.length > 0,
     providers,
+    routerSettings: isUnifiedRuntimeJSONObject(normalizedRouterSettings)
+      ? normalizedRouterSettings
+      : {},
+    litellmSettings: isUnifiedRuntimeJSONObject(normalizedLiteLLMSettings)
+      ? normalizedLiteLLMSettings
+      : {},
     process: normalizeProcessConfigInput(processSource),
   };
 }
@@ -754,7 +876,7 @@ const DEFAULT_UNIFIED_RUNTIME_CONTROLLER_CONFIG: UnifiedRuntimeControllerConfig 
   sourceType: "remote",
   endpointId: null,
   modelId: null,
-  timeoutMs: 1500,
+  timeoutMs: DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS,
 };
 
 function normalizeDifficultyClassifierInput(
@@ -854,14 +976,18 @@ function normalizeObservedDataInput(
   if (aggregationSource !== undefined) {
     ensureObject(aggregationSource, `${prefix}.aggregation must be an object.`);
   }
-  const metricHalflivesSource =
-    "metricHalflives" in value
-      ? value.metricHalflives
-      : "metric_halflives" in value
-        ? value.metric_halflives
-        : undefined;
-  if (metricHalflivesSource !== undefined) {
-    ensureObject(metricHalflivesSource, `${prefix}.metric_halflives must be an object.`);
+  const metricDecaySource =
+    "metricDecayPercentPerDay" in value
+      ? value.metricDecayPercentPerDay
+      : "metric_decay_percent_per_day" in value
+        ? value.metric_decay_percent_per_day
+        : "metricHalflives" in value
+          ? value.metricHalflives
+          : "metric_halflives" in value
+            ? value.metric_halflives
+            : undefined;
+  if (metricDecaySource !== undefined) {
+    ensureObject(metricDecaySource, `${prefix}.metric_decay_percent_per_day must be an object.`);
   }
   const throughputSlaSource =
     "throughputSla" in value
@@ -1086,51 +1212,28 @@ function normalizeObservedDataInput(
         ),
       },
     },
-    metricHalflives: {
-      qualityMs: readRequiredPositiveNumber(
-        metricHalflivesSource && "qualityMs" in metricHalflivesSource
-          ? metricHalflivesSource.qualityMs
-          : metricHalflivesSource && "quality_ms" in metricHalflivesSource
-            ? metricHalflivesSource.quality_ms
-            : undefined,
-        `${prefix}.metric_halflives.quality_ms`,
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.qualityMs,
+    metricDecayPercentPerDay: {
+      latency: readRequiredPositiveNumber(
+        metricDecaySource && "latency" in metricDecaySource
+          ? metricDecaySource.latency
+          : metricDecaySource && "latencyMs" in metricDecaySource
+            ? metricDecaySource.latencyMs
+            : metricDecaySource && "latency_ms" in metricDecaySource
+              ? metricDecaySource.latency_ms
+              : undefined,
+        `${prefix}.metric_decay_percent_per_day.latency`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricDecayPercentPerDay.latency,
       ),
-      latencyMs: readRequiredPositiveNumber(
-        metricHalflivesSource && "latencyMs" in metricHalflivesSource
-          ? metricHalflivesSource.latencyMs
-          : metricHalflivesSource && "latency_ms" in metricHalflivesSource
-            ? metricHalflivesSource.latency_ms
-            : undefined,
-        `${prefix}.metric_halflives.latency_ms`,
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.latencyMs,
-      ),
-      throughputMs: readRequiredPositiveNumber(
-        metricHalflivesSource && "throughputMs" in metricHalflivesSource
-          ? metricHalflivesSource.throughputMs
-          : metricHalflivesSource && "throughput_ms" in metricHalflivesSource
-            ? metricHalflivesSource.throughput_ms
-            : undefined,
-        `${prefix}.metric_halflives.throughput_ms`,
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.throughputMs,
-      ),
-      reliabilityMs: readRequiredPositiveNumber(
-        metricHalflivesSource && "reliabilityMs" in metricHalflivesSource
-          ? metricHalflivesSource.reliabilityMs
-          : metricHalflivesSource && "reliability_ms" in metricHalflivesSource
-            ? metricHalflivesSource.reliability_ms
-            : undefined,
-        `${prefix}.metric_halflives.reliability_ms`,
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.reliabilityMs,
-      ),
-      costMs: readRequiredPositiveNumber(
-        metricHalflivesSource && "costMs" in metricHalflivesSource
-          ? metricHalflivesSource.costMs
-          : metricHalflivesSource && "cost_ms" in metricHalflivesSource
-            ? metricHalflivesSource.cost_ms
-            : undefined,
-        `${prefix}.metric_halflives.cost_ms`,
-        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricHalflives.costMs,
+      throughput: readRequiredPositiveNumber(
+        metricDecaySource && "throughput" in metricDecaySource
+          ? metricDecaySource.throughput
+          : metricDecaySource && "throughputMs" in metricDecaySource
+            ? metricDecaySource.throughputMs
+            : metricDecaySource && "throughput_ms" in metricDecaySource
+              ? metricDecaySource.throughput_ms
+              : undefined,
+        `${prefix}.metric_decay_percent_per_day.throughput`,
+        DEFAULT_UNIFIED_RUNTIME_OBSERVED_DATA_CONFIG.metricDecayPercentPerDay.throughput,
       ),
     },
     throughputSla: {
@@ -1183,6 +1286,7 @@ function parseLlamaSwapModels(
     return {
       modelId,
       path: config.path,
+      capabilities: readStringArray(config.capabilities),
       contextWindow: typeof config.context_window === "number" ? config.context_window : null,
       command:
         typeof config.command === "string" && config.command.trim().length > 0
@@ -1249,6 +1353,7 @@ function parseLiteLLMProviders(
           ...litellmParams,
           model: litellmModel,
         },
+        capabilities: readStringArray("capabilities" in entry ? entry.capabilities : undefined),
         maxDifficulty: readDifficultyBucket(
           "max_difficulty" in entry ? entry.max_difficulty : undefined,
           `litellm_proxy.providers.${providerId}.model_list.${modelId}.max_difficulty`,
@@ -1273,6 +1378,20 @@ function parseLiteLLMProviders(
   return {
     enabled: normalizedProviders.length > 0,
     providers: normalizedProviders,
+    routerSettings: isUnifiedRuntimeJSONObject(
+      normalizeJSONValue(rawConfig.litellm_proxy?.router_settings),
+    )
+      ? (normalizeJSONValue(rawConfig.litellm_proxy?.router_settings) as Readonly<
+          Record<string, UnifiedRuntimeJSONValue>
+        >)
+      : {},
+    litellmSettings: isUnifiedRuntimeJSONObject(
+      normalizeJSONValue(rawConfig.litellm_proxy?.litellm_settings),
+    )
+      ? (normalizeJSONValue(rawConfig.litellm_proxy?.litellm_settings) as Readonly<
+          Record<string, UnifiedRuntimeJSONValue>
+        >)
+      : {},
     process: parseProcessConfig(rawConfig.litellm_proxy),
   };
 }
@@ -1293,6 +1412,191 @@ export function deriveUnifiedRuntimeExecutionMode(config: {
   return "decision_only";
 }
 
+function normalizeRoutingStrategyForAlias(strategy: string | null): string {
+  const normalized = strategy?.trim().toLowerCase() ?? "";
+  switch (normalized) {
+    case "craft-ask":
+      return "default";
+    case "baseline":
+    case "basic":
+    case "balanced":
+    case "latency":
+    case "quality":
+    case "cost":
+    case "low-latency":
+    case "high-quality":
+    case "low-cost":
+    case "latency-first":
+      return "baseline";
+    case "controller":
+    case "intelligent":
+      return "controller";
+    case "difficulty":
+      return "difficulty";
+    case "hybrid":
+      return "hybrid";
+    default:
+      return normalized.length > 0
+        ? normalized.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "custom"
+        : "default";
+  }
+}
+
+function normalizeRoutingStrategyInputValue(value: unknown): string | null {
+  const strategy = readNonEmptyString(value);
+  if (!strategy) {
+    return null;
+  }
+  return strategy.trim().toLowerCase() === "craft-ask" ? null : strategy;
+}
+
+export function deriveUnifiedRuntimeRoutingAliasMode(
+  strategy: string | null,
+  fallback: UnifiedRuntimeAliasRoutingMode | null | undefined,
+): UnifiedRuntimeAliasRoutingMode | null {
+  switch (normalizeRoutingStrategyForAlias(strategy)) {
+    case "baseline":
+    case "default":
+      return "basic";
+    case "controller":
+      return "intelligent";
+    case "difficulty":
+      return "difficulty";
+    case "hybrid":
+      return "hybrid";
+    default:
+      return fallback ?? "basic";
+  }
+}
+
+export function deriveUnifiedRuntimeRoutingAliasId(config: {
+  readonly routingStrategy: string | null;
+  readonly executionMode: UnifiedRuntimeExecutionMode;
+}): string {
+  return `${normalizeRoutingStrategyForAlias(config.routingStrategy)}.${config.executionMode.replaceAll(
+    "_",
+    "-",
+  )}`;
+}
+
+export function isPrimaryRoutingAliasId(aliasId: string): boolean {
+  if (legacyPrimaryRoutingAliasIds.has(aliasId)) {
+    return true;
+  }
+  return primaryRoutingAliasPrefixes.some((prefix) =>
+    primaryRoutingAliasExecutionSuffixes.some((suffix) => aliasId === `${prefix}.${suffix}`),
+  );
+}
+
+function readPrimaryRoutingAliasExecutionMode(aliasId: string): UnifiedRuntimeExecutionMode | null {
+  for (const suffix of primaryRoutingAliasExecutionSuffixes) {
+    if (primaryRoutingAliasPrefixes.some((prefix) => aliasId === `${prefix}.${suffix}`)) {
+      return suffix.replaceAll("-", "_") as UnifiedRuntimeExecutionMode;
+    }
+  }
+  return null;
+}
+
+function canonicalizeSinglePrimaryRoutingAlias(
+  alias: UnifiedRuntimeModelAliasConfig,
+  config: UnifiedRuntimeConfig,
+): UnifiedRuntimeModelAliasConfig {
+  return {
+    ...alias,
+    aliasId: deriveUnifiedRuntimeRoutingAliasId(config),
+    mode: deriveUnifiedRuntimeRoutingAliasMode(config.routingStrategy, alias.mode),
+  };
+}
+
+function canonicalizeLegacyRoutingAliasId(
+  alias: UnifiedRuntimeModelAliasConfig,
+  config: UnifiedRuntimeConfig,
+): UnifiedRuntimeModelAliasConfig {
+  if (alias.aliasId === "mixed.local-remote") {
+    return canonicalizeSinglePrimaryRoutingAlias(alias, config);
+  }
+  for (const suffix of primaryRoutingAliasExecutionSuffixes) {
+    if (alias.aliasId === `craft-ask.${suffix}`) {
+      return {
+        ...alias,
+        aliasId: `default.${suffix}`,
+        mode: deriveUnifiedRuntimeRoutingAliasMode(null, alias.mode),
+      };
+    }
+  }
+  return alias;
+}
+
+function mergeCanonicalAliasEntries(
+  aliases: readonly UnifiedRuntimeModelAliasConfig[],
+): readonly UnifiedRuntimeModelAliasConfig[] {
+  const merged = new Map<string, UnifiedRuntimeModelAliasConfig>();
+  for (const alias of aliases) {
+    const existing = merged.get(alias.aliasId);
+    if (!existing) {
+      merged.set(alias.aliasId, alias);
+      continue;
+    }
+    merged.set(alias.aliasId, {
+      aliasId: alias.aliasId,
+      mode: existing.mode ?? alias.mode ?? null,
+      modelIds: [...new Set([...existing.modelIds, ...alias.modelIds])],
+    });
+  }
+  return [...merged.values()];
+}
+
+function sameCanonicalAliasList(
+  left: readonly UnifiedRuntimeModelAliasConfig[],
+  right: readonly UnifiedRuntimeModelAliasConfig[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((alias, index) => {
+      const nextAlias = right[index];
+      return (
+        nextAlias !== undefined &&
+        alias.aliasId === nextAlias.aliasId &&
+        (alias.mode ?? null) === (nextAlias.mode ?? null) &&
+        alias.modelIds.length === nextAlias.modelIds.length &&
+        alias.modelIds.every((modelId, modelIndex) => modelId === nextAlias.modelIds[modelIndex])
+      );
+    })
+  );
+}
+
+function canonicalizeUnifiedRuntimeRoutingAliases(
+  config: UnifiedRuntimeConfig,
+): UnifiedRuntimeConfig {
+  if (!config.modelAliases || config.modelAliases.length === 0) {
+    return config;
+  }
+
+  const normalizedAliases = mergeCanonicalAliasEntries(
+    config.modelAliases.map((alias) => {
+      const canonicalLegacyAlias = canonicalizeLegacyRoutingAliasId(alias, config);
+      const aliasExecutionMode = readPrimaryRoutingAliasExecutionMode(canonicalLegacyAlias.aliasId);
+      if (
+        config.modelAliases?.length === 1 &&
+        aliasExecutionMode !== null &&
+        aliasExecutionMode !== config.executionMode
+      ) {
+        return canonicalizeSinglePrimaryRoutingAlias(canonicalLegacyAlias, config);
+      }
+      return canonicalLegacyAlias;
+    }),
+  );
+
+  if (sameCanonicalAliasList(config.modelAliases, normalizedAliases)) {
+    return config;
+  }
+
+  return {
+    ...config,
+    modelAliases: normalizedAliases,
+  };
+}
+
 export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfig {
   const rawDocument = parse(text) as unknown;
   ensureObject(rawDocument, "Unified runtime config root must be an object.");
@@ -1300,21 +1604,23 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
 
   const llamaSwap = parseLlamaSwapModels(rawConfig);
   const liteLLM = parseLiteLLMProviders(rawConfig);
+  const explicitExecutionMode = readExecutionMode(
+    rawConfig.execution_mode ?? rawConfig.executionMode,
+    "execution_mode",
+  );
 
-  return {
+  return canonicalizeUnifiedRuntimeRoutingAliases({
     version:
       typeof rawConfig.version === "string" && rawConfig.version.trim().length > 0
         ? rawConfig.version
         : "1.0",
-    routingStrategy:
-      typeof rawConfig.routing?.strategy === "string" &&
-      rawConfig.routing.strategy.trim().length > 0
-        ? rawConfig.routing.strategy
-        : null,
-    executionMode: deriveUnifiedRuntimeExecutionMode({
-      llamaSwapEnabled: llamaSwap.enabled,
-      liteLLMEnabled: liteLLM.enabled,
-    }),
+    routingStrategy: normalizeRoutingStrategyInputValue(rawConfig.routing?.strategy),
+    executionMode:
+      explicitExecutionMode ??
+      deriveUnifiedRuntimeExecutionMode({
+        llamaSwapEnabled: llamaSwap.enabled,
+        liteLLMEnabled: liteLLM.enabled,
+      }),
     ...(rawConfig.controller
       ? { controller: normalizeControllerInput(rawConfig.controller, "controller") }
       : {}),
@@ -1334,7 +1640,7 @@ export function parseUnifiedRuntimeConfigText(text: string): UnifiedRuntimeConfi
       : {}),
     llamaSwap,
     liteLLM,
-  };
+  });
 }
 
 export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRuntimeConfig {
@@ -1373,16 +1679,26 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
         ? input.model_aliases
         : undefined;
 
-  return {
+  const explicitExecutionMode = readExecutionMode(
+    "executionMode" in input
+      ? input.executionMode
+      : "execution_mode" in input
+        ? input.execution_mode
+        : undefined,
+    "executionMode",
+  );
+
+  return canonicalizeUnifiedRuntimeRoutingAliases({
     version: readNonEmptyString(input.version) ?? "1.0",
-    routingStrategy:
-      readNonEmptyString(
-        "routingStrategy" in input ? input.routingStrategy : routingStrategyInput,
-      ) ?? null,
-    executionMode: deriveUnifiedRuntimeExecutionMode({
-      llamaSwapEnabled: llamaSwap.enabled,
-      liteLLMEnabled: liteLLM.enabled,
-    }),
+    routingStrategy: normalizeRoutingStrategyInputValue(
+      "routingStrategy" in input ? input.routingStrategy : routingStrategyInput,
+    ),
+    executionMode:
+      explicitExecutionMode ??
+      deriveUnifiedRuntimeExecutionMode({
+        llamaSwapEnabled: llamaSwap.enabled,
+        liteLLMEnabled: liteLLM.enabled,
+      }),
     ...(controllerSource !== undefined
       ? {
           controller: normalizeControllerInput(controllerSource, "controller"),
@@ -1408,7 +1724,7 @@ export function normalizeUnifiedRuntimeConfigInput(input: unknown): UnifiedRunti
       : {}),
     llamaSwap,
     liteLLM,
-  };
+  });
 }
 
 function hasProcessConfig(config: UnifiedRuntimeProcessConfig): boolean {
@@ -1444,6 +1760,7 @@ function renderProcessConfig(config: UnifiedRuntimeProcessConfig): Record<string
 export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): string {
   const document: Record<string, unknown> = {
     version: config.version,
+    execution_mode: config.executionMode,
   };
 
   if (config.routingStrategy !== null) {
@@ -1487,12 +1804,9 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
           min_tokens_per_sec: config.observedData.difficultyLearning.recommendation.minTokensPerSec,
         },
       },
-      metric_halflives: {
-        quality_ms: config.observedData.metricHalflives.qualityMs,
-        latency_ms: config.observedData.metricHalflives.latencyMs,
-        throughput_ms: config.observedData.metricHalflives.throughputMs,
-        reliability_ms: config.observedData.metricHalflives.reliabilityMs,
-        cost_ms: config.observedData.metricHalflives.costMs,
+      metric_decay_percent_per_day: {
+        latency: config.observedData.metricDecayPercentPerDay.latency,
+        throughput: config.observedData.metricDecayPercentPerDay.throughput,
       },
       throughput_sla: {
         enabled: config.observedData.throughputSla.enabled,
@@ -1550,6 +1864,7 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
         model.modelId,
         {
           path: model.path,
+          ...(model.capabilities.length > 0 ? { capabilities: [...model.capabilities] } : {}),
           ...(model.contextWindow !== null ? { context_window: model.contextWindow } : {}),
           ...(model.command !== null ? { command: model.command } : {}),
           ...(model.proxyBaseUrl !== null ? { proxy: model.proxyBaseUrl } : {}),
@@ -1575,6 +1890,9 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
             provider.modelMappings.length > 0
               ? provider.modelMappings.map((mapping) => ({
                   model_name: mapping.modelId,
+                  ...(mapping.capabilities.length > 0
+                    ? { capabilities: [...mapping.capabilities] }
+                    : {}),
                   ...(mapping.maxDifficulty !== null
                     ? { max_difficulty: mapping.maxDifficulty }
                     : {}),
@@ -1592,6 +1910,12 @@ export function renderUnifiedRuntimeConfigText(config: UnifiedRuntimeConfig): st
         },
       ]),
     );
+  }
+  if (Object.keys(config.liteLLM.routerSettings).length > 0) {
+    liteLLMSection.router_settings = config.liteLLM.routerSettings;
+  }
+  if (Object.keys(config.liteLLM.litellmSettings).length > 0) {
+    liteLLMSection.litellm_settings = config.liteLLM.litellmSettings;
   }
   if (config.liteLLM.providers.length > 0 || hasProcessConfig(config.liteLLM.process)) {
     document.litellm_proxy = liteLLMSection;
@@ -1617,6 +1941,13 @@ function normalizeRuntimeConfigPatchDocument(
   ) {
     normalized.routing = { strategy: normalized.routing_strategy };
     delete normalized.routing_strategy;
+  }
+  if (
+    Object.prototype.hasOwnProperty.call(normalized, "executionMode") &&
+    !Object.prototype.hasOwnProperty.call(normalized, "execution_mode")
+  ) {
+    normalized.execution_mode = normalized.executionMode;
+    delete normalized.executionMode;
   }
   return normalized;
 }

@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/apps/runtime-host-bridge
+
+(node:19204) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (202 tests | 201 skipped) 389ms
+   ✓ runtime-host-bridge > seeds deterministic QA telemetry for chart geometry and token-truth browser checks  386ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 201 skipped (202)
+   Start at  04:16:03
+   Duration  3.73s (transform 1.82s, setup 0ms, collect 2.51s, tests 389ms, environment 0ms, prepare 208ms)
+

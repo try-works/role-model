@@ -24,8 +24,9 @@ reference router.
 
 The smoke run asks the router to satisfy a request with these requirements:
 
-- `taskType: "code.edit"`
-- `requiredCapabilities: ["code.edit"]`
+- `roleHintId: "coder"`
+- `taskType: "coder.edit"`
+- `requiredCapabilities: ["code.read", "code.write"]`
 - `preferredCapabilities: ["reasoning.multi_step"]`
 - `requiredModalities: ["text"]`
 - `needsTools: true`
@@ -54,7 +55,7 @@ In the current baseline, the smoke flow chooses `cli.local.coder`.
 
 Why:
 
-1. it satisfies the required `code.edit` capability
+1. it satisfies the required `code.read` and `code.write` capabilities
 2. it supports text output and tools
 3. it matches the local preference
 4. the other sample endpoints are excluded for missing required capability

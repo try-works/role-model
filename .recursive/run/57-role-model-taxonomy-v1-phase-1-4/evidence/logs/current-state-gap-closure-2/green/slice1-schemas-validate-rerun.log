@@ -1,0 +1,6 @@
+
+> role-model@0.0.0 schemas:validate D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts validate
+
+Validated 32 schema file(s).
+Validated 30 fixture file(s).

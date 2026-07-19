@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:44608) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/validate-vendors.test.ts (2 tests) 76487ms
+   ✓ runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end  76472ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  09:28:57
+   Duration  80.30s (transform 1.82s, setup 0ms, collect 2.55s, tests 76.49s, environment 0ms, prepare 320ms)
+

@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/72-standalone-runtime-config-authority-and-alias-rematerialization/role-model-router/apps/runtime-host-bridge
+
+(node:28828) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/backend-unified-runtime-config.test.ts (25 tests | 24 skipped) 1874ms
+   ✓ runtime-host-bridge unified runtime backend > repairs stale standalone canonical remote aliases after restart bootstrap rehydrates env-backed persisted endpoints  1872ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 24 skipped (25)
+   Start at  09:20:48
+   Duration  4.94s (transform 1.57s, setup 0ms, collect 2.21s, tests 1.87s, environment 0ms, prepare 294ms)
+

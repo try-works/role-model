@@ -1,0 +1,167 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [31m❯[39m test/request-intent.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 27[2mms[22m[39m
+[31m   [31m×[31m Role-Model provider request intent injection[2m > [22minjects classified role_model intent for known Role-Model aliases[39m[32m 24[2mms[22m[39m
+[31m     → expected { Object (model, messages, ...) } to match object { role_model: { …(2) } }
+(19 matching properties omitted from actual)[39m
+   [32m✓[39m Role-Model provider request intent injection[2m > [22mdoes not modify non Role-Model provider payloads or explicit role_model intent[32m 1[2mms[22m[39m
+ [31m❯[39m test/taxonomy-classification.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m7 failed[39m[2m)[22m[32m 33[2mms[22m[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mloads a compact group-first taxonomy snapshot[39m[32m 21[2mms[22m[39m
+[31m     → expected [ { id: 'coder.edit', …(1) }, …(3) ] to deeply equal ArrayContaining{…}[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mclassifies Review this diff for security risks and likely regressions.[39m[32m 3[2mms[22m[39m
+[31m     → expected undefined to be 1 // Object.is equality[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mclassifies Implement this small bug fix and add a regression test.[39m[32m 1[2mms[22m[39m
+[31m     → expected undefined to be 1 // Object.is equality[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mclassifies Compare current public documentation for this API and cite differences.[39m[32m 1[2mms[22m[39m
+[31m     → expected undefined to be 1 // Object.is equality[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mclassifies Turn these support notes into a clear customer reply.[39m[32m 2[2mms[22m[39m
+[31m     → expected undefined to be 1 // Object.is equality[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mclassifies Inspect this schema and propose a migration plan.[39m[32m 2[2mms[22m[39m
+[31m     → expected undefined to be 1 // Object.is equality[39m
+[31m   [31m×[31m compact taxonomy and progressive classification[2m > [22mclassifies Create product requirements and acceptance criteria for this workflow.[39m[32m 1[2mms[22m[39m
+[31m     → expected undefined to be 1 // Object.is equality[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/request-intent.test.ts > Role-Model provider request intent injection > injects classified role_model intent for known Role-Model aliases
+AssertionError: expected { Object (model, messages, ...) } to match object { role_model: { …(2) } }
+(19 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "role_model": {
+-     "contract_version": 1,
+      "intent": {
+-       "classification_contract_version": "role-model.classification.v1",
+-       "role_hint_id": "coder",
+-       "task_source": "heuristic",
+-       "task_type": "coder.edit",
+-       "taxonomy_version": "1.0.0-alpha.1",
++       "alternatives": [
++         {
++           "roleId": "coder",
++           "taskType": "coder.review",
++         },
++         {
++           "roleId": "coder",
++           "taskType": "coder.debug.root_cause",
++         },
++       ],
++       "capabilities": {
++         "preferred": [
++           "code.read",
++           "code.write",
++         ],
++       },
++       "classificationContractVersion": "role-model.classification.v1",
++       "confidence": 0.72,
++       "evidence": [
++         "implementation/fix signal",
++       ],
++       "modalities": {
++         "required": [
++           "text",
++         ],
++       },
++       "role": {
++         "hard": false,
++         "id": "coder",
++       },
++       "source": "heuristic",
++       "task": {
++         "hard": false,
++         "id": "coder.edit",
++       },
++       "taxonomyVersion": "1.0.0-alpha.1",
++       "toolClasses": [
++         "filesystem.read",
++         "filesystem.write",
++         "shell.execute",
++       ],
+      },
+    },
+  }
+
+ ❯ test/request-intent.test.ts:14:20
+     12| 
+     13|     expect(result).not.toBe(payload);
+     14|     expect(result).toMatchObject({
+       |                    ^
+     15|       role_model: {
+     16|         contract_version: 1,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  test/taxonomy-classification.test.ts > compact taxonomy and progressive classification > loads a compact group-first taxonomy snapshot
+AssertionError: expected [ { id: 'coder.edit', …(1) }, …(3) ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
++ [
+    {
+      "id": "coder.edit",
+-     "label": "Code Edit",
++     "label": "Coder Edit",
++   },
++   {
++     "id": "coder.review",
++     "label": "Coder Review",
++   },
++   {
++     "id": "coder.debug.root_cause",
++     "label": "Coder Debug Root Cause",
++   },
++   {
++     "id": "coder.test.write",
++     "label": "Coder Test Write",
+    },
+  ]
+
+ ❯ test/taxonomy-classification.test.ts:17:42
+     15|       expect.arrayContaining(["coder", "security", "researcher", "supp…
+     16|     );
+     17|     expect(taxonomy.roleTaskIndex.coder).toEqual(
+       |                                          ^
+     18|       expect.arrayContaining([{ id: "coder.edit", label: "Code Edit" }…
+     19|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  test/taxonomy-classification.test.ts > compact taxonomy and progressive classification > classifies Review this diff for security risks and likely regressions.
+ FAIL  test/taxonomy-classification.test.ts > compact taxonomy and progressive classification > classifies Implement this small bug fix and add a regression test.
+ FAIL  test/taxonomy-classification.test.ts > compact taxonomy and progressive classification > classifies Compare current public documentation for this API and cite differences.
+ FAIL  test/taxonomy-classification.test.ts > compact taxonomy and progressive classification > classifies Turn these support notes into a clear customer reply.
+ FAIL  test/taxonomy-classification.test.ts > compact taxonomy and progressive classification > classifies Inspect this schema and propose a migration plan.
+ FAIL  test/taxonomy-classification.test.ts > compact taxonomy and progressive classification > classifies Create product requirements and acceptance criteria for this workflow.
+AssertionError: expected undefined to be 1 // Object.is equality
+
+- Expected: 
+1
+
++ Received: 
+undefined
+
+ ❯ test/taxonomy-classification.test.ts:54:56
+     52|     const classification = classifyWithProgressiveDisclosure({ prompt …
+     53| 
+     54|     expect(classification.role_model.contract_version).toBe(1);
+       |                                                        ^
+     55|     expect(classification.role_model.intent.role_hint_id).toBe(expecte…
+     56|     expect(classification.role_model.intent.task_type).toBe(expectedTa…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m8 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (9)[39m
+[2m   Start at [22m 16:24:38
+[2m   Duration [22m 1.18s[2m (transform 153ms, setup 0ms, collect 225ms, tests 60ms, environment 1ms, prepare 625ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/taxonomy-classification.test.ts test/request-intent.test.ts

@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/request-capability-inference.test.ts (2 tests) 32ms
+ ✓ test/model-capability-resolver.test.ts (3 tests) 31ms
+ ✓ test/downstream-openai-discovery.test.ts (1 test) 36ms
+(node:52612) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/alias-capability-routing.test.ts (2 tests) 31ms
+
+ Test Files  4 passed (4)
+      Tests  8 passed (8)
+   Start at  06:55:25
+   Duration  2.84s (transform 1.36s, setup 0ms, collect 2.14s, tests 130ms, environment 1ms, prepare 1.49s)

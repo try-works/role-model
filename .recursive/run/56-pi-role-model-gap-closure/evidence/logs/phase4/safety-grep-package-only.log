@@ -1,0 +1,2 @@
+## rg -n "child_process|\bspawn\b|\bexec\b|role-model-launcher|authStorage|ROLE_MODEL_DATA_TOKEN|benchmark.*purchase" packages/pi-role-model/src packages/pi-role-model/skills packages/pi-role-model/README.md
+EXIT_CODE=1

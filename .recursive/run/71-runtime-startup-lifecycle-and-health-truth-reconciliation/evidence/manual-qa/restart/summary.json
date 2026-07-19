@@ -1,0 +1,357 @@
+{
+  "lifecycleSummary": {
+    "active": 4,
+    "degraded": 0,
+    "offline": 0
+  },
+  "providerCount": 232,
+  "accountCount": 5,
+  "endpointCount": 4,
+  "scopeId": "runtime-host-bridge",
+  "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-run71-qa-state",
+  "readinessSummary": {
+    "pendingDeviceAuthorizationCount": 0,
+    "credentialsMissingAccountCount": 0,
+    "connectedWithoutEndpointCount": 2,
+    "readyAccountCount": 2
+  },
+  "credentialLifecycle": {
+    "version": 1,
+    "authority": {
+      "state": "authoritative",
+      "bootstrapStatus": "degraded"
+    },
+    "counts": {
+      "executionReady": 2,
+      "connectedNoEndpoint": 2,
+      "pendingAuthorization": 0,
+      "expiredAuth": 1,
+      "credentialsMissing": 0,
+      "envUnresolved": 0,
+      "archivedStale": 0
+    },
+    "accounts": [
+      {
+        "logicalAccountId": "deepseek.capture.account",
+        "providerAccountId": "deepseek.capture.account",
+        "providerId": "deepseek",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "api-key-static",
+        "credentialStorageMode": "env-ref",
+        "credentialBackendCanonical": "env",
+        "lifecycleState": "connected-no-endpoint",
+        "reasonCode": "active-without-endpoint",
+        "blocking": true,
+        "activeEndpointIds": [],
+        "configuredModelIds": [
+          "deepseek/chat-capture-v1"
+        ],
+        "availableActions": [
+          "activate-endpoint",
+          "update-api-key"
+        ]
+      },
+      {
+        "logicalAccountId": "deepseek.personal.deepseek-api-key",
+        "providerAccountId": "deepseek.personal.deepseek-api-key",
+        "providerId": "deepseek",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "api-key-static",
+        "credentialStorageMode": "persisted-local",
+        "credentialBackendCanonical": "local-file",
+        "lifecycleState": "execution-ready",
+        "reasonCode": "active-endpoint-present",
+        "blocking": false,
+        "activeEndpointIds": [
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+          "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro"
+        ],
+        "configuredModelIds": [
+          "deepseek/deepseek-v4-flash",
+          "deepseek/deepseek-v4-pro"
+        ],
+        "availableActions": [
+          "update-api-key"
+        ]
+      },
+      {
+        "logicalAccountId": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0",
+        "providerAccountId": "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0",
+        "providerId": "local-openai-compatible",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "api-key-static",
+        "credentialStorageMode": "persisted-local",
+        "credentialBackendCanonical": "local-file",
+        "lifecycleState": "connected-no-endpoint",
+        "reasonCode": "active-without-endpoint",
+        "blocking": true,
+        "activeEndpointIds": [],
+        "configuredModelIds": [],
+        "availableActions": [
+          "activate-endpoint"
+        ]
+      },
+      {
+        "logicalAccountId": "moonshot.personal.kimi-code",
+        "providerAccountId": "moonshot.personal.kimi-code",
+        "providerId": "moonshot",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "oauth2-device-code",
+        "credentialStorageMode": "oauth-local",
+        "credentialBackendCanonical": "local-file",
+        "lifecycleState": "expired-auth",
+        "reasonCode": "oauth-refresh-failed",
+        "blocking": true,
+        "activeEndpointIds": [
+          "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+        ],
+        "configuredModelIds": [
+          "moonshot/kimi-k2.7-code"
+        ],
+        "availableActions": [
+          "reconnect"
+        ]
+      },
+      {
+        "logicalAccountId": "openai.personal.openai-codex-subscription",
+        "providerAccountId": "openai.personal.openai-codex-subscription",
+        "providerId": "openai",
+        "sourceProvenance": [
+          "manual"
+        ],
+        "authMode": "oauth2-device-code",
+        "credentialStorageMode": "oauth-local",
+        "credentialBackendCanonical": "local-file",
+        "lifecycleState": "execution-ready",
+        "reasonCode": "active-endpoint-present",
+        "blocking": false,
+        "activeEndpointIds": [
+          "openai.personal.openai-codex-subscription.global.gpt-5.4"
+        ],
+        "configuredModelIds": [
+          "chatgpt/gpt-5.4"
+        ],
+        "availableActions": []
+      }
+    ],
+    "providerRollups": [
+      {
+        "providerId": "deepseek",
+        "accountIds": [
+          "deepseek.capture.account",
+          "deepseek.personal.deepseek-api-key"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 1,
+          "connectedNoEndpoint": 1,
+          "pendingAuthorization": 0,
+          "expiredAuth": 0,
+          "credentialsMissing": 0,
+          "envUnresolved": 0,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [
+          "deepseek.personal.deepseek-api-key"
+        ],
+        "attentionAccountIds": [
+          "deepseek.capture.account"
+        ],
+        "hasArchivedArtifacts": false
+      },
+      {
+        "providerId": "local-openai-compatible",
+        "accountIds": [
+          "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 0,
+          "connectedNoEndpoint": 1,
+          "pendingAuthorization": 0,
+          "expiredAuth": 0,
+          "credentialsMissing": 0,
+          "envUnresolved": 0,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [],
+        "attentionAccountIds": [
+          "local-openai-compatible.personal.54fc2746-6472-42b0-901b-f2b178f5c0d0"
+        ],
+        "hasArchivedArtifacts": false
+      },
+      {
+        "providerId": "moonshot",
+        "accountIds": [
+          "moonshot.personal.kimi-code"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 0,
+          "connectedNoEndpoint": 0,
+          "pendingAuthorization": 0,
+          "expiredAuth": 1,
+          "credentialsMissing": 0,
+          "envUnresolved": 0,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [],
+        "attentionAccountIds": [
+          "moonshot.personal.kimi-code"
+        ],
+        "hasArchivedArtifacts": false
+      },
+      {
+        "providerId": "openai",
+        "accountIds": [
+          "openai.personal.openai-codex-subscription"
+        ],
+        "countsByLifecycle": {
+          "executionReady": 1,
+          "connectedNoEndpoint": 0,
+          "pendingAuthorization": 0,
+          "expiredAuth": 0,
+          "credentialsMissing": 0,
+          "envUnresolved": 0,
+          "archivedStale": 0
+        },
+        "readyAccountIds": [
+          "openai.personal.openai-codex-subscription"
+        ],
+        "attentionAccountIds": [],
+        "hasArchivedArtifacts": false
+      }
+    ],
+    "archivedArtifacts": []
+  },
+  "executionMode": "hybrid",
+  "unifiedConfig": {
+    "enabled": true,
+    "path": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-run71-qa-state\\runtime-config.yaml"
+  },
+  "sessionBootstrap": {
+    "status": "degraded",
+    "startedAt": "2026-07-15T13:20:46.933Z",
+    "finishedAt": "2026-07-15T13:21:02.849Z",
+    "stages": [
+      {
+        "stageId": "credentials",
+        "status": "degraded",
+        "startedAt": "2026-07-15T13:20:46.933Z",
+        "finishedAt": "2026-07-15T13:20:55.164Z",
+        "details": {
+          "pendingAttempted": 0,
+          "pendingSucceeded": 0,
+          "pendingConnected": 0,
+          "pendingFailed": 0,
+          "pendingDeferred": 0,
+          "refreshAttempted": 1,
+          "refreshSucceeded": 0,
+          "refreshFailed": 1
+        }
+      },
+      {
+        "stageId": "endpoints",
+        "status": "ready",
+        "startedAt": "2026-07-15T13:20:55.164Z",
+        "finishedAt": "2026-07-15T13:20:55.188Z",
+        "details": {
+          "source": "sqlite+manifest",
+          "count": 4,
+          "reconciled": 0,
+          "failed": 0,
+          "skipped": 4
+        }
+      },
+      {
+        "stageId": "peers",
+        "status": "skipped",
+        "startedAt": "2026-07-15T13:20:55.188Z",
+        "finishedAt": "2026-07-15T13:20:55.189Z",
+        "message": "no peer loads in manifest",
+        "details": {
+          "reloaded": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "vendors",
+        "status": "ready",
+        "startedAt": "2026-07-15T13:20:55.189Z",
+        "finishedAt": "2026-07-15T13:20:55.189Z"
+      },
+      {
+        "stageId": "local-reload",
+        "status": "skipped",
+        "startedAt": "2026-07-15T13:20:55.189Z",
+        "finishedAt": "2026-07-15T13:20:55.19Z",
+        "message": "no llama-swap loads in manifest"
+      },
+      {
+        "stageId": "remote-health",
+        "status": "degraded",
+        "startedAt": "2026-07-15T13:20:55.19Z",
+        "finishedAt": "2026-07-15T13:21:02.848Z",
+        "details": {
+          "probed": 3,
+          "healthy": 1,
+          "degraded": 2,
+          "results": [
+            {
+              "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+              "modelId": "deepseek/deepseek-v4-flash",
+              "reason": "timeout",
+              "healthStatus": "offline",
+              "message": "The operation was aborted due to timeout"
+            },
+            {
+              "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+              "modelId": "deepseek/deepseek-v4-pro",
+              "reason": "healthy",
+              "healthStatus": "healthy"
+            },
+            {
+              "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+              "modelId": "moonshot/kimi-k2.7-code",
+              "reason": "credentials-missing",
+              "healthStatus": "degraded",
+              "message": "No authorization credential is available for remote probe."
+            }
+          ]
+        }
+      },
+      {
+        "stageId": "inventory",
+        "status": "ready",
+        "startedAt": "2026-07-15T13:21:02.848Z",
+        "finishedAt": "2026-07-15T13:21:02.849Z",
+        "details": {
+          "modelIdCount": 2,
+          "endpointIdCount": 2,
+          "localEndpointCount": 0,
+          "remoteEndpointCount": 2,
+          "emptyAliasIds": [],
+          "driftWarningCount": 0,
+          "driftWarnings": []
+        }
+      }
+    ]
+  },
+  "inventorySummary": {
+    "modelIdCount": 2,
+    "endpointIdCount": 2,
+    "localEndpointCount": 0,
+    "remoteEndpointCount": 2,
+    "emptyAliasIds": []
+  },
+  "aliasDrift": [],
+  "operatorIntent": {
+    "path": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-run71-qa-state\\runtime-host-bridge\\operator-intent.json",
+    "status": "ok"
+  }
+}

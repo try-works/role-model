@@ -1,0 +1,9 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+../../../packages/protocol-types/src/generated.ts(113,12): error TS2304: Cannot find name 'DownstreamOpenAIModelRecord'.
+../../../packages/protocol-types/src/generated.ts(113,44): error TS2304: Cannot find name 'DownstreamOpenAIModelRecord'.
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

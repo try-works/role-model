@@ -1,0 +1,23 @@
+
+> pi-role-model@0.0.0 build D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model
+> tsc --noEmit -p tsconfig.json
+
+test/commands.test.ts(62,75): error TS2322: Type 'Promise<{ discovery: { contractVersion: string; kind: string; providerId: string; displayName: string; baseUrl: string; endpoints: { health: string; models: string; chatCompletions: string; responses: string; }; authentication: { ...; }; models: { ...; }[]; setup: { ...; }; freshness: { ...; }; }; }>' is not assignable to type 'Promise<DiscoveryResult>'.
+  Type '{ discovery: { contractVersion: string; kind: string; providerId: string; displayName: string; baseUrl: string; endpoints: { health: string; models: string; chatCompletions: string; responses: string; }; authentication: { ...; }; models: { ...; }[]; setup: { ...; }; freshness: { ...; }; }; }' is not assignable to type 'DiscoveryResult'.
+    The types of 'discovery.contractVersion' are incompatible between these types.
+      Type 'string' is not assignable to type '"role-model.downstream.openai.v1"'.
+test/commands.test.ts(72,29): error TS2322: Type 'Promise<{ discovery: { contractVersion: string; kind: string; providerId: string; displayName: string; baseUrl: string; endpoints: { health: string; models: string; chatCompletions: string; responses: string; }; authentication: { ...; }; models: { ...; }[]; setup: { ...; }; freshness: { ...; }; }; version: { ...; };...' is not assignable to type 'Promise<DiscoveryResult>'.
+  Type '{ discovery: { contractVersion: string; kind: string; providerId: string; displayName: string; baseUrl: string; endpoints: { health: string; models: string; chatCompletions: string; responses: string; }; authentication: { ...; }; models: { ...; }[]; setup: { ...; }; freshness: { ...; }; }; version: { ...; }; }' is not assignable to type 'DiscoveryResult'.
+    The types of 'discovery.contractVersion' are incompatible between these types.
+      Type 'string' is not assignable to type '"role-model.downstream.openai.v1"'.
+test/commands.test.ts(88,29): error TS2322: Type 'Promise<{ discovery: { contractVersion: string; kind: string; providerId: string; displayName: string; baseUrl: string; endpoints: { health: string; models: string; chatCompletions: string; responses: string; }; authentication: { ...; }; models: { ...; }[]; setup: { ...; }; freshness: { ...; }; }; }>' is not assignable to type 'Promise<DiscoveryResult>'.
+  Type '{ discovery: { contractVersion: string; kind: string; providerId: string; displayName: string; baseUrl: string; endpoints: { health: string; models: string; chatCompletions: string; responses: string; }; authentication: { ...; }; models: { ...; }[]; setup: { ...; }; freshness: { ...; }; }; }' is not assignable to type 'DiscoveryResult'.
+    The types of 'discovery.contractVersion' are incompatible between these types.
+      Type 'string' is not assignable to type '"role-model.downstream.openai.v1"'.
+test/downstream-openai.test.ts(69,51): error TS2345: Argument of type '{ contractVersion: string; kind: string; providerId: string; displayName: string; baseUrl: string; endpoints: { health: string; models: string; chatCompletions: string; responses: string; }; authentication: { ...; }; models: { ...; }[]; setup: { ...; }; freshness: { ...; }; }' is not assignable to parameter of type 'DownstreamOpenAIDiscovery'.
+  Types of property 'contractVersion' are incompatible.
+    Type 'string' is not assignable to type '"role-model.downstream.openai.v1"'.
+D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  pi-role-model@0.0.0 build: `tsc --noEmit -p tsconfig.json`
+Exit status 2
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?

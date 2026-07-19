@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "c01-full-refactor",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The deliverable includes a well-formed unified diff for router.ts that renames the function and normalizes the strategy, correctly identifies the missing `requestedRoleId` schema field, provides actionable test updates, and explains before/after scenarios. It meets all required checklist items (diff, schema_findings, test_updates, before_after) with no placeholder or malformed content.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/c01-full-refactor.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/c01-full-refactor/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935001646
+}

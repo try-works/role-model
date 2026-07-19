@@ -1,0 +1,46 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge
+
+(node:20592) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/routable-inventory-bootstrap.test.ts (3 tests | 1 failed | 2 skipped) 45ms
+   ↓ routable inventory bootstrap > routes alias pools from inventory when yaml hints are stale
+   × routable inventory bootstrap > keeps stale-only aliases in model list responses with an empty endpoint pool 43ms
+     → expected undefined to deeply equal { id: 'mixed.local-remote', …(3) }
+   ↓ routable inventory bootstrap > exposes inventory summary and inventory bootstrap stage after startup
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/routable-inventory-bootstrap.test.ts > routable inventory bootstrap > keeps stale-only aliases in model list responses with an empty endpoint pool
+AssertionError: expected undefined to deeply equal { id: 'mixed.local-remote', …(3) }
+
+- Expected:
+{
+  "endpoint_ids": [],
+  "id": "mixed.local-remote",
+  "object": "model",
+  "owned_by": "role-model",
+}
+
++ Received:
+undefined
+
+ ❯ test/routable-inventory-bootstrap.test.ts:147:24
+    145|     const aliasEntry = models.data.find((entry) => entry.id === "mixed…
+    146|
+    147|     expect(aliasEntry).toEqual({
+       |                        ^
+    148|       id: "mixed.local-remote",
+    149|       object: "model",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  07:46:27
+   Duration  3.89s (transform 1.65s, setup 0ms, collect 2.31s, tests 45ms, environment 0ms, prepare 462ms)
+
+undefined
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/routable-inventory-bootstrap.test.ts -t stale-only

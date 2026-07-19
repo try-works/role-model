@@ -1,0 +1,24 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-route-models.test.ts app/components/telemetry-charts.test.tsx "--" "app/lib/design-system.test.ts" "--runInBand"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/provider-account-state.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-latency.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m app/lib/router-candidate-labels.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m app/lib/device-authorization.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-analytics.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-route-models.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m app/lib/view-models.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 198[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts [2m([22m[2m40 tests[22m[2m)[22m[32m 225[2mms[22m[39m
+ [32m✓[39m app/components/telemetry-charts.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts [2m([22m[2m46 tests[22m[2m)[22m[33m 412[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m11 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[32m150 passed[39m[22m[90m (150)[39m
+[2m   Start at [22m 20:42:25
+[2m   Duration [22m 6.89s[2m (transform 5.98s, setup 0ms, collect 15.89s, tests 1.03s, environment 7ms, prepare 11.87s)[22m
+

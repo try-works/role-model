@@ -15,6 +15,7 @@ import {
   buildJudgeGradingBrief,
   formatQuestionTranscript,
   resolveExemplarAnswer,
+  validateJudgeCaseContract,
 } from "./judge-brief.js";
 
 import {
@@ -55,6 +56,14 @@ export interface RoutingBenchmarkCase {
   readonly expected_tool_names?: readonly string[];
   readonly answer_format?: BenchmarkAnswerFormat;
   readonly example_deliverable?: string;
+  readonly taxonomy_tags?: {
+    readonly roleId: string;
+    readonly taskType: string;
+    readonly requiredCapabilities?: readonly string[];
+    readonly preferredCapabilities?: readonly string[];
+    readonly requiredModalities?: readonly string[];
+    readonly toolClasses?: readonly string[];
+  };
   readonly judge_guidance?: {
     readonly exemplar?: { readonly summary?: string; readonly deliverable?: string };
   };
@@ -107,7 +116,11 @@ export function mapCategoryToDifficultyBucket(category: string): BenchmarkDiffic
 }
 
 export function loadRoutingCapabilitySuite(): RoutingCapabilityBenchmarkSuite {
-  return routingCapabilitySuite as RoutingCapabilityBenchmarkSuite;
+  const suite = routingCapabilitySuite as RoutingCapabilityBenchmarkSuite;
+  for (const caseItem of suite.cases) {
+    validateJudgeCaseContract(caseItem);
+  }
+  return suite;
 }
 
 export function selectBenchmarkCases(
@@ -216,6 +229,223 @@ function gradeBenchmarkCaseHeuristic(input: {
   return contentGrade;
 }
 
+function tryParseDeliverableJson(deliverable: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(deliverable) as unknown;
+    return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function readNormalizedBinaryAnswer(
+  caseItem: RoutingBenchmarkCase,
+  deliverable: string,
+): string | null {
+  const expected = caseItem.expected_response.trim().toLowerCase();
+  if (!["yes", "no", "true", "false"].includes(expected)) {
+    return null;
+  }
+
+  const parsed = tryParseDeliverableJson(deliverable);
+  const answer =
+    typeof parsed?.answer === "string"
+      ? parsed.answer
+      : typeof parsed?.value === "string"
+        ? parsed.value
+        : deliverable;
+  const normalized = answer.trim().toLowerCase();
+  return normalized === expected ? normalized : null;
+}
+
+function readToolCallArguments(
+  toolCall: Record<string, unknown> | undefined,
+): Record<string, unknown> | null {
+  if (!toolCall) {
+    return null;
+  }
+  const argumentsValue = toolCall.arguments;
+  if (argumentsValue && typeof argumentsValue === "object") {
+    return argumentsValue as Record<string, unknown>;
+  }
+  if (typeof argumentsValue === "string") {
+    try {
+      const parsed = JSON.parse(argumentsValue) as unknown;
+      return parsed && typeof parsed === "object" ? (parsed as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function readToolCalls(deliverable: Record<string, unknown>): readonly Record<string, unknown>[] {
+  const toolCalls = deliverable.tool_calls;
+  if (!Array.isArray(toolCalls)) {
+    return [];
+  }
+  return toolCalls.filter(
+    (toolCall): toolCall is Record<string, unknown> => !!toolCall && typeof toolCall === "object",
+  );
+}
+
+function normalizeGroundedToolPath(pathValue: unknown): string | null {
+  if (typeof pathValue !== "string") {
+    return null;
+  }
+  return pathValue.replace(/\\/g, "/").replace(/\/+$/, "").toLowerCase();
+}
+
+function groundedTruthMismatchDetails(
+  caseItem: RoutingBenchmarkCase,
+  deliverable: string,
+): string[] {
+  const parsed = tryParseDeliverableJson(deliverable);
+  if (!parsed) {
+    return [];
+  }
+  const toolCalls = readToolCalls(parsed);
+  const answer = typeof parsed.answer === "string" ? parsed.answer : "";
+  const lowerAnswer = answer.toLowerCase();
+
+  switch (caseItem.case_id) {
+    case "p15-tools-read-one":
+    case "h08-multi-turn-tool-refine": {
+      const hasGroundedReadFile = toolCalls.some((toolCall) => {
+        if (toolCall.name !== "read_file") {
+          return false;
+        }
+        const normalizedPath = normalizeGroundedToolPath(readToolCallArguments(toolCall)?.path);
+        return (
+          normalizedPath === "state/runtime-config.yaml" ||
+          normalizedPath?.endsWith("/state/runtime-config.yaml") === true
+        );
+      });
+      if (!hasGroundedReadFile) {
+        return ["expected read_file path state/runtime-config.yaml"];
+      }
+      if (lowerAnswer !== "controller") {
+        return ['expected grounded answer "controller"'];
+      }
+      return [];
+    }
+    case "t01-tools-list-dir": {
+      const inspectedConfigDir = toolCalls.some((toolCall) => {
+        if (toolCall.name !== "list_dir") {
+          return false;
+        }
+        const normalizedPath = normalizeGroundedToolPath(readToolCallArguments(toolCall)?.path);
+        return normalizedPath === "config" || normalizedPath?.endsWith("/config") === true;
+      });
+      if (!inspectedConfigDir) {
+        return ["expected list_dir path config"];
+      }
+      if (!lowerAnswer.includes("router.yaml") || !lowerAnswer.includes("routing-policy.json")) {
+        return ["expected answer grounded in router.yaml and routing-policy.json"];
+      }
+      return [];
+    }
+    case "p18-tools-agent": {
+      const hasListEndpoints = toolCalls.some((toolCall) => toolCall.name === "list_endpoints");
+      if (!hasListEndpoints) {
+        return ["expected list_endpoints call before routing recommendation"];
+      }
+      const metricEndpointIds = [
+        ...new Set(
+          toolCalls
+            .filter((toolCall) => toolCall.name === "get_metrics")
+            .map((toolCall) => readToolCallArguments(toolCall)?.endpoint_id)
+            .filter((value): value is string => typeof value === "string" && value.length > 0),
+        ),
+      ];
+      if (metricEndpointIds.length < 2) {
+        return ["expected get_metrics calls for both endpoints used in the comparison"];
+      }
+      return [];
+    }
+    case "h09-agent-metrics-chain": {
+      const hasListEndpoints = toolCalls.some((toolCall) => toolCall.name === "list_endpoints");
+      if (!hasListEndpoints) {
+        return ["expected list_endpoints call before latency comparison"];
+      }
+      const metricEndpointIds = [
+        ...new Set(
+          toolCalls
+            .filter((toolCall) => toolCall.name === "get_metrics")
+            .map((toolCall) => readToolCallArguments(toolCall)?.endpoint_id)
+            .filter((value): value is string => typeof value === "string" && value.length > 0),
+        ),
+      ];
+      if (
+        !metricEndpointIds.includes("local.lfm2.5-8b-a1b") ||
+        !metricEndpointIds.includes("remote.deepseek-v4-flash")
+      ) {
+        return [
+          "expected get_metrics calls for both local.lfm2.5-8b-a1b and remote.deepseek-v4-flash",
+        ];
+      }
+      if (/not available|unavailable|unknown|missing/i.test(answer)) {
+        return [
+          "expected explicit remote-vs-local latency comparison, not an unavailable-data answer",
+        ];
+      }
+      const lowerAnswerText = answer.toLowerCase();
+      const mentionsBothSides =
+        lowerAnswerText.includes("local") && lowerAnswerText.includes("remote");
+      const comparisonConnector =
+        lowerAnswerText.includes(" than ") ||
+        lowerAnswerText.includes(" versus ") ||
+        lowerAnswerText.includes(" vs ") ||
+        lowerAnswerText.includes(" compared ");
+      const localBetter =
+        mentionsBothSides &&
+        (lowerAnswerText.includes("lower") ||
+          lowerAnswerText.includes("less") ||
+          lowerAnswerText.includes("faster") ||
+          lowerAnswerText.includes("smaller") ||
+          lowerAnswerText.includes("better")) &&
+        comparisonConnector;
+      const remoteWorse =
+        mentionsBothSides &&
+        (lowerAnswerText.includes("higher") ||
+          lowerAnswerText.includes("greater") ||
+          lowerAnswerText.includes("slower") ||
+          lowerAnswerText.includes("worse")) &&
+        comparisonConnector;
+      const numericComparison =
+        lowerAnswerText.includes("62") && lowerAnswerText.includes("245") && comparisonConnector;
+      const comparesLocalLower = localBetter || remoteWorse || numericComparison;
+      if (!comparesLocalLower) {
+        return [
+          "expected grounded comparison that local.lfm2.5-8b-a1b has lower p95 latency than remote.deepseek-v4-flash",
+        ];
+      }
+      return [];
+    }
+    default:
+      return [];
+  }
+}
+
+export function capJudgeScoreForGroundedTruthMismatch(input: {
+  readonly caseItem: RoutingBenchmarkCase;
+  readonly score: number;
+  readonly rationale: string;
+  readonly deliverable: string;
+}): { readonly score: number; readonly rationale: string } {
+  const mismatches = groundedTruthMismatchDetails(input.caseItem, input.deliverable);
+  if (mismatches.length === 0) {
+    return {
+      score: input.score,
+      rationale: input.rationale,
+    };
+  }
+  return {
+    score: 0,
+    rationale: `[grounded_truth_mismatch] ${mismatches.join("; ")}. ${input.rationale}`.trim(),
+  };
+}
+
 export function gradeBenchmarkCase(input: {
   readonly caseItem: RoutingBenchmarkCase;
   readonly actualResponse: string;
@@ -232,23 +462,52 @@ export function gradeBenchmarkCase(input: {
         method: "judge",
       };
     }
-    return input.judgeGrade;
+    const normalizedBinaryAnswer = readNormalizedBinaryAnswer(input.caseItem, input.actualResponse);
+    if (normalizedBinaryAnswer) {
+      return {
+        ...input.judgeGrade,
+        score: 1,
+        rationale: `[case_normalized_exact_match] Accepted ${normalizedBinaryAnswer} after case-insensitive normalization.`,
+      };
+    }
+    const capped = capJudgeScoreForGroundedTruthMismatch({
+      caseItem: input.caseItem,
+      score: input.judgeGrade.score,
+      rationale: input.judgeGrade.rationale,
+      deliverable: input.actualResponse,
+    });
+    return {
+      ...input.judgeGrade,
+      score: capped.score,
+      rationale: capped.rationale,
+    };
   }
 
   const heuristic = gradeBenchmarkCaseHeuristic(input);
+  const grounded = capJudgeScoreForGroundedTruthMismatch({
+    caseItem: input.caseItem,
+    score: heuristic.score,
+    rationale: heuristic.rationale,
+    deliverable: input.actualResponse,
+  });
+  const cappedHeuristic = {
+    ...heuristic,
+    score: grounded.score,
+    rationale: grounded.rationale,
+  };
   if (input.judgeUnavailable) {
     const cappedScore =
-      heuristic.score >= 1
-        ? heuristic.score
-        : Math.min(heuristic.score, JUDGE_UNAVAILABLE_HEURISTIC_CAP);
+      cappedHeuristic.score >= 1
+        ? cappedHeuristic.score
+        : Math.min(cappedHeuristic.score, JUDGE_UNAVAILABLE_HEURISTIC_CAP);
     return {
-      ...heuristic,
+      ...cappedHeuristic,
       score: cappedScore,
-      rationale: `[judge_unavailable] Heuristic fallback: ${heuristic.rationale}`,
+      rationale: `[judge_unavailable] Heuristic fallback: ${cappedHeuristic.rationale}`,
       method: "heuristic",
     };
   }
-  return heuristic;
+  return cappedHeuristic;
 }
 
 export function buildJudgeRequestMessages(
@@ -434,6 +693,7 @@ export {
   buildJudgeGradingBrief,
   formatQuestionTranscript,
   resolveExemplarAnswer,
+  validateJudgeCaseContract,
   type JudgeGradingBrief,
   type JudgeBriefCaseRef,
 } from "./judge-brief.js";

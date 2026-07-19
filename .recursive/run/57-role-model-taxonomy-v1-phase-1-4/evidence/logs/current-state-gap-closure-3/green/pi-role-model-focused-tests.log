@@ -1,0 +1,13 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [32m✓[39m test/request-intent.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m test/taxonomy-classification.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m test/taxonomy-data-files.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 114[2mms[22m[39m
+ [32m✓[39m test/effective-taxonomy.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 86[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m19 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 20:57:00
+[2m   Duration [22m 2.43s[2m (transform 384ms, setup 0ms, collect 673ms, tests 279ms, environment 2ms, prepare 1.91s)[22m
+

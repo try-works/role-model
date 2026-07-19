@@ -1,0 +1,6 @@
+provider    model                     context  max-out  thinking  images
+deepseek    deepseek-v4-flash         1M       384K     yes       no    
+deepseek    deepseek-v4-pro           1M       384K     yes       no    
+role-model  claude-3.7-sonnet         200K     8.2K     no        no    
+role-model  gpt-5.4                   8.2K     2.0K     no        no    
+role-model  openai/gpt-4.1-mini-fast  1.0M     32.8K    no        no    

@@ -1,0 +1,15 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/apps/runtime-host-bridge[39m
+
+(node:39028) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:50116) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/index.test.ts [2m([22m[2m152 tests[22m[2m | [22m[33m148 skipped[39m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m test/taxonomy-discovery.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 221[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m6 passed[39m[22m[2m | [22m[33m148 skipped[39m[90m (154)[39m
+[2m   Start at [22m 17:41:44
+[2m   Duration [22m 3.25s[2m (transform 2.27s, setup 0ms, collect 4.31s, tests 258ms, environment 1ms, prepare 666ms)[22m
+

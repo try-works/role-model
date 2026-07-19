@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "durationMs": 8997,
+  "model": "difficulty.remote-only",
+  "containsExpected": true,
+  "outputPreview": "{\n  \"ok\": true,\n  \"elapsedMs\": 8294,\n  \"sessionId\": \"260709-sunny-prairie\",\n  \"messageCount\": 2\n}",
+  "resultPath": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-16\\live\\craft-headless-2\\craft-difficulty-remote-only-result.json"
+}

@@ -1,0 +1,6 @@
+{
+  "pid": 51276,
+  "health": "healthy",
+  "modelCount": 3,
+  "recommended": "claude-3.7-sonnet"
+}

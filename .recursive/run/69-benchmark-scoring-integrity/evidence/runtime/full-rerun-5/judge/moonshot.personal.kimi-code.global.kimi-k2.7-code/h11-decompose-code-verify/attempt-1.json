@@ -1,0 +1,54 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h11-decompose-code-verify",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-h11-decompose-code-verify-a1-164772e2-97fe-4809-b9fa-ba8d4ec65fd2",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\nRequired API tool calls: run_tests.\nActual structured tool calls from API: run_tests.\nFake tool syntax in prose (e.g. TOOL_CALL name=...) does not count unless criteria explicitly allow it.\n\nCase: h11-decompose-code-verify\n\n## Original question\n[user]\nPhase 1: bullet milestones to add benchmark progress API. Phase 2: write TypeScript interface BenchmarkRunProgress with runId, status, completedSteps, totalSteps. Phase 3: call run_tests with `pnpm test benchmark-progress`. Use run_tests tool for phase 3.\n\n## Example expected answer\nMilestone bullets, BenchmarkRunProgress interface, run_tests tool call\nTool calls: run_tests\nRequired fields: bullets\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Structured phases\n[MUST] includes BenchmarkRunProgress interface fields\n[MUST] run_tests tool emitted.\n[MUST] Emit API tool calls: run_tests\n[MUST] Include JSON keys: bullets\n[SHOULD] Match clues: BenchmarkRunProgress|milestone|phase|run_tests\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nStep 1: emit required API tool calls. Step 2: after tools, output ONLY a ```json fence: {\"bullets\":[\"...\",\"...\"]}. No reasoning in the JSON.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"bullets\"\n  ],\n  \"properties\": {\n    \"bullets\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"minItems\": 2\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nStructured phases; includes BenchmarkRunProgress interface fields; run_tests tool emitted.\n\n## Subject deliverable to grade\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"run_tests\",\n      \"arguments\": {\n        \"command\": \"pnpm test benchmark-progress\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"The interface BenchmarkRunProgress should have runId, status, completedSteps, and totalSteps as required fields.\",\n    \"Tests can be run using the run_tests tool with command 'pnpm test benchmark-progress'.\"\n  ]\n}"
+    }
+  ],
+  "rawResponse": "{\"score\": 1.0, \"rationale\": \"All MUST criteria satisfied: structured phases via bullets mentioning interface fields and test command, run_tests tool call emitted, BenchmarkRunProgress fields listed (runId, status, completedSteps, totalSteps). No placeholder diffs, no prohibited content.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "All MUST criteria satisfied: structured phases via bullets mentioning interface fields and test command, run_tests tool call emitted, BenchmarkRunProgress fields listed (runId, status, completedSteps, totalSteps). No placeholder diffs, no prohibited content.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h11-decompose-code-verify.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nPhase 1: bullet milestones to add benchmark progress API. Phase 2: write TypeScript interface BenchmarkRunProgress with runId, status, completedSteps, totalSteps. Phase 3: call run_tests with `pnpm test benchmark-progress`. Use run_tests tool for phase 3.",
+    "exemplarAnswer": "Milestone bullets, BenchmarkRunProgress interface, run_tests tool call\nTool calls: run_tests\nRequired fields: bullets",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Structured phases",
+      "[MUST] includes BenchmarkRunProgress interface fields",
+      "[MUST] run_tests tool emitted.",
+      "[MUST] Emit API tool calls: run_tests",
+      "[MUST] Include JSON keys: bullets",
+      "[SHOULD] Match clues: BenchmarkRunProgress|milestone|phase|run_tests"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 289,
+    "reasoningLength": 5368
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935277358
+}

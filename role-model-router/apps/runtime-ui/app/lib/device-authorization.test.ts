@@ -2,9 +2,12 @@ import { describe, expect, test, vi } from "vitest";
 
 import {
   getDeviceAuthorizationPollDelayMs,
+  isCodexSubscriptionDeviceAuthorization,
   resolveVerificationWindowUrl,
   restorePersistedDeviceAuthorization,
+  shouldAutoOpenDeviceAuthorizationWindow,
   shouldAutoPollDeviceAuthorization,
+  shouldFallbackToCurrentBrowserForDeviceAuthorization,
   syncConnectedDeviceAuthorizationEndpoints,
 } from "./device-authorization";
 
@@ -62,6 +65,66 @@ describe("shouldAutoPollDeviceAuthorization", () => {
         status: "connected",
       }),
     ).toBe(false);
+  });
+});
+
+describe("shouldAutoOpenDeviceAuthorizationWindow", () => {
+  test("keeps Codex Subscription in-app so the user can copy the device code first", () => {
+    expect(
+      shouldAutoOpenDeviceAuthorizationWindow({
+        providerId: "openai",
+        variantId: "openai-codex-subscription",
+      }),
+    ).toBe(false);
+  });
+
+  test("still auto-opens device auth providers that return complete browser URLs", () => {
+    expect(
+      shouldAutoOpenDeviceAuthorizationWindow({
+        providerId: "moonshot",
+        variantId: "kimi-code",
+      }),
+    ).toBe(true);
+  });
+});
+
+describe("isCodexSubscriptionDeviceAuthorization", () => {
+  test("recognizes the OpenAI Codex Subscription variant", () => {
+    expect(
+      isCodexSubscriptionDeviceAuthorization({
+        providerId: "openai",
+        variantId: "openai-codex-subscription",
+      }),
+    ).toBe(true);
+  });
+
+  test("does not treat other device-auth providers as Codex Subscription", () => {
+    expect(
+      isCodexSubscriptionDeviceAuthorization({
+        providerId: "moonshot",
+        variantId: "kimi-code",
+      }),
+    ).toBe(false);
+  });
+});
+
+describe("shouldFallbackToCurrentBrowserForDeviceAuthorization", () => {
+  test("does not fall back to the current browser context for Codex Subscription", () => {
+    expect(
+      shouldFallbackToCurrentBrowserForDeviceAuthorization({
+        providerId: "openai",
+        variantId: "openai-codex-subscription",
+      }),
+    ).toBe(false);
+  });
+
+  test("still allows browser-context fallback for standard device-auth providers", () => {
+    expect(
+      shouldFallbackToCurrentBrowserForDeviceAuthorization({
+        providerId: "moonshot",
+        variantId: "kimi-code",
+      }),
+    ).toBe(true);
   });
 });
 
@@ -130,6 +193,29 @@ describe("syncConnectedDeviceAuthorizationEndpoints", () => {
 
     expect(activateEndpoint).not.toHaveBeenCalled();
   });
+
+  test("activates endpoints for connected Codex Subscription sessions", async () => {
+    const activateEndpoint = vi.fn().mockResolvedValue(undefined);
+
+    await syncConnectedDeviceAuthorizationEndpoints({
+      session: {
+        authRequestId: "auth-001",
+        providerAccountId: "openai.personal.codex-subscription",
+        providerId: "openai",
+        variantId: "openai-codex-subscription",
+        status: "connected",
+      },
+      selectedModels: ["chatgpt/gpt-5.3-codex"],
+      activateEndpoint,
+    });
+
+    expect(activateEndpoint).toHaveBeenCalledTimes(1);
+    expect(activateEndpoint).toHaveBeenCalledWith({
+      providerAccountId: "openai.personal.codex-subscription",
+      modelId: "chatgpt/gpt-5.3-codex",
+      region: "global",
+    });
+  });
 });
 
 describe("restorePersistedDeviceAuthorization", () => {
@@ -159,6 +245,26 @@ describe("restorePersistedDeviceAuthorization", () => {
       userCode: "ABCD-EFGH",
       verificationUriComplete: "https://auth.kimi.com/device?user_code=ABCD-EFGH",
     });
+  });
+
+  test("does not auto-restore a persisted session when restore is suppressed for manual selection changes", () => {
+    expect(
+      restorePersistedDeviceAuthorization({
+        current: null,
+        providerAccountId: "openai.personal.codex-subscription",
+        persistedSessions: [
+          {
+            authRequestId: "auth-001",
+            providerAccountId: "openai.personal.codex-subscription",
+            providerId: "openai",
+            variantId: "openai-codex-subscription",
+            status: "pending",
+            userCode: "STALE-CODE",
+          },
+        ],
+        allowPersistedRestore: false,
+      }),
+    ).toBeNull();
   });
 
   test("preserves the current session when it already matches the selected provider account", () => {

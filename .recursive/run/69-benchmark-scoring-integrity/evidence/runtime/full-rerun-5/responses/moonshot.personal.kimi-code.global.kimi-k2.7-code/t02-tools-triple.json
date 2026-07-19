@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "t02-tools-triple",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-t02-tools-triple-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"answer\": \"The code-edit workflow is a five-step quality-assurance pipeline: (1) Read affected files to establish the baseline context and locate the target source modules. (2) Grep for eligibility checks to identify conditional guards, feature flags, or assertions that the edit must preserve or extend. (3) Apply a unified diff patch atomically so the codebase transitions from the known baseline to the desired state. (4) Validate the JSON schema contract to ensure that the changed interfaces, payloads, or tool outputs still conform to the required shape and types. (5) Refactor the test suite by updating existing assertions, adding new cases for the changed behavior, and removing obsolete tests so coverage remains aligned with the patch. Executed in order, these steps minimize regression risk and keep the schema contract, source code, and tests in a consistent state.\"\n}",
+  "rawResponse": "```json\n{\n  \"answer\": \"The code-edit workflow is a five-step quality-assurance pipeline: (1) Read affected files to establish the baseline context and locate the target source modules. (2) Grep for eligibility checks to identify conditional guards, feature flags, or assertions that the edit must preserve or extend. (3) Apply a unified diff patch atomically so the codebase transitions from the known baseline to the desired state. (4) Validate the JSON schema contract to ensure that the changed interfaces, payloads, or tool outputs still conform to the required shape and types. (5) Refactor the test suite by updating existing assertions, adding new cases for the changed behavior, and removing obsolete tests so coverage remains aligned with the patch. Executed in order, these steps minimize regression risk and keep the schema contract, source code, and tests in a consistent state.\"\n}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"The code-edit workflow is a five-step quality-assurance pipeline: (1) Read affected files to establish the baseline context and locate the target source modules. (2) Grep for eligibility checks to identify conditional guards, feature flags, or assertions that the edit must preserve or extend. (3) Apply a unified diff patch atomically so the codebase transitions from the known baseline to the desired state. (4) Validate the JSON schema contract to ensure that the changed interfaces, payloads, or tool outputs still conform to the required shape and types. (5) Refactor the test suite by updating existing assertions, adding new cases for the changed behavior, and removing obsolete tests so coverage remains aligned with the patch. Executed in order, these steps minimize regression risk and keep the schema contract, source code, and tests in a consistent state.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 11128,
+  "failure": false,
+  "recordedAtMs": 1783933386758
+}

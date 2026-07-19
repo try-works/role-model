@@ -8,13 +8,28 @@ import {
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
   StatusPill,
 } from "../components/page-primitives";
-import { fieldClassName, mutedPanelClassName, primaryButtonClassName } from "../lib/design-system";
+import {
+  accentActionTextClassName,
+  bodyStrongTextClassName,
+  bodyTextClassName,
+  compactTitleClassName,
+  fieldClassName,
+  metaTextClassName,
+  mutedPanelClassName,
+  primaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
+} from "../lib/design-system";
 import {
   type RuntimeSnapshot,
   type WorkbenchChatInput,
-  fetchRuntimeSnapshot,
+  fetchRuntimeAccounts,
+  fetchRuntimeEndpoints,
+  fetchRuntimeModels,
+  fetchRuntimeSummary,
   submitWorkbenchChat,
 } from "../lib/runtime-api";
 import {
@@ -60,6 +75,8 @@ function readLocationRoutingModeOverride(
   return "";
 }
 
+const formFieldLabelClassName = utilityLabelClassName;
+
 export default function WorkbenchRoute() {
   const location = useLocation();
   const locationRoutingModeOverride = readLocationRoutingModeOverride(
@@ -67,7 +84,10 @@ export default function WorkbenchRoute() {
       ? (location.state as { routingModeOverride?: unknown }).routingModeOverride
       : undefined,
   );
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<
+    RuntimeSnapshot,
+    "summary" | "accounts" | "endpoints" | "models"
+  > | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [model, setModel] = useState("");
@@ -80,9 +100,19 @@ export default function WorkbenchRoute() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then((data) => {
-        setSnapshot(data);
+    void Promise.all([
+      fetchRuntimeSummary(),
+      fetchRuntimeAccounts(),
+      fetchRuntimeEndpoints(),
+      fetchRuntimeModels(),
+    ])
+      .then(([summary, accounts, endpoints, models]) => {
+        setSnapshot({
+          summary,
+          accounts,
+          endpoints,
+          models,
+        });
       })
       .catch((value: unknown) =>
         setLoadError(value instanceof Error ? value.message : "Could not load workbench."),
@@ -178,12 +208,12 @@ export default function WorkbenchRoute() {
         lifecycleBanner.archivedStaleCount > 0 ||
         lifecycleBanner.authorityTone === "accent") ? (
         <div
-          className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 text-sm text-[var(--rm-secondary)]`}
+          className={`${mutedPanelClassName} flex flex-wrap items-center gap-3 p-4 ${supportingTextClassName}`}
         >
           <StatusPill tone={lifecycleBanner.authorityTone}>
             {lifecycleBanner.authorityLabel}
           </StatusPill>
-          <span className="font-medium text-[var(--rm-fg)]">{lifecycleBanner.detail}</span>
+          <span className={bodyStrongTextClassName}>{lifecycleBanner.detail}</span>
           {blockingReadinessRows.map((row) => (
             <StatusPill key={row.key} tone={row.tone}>
               {row.label} {row.value}
@@ -194,10 +224,10 @@ export default function WorkbenchRoute() {
               Archived stale {lifecycleBanner.archivedStaleCount}
             </StatusPill>
           ) : null}
-          <Link className="text-[var(--rm-accent)]" to="/app/remote/providers">
+          <Link className={accentActionTextClassName} to="/app/remote/providers">
             Remote → Providers
           </Link>
-          <Link className="text-[var(--rm-accent)]" to="/app/system/session-readiness">
+          <Link className={accentActionTextClassName} to="/app/system/session-readiness">
             System → Session readiness
           </Link>
         </div>
@@ -210,56 +240,37 @@ export default function WorkbenchRoute() {
         >
           {hasModels ? (
             <form className="space-y-4" onSubmit={onSubmit}>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Model</span>
-                <select
-                  className={fieldClassName}
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                >
-                  {modelOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Endpoint</span>
-                <select
-                  className={fieldClassName}
-                  value={endpointId}
-                  onChange={(event) => setEndpointId(event.target.value)}
-                >
-                  {endpointOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Routing mode</span>
-                <select
-                  className={fieldClassName}
-                  value={routingModeOverride}
-                  onChange={(event) =>
-                    setRoutingModeOverride(
-                      event.target.value as
-                        | ""
-                        | NonNullable<WorkbenchChatInput["routingModeOverride"]>,
-                    )
-                  }
-                >
-                  {routingModeOptions.map((option) => (
-                    <option key={option.label} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Prompt</span>
+              <SelectField label="Model" value={model} onChange={setModel}>
+                {modelOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
+              <SelectField label="Endpoint" value={endpointId} onChange={setEndpointId}>
+                {endpointOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
+              <SelectField
+                label="Routing mode"
+                value={routingModeOverride}
+                onChange={(value) =>
+                  setRoutingModeOverride(
+                    value as "" | NonNullable<WorkbenchChatInput["routingModeOverride"]>,
+                  )
+                }
+              >
+                {routingModeOptions.map((option) => (
+                  <option key={option.label} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
+              <label className="grid gap-2">
+                <span className={formFieldLabelClassName}>Prompt</span>
                 <textarea
                   className={`${fieldClassName} min-h-40`}
                   value={prompt}
@@ -290,26 +301,18 @@ export default function WorkbenchRoute() {
           description="Tooling-aware response summary aligned with the runtime host payload."
         >
           {submitError ? (
-            <div className={`${mutedPanelClassName} border-l-4 border-red-500 p-4`}>
-              <p className="text-xs font-normal uppercase tracking-[0.2em] text-red-500">
-                Request failed
-              </p>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">
-                {submitError}
-              </p>
-            </div>
+            <ErrorState label={submitError} />
           ) : !resultSummary ? (
             <EmptyState label="No result yet." />
           ) : (
             <div className="space-y-4">
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                  Routing receipt handoff
-                </p>
-                <p className="mt-3 text-sm leading-6 text-[var(--rm-fg)]">
-                  Requested mode: <span className="font-medium">{routingModeLabel}</span>. Verify
-                  the persisted routing receipt in{" "}
-                  <Link className="font-medium text-[var(--rm-accent)]" to="/app/observe/requests">
+                <p className={metaTextClassName}>Routing receipt handoff</p>
+                <p className={`mt-3 ${bodyTextClassName}`}>
+                  Requested mode:{" "}
+                  <span className={bodyStrongTextClassName}>{routingModeLabel}</span>. Verify the
+                  persisted routing receipt in{" "}
+                  <Link className={accentActionTextClassName} to="/app/observe/requests">
                     Telemetry ledger
                   </Link>{" "}
                   after the request completes.
@@ -317,10 +320,8 @@ export default function WorkbenchRoute() {
               </div>
 
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                  Assistant output
-                </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">
+                <p className={metaTextClassName}>Assistant output</p>
+                <p className={`mt-3 whitespace-pre-wrap ${bodyTextClassName}`}>
                   {resultSummary.outputText || "No assistant text was returned."}
                 </p>
               </div>
@@ -328,14 +329,14 @@ export default function WorkbenchRoute() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className={`${mutedPanelClassName} p-4`}>
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-[var(--rm-fg)]">Tool calls</p>
+                    <p className={compactTitleClassName}>Tool calls</p>
                     <StatusPill tone={resultSummary.toolCalls.length > 0 ? "accent" : "neutral"}>
                       {resultSummary.toolCalls.length}
                     </StatusPill>
                   </div>
                   <div className="mt-3 space-y-3">
                     {resultSummary.toolCalls.length === 0 ? (
-                      <p className="text-sm text-[var(--rm-secondary)]">
+                      <p className={supportingTextClassName}>
                         No tool calls were surfaced for this response.
                       </p>
                     ) : (
@@ -344,8 +345,8 @@ export default function WorkbenchRoute() {
                           key={toolCall.id ?? `${toolCall.name}-${toolCall.arguments}`}
                           className={`${mutedPanelClassName} p-3`}
                         >
-                          <p className="font-medium text-[var(--rm-fg)]">{toolCall.name}</p>
-                          <CodeBlock className="mt-3 text-xs">{toolCall.arguments}</CodeBlock>
+                          <p className={compactTitleClassName}>{toolCall.name}</p>
+                          <CodeBlock className="mt-3">{toolCall.arguments}</CodeBlock>
                         </div>
                       ))
                     )}
@@ -354,7 +355,7 @@ export default function WorkbenchRoute() {
 
                 <div className={`${mutedPanelClassName} p-4`}>
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-[var(--rm-fg)]">Execution receipts</p>
+                    <p className={compactTitleClassName}>Execution receipts</p>
                     <StatusPill
                       tone={resultSummary.toolExecutions.length > 0 ? "success" : "neutral"}
                     >
@@ -363,7 +364,7 @@ export default function WorkbenchRoute() {
                   </div>
                   <div className="mt-3 space-y-3">
                     {resultSummary.toolExecutions.length === 0 ? (
-                      <p className="text-sm text-[var(--rm-secondary)]">
+                      <p className={supportingTextClassName}>
                         No runtime tool execution receipts were recorded.
                       </p>
                     ) : (
@@ -373,7 +374,7 @@ export default function WorkbenchRoute() {
                           className={`${mutedPanelClassName} p-3`}
                         >
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="font-medium text-[var(--rm-fg)]">
+                            <p className={compactTitleClassName}>
                               {execution.toolName ?? "Unnamed tool"}
                             </p>
                             {execution.status ? (
@@ -384,7 +385,7 @@ export default function WorkbenchRoute() {
                               </StatusPill>
                             ) : null}
                           </div>
-                          <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                          <p className={`mt-2 ${supportingTextClassName}`}>
                             {execution.connectorId ?? "Unknown connector"}
                             {typeof execution.durationMs === "number"
                               ? ` • ${execution.durationMs} ms`
@@ -400,15 +401,13 @@ export default function WorkbenchRoute() {
               <div className="grid gap-3 md:grid-cols-2">
                 {resultSummary.usageRows.map((row) => (
                   <div key={row.label} className={`${mutedPanelClassName} p-4`}>
-                    <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                      {row.label}
-                    </p>
-                    <p className="mt-2 text-lg font-medium text-[var(--rm-fg)]">{row.value}</p>
+                    <p className={metaTextClassName}>{row.label}</p>
+                    <p className={`mt-2 ${compactTitleClassName}`}>{row.value}</p>
                   </div>
                 ))}
               </div>
 
-              <CodeBlock className="min-h-72 text-sm">{resultSummary.rawPayload}</CodeBlock>
+              <CodeBlock className="min-h-72">{resultSummary.rawPayload}</CodeBlock>
             </div>
           )}
         </SectionCard>

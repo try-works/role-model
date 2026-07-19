@@ -4,9 +4,10 @@ import {
   BENCHMARK_SECTION_ORDER,
   STANDALONE_LAST_RUNS_BY_MODE_ENABLED,
   describeHardBlend,
+  filterBenchmarkRunnableCandidates,
   resolveSubjectFromSummary,
 } from "./benchmark-model-cards";
-import type { BenchmarkSummary } from "./runtime-api";
+import type { BenchmarkSummary, RouterCandidate } from "./runtime-api";
 
 const endpointA = "model.a";
 const endpointB = "model.b";
@@ -68,5 +69,27 @@ describe("benchmark model cards addendum layout", () => {
         },
       }),
     ).toContain("blended 0.600");
+  });
+
+  test("excludes benchmark-ineligible endpoints from benchmark runnable candidates", () => {
+    const candidates = [
+      {
+        endpointId: "local.lfm",
+        executionModeEligible: true,
+        benchmarkEligible: true,
+      },
+      {
+        endpointId: "remote.kimi",
+        executionModeEligible: true,
+        benchmarkEligible: false,
+      },
+      {
+        endpointId: "legacy.unspecified",
+      },
+    ] as RouterCandidate[];
+
+    expect(
+      filterBenchmarkRunnableCandidates(candidates).map((candidate) => candidate.endpointId),
+    ).toEqual(["local.lfm", "legacy.unspecified"]);
   });
 });

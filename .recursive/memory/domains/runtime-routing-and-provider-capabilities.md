@@ -1,0 +1,274 @@
+Type: `domain`
+Status: `CURRENT`
+Scope: `Durable runtime routing, provider capability metadata, account and endpoint lifecycle semantics, alias-matrix behavior, routing-strategy and execution-mode interactions, and the operator surfaces that expose those behaviors.`
+Owns-Paths:
+- `/role-model-router/apps/runtime-host-bridge/**`
+- `/role-model-router/apps/runtime-ui/**`
+- `/role-model-router/packages/catalog/**`
+- `/role-model-router/packages/core/**`
+- `/role-model-router/packages/core/data/taxonomy/**`
+- `/role-model-router/packages/core/src/taxonomy/**`
+- `/role-model-router/packages/provider-openai/**`
+- `/role-model-router/packages/sqlite-memory/**`
+- `/role-model-router/packages/runtime-observability/**`
+- `/role-model-router/packages/protocol-routing/**`
+- `/role-model-router/packages/adapter-execution/**`
+- `/role-model-router/packages/vendor-litellm/**`
+- `/packages/conformance/**`
+- `/packages/protocol-types/**`
+- `/protocol/fixtures/downstream-openai/**`
+- `/protocol/fixtures/router-golden/**`
+- `/protocol/schemas/downstream-openai-discovery.schema.json`
+- `/protocol/schemas/router-decision.schema.json`
+- `/schemas/role-model/taxonomy/**`
+- `/docs/architecture/09-runtime-routing-strategy-interactions.md`
+- `/docs/architecture/13-litellm-pi-role-model-integration-proposal.md`
+- `/docs/architecture/14-routed-execution-semantics-and-receipts.md`
+- `/docs/architecture/12-downstream-alias-capability-discovery.md`
+- `/docs/taxonomy/**`
+- `/testdata/catalog/**`
+- `/packages/pi-role-model/**`
+Watch-Paths:
+- `/.recursive/STATE.md`
+- `/.recursive/DECISIONS.md`
+- `/.recursive/memory/domains/role-model-baseline.md`
+Source-Runs:
+- `22-router-runtime-routing-strategy-lock`
+- `23-router-runtime-live-observed-feedback`
+- `24-router-runtime-recency-bias-throughput-sla`
+- `25-router-runtime-model-alias-pool`
+- `26-router-runtime-difficulty-guided-routing`
+- `27-router-runtime-difficulty-learning-cache`
+- `28-router-runtime-controller-guided-routing`
+- `29-router-runtime-request-rewriter-hybrid-mode`
+- `30-router-runtime-strategy-convergence-e2e`
+- `34-router-runtime-role-policy-and-ui-fixture-reduction`
+- `36-runtime-consumption-telemetry-remediation`
+- `45-observe-surface-realignment`
+- `47-runtime-persistence-rehydration-lifecycle`
+- `49-runtime-telemetry-analytics-charts`
+- `50-openai-codex-subscription`
+- `51-runtime-testing-architecture-and-regression-matrix`
+- `53-runtime-telemetry-analytics-contract-hardening`
+- `54-alias-capability-discovery-contract`
+- `55-pi-role-model-package`
+- `56-pi-role-model-gap-closure`
+- `57-role-model-taxonomy-v1-phase-1-4`
+- `58-role-model-taxonomy-v1-benchmark-telemetry`
+- `59-observe-taxonomy-analytics-completion`
+- `62-litellm-pi-craft-codex-execution-hardening`
+- `63-router-backend-regression-and-telemetry-surface-hardening`
+- `64-observed-data-decay-policy-recalibration`
+- `65-codex-subscription-prompt-cache-parity`
+- `66-remote-providers-deferred-request-id-loading`
+- `67-runtime-ui-route-startup-performance-hardening`
+- `68-codex-subscription-tool-call-parity`
+- `69-benchmark-scoring-integrity`
+- `70-cache-hit-token-rate-analytics-fix`
+- `71-runtime-startup-lifecycle-and-health-truth-reconciliation`
+- `72-standalone-runtime-config-authority-and-alias-rematerialization`
+- `74-kimi-k3-kimi-code-oauth-support`
+Validated-At-Commit: `working-tree`
+Last-Validated: `2026-07-17`
+Tags:
+- `runtime`
+- `routing`
+- `providers`
+- `capabilities`
+- `oauth`
+- `telemetry`
+- `taxonomy`
+- `benchmark`
+
+# Runtime Routing And Provider Capabilities
+
+This shard owns the detailed runtime truth for how role-model routes requests, exposes provider and endpoint state, and surfaces those decisions to operators and downstream consumers.
+
+## Startup Bootstrap Discipline
+
+- `fetchRuntimeSnapshot()` is now a legacy broad bootstrap helper. First-paint operator routes should use explicit route-owned fetch groups unless rich request-ledger data is truly primary content for that route.
+- `/app/models` is the canonical example for deferred request evidence:
+  - initial render uses accounts, endpoints, models, controller, role-policy, and router candidates only
+  - request evidence loads afterward
+  - deferred failure degrades to truthful `Unavailable` state instead of a fabricated zero-value metric
+- production-style startup parity matters as much as the UI split:
+  - non-QA startup paths must expose `listRecentRequestIds`
+  - packaged validation must wait for `/api/role-model/runtime/summary` before assuming the control plane is ready after `/healthz`
+
+## What This Domain Owns
+
+- Runtime-host routing, provider, account, endpoint, and validator behavior
+- Runtime-UI routing, provider, remote, and Studio truth surfaces
+- Catalog and provider metadata that shape routing and tool-capability decisions
+- Protocol and conformance artifacts tied to routing decisions and alias behavior
+- The operator-facing routing-interaction architecture doc
+- The routed-execution architecture doc that owns the cross-provider route-switch and multi-tool-call matrices
+
+## Durable Truths
+
+- The runtime owns a canonical strategy × execution-mode routing matrix, and alias materialization must reflect that matrix instead of ad hoc inventory fallback.
+- For `scopeId = standalone-runtime`, the canonical unified runtime config authority is `<runtimeStateRoot>/state/runtime-config.yaml`. A legacy root-level `runtime-config.yaml` may be copied forward only when the canonical file is missing; do not treat both paths as live authorities after startup.
+- Legacy `craft-ask` strategy and alias ids are removed and should not reappear in config materialization, `/v1/models`, or operator documentation.
+- Exact-model requests stay additive; alias requests resolve through the runtime-owned candidate pool before final routing.
+- The shared routed execution contract now carries additive `reasoning`, `sessionAffinity`, `transportPreference`, and `continuation` fields. Responses ingress must preserve `tool_choice`, reasoning/thinking controls, `previous_response_id`, and prompt-cache/request-affinity hints into that contract so provider adapters do not have to reconstruct dropped semantics later.
+- `parallel_tool_calls` is caller-owned tri-state policy. Preserve explicit `true`, explicit `false`, and omission distinctly from ingress through the shared execution contract and final provider request shaping; do not silently force omitted Codex requests to `true`.
+- OpenAI-family prompt caching should be treated as `supported: true` and `mode: implicit` when the upstream surface documents automatic prompt caching. Supported misses and sub-threshold requests should still serialize `cached_tokens: 0` in the documented usage-detail field instead of being downgraded to unsupported.
+- `provider-openai` must preserve documented cache shapes without rewriting totals: nested OpenAI `cached_tokens` plus `cache_write_tokens` fields for Responses or Chat Completions, and current Kimi top-level `usage.cached_tokens` for chat-completions coding routes.
+- `moonshot/kimi-k3` is the canonical operator-visible Kimi Code K3 id. The shipped catalog publishes provider-maximum limits `contextWindow = 1048576` and `maxOutputTokens = 131072`, token economics resolves that outward id through hidden authority `moonshotai/kimi-k3`, and provider-local ids such as `k3` stay normalization-only inputs rather than user-facing catalog truth.
+- Current Kimi Code chat-completions models `moonshot/kimi-k2.5`, `moonshot/kimi-k2.6`, `moonshot/kimi-k2.7-code`, and `moonshot/kimi-k3` are fixed-temperature on the verified provider-openai path. Preserve canonical outward ids, translate `moonshot/kimi-k3` to upstream `k3` in one centralized seam, keep `moonshot/kimi-k2.7-code` on upstream `kimi-k2.7-code`, and omit caller-supplied `temperature` for this family instead of leaving one model on a bespoke request branch.
+- `cacheHitTokenRate` is a backend-owned telemetry metric and, for the current shared OpenAI-family cache contract, must aggregate cache-supported rows as `sum(cacheReadTokens) / sum(inputTokens)`. Do not add cached tokens back into the denominator when `inputTokens` already represents total prompt input.
+- LiteLLM-backed remote execution currently inherits those richer Responses semantics through the shared OpenAI request builder. Verify the inherited path directly before introducing a second divergent LiteLLM request contract.
+- `providerId` and `providerFamily` must identify the actual routed provider, never the adapter family. Intermediaries such as LiteLLM, llama-swap, or ChatGPT Codex Responses belong in `vendorId`; high-level routing belongs in `executionFamily`; concrete request-shaping implementation belongs in `adapterFamily`. `codex-app-server` is historical and must not reappear as the current Codex Subscription execution path.
+- `/api/role-model/downstream/openai` is the rich downstream OpenAI-compatible discovery contract for exact models and aliases. `/v1/models` remains the compact compatibility list, but now carries additive conservative capability metadata (`context_window`, `max_tokens`, Pi-compatible `input`, full modality lists, capability names, `role_model.discovery_url`, and `role_model.capability_revision`) so consumers can auto-discover from the standard model-list URL. Consumers that need declared versus routable layers, conditional target membership, provenance, cache posture detail, or alias composition should follow the rich route.
+- Pi can configure the role-model provider aliases from the compact `/v1/models` route. The current Run 54 QA baseline proved all `15` aliases list through `pi --provider role-model --list-models role-model` with `262.1K` context, `128K` max output, thinking enabled, and image support, while concrete DeepSeek models still correctly show no image input support.
+- The repo-owned Pi package is `/packages/pi-role-model` and is published publicly as `@try-works/pi-role-model` for `pi install @try-works/pi-role-model`. It uses the rich `/api/role-model/downstream/openai` contract to register a Pi provider named `role-model`, ships a `role-model` skill, and implements one `/role-model` command family. The verified scope is external-runtime only: no managed runtime process, no Role-Model launcher call, no Pi credential copy/sync, no benchmark command, no Pi auth-file reads, and no Pi-side routing logic.
+- Role-Model Taxonomy V1 is the canonical classification and routing-intent vocabulary. It is versioned separately across schema version, taxonomy version, database/storage version, content revision, and classification contract version, and currently exposes `6` groups, `28` roles, `280` task types, `46` capabilities, `9` modalities, and `15` tool classes. Group membership is explicit on role entries via `primaryGroupId` and `secondaryGroupIds`; task IDs follow `{role-family}.{task-action}[.{variant}]`; task detail stays subordinate to role context.
+- Runtime taxonomy discovery is exposed through `/api/role-model/taxonomy*`. Consumers should start with summaries/groups/role summaries, then fetch task details only for likely roles or ambiguity. Do not force consumers to ingest the full taxonomy catalog when compact progressive-disclosure data is sufficient.
+- Request metadata from consumers should use `role_model.intent`. The router normalizes it into routing intent, treats hard trusted fields as eligibility filters, treats advisory fields as scoring/diagnostic signals, and persists taxonomy version metadata with decisions so historical receipts remain interpretable.
+- `pi-role-model` now packages compact taxonomy data and a progressive classifier. It should prefer compatible runtime taxonomy/effective-taxonomy discovery when available, fall back to the package snapshot offline, avoid hidden classification model calls by default, and inject `role_model.intent` into provider payloads only for known Role-Model aliases.
+- `pi-role-model` discovery should check `/healthz`, `/api/version`, and `/api/role-model/downstream/openai`, with compact `/v1/models` fallback only for compatible rich-discovery absence. Remote endpoints are blocked by default unless an explicit trusted allow-remote path is used, and `authentication.required: true` must fail closed unless a real supported token source is added.
+- Rich downstream OpenAI discovery records must remain Pi-compatible for both configured aliases and QA fallback records: include contract version, record type, limits, structured capabilities, modalities, declared/routable metadata, `piMapping`, freshness, and conservative renderer fields.
+- Prompt-cache continuity is per upstream cache domain, not one session-global cache slot. A logical session may warm multiple domains, and an `A -> B -> A` route sequence must restore `A`'s provider-local identity while keeping warmed-domain routing preference advisory rather than absolute.
+- Runtime-host QA backends are part of the Pi integration verification surface. `scripts/start-for-qa.ts` should start managed local and remote mock vendors, skip placeholder control-plane endpoints by default, advertise canonical taxonomy capabilities for QA local/remote models, bind the QA local model to canonical roles, and support real Pi completion QA where telemetry records `requestedRoleId`, role-scoped `roleIds`, `ROLE_POLICY_APPLIED`, and `TASK_POLICY_APPLIED`.
+- For Pi package compatibility, provider model records need Pi renderer fields beyond id/limits: `input` and zeroed `cost` are required for `pi --list-models role-model` to render Role-Model models without a package-side TypeError. Role-Model provider models also need `compat.supportsDeveloperRole: false`; real Pi prompt QA found the runtime rejects `developer` messages unless Pi is told not to send that role.
+- Pi extension commands use `handler(args, ctx)`, not `run`; command output should use `ctx.ui.notify(...)`. Non-interactive `pi -p "/role-model ..."` sends slash-command text to the model instead of executing extension commands, so package command QA should use Pi RPC. Noninteractive `pi -p` remains appropriate for actual model prompt smoke tests.
+- Pi's package CLI on Windows can complete useful work and then print `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING), file src\win\async.c, line 76`; run 56 observed this after `install`, `list`, `--help`, `--list-models`, and `remove`. Treat observable package state, RPC command output, and prompt success as the package truth while recording the Pi CLI teardown caveat.
+- Rich downstream discovery is derived on each read from the current registry, catalog, runtime alias config, and effective routable inventory. Endpoint/model onboarding, routing-strategy alias regeneration, execution-mode changes, endpoint readiness, and catalog updates should update those underlying inputs rather than writing separate alias metadata.
+- Every configured downstream alias should receive a rich discovery record. If the current endpoint pool is empty, the alias remains visible with empty `routable` sets and declared configured target metadata rather than disappearing from discovery.
+- Mixed-alias capability claims must distinguish guaranteed, available, conditional, declared, and currently routable support. Capability-constrained requests must filter incompatible targets before scoring.
+- Routing semantics are split across `baseline`, `difficulty`, `controller`, and `hybrid`, with request-level overrides producing durable routing diagnostics rather than mutating saved operator config.
+- Difficulty routing, controller routing, rewrite behavior, hybrid arbitration, observed-profile selection, effective metrics, throughput penalties, and alias resolution are all runtime-owned diagnostics that should remain inspectable in request receipts.
+- The canonical observed-data decay contract is now `metric_decay_percent_per_day` for `latency` and `throughput` only. Legacy halflife keys may still parse for compatibility, but canonical config truth and rendered readback should no longer imply that quality, reliability, or cost have active time-decay knobs.
+- Observed-data time decay now applies only to latency and throughput, on a 10%-per-day retained-deviation loss curve. Fresh samples reset the age calculation. Benchmark or measured quality, measured reliability, and measured cost remain age-invariant during route scoring unless a future run explicitly introduces a new policy.
+- Effective-metric diagnostics must say whether time decay actually applied. Request-detail and routing receipts should distinguish pass-through metrics from time-decayed metrics through explicit freshness source, time-decay-applied, measured-at, and decay-rate facts rather than implying decay from generic freshness fields alone.
+- The operator-facing routing interaction reference is `/docs/architecture/09-runtime-routing-strategy-interactions.md`; when routing semantics change, that doc must stay aligned with runtime truth.
+- The canonical cross-provider route-switch and multi-tool or `parallel_tool_calls` policy matrices live in `/docs/architecture/14-routed-execution-semantics-and-receipts.md`; `/docs/architecture/09-runtime-routing-strategy-interactions.md` should cross-reference that matrix when route-switch rendering behavior matters instead of drifting into a separate compatibility table.
+- Operator-facing OpenAI inventory collapses to one `OpenAI` provider surface with `API Key` plus `Codex Subscription`; raw `chatgpt/*` provider rows are not an operator-facing provider baseline.
+- `Codex Subscription` is a truthful auth-boundary path, not an API-key equivalent:
+  - device authorization can complete from the local Codex auth cache
+  - a connected account can remain `Connected, no endpoint` / `entitlement-missing`
+  - direct OpenAI Platform execution stays blocked when the cached ChatGPT/Codex session lacks the required request scopes
+- OpenAI-compatible chat-completions `tool_choice` must survive routed execution into provider requests. Forced function-tool selection is valid on the initial tool-bearing turn, but continuation turns that already contain tool output should drop the forced choice so the model can resume normally.
+- Cross-provider tool-call routing uses one portable continuation history inside role-model, but upstream serialization is surface-specific:
+  - Codex Subscription exact-model Responses requests require official typed replay items (`function_call`, `function_call_output`) and forced-tool `tool_choice` in named-tool form `{ type: "function", name }`
+  - generic chat-completions-compatible upstreams, including current direct Kimi OAuth and LiteLLM-backed DeepSeek, continue to use assistant `tool_calls` plus `tool` messages
+- Codex Subscription execution compatibility should be represented through runtime-owned endpoint capability markers, provider identity, vendor identity, execution family, adapter family, and equivalent production metadata surfaces, not through scattered exact-model constants. Curated GPT-family matrices remain acceptable for auth/discovery and compatibility display, but not as a primary route-selection preference when endpoint metadata already declares transport support.
+- Codex Subscription execution now uses the native ChatGPT Codex Responses surface, not `codex app-server`: route first, select the OpenAI Codex Subscription endpoint, then execute against the ChatGPT backend `/codex/responses` transport with `providerId = openai`, `vendorId = chatgpt-codex-responses`, and `adapterFamily = codex-subscription-responses`.
+- Codex Subscription request conversion is role-aware. User input maps to Responses `input_text` / `input_image`; replayed assistant history maps to `output_text` or `refusal`. Do not reuse a role-blind content-part converter across user and assistant messages.
+- Selected-backend parameter policy is execution-surface specific and must be observable. For Codex Subscription, unsupported optional fields such as `temperature` and max-token variants are sanitized after endpoint selection with `parameterSanitization` receipts instead of being used as routing eligibility filters.
+- Supported OpenAI subscription models are curated to GPT `5.3+`; capability claims for that path should be tied to the curated matrix rather than inherited blindly from raw upstream catalog rows.
+- Ordinary text, function-tool, and non-hosted-tool alias requests must remain broadly routable. Endpoint/model metadata, request-surface capability requirements, role/task policy, routing-model advisory boosts, benchmark-backed quality, observed performance, and explicit request constraints may affect eligibility or scoring; hardcoded provider-family preferences such as Codex-first must not.
+- Unified runtime config and `vendor-litellm` should preserve additive upstream LiteLLM `router_settings` and `litellm_settings` pass-through without hardcoding a second repo-owned enum of LiteLLM keys.
+- Hosted-search and tool-capability routing is transport-aware:
+  - OpenAI exact hosted search is provider-native for supported GPT `5.3+` subscription models
+  - Kimi exact hosted search is provider-native on the active transport and should not be excluded from search-capable routing
+  - DeepSeek has documented provider-native web search on other vendor surfaces, but on the current runtime transport the bridge still classifies it as `runtime-fallback`
+  - DeepSeek DSML search markup should be normalized back into consumer-visible tool calls rather than expanded into a generic router-hosted browser/tool runtime
+- The router runtime is not a universal hosted browser or tool executor for every provider. Current code still has a `runtime-fallback` classification for some ordinary tool-calling web-search turns, but that should not be confused with a provider-native hosted-tool contract.
+- The architecture reference for these boundaries is `/docs/architecture/09-runtime-routing-strategy-interactions.md`; that doc and this shard should stay aligned when the runtime transport or hosted-tool boundary changes.
+- Non-controller `requestedRoleId` ingress is part of the baseline and must survive alias-based routing without being lost before role filtering.
+- Roles are the primary operator-facing hierarchy level; task detail is subordinate and should appear only through explicit drill-down rather than as flat top-level routing inventory.
+- Runtime account and endpoint readiness must remain truthful across reload, restart, and packaged execution:
+  - pending device-auth flows survive reload and restart
+  - persisted OAuth-backed accounts rehydrate from stored tokens
+  - unresolved env-backed credentials remain `credentials-missing`
+  - Studio and related consumers must not imply execution readiness before credentials and endpoint activation are actually satisfied
+- Startup endpoint reconciliation is durable-intent authoritative on every boot. A non-empty `runtime_endpoints` table is not sufficient readiness proof; startup must compare persisted endpoint rows to the current configured endpoint intent, reconcile missing valid activations, exclude stale rows that no longer belong to current intent, and keep repeated restarts idempotent.
+- Canonical primary aliases must be re-materialized after startup inventory reconciliation changes the effective routable inventory, not only during the initial config-load pass. When env-backed or persisted endpoints return to the healthy routable pool on restart, the canonical alias matrix must be rewritten from that post-bootstrap truth and persisted only if membership actually changed.
+- Provider-account rows are maintenance state, not configured remote inventory. Configured remote inventory is the endpoint-backed endpoint-plus-model set for the current runtime posture; maintenance-only rows such as `connected-no-endpoint` credentials, env-backed account references, and peer-local credentials may appear in a separate maintenance surface but must not appear as configured remote provider connections.
+- Health, lifecycle, routing eligibility, and benchmark eligibility are distinct backend-owned fields. Runtime UI surfaces should consume `healthStatus`, `routingEligible`, and `benchmarkEligible` from backend contracts rather than inferring readiness from lifecycle `status`, raw credential presence, or raw candidate ordering.
+- Router overview slices and benchmark runnable checklists should derive from canonical eligible subsets instead of `slice(0, 3)` over raw candidates, an implicit three-row helper default, or `executionModeEligible` alone. The default `/app/router` visible list should render the full routing-eligible subset unless a caller applies an explicit limit.
+- If bridge-local Kimi OAuth state is stale but fresher standalone-runtime tokens already exist on local disk, runtime restart may repair the bridge credential from that fresher local payload rather than leaving Kimi unavailable until the user reauthorizes manually.
+- Upstream failure classification is routing-active, not purely diagnostic:
+  - timeout, network, rate-limit, quota-exhausted, provider-auth, and upstream-5xx failures are fallback-eligible
+  - only timeout, network, rate-limit, and generic upstream-5xx failures are same-endpoint retryable
+  - invalid-request failures remain terminal and do not trigger fallback
+  - fallback-eligible failures enter escalating endpoint cooldown windows of `10m`, `30m`, `1h`, `5h`, `10h`, and `20h`
+  - if fresher stored Codex auth repairs a subscription credential, clear stale provider-auth cooldowns before routing
+- Benchmark-owned subject, judge, compare, and judge-probe executions may request a benchmark-only bypass of execution-failure cooldown deny lists so reruns inspect the same endpoint's real behavior. Preserve the normal cooldown policy for ordinary runtime traffic.
+- Selected-endpoint provider failures must be captured with the same endpoint/provider/vendor/adapter context as successes. Use `routing.failed.pre-execution` only when no endpoint was selected. Once routing selects an endpoint, failure telemetry and request detail should preserve the selected endpoint, provider account, routing decision, execution semantics, sanitized upstream error preview, and structured failure observation. Historical sparse rows cannot be truthfully backfilled if those fields were not stored.
+- Session bootstrap `peers` degradation is advisory. `peer reload incomplete` should stay visible in readiness detail, but overall bootstrap can still summarize as `ready` when every non-advisory stage succeeded.
+- Canonical request-detail and telemetry surfaces now own execution-semantics receipts: `sourceClient`, `executionFamily`, `adapterFamily`, provider request/response payload bytes, `retryCount`, `rerouteCount`, `cooldownDecision`, `idempotencyDecision`, `parameterSanitization`, routed failure observations, and request/tool `toolSideEffectState`. Extend these through `runtime-observability`, `sqlite-memory`, request-detail APIs, and telemetry-ledger rows instead of creating a parallel trace store.
+- Live prompt-cache verification must include Pi CLI proof plus canonical request-detail or telemetry cross-checks. Exact-model and alias-backed cache paths should be verified separately when both are in scope, and Observe/telemetry proof is required for operator-surface parity claims.
+- When alias continuity proof includes an image-bearing turn, reusing the same local Pi session file can carry image modality into the next request and keep the alias on Codex. Preserve the logical Pi `session-id`, but refresh local Pi session storage when proving the return-to-`A` leg.
+- Kimi live prompt-cache proof may be blocked when the active runtime has no eligible Kimi endpoint or zero benchmark samples. Record that blocker explicitly instead of implying that Kimi was live-verified.
+- Streaming and reasoning are execution behavior, not routing eligibility. Forward provider reasoning deltas as OpenAI-compatible `reasoning_content` when upstream emits them, never copy reasoning into visible `content`, and record upstream absence such as `provider_returned_no_reasoning` instead of fabricating thinking/progress text.
+- `runtime:validate-vendors` is the canonical deterministic Pi/Craft execution corpus anchor for this integration family. It emits a `200`-case machine-readable artifact with per-case execution family, routing result, payload-byte, and idempotency facts and should be kept green whenever routed execution semantics change.
+- For rebuilt-runtime direct-remote QA, provider accounts are SQLite-backed, local-file credential refs resolve from `<runtimeStateRoot>/<scopeId>/credentials/**`, env-backed remote accounts still traverse the LiteLLM vendor path, and post-activation inventory truth should come from `/api/role-model/endpoints` and `/v1/models` rather than `/healthz` bootstrap inventory.
+- The telemetry query path is backend-owned and powers Overview plus Observe analytics surfaces; setup and control pages should not regress into chart dashboards.
+- The shared Overview `Cache Efficiency` and Observe Requests `Cache Efficiency Trend` charts intentionally mix absolute `cacheHitTokens` with fractional `cacheHitTokenRate`, so they must render split left and right Y axes instead of one shared axis.
+- `/app/remote/providers` is not a first-render request-ledger surface. Its initial bootstrap should depend only on provider/account/model/runtime-readiness data. Recent request context for that page is a deferred follow-up through `GET /api/role-model/requests/latest-ids?limit=10`; that lightweight path must select and return request ids only, must not read or parse `runtime_observations.observation_json`, and must not replace the richer `/api/role-model/requests` or request-detail inspection surfaces.
+- `/app/remote/providers` configured connections are endpoint-backed remote execution truth, not a dump of persisted provider-account rows. If maintenance-only accounts are shown on the same route, they must live in a clearly labeled maintenance section that cannot be mistaken for configured remote provider connections.
+- `role-model-router/apps/runtime-host-bridge/scripts/start-for-qa.ts` is part of the owning verification surface for providers-page load-path work. It should forward `listRecentRequestIds` so the stock rebuilt-runtime Playwright harness exercises the live lightweight latest-ids route without a custom QA entrypoint.
+- Richer taxonomy telemetry dimensions now include original role/task hints, normalized role/task, group, variant, capability, modality, and tool-class data. Observe analytics and request-ledger enrichment should read those dimensions from persisted telemetry-ledger fields first; reparsing large raw `runtime_observations.observation_json` bundles is now a fallback path for request detail, not the normal analytics path.
+- The telemetry analytics contract now returns applied query metadata, slice metadata, metric support, and dimension support. Analytics aggregation is full-slice by default and must not silently inherit request-ledger pagination caps.
+- Request-ledger reads and telemetry analytics reads share overlapping filter semantics for operator-visible dimensions while preserving separate ledger pagination behavior.
+- Runtime UI telemetry charts consume shared semantic states (`loading`, `refreshing`, `empty`, `unsupported`, `partial`, `truncated`, `error`, `populated`) instead of treating missing buckets as the only source of chart truth.
+- When validating cache-efficiency analytics, include both the repaired main-slice denominator proof and a supported-zero control because cache-supported misses must remain `0` rather than being reclassified as unsupported.
+- Dashboard, Observe Requests, and Observe Routing now resolve background chart refreshes through one shared stale-refresh path. If a background analytics request fails and prior chart data is reused, the route must surface a visible cached-data warning, emit bounded structured diagnostics with route, chart, query-snapshot, and error context, and clear the stale-chart warning after the next successful refresh.
+- Horizontal ranking telemetry charts use bottom legends for long technical labels and a concrete plot height so Recharts has stable geometry.
+- The current runtime telemetry graph matrix architecture reference is `/docs/architecture/11-runtime-ui-telemetry-graph-matrix.md`.
+- `runtime:validate-ui` teardown must shut down cleanly after backend shutdown; validator cleanup is part of the durable runtime baseline, not a one-off test harness fix.
+- Benchmark-backed quality precedence in live routing is now: task score → eligible role score → eligible group score → overall benchmark fallback → measured quality. Measured latency, throughput, and reliability remain advisory non-quality metrics and benchmark evidence must not create hard eligibility by itself.
+
+## Validation Path
+
+- For routing or provider-capability changes, prefer focused runtime-host and runtime-ui tests first, then the repo-owned validators such as `runtime:validate-host`, `runtime:validate-vendors`, and `runtime:validate-ui`.
+- When claims depend on rebuilt operator truth, verify against the rebuilt runtime in-browser instead of relying only on fixture tests or stale local ports.
+- For telemetry chart changes, include both contract-level tests and browser/runtime verification that chart primitives render non-empty geometry when data is present.
+- For request-ledger or telemetry-analytics browser proof on the persistent QA runtime, seed unique per-run identifiers before asserting filters or drill-in behavior. Prove narrowing, query-param restoration after reload, and request-detail navigation through operator-visible controls instead of row-order or clean-ledger assumptions.
+- For providers-page load-path changes, verify the owning runtime-ui route and runtime-api suites, the owning host-bridge or sqlite-memory latest-id suites, `runtime:validate-ui`, the stock `runtime:test-browser` / `scripts/start-for-qa.ts` harness success path, and rebuilt-runtime providers-page proof that demonstrates both delayed latest-ids completion and failure isolation without clearing the loaded page.
+- For alias-matrix or controller behavior changes, confirm persisted config truth, live `/v1/models` exposure, and Pi-originated requests for every configured alias when Pi compatibility is in scope.
+- For downstream discovery changes, confirm both `/v1/models` compact metadata and the rich route against the current runtime config alias set, including empty-pool aliases where feasible, and validate the downstream OpenAI schema/fixtures.
+- For provider capability changes, verify exact-model and alias-path behavior separately where the transport boundary can differ.
+- For Kimi Code catalog or request-policy changes, verify the owning catalog, provider-openai, and runtime-host suites, then run a live repo-path Kimi OAuth proof that captures the upstream request body for canonical `moonshot/kimi-k3` and at least one existing Kimi Code model such as `moonshot/kimi-k2.7-code`. Direct-wire discovery may explain upstream contract limits, but it does not replace the runtime-path verification needed to prove canonical-to-upstream mapping and shared parameter omission.
+- For prompt-cache parity claims, verify exact-model and alias-backed paths separately where both are in scope, and cross-check the Pi footer cache percentage against canonical request-detail or telemetry facts rather than trusting the footer alone.
+- For cross-provider tool-call changes, verify the owning provider-openai and runtime-host-bridge tool-choice or typed-replay regressions, the route-switch matrix, one exact-model `chatgpt/gpt-5.4` Pi proof, and one alias proof such as `difficulty.remote-only`. The alias proof may legitimately select a non-Codex provider; record the selected endpoint, provider, and adapter facts instead of treating non-Codex selection as failure.
+- For routed execution hardening that claims Pi/Craft compatibility, include rebuilt-runtime proof for at least one tool-bearing case, one non-text modality case, and one degraded-family recovery case in addition to deterministic validator coverage.
+- When Phase 5 proof depends on alias routing, use canonical runtime aliases such as `difficulty.remote-only` and verify provider, vendor, execution, and adapter facts separately in raw receipts.
+- For Codex Subscription changes, verify the native `chatgpt-codex-responses` / `codex-subscription-responses` path with exact `chatgpt/gpt-5.4` and canonical aliases. Do not treat app-server-era telemetry or adapter-family labels as current proof.
+- For Windows rebuilt-runtime QA on packaged binaries with spaced paths, prefer tokenized `ProcessStartInfo.ArgumentList` over `Start-Process` positional argument splitting when capturing the authoritative live proof.
+- If Kimi or another provider cannot be live-verified in the rebuilt runtime, record the exact routing blocker and benchmark-data state in the Phase 5 artifact rather than replacing the missing live proof with an unexplained deterministic test.
+- For selected-endpoint failure capture, prefer automated selected-endpoint failure tests plus a clean live induced-provider-failure harness. Do not count a `VENDOR_NOT_CONFIGURED` setup failure as proof of selected provider execution failure telemetry.
+- For taxonomy changes, compare canonical data against proposal or generated golden fixtures, validate schemas and generated docs, probe `/api/role-model/taxonomy*`, verify runtime routing intent normalization, verify UI role assignment/drill-down, and run `@try-works/pi-role-model` compact-classification tests.
+- For Pi taxonomy changes, use real Pi RPC for `/role-model` commands and capture real provider transport to prove `role_model.intent` is sent for known Role-Model aliases; one-line stdin pipelines can close before slower async extension commands finish.
+
+## Scope Boundary
+
+- Do not treat ChatGPT/Codex auth as equivalent to an OpenAI API key.
+- Do not let the runtime grow into a generic hosted tool/browser executor when the provider or consumer should own that loop.
+- Do not document, emit, or accept routing aliases that are not part of the canonical runtime-owned matrix.
+- Do not implement taxonomy-aware benchmark scoring, taxonomy telemetry rollups, or telemetry-informed taxonomy routing inside the Phase 1-4 taxonomy baseline; those are later proposal phases.
+
+## Configured Membership Authority (Run 76)
+
+- Treat configured remote membership as exact `{providerAccountId, modelId}` identity. A model with the same id on a sibling account is a separate membership.
+- SQLite provider-account `allowedModels` owns manual accounts. When YAML declares a matching provider, YAML owns the complete membership set for the reserved `${providerId}.litellm` account; persisted rows at that id are credential/metadata projections and cannot union extra membership.
+- Runtime endpoints, `operator-intent.remoteActivations`, role bindings, primary aliases, inventory, health, and UI cards are derived evidence. Rebuild, repair, and restart may materialize them only for configured keys and must prune stale residue rather than promote it.
+- Serialize eject with ordinary config mutation, atomically replace YAML, preflight explicit references, and expose structured authority/prune, rollback/indeterminate, conflict, and reconciliation receipts.
+
+## Benchmark Quality Routing (Added 2026-06-24)
+
+Benchmark runs produce per-endpoint quality scores (`endpointGrades[].overallScore`) that are stored on routing candidates as `benchmarkCapability.overallScore`. The `getQualityMetric()` function in the router core reads these through a three-tier priority system:
+
+1. `candidate.observed?.judge_score` — live request judging (highest priority, rarely populated)
+2. `candidate.observed?.quality_score` — difficulty-bucketed observed profiles
+3. `candidate.benchmarkCapability?.overallScore` — benchmark-derived quality (added in addendum 10)
+4. Default 0.500 — neutral fallback
+
+The `MetricSource` type includes `"benchmark"` for provenance. `EndpointCandidate` carries `benchmarkCapability?: { overallScore?: number }` populated by `buildBenchmarkCapabilityForEndpoint()` from completed benchmark summaries.
+
+**Before fix:** All models defaulted to quality 0.500. Routing was pure cost/latency.
+**After fix:** benchmark-derived `overallScore` participates in quality routing instead of leaving every candidate at the neutral fallback.
+
+Those numeric examples are historical proof from run 36, not a durable current leaderboard.
+After run 69, the benchmark stack itself is validated by fresh `VALID` quick and full reruns that include both Kimi and GPT under a `deepseek-v4-pro` judge, but benchmark-backed quality remains run-config dependent. Future readers should pull the current benchmark summary or the latest Phase 5 receipt instead of trusting a frozen score table in this domain shard.
+
+## Run 77 responsiveness, projection, and committed-stream rules
+
+- Treat mutation receipts and the smallest canonical rereads as the completion boundary. Request history, full router candidates, benchmark summaries, and profile enrichment are advisory; load them progressively and never let them keep operator actions in a generic pending state.
+- For SQLite-backed list and startup paths, persist frequently listed fields as columns, select only those columns, and add an index matching the exact filter/order/limit shape. Large observation JSON belongs to explicit detail reads; reconstructing list fields by blob parsing can synchronously stall the entire Node runtime.
+- Candidate/profile startup work should reuse one database access scope, query endpoints in bulk, and cap recent sample history. Validate scaling at multiple endpoint counts because a fast tiny fixture can hide per-endpoint scans and repeated setup.
+- After `headersSent` or equivalent stream commitment, an upstream failure cannot be rewritten as JSON. End or destroy the committed stream according to protocol semantics, keep the server healthy, and test the actual HTTP server path so `ERR_HTTP_HEADERS_SENT` cannot regress.
+- Provider model translation is a separate boundary from runtime aliases. Preserve explicit regression coverage for catalog model IDs such as `moonshot/kimi-k3` mapping to the provider wire model `k3`, without injecting unsupported fixed sampling parameters.
+- Large static metadata may use a versioned compact wire representation, but all consumers must hydrate through one owning package boundary. Do not let direct JSON imports bypass default restoration or provenance reconstruction.

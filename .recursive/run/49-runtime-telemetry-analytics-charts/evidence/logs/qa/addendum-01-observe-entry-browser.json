@@ -1,0 +1,42 @@
+{
+  "before": {
+    "observe": {
+      "href": "/app/observe/requests",
+      "text": "Observe"
+    },
+    "url": "http://127.0.0.1:3456/app/router"
+  },
+  "requests": {
+    "bodySample": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLight\nDark\nTelemetry request ledger\n\nCanonical runtime telemetry rows with direct drill-in to request captures, endpoint profile context, and tooling receipts.\n\nRequests\nRouting\nActivity\nLogs\nAnalytics controls\n\nScope the structured telemetry history and comparison target without leaving the canonical request ledger.\n\nDay\nWeek\nMonth\n90 days\nBreakdown\nTotal\nSource\nEndpoint\nModel\nProvider\nRanking metric\nRequests\nTotal tok",
+    "headings": [
+      "Analytics controls",
+      "Request Volume Over Time",
+      "Token Usage Over Time",
+      "Effective Cost Over Time",
+      "Latency Trend",
+      "Cache Efficiency Trend",
+      "Failure Trend",
+      "Ranked Comparison",
+      "Adjacent raw-host tools",
+      "Recent telemetry requests"
+    ],
+    "rechartsCount": 12,
+    "svgCount": 6,
+    "url": "http://127.0.0.1:3456/app/observe/requests"
+  },
+  "routing": {
+    "bodySample": "role-model\nOverview\nStudio\nLocal\nRemote\nModels\nRouter\nObserve\nConnect\nSystem\nLight\nDark\nRouting analytics\n\nHistorical routing mix, difficulty, model selection, and avoided-cost analytics from persisted request-time telemetry facts.\n\nRequests\nRouting\nActivity\nLogs\nRouting analytics controls\n\nInspect routing mix, difficulty distribution, and avoided cost without leaving the Observe pillar.\n\nDay\nWeek\nMonth\n90 days\nBreakdown\nTotal\nBy source\nBy requested role\nBy model\nBy strategy\nSource\nAll sources\nL",
+    "headings": [
+      "Routing analytics controls",
+      "Cost Avoided By Routing",
+      "Routing Decision Volume",
+      "Difficulty Distribution",
+      "Strategy Selection Trend",
+      "Role Demand",
+      "Model Selection"
+    ],
+    "rechartsCount": 6,
+    "svgCount": 3,
+    "url": "http://127.0.0.1:3456/app/observe/routing"
+  }
+}

@@ -1,0 +1,322 @@
+role-model
+Overview
+Studio
+Local
+Remote
+Models
+Router
+Observe
+Connect
+System
+Capability benchmark
+Models
+Roles
+Benchmark
+
+SUITE
+
+55
+
+routing-capability-v2 v3.4
+
+RUN SIZE
+
+12
+
+Quick mode hard subset.
+
+JUDGE
+
+gpt-5.4
+
+grading-only endpoint
+
+Run capability benchmark
+
+Production page exposes benchmark mode, judge endpoint, endpoint checklist, and run progress in a single operator surface.
+
+Runtime scope: runtime-host-bridge • 4 endpoints available • state root connected
+
+Judge endpoint is also a benchmark subject. Expect slower grading and higher judge failure risk — prefer a dedicated judge when available.
+
+BENCHMARK MODE
+Quick (12 hard cases)
+JUDGE ENDPOINT (GRADING ONLY)
+chatgpt/gpt-5.4 (remote)
+
+Endpoints to grade
+
+1 selected • 1 runnable
+
+Only benchmark-runnable endpoints appear in the active checklist.
+
+chatgpt/gpt-5.4
+openai.personal.openai-codex-subscription.global.gpt-5.4
+remote • healthy
+
+Select at least two runnable endpoints to compare benchmark results head to head.
+
+Excluded by current execution mode
+Run quick benchmark (1 model, 12 cases)
+Benchmark scores
+
+Scores above are written into each endpoint's observed profile for future routing.
+
+Last completed run: 7/13/2026, 9:04:18 PM • full suite • judge: deepseek/deepseek-v4-pro
+
+moonshot/kimi-k2.7-code
+
+moonshot.personal.kimi-code.global.kimi-k2.7-code
+
+Benchmark overall: 89.1%
+
+Profile quality score: 79.6% (350 benchmark samples)
+
+Benchmark latency: p50 7295 ms • p95 69326 ms
+
+By difficulty: easy 93.3% • medium 89.5% • hard 85.7%
+
+Routing impact: Router ranks this candidate using a 79.6% quality score (from benchmark judge grades). Difficulty routing treats medium as the recommended max prompt difficulty for this endpoint. Per-bucket quality must stay above 80% to raise that ceiling. 350 benchmark samples are merged into the observed profile used on future routing decisions. Hard routing blend: full 0.729 + quick 0.676 → blended 0.703.
+
+Last full run
+
+Completed 7/13/2026, 9:04:18 PM • judge: deepseek/deepseek-v4-pro
+
+89.1% overall
+
+easy 93.3% • medium 89.5% • hard 85.7%
+
+Last quick run (12 hard)
+
+Completed 7/13/2026, 7:54:09 PM • judge: deepseek/deepseek-v4-pro
+
+89.2% overall
+
+easy 0% • medium 0% • hard 89.2%
+
+89.1%
+remote
+Clear routing profile
+
+deepseek/deepseek-v4-pro
+
+deepseek.personal.deepseek-api-key.global.deepseek-v4-pro
+
+Benchmark overall: 94.1%
+
+Profile quality score: 94.1% (259 benchmark samples)
+
+Benchmark latency: p50 n/a • p95 n/a
+
+By difficulty: easy 96.7% • medium 95.4% • hard 92.1%
+
+Routing impact: Router ranks this candidate using a 94.1% quality score (from benchmark judge grades). Difficulty routing treats hard as the recommended max prompt difficulty for this endpoint. Per-bucket quality must stay above 80% to raise that ceiling. 259 benchmark samples are merged into the observed profile used on future routing decisions. Hard routing blend: full 0.928 + quick 0.902 → blended 0.915.
+
+Last full run
+
+Completed 7/13/2026, 9:04:18 PM • judge: deepseek/deepseek-v4-pro
+
+This endpoint was not graded in the last full run.
+
+Last quick run (12 hard)
+
+Completed 7/13/2026, 7:54:09 PM • judge: deepseek/deepseek-v4-pro
+
+This endpoint was not graded in the last quick run.
+
+94.1%
+remote
+Clear routing profile
+
+deepseek/deepseek-v4-flash
+
+deepseek.personal.deepseek-api-key.global.deepseek-v4-flash
+
+Benchmark overall: 87.7%
+
+Profile quality score: 87.7% (268 benchmark samples)
+
+Benchmark latency: p50 n/a • p95 n/a
+
+By difficulty: easy 100% • medium 94.9% • hard 77.9%
+
+Routing impact: Router ranks this candidate using a 87.7% quality score (from benchmark judge grades). Difficulty routing treats medium as the recommended max prompt difficulty for this endpoint. Per-bucket quality must stay above 80% to raise that ceiling. 268 benchmark samples are merged into the observed profile used on future routing decisions. Hard routing blend: full 0.750 + quick 0.835 → blended 0.792.
+
+Last full run
+
+Completed 7/13/2026, 9:04:18 PM • judge: deepseek/deepseek-v4-pro
+
+This endpoint was not graded in the last full run.
+
+Last quick run (12 hard)
+
+Completed 7/13/2026, 7:54:09 PM • judge: deepseek/deepseek-v4-pro
+
+This endpoint was not graded in the last quick run.
+
+87.7%
+remote
+Clear routing profile
+
+chatgpt/gpt-5.4
+
+openai.personal.openai-codex-subscription.global.gpt-5.4
+
+Benchmark overall: 92.7%
+
+Profile quality score: 80.9% (350 benchmark samples)
+
+Benchmark latency: p50 7751 ms • p95 84004 ms
+
+By difficulty: easy 93.3% • medium 100% • hard 85.7%
+
+Routing impact: Router ranks this candidate using a 80.9% quality score (from benchmark judge grades). 350 benchmark samples are merged into the observed profile used on future routing decisions. Hard routing blend: full 0.744 + quick 0.958 → blended 0.851.
+
+Last full run
+
+Completed 7/13/2026, 9:04:18 PM • judge: deepseek/deepseek-v4-pro
+
+92.7% overall
+
+easy 93.3% • medium 100% • hard 85.7%
+
+Last quick run (12 hard)
+
+Completed 7/13/2026, 7:54:09 PM • judge: deepseek/deepseek-v4-pro
+
+91.7% overall
+
+easy 0% • medium 0% • hard 91.7%
+
+92.7%
+remote
+Clear routing profile
+Taxonomy dimensions
+
+The runtime exposes advisory benchmark scores by role, task, and capability. Filters switch which dimension is active.
+
+FILTER BY ROLE
+All roles
+FILTER BY TASK
+All tasks
+FILTER BY CAPABILITY
+All capabilities
+
+Select a taxonomy dimension above to see per-model benchmark scores.
+
+Run history
+
+Completed benchmark runs stored on this runtime.
+
+ce77bb27-583a-4610-a54e-afa7ac0f770c
+
+full • 55 cases • 2 models
+
+7/13/2026, 9:04:18 PM • routing-capability-v2
+
+full
+
+3210dbd4-ecae-4c3a-ae3e-24d5ce671a77
+
+quick • 12 cases • 2 models
+
+7/13/2026, 7:54:09 PM • routing-capability-v2
+
+quick
+
+5513dd86-aae0-456d-bfa6-02a574de1ca1
+
+full • 55 cases • 2 models
+
+7/13/2026, 6:04:11 PM • routing-capability-v2
+
+full
+
+ce943fe9-f5d4-444b-8ab2-447451126be9
+
+quick • 12 cases • 2 models
+
+7/13/2026, 4:46:45 PM • routing-capability-v2
+
+quick
+
+95825446-aba0-4711-82d8-24ad3ba63b0a
+
+full • 55 cases • 2 models
+
+7/13/2026, 3:57:32 PM • routing-capability-v2
+
+full
+
+3fcc3acc-1240-458c-b63e-153e3acfb062
+
+quick • 12 cases • 2 models
+
+7/13/2026, 3:41:55 PM • routing-capability-v2
+
+quick
+
+c9af1ce1-91fe-47db-9bdc-4ef76bb18966
+
+full • 55 cases • 3 models
+
+7/13/2026, 2:10:42 PM • routing-capability-v2
+
+full
+
+b40865a4-023d-4cba-a3ac-ca9da77eb4ec
+
+full • 55 cases • 2 models
+
+7/13/2026, 1:55:38 PM • routing-capability-v2
+
+full
+
+fd40846a-11af-430e-8a5c-1b903ca0810c
+
+quick • 12 cases • 4 models
+
+7/13/2026, 10:37:29 AM • routing-capability-v2
+
+quick
+
+a25f920b-ab30-4203-96b5-bdda11f03140
+
+full • 55 cases • 4 models
+
+6/29/2026, 6:16:53 AM • routing-capability-v2
+
+full
+
+5786d794-609c-452e-b9f5-ed31d05b86c8
+
+quick • 12 cases • 4 models
+
+6/29/2026, 2:33:28 AM • routing-capability-v2
+
+quick
+
+3f937a1f-4bb7-4348-9519-efceb579ba21
+
+full • 3 cases • 4 models
+
+6/28/2026, 11:09:48 PM • routing-capability-v2
+
+full
+
+f70c076a-88ed-4e77-822d-62369ee26da7
+
+quick • 12 cases • 4 models
+
+6/28/2026, 10:48:36 PM • routing-capability-v2
+
+quick
+
+c8d1cabd-a12b-455c-aaa4-4af743b7ec7d
+
+full • 55 cases • 3 models
+
+6/28/2026, 2:50:59 AM • routing-capability-v2
+
+full
+Clear all benchmark data

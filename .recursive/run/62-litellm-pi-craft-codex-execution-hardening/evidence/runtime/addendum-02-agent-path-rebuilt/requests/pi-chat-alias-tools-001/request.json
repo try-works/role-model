@@ -1,0 +1,82 @@
+{
+  "model": "gpt-5.4-difficulty",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Analyze this code-edit workflow, preserve session affinity, and reply with exactly PI_TOOL_OK."
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_1",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_2",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    }
+  ],
+  "role_model": {
+    "contract_version": 1,
+    "intent": {
+      "taxonomy_version": "1.0.0-alpha.1",
+      "content_revision": "taxonomy-v1-alpha.1",
+      "classification_contract_version": "role-model.classification.v1",
+      "classification_version": "role-model.pi-classifier.v1",
+      "source": "heuristic",
+      "confidence": 0.38,
+      "role_hint_id": "coder",
+      "role_source": "heuristic",
+      "task_type": "coder.general",
+      "task_action": "general",
+      "task_variant": null,
+      "task_source": "heuristic",
+      "task_confidence": 0.38,
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "required_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "tool_classes": [],
+      "context_tokens_estimate": 24,
+      "evidence": [
+        "Group-first classification: matched groups [engineering, product_design, communication], scored 15 candidate roles.",
+        "Selected coder (score 2, margin 0) from candidate groups.",
+        "No task matched prompt signals; using default task.",
+        "Confirmed taxonomy task coder.general."
+      ],
+      "alternatives": [
+        {
+          "role_hint_id": "architect",
+          "task_type": "architect.general"
+        },
+        {
+          "role_hint_id": "security",
+          "task_type": "security.general"
+        },
+        {
+          "role_hint_id": "operator",
+          "task_type": "operator.general"
+        }
+      ]
+    }
+  }
+}

@@ -22,6 +22,22 @@ That means a valid decision contains:
 - one chosen endpoint
 - zero or more fallback endpoints already in deterministic order
 
+## Execution fallback can react to live failures
+
+The ranked fallback list is still part of the decision artifact, but execution can react when the chosen
+endpoint fails after routing.
+
+Current runtime behavior is:
+
+- timeout, network, rate-limit, and upstream 5xx failures get one quick same-endpoint retry before reroute
+- quota-exhausted and provider-auth failures skip the in-place retry, but they are still eligible for
+  cross-endpoint fallback
+- invalid-request failures stay terminal and do not trigger fallback
+
+Fallback-eligible failures also place the endpoint into a temporary cooldown window so the next request does
+not keep selecting the same broken path immediately. The current cooldown schedule steps through `10`
+minutes, `30` minutes, `1` hour, `5` hours, `10` hours, and `20` hours.
+
 ## What a healthy decision tells you
 
 A good decision record lets you answer:

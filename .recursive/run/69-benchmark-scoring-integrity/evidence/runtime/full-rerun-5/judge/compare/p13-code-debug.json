@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p13-code-debug",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"This error usually means the endpoint-selection step ran before any endpoint satisfied the eligibility filter, so `chosen_endpoint_id` was never assigned. Inspect the following checks in your registry/selector code:\\n\\n1. Reg",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"Inspect the eligibility path that produces both `chosen_endpoint_id` and the registry query result. If `chosen_endpoint_id` is empty, the failure is usually earlier than the registry lookup. Check these areas:\\n\\n1. Endpoint ",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both answers comprehensively list eligibility checks for an empty chosen_endpoint_id, matching the exemplar's intent. Moonshot's response is slightly more directly targeted at the specific TypeScript error and registry/selector inspection, offering a structured numbered list and explicit code-level debugging hints. OpenAI's answer is equally thorough but more generic in its framing. Therefore moo…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both answers comprehensively list eligibility checks for an empty chosen_endpoint_id, matching the exemplar's intent. Moonshot's response is slightly more directly targeted at the specific TypeScript error and registry/selector inspection, offering a structured numbered list and explicit code-level debugging hints. OpenAI's answer is equally thorough but more generic in its framing. Therefore moonshot ranks first.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nDebug this TypeScript error: Chosen endpoint is not present in the registry result. The chosen_endpoint_id is empty. What eligibility checks should I inspect?",
+    "exemplarAnswer": "inspect eligibility, throughput SLA, allowEndpoints, chosen_endpoint_id\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Lists eligibility checks for empty chosen_endpoint_id.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: eligib, endpoint, registry|allow"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 586,
+    "reasoningLength": 6749
+  },
+  "recordedAtMs": 1783936198324
+}

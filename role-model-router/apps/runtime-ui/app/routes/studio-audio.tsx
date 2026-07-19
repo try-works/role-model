@@ -7,19 +7,25 @@ import {
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
   StatusPill,
 } from "../components/page-primitives";
 import {
+  bodyStrongTextClassName,
+  bodyTextClassName,
   fieldClassName,
+  metaTextClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
 import {
   type RuntimeAudioVoiceRecord,
   type RuntimeSnapshot,
   fetchAudioVoices,
-  fetchRuntimeSnapshot,
+  fetchRuntimeModels,
   submitAudioTranscription,
   submitSpeechGeneration,
 } from "../lib/runtime-api";
@@ -50,8 +56,14 @@ function getVoiceLabel(voice: RuntimeAudioVoiceRecord): string {
   return voice.label ?? voice.name ?? voice.voice ?? voice.id ?? "Unnamed voice";
 }
 
+const formFieldLabelClassName = utilityLabelClassName;
+
+export function isVoiceInventoryUnavailableError(message: string | null): boolean {
+  return Boolean(message?.includes("returned HTML instead of JSON"));
+}
+
 export default function StudioAudioRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
   const [voices, setVoices] = useState<readonly RuntimeAudioVoiceRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -67,10 +79,10 @@ export default function StudioAudioRoute() {
   const [result, setResult] = useState<AudioResult | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then((value) => {
-        setSnapshot(value);
-        setModel((current) => current || value.models[0]?.id || "");
+    void fetchRuntimeModels()
+      .then((models) => {
+        setSnapshot({ models });
+        setModel((current) => current || models[0]?.id || "");
       })
       .catch((value: unknown) =>
         setError(
@@ -112,6 +124,7 @@ export default function StudioAudioRoute() {
     () => buildWorkbenchModelOptions(snapshot?.models ?? []),
     [snapshot?.models],
   );
+  const voiceInventoryUnavailable = isVoiceInventoryUnavailableError(voiceError);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -221,52 +234,35 @@ export default function StudioAudioRoute() {
             <LoadingState label="Loading audio request context…" />
           ) : (
             <form className="space-y-4" onSubmit={onSubmit}>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Mode</span>
-                <select
-                  className={fieldClassName}
-                  value={mode}
-                  onChange={(event) => setMode(event.target.value as AudioMode)}
-                >
-                  <option value="speech">Speech synthesis</option>
-                  <option value="transcription">Transcription</option>
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Model</span>
-                <select
-                  className={fieldClassName}
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                >
-                  {modelOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <SelectField
+                label="Mode"
+                value={mode}
+                onChange={(value) => setMode(value as AudioMode)}
+              >
+                <option value="speech">Speech synthesis</option>
+                <option value="transcription">Transcription</option>
+              </SelectField>
+              <SelectField label="Model" value={model} onChange={setModel}>
+                {modelOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
               {mode === "speech" ? (
                 <>
-                  <label className="grid gap-2 text-sm">
-                    <span className="font-medium text-[var(--rm-fg)]">Voice</span>
-                    <select
-                      className={fieldClassName}
-                      value={voice}
-                      onChange={(event) => setVoice(event.target.value)}
-                    >
-                      {voices.map((entry) => {
-                        const id = getVoiceId(entry);
-                        return (
-                          <option key={id} value={id}>
-                            {getVoiceLabel(entry)}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </label>
-                  <label className="grid gap-2 text-sm">
-                    <span className="font-medium text-[var(--rm-fg)]">Input</span>
+                  <SelectField label="Voice" value={voice} onChange={setVoice}>
+                    {voices.map((entry) => {
+                      const id = getVoiceId(entry);
+                      return (
+                        <option key={id} value={id}>
+                          {getVoiceLabel(entry)}
+                        </option>
+                      );
+                    })}
+                  </SelectField>
+                  <label className="grid gap-2">
+                    <span className={formFieldLabelClassName}>Input</span>
                     <textarea
                       className={`${fieldClassName} min-h-32`}
                       value={speechInput}
@@ -275,8 +271,8 @@ export default function StudioAudioRoute() {
                   </label>
                 </>
               ) : (
-                <label className="grid gap-2 text-sm">
-                  <span className="font-medium text-[var(--rm-fg)]">Audio file</span>
+                <label className="grid gap-2">
+                  <span className={formFieldLabelClassName}>Audio file</span>
                   <input
                     className={fieldClassName}
                     onChange={(event) => setTranscriptionFile(event.target.files?.[0] ?? null)}
@@ -301,15 +297,11 @@ export default function StudioAudioRoute() {
             ) : result.kind === "speech" ? (
               <div className="space-y-4">
                 <div className={`${mutedPanelClassName} p-4`}>
-                  <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                    Speech output
-                  </p>
-                  <p className="mt-2 text-sm text-[var(--rm-secondary)]">
+                  <p className={metaTextClassName}>Speech output</p>
+                  <p className={`mt-2 ${supportingTextClassName}`}>
                     Voice{" "}
-                    <span className="font-medium text-[var(--rm-fg)]">
-                      {result.voice || "unspecified"}
-                    </span>{" "}
-                    on model <span className="font-medium text-[var(--rm-fg)]">{result.model}</span>
+                    <span className={bodyStrongTextClassName}>{result.voice || "unspecified"}</span>{" "}
+                    on model <span className={bodyStrongTextClassName}>{result.model}</span>
                   </p>
                 </div>
                 {result.audioUrl ? (
@@ -324,17 +316,15 @@ export default function StudioAudioRoute() {
                   <EmptyState label="Speech audio is available, but this environment cannot create a local audio URL." />
                 )}
                 {result.audioUrl ? (
-                  <p className="text-xs text-[var(--rm-muted)]">
+                  <p className={metaTextClassName}>
                     Captions are not available for generated speech playback in this preview.
                   </p>
                 ) : null}
               </div>
             ) : (
               <div className={`${mutedPanelClassName} p-4`}>
-                <p className="text-xs font-normal uppercase tracking-[0.2em] text-[var(--rm-muted)]">
-                  Transcript
-                </p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--rm-fg)]">
+                <p className={metaTextClassName}>Transcript</p>
+                <p className={`mt-3 whitespace-pre-wrap ${bodyTextClassName}`}>
                   {result.text || "No transcript text was returned."}
                 </p>
               </div>
@@ -347,6 +337,8 @@ export default function StudioAudioRoute() {
           >
             {voiceLoading ? (
               <LoadingState label="Loading voices…" />
+            ) : voiceInventoryUnavailable ? (
+              <EmptyState label="Voice inventory is unavailable on this runtime host." />
             ) : voiceError ? (
               <ErrorState label={voiceError} />
             ) : voices.length === 0 ? (
@@ -363,7 +355,7 @@ export default function StudioAudioRoute() {
                     );
                   })}
                 </div>
-                <CodeBlock className="min-h-44 text-sm">
+                <CodeBlock className="min-h-44">
                   {result?.rawPayload ?? JSON.stringify(voices, null, 2)}
                 </CodeBlock>
               </div>

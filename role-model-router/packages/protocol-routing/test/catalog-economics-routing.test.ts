@@ -1,10 +1,9 @@
-import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
-import type { NormalizedCatalog } from "@role-model-router/catalog";
+import { type NormalizedCatalog, readNormalizedCatalogFile } from "@role-model-router/catalog";
 
 import { routeRuntimeRequest } from "../src/index.js";
 import { TEST_CATALOG } from "./test-catalog-fixture.js";
@@ -21,7 +20,7 @@ async function loadNormalizedCatalog(): Promise<NormalizedCatalog> {
     "data",
     "normalized-catalog.json",
   );
-  return JSON.parse(await readFile(catalogPath, "utf8")) as NormalizedCatalog;
+  return readNormalizedCatalogFile(catalogPath);
 }
 
 describe("catalog economics routing", () => {
@@ -356,12 +355,9 @@ describe("catalog economics routing", () => {
       observedDataConfig: {
         enabled: true,
         aggregation: { minSamples: 2 },
-        metricHalflives: {
-          qualityMs: 900_000,
-          latencyMs: 300_000,
-          throughputMs: 120_000,
-          reliabilityMs: 600_000,
-          costMs: 1_800_000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: {
           enabled: false,

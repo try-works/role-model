@@ -1,0 +1,70 @@
+{
+  "statusCode": 200,
+  "ok": true,
+  "headers": {
+    "access-control-allow-headers": "Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-origin": "*",
+    "connection": "keep-alive",
+    "content-length": "882",
+    "content-type": "application/json",
+    "date": "Tue, 07 Jul 2026 18:47:58 GMT",
+    "keep-alive": "timeout=5"
+  },
+  "body": {
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "providerId": "deepseek",
+    "providerKind": "provider-openai",
+    "orgScope": "personal",
+    "accountScope": "workspace-default",
+    "credentialRef": {
+      "backend": "local-file",
+      "ref": "api-key/deepseek/deepseek.personal.deepseek-api-key"
+    },
+    "authMode": "api-key-static",
+    "regionPolicy": {
+      "mode": "prefer",
+      "regions": [
+        "global"
+      ]
+    },
+    "baseUrlOverride": null,
+    "allowedModels": [
+      "deepseek/deepseek-v4-flash",
+      "deepseek/deepseek-v4-pro"
+    ],
+    "modelRoleBindings": [
+      {
+        "modelId": "deepseek/deepseek-v4-flash",
+        "roleIds": [
+          "analyst",
+          "coder",
+          "data",
+          "writer",
+          "translator",
+          "operator"
+        ]
+      },
+      {
+        "modelId": "deepseek/deepseek-v4-pro",
+        "roleIds": [
+          "analyst",
+          "coder",
+          "data",
+          "writer",
+          "translator",
+          "operator"
+        ]
+      }
+    ],
+    "deniedModels": [],
+    "entitlementTags": [
+      "chat"
+    ],
+    "budgetPolicyRef": "budget.default",
+    "quotaPolicyRef": "quota.default",
+    "status": "active",
+    "healthStatus": "healthy",
+    "rotationState": "not-required"
+  }
+}

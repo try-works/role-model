@@ -1,0 +1,12 @@
+
+> pi-role-model@0.0.0 build D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model
+> tsc --noEmit -p tsconfig.json
+
+test/commands.test.ts(2,47): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../src/commands.js'?
+test/commands.test.ts(90,34): error TS7006: Parameter 'alias' implicitly has an 'any' type.
+test/downstream-openai.test.ts(5,8): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../src/downstream-openai.js'?
+test/extension.test.ts(2,42): error TS2835: Relative import paths need explicit file extensions in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../src/extension.js'?
+D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  pi-role-model@0.0.0 build: `tsc --noEmit -p tsconfig.json`
+Exit status 2
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?

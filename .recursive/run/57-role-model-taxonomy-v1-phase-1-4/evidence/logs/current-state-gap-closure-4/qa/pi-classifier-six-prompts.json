@@ -1,0 +1,371 @@
+[
+  {
+    "prompt": "Review this diff for security risks and likely regressions.",
+    "classification": {
+      "role_model": {
+        "contract_version": 1,
+        "intent": {
+          "taxonomy_version": "1.0.0-alpha.1",
+          "content_revision": "taxonomy-v1-alpha.1",
+          "classification_contract_version": "role-model.classification.v1",
+          "classification_version": "role-model.pi-classifier.v1",
+          "source": "heuristic",
+          "confidence": 0.72,
+          "role_hint_id": "security",
+          "role_source": "heuristic",
+          "task_type": "security.audit",
+          "task_action": "audit",
+          "task_variant": null,
+          "task_source": "heuristic",
+          "task_confidence": 0.72,
+          "preferred_capabilities": [
+            "code.read"
+          ],
+          "required_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tool_classes": [
+            "filesystem.read"
+          ],
+          "context_tokens_estimate": 15,
+          "evidence": [
+            "security/risk/diff signal",
+            "Selected taxonomy task security.audit."
+          ],
+          "alternatives": [
+            {
+              "role_hint_id": "security",
+              "task_type": "security.audit.supply_chain"
+            },
+            {
+              "role_hint_id": "security",
+              "task_type": "security.threat_model"
+            }
+          ]
+        }
+      },
+      "candidateGroupIds": [
+        "engineering"
+      ],
+      "candidateRoleIds": [
+        "security"
+      ],
+      "loadedChunks": [
+        "groups",
+        "role-summaries",
+        "tasks:security"
+      ],
+      "hiddenModelCallUsed": false
+    }
+  },
+  {
+    "prompt": "Implement this small bug fix and add a regression test.",
+    "classification": {
+      "role_model": {
+        "contract_version": 1,
+        "intent": {
+          "taxonomy_version": "1.0.0-alpha.1",
+          "content_revision": "taxonomy-v1-alpha.1",
+          "classification_contract_version": "role-model.classification.v1",
+          "classification_version": "role-model.pi-classifier.v1",
+          "source": "heuristic",
+          "confidence": 0.72,
+          "role_hint_id": "coder",
+          "role_source": "heuristic",
+          "task_type": "coder.edit",
+          "task_action": "edit",
+          "task_variant": null,
+          "task_source": "heuristic",
+          "task_confidence": 0.72,
+          "preferred_capabilities": [
+            "reasoning.multi_step"
+          ],
+          "required_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tool_classes": [
+            "filesystem.read",
+            "filesystem.write",
+            "shell.execute"
+          ],
+          "context_tokens_estimate": 14,
+          "evidence": [
+            "implementation/fix signal",
+            "Selected taxonomy task coder.edit."
+          ],
+          "alternatives": [
+            {
+              "role_hint_id": "coder",
+              "task_type": "coder.review"
+            },
+            {
+              "role_hint_id": "coder",
+              "task_type": "coder.debug.root_cause"
+            }
+          ]
+        }
+      },
+      "candidateGroupIds": [
+        "engineering"
+      ],
+      "candidateRoleIds": [
+        "coder"
+      ],
+      "loadedChunks": [
+        "groups",
+        "role-summaries",
+        "tasks:coder"
+      ],
+      "hiddenModelCallUsed": false
+    }
+  },
+  {
+    "prompt": "Compare current public documentation for this API and cite differences.",
+    "classification": {
+      "role_model": {
+        "contract_version": 1,
+        "intent": {
+          "taxonomy_version": "1.0.0-alpha.1",
+          "content_revision": "taxonomy-v1-alpha.1",
+          "classification_contract_version": "role-model.classification.v1",
+          "classification_version": "role-model.pi-classifier.v1",
+          "source": "heuristic",
+          "confidence": 0.72,
+          "role_hint_id": "researcher",
+          "role_source": "heuristic",
+          "task_type": "researcher.web_research.current",
+          "task_action": "web_research",
+          "task_variant": "current",
+          "task_source": "heuristic",
+          "task_confidence": 0.72,
+          "preferred_capabilities": [
+            "citation.synthesis"
+          ],
+          "required_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tool_classes": [
+            "web.search",
+            "http.fetch"
+          ],
+          "context_tokens_estimate": 18,
+          "evidence": [
+            "current research/citation signal",
+            "Selected taxonomy task researcher.web_research.current."
+          ],
+          "alternatives": [
+            {
+              "role_hint_id": "researcher",
+              "task_type": "researcher.web_research"
+            },
+            {
+              "role_hint_id": "researcher",
+              "task_type": "researcher.compare_sources"
+            }
+          ]
+        }
+      },
+      "candidateGroupIds": [
+        "knowledge_research"
+      ],
+      "candidateRoleIds": [
+        "researcher"
+      ],
+      "loadedChunks": [
+        "groups",
+        "role-summaries",
+        "tasks:researcher"
+      ],
+      "hiddenModelCallUsed": false
+    }
+  },
+  {
+    "prompt": "Turn these support notes into a clear customer reply.",
+    "classification": {
+      "role_model": {
+        "contract_version": 1,
+        "intent": {
+          "taxonomy_version": "1.0.0-alpha.1",
+          "content_revision": "taxonomy-v1-alpha.1",
+          "classification_contract_version": "role-model.classification.v1",
+          "classification_version": "role-model.pi-classifier.v1",
+          "source": "heuristic",
+          "confidence": 0.72,
+          "role_hint_id": "support",
+          "role_source": "heuristic",
+          "task_type": "support.ticket.reply",
+          "task_action": "ticket",
+          "task_variant": "reply",
+          "task_source": "heuristic",
+          "task_confidence": 0.72,
+          "preferred_capabilities": [
+            "reasoning.multi_step"
+          ],
+          "required_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tool_classes": [],
+          "context_tokens_estimate": 14,
+          "evidence": [
+            "support communication signal",
+            "Selected taxonomy task support.ticket.reply."
+          ],
+          "alternatives": [
+            {
+              "role_hint_id": "support",
+              "task_type": "support.triage"
+            },
+            {
+              "role_hint_id": "support",
+              "task_type": "support.explain"
+            }
+          ]
+        }
+      },
+      "candidateGroupIds": [
+        "communication"
+      ],
+      "candidateRoleIds": [
+        "support"
+      ],
+      "loadedChunks": [
+        "groups",
+        "role-summaries",
+        "tasks:support"
+      ],
+      "hiddenModelCallUsed": false
+    }
+  },
+  {
+    "prompt": "Inspect this schema and propose a migration plan.",
+    "classification": {
+      "role_model": {
+        "contract_version": 1,
+        "intent": {
+          "taxonomy_version": "1.0.0-alpha.1",
+          "content_revision": "taxonomy-v1-alpha.1",
+          "classification_contract_version": "role-model.classification.v1",
+          "classification_version": "role-model.pi-classifier.v1",
+          "source": "heuristic",
+          "confidence": 0.72,
+          "role_hint_id": "architect",
+          "role_source": "heuristic",
+          "task_type": "architect.migration.strategy",
+          "task_action": "migration",
+          "task_variant": "strategy",
+          "task_source": "heuristic",
+          "task_confidence": 0.72,
+          "preferred_capabilities": [
+            "json.schema_adherence"
+          ],
+          "required_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tool_classes": [],
+          "context_tokens_estimate": 13,
+          "evidence": [
+            "architecture/schema migration signal",
+            "Selected taxonomy task architect.migration.strategy."
+          ],
+          "alternatives": [
+            {
+              "role_hint_id": "architect",
+              "task_type": "architect.design"
+            },
+            {
+              "role_hint_id": "architect",
+              "task_type": "architect.review"
+            }
+          ]
+        }
+      },
+      "candidateGroupIds": [
+        "engineering"
+      ],
+      "candidateRoleIds": [
+        "architect"
+      ],
+      "loadedChunks": [
+        "groups",
+        "role-summaries",
+        "tasks:architect"
+      ],
+      "hiddenModelCallUsed": false
+    }
+  },
+  {
+    "prompt": "Create product requirements and acceptance criteria for this workflow.",
+    "classification": {
+      "role_model": {
+        "contract_version": 1,
+        "intent": {
+          "taxonomy_version": "1.0.0-alpha.1",
+          "content_revision": "taxonomy-v1-alpha.1",
+          "classification_contract_version": "role-model.classification.v1",
+          "classification_version": "role-model.pi-classifier.v1",
+          "source": "heuristic",
+          "confidence": 0.72,
+          "role_hint_id": "product",
+          "role_source": "heuristic",
+          "task_type": "product.requirements",
+          "task_action": "requirements",
+          "task_variant": null,
+          "task_source": "heuristic",
+          "task_confidence": 0.72,
+          "preferred_capabilities": [
+            "json.schema_adherence"
+          ],
+          "required_modalities": [
+            "text"
+          ],
+          "output_modalities": [
+            "text"
+          ],
+          "tool_classes": [],
+          "context_tokens_estimate": 18,
+          "evidence": [
+            "product requirements signal",
+            "Selected taxonomy task product.requirements."
+          ],
+          "alternatives": [
+            {
+              "role_hint_id": "product",
+              "task_type": "product.workflow.review"
+            },
+            {
+              "role_hint_id": "product",
+              "task_type": "product.release_notes"
+            }
+          ]
+        }
+      },
+      "candidateGroupIds": [
+        "product_design"
+      ],
+      "candidateRoleIds": [
+        "product"
+      ],
+      "loadedChunks": [
+        "groups",
+        "role-summaries",
+        "tasks:product"
+      ],
+      "hiddenModelCallUsed": false
+    }
+  }
+]

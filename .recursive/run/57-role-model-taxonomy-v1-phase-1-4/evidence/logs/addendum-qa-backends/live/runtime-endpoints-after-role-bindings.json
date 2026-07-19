@@ -1,0 +1,78 @@
+[
+  {
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "providerId": "openai",
+    "roleIds": [],
+    "endpointKind": "remote_api",
+    "servingSource": "vendor-litellm",
+    "sourceType": "remote",
+    "healthStatus": "healthy",
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "structured.output",
+      "latency.optimized"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "webSearchSupport": {
+      "mode": "runtime-fallback",
+      "currentRuntimeContract": null,
+      "documentedProviderContract": null
+    },
+    "status": "active"
+  },
+  {
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "modelId": "lfm2.5-1.2b-instruct",
+    "providerId": "llama-swap",
+    "roleIds": [
+      "analyst",
+      "architect",
+      "coder",
+      "coordinator",
+      "creative",
+      "data",
+      "designer",
+      "educator",
+      "finance",
+      "health",
+      "knowledge",
+      "legal",
+      "marketer",
+      "mathematician",
+      "operator",
+      "planner",
+      "procurement",
+      "product",
+      "recruiter",
+      "researcher",
+      "scientist",
+      "security",
+      "seller",
+      "strategist",
+      "support",
+      "tester",
+      "translator",
+      "writer"
+    ],
+    "localModelSource": "llama-swap",
+    "endpointKind": "local_engine",
+    "servingSource": "vendor-llama-swap",
+    "sourceType": "local",
+    "healthStatus": "healthy",
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "webSearchSupport": {
+      "mode": "runtime-fallback",
+      "currentRuntimeContract": null,
+      "documentedProviderContract": null
+    },
+    "status": "active"
+  }
+]

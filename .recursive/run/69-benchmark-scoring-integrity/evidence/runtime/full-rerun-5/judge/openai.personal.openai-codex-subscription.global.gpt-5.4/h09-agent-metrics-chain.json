@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "h09-agent-metrics-chain",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Deliverable includes tool_calls for list_endpoints and two get_metrics (local and remote endpoint IDs), and answer explicitly compares remote vs local p95 latency (245 ms vs 62 ms). Meets all MUST criteria: required API tool calls emitted, JSON contains 'answer' key, answer compares p95 latency. No prohibited elements.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h09-agent-metrics-chain.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/h09-agent-metrics-chain/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935718056
+}

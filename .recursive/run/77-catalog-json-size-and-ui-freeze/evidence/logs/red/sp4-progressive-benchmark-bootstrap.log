@@ -1,0 +1,11 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP4
+TDD Mode: strict
+Timestamp: 2026-07-18T01:30:40Z
+Command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/control-benchmark.test.ts
+Exit code: 1
+
+RED verified: PASS
+Expected: essential suite/candidates/preferences publish while an advisory loader remains unresolved.
+Actual: startProgressiveBenchmarkBootstrap was undefined; the route used one seven-request Promise.all.
+Vitest summary: 1 failed; duration 2.00s.

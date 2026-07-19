@@ -11,14 +11,176 @@ import type { ProviderAccountRecord } from "@role-model-router/provider-account"
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
+const OBSERVATION_METADATA_BACKFILL_MIGRATION_ID = "run62-observation-metadata-backfill-v1";
+const TELEMETRY_METADATA_BACKFILL_MIGRATION_ID = "run62-telemetry-metadata-backfill-v1";
+const RECENT_OBSERVATIONS_INDEX_MIGRATION_ID = "run77-recent-observations-index-v1";
+const OBSERVED_PROFILE_INDEXES_MIGRATION_ID = "run77-observed-profile-indexes-v1";
 const CURRENT_SCHEMA_VERSION = 1;
+const COST_CALCULATION_VERSION = "run49.v1";
+const RUNTIME_TELEMETRY_INSERT_COLUMNS = [
+  "request_id",
+  "routing_decision_id",
+  "endpoint_id",
+  "conversation_id",
+  "created_at_ms",
+  "client_request_id",
+  "request_class",
+  "source_type",
+  "model_id",
+  "provider_kind",
+  "provider_family",
+  "vendor_id",
+  "provider_id",
+  "provider_account_id",
+  "selected_model_id",
+  "endpoint_kind",
+  "serving_source",
+  "region",
+  "lifecycle_state_at_request",
+  "health_status_at_request",
+  "requested_model_id",
+  "difficulty_bucket",
+  "routing_mode",
+  "requested_role_id",
+  "selected_strategy",
+  "request_operation",
+  "source_client",
+  "execution_family",
+  "adapter_family",
+  "status_family",
+  "request_payload_bytes",
+  "ingress_payload_bytes",
+  "translated_payload_bytes",
+  "provider_canonical_payload_bytes",
+  "provider_wire_payload_bytes",
+  "response_payload_bytes",
+  "retry_count",
+  "reroute_count",
+  "cooldown_decision",
+  "idempotency_decision",
+  "tool_side_effect_state",
+  "tooling_used",
+  "cache_state",
+  "role_ids_json",
+  "eligible_endpoint_ids_json",
+  "eligible_model_ids_json",
+  "candidate_cost_snapshot_json",
+  "selected_pricing_snapshot_json",
+  "input_tokens",
+  "output_tokens",
+  "total_tokens",
+  "latency_ms",
+  "error_class",
+  "status_code",
+  "finish_reason",
+  "prompt_cache_requested",
+  "prompt_cache_supported",
+  "prompt_cache_used",
+  "cache_read_tokens",
+  "cache_read_tokens_supported",
+  "cache_write_tokens",
+  "cache_write_tokens_supported",
+  "stream_text_delta_count",
+  "stream_text_supported",
+  "stream_tool_call_delta_count",
+  "stream_tool_call_supported",
+  "stream_tool_argument_delta_count",
+  "stream_tool_argument_supported",
+  "tool_call_count",
+  "tool_execution_count",
+  "cost_provenance",
+  "actual_cost_usd",
+  "estimated_cost_usd",
+  "effective_cost_usd",
+  "selected_uncached_cost_usd",
+  "baseline_max_eligible_cost_usd",
+  "routing_cost_savings_usd",
+  "cache_cost_savings_usd",
+  "total_avoided_cost_usd",
+  "cost_calculation_basis",
+  "cost_calculation_version",
+  "cost_baseline_source",
+  "cost_savings_support",
+  "sampling_rate",
+  "retention_ttl_hours",
+  "retain_until_ms",
+  "redaction_level",
+  "retention_class",
+  "structured_inspection_mode",
+  "raw_capture_available",
+  "structured_inspection_available",
+  "taxonomy_group_id",
+  "taxonomy_role_id",
+  "taxonomy_task_type",
+  "taxonomy_task_variant",
+  "taxonomy_capability_ids_json",
+  "taxonomy_modality_ids_json",
+  "taxonomy_tool_class_ids_json",
+  "currency",
+  "dimensions_json",
+] as const;
 const DIFFICULTY_BUCKETS = ["easy", "medium", "hard"] as const;
+const SQLITE_BUSY_TIMEOUT_MS = 5_000;
+const SQLITE_BUSY_RETRY_DELAY_MS = 100;
+const SQLITE_BUSY_MAX_ATTEMPTS = 3;
 const MAINTENANCE_DEFAULTS = [
   { key: "backup.policy", value: "wal-copy-on-demand" },
   { key: "deletion.policy", value: "explicit-export-delete" },
   { key: "redaction.level", value: "strict" },
   { key: "retention.class", value: "standard" },
 ] as const;
+
+function openSqliteDatabase(databasePath: string): DatabaseSync {
+  const database = new DatabaseSync(databasePath);
+  database.exec(`PRAGMA busy_timeout = ${SQLITE_BUSY_TIMEOUT_MS}`);
+  return database;
+}
+
+function isSqliteBusyError(error: unknown): boolean {
+  return error instanceof Error && /database is locked|SQLITE_BUSY/i.test(error.message);
+}
+
+function sleepSync(milliseconds: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, milliseconds);
+}
+
+function withSqliteBusyRetry<T>(databasePath: string, operation: (database: DatabaseSync) => T): T {
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= SQLITE_BUSY_MAX_ATTEMPTS; attempt += 1) {
+    const database = openSqliteDatabase(databasePath);
+    try {
+      const result = operation(database);
+      database.close();
+      return result;
+    } catch (error) {
+      lastError = error;
+      try {
+        database.close();
+      } catch {
+        // Ignore close failures while retrying the original busy error.
+      }
+      if (!isSqliteBusyError(error) || attempt >= SQLITE_BUSY_MAX_ATTEMPTS) {
+        throw error;
+      }
+      sleepSync(SQLITE_BUSY_RETRY_DELAY_MS * attempt);
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("sqlite write failed");
+}
+
+function isRuntimeTelemetryDifficultyBucket(
+  value: string | null | undefined,
+): value is RuntimeTelemetryRecord["difficultyBucket"] {
+  return value === "easy" || value === "medium" || value === "hard";
+}
+
+function isRuntimeTelemetryRoutingMode(
+  value: string | null | undefined,
+): value is RuntimeTelemetryRecord["routingMode"] {
+  return (
+    value === "baseline" || value === "difficulty" || value === "controller" || value === "hybrid"
+  );
+}
 
 const SCHEMA_SQL = `
 CREATE TABLE IF NOT EXISTS provider_accounts (
@@ -119,6 +281,7 @@ CREATE TABLE IF NOT EXISTS runtime_observations (
   endpoint_id TEXT NOT NULL,
   conversation_id TEXT NOT NULL,
   created_at_ms INTEGER NOT NULL,
+  retain_until_ms INTEGER,
   observation_json TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS observed_performance_samples (
@@ -180,6 +343,43 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   model_id TEXT,
   provider_kind TEXT,
   provider_family TEXT,
+  vendor_id TEXT,
+  provider_id TEXT,
+  provider_account_id TEXT,
+  selected_model_id TEXT,
+  endpoint_kind TEXT,
+  serving_source TEXT,
+  region TEXT,
+  lifecycle_state_at_request TEXT,
+  health_status_at_request TEXT,
+  requested_model_id TEXT,
+  difficulty_bucket TEXT,
+  routing_mode TEXT,
+  requested_role_id TEXT,
+  selected_strategy TEXT,
+  request_operation TEXT,
+  source_client TEXT,
+  execution_family TEXT,
+  adapter_family TEXT,
+  status_family TEXT,
+  request_payload_bytes INTEGER,
+  ingress_payload_bytes INTEGER,
+  translated_payload_bytes INTEGER,
+  provider_canonical_payload_bytes INTEGER,
+  provider_wire_payload_bytes INTEGER,
+  response_payload_bytes INTEGER,
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  reroute_count INTEGER NOT NULL DEFAULT 0,
+  cooldown_decision TEXT,
+  idempotency_decision TEXT,
+  tool_side_effect_state TEXT,
+  tooling_used INTEGER NOT NULL DEFAULT 0,
+  cache_state TEXT,
+  role_ids_json TEXT NOT NULL DEFAULT '[]',
+  eligible_endpoint_ids_json TEXT NOT NULL DEFAULT '[]',
+  eligible_model_ids_json TEXT NOT NULL DEFAULT '[]',
+  candidate_cost_snapshot_json TEXT,
+  selected_pricing_snapshot_json TEXT,
   input_tokens INTEGER NOT NULL,
   output_tokens INTEGER NOT NULL,
   total_tokens INTEGER NOT NULL,
@@ -205,7 +405,33 @@ CREATE TABLE IF NOT EXISTS runtime_telemetry_records (
   cost_provenance TEXT NOT NULL DEFAULT 'unavailable',
   actual_cost_usd REAL,
   estimated_cost_usd REAL,
-  currency TEXT
+  effective_cost_usd REAL NOT NULL DEFAULT 0,
+  selected_uncached_cost_usd REAL,
+  baseline_max_eligible_cost_usd REAL,
+  routing_cost_savings_usd REAL NOT NULL DEFAULT 0,
+  cache_cost_savings_usd REAL NOT NULL DEFAULT 0,
+  total_avoided_cost_usd REAL NOT NULL DEFAULT 0,
+  cost_calculation_basis TEXT NOT NULL DEFAULT 'unavailable',
+  cost_calculation_version TEXT NOT NULL DEFAULT 'run49.v1',
+  cost_baseline_source TEXT,
+  cost_savings_support TEXT,
+  sampling_rate REAL,
+  retention_ttl_hours INTEGER,
+  retain_until_ms INTEGER,
+  redaction_level TEXT,
+  retention_class TEXT,
+  structured_inspection_mode TEXT,
+  raw_capture_available INTEGER NOT NULL DEFAULT 0,
+  structured_inspection_available INTEGER NOT NULL DEFAULT 0,
+  taxonomy_group_id TEXT,
+  taxonomy_role_id TEXT,
+  taxonomy_task_type TEXT,
+  taxonomy_task_variant TEXT,
+  taxonomy_capability_ids_json TEXT,
+  taxonomy_modality_ids_json TEXT,
+  taxonomy_tool_class_ids_json TEXT,
+  currency TEXT,
+  dimensions_json TEXT
  );
 CREATE INDEX IF NOT EXISTS runtime_telemetry_records_created_at_idx
   ON runtime_telemetry_records (created_at_ms DESC, request_id DESC);
@@ -561,6 +787,11 @@ export interface ReadRuntimeControllerAssignmentInput {
   readonly scope: string;
 }
 
+export interface DeleteRuntimeControllerAssignmentInput {
+  readonly databasePath: string;
+  readonly scope: string;
+}
+
 export interface ExportRuntimeStateInput {
   readonly databasePath: string;
   readonly exportPath: string;
@@ -603,6 +834,11 @@ export interface ListRecentRuntimeObservationsInput {
   readonly limit?: number;
 }
 
+export interface ListRecentRuntimeRequestIdsInput {
+  readonly databasePath: string;
+  readonly limit?: number;
+}
+
 export interface RuntimeTelemetryRecord {
   readonly requestId: string;
   readonly routingDecisionId: string;
@@ -615,14 +851,56 @@ export interface RuntimeTelemetryRecord {
   readonly modelId: string | null;
   readonly providerKind: string | null;
   readonly providerFamily: string | null;
+  readonly vendorId: string | null;
+  readonly providerId: string | null;
+  readonly providerAccountId: string | null;
+  readonly selectedModelId: string | null;
+  readonly endpointKind: string | null;
+  readonly servingSource: string | null;
+  readonly region: string | null;
+  readonly lifecycleStateAtRequest: string | null;
+  readonly healthStatusAtRequest: string | null;
+  readonly requestedModelId: string | null;
+  readonly difficultyBucket: "easy" | "medium" | "hard" | null;
+  readonly routingMode: "baseline" | "difficulty" | "controller" | "hybrid" | null;
+  readonly requestedRoleId: string | null;
+  readonly selectedStrategy: string | null;
+  readonly requestOperation: string | null;
+  readonly sourceClient: string | null;
+  readonly executionFamily: string | null;
+  readonly adapterFamily: string | null;
+  readonly statusFamily: "success" | "failure" | "unknown" | null;
+  readonly requestPayloadBytes: number | null;
+  readonly ingressPayloadBytes: number | null;
+  readonly translatedPayloadBytes: number | null;
+  readonly providerCanonicalPayloadBytes: number | null;
+  readonly providerWirePayloadBytes: number | null;
+  readonly responsePayloadBytes: number | null;
+  readonly retryCount: number;
+  readonly rerouteCount: number;
+  readonly cooldownDecision: string | null;
+  readonly idempotencyDecision: string | null;
+  readonly toolSideEffectState: string | null;
+  readonly toolingUsed: boolean;
+  readonly cacheState: string | null;
+  readonly roleIds: readonly string[];
+  readonly eligibleEndpointIds: readonly string[];
+  readonly eligibleModelIds: readonly string[];
+  readonly candidateCostSnapshot: Record<string, unknown> | null;
+  readonly selectedPricingSnapshot: Record<string, unknown> | null;
   readonly inputTokens: number;
+  readonly inputTokensSource: "measured" | "normalized" | "estimated" | "unavailable";
+  readonly inputTokensAvailable: boolean;
   readonly outputTokens: number;
+  readonly outputTokensSource: "measured" | "normalized" | "estimated" | "unavailable";
+  readonly outputTokensAvailable: boolean;
   readonly totalTokens: number;
   readonly latencyMs: number | null;
   readonly errorClass: string | null;
   readonly statusCode: number | null;
   readonly finishReason: string | null;
   readonly promptCacheRequested: boolean;
+  readonly promptCacheRequestSource: "explicit" | "synthesized" | null;
   readonly promptCacheSupported: boolean;
   readonly promptCacheUsed: boolean;
   readonly cacheReadTokens: number;
@@ -640,7 +918,37 @@ export interface RuntimeTelemetryRecord {
   readonly costProvenance: "actual" | "estimated" | "unavailable";
   readonly actualCostUsd: number | null;
   readonly estimatedCostUsd: number | null;
+  readonly effectiveCostUsd: number;
+  readonly selectedUncachedCostUsd: number | null;
+  readonly baselineMaxEligibleCostUsd: number | null;
+  readonly routingCostSavingsUsd: number;
+  readonly cacheCostSavingsUsd: number;
+  readonly totalAvoidedCostUsd: number;
+  readonly costCalculationBasis:
+    | "actual_vendor_cost"
+    | "estimated_vendor_cost"
+    | "no_execution_zero"
+    | "unavailable";
+  readonly costCalculationVersion: string;
+  readonly costBaselineSource: string | null;
+  readonly costSavingsSupport: string | null;
+  readonly samplingRate: number | null;
+  readonly retentionTtlHours: number | null;
+  readonly retainUntil: number | null;
+  readonly redactionLevel: string | null;
+  readonly retentionClass: string | null;
+  readonly structuredInspectionMode: string | null;
+  readonly rawCaptureAvailable: boolean;
+  readonly structuredInspectionAvailable: boolean;
+  readonly taxonomyGroupId: string | null;
+  readonly taxonomyRoleId: string | null;
+  readonly taxonomyTaskType: string | null;
+  readonly taxonomyTaskVariant: string | null;
+  readonly taxonomyCapabilityIds: readonly string[];
+  readonly taxonomyModalityIds: readonly string[];
+  readonly taxonomyToolClassIds: readonly string[];
   readonly currency: string | null;
+  readonly dimensions: Record<string, unknown> | null;
 }
 
 export interface RuntimeTelemetrySummary {
@@ -684,6 +992,7 @@ export interface RuntimeTelemetryQueryInput {
   readonly windowMs?: number;
   readonly limit?: number;
   readonly endAtMs?: number;
+  readonly startAtMs?: number;
 }
 
 export interface PersistedRuntimeObservationBundle {
@@ -700,7 +1009,11 @@ export interface PersistedRuntimeObservationBundle {
     readonly model_id?: string;
     readonly provider_kind?: string;
     readonly tokens_in?: number;
+    readonly tokens_in_source?: "measured" | "normalized" | "estimated" | "unavailable";
+    readonly tokens_in_available?: boolean;
     readonly tokens_out?: number;
+    readonly tokens_out_source?: "measured" | "normalized" | "estimated" | "unavailable";
+    readonly tokens_out_available?: boolean;
     readonly latency_ms?: number;
     readonly cost_actual?: number;
     readonly cost_estimate?: number;
@@ -713,12 +1026,14 @@ export interface PersistedRuntimeObservationBundle {
   };
   readonly cacheObservability?: {
     readonly promptCacheRequested?: boolean;
+    readonly promptCacheRequestSource?: "explicit" | "synthesized";
     readonly promptCacheUsed?: boolean;
     readonly cacheReadTokens?: number;
     readonly cacheWriteTokens?: number;
   };
   readonly executionTelemetry?: {
     readonly providerFamily?: string;
+    readonly vendorId?: string;
     readonly finishReason?: string;
     readonly stream?: {
       readonly textDeltas?: number;
@@ -739,9 +1054,75 @@ export interface PersistedRuntimeObservationBundle {
     };
     readonly costProvenance?: "actual" | "estimated" | "unavailable";
   };
+  readonly routingDiagnostics?: {
+    readonly routingMode?: {
+      readonly effectiveMode?: string | null;
+    };
+    readonly rolePolicy?: {
+      readonly requestedRoleId?: string | null;
+    };
+    readonly controllerRouting?: {
+      readonly acceptedDirectives?: {
+        readonly strategy?: string | null;
+        readonly requestedRoleId?: string | null;
+      };
+    };
+    readonly hybridArbitration?: {
+      readonly finalStrategy?: string | null;
+    };
+    readonly difficultyRouting?: {
+      readonly difficulty?: string | null;
+      readonly strategy?: string | null;
+    };
+  };
   readonly tooling?: {
     readonly toolCalls?: readonly unknown[];
     readonly executions?: readonly unknown[];
+  };
+  readonly executionSemantics?: {
+    readonly sourceClient?: string;
+    readonly executionFamily?: string;
+    readonly adapterFamily?: string;
+    readonly payloadBytes?: {
+      readonly ingress?: number;
+      readonly translated?: number;
+      readonly providerCanonical?: number;
+      readonly providerWire?: number;
+      readonly providerResponse?: number;
+    };
+    readonly retryCount?: number;
+    readonly rerouteCount?: number;
+    readonly cooldownDecision?: string;
+    readonly idempotencyDecision?: string;
+    readonly toolSideEffectState?: string;
+  };
+  readonly telemetrySnapshot?: {
+    readonly providerId: string | null;
+    readonly providerAccountId: string | null;
+    readonly sourceType: "local" | "remote";
+    readonly endpointKind: string;
+    readonly servingSource: string;
+    readonly region: string | null;
+    readonly lifecycleStateAtRequest: string;
+    readonly healthStatusAtRequest: string | null;
+    readonly requestedModelId: string | null;
+    readonly selectedModelId?: string | null;
+    readonly requestOperation: string;
+    readonly roleIds: readonly string[];
+    readonly toolingUsed: boolean;
+    readonly cacheState: string;
+    readonly eligibleEndpointIds: readonly string[];
+    readonly eligibleModelIds: readonly string[];
+    readonly candidateCostSnapshot: Record<string, unknown>;
+    readonly selectedPricingSnapshot: Record<string, unknown> | null;
+    readonly selectedUncachedCostUsd: number | null;
+    readonly baselineMaxEligibleCostUsd: number | null;
+    readonly routingCostSavingsUsd: number;
+    readonly cacheCostSavingsUsd: number;
+    readonly totalAvoidedCostUsd: number;
+    readonly costBaselineSource: string | null;
+    readonly costSavingsSupport: string | null;
+    readonly dimensions?: Record<string, unknown>;
   };
   readonly inspection?: {
     readonly request?: {
@@ -750,6 +1131,30 @@ export interface PersistedRuntimeObservationBundle {
       };
     };
   };
+  readonly capturePolicy?: {
+    readonly environment?: string;
+    readonly redactionLevel?: string;
+    readonly retentionClass?: string;
+    readonly structuredInspectionMode?: string;
+    readonly rawCaptureAvailable?: boolean;
+    readonly structuredInspectionAvailable?: boolean;
+    readonly redactedFields?: readonly string[];
+    readonly suppressedFields?: readonly string[];
+  };
+  readonly privacyReceipt?: {
+    readonly samplingRate?: number;
+    readonly retentionTtlHours?: number;
+    readonly retainUntil?: number;
+  };
+  readonly taxonomyDimensions?: {
+    readonly taxonomy_group_id?: unknown;
+    readonly taxonomy_role_id?: unknown;
+    readonly taxonomy_task_type?: unknown;
+    readonly taxonomy_task_variant?: unknown;
+    readonly taxonomy_capability_ids?: unknown;
+    readonly taxonomy_modality_ids?: unknown;
+    readonly taxonomy_tool_class_ids?: unknown;
+  };
 }
 
 function ensureNonEmpty(value: string, label: string): string {
@@ -757,6 +1162,36 @@ function ensureNonEmpty(value: string, label: string): string {
     throw new Error(`${label} must be a non-empty string`);
   }
   return value;
+}
+
+function hasMigrationReceipt(database: DatabaseSync, migrationId: string): boolean {
+  const row = database
+    .prepare("SELECT migration_id FROM migration_receipts WHERE migration_id = ? AND status = ?")
+    .get(migrationId, "applied") as { migration_id?: string } | undefined;
+  return row?.migration_id === migrationId;
+}
+
+function recordMigrationReceipt(database: DatabaseSync, migrationId: string): void {
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO migration_receipts (migration_id, schema_version, applied_at_ms, status) VALUES (?, ?, ?, ?)",
+    )
+    .run(migrationId, CURRENT_SCHEMA_VERSION, Date.now(), "applied");
+}
+
+function runOnceMigration(
+  database: DatabaseSync,
+  migrationId: string,
+  shouldRunMigration: boolean,
+  migrate: () => void,
+): void {
+  if (hasMigrationReceipt(database, migrationId)) {
+    return;
+  }
+  if (shouldRunMigration) {
+    migrate();
+  }
+  recordMigrationReceipt(database, migrationId);
 }
 
 export function resolveSqliteMemoryLocation(input: SqliteMemoryLocationInput): string {
@@ -779,6 +1214,69 @@ function initializeSchema(database: DatabaseSync): void {
       "ALTER TABLE provider_accounts ADD COLUMN model_role_bindings_json TEXT NOT NULL DEFAULT '[]'",
     );
   }
+  const observationColumns = new Set(
+    (
+      database.prepare("PRAGMA table_info(runtime_observations)").all() as Array<{
+        name: string;
+      }>
+    ).map((row) => row.name),
+  );
+  if (!observationColumns.has("retain_until_ms")) {
+    database.exec("ALTER TABLE runtime_observations ADD COLUMN retain_until_ms INTEGER");
+  }
+  database.exec(
+    "CREATE INDEX IF NOT EXISTS idx_obs_retain_until ON runtime_observations(retain_until_ms)",
+  );
+  // R-PERF1: Add metadata columns to avoid JSON parsing on every telemetry query
+  let addedObservationMetadataColumn = false;
+  for (const [colName, colType] of [
+    ["taxonomy_role_id", "TEXT"],
+    ["taxonomy_task_type", "TEXT"],
+    ["client_request_id", "TEXT"],
+    ["request_class", "TEXT"],
+  ] as const) {
+    if (!observationColumns.has(colName)) {
+      database.exec(`ALTER TABLE runtime_observations ADD COLUMN ${colName} ${colType}`);
+      addedObservationMetadataColumn = true;
+    }
+  }
+  runOnceMigration(
+    database,
+    OBSERVATION_METADATA_BACKFILL_MIGRATION_ID,
+    addedObservationMetadataColumn,
+    () =>
+      database.exec(
+        `UPDATE runtime_observations SET
+          client_request_id = COALESCE(client_request_id, json_extract(observation_json, '$.clientRequestId')),
+          request_class = COALESCE(request_class, CASE
+            WHEN json_extract(observation_json, '$.observedPerformance.sample.source_type') = 'benchmark' THEN 'benchmark'
+            WHEN json_extract(observation_json, '$.observedPerformance.sample.source_type') = 'live_request' THEN 'live_request'
+            ELSE NULL END),
+          taxonomy_role_id = COALESCE(taxonomy_role_id, json_extract(observation_json, '$.taxonomyDimensions.taxonomy_role_id')),
+          taxonomy_task_type = COALESCE(taxonomy_task_type, json_extract(observation_json, '$.taxonomyDimensions.taxonomy_task_type'))
+        WHERE client_request_id IS NULL
+          OR request_class IS NULL
+          OR taxonomy_role_id IS NULL
+          OR taxonomy_task_type IS NULL`,
+      ),
+  );
+  runOnceMigration(database, RECENT_OBSERVATIONS_INDEX_MIGRATION_ID, true, () =>
+    database.exec(
+      "CREATE INDEX IF NOT EXISTS runtime_observations_created_at_idx ON runtime_observations (created_at_ms DESC, request_id DESC)",
+    ),
+  );
+  runOnceMigration(database, OBSERVED_PROFILE_INDEXES_MIGRATION_ID, true, () =>
+    database.exec(`
+      CREATE INDEX IF NOT EXISTS observed_performance_samples_endpoint_time_idx
+        ON observed_performance_samples (endpoint_id, timestamp_ms ASC, sample_id ASC);
+      CREATE INDEX IF NOT EXISTS observed_performance_samples_difficulty_time_idx
+        ON observed_performance_samples_by_difficulty (endpoint_id, difficulty_bucket, timestamp_ms ASC, sample_id ASC);
+      CREATE INDEX IF NOT EXISTS observed_profile_snapshots_endpoint_time_idx
+        ON observed_profile_snapshots (endpoint_id, measured_at_ms DESC, snapshot_id DESC);
+      CREATE INDEX IF NOT EXISTS observed_profile_snapshots_difficulty_time_idx
+        ON observed_profile_snapshots_by_difficulty (endpoint_id, difficulty_bucket, measured_at_ms DESC, snapshot_id DESC);
+    `),
+  );
   const runtimeTelemetryColumns = new Set(
     (
       database.prepare("PRAGMA table_info(runtime_telemetry_records)").all() as Array<{
@@ -791,6 +1289,43 @@ function initializeSchema(database: DatabaseSync): void {
     "request_class TEXT",
     "source_type TEXT",
     "provider_family TEXT",
+    "vendor_id TEXT",
+    "provider_id TEXT",
+    "provider_account_id TEXT",
+    "selected_model_id TEXT",
+    "endpoint_kind TEXT",
+    "serving_source TEXT",
+    "region TEXT",
+    "lifecycle_state_at_request TEXT",
+    "health_status_at_request TEXT",
+    "requested_model_id TEXT",
+    "difficulty_bucket TEXT",
+    "routing_mode TEXT",
+    "requested_role_id TEXT",
+    "selected_strategy TEXT",
+    "request_operation TEXT",
+    "source_client TEXT",
+    "execution_family TEXT",
+    "adapter_family TEXT",
+    "status_family TEXT",
+    "request_payload_bytes INTEGER",
+    "ingress_payload_bytes INTEGER",
+    "translated_payload_bytes INTEGER",
+    "provider_canonical_payload_bytes INTEGER",
+    "provider_wire_payload_bytes INTEGER",
+    "response_payload_bytes INTEGER",
+    "retry_count INTEGER NOT NULL DEFAULT 0",
+    "reroute_count INTEGER NOT NULL DEFAULT 0",
+    "cooldown_decision TEXT",
+    "idempotency_decision TEXT",
+    "tool_side_effect_state TEXT",
+    "tooling_used INTEGER NOT NULL DEFAULT 0",
+    "cache_state TEXT",
+    "role_ids_json TEXT NOT NULL DEFAULT '[]'",
+    "eligible_endpoint_ids_json TEXT NOT NULL DEFAULT '[]'",
+    "eligible_model_ids_json TEXT NOT NULL DEFAULT '[]'",
+    "candidate_cost_snapshot_json TEXT",
+    "selected_pricing_snapshot_json TEXT",
     "finish_reason TEXT",
     "prompt_cache_supported INTEGER NOT NULL DEFAULT 0",
     "cache_read_tokens_supported INTEGER NOT NULL DEFAULT 0",
@@ -802,13 +1337,160 @@ function initializeSchema(database: DatabaseSync): void {
     "stream_tool_argument_delta_count INTEGER NOT NULL DEFAULT 0",
     "stream_tool_argument_supported INTEGER NOT NULL DEFAULT 0",
     "cost_provenance TEXT NOT NULL DEFAULT 'unavailable'",
+    "effective_cost_usd REAL NOT NULL DEFAULT 0",
+    "selected_uncached_cost_usd REAL",
+    "baseline_max_eligible_cost_usd REAL",
+    "routing_cost_savings_usd REAL NOT NULL DEFAULT 0",
+    "cache_cost_savings_usd REAL NOT NULL DEFAULT 0",
+    "total_avoided_cost_usd REAL NOT NULL DEFAULT 0",
+    "cost_calculation_basis TEXT NOT NULL DEFAULT 'unavailable'",
+    `cost_calculation_version TEXT NOT NULL DEFAULT '${COST_CALCULATION_VERSION}'`,
+    "cost_baseline_source TEXT",
+    "cost_savings_support TEXT",
+    "sampling_rate REAL",
+    "retention_ttl_hours INTEGER",
+    "retain_until_ms INTEGER",
+    "redaction_level TEXT",
+    "retention_class TEXT",
+    "structured_inspection_mode TEXT",
+    "raw_capture_available INTEGER NOT NULL DEFAULT 0",
+    "structured_inspection_available INTEGER NOT NULL DEFAULT 0",
+    "taxonomy_group_id TEXT",
+    "taxonomy_role_id TEXT",
+    "taxonomy_task_type TEXT",
+    "taxonomy_task_variant TEXT",
+    "taxonomy_capability_ids_json TEXT",
+    "taxonomy_modality_ids_json TEXT",
+    "taxonomy_tool_class_ids_json TEXT",
+    "dimensions_json TEXT",
   ] as const;
+  let addedRuntimeTelemetryMetadataColumn = false;
   for (const definition of telemetryColumnDefinitions) {
     const [columnName] = definition.split(" ");
     if (!runtimeTelemetryColumns.has(columnName)) {
       database.exec(`ALTER TABLE runtime_telemetry_records ADD COLUMN ${definition}`);
+      addedRuntimeTelemetryMetadataColumn = true;
     }
   }
+  runOnceMigration(
+    database,
+    TELEMETRY_METADATA_BACKFILL_MIGRATION_ID,
+    addedRuntimeTelemetryMetadataColumn,
+    () =>
+      database.exec(
+        `UPDATE runtime_telemetry_records SET
+          client_request_id = COALESCE(
+            client_request_id,
+            (SELECT client_request_id FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          request_class = COALESCE(
+            request_class,
+            (SELECT request_class FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          source_client = COALESCE(
+            source_client,
+            (SELECT json_extract(observation_json, '$.executionSemantics.sourceClient') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          vendor_id = COALESCE(
+            vendor_id,
+            (SELECT json_extract(observation_json, '$.executionTelemetry.vendorId') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          execution_family = COALESCE(
+            execution_family,
+            (SELECT json_extract(observation_json, '$.executionSemantics.executionFamily') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          adapter_family = COALESCE(
+            adapter_family,
+            (SELECT json_extract(observation_json, '$.executionSemantics.adapterFamily') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          request_payload_bytes = COALESCE(
+            request_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerCanonical') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          ingress_payload_bytes = COALESCE(
+            ingress_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.ingress') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          translated_payload_bytes = COALESCE(
+            translated_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.translated') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          provider_canonical_payload_bytes = COALESCE(
+            provider_canonical_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerCanonical') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          provider_wire_payload_bytes = COALESCE(
+            provider_wire_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerWire') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          response_payload_bytes = COALESCE(
+            response_payload_bytes,
+            (SELECT json_extract(observation_json, '$.executionSemantics.payloadBytes.providerResponse') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          cooldown_decision = COALESCE(
+            cooldown_decision,
+            (SELECT json_extract(observation_json, '$.executionSemantics.cooldownDecision') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          idempotency_decision = COALESCE(
+            idempotency_decision,
+            (SELECT json_extract(observation_json, '$.executionSemantics.idempotencyDecision') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          tool_side_effect_state = COALESCE(
+            tool_side_effect_state,
+            (SELECT json_extract(observation_json, '$.executionSemantics.toolSideEffectState') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_group_id = COALESCE(
+            taxonomy_group_id,
+            (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_group_id') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_role_id = COALESCE(
+            taxonomy_role_id,
+            (SELECT taxonomy_role_id FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_task_type = COALESCE(
+            taxonomy_task_type,
+            (SELECT taxonomy_task_type FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_task_variant = COALESCE(
+            taxonomy_task_variant,
+            (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_task_variant') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_capability_ids_json = COALESCE(
+            taxonomy_capability_ids_json,
+            (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_capability_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_modality_ids_json = COALESCE(
+            taxonomy_modality_ids_json,
+            (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_modality_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          ),
+          taxonomy_tool_class_ids_json = COALESCE(
+            taxonomy_tool_class_ids_json,
+            (SELECT json_extract(observation_json, '$.taxonomyDimensions.taxonomy_tool_class_ids') FROM runtime_observations WHERE request_id = runtime_telemetry_records.request_id)
+          )
+        WHERE client_request_id IS NULL
+          OR request_class IS NULL
+          OR source_client IS NULL
+          OR vendor_id IS NULL
+          OR execution_family IS NULL
+          OR adapter_family IS NULL
+          OR request_payload_bytes IS NULL
+          OR ingress_payload_bytes IS NULL
+          OR translated_payload_bytes IS NULL
+          OR provider_canonical_payload_bytes IS NULL
+          OR provider_wire_payload_bytes IS NULL
+          OR response_payload_bytes IS NULL
+          OR cooldown_decision IS NULL
+          OR idempotency_decision IS NULL
+          OR tool_side_effect_state IS NULL
+          OR taxonomy_group_id IS NULL
+          OR taxonomy_role_id IS NULL
+          OR taxonomy_task_type IS NULL
+          OR taxonomy_task_variant IS NULL
+          OR taxonomy_capability_ids_json IS NULL
+          OR taxonomy_modality_ids_json IS NULL
+          OR taxonomy_tool_class_ids_json IS NULL`,
+      ),
+  );
 }
 
 function seedMaintenanceDefaults(database: DatabaseSync, nowMs: number): void {
@@ -1235,6 +1917,14 @@ export function readRuntimeControllerAssignment(
   return row ? mapRuntimeControllerAssignmentRow(row) : null;
 }
 
+export function deleteRuntimeControllerAssignment(
+  input: DeleteRuntimeControllerAssignmentInput,
+): void {
+  const database = new DatabaseSync(input.databasePath);
+  database.prepare("DELETE FROM runtime_controller_assignments WHERE scope = ?").run(input.scope);
+  database.close();
+}
+
 export function upsertProviderDeviceAuthSession(input: UpsertProviderDeviceAuthSessionInput): void {
   const database = new DatabaseSync(input.databasePath);
   const nowMs = Date.now();
@@ -1651,6 +2341,43 @@ function mapRuntimeTelemetryRecord(row: {
   model_id: string | null;
   provider_kind: string | null;
   provider_family: string | null;
+  vendor_id: string | null;
+  provider_id: string | null;
+  provider_account_id: string | null;
+  selected_model_id: string | null;
+  endpoint_kind: string | null;
+  serving_source: string | null;
+  region: string | null;
+  lifecycle_state_at_request: string | null;
+  health_status_at_request: string | null;
+  requested_model_id: string | null;
+  difficulty_bucket: string | null;
+  routing_mode: string | null;
+  requested_role_id: string | null;
+  selected_strategy: string | null;
+  request_operation: string | null;
+  source_client: string | null;
+  execution_family: string | null;
+  adapter_family: string | null;
+  status_family: string | null;
+  request_payload_bytes: number | null;
+  ingress_payload_bytes: number | null;
+  translated_payload_bytes: number | null;
+  provider_canonical_payload_bytes: number | null;
+  provider_wire_payload_bytes: number | null;
+  response_payload_bytes: number | null;
+  retry_count: number;
+  reroute_count: number;
+  cooldown_decision: string | null;
+  idempotency_decision: string | null;
+  tool_side_effect_state: string | null;
+  tooling_used: number;
+  cache_state: string | null;
+  role_ids_json: string | null;
+  eligible_endpoint_ids_json: string | null;
+  eligible_model_ids_json: string | null;
+  candidate_cost_snapshot_json: string | null;
+  selected_pricing_snapshot_json: string | null;
   input_tokens: number;
   output_tokens: number;
   total_tokens: number;
@@ -1676,8 +2403,63 @@ function mapRuntimeTelemetryRecord(row: {
   cost_provenance: string;
   actual_cost_usd: number | null;
   estimated_cost_usd: number | null;
+  effective_cost_usd: number;
+  selected_uncached_cost_usd: number | null;
+  baseline_max_eligible_cost_usd: number | null;
+  routing_cost_savings_usd: number;
+  cache_cost_savings_usd: number;
+  total_avoided_cost_usd: number;
+  cost_calculation_basis: string;
+  cost_calculation_version: string | null;
+  cost_baseline_source: string | null;
+  cost_savings_support: string | null;
+  sampling_rate: number | null;
+  retention_ttl_hours: number | null;
+  retain_until_ms: number | null;
+  redaction_level: string | null;
+  retention_class: string | null;
+  structured_inspection_mode: string | null;
+  raw_capture_available: number;
+  structured_inspection_available: number;
+  taxonomy_group_id: string | null;
+  taxonomy_role_id: string | null;
+  taxonomy_task_type: string | null;
+  taxonomy_task_variant: string | null;
+  taxonomy_capability_ids_json: string | null;
+  taxonomy_modality_ids_json: string | null;
+  taxonomy_tool_class_ids_json: string | null;
   currency: string | null;
+  dimensions_json: string | null;
 }): RuntimeTelemetryRecord {
+  const parseStringList = (value: string | null): readonly string[] =>
+    value
+      ? (JSON.parse(value) as unknown[]).filter(
+          (entry): entry is string => typeof entry === "string",
+        )
+      : [];
+  const dimensions = row.dimensions_json
+    ? (JSON.parse(row.dimensions_json) as Record<string, unknown>)
+    : null;
+  const usageTokenTruth =
+    dimensions?.usageTokenTruth &&
+    typeof dimensions.usageTokenTruth === "object" &&
+    !Array.isArray(dimensions.usageTokenTruth)
+      ? (dimensions.usageTokenTruth as Record<string, unknown>)
+      : null;
+  const readTokenSource = (value: unknown): RuntimeTelemetryRecord["inputTokensSource"] =>
+    value === "measured" ||
+    value === "normalized" ||
+    value === "estimated" ||
+    value === "unavailable"
+      ? value
+      : "unavailable";
+  const inputTokensSource = readTokenSource(usageTokenTruth?.inputSource);
+  const outputTokensSource = readTokenSource(usageTokenTruth?.outputSource);
+  const promptCacheRequestSource =
+    dimensions?.promptCacheRequestSource === "explicit" ||
+    dimensions?.promptCacheRequestSource === "synthesized"
+      ? dimensions.promptCacheRequestSource
+      : null;
   return {
     requestId: row.request_id,
     routingDecisionId: row.routing_decision_id,
@@ -1696,14 +2478,86 @@ function mapRuntimeTelemetryRecord(row: {
     modelId: row.model_id,
     providerKind: row.provider_kind,
     providerFamily: row.provider_family,
+    vendorId: row.vendor_id,
+    providerId: row.provider_id,
+    providerAccountId: row.provider_account_id,
+    selectedModelId: row.selected_model_id,
+    endpointKind: row.endpoint_kind,
+    servingSource: row.serving_source,
+    region: row.region,
+    lifecycleStateAtRequest: row.lifecycle_state_at_request,
+    healthStatusAtRequest: row.health_status_at_request,
+    requestedModelId: row.requested_model_id,
+    difficultyBucket:
+      row.difficulty_bucket === "easy" ||
+      row.difficulty_bucket === "medium" ||
+      row.difficulty_bucket === "hard"
+        ? row.difficulty_bucket
+        : null,
+    routingMode:
+      row.routing_mode === "baseline" ||
+      row.routing_mode === "difficulty" ||
+      row.routing_mode === "controller" ||
+      row.routing_mode === "hybrid"
+        ? row.routing_mode
+        : null,
+    requestedRoleId: row.requested_role_id,
+    selectedStrategy: row.selected_strategy,
+    requestOperation: row.request_operation,
+    sourceClient: row.source_client,
+    executionFamily: row.execution_family,
+    adapterFamily: row.adapter_family,
+    statusFamily:
+      row.status_family === "success" ||
+      row.status_family === "failure" ||
+      row.status_family === "unknown"
+        ? row.status_family
+        : null,
+    requestPayloadBytes: row.request_payload_bytes,
+    ingressPayloadBytes: row.ingress_payload_bytes,
+    translatedPayloadBytes: row.translated_payload_bytes,
+    providerCanonicalPayloadBytes: row.provider_canonical_payload_bytes,
+    providerWirePayloadBytes: row.provider_wire_payload_bytes,
+    responsePayloadBytes: row.response_payload_bytes,
+    retryCount: row.retry_count,
+    rerouteCount: row.reroute_count,
+    cooldownDecision: row.cooldown_decision,
+    idempotencyDecision: row.idempotency_decision,
+    toolSideEffectState: row.tool_side_effect_state,
+    toolingUsed: row.tooling_used === 1,
+    cacheState: row.cache_state,
+    roleIds: row.role_ids_json ? (JSON.parse(row.role_ids_json) as string[]) : [],
+    eligibleEndpointIds: row.eligible_endpoint_ids_json
+      ? (JSON.parse(row.eligible_endpoint_ids_json) as string[])
+      : [],
+    eligibleModelIds: row.eligible_model_ids_json
+      ? (JSON.parse(row.eligible_model_ids_json) as string[])
+      : [],
+    candidateCostSnapshot: row.candidate_cost_snapshot_json
+      ? (JSON.parse(row.candidate_cost_snapshot_json) as Record<string, unknown>)
+      : null,
+    selectedPricingSnapshot: row.selected_pricing_snapshot_json
+      ? (JSON.parse(row.selected_pricing_snapshot_json) as Record<string, unknown>)
+      : null,
     inputTokens: row.input_tokens,
+    inputTokensSource,
+    inputTokensAvailable:
+      typeof usageTokenTruth?.inputAvailable === "boolean"
+        ? usageTokenTruth.inputAvailable
+        : usageTokenTruth === null && row.input_tokens > 0,
     outputTokens: row.output_tokens,
+    outputTokensSource,
+    outputTokensAvailable:
+      typeof usageTokenTruth?.outputAvailable === "boolean"
+        ? usageTokenTruth.outputAvailable
+        : usageTokenTruth === null && row.output_tokens > 0,
     totalTokens: row.total_tokens,
     latencyMs: row.latency_ms,
     errorClass: row.error_class,
     statusCode: row.status_code,
     finishReason: row.finish_reason,
     promptCacheRequested: row.prompt_cache_requested === 1,
+    promptCacheRequestSource,
     promptCacheSupported: row.prompt_cache_supported === 1,
     promptCacheUsed: row.prompt_cache_used === 1,
     cacheReadTokens: row.cache_read_tokens,
@@ -1721,8 +2575,50 @@ function mapRuntimeTelemetryRecord(row: {
     costProvenance: row.cost_provenance as RuntimeTelemetryRecord["costProvenance"],
     actualCostUsd: row.actual_cost_usd,
     estimatedCostUsd: row.estimated_cost_usd,
+    effectiveCostUsd: row.effective_cost_usd,
+    selectedUncachedCostUsd: row.selected_uncached_cost_usd,
+    baselineMaxEligibleCostUsd: row.baseline_max_eligible_cost_usd,
+    routingCostSavingsUsd: row.routing_cost_savings_usd,
+    cacheCostSavingsUsd: row.cache_cost_savings_usd,
+    totalAvoidedCostUsd: row.total_avoided_cost_usd,
+    costCalculationBasis:
+      row.cost_calculation_basis === "actual_vendor_cost" ||
+      row.cost_calculation_basis === "estimated_vendor_cost" ||
+      row.cost_calculation_basis === "no_execution_zero"
+        ? row.cost_calculation_basis
+        : "unavailable",
+    costCalculationVersion: row.cost_calculation_version ?? COST_CALCULATION_VERSION,
+    costBaselineSource: row.cost_baseline_source,
+    costSavingsSupport: row.cost_savings_support,
+    samplingRate: row.sampling_rate,
+    retentionTtlHours: row.retention_ttl_hours,
+    retainUntil: row.retain_until_ms,
+    redactionLevel: row.redaction_level,
+    retentionClass: row.retention_class,
+    structuredInspectionMode: row.structured_inspection_mode,
+    rawCaptureAvailable: row.raw_capture_available === 1,
+    structuredInspectionAvailable: row.structured_inspection_available === 1,
+    taxonomyGroupId: row.taxonomy_group_id,
+    taxonomyRoleId: row.taxonomy_role_id,
+    taxonomyTaskType: row.taxonomy_task_type,
+    taxonomyTaskVariant: row.taxonomy_task_variant,
+    taxonomyCapabilityIds: parseStringList(row.taxonomy_capability_ids_json),
+    taxonomyModalityIds: parseStringList(row.taxonomy_modality_ids_json),
+    taxonomyToolClassIds: parseStringList(row.taxonomy_tool_class_ids_json),
     currency: row.currency,
+    dimensions,
   };
+}
+
+function readPersistedTelemetryString(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function readPersistedTelemetryStringList(value: unknown): readonly string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter((entry): entry is string => typeof entry === "string");
 }
 
 function toRuntimeTelemetryRecord(
@@ -1730,8 +2626,80 @@ function toRuntimeTelemetryRecord(
 ): RuntimeTelemetryRecord {
   const inputTokens = observation.usageEvent.tokens_in ?? 0;
   const outputTokens = observation.usageEvent.tokens_out ?? 0;
+  const inputTokensSource = observation.usageEvent.tokens_in_source ?? "unavailable";
+  const outputTokensSource = observation.usageEvent.tokens_out_source ?? "unavailable";
+  const inputTokensAvailable = observation.usageEvent.tokens_in_available ?? false;
+  const outputTokensAvailable = observation.usageEvent.tokens_out_available ?? false;
   const executionTelemetry = observation.executionTelemetry;
   const streamSupport = executionTelemetry?.streamSupport;
+  const actualCostUsd = observation.usageEvent.cost_actual ?? null;
+  const estimatedCostUsd = observation.usageEvent.cost_estimate ?? null;
+  const effectiveCostUsd = actualCostUsd ?? estimatedCostUsd ?? 0;
+  const costCalculationBasis: RuntimeTelemetryRecord["costCalculationBasis"] =
+    typeof actualCostUsd === "number"
+      ? "actual_vendor_cost"
+      : typeof estimatedCostUsd === "number"
+        ? "estimated_vendor_cost"
+        : "unavailable";
+  const routingDiagnostics = observation.routingDiagnostics;
+  const telemetrySnapshot = observation.telemetrySnapshot;
+  const difficultyBucketCandidate =
+    routingDiagnostics?.difficultyRouting?.difficulty ??
+    observation.observedPerformance.sample.difficulty_bucket ??
+    null;
+  const difficultyBucket: RuntimeTelemetryRecord["difficultyBucket"] =
+    isRuntimeTelemetryDifficultyBucket(difficultyBucketCandidate)
+      ? difficultyBucketCandidate
+      : null;
+  const routingModeCandidate = routingDiagnostics?.routingMode?.effectiveMode ?? null;
+  const routingMode: RuntimeTelemetryRecord["routingMode"] = isRuntimeTelemetryRoutingMode(
+    routingModeCandidate,
+  )
+    ? routingModeCandidate
+    : null;
+  const executionSemantics = observation.executionSemantics;
+  const selectedStrategy =
+    routingDiagnostics?.hybridArbitration?.finalStrategy ??
+    routingDiagnostics?.controllerRouting?.acceptedDirectives?.strategy ??
+    routingDiagnostics?.difficultyRouting?.strategy ??
+    (routingMode ? "balanced" : null);
+  const statusCode = observation.inspection?.request?.responseCapture?.statusCode ?? null;
+  const errorClass =
+    observation.usageEvent.error_class ??
+    observation.observedPerformance.sample.error_class ??
+    null;
+  const statusFamily: RuntimeTelemetryRecord["statusFamily"] =
+    typeof statusCode === "number"
+      ? statusCode >= 200 && statusCode < 400
+        ? "success"
+        : "failure"
+      : errorClass
+        ? "failure"
+        : "unknown";
+  const taxonomyDimensions = observation.taxonomyDimensions;
+  const promptCacheRequestSource = observation.cacheObservability?.promptCacheRequestSource ?? null;
+  const hasUsageTokenTruth =
+    observation.usageEvent.tokens_in_source !== undefined ||
+    observation.usageEvent.tokens_in_available !== undefined ||
+    observation.usageEvent.tokens_out_source !== undefined ||
+    observation.usageEvent.tokens_out_available !== undefined;
+  const dimensions =
+    hasUsageTokenTruth || promptCacheRequestSource
+      ? {
+          ...(telemetrySnapshot?.dimensions ?? {}),
+          ...(hasUsageTokenTruth
+            ? {
+                usageTokenTruth: {
+                  inputSource: inputTokensSource,
+                  inputAvailable: inputTokensAvailable,
+                  outputSource: outputTokensSource,
+                  outputAvailable: outputTokensAvailable,
+                },
+              }
+            : {}),
+          ...(promptCacheRequestSource ? { promptCacheRequestSource } : {}),
+        }
+      : (telemetrySnapshot?.dimensions ?? null);
   return {
     requestId: observation.requestId,
     routingDecisionId: observation.routingDecisionId,
@@ -1744,24 +2712,70 @@ function toRuntimeTelemetryRecord(
       observation.observedPerformance.sample.source_type === "live_request"
         ? observation.observedPerformance.sample.source_type
         : "unknown",
-    sourceType: null,
+    sourceType: telemetrySnapshot?.sourceType ?? null,
     modelId: observation.usageEvent.model_id ?? null,
     providerKind: observation.usageEvent.provider_kind ?? null,
     providerFamily: executionTelemetry?.providerFamily ?? null,
+    vendorId: executionTelemetry?.vendorId ?? null,
+    providerId: telemetrySnapshot?.providerId ?? null,
+    providerAccountId: telemetrySnapshot?.providerAccountId ?? null,
+    selectedModelId: telemetrySnapshot?.selectedModelId ?? observation.usageEvent.model_id ?? null,
+    endpointKind: telemetrySnapshot?.endpointKind ?? null,
+    servingSource: telemetrySnapshot?.servingSource ?? null,
+    region: telemetrySnapshot?.region ?? null,
+    lifecycleStateAtRequest: telemetrySnapshot?.lifecycleStateAtRequest ?? null,
+    healthStatusAtRequest: telemetrySnapshot?.healthStatusAtRequest ?? null,
+    requestedModelId: telemetrySnapshot?.requestedModelId ?? null,
+    difficultyBucket,
+    routingMode,
+    requestedRoleId:
+      routingDiagnostics?.rolePolicy?.requestedRoleId ??
+      routingDiagnostics?.controllerRouting?.acceptedDirectives?.requestedRoleId ??
+      null,
+    selectedStrategy,
+    requestOperation: telemetrySnapshot?.requestOperation ?? null,
+    sourceClient: executionSemantics?.sourceClient ?? null,
+    executionFamily:
+      executionSemantics?.executionFamily ?? telemetrySnapshot?.servingSource ?? null,
+    adapterFamily: executionSemantics?.adapterFamily ?? null,
+    statusFamily,
+    requestPayloadBytes: executionSemantics?.payloadBytes?.providerCanonical ?? null,
+    ingressPayloadBytes: executionSemantics?.payloadBytes?.ingress ?? null,
+    translatedPayloadBytes: executionSemantics?.payloadBytes?.translated ?? null,
+    providerCanonicalPayloadBytes: executionSemantics?.payloadBytes?.providerCanonical ?? null,
+    providerWirePayloadBytes: executionSemantics?.payloadBytes?.providerWire ?? null,
+    responsePayloadBytes: executionSemantics?.payloadBytes?.providerResponse ?? null,
+    retryCount: executionSemantics?.retryCount ?? 0,
+    rerouteCount: executionSemantics?.rerouteCount ?? 0,
+    cooldownDecision: executionSemantics?.cooldownDecision ?? null,
+    idempotencyDecision: executionSemantics?.idempotencyDecision ?? null,
+    toolSideEffectState: executionSemantics?.toolSideEffectState ?? null,
+    toolingUsed:
+      telemetrySnapshot?.toolingUsed ??
+      ((observation.tooling?.toolCalls?.length ?? 0) > 0 ||
+        (observation.tooling?.executions?.length ?? 0) > 0),
+    cacheState: telemetrySnapshot?.cacheState ?? null,
+    roleIds: telemetrySnapshot?.roleIds ?? [],
+    eligibleEndpointIds: telemetrySnapshot?.eligibleEndpointIds ?? [],
+    eligibleModelIds: telemetrySnapshot?.eligibleModelIds ?? [],
+    candidateCostSnapshot: telemetrySnapshot?.candidateCostSnapshot ?? null,
+    selectedPricingSnapshot: telemetrySnapshot?.selectedPricingSnapshot ?? null,
     inputTokens,
+    inputTokensSource,
+    inputTokensAvailable,
     outputTokens,
+    outputTokensSource,
+    outputTokensAvailable,
     totalTokens: inputTokens + outputTokens,
     latencyMs:
       observation.usageEvent.latency_ms ??
       observation.observedPerformance.sample.latency_ms ??
       null,
-    errorClass:
-      observation.usageEvent.error_class ??
-      observation.observedPerformance.sample.error_class ??
-      null,
-    statusCode: observation.inspection?.request?.responseCapture?.statusCode ?? null,
+    errorClass,
+    statusCode,
     finishReason: executionTelemetry?.finishReason ?? null,
     promptCacheRequested: observation.cacheObservability?.promptCacheRequested ?? false,
+    promptCacheRequestSource,
     promptCacheSupported: executionTelemetry?.promptCaching?.supported ?? false,
     promptCacheUsed: observation.cacheObservability?.promptCacheUsed ?? false,
     cacheReadTokens: observation.cacheObservability?.cacheReadTokens ?? 0,
@@ -1777,9 +2791,278 @@ function toRuntimeTelemetryRecord(
     toolCallCount: observation.tooling?.toolCalls?.length ?? 0,
     toolExecutionCount: observation.tooling?.executions?.length ?? 0,
     costProvenance: executionTelemetry?.costProvenance ?? "unavailable",
-    actualCostUsd: observation.usageEvent.cost_actual ?? null,
-    estimatedCostUsd: observation.usageEvent.cost_estimate ?? null,
+    actualCostUsd,
+    estimatedCostUsd,
+    effectiveCostUsd,
+    selectedUncachedCostUsd: telemetrySnapshot?.selectedUncachedCostUsd ?? estimatedCostUsd,
+    baselineMaxEligibleCostUsd: telemetrySnapshot?.baselineMaxEligibleCostUsd ?? estimatedCostUsd,
+    routingCostSavingsUsd: telemetrySnapshot?.routingCostSavingsUsd ?? 0,
+    cacheCostSavingsUsd: telemetrySnapshot?.cacheCostSavingsUsd ?? 0,
+    totalAvoidedCostUsd: telemetrySnapshot?.totalAvoidedCostUsd ?? 0,
+    costCalculationBasis,
+    costCalculationVersion: COST_CALCULATION_VERSION,
+    costBaselineSource: telemetrySnapshot?.costBaselineSource ?? null,
+    costSavingsSupport: telemetrySnapshot?.costSavingsSupport ?? null,
+    samplingRate: observation.privacyReceipt?.samplingRate ?? null,
+    retentionTtlHours: observation.privacyReceipt?.retentionTtlHours ?? null,
+    retainUntil: observation.privacyReceipt?.retainUntil ?? null,
+    redactionLevel: observation.capturePolicy?.redactionLevel ?? null,
+    retentionClass: observation.capturePolicy?.retentionClass ?? null,
+    structuredInspectionMode: observation.capturePolicy?.structuredInspectionMode ?? null,
+    rawCaptureAvailable: observation.capturePolicy?.rawCaptureAvailable ?? false,
+    structuredInspectionAvailable:
+      observation.capturePolicy?.structuredInspectionAvailable ?? false,
+    taxonomyGroupId: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_group_id),
+    taxonomyRoleId: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_role_id),
+    taxonomyTaskType: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_task_type),
+    taxonomyTaskVariant: readPersistedTelemetryString(taxonomyDimensions?.taxonomy_task_variant),
+    taxonomyCapabilityIds: readPersistedTelemetryStringList(
+      taxonomyDimensions?.taxonomy_capability_ids,
+    ),
+    taxonomyModalityIds: readPersistedTelemetryStringList(
+      taxonomyDimensions?.taxonomy_modality_ids,
+    ),
+    taxonomyToolClassIds: readPersistedTelemetryStringList(
+      taxonomyDimensions?.taxonomy_tool_class_ids,
+    ),
     currency: observation.usageEvent.currency ?? null,
+    dimensions,
+  };
+}
+
+function runtimeTelemetryInsertValues(
+  record: RuntimeTelemetryRecord,
+): readonly (string | number | null)[] {
+  return [
+    record.requestId,
+    record.routingDecisionId,
+    record.endpointId,
+    record.conversationId,
+    record.createdAtMs,
+    record.clientRequestId,
+    record.requestClass,
+    record.sourceType,
+    record.modelId,
+    record.providerKind,
+    record.providerFamily,
+    record.vendorId,
+    record.providerId,
+    record.providerAccountId,
+    record.selectedModelId,
+    record.endpointKind,
+    record.servingSource,
+    record.region,
+    record.lifecycleStateAtRequest,
+    record.healthStatusAtRequest,
+    record.requestedModelId,
+    record.difficultyBucket,
+    record.routingMode,
+    record.requestedRoleId,
+    record.selectedStrategy,
+    record.requestOperation,
+    record.sourceClient,
+    record.executionFamily,
+    record.adapterFamily,
+    record.statusFamily,
+    record.requestPayloadBytes,
+    record.ingressPayloadBytes,
+    record.translatedPayloadBytes,
+    record.providerCanonicalPayloadBytes,
+    record.providerWirePayloadBytes,
+    record.responsePayloadBytes,
+    record.retryCount,
+    record.rerouteCount,
+    record.cooldownDecision,
+    record.idempotencyDecision,
+    record.toolSideEffectState,
+    record.toolingUsed ? 1 : 0,
+    record.cacheState,
+    JSON.stringify(record.roleIds),
+    JSON.stringify(record.eligibleEndpointIds),
+    JSON.stringify(record.eligibleModelIds),
+    record.candidateCostSnapshot ? JSON.stringify(record.candidateCostSnapshot) : null,
+    record.selectedPricingSnapshot ? JSON.stringify(record.selectedPricingSnapshot) : null,
+    record.inputTokens,
+    record.outputTokens,
+    record.totalTokens,
+    record.latencyMs,
+    record.errorClass,
+    record.statusCode,
+    record.finishReason,
+    record.promptCacheRequested ? 1 : 0,
+    record.promptCacheSupported ? 1 : 0,
+    record.promptCacheUsed ? 1 : 0,
+    record.cacheReadTokens,
+    record.cacheReadTokensSupported ? 1 : 0,
+    record.cacheWriteTokens,
+    record.cacheWriteTokensSupported ? 1 : 0,
+    record.streamTextDeltaCount,
+    record.streamTextSupported ? 1 : 0,
+    record.streamToolCallDeltaCount,
+    record.streamToolCallSupported ? 1 : 0,
+    record.streamToolArgumentDeltaCount,
+    record.streamToolArgumentSupported ? 1 : 0,
+    record.toolCallCount,
+    record.toolExecutionCount,
+    record.costProvenance,
+    record.actualCostUsd,
+    record.estimatedCostUsd,
+    record.effectiveCostUsd,
+    record.selectedUncachedCostUsd,
+    record.baselineMaxEligibleCostUsd,
+    record.routingCostSavingsUsd,
+    record.cacheCostSavingsUsd,
+    record.totalAvoidedCostUsd,
+    record.costCalculationBasis,
+    record.costCalculationVersion,
+    record.costBaselineSource,
+    record.costSavingsSupport,
+    record.samplingRate,
+    record.retentionTtlHours,
+    record.retainUntil,
+    record.redactionLevel,
+    record.retentionClass,
+    record.structuredInspectionMode,
+    record.rawCaptureAvailable ? 1 : 0,
+    record.structuredInspectionAvailable ? 1 : 0,
+    record.taxonomyGroupId,
+    record.taxonomyRoleId,
+    record.taxonomyTaskType,
+    record.taxonomyTaskVariant,
+    JSON.stringify(record.taxonomyCapabilityIds),
+    JSON.stringify(record.taxonomyModalityIds),
+    JSON.stringify(record.taxonomyToolClassIds),
+    record.currency,
+    record.dimensions ? JSON.stringify(record.dimensions) : null,
+  ];
+}
+
+function toFailureRuntimeTelemetryRecord(
+  input: PersistRuntimeTelemetryFailureInput,
+  routingDecisionId: string,
+  endpointId: string,
+  createdAtMs: number,
+): RuntimeTelemetryRecord {
+  const observationCapturePolicy =
+    input.observation &&
+    typeof input.observation.capturePolicy === "object" &&
+    input.observation.capturePolicy !== null
+      ? (input.observation.capturePolicy as Record<string, unknown>)
+      : null;
+  return {
+    requestId: input.requestId,
+    routingDecisionId,
+    endpointId,
+    conversationId: "conversation-main",
+    createdAtMs,
+    clientRequestId: input.clientRequestId ?? null,
+    requestClass: input.requestClass ?? "unknown",
+    sourceType: input.sourceType ?? null,
+    modelId: input.modelId ?? null,
+    providerKind: input.providerKind ?? null,
+    providerFamily: input.providerFamily ?? null,
+    vendorId: input.vendorId ?? null,
+    providerId: input.providerId ?? null,
+    providerAccountId: input.providerAccountId ?? null,
+    selectedModelId: input.selectedModelId ?? null,
+    endpointKind: input.endpointKind ?? null,
+    servingSource: input.servingSource ?? null,
+    region: input.region ?? null,
+    lifecycleStateAtRequest: input.lifecycleStateAtRequest ?? null,
+    healthStatusAtRequest: input.healthStatusAtRequest ?? null,
+    requestedModelId: input.requestedModelId ?? input.modelId ?? null,
+    difficultyBucket: input.difficultyBucket ?? null,
+    routingMode: input.routingMode ?? null,
+    requestedRoleId: input.requestedRoleId ?? null,
+    selectedStrategy: input.selectedStrategy ?? null,
+    requestOperation: input.requestOperation ?? null,
+    sourceClient: input.sourceClient ?? null,
+    executionFamily: input.executionFamily ?? null,
+    adapterFamily: input.adapterFamily ?? null,
+    statusFamily: "failure",
+    requestPayloadBytes: input.requestPayloadBytes ?? null,
+    ingressPayloadBytes: input.ingressPayloadBytes ?? null,
+    translatedPayloadBytes: input.translatedPayloadBytes ?? null,
+    providerCanonicalPayloadBytes: input.providerCanonicalPayloadBytes ?? null,
+    providerWirePayloadBytes: input.providerWirePayloadBytes ?? null,
+    responsePayloadBytes: input.responsePayloadBytes ?? null,
+    retryCount: input.retryCount ?? 0,
+    rerouteCount: input.rerouteCount ?? 0,
+    cooldownDecision: input.cooldownDecision ?? null,
+    idempotencyDecision: input.idempotencyDecision ?? null,
+    toolSideEffectState: input.toolSideEffectState ?? null,
+    toolingUsed: input.toolingUsed ?? false,
+    cacheState: input.cacheState ?? null,
+    roleIds: input.roleIds ?? [],
+    eligibleEndpointIds: input.eligibleEndpointIds ?? [],
+    eligibleModelIds: input.eligibleModelIds ?? [],
+    candidateCostSnapshot: input.candidateCostSnapshot ?? null,
+    selectedPricingSnapshot: input.selectedPricingSnapshot ?? null,
+    inputTokens: 0,
+    inputTokensSource: "unavailable",
+    inputTokensAvailable: false,
+    outputTokens: 0,
+    outputTokensSource: "unavailable",
+    outputTokensAvailable: false,
+    totalTokens: 0,
+    latencyMs: input.latencyMs ?? null,
+    errorClass: input.errorClass,
+    statusCode: input.statusCode,
+    finishReason: null,
+    promptCacheRequested: false,
+    promptCacheRequestSource: null,
+    promptCacheSupported: true,
+    promptCacheUsed: false,
+    cacheReadTokens: 0,
+    cacheReadTokensSupported: true,
+    cacheWriteTokens: 0,
+    cacheWriteTokensSupported: true,
+    streamTextDeltaCount: 0,
+    streamTextSupported: true,
+    streamToolCallDeltaCount: 0,
+    streamToolCallSupported: true,
+    streamToolArgumentDeltaCount: 0,
+    streamToolArgumentSupported: true,
+    toolCallCount: 0,
+    toolExecutionCount: 0,
+    costProvenance: "unavailable",
+    actualCostUsd: null,
+    estimatedCostUsd: null,
+    effectiveCostUsd: 0,
+    selectedUncachedCostUsd: input.selectedUncachedCostUsd ?? 0,
+    baselineMaxEligibleCostUsd: input.baselineMaxEligibleCostUsd ?? 0,
+    routingCostSavingsUsd: input.routingCostSavingsUsd ?? 0,
+    cacheCostSavingsUsd: input.cacheCostSavingsUsd ?? 0,
+    totalAvoidedCostUsd: input.totalAvoidedCostUsd ?? 0,
+    costCalculationBasis: "no_execution_zero",
+    costCalculationVersion: COST_CALCULATION_VERSION,
+    costBaselineSource: input.costBaselineSource ?? null,
+    costSavingsSupport: input.costSavingsSupport ?? null,
+    samplingRate: input.samplingRate ?? null,
+    retentionTtlHours: input.retentionTtlHours ?? null,
+    retainUntil: input.retainUntil ?? null,
+    redactionLevel: input.redactionLevel ?? null,
+    retentionClass: input.retentionClass ?? null,
+    structuredInspectionMode: input.structuredInspectionMode ?? null,
+    rawCaptureAvailable:
+      input.rawCaptureAvailable ??
+      (typeof observationCapturePolicy?.rawCaptureAvailable === "boolean"
+        ? observationCapturePolicy.rawCaptureAvailable
+        : false),
+    structuredInspectionAvailable:
+      input.structuredInspectionAvailable ??
+      (typeof observationCapturePolicy?.structuredInspectionAvailable === "boolean"
+        ? observationCapturePolicy.structuredInspectionAvailable
+        : false),
+    taxonomyGroupId: input.taxonomyGroupId ?? null,
+    taxonomyRoleId: input.taxonomyRoleId ?? null,
+    taxonomyTaskType: input.taxonomyTaskType ?? null,
+    taxonomyTaskVariant: input.taxonomyTaskVariant ?? null,
+    taxonomyCapabilityIds: input.taxonomyCapabilityIds ?? [],
+    taxonomyModalityIds: input.taxonomyModalityIds ?? [],
+    taxonomyToolClassIds: input.taxonomyToolClassIds ?? [],
+    currency: null,
+    dimensions: input.dimensions ?? null,
   };
 }
 
@@ -1790,9 +3073,15 @@ function listRuntimeTelemetryRecordsInternal(
   const clauses: string[] = [];
   const parameters: Array<number> = [];
   const endAtMs = input.endAtMs ?? Date.now();
-  if (typeof input.windowMs === "number") {
+  const startAtMs =
+    typeof input.startAtMs === "number"
+      ? input.startAtMs
+      : typeof input.windowMs === "number"
+        ? endAtMs - input.windowMs
+        : undefined;
+  if (typeof startAtMs === "number") {
     clauses.push("created_at_ms >= ?");
-    parameters.push(endAtMs - input.windowMs);
+    parameters.push(startAtMs);
   }
   clauses.push("created_at_ms <= ?");
   parameters.push(endAtMs);
@@ -1800,7 +3089,7 @@ function listRuntimeTelemetryRecordsInternal(
   const limitClause = typeof input.limit === "number" ? " LIMIT ?" : "";
   const rows = database
     .prepare(
-      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency FROM runtime_telemetry_records WHERE ${clauses.join(
+      `SELECT request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, vendor_id, provider_id, provider_account_id, selected_model_id, endpoint_kind, serving_source, region, lifecycle_state_at_request, health_status_at_request, requested_model_id, difficulty_bucket, routing_mode, requested_role_id, selected_strategy, request_operation, source_client, execution_family, adapter_family, status_family, request_payload_bytes, ingress_payload_bytes, translated_payload_bytes, provider_canonical_payload_bytes, provider_wire_payload_bytes, response_payload_bytes, retry_count, reroute_count, cooldown_decision, idempotency_decision, tool_side_effect_state, tooling_used, cache_state, role_ids_json, eligible_endpoint_ids_json, eligible_model_ids_json, candidate_cost_snapshot_json, selected_pricing_snapshot_json, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, effective_cost_usd, selected_uncached_cost_usd, baseline_max_eligible_cost_usd, routing_cost_savings_usd, cache_cost_savings_usd, total_avoided_cost_usd, cost_calculation_basis, cost_calculation_version, cost_baseline_source, cost_savings_support, sampling_rate, retention_ttl_hours, retain_until_ms, redaction_level, retention_class, structured_inspection_mode, raw_capture_available, structured_inspection_available, taxonomy_group_id, taxonomy_role_id, taxonomy_task_type, taxonomy_task_variant, taxonomy_capability_ids_json, taxonomy_modality_ids_json, taxonomy_tool_class_ids_json, currency, dimensions_json FROM runtime_telemetry_records WHERE ${clauses.join(
         " AND ",
       )} ORDER BY created_at_ms DESC, request_id DESC${limitClause}`,
     )
@@ -1816,6 +3105,43 @@ function listRuntimeTelemetryRecordsInternal(
     model_id: string | null;
     provider_kind: string | null;
     provider_family: string | null;
+    vendor_id: string | null;
+    provider_id: string | null;
+    provider_account_id: string | null;
+    selected_model_id: string | null;
+    endpoint_kind: string | null;
+    serving_source: string | null;
+    region: string | null;
+    lifecycle_state_at_request: string | null;
+    health_status_at_request: string | null;
+    requested_model_id: string | null;
+    difficulty_bucket: string | null;
+    routing_mode: string | null;
+    requested_role_id: string | null;
+    selected_strategy: string | null;
+    request_operation: string | null;
+    source_client: string | null;
+    execution_family: string | null;
+    adapter_family: string | null;
+    status_family: string | null;
+    request_payload_bytes: number | null;
+    ingress_payload_bytes: number | null;
+    translated_payload_bytes: number | null;
+    provider_canonical_payload_bytes: number | null;
+    provider_wire_payload_bytes: number | null;
+    response_payload_bytes: number | null;
+    retry_count: number;
+    reroute_count: number;
+    cooldown_decision: string | null;
+    idempotency_decision: string | null;
+    tool_side_effect_state: string | null;
+    tooling_used: number;
+    cache_state: string | null;
+    role_ids_json: string | null;
+    eligible_endpoint_ids_json: string | null;
+    eligible_model_ids_json: string | null;
+    candidate_cost_snapshot_json: string | null;
+    selected_pricing_snapshot_json: string | null;
     input_tokens: number;
     output_tokens: number;
     total_tokens: number;
@@ -1841,7 +3167,33 @@ function listRuntimeTelemetryRecordsInternal(
     cost_provenance: string;
     actual_cost_usd: number | null;
     estimated_cost_usd: number | null;
+    effective_cost_usd: number;
+    selected_uncached_cost_usd: number | null;
+    baseline_max_eligible_cost_usd: number | null;
+    routing_cost_savings_usd: number;
+    cache_cost_savings_usd: number;
+    total_avoided_cost_usd: number;
+    cost_calculation_basis: string;
+    cost_calculation_version: string | null;
+    cost_baseline_source: string | null;
+    cost_savings_support: string | null;
+    sampling_rate: number | null;
+    retention_ttl_hours: number | null;
+    retain_until_ms: number | null;
+    redaction_level: string | null;
+    retention_class: string | null;
+    structured_inspection_mode: string | null;
+    raw_capture_available: number;
+    structured_inspection_available: number;
+    taxonomy_group_id: string | null;
+    taxonomy_role_id: string | null;
+    taxonomy_task_type: string | null;
+    taxonomy_task_variant: string | null;
+    taxonomy_capability_ids_json: string | null;
+    taxonomy_modality_ids_json: string | null;
+    taxonomy_tool_class_ids_json: string | null;
     currency: string | null;
+    dimensions_json: string | null;
   }>;
 
   return rows.map(mapRuntimeTelemetryRecord);
@@ -1862,6 +3214,20 @@ export function readRuntimeMaintenancePolicy(
   database.close();
 
   return Object.fromEntries(rows.map((row) => [row.maintenance_key, row.maintenance_value]));
+}
+
+export function upsertRuntimeMaintenanceValue(input: {
+  readonly databasePath: string;
+  readonly key: string;
+  readonly value: string;
+}): void {
+  const database = openSqliteDatabase(input.databasePath);
+  database
+    .prepare(
+      "INSERT OR REPLACE INTO memory_maintenance (maintenance_key, maintenance_value, updated_at_ms) VALUES (?, ?, ?)",
+    )
+    .run(input.key, input.value, Date.now());
+  database.close();
 }
 
 export function upsertObservedThroughputPenaltyState(
@@ -1898,7 +3264,7 @@ export function upsertObservedThroughputPenaltyState(
 export function readObservedThroughputPenaltyState(
   input: ReadObservedThroughputPenaltyStateInput,
 ): ObservedThroughputPenaltyStateRecord | null {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const row = database
     .prepare(
       `SELECT endpoint_id, last_observed_tokens_per_sec, min_tokens_per_sec, penalty_factor, activated_at_ms, expires_at_ms, last_observation_measured_at_ms, updated_at_ms
@@ -2111,211 +3477,197 @@ export function clearBenchmarkRunArtifacts(
 }
 
 export function persistObservedBenchmarkSample(input: PersistObservedBenchmarkSampleInput): void {
-  const database = new DatabaseSync(input.databasePath);
   const sample = {
     ...input.sample,
     source_type: "benchmark" as const,
   };
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    )
-    .run(
-      sampleIdFor(sample),
-      sample.endpoint_id,
-      sample.request_id ?? null,
-      sample.routing_decision_id ?? null,
-      sample.source_type,
-      sample.timestamp_ms,
-      JSON.stringify(sample),
-    );
-  if (sample.difficulty_bucket) {
-    const difficultyBucket = sample.difficulty_bucket;
-    database
-      .prepare(
-        "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-      )
-      .run(
-        segmentedSampleIdFor(sample),
-        sample.endpoint_id,
-        difficultyBucket,
-        sample.request_id ?? null,
-        sample.routing_decision_id ?? null,
-        sample.source_type,
-        sample.timestamp_ms,
-        JSON.stringify(sample),
+  for (let attempt = 1; ; attempt += 1) {
+    const database = openSqliteDatabase(input.databasePath);
+    try {
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          sampleIdFor(sample),
+          sample.endpoint_id,
+          sample.request_id ?? null,
+          sample.routing_decision_id ?? null,
+          sample.source_type,
+          sample.timestamp_ms,
+          JSON.stringify(sample),
+        );
+      if (sample.difficulty_bucket) {
+        const difficultyBucket = sample.difficulty_bucket;
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          )
+          .run(
+            segmentedSampleIdFor(sample),
+            sample.endpoint_id,
+            difficultyBucket,
+            sample.request_id ?? null,
+            sample.routing_decision_id ?? null,
+            sample.source_type,
+            sample.timestamp_ms,
+            JSON.stringify(sample),
+          );
+        const priorBucketRows = database
+          .prepare(
+            "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+          )
+          .all(sample.endpoint_id, difficultyBucket) as Array<{ sample_json: string }>;
+        const bucketSamples = priorBucketRows.map(
+          (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+        );
+        const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+          nowMs: sample.timestamp_ms,
+        });
+        database
+          .prepare(
+            "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+          )
+          .run(
+            `${sample.endpoint_id}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+            sample.endpoint_id,
+            difficultyBucket,
+            bucketProfile.measured_at_ms,
+            JSON.stringify(bucketProfile),
+          );
+      }
+      const priorRows = database
+        .prepare(
+          "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+        )
+        .all(sample.endpoint_id) as Array<{ sample_json: string }>;
+      const allSamples = priorRows.map(
+        (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
       );
-    const priorBucketRows = database
-      .prepare(
-        "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-      )
-      .all(sample.endpoint_id, difficultyBucket) as Array<{ sample_json: string }>;
-    const bucketSamples = priorBucketRows.map(
-      (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
-    );
-    const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
-      nowMs: sample.timestamp_ms,
-    });
-    database
-      .prepare(
-        "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
-      )
-      .run(
-        `${sample.endpoint_id}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
-        sample.endpoint_id,
-        difficultyBucket,
-        bucketProfile.measured_at_ms,
-        JSON.stringify(bucketProfile),
-      );
+      const profile = aggregateObservedPerformanceSamples(allSamples, {
+        nowMs: sample.timestamp_ms,
+      });
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
+        )
+        .run(
+          `${sample.endpoint_id}:${profile.measured_at_ms}`,
+          sample.endpoint_id,
+          profile.measured_at_ms,
+          JSON.stringify(profile),
+        );
+      return;
+    } catch (error) {
+      if (!isSqliteBusyError(error) || attempt >= SQLITE_BUSY_MAX_ATTEMPTS) {
+        throw error;
+      }
+      sleepSync(SQLITE_BUSY_RETRY_DELAY_MS * attempt);
+    } finally {
+      database.close();
+    }
   }
-  const priorRows = database
-    .prepare(
-      "SELECT sample_json FROM observed_performance_samples WHERE endpoint_id = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-    )
-    .all(sample.endpoint_id) as Array<{ sample_json: string }>;
-  const allSamples = priorRows.map(
-    (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
-  );
-  const profile = aggregateObservedPerformanceSamples(allSamples, {
-    nowMs: sample.timestamp_ms,
-  });
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-    )
-    .run(
-      `${sample.endpoint_id}:${profile.measured_at_ms}`,
-      sample.endpoint_id,
-      profile.measured_at_ms,
-      JSON.stringify(profile),
-    );
-  database.close();
 }
 
 export function persistRuntimeObservationBundle(input: PersistRuntimeObservationBundleInput): void {
-  const database = new DatabaseSync(input.databasePath);
   const observation = input.observation;
   const telemetryRecord = toRuntimeTelemetryRecord(observation);
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json) VALUES (?, ?, ?, ?, ?, ?)",
-    )
-    .run(
-      observation.requestId,
-      observation.routingDecisionId,
-      observation.endpointId,
-      observation.conversationId,
-      observation.usageEvent.timestamp_ms,
-      JSON.stringify(observation),
-    );
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    )
-    .run(
-      sampleIdFor(observation.observedPerformance.sample),
-      observation.endpointId,
-      observation.observedPerformance.sample.request_id ?? null,
-      observation.observedPerformance.sample.routing_decision_id ?? null,
-      observation.observedPerformance.sample.source_type,
-      observation.observedPerformance.sample.timestamp_ms,
-      JSON.stringify(observation.observedPerformance.sample),
-    );
-  if (observation.observedPerformance.sample.difficulty_bucket) {
-    const difficultyBucket = observation.observedPerformance.sample.difficulty_bucket;
+  withSqliteBusyRetry(input.databasePath, (database) => {
     database
       .prepare(
-        "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, taxonomy_role_id, taxonomy_task_type, client_request_id, request_class, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       )
       .run(
-        segmentedSampleIdFor(observation.observedPerformance.sample),
+        observation.requestId,
+        observation.routingDecisionId,
         observation.endpointId,
-        difficultyBucket,
+        observation.conversationId,
+        observation.usageEvent.timestamp_ms,
+        observation.privacyReceipt?.retainUntil ?? null,
+        typeof observation.taxonomyDimensions?.taxonomy_role_id === "string"
+          ? observation.taxonomyDimensions.taxonomy_role_id
+          : null,
+        typeof observation.taxonomyDimensions?.taxonomy_task_type === "string"
+          ? observation.taxonomyDimensions.taxonomy_task_type
+          : null,
+        observation.clientRequestId ?? null,
+        observation.observedPerformance?.sample?.source_type === "benchmark"
+          ? "benchmark"
+          : observation.observedPerformance?.sample?.source_type === "live_request"
+            ? "live_request"
+            : null,
+        JSON.stringify(observation),
+      );
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      )
+      .run(
+        sampleIdFor(observation.observedPerformance.sample),
+        observation.endpointId,
         observation.observedPerformance.sample.request_id ?? null,
         observation.observedPerformance.sample.routing_decision_id ?? null,
         observation.observedPerformance.sample.source_type,
         observation.observedPerformance.sample.timestamp_ms,
         JSON.stringify(observation.observedPerformance.sample),
       );
-    const priorBucketRows = database
-      .prepare(
-        "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
-      )
-      .all(observation.endpointId, difficultyBucket) as Array<{
-      sample_json: string;
-    }>;
-    const bucketSamples = priorBucketRows.map(
-      (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
-    );
-    const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
-      nowMs: observation.observedPerformance.sample.timestamp_ms,
-    });
+    if (observation.observedPerformance.sample.difficulty_bucket) {
+      const difficultyBucket = observation.observedPerformance.sample.difficulty_bucket;
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_performance_samples_by_difficulty (sample_id, endpoint_id, difficulty_bucket, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          segmentedSampleIdFor(observation.observedPerformance.sample),
+          observation.endpointId,
+          difficultyBucket,
+          observation.observedPerformance.sample.request_id ?? null,
+          observation.observedPerformance.sample.routing_decision_id ?? null,
+          observation.observedPerformance.sample.source_type,
+          observation.observedPerformance.sample.timestamp_ms,
+          JSON.stringify(observation.observedPerformance.sample),
+        );
+      const priorBucketRows = database
+        .prepare(
+          "SELECT sample_json FROM observed_performance_samples_by_difficulty WHERE endpoint_id = ? AND difficulty_bucket = ? ORDER BY timestamp_ms ASC, sample_id ASC",
+        )
+        .all(observation.endpointId, difficultyBucket) as Array<{
+        sample_json: string;
+      }>;
+      const bucketSamples = priorBucketRows.map(
+        (row) => JSON.parse(row.sample_json) as ObservedPerformanceSample,
+      );
+      const bucketProfile = aggregateObservedPerformanceSamples(bucketSamples, {
+        nowMs: observation.observedPerformance.sample.timestamp_ms,
+      });
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+        )
+        .run(
+          `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+          observation.endpointId,
+          difficultyBucket,
+          bucketProfile.measured_at_ms,
+          JSON.stringify(bucketProfile),
+        );
+    }
     database
       .prepare(
-        "INSERT OR REPLACE INTO observed_profile_snapshots_by_difficulty (snapshot_id, endpoint_id, difficulty_bucket, measured_at_ms, profile_json) VALUES (?, ?, ?, ?, ?)",
+        "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
       )
       .run(
-        `${observation.endpointId}:${difficultyBucket}:${bucketProfile.measured_at_ms}`,
+        `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
         observation.endpointId,
-        difficultyBucket,
-        bucketProfile.measured_at_ms,
-        JSON.stringify(bucketProfile),
+        observation.observedPerformance.profile.measured_at_ms,
+        JSON.stringify(observation.observedPerformance.profile),
       );
-  }
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO observed_profile_snapshots (snapshot_id, endpoint_id, measured_at_ms, profile_json) VALUES (?, ?, ?, ?)",
-    )
-    .run(
-      `${observation.endpointId}:${observation.observedPerformance.profile.measured_at_ms}`,
-      observation.endpointId,
-      observation.observedPerformance.profile.measured_at_ms,
-      JSON.stringify(observation.observedPerformance.profile),
-    );
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    )
-    .run(
-      telemetryRecord.requestId,
-      telemetryRecord.routingDecisionId,
-      telemetryRecord.endpointId,
-      telemetryRecord.conversationId,
-      telemetryRecord.createdAtMs,
-      telemetryRecord.clientRequestId,
-      telemetryRecord.requestClass,
-      telemetryRecord.sourceType,
-      telemetryRecord.modelId,
-      telemetryRecord.providerKind,
-      telemetryRecord.providerFamily,
-      telemetryRecord.inputTokens,
-      telemetryRecord.outputTokens,
-      telemetryRecord.totalTokens,
-      telemetryRecord.latencyMs,
-      telemetryRecord.errorClass,
-      telemetryRecord.statusCode,
-      telemetryRecord.finishReason,
-      telemetryRecord.promptCacheRequested ? 1 : 0,
-      telemetryRecord.promptCacheSupported ? 1 : 0,
-      telemetryRecord.promptCacheUsed ? 1 : 0,
-      telemetryRecord.cacheReadTokens,
-      telemetryRecord.cacheReadTokensSupported ? 1 : 0,
-      telemetryRecord.cacheWriteTokens,
-      telemetryRecord.cacheWriteTokensSupported ? 1 : 0,
-      telemetryRecord.streamTextDeltaCount,
-      telemetryRecord.streamTextSupported ? 1 : 0,
-      telemetryRecord.streamToolCallDeltaCount,
-      telemetryRecord.streamToolCallSupported ? 1 : 0,
-      telemetryRecord.streamToolArgumentDeltaCount,
-      telemetryRecord.streamToolArgumentSupported ? 1 : 0,
-      telemetryRecord.toolCallCount,
-      telemetryRecord.toolExecutionCount,
-      telemetryRecord.costProvenance,
-      telemetryRecord.actualCostUsd,
-      telemetryRecord.estimatedCostUsd,
-      telemetryRecord.currency,
-    );
-  database.close();
+    database
+      .prepare(
+        `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
+      )
+      .run(...runtimeTelemetryInsertValues(telemetryRecord));
+  });
 }
 
 export interface PersistRuntimeTelemetryFailureInput {
@@ -2324,69 +3676,118 @@ export interface PersistRuntimeTelemetryFailureInput {
   readonly routingDecisionId?: string;
   readonly endpointId?: string;
   readonly modelId?: string;
+  readonly requestedModelId?: string | null;
+  readonly selectedModelId?: string | null;
+  readonly requestOperation?: string | null;
   readonly statusCode: number;
   readonly errorClass: string;
   readonly latencyMs?: number;
   readonly clientRequestId?: string | null;
   readonly requestClass?: "benchmark" | "live_request" | "unknown";
   readonly sourceType?: "local" | "remote" | null;
+  readonly providerKind?: string | null;
+  readonly providerFamily?: string | null;
+  readonly vendorId?: string | null;
+  readonly providerId?: string | null;
+  readonly providerAccountId?: string | null;
+  readonly endpointKind?: string | null;
+  readonly servingSource?: string | null;
+  readonly region?: string | null;
+  readonly lifecycleStateAtRequest?: string | null;
+  readonly healthStatusAtRequest?: string | null;
+  readonly difficultyBucket?: RuntimeTelemetryRecord["difficultyBucket"];
+  readonly routingMode?: RuntimeTelemetryRecord["routingMode"];
+  readonly requestedRoleId?: string | null;
+  readonly selectedStrategy?: string | null;
+  readonly sourceClient?: string | null;
+  readonly executionFamily?: string | null;
+  readonly adapterFamily?: string | null;
+  readonly requestPayloadBytes?: number | null;
+  readonly ingressPayloadBytes?: number | null;
+  readonly translatedPayloadBytes?: number | null;
+  readonly providerCanonicalPayloadBytes?: number | null;
+  readonly providerWirePayloadBytes?: number | null;
+  readonly responsePayloadBytes?: number | null;
+  readonly retryCount?: number;
+  readonly rerouteCount?: number;
+  readonly cooldownDecision?: string | null;
+  readonly idempotencyDecision?: string | null;
+  readonly toolSideEffectState?: string | null;
+  readonly toolingUsed?: boolean;
+  readonly cacheState?: string | null;
+  readonly roleIds?: readonly string[];
+  readonly eligibleEndpointIds?: readonly string[];
+  readonly eligibleModelIds?: readonly string[];
+  readonly candidateCostSnapshot?: Record<string, unknown> | null;
+  readonly selectedPricingSnapshot?: Record<string, unknown> | null;
+  readonly selectedUncachedCostUsd?: number | null;
+  readonly baselineMaxEligibleCostUsd?: number | null;
+  readonly routingCostSavingsUsd?: number;
+  readonly cacheCostSavingsUsd?: number;
+  readonly totalAvoidedCostUsd?: number;
+  readonly costBaselineSource?: string | null;
+  readonly costSavingsSupport?: string | null;
+  readonly samplingRate?: number | null;
+  readonly retentionTtlHours?: number | null;
+  readonly retainUntil?: number | null;
+  readonly redactionLevel?: string | null;
+  readonly retentionClass?: string | null;
+  readonly structuredInspectionMode?: string | null;
+  readonly rawCaptureAvailable?: boolean;
+  readonly structuredInspectionAvailable?: boolean;
+  readonly taxonomyGroupId?: string | null;
+  readonly taxonomyRoleId?: string | null;
+  readonly taxonomyTaskType?: string | null;
+  readonly taxonomyTaskVariant?: string | null;
+  readonly taxonomyCapabilityIds?: readonly string[];
+  readonly taxonomyModalityIds?: readonly string[];
+  readonly taxonomyToolClassIds?: readonly string[];
+  readonly dimensions?: Record<string, unknown> | null;
+  readonly observation?: Record<string, unknown> | null;
 }
 
 export function persistRuntimeTelemetryFailure(input: PersistRuntimeTelemetryFailureInput): void {
-  const database = new DatabaseSync(input.databasePath);
   const createdAtMs = Date.now();
   const routingDecisionId = input.routingDecisionId ?? `decision-${input.requestId}`;
   const endpointId = input.endpointId ?? "routing.failed.pre-execution";
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO runtime_telemetry_records (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, client_request_id, request_class, source_type, model_id, provider_kind, provider_family, input_tokens, output_tokens, total_tokens, latency_ms, error_class, status_code, finish_reason, prompt_cache_requested, prompt_cache_supported, prompt_cache_used, cache_read_tokens, cache_read_tokens_supported, cache_write_tokens, cache_write_tokens_supported, stream_text_delta_count, stream_text_supported, stream_tool_call_delta_count, stream_tool_call_supported, stream_tool_argument_delta_count, stream_tool_argument_supported, tool_call_count, tool_execution_count, cost_provenance, actual_cost_usd, estimated_cost_usd, currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    )
-    .run(
-      input.requestId,
-      routingDecisionId,
-      endpointId,
-      "conversation-main",
-      createdAtMs,
-      input.clientRequestId ?? null,
-      input.requestClass ?? "unknown",
-      input.sourceType ?? null,
-      input.modelId ?? null,
-      null,
-      null,
-      0,
-      0,
-      0,
-      input.latencyMs ?? null,
-      input.errorClass,
-      input.statusCode,
-      null,
-      0,
-      1,
-      0,
-      0,
-      1,
-      0,
-      1,
-      0,
-      1,
-      0,
-      1,
-      0,
-      1,
-      0,
-      0,
-      "unavailable",
-      null,
-      null,
-      null,
-    );
-  database.close();
+  const telemetryRecord = toFailureRuntimeTelemetryRecord(
+    input,
+    routingDecisionId,
+    endpointId,
+    createdAtMs,
+  );
+  withSqliteBusyRetry(input.databasePath, (database) => {
+    if (input.observation) {
+      database
+        .prepare(
+          "INSERT OR REPLACE INTO runtime_observations (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, retain_until_ms, taxonomy_role_id, taxonomy_task_type, client_request_id, request_class, observation_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .run(
+          input.requestId,
+          routingDecisionId,
+          endpointId,
+          "conversation-main",
+          createdAtMs,
+          input.retainUntil ?? null,
+          input.taxonomyRoleId ?? null,
+          input.taxonomyTaskType ?? null,
+          input.clientRequestId ?? null,
+          input.requestClass ?? null,
+          JSON.stringify(input.observation),
+        );
+    }
+    database
+      .prepare(
+        `INSERT OR REPLACE INTO runtime_telemetry_records (${RUNTIME_TELEMETRY_INSERT_COLUMNS.join(", ")}) VALUES (${RUNTIME_TELEMETRY_INSERT_COLUMNS.map(() => "?").join(", ")})`,
+      )
+      .run(...runtimeTelemetryInsertValues(telemetryRecord));
+  });
 }
 
 export function readRuntimeObservationBundle(
   input: ReadRuntimeObservationBundleInput,
 ): PersistedRuntimeObservationBundle | null {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const row = database
     .prepare("SELECT observation_json FROM runtime_observations WHERE request_id = ?")
     .get(input.requestId) as
@@ -2399,10 +3800,124 @@ export function readRuntimeObservationBundle(
   return row ? (JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle) : null;
 }
 
+export interface ReadObservationTelemetryColumnsInput {
+  readonly databasePath: string;
+  readonly requestId: string;
+}
+
+export interface ReadObservationTelemetryColumnsBatchInput {
+  readonly databasePath: string;
+  readonly requestIds: readonly string[];
+}
+
+export interface ObservationTelemetryColumns {
+  readonly clientRequestId: string | null;
+  readonly requestClass: string | null;
+  readonly taxonomyRoleId: string | null;
+  readonly taxonomyTaskType: string | null;
+}
+
+export interface ObservationTelemetrySnapshot extends ObservationTelemetryColumns {
+  readonly observationJson: string | null;
+}
+
+export function readObservationTelemetryColumns(
+  input: ReadObservationTelemetryColumnsInput,
+): ObservationTelemetryColumns | null {
+  const database = openSqliteDatabase(input.databasePath);
+  const row = database
+    .prepare(
+      "SELECT client_request_id, request_class, taxonomy_role_id, taxonomy_task_type FROM runtime_observations WHERE request_id = ?",
+    )
+    .get(input.requestId) as
+    | {
+        client_request_id: string | null;
+        request_class: string | null;
+        taxonomy_role_id: string | null;
+        taxonomy_task_type: string | null;
+      }
+    | undefined;
+  database.close();
+  return row
+    ? {
+        clientRequestId: row.client_request_id,
+        requestClass: row.request_class,
+        taxonomyRoleId: row.taxonomy_role_id,
+        taxonomyTaskType: row.taxonomy_task_type,
+      }
+    : null;
+}
+
+export function readObservationTelemetryColumnsBatch(
+  input: ReadObservationTelemetryColumnsBatchInput,
+): Map<string, ObservationTelemetryColumns> {
+  if (input.requestIds.length === 0) {
+    return new Map();
+  }
+  const database = openSqliteDatabase(input.databasePath);
+  const placeholders = input.requestIds.map(() => "?").join(", ");
+  const rows = database
+    .prepare(
+      `SELECT request_id, client_request_id, request_class, taxonomy_role_id, taxonomy_task_type FROM runtime_observations WHERE request_id IN (${placeholders})`,
+    )
+    .all(...input.requestIds) as unknown as ReadonlyArray<{
+    request_id: string;
+    client_request_id: string | null;
+    request_class: string | null;
+    taxonomy_role_id: string | null;
+    taxonomy_task_type: string | null;
+  }>;
+  database.close();
+  const result = new Map<string, ObservationTelemetryColumns>();
+  for (const row of rows) {
+    result.set(row.request_id, {
+      clientRequestId: row.client_request_id,
+      requestClass: row.request_class,
+      taxonomyRoleId: row.taxonomy_role_id,
+      taxonomyTaskType: row.taxonomy_task_type,
+    });
+  }
+  return result;
+}
+
+export function readObservationTelemetrySnapshotsBatch(
+  input: ReadObservationTelemetryColumnsBatchInput,
+): Map<string, ObservationTelemetrySnapshot> {
+  if (input.requestIds.length === 0) {
+    return new Map();
+  }
+  const database = openSqliteDatabase(input.databasePath);
+  const placeholders = input.requestIds.map(() => "?").join(", ");
+  const rows = database
+    .prepare(
+      `SELECT request_id, client_request_id, request_class, taxonomy_role_id, taxonomy_task_type, observation_json FROM runtime_observations WHERE request_id IN (${placeholders})`,
+    )
+    .all(...input.requestIds) as unknown as ReadonlyArray<{
+    request_id: string;
+    client_request_id: string | null;
+    request_class: string | null;
+    taxonomy_role_id: string | null;
+    taxonomy_task_type: string | null;
+    observation_json: string | null;
+  }>;
+  database.close();
+  const result = new Map<string, ObservationTelemetrySnapshot>();
+  for (const row of rows) {
+    result.set(row.request_id, {
+      clientRequestId: row.client_request_id,
+      requestClass: row.request_class,
+      taxonomyRoleId: row.taxonomy_role_id,
+      taxonomyTaskType: row.taxonomy_task_type,
+      observationJson: row.observation_json,
+    });
+  }
+  return result;
+}
+
 export function readObservedPerformanceSamples(
   input: ReadObservedPerformanceSamplesInput,
 ): readonly ObservedPerformanceSample[] {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const rows = (
     input.difficultyBucket
       ? database
@@ -2426,7 +3941,7 @@ export function readObservedPerformanceSamples(
 export function readLatestObservedProfile(
   input: ReadLatestObservedProfileInput,
 ): ObservedPerformanceProfile | null {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const row = (
     input.difficultyBucket
       ? database
@@ -2456,7 +3971,7 @@ export function readLatestObservedProfilesByEndpointIds(
     return {};
   }
 
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const placeholders = input.endpointIds.map(() => "?").join(", ");
   const rows = (
     input.difficultyBucket
@@ -2529,15 +4044,28 @@ function evaluateAdvisoryMaxDifficultyProfile(
 export function readAdvisoryMaxDifficultyRecommendation(
   input: ReadAdvisoryMaxDifficultyRecommendationInput,
 ): AdvisoryMaxDifficultyRecommendation {
-  const evaluations = Object.fromEntries(
-    DIFFICULTY_BUCKETS.map((difficultyBucket) => {
-      const profile = readLatestObservedProfile({
+  const profiles = Object.fromEntries(
+    DIFFICULTY_BUCKETS.map((difficultyBucket) => [
+      difficultyBucket,
+      readLatestObservedProfile({
         databasePath: input.databasePath,
         endpointId: input.endpointId,
         difficultyBucket,
-      });
-      return [difficultyBucket, evaluateAdvisoryMaxDifficultyProfile(profile, input.thresholds)];
-    }),
+      }),
+    ]),
+  ) as Record<(typeof DIFFICULTY_BUCKETS)[number], ObservedPerformanceProfile | null>;
+  return buildAdvisoryMaxDifficultyRecommendation({ profiles, thresholds: input.thresholds });
+}
+
+export function buildAdvisoryMaxDifficultyRecommendation(input: {
+  readonly profiles: Record<(typeof DIFFICULTY_BUCKETS)[number], ObservedPerformanceProfile | null>;
+  readonly thresholds: AdvisoryMaxDifficultyThresholds;
+}): AdvisoryMaxDifficultyRecommendation {
+  const evaluations = Object.fromEntries(
+    DIFFICULTY_BUCKETS.map((difficultyBucket) => [
+      difficultyBucket,
+      evaluateAdvisoryMaxDifficultyProfile(input.profiles[difficultyBucket], input.thresholds),
+    ]),
   ) as AdvisoryMaxDifficultyRecommendation["evaluations"];
 
   let recommendedMaxDifficulty: AdvisoryMaxDifficultyRecommendation["recommendedMaxDifficulty"] =
@@ -2558,19 +4086,19 @@ export function readAdvisoryMaxDifficultyRecommendation(
 export function upsertDifficultyClassificationCache(
   input: UpsertDifficultyClassificationCacheInput,
 ): void {
-  const database = new DatabaseSync(input.databasePath);
-  database
-    .prepare(
-      "INSERT OR REPLACE INTO difficulty_classification_cache (conversation_id, cache_json, updated_at_ms) VALUES (?, ?, ?)",
-    )
-    .run(input.cache.conversationId, JSON.stringify(input.cache), input.cache.cachedAtMs);
-  database.close();
+  withSqliteBusyRetry(input.databasePath, (database) => {
+    database
+      .prepare(
+        "INSERT OR REPLACE INTO difficulty_classification_cache (conversation_id, cache_json, updated_at_ms) VALUES (?, ?, ?)",
+      )
+      .run(input.cache.conversationId, JSON.stringify(input.cache), input.cache.cachedAtMs);
+  });
 }
 
 export function readDifficultyClassificationCache(
   input: ReadDifficultyClassificationCacheInput,
 ): DifficultyClassificationCacheRecord | null {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const row = database
     .prepare("SELECT cache_json FROM difficulty_classification_cache WHERE conversation_id = ?")
     .get(input.conversationId) as
@@ -2585,38 +4113,48 @@ export function readDifficultyClassificationCache(
 export function listRecentRuntimeObservations(
   input: ListRecentRuntimeObservationsInput,
 ): readonly RuntimeObservationSummaryRecord[] {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const rows = database
     .prepare(
-      "SELECT request_id, routing_decision_id, endpoint_id, created_at_ms, observation_json FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
+      "SELECT request_id, client_request_id, routing_decision_id, endpoint_id, created_at_ms FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
     )
     .all(input.limit ?? 20) as Array<{
     request_id: string;
     routing_decision_id: string;
     endpoint_id: string;
     created_at_ms: number;
-    observation_json: string;
+    client_request_id: string | null;
   }>;
   database.close();
 
   return rows.map((row) => ({
     requestId: row.request_id,
-    clientRequestId:
-      (
-        JSON.parse(row.observation_json) as PersistedRuntimeObservationBundle & {
-          clientRequestId?: string | null;
-        }
-      ).clientRequestId ?? null,
+    clientRequestId: row.client_request_id,
     routingDecisionId: row.routing_decision_id,
     endpointId: row.endpoint_id,
     createdAtMs: row.created_at_ms,
   }));
 }
 
+export function listRecentRuntimeRequestIds(
+  input: ListRecentRuntimeRequestIdsInput,
+): readonly string[] {
+  const database = openSqliteDatabase(input.databasePath);
+  const rows = database
+    .prepare(
+      "SELECT request_id FROM runtime_observations ORDER BY created_at_ms DESC, request_id DESC LIMIT ?",
+    )
+    .all(input.limit ?? 10) as Array<{
+    request_id: string;
+  }>;
+  database.close();
+  return rows.map((row) => row.request_id);
+}
+
 export function listRuntimeTelemetryRecords(
   input: RuntimeTelemetryQueryInput,
 ): readonly RuntimeTelemetryRecord[] {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const rows = listRuntimeTelemetryRecordsInternal(database, input);
   database.close();
   return rows;
@@ -2625,7 +4163,7 @@ export function listRuntimeTelemetryRecords(
 export function readRuntimeTelemetrySummary(
   input: RuntimeTelemetryQueryInput,
 ): RuntimeTelemetrySummary {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const records = listRuntimeTelemetryRecordsInternal(database, input);
   database.close();
 
@@ -2649,15 +4187,7 @@ export function readRuntimeTelemetrySummary(
       records.reduce((sum, record) => sum + (record.estimatedCostUsd ?? 0), 0),
     ),
     totalEffectiveCostUsd: roundMetric(
-      records.reduce((sum, record) => {
-        if (typeof record.actualCostUsd === "number") {
-          return sum + record.actualCostUsd;
-        }
-        if (typeof record.estimatedCostUsd === "number") {
-          return sum + record.estimatedCostUsd;
-        }
-        return sum;
-      }, 0),
+      records.reduce((sum, record) => sum + record.effectiveCostUsd, 0),
     ),
     averageLatencyMs:
       latencyValues.length > 0 ? Math.round(totalLatency / latencyValues.length) : null,
@@ -2669,7 +4199,7 @@ export function readRuntimeTelemetrySummary(
 export function listRuntimeTelemetryComparisonRows(
   input: RuntimeTelemetryQueryInput,
 ): readonly RuntimeTelemetryComparisonRow[] {
-  const database = new DatabaseSync(input.databasePath);
+  const database = openSqliteDatabase(input.databasePath);
   const records = listRuntimeTelemetryRecordsInternal(database, input);
   database.close();
 

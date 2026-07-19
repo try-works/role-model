@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p25-exact-remote",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"routed-remote\"\n}",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"routed-remote\"\n}",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both responses delivered the exact required answer 'routed-remote' with the correct JSON key 'answer'. No errors or omissions. They are tied for best.",
+  "rawResponse": "{\"relativeRanking\":[\"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\"openai.personal.openai-codex-subscription.global.gpt-5.4\"],\"rationale\":\"Both responses delivered the exact required answer 'routed-remote' with the correct JSON key 'answer'. No errors or omissions. They are tied for best.\"}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nReply exactly: routed-remote",
+    "exemplarAnswer": "routed-remote\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Exact text routed-remote.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: routed-remote"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 297,
+    "reasoningLength": 915
+  },
+  "recordedAtMs": 1783936592098
+}

@@ -1,0 +1,18 @@
+{
+  "artifact": "06-decisions-update.md",
+  "artifact_hash": "2ca98e68771577828dfa3d7fab75a017075cbb84a5d2da5c17784d59f2611f50",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\72-standalone-runtime-config-authority-and-alias-rematerialization\\.recursive\\run\\72-standalone-runtime-config-authority-and-alias-rematerialization\\06-decisions-update.md",
+  "locked_at": "2026-07-16T02:09:52Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "f7f24094e05ea3b6eb26b2349f380142b9ec2274e20935577af2054ca15d9dae",
+    "00-worktree.md": "9a9261384252d376051b68e778c7d709f26151e86e3d17475510c9cbafe47482",
+    "01-as-is.md": "acd9bdbf3c46031dcf48cf8e870d617b01a08fbf52b1d8e37d1ccdee7d225d5e",
+    "01.5-root-cause.md": "ef979b9da3ff7069e81a384ddd130501b7ea4616af5b9067022e2fb41f11f95e",
+    "02-to-be-plan.md": "71f142c0859b78f2812f3574e8601b4116bcc6e7932b6334da6b7b7c984cf01a",
+    "03-implementation-summary.md": "46b33acc0230a82aba2d0707c40a14b452ec91536f263ac43eaf2547dca23abd",
+    "04-test-summary.md": "d3a5a5be67ab3858105f64e5133fa8471127f6e42a43e67df85324366b7a008e",
+    "05-manual-qa.md": "4a029c5aca0633e4ce9d8dda110b963e5459adbd108041131e27e984957bb529"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "a9764c2bfc64619ff1dcaf0ef3e55acc8409fe30818b3bc01eda3c1371f5a9f7"
+}

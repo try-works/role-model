@@ -1,0 +1,6 @@
+{
+  "ProcessId": 55848,
+  "ParentProcessId": 1616,
+  "Name": "Craft Agents.exe",
+  "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --user-data-dir D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless-addendum17-combined\\user-data"
+}

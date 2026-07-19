@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/66-remote-providers-deferred-request-id-loading/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/runtime-api.test.ts (53 tests) 137ms
+ ✓ app/routes/providers.test.ts (7 tests) 163ms
+
+ Test Files  2 passed (2)
+      Tests  60 passed (60)
+   Start at  12:24:25
+   Duration  2.90s (transform 1.02s, setup 0ms, collect 1.92s, tests 300ms, environment 1ms, prepare 877ms)
+

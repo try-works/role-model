@@ -1,0 +1,20 @@
+[
+  {
+    "name": "raw-alias-difficulty-remote-only",
+    "model": "difficulty.remote-only",
+    "status": 200,
+    "responseModel": "deepseek-v4-pro",
+    "reasoningDeltas": 43,
+    "contentDeltas": 10,
+    "rawPath": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\raw-sse\\raw-alias-difficulty-remote-only.sse.log"
+  },
+  {
+    "name": "raw-exact-deepseek",
+    "model": "deepseek/deepseek-v4-pro",
+    "status": 200,
+    "responseModel": "deepseek-v4-pro",
+    "reasoningDeltas": 61,
+    "contentDeltas": 12,
+    "rawPath": ".recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-11\\live\\raw-sse\\raw-exact-deepseek.sse.log"
+  }
+]

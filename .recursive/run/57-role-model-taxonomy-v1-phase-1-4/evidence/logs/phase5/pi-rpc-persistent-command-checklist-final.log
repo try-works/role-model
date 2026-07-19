@@ -1,0 +1,30 @@
+(node:21032) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+===== /role-model status =====
+{"type":"extension_ui_request","id":"561fad45-3d3b-4597-b379-a70c160ff1ac","method":"notify","message":"Role Model Runtime\nstate: ready\nendpoint: http://127.0.0.1:4567\nversion: 0.0.0-qa\naliases: 15\nselected alias: default.decision-only\nprovider: registered\nauth: placeholder\nendpoint trust: local\nfallback: no\nwarnings: none","notifyType":"info"}
+{"id":"cmd-0","type":"response","command":"prompt","success":true}
+===== /role-model setup =====
+{"type":"extension_ui_request","id":"037bcdad-a587-4e26-b6e7-848afdf41dc6","method":"notify","message":"Role-Model provider configured at http://127.0.0.1:4567\nrecommended alias: default.decision-only","notifyType":"info"}
+{"id":"cmd-1","type":"response","command":"prompt","success":true}
+===== /role-model doctor =====
+{"type":"extension_ui_request","id":"22a3fe74-8d2b-4be4-874a-6ed92cbe6199","method":"notify","message":"doctor: ok\nendpoint: http://127.0.0.1:4567\nhealth: ok\nversion: ok\ndownstream discovery: ok\nfallback: no\nauth: ok\nendpoint trust: ok\nprovider: ok\naliases: ok\ndegraded models: none\nmodels: 16\nrecommended alias: default.decision-only","notifyType":"info"}
+{"id":"cmd-2","type":"response","command":"prompt","success":true}
+===== /role-model ui =====
+{"type":"extension_ui_request","id":"f5ea045e-b912-4311-8ce9-7d25e8f05782","method":"notify","message":"Role-Model UI/runtime URL: http://127.0.0.1:4567","notifyType":"info"}
+{"id":"cmd-3","type":"response","command":"prompt","success":true}
+===== /role-model alias list =====
+{"type":"extension_ui_request","id":"9f0a4913-2a76-4ddf-bf75-7a3b9bbc5b49","method":"notify","message":"- baseline.decision-only [ready]\n- baseline.hybrid [ready]\n- baseline.local-only [ready]\n- controller.decision-only [ready]\n- controller.hybrid [ready]\n- controller.local-only [ready]\n- default.decision-only (recommended) [ready, recommended, selected]\n- default.hybrid [ready]\n- default.local-only [ready]\n- difficulty.decision-only [ready]\n- difficulty.hybrid [ready]\n- difficulty.local-only [ready]\n- hybrid.decision-only [ready]\n- hybrid.hybrid [ready]\n- hybrid.local-only [ready]","notifyType":"info"}
+{"id":"cmd-4","type":"response","command":"prompt","success":true}
+===== /role-model alias recommended =====
+{"type":"extension_ui_request","id":"09a488d1-67a7-427d-9dec-8a51806fef78","method":"notify","message":"Recommended Role-Model alias: default.decision-only","notifyType":"info"}
+{"id":"cmd-5","type":"response","command":"prompt","success":true}
+===== /role-model alias use default.decision-only =====
+{"type":"extension_ui_request","id":"471487c6-b1fc-4510-8497-7dd02e3cb412","method":"notify","message":"selected alias: default.decision-only\nactive model: role-model/default.decision-only","notifyType":"info"}
+{"id":"cmd-6","type":"response","command":"prompt","success":true}
+===== /role-model alias refresh =====
+{"type":"extension_ui_request","id":"add4ccc8-88f0-472d-b94c-20f0089398cc","method":"notify","message":"Refreshed Role-Model provider from http://127.0.0.1:4567\nmodels: 16\nrecommended alias: default.decision-only","notifyType":"info"}
+{"id":"cmd-7","type":"response","command":"prompt","success":true}
+===== /role-model alias current =====
+{"type":"extension_ui_request","id":"7d02347a-ea27-4fe0-9ceb-f0db5f43502f","method":"notify","message":"Current Role-Model alias: default.decision-only","notifyType":"info"}
+{"id":"cmd-8","type":"response","command":"prompt","success":true}
+EXIT=0 SIGNAL=

@@ -1,0 +1,39 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+ [31m❯[39m test/taxonomy-data-files.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 307[2mms[22m[39m
+   [32m✓[39m taxonomy data and schema files[2m > [22mships proposal-shaped schema files for every taxonomy resource kind[32m 4[2mms[22m[39m
+   [32m✓[39m taxonomy data and schema files[2m > [22mships canonical JSON data that matches the runtime taxonomy source[32m 18[2mms[22m[39m
+[31m   [31m×[31m taxonomy data and schema files[2m > [22mtaxonomy schemas validate canonical data and reject proposal-contract drift[39m[32m 283[2mms[22m[39m
+[31m     → expected true to be false // Object.is equality[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/taxonomy-data-files.test.ts > taxonomy data and schema files > taxonomy schemas validate canonical data and reject proposal-contract drift
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ test/taxonomy-data-files.test.ts:77:77
+     75|     expect(taskTypeSchema(canonicalTaxonomy.tasks[0])).toBe(true);
+     76| 
+     77|     expect(taskTypeSchema({ ...canonicalTaxonomy.tasks[0], kind: "task…
+       |                                                                             ^
+     78|     expect(taskTypeSchema({ ...canonicalTaxonomy.tasks[0], extraField:…
+     79|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 19:10:20
+[2m   Duration [22m 1.29s[2m (transform 130ms, setup 0ms, collect 141ms, tests 307ms, environment 0ms, prepare 312ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/taxonomy-data-files.test.ts

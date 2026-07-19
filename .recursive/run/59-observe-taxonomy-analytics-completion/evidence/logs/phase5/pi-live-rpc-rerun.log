@@ -1,0 +1,32 @@
+===== get_commands =====
+[
+  {
+    "name": "role-model",
+    "description": "Configure and inspect the Role-Model provider for Pi.",
+    "source": "extension",
+    "sourceInfo": {
+      "path": "D:\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model\\extensions\\role-model.ts",
+      "source": "..\\..\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model",
+      "scope": "user",
+      "origin": "package",
+      "baseDir": "D:\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model"
+    }
+  },
+  {
+    "name": "skill:role-model",
+    "description": "Use when Pi should route model requests through a locally running Role-Model runtime, inspect Role-Model aliases, diagnose Role-Model provider setup, or inspect runtime-owned request explanations.",
+    "source": "skill",
+    "sourceInfo": {
+      "path": "D:\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model\\skills\\role-model\\SKILL.md",
+      "source": "..\\..\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model",
+      "scope": "user",
+      "origin": "package",
+      "baseDir": "D:\\DEV\\role-model\\.worktrees\\59-observe-taxonomy-analytics-completion\\packages\\pi-role-model"
+    }
+  }
+]
+===== /role-model setup =====
+[fatal] Error: Timed out waiting for agent_end after 180000ms
+    at waitForAgentEnd (file:///D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/[eval1]:81:9)
+    at async promptAndCollect (file:///D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/[eval1]:105:18)
+    at async main (file:///D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/[eval1]:117:5)

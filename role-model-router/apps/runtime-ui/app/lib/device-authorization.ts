@@ -1,6 +1,7 @@
 import type { RuntimeDeviceAuthorization } from "./runtime-api";
 
 const DEFAULT_POLL_DELAY_MS = 5_000;
+const OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID = "openai-codex-subscription";
 
 function normalizeUrl(value?: string): string | null {
   if (typeof value !== "string") {
@@ -13,6 +14,26 @@ function normalizeUrl(value?: string): string | null {
 
 export function resolveVerificationWindowUrl(session: RuntimeDeviceAuthorization): string | null {
   return normalizeUrl(session.verificationUriComplete) ?? normalizeUrl(session.verificationUri);
+}
+
+export function isCodexSubscriptionDeviceAuthorization(
+  session: Pick<RuntimeDeviceAuthorization, "providerId" | "variantId">,
+): boolean {
+  return (
+    session.providerId === "openai" && session.variantId === OPENAI_CODEX_SUBSCRIPTION_VARIANT_ID
+  );
+}
+
+export function shouldAutoOpenDeviceAuthorizationWindow(
+  session: Pick<RuntimeDeviceAuthorization, "providerId" | "variantId">,
+): boolean {
+  return !isCodexSubscriptionDeviceAuthorization(session);
+}
+
+export function shouldFallbackToCurrentBrowserForDeviceAuthorization(
+  session: Pick<RuntimeDeviceAuthorization, "providerId" | "variantId">,
+): boolean {
+  return !isCodexSubscriptionDeviceAuthorization(session);
 }
 
 export function shouldAutoPollDeviceAuthorization(
@@ -37,6 +58,7 @@ export function restorePersistedDeviceAuthorization(input: {
   readonly current: RuntimeDeviceAuthorization | null;
   readonly providerAccountId: string;
   readonly persistedSessions: readonly RuntimeDeviceAuthorization[];
+  readonly allowPersistedRestore?: boolean;
 }): RuntimeDeviceAuthorization | null {
   const providerAccountId = input.providerAccountId.trim();
   if (providerAccountId.length === 0) {
@@ -45,6 +67,10 @@ export function restorePersistedDeviceAuthorization(input: {
 
   if (input.current?.providerAccountId === providerAccountId) {
     return input.current;
+  }
+
+  if (input.allowPersistedRestore === false) {
+    return null;
   }
 
   return (

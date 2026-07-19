@@ -1,0 +1,18 @@
+{
+  "artifact": "05-manual-qa.md",
+  "artifact_hash": "909898032735ba883845be20309d7e23de916992f2e0027dbcd3fc01bcda1ac5",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\76-configured-model-membership-authority-and-eject-convergence\\.recursive\\run\\76-configured-model-membership-authority-and-eject-convergence\\05-manual-qa.md",
+  "locked_at": "2026-07-17T12:12:07Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "d98e2f65884e1b30d8b2b6811cdc45ff78011304066540f0d18341ecbfd85d52",
+    "00-worktree.md": "b313dd770a8e09606881446052878780ca15de662d1219c3cf6bda0b8a395f97",
+    "01-as-is.md": "db6611a364ade4d7ed08db620c276dd3a280ffd9b9c7f5bcafb145772e7c1080",
+    "01.5-root-cause.md": "80572079809c366ffd4c3f92fc2b3a945310763e47899a7074da81e2d076e777",
+    "02-to-be-plan.md": "b727979f345e7ee1d37d2f112c656535e73c1d65a9e1b3544ebc28c8382d5cb3",
+    "03-implementation-summary.md": "3f0fb73a2597169d98e70e18f32b03ef991e8a1be85ce7e08d767a4d1ace0ea7",
+    "03.5-code-review.md": "75b014572a86b09b4770495413f6f9640e55d2fa14ecba594c0b6062227810db",
+    "04-test-summary.md": "a7b4ef8e216ea06229a8d6c5098436890fb80cf5473edf9d253b44a42ffc6a1c"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "2362ac52fda12d37859564dbdbb5b25e64e76826757a4c94dc8abf5fbea4a96d"
+}

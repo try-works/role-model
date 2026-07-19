@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "8884465450396cc689dcf06cb48ea411616b99d8ceb334c6324d5988299ecdd6",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\63-router-backend-regression-and-telemetry-surface-hardening\\.recursive\\run\\63-router-backend-regression-and-telemetry-surface-hardening\\00-worktree.md",
+  "locked_at": "2026-07-11T08:50:23Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "f52537f1b712097b958ac053fa11a20de95708081ba1f962b8ceb0992135796b"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "2eb93660dcf4374e9da729c791baf333350cc034087dcdfa7bb1f86d26db3938"
+}

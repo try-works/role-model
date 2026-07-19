@@ -1,0 +1,15 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "h05-tool-grep-eligibility",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Meets all MUSTs: grep_search called with evaluateEligibility pattern; bullets mention evaluateEligibility (matches evaluateEligibility|eligib clue) and concern eligibility checks; API tool_calls present; JSON has bullets array with exactly two items; no diff placeholders or malformed content.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h05-tool-grep-eligibility.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/h05-tool-grep-eligibility/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783931893738
+}

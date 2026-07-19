@@ -1,0 +1,5 @@
+Scope: all 44 workspace projects
+(node:44800) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ WARN  There are cyclic workspace dependencies: D:\DEV\role-model\.worktrees\61-litellm-pi-craft-codex-execution-hardening\role-model-router\packages\adapter-execution, D:\DEV\role-model\.worktrees\61-litellm-pi-craft-codex-execution-hardening\role-model-router\packages\provider-anthropic
+[?25l[36m?[39m [1mThe modules directories will be removed and reinstalled from scratch. Proceed?[22m [2m(Y/n)[22m [2m»[22m [36mtrue[39m[4D[?25h

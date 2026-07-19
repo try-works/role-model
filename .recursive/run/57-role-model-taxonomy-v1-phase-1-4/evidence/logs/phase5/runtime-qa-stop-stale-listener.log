@@ -1,0 +1,2 @@
+Stopping stale listener PID 12732: "C:\Program Files\nodejs\node.exe" --require D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\node_modules\.pnpm\tsx@4.21.0\node_modules\tsx\dist\preflight.cjs --import file:///D:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/node_modules/.pnpm/tsx@4.21.0/node_modules/tsx/dist/loader.mjs scripts/start-for-qa.ts
+

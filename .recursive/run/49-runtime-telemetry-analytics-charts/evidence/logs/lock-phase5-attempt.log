@@ -1,0 +1,21 @@
+[FAIL] Refusing to lock .recursive\run\49-runtime-telemetry-analytics-charts\05-manual-qa.md
+Workflow Profile: recursive-mode-audit-v2
+- Approval gate must be PASS before locking
+- Artifact Status must be DRAFT before locking (found agent qa complete, awaiting operator qa)
+- Coverage gate must be PASS before locking
+- Inputs is missing relevant addenda: .recursive/run/49-runtime-telemetry-analytics-charts/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-01.md, .recursive/run/49-runtime-telemetry-analytics-charts/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-02.md, .recursive/run/49-runtime-telemetry-analytics-charts/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-03.md, .recursive/run/49-runtime-telemetry-analytics-charts/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-04.md
+- Missing Traceability section content
+- Missing or empty section: ## QA Execution Record
+- Missing required gate line: Approval: PASS|FAIL
+- Missing required gate line: Coverage: PASS|FAIL
+- Missing required header field(s): Inputs, Outputs, Scope note
+- Missing required section heading: ## Approval Gate
+- Missing required section heading: ## Coverage Gate
+- Missing required section heading: ## Evidence and Artifacts
+- Missing required section heading: ## QA Execution Record
+- Missing required section heading: ## QA Scenarios and Results
+- Missing required section heading: ## TODO
+- Missing required section heading: ## Traceability
+- Missing required section heading: ## User Sign-Off
+- Missing required section: ## TODO
+- QA Execution Record is missing QA Execution Mode: human|agent-operated|hybrid

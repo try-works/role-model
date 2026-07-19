@@ -1,0 +1,28 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/55-pi-role-model-package[39m
+
+ [31m❯[39m packages/pi-role-model/test/docs-and-safety.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 20[2mms[22m[39m
+[31m   [31m×[31m Pi installation docs, skill, and safety guardrails[2m > [22mships the role-model skill and README Installation for Pi section[39m[32m 14[2mms[22m[39m
+[31m     → ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model\README.md'[39m
+   [32m✓[39m Pi installation docs, skill, and safety guardrails[2m > [22mdoes not couple the package to auth storage, launchers, or managed runtime processes[32m 4[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/pi-role-model/test/docs-and-safety.test.ts > Pi installation docs, skill, and safety guardrails > ships the role-model skill and README Installation for Pi section
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\55-pi-role-model-package\packages\pi-role-model\README.md'
+ ❯ packages/pi-role-model/test/docs-and-safety.test.ts:30:27
+     28|     const skill = await readFile(join(packageRoot, "skills", "role-mod…
+     29|     const readme = await readFile(join(repoRoot, "README.md"), "utf8");
+     30|     const packageReadme = await readFile(join(packageRoot, "README.md"…
+       |                           ^
+     31| 
+     32|     expect(skill).toContain("role-model");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 13:49:57
+[2m   Duration [22m 1.05s[2m (transform 99ms, setup 0ms, collect 88ms, tests 20ms, environment 0ms, prepare 358ms)[22m
+

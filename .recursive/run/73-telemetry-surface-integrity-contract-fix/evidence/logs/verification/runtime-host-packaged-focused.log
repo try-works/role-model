@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/apps/runtime-host-bridge
+
+(node:23672) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Wrote single executable preparation blob to ./dist/sea-prep.blob
+ ✓ test/packaged-standalone-restart.test.ts (1 test) 25899ms
+   ✓ packaged runtime repairs stale standalone aliases after env-backed restart bootstrap  25884ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  04:29:53
+   Duration  29.63s (transform 1.60s, setup 0ms, collect 2.30s, tests 25.90s, environment 0ms, prepare 513ms)
+

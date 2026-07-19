@@ -1,0 +1,70 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity/role-model-router/apps/runtime-host-bridge[39m
+
+(node:64164) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31m❯[39m test/restart-rehydration.test.ts [2m([22m[2m13 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m12 skipped[39m[2m)[22m[33m 1946[2mms[22m[39m
+   [2m[90m↓[39m[22m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart
+   [2m[90m↓[39m[22m restart rehydration[2m > [22mkeeps restarted remote endpoints healthy when provider /models returns unprefixed ids
+   [2m[90m↓[39m[22m restart rehydration[2m > [22mdoes not count expired pending device authorization as an active readiness blocker after restart
+   [2m[90m↓[39m[22m restart rehydration[2m > [22marchives orphan pending authorizations and orphan credential files instead of counting them as active readiness
+   [2m[90m↓[39m[22m restart rehydration[2m > [22marchives invalid persisted provider accounts instead of surfacing them as active lifecycle records
+   [2m[90m↓[39m[22m restart rehydration[2m > [22msurfaces failed pending authorization polling in bootstrap stage details after restart
+   [2m[90m↓[39m[22m restart rehydration[2m > [22mclassifies failed startup OAuth refresh as expired auth after restart
+   [2m[90m↓[39m[22m restart rehydration[2m > [22mrepairs stale bridge Kimi OAuth credentials from fresher standalone runtime tokens on restart
+[31m   [31m×[31m restart rehydration[2m > [22mrepairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility[39m[33m 1944[2mms[22m[39m
+[31m     → expected { stageId: 'credentials', …(4) } to deeply equal ObjectContaining{…}[39m
+   [2m[90m↓[39m[22m restart rehydration[2m > [22mpolls the earliest-expiring pending authorizations first and surfaces deferred count
+   [2m[90m↓[39m[22m restart rehydration[2m > [22mcleans up a pending Codex Subscription device-code session after restart
+   [2m[90m↓[39m[22m restart rehydration[2m > [22mnormalizes legacy local peer role bindings during restart rehydration
+   [2m[90m↓[39m[22m restart rehydration[2m > [22mdefers persisted peer auto-reload entries during restart bootstrap when peers are not configured
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/restart-rehydration.test.ts > restart rehydration > repairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility
+AssertionError: expected { stageId: 'credentials', …(4) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "details": ObjectContaining {
+-     "refreshAttempted": 0,
+-     "refreshFailed": 0,
++ {
++   "details": {
++     "pendingAttempted": 0,
++     "pendingConnected": 0,
++     "pendingDeferred": 0,
++     "pendingFailed": 0,
++     "pendingSucceeded": 0,
++     "refreshAttempted": 1,
++     "refreshFailed": 1,
+      "refreshSucceeded": 0,
+    },
+-   "status": "ready",
++   "finishedAt": "2026-07-14T00:41:22.273Z",
++   "stageId": "credentials",
++   "startedAt": "2026-07-14T00:41:22.210Z",
++   "status": "degraded",
+  }
+
+ ❯ test/restart-rehydration.test.ts:1236:34
+    1234|           (stage) => stage.stageId === "credentials",
+    1235|         );
+    1236|         expect(credentialsStage).toEqual(
+       |                                  ^
+    1237|           expect.objectContaining({
+    1238|             status: "ready",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m12 skipped[39m[90m (13)[39m
+[2m   Start at [22m 08:41:16
+[2m   Duration [22m 5.56s[2m (transform 1.77s, setup 0ms, collect 2.40s, tests 1.95s, environment 0ms, prepare 562ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/restart-rehydration.test.ts -t repairs stale standalone Kimi OAuth credentials from fresher bridge tokens on restart and restores endpoint eligibility

@@ -1,0 +1,7 @@
+{
+  "stdoutLog": "D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.recursive\\run\\65-codex-subscription-prompt-cache-parity\\evidence\\runtime\\phase5-rebuilt\\runtime.restart.stdout.log",
+  "stderrLog": "D:\\DEV\\role-model\\.worktrees\\65-codex-subscription-prompt-cache-parity\\.recursive\\run\\65-codex-subscription-prompt-cache-parity\\evidence\\runtime\\phase5-rebuilt\\runtime.restart.stderr.log",
+  "baseUrl": "http://127.0.0.1:50692",
+  "pid": 65792,
+  "runtimeStateRoot": "C:\\Users\\erikb\\AppData\\Local\\Temp\\run65-phase5-rebuilt-32b033cb1a6b4e7baddd46eac6126399\\state"
+}

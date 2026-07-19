@@ -1,0 +1,145 @@
+{
+  "checkedAt": "2026-07-10T00:40:54.7999509Z",
+  "listener": {
+    "LocalAddress": "127.0.0.1",
+    "LocalPort": 3456,
+    "State": 2,
+    "OwningProcess": 48524
+  },
+  "healthz": {
+    "status": "healthy",
+    "executionMode": "remote_only",
+    "vendors": {
+      "llama-swap": {
+        "vendorId": "llama-swap",
+        "healthStatus": "inactive"
+      },
+      "litellm": {
+        "vendorId": "litellm",
+        "healthStatus": "inactive"
+      }
+    },
+    "inactiveVendors": [
+      "llama-swap",
+      "litellm"
+    ],
+    "credentialLifecycleAuthority": {
+      "state": "provisional",
+      "bootstrapStatus": "running"
+    },
+    "sessionBootstrap": {
+      "status": "running",
+      "startedAt": "2026-07-10T00:41:01.632Z",
+      "finishedAt": null,
+      "stages": []
+    }
+  },
+  "endpoints": [
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "providerId": "deepseek",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "coordinator",
+        "creative",
+        "data",
+        "designer",
+        "educator",
+        "finance",
+        "health",
+        "knowledge",
+        "legal",
+        "marketer",
+        "mathematician",
+        "operator",
+        "planner",
+        "procurement",
+        "product",
+        "recruiter",
+        "seller",
+        "strategist",
+        "support",
+        "translator",
+        "writer"
+      ],
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+        "code.edit"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "none",
+      "webSearchSupport": {
+        "mode": "runtime-fallback",
+        "currentRuntimeContract": null,
+        "documentedProviderContract": "deepseek.anthropic.server_web_search"
+      },
+      "status": "active"
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "modelId": "chatgpt/gpt-5.4",
+      "providerId": "openai",
+      "providerAccountId": "openai.personal.openai-codex-subscription",
+      "roleIds": [
+        "analyst",
+        "architect",
+        "coder",
+        "coordinator",
+        "creative",
+        "data",
+        "designer",
+        "educator",
+        "finance",
+        "health",
+        "knowledge",
+        "legal",
+        "marketer",
+        "mathematician",
+        "operator",
+        "planner",
+        "procurement",
+        "product",
+        "recruiter",
+        "researcher",
+        "scientist",
+        "security",
+        "seller",
+        "strategist",
+        "support",
+        "tester",
+        "translator",
+        "writer"
+      ],
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+        "code.edit"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "none",
+      "webSearchSupport": {
+        "mode": "native",
+        "currentRuntimeContract": "openai.responses.web_search",
+        "documentedProviderContract": "openai.responses.web_search"
+      },
+      "status": "active"
+    }
+  ],
+  "errors": []
+}

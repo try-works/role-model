@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-06-18T00:45:25+02:00",
+  "finding": "The bare QA host root http://127.0.0.1:3456/ returned JSON {\"error\":\"not found\"} instead of the runtime UI.",
+  "rootCause": "The Phase 5 QA server was restarted after generated runtime-ui build assets were removed, so staticRoot did not contain build/client/index.html and the bridge fell through to the JSON 404 handler.",
+  "implementation": {
+    "codeCoverage": [
+      "Added a runtime-host-bridge regression test proving /, /app, and /app/router/strategy serve the SPA shell when staticRoot exists."
+    ],
+    "operationalRepair": [
+      "Rebuilt @role-model-router/runtime-ui so role-model-router/apps/runtime-ui/build/client/index.html exists.",
+      "Restarted the Phase 5 QA server against the rebuilt client."
+    ]
+  },
+  "verification": {
+    "tests": [
+      ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-23-root-route-runtime-ui-build.log",
+      ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/logs/green/addendum-23-root-route-static-shell-green.log"
+    ],
+    "server": {
+      "stdout": ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/phase5-qa-server-addendum-23-root-route.log",
+      "stderr": ".recursive/run/49-runtime-telemetry-analytics-charts/evidence/phase5-qa-server-addendum-23-root-route.err.log"
+    },
+    "httpProbes": [
+      {
+        "route": "/",
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "hasHtml": true
+      },
+      {
+        "route": "/app",
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "hasHtml": true
+      },
+      {
+        "route": "/app/router/strategy",
+        "status": 200,
+        "contentType": "text/html; charset=utf-8",
+        "hasHtml": true
+      }
+    ],
+    "browser": {
+      "opened": "http://127.0.0.1:3456/",
+      "resultUrl": "http://127.0.0.1:3456/app",
+      "hasRoleModel": true,
+      "hasRuntimeOverview": true,
+      "hasJsonNotFound": false
+    }
+  },
+  "result": "PASS",
+  "notes": [
+    "The build/client directory remains a generated review artifact required by the live QA server, but it should not be committed."
+  ]
+}

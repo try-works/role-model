@@ -1,3 +1,4 @@
+import { canonicalTaxonomy } from "./taxonomy/index.js";
 import type {
   CandidateExclusion,
   EndpointCandidate,
@@ -26,13 +27,17 @@ function clamp(value: number, minimum = 0, maximum = 1): number {
   return Math.min(maximum, Math.max(minimum, value));
 }
 
-const SCORE_TIE_EPSILON = 0.01;
+export const ROUTER_SCORE_TIE_EPSILON = 0.01;
 const LATENCY_TARGET_MS = 150;
 const LATENCY_MAX_MS = 300;
 const THROUGHPUT_TARGET_TPS = 40;
 const DEFAULT_COST_TARGET = 0.01;
 const FRESHNESS_NEUTRAL = 0.5;
 const RELIABILITY_NEUTRAL = 0.7;
+const DEFAULT_METRIC_DECAY_PERCENT_PER_DAY = {
+  latency: 10,
+  throughput: 10,
+} as const;
 const STRATEGY_WEIGHTS: Record<
   RoutingPolicyStrategy,
   Record<"quality" | "latency" | "throughput" | "cost" | "reliability" | "preference", number>
@@ -79,7 +84,7 @@ type ScoringMetricName =
   | "reliability"
   | "preference";
 
-type MetricSource = "measured" | "declared" | "default" | "catalog";
+type MetricSource = "measured" | "declared" | "default" | "catalog" | "benchmark";
 type MetricEntry = {
   value: number;
   source: MetricSource;
@@ -99,10 +104,18 @@ type CandidateScoreResult = ScoredCandidate & {
   usedDeclared: boolean;
 };
 
+type QualityScopedObservedProfile = NonNullable<EndpointCandidate["observed"]> & {
+  quality_measured_at_ms?: number;
+  quality_freshness_score?: number;
+  quality_live_request_samples?: number;
+  quality_benchmark_samples?: number;
+};
+type TimeDecayedMetricName = keyof typeof DEFAULT_METRIC_DECAY_PERCENT_PER_DAY;
+
 function getFreshnessWeight(
   input: RouteRequestInput,
   candidate: EndpointCandidate,
-  halflifeMs: number,
+  decayPercentPerDay: number,
 ): number {
   const measuredAtMs = candidate.observed?.measured_at_ms;
   if (!input.observedDataConfig?.enabled || typeof measuredAtMs !== "number") {
@@ -115,7 +128,20 @@ function getFreshnessWeight(
   if (ageMs === 0) {
     return 1;
   }
-  return Math.exp((-Math.LN2 * ageMs) / halflifeMs);
+  const ageDays = ageMs / (24 * 60 * 60 * 1000);
+  // 10% per day: each day retains (1 - 0.10) = 0.90 of deviation from neutral
+  // N days = 0.90^N
+  return (1 - decayPercentPerDay / 100) ** ageDays;
+}
+
+function getMetricDecayPercentPerDay(
+  input: RouteRequestInput,
+  metricName: TimeDecayedMetricName,
+): number {
+  return (
+    input.observedDataConfig?.metricDecayPercentPerDay?.[metricName] ??
+    DEFAULT_METRIC_DECAY_PERCENT_PER_DAY[metricName]
+  );
 }
 
 function decayToNeutral(
@@ -170,6 +196,15 @@ function getEffectivePreferredCapabilities(input: RouteRequestInput): string[] {
     ...(requestedRole?.preferred_capabilities ?? []),
     ...(requestedTask?.preferred_capabilities ?? []),
   ]);
+}
+
+function resolveBenchmarkGroupIdsForRequest(input: RouteRequestInput): string[] {
+  const requestedRoleId = input.request.requestedRoleId ?? input.request.roleModelIntent?.role?.id;
+  if (!requestedRoleId) {
+    return [];
+  }
+  const role = canonicalTaxonomy.roles.find((entry) => entry.id === requestedRoleId);
+  return role ? [role.primaryGroupId, ...role.secondaryGroupIds] : [];
 }
 
 function toPolicyStrategy(
@@ -324,6 +359,46 @@ function getRoleBindingForCandidate(
   );
 }
 
+function getSupportedCapabilitiesForCandidate(
+  candidate: EndpointCandidate,
+  input: RouteRequestInput,
+): string[] {
+  const roleBinding = getRoleBindingForCandidate(candidate, input);
+  if (roleBinding?.status !== "active") {
+    return candidate.declared.capabilities;
+  }
+
+  return unique([...candidate.declared.capabilities, ...roleBinding.effective_capabilities]);
+}
+
+function supportsCapabilityRequirement(
+  supportedCapabilities: readonly string[],
+  requirement: string,
+): boolean {
+  if (supportedCapabilities.includes(requirement)) {
+    return true;
+  }
+  if (supportedCapabilities.some((capability) => capability.startsWith(`${requirement}.`))) {
+    return true;
+  }
+  if (requirement.startsWith("reasoning.") && supportedCapabilities.includes("reasoning")) {
+    return true;
+  }
+  if (
+    requirement === "structured.output" &&
+    supportedCapabilities.includes("response.json_schema")
+  ) {
+    return true;
+  }
+  if (
+    requirement === "response.json_schema" &&
+    supportedCapabilities.includes("structured.output")
+  ) {
+    return true;
+  }
+  return false;
+}
+
 function getEffectiveLatency(candidate: EndpointCandidate): number {
   if (
     typeof candidate.observed?.latency_ms_p50 === "number" &&
@@ -338,13 +413,159 @@ function getEffectiveLatency(candidate: EndpointCandidate): number {
   return 250;
 }
 
-function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput): MetricEntry {
+function resolveQualityFreshness(
+  input: RouteRequestInput,
+  candidate: EndpointCandidate,
+): {
+  freshnessWeight: number;
+  measuredAtMs: number | undefined;
+  source: "profile" | "passthrough";
+  profileFreshnessScore?: number;
+  timeDecayApplied: boolean;
+} {
+  const observed = candidate.observed as QualityScopedObservedProfile | undefined;
+  const qualityBenchmarkOnly =
+    typeof observed?.quality_freshness_score === "number" &&
+    (observed.quality_live_request_samples ?? 0) === 0 &&
+    (observed.quality_benchmark_samples ?? 0) > 0;
+  if (qualityBenchmarkOnly) {
+    return {
+      freshnessWeight: 1,
+      measuredAtMs: observed.quality_measured_at_ms ?? observed.measured_at_ms,
+      source: "profile",
+      profileFreshnessScore: clamp(observed.quality_freshness_score ?? 0),
+      timeDecayApplied: false,
+    };
+  }
+
+  const profileBenchmarkOnly =
+    typeof observed?.freshness_score === "number" &&
+    (observed.sources?.live_request_samples ?? 0) === 0 &&
+    (observed.sources?.benchmark_samples ?? 0) > 0;
+  if (profileBenchmarkOnly) {
+    return {
+      freshnessWeight: 1,
+      measuredAtMs: observed.measured_at_ms,
+      source: "profile",
+      profileFreshnessScore: clamp(observed.freshness_score ?? 0),
+      timeDecayApplied: false,
+    };
+  }
+
+  // Quality, reliability, and cost are no longer time-decayed.
+  // Only latency and throughput use the new 10%/day decay shape.
+  return {
+    freshnessWeight: 1,
+    measuredAtMs: observed?.measured_at_ms,
+    source: "passthrough",
+    timeDecayApplied: false,
+  };
+}
+
+export function getQualityMetric(
+  candidate: EndpointCandidate,
+  input: RouteRequestInput,
+): MetricEntry {
+  // Benchmark quality is the primary advisory quality signal after hard eligibility
+  // so task/role/group taxonomy evidence can influence live routing decisions.
+  const benchmarkScore = candidate.benchmarkCapability?.overallScore;
+  const taskType = input.request.taskType;
+  const taskScore = candidate.benchmarkCapability?.taskScores?.[taskType];
+  const requestedRoleId = input.request.requestedRoleId ?? input.request.roleModelIntent?.role?.id;
+  const roleScore = requestedRoleId
+    ? candidate.benchmarkCapability?.eligibleRoleScores?.[requestedRoleId]
+    : undefined;
+  const benchmarkGroupIds = resolveBenchmarkGroupIdsForRequest(input);
+  const groupScoreCandidates = benchmarkGroupIds
+    .map((groupId) => candidate.benchmarkCapability?.groupScores?.[groupId])
+    .filter((score): score is number => typeof score === "number");
+  const groupScore =
+    groupScoreCandidates.length > 0 ? Math.max(...groupScoreCandidates) : undefined;
+  const lowCoverageRoleIds = new Set(
+    candidate.benchmarkCapability?.coverage?.lowCoverageRoleIds ?? [],
+  );
+  const lowCoverageGroupIds = new Set(
+    candidate.benchmarkCapability?.coverage?.lowCoverageGroupIds ?? [],
+  );
+  const roleScoreLowCoverage = requestedRoleId ? lowCoverageRoleIds.has(requestedRoleId) : false;
+  const groupScoreLowCoverage = benchmarkGroupIds.some((groupId) =>
+    lowCoverageGroupIds.has(groupId),
+  );
+
+  if (typeof benchmarkScore === "number") {
+    const freshness = resolveQualityFreshness(input, candidate);
+    const freshnessWeight = freshness.freshnessWeight;
+    const config = input.observedDataConfig;
+    const blendWeight = config?.benchmarkTaskBlendWeight ?? 0.7;
+    let benchmarkReferenceScore = benchmarkScore;
+    let benchmarkReason: "task" | "role" | "group" | "overall" = "overall";
+    if (typeof taskScore === "number") {
+      benchmarkReferenceScore = blendWeight * benchmarkScore + (1 - blendWeight) * taskScore;
+      benchmarkReason = "task";
+    } else if (typeof roleScore === "number" && !roleScoreLowCoverage) {
+      benchmarkReferenceScore = roleScore;
+      benchmarkReason = "role";
+    } else if (typeof groupScore === "number" && !groupScoreLowCoverage) {
+      benchmarkReferenceScore = groupScore;
+      benchmarkReason = "group";
+    }
+
+    let value = config?.enabled
+      ? decayToNeutral(benchmarkReferenceScore, FRESHNESS_NEUTRAL, freshnessWeight)
+      : benchmarkReferenceScore;
+    const raw: Record<string, unknown> = {
+      benchmark_quality_score: benchmarkScore,
+      ...(typeof taskScore === "number" ? { benchmark_task_score: taskScore } : {}),
+      ...(typeof roleScore === "number" ? { benchmark_role_score: roleScore } : {}),
+      ...(typeof groupScore === "number" ? { benchmark_group_score: groupScore } : {}),
+      ...(benchmarkGroupIds.length > 0 ? { benchmark_group_ids: benchmarkGroupIds } : {}),
+      benchmark_reason: benchmarkReason,
+      benchmark_source: "routing-capability-benchmark",
+      measured_at_ms: freshness.measuredAtMs,
+      freshness_weight: freshnessWeight,
+      freshness_source: freshness.source,
+      time_decay_applied: freshness.timeDecayApplied,
+      neutral_value: FRESHNESS_NEUTRAL,
+    };
+    if (typeof freshness.profileFreshnessScore === "number") {
+      raw.profile_freshness_score = freshness.profileFreshnessScore;
+    }
+    if (roleScoreLowCoverage) {
+      raw.benchmark_role_score_low_coverage = true;
+      raw.benchmark_role_case_count =
+        requestedRoleId !== undefined
+          ? (candidate.benchmarkCapability?.coverage?.roleCases?.[requestedRoleId] ?? null)
+          : null;
+    }
+    if (groupScoreLowCoverage) {
+      raw.benchmark_group_score_low_coverage = true;
+    }
+
+    // Telemetry-derived advisory adjustment.
+    // Threshold and penalty are configurable via observedDataConfig (defaults: 0.20, -0.05).
+    const telemetrySuccessRate = candidate.telemetryScores?.taskSuccessRates?.[taskType];
+    if (typeof telemetrySuccessRate === "number") {
+      const failureThreshold = config?.telemetryAdvisoryFailureThreshold ?? 0.2;
+      const advisoryAdjustment = config?.telemetryAdvisoryPenalty ?? -0.05;
+      if (1 - telemetrySuccessRate > failureThreshold) {
+        value = Math.max(0, value + advisoryAdjustment);
+        raw.telemetry_advisory_applied = true;
+        raw.telemetry_success_rate = telemetrySuccessRate;
+        raw.telemetry_advisory_adjustment = advisoryAdjustment;
+        raw.telemetry_effective_value = value;
+      }
+    }
+
+    return {
+      value,
+      source: "benchmark" as const,
+      raw: { ...raw, effective_value: raw.effective_value ?? value },
+    };
+  }
+
   if (typeof candidate.observed?.judge_score === "number") {
-    const freshnessWeight = getFreshnessWeight(
-      input,
-      candidate,
-      input.observedDataConfig?.metricHalflives.qualityMs ?? 1,
-    );
+    const freshness = resolveQualityFreshness(input, candidate);
+    const freshnessWeight = freshness.freshnessWeight;
     const observedValue = clamp(candidate.observed.judge_score);
     const value = input.observedDataConfig?.enabled
       ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
@@ -354,8 +575,13 @@ function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput
       source: "measured",
       raw: {
         judge_score: candidate.observed.judge_score,
-        measured_at_ms: candidate.observed.measured_at_ms,
+        measured_at_ms: freshness.measuredAtMs,
         freshness_weight: freshnessWeight,
+        freshness_source: freshness.source,
+        time_decay_applied: freshness.timeDecayApplied,
+        ...(typeof freshness.profileFreshnessScore === "number"
+          ? { profile_freshness_score: freshness.profileFreshnessScore }
+          : {}),
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
       },
@@ -363,11 +589,8 @@ function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput
   }
 
   if (typeof candidate.observed?.quality_score === "number") {
-    const freshnessWeight = getFreshnessWeight(
-      input,
-      candidate,
-      input.observedDataConfig?.metricHalflives.qualityMs ?? 1,
-    );
+    const freshness = resolveQualityFreshness(input, candidate);
+    const freshnessWeight = freshness.freshnessWeight;
     const observedValue = clamp(candidate.observed.quality_score);
     const value = input.observedDataConfig?.enabled
       ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
@@ -377,8 +600,13 @@ function getQualityMetric(candidate: EndpointCandidate, input: RouteRequestInput
       source: "measured",
       raw: {
         quality_score: candidate.observed.quality_score,
-        measured_at_ms: candidate.observed.measured_at_ms,
+        measured_at_ms: freshness.measuredAtMs,
         freshness_weight: freshnessWeight,
+        freshness_source: freshness.source,
+        time_decay_applied: freshness.timeDecayApplied,
+        ...(typeof freshness.profileFreshnessScore === "number"
+          ? { profile_freshness_score: freshness.profileFreshnessScore }
+          : {}),
         neutral_value: FRESHNESS_NEUTRAL,
         effective_value: value,
       },
@@ -412,11 +640,8 @@ function getLatencyMetric(
     Math.log1p(effectiveLatencyMs / policySnapshot.targets.latency_target_ms) /
       Math.log1p(policySnapshot.targets.latency_max_ms / policySnapshot.targets.latency_target_ms);
   const observedValue = clamp(normalized);
-  const freshnessWeight = getFreshnessWeight(
-    input,
-    candidate,
-    input.observedDataConfig?.metricHalflives.latencyMs ?? 1,
-  );
+  const decayPercentPerDay = getMetricDecayPercentPerDay(input, "latency");
+  const freshnessWeight = getFreshnessWeight(input, candidate, decayPercentPerDay);
   const value = input.observedDataConfig?.enabled
     ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
     : observedValue;
@@ -430,6 +655,9 @@ function getLatencyMetric(
       effective_latency_ms: effectiveLatencyMs,
       measured_at_ms: candidate.observed.measured_at_ms,
       freshness_weight: freshnessWeight,
+      freshness_source: "time-decay",
+      time_decay_applied: Boolean(input.observedDataConfig?.enabled),
+      decay_percent_per_day: decayPercentPerDay,
       neutral_value: FRESHNESS_NEUTRAL,
       observed_value: observedValue,
       effective_value: value,
@@ -453,11 +681,8 @@ function getThroughputMetric(
     Math.log1p(candidate.observed.tokens_per_sec) /
     Math.log1p(policySnapshot.targets.throughput_target_tps);
   const observedValue = clamp(normalized);
-  const freshnessWeight = getFreshnessWeight(
-    input,
-    candidate,
-    input.observedDataConfig?.metricHalflives.throughputMs ?? 1,
-  );
+  const decayPercentPerDay = getMetricDecayPercentPerDay(input, "throughput");
+  const freshnessWeight = getFreshnessWeight(input, candidate, decayPercentPerDay);
   const decayedValue = input.observedDataConfig?.enabled
     ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
     : observedValue;
@@ -473,6 +698,9 @@ function getThroughputMetric(
       tokens_per_sec: candidate.observed.tokens_per_sec,
       measured_at_ms: candidate.observed.measured_at_ms,
       freshness_weight: freshnessWeight,
+      freshness_source: "time-decay",
+      time_decay_applied: Boolean(input.observedDataConfig?.enabled),
+      decay_percent_per_day: decayPercentPerDay,
       neutral_value: FRESHNESS_NEUTRAL,
       observed_value: observedValue,
       effective_value: value,
@@ -516,24 +744,17 @@ function getCostMetric(
   const targetCost = policySnapshot.budget.target_cost_per_request ?? DEFAULT_COST_TARGET;
   const costPer1k = catalogCostPer1k ?? observedCostPer1k ?? targetCost;
   const observedValue = clamp(1 - costPer1k / targetCost);
-  const freshnessWeight = getFreshnessWeight(
-    input,
-    candidate,
-    input.observedDataConfig?.metricHalflives.costMs ?? 1,
-  );
-  const value =
-    typeof catalogCostPer1k === "number"
-      ? observedValue
-      : input.observedDataConfig?.enabled
-        ? decayToNeutral(observedValue, FRESHNESS_NEUTRAL, freshnessWeight)
-        : observedValue;
+  const freshnessWeight = 1;
+  const value = observedValue;
   return {
     value,
     source: typeof catalogCostPer1k === "number" ? "catalog" : "measured",
     raw: {
       cost_per_1k_tokens_est: costPer1k,
       measured_at_ms: candidate.observed?.measured_at_ms ?? null,
-      freshness_weight: typeof catalogCostPer1k === "number" ? 1 : freshnessWeight,
+      freshness_weight: freshnessWeight,
+      freshness_source: "passthrough",
+      time_decay_applied: false,
       neutral_value: FRESHNESS_NEUTRAL,
       estimated_request_usd: catalogEstimate?.estimatedRequestUsd ?? null,
       input_per_1m: catalogEstimate?.inputPer1M ?? null,
@@ -556,14 +777,8 @@ function getReliabilityMetric(candidate: EndpointCandidate, input: RouteRequestI
   }
 
   const observedValue = clamp(1 - candidate.observed.failure_rate);
-  const freshnessWeight = getFreshnessWeight(
-    input,
-    candidate,
-    input.observedDataConfig?.metricHalflives.reliabilityMs ?? 1,
-  );
-  const value = input.observedDataConfig?.enabled
-    ? decayToNeutral(observedValue, RELIABILITY_NEUTRAL, freshnessWeight)
-    : observedValue;
+  const freshnessWeight = 1;
+  const value = observedValue;
   return {
     value,
     source: "measured",
@@ -571,6 +786,8 @@ function getReliabilityMetric(candidate: EndpointCandidate, input: RouteRequestI
       failure_rate: candidate.observed.failure_rate,
       measured_at_ms: candidate.observed.measured_at_ms,
       freshness_weight: freshnessWeight,
+      freshness_source: "passthrough",
+      time_decay_applied: false,
       neutral_value: RELIABILITY_NEUTRAL,
       observed_value: observedValue,
       effective_value: value,
@@ -586,6 +803,7 @@ function getPreferenceMetric(
 ): MetricEntry {
   const effectiveRequiredCapabilities = getEffectiveRequiredCapabilities(input);
   const effectivePreferredCapabilities = getEffectivePreferredCapabilities(input);
+  const supportedCapabilities = getSupportedCapabilitiesForCandidate(candidate, input);
   const requestedRoleId = input.request.requestedRoleId;
   const { requestedRole, requestedTask } = getRequestedRoleAndTask(input);
   const activeBinding = getRoleBindingForCandidate(candidate, input)?.status === "active";
@@ -611,7 +829,7 @@ function getPreferenceMetric(
   const preferredCapabilityMatches = effectivePreferredCapabilities.filter(
     (capability) =>
       !effectiveRequiredCapabilities.includes(capability) &&
-      candidate.declared.capabilities.includes(capability),
+      supportsCapabilityRequirement(supportedCapabilities, capability),
   ).length;
   if (preferredCapabilityMatches > 0) {
     const delta = Math.min(0.25, preferredCapabilityMatches * 0.25);
@@ -843,6 +1061,8 @@ function evaluateEligibility(
 
   for (const candidate of input.candidates) {
     const reasons: CandidateExclusion["code"][] = [];
+    const roleBinding = getRoleBindingForCandidate(candidate, input);
+    const supportedCapabilities = getSupportedCapabilitiesForCandidate(candidate, input);
 
     if (candidate.runtimeEligibility?.accountDisabled) {
       reasons.push("ACCOUNT_DISABLED");
@@ -901,7 +1121,7 @@ function evaluateEligibility(
 
     if (
       effectiveRequiredCapabilities.some(
-        (capability) => !candidate.declared.capabilities.includes(capability),
+        (capability) => !supportsCapabilityRequirement(supportedCapabilities, capability),
       )
     ) {
       reasons.push("CAPABILITY_MISSING");
@@ -938,7 +1158,6 @@ function evaluateEligibility(
       reasons.push("ROLE_NOT_ALLOWED");
     }
 
-    const roleBinding = getRoleBindingForCandidate(candidate, input);
     if (roleBinding?.status === "inactive") {
       reasons.push("ROLE_BINDING_INACTIVE");
     }
@@ -948,7 +1167,8 @@ function evaluateEligibility(
     if (
       roleBinding?.status === "active" &&
       effectiveRequiredCapabilities.some(
-        (capability) => !roleBinding.effective_capabilities.includes(capability),
+        (capability) =>
+          !supportsCapabilityRequirement(roleBinding.effective_capabilities, capability),
       )
     ) {
       reasons.push("ROLE_BINDING_CAPABILITY_MISSING");
@@ -1023,6 +1243,11 @@ function scoreCandidate(
 
   const selectionReasons: RouterDecisionRecord["selection_reasons"] = ["DECLARED_PROFILE_USED"];
   const { requestedTask } = getRequestedRoleAndTask(input);
+  const advisoryTask = !input.request.roleModelIntent?.task?.hard
+    ? input.taskDefinitions?.find(
+        (task) => task.task_type === input.request.roleModelIntent?.task?.id,
+      )
+    : undefined;
   const hasMeasuredMetric = Object.values(metricScores).some(
     (metric) => metric.source === "measured",
   );
@@ -1035,6 +1260,30 @@ function scoreCandidate(
   }
   if (hasDefaultMetric) {
     selectionReasons.push("DEFAULT_PROFILE_USED");
+  }
+  if (metricScores.quality.source === "benchmark") {
+    const qualityRaw = metricScores.quality.raw ?? {};
+    const benchmarkReason = qualityRaw.benchmark_reason;
+    if (benchmarkReason === "task") {
+      selectionReasons.push("BENCHMARK_TASK_SCORE");
+    } else if (benchmarkReason === "role") {
+      selectionReasons.push("BENCHMARK_ROLE_SCORE");
+    } else if (benchmarkReason === "group") {
+      selectionReasons.push("BENCHMARK_GROUP_SCORE");
+    } else if (benchmarkReason === "overall") {
+      selectionReasons.push("BENCHMARK_FALLBACK_OVERALL_SCORE");
+    } else if (typeof qualityRaw.benchmark_task_score === "number") {
+      selectionReasons.push("BENCHMARK_TASK_SCORE");
+    } else if (typeof qualityRaw.benchmark_role_score === "number") {
+      selectionReasons.push("BENCHMARK_ROLE_SCORE");
+    } else if (typeof qualityRaw.benchmark_group_score === "number") {
+      selectionReasons.push("BENCHMARK_GROUP_SCORE");
+    } else if (typeof qualityRaw.benchmark_quality_score === "number") {
+      selectionReasons.push("BENCHMARK_FALLBACK_OVERALL_SCORE");
+    }
+    if (qualityRaw.telemetry_advisory_applied === true) {
+      selectionReasons.push("TELEMETRY_TASK_PERFORMANCE");
+    }
   }
 
   if (policySnapshot.compute_preference === "local" && isLocalCandidate(candidate)) {
@@ -1077,7 +1326,7 @@ function scoreCandidate(
   if (input.request.requestedRoleId || rolePolicyApplied) {
     selectionReasons.push("ROLE_POLICY_APPLIED");
   }
-  if (requestedTask) {
+  if (requestedTask || advisoryTask) {
     selectionReasons.push("TASK_POLICY_APPLIED");
   }
 
@@ -1105,13 +1354,67 @@ function compareTieBreak(left: TieBreakDiagnostic, right: TieBreakDiagnostic): n
   return left.endpoint_id.localeCompare(right.endpoint_id);
 }
 
+export function normalizeRoutingIntentInput(input: RouteRequestInput): RouteRequestInput {
+  const intent = input.request.roleModelIntent;
+  if (!intent) {
+    return input;
+  }
+
+  const stablePiAdvisoryIntent = intent.contractVersion === 1;
+  const hardRoleId = intent.role?.hard ? intent.role.id : undefined;
+  const hardTaskType = intent.task?.hard ? intent.task.id : undefined;
+  const advisoryRole =
+    !intent.role?.hard && intent.role?.id
+      ? input.roleDefinitions?.find((role) => role.role_id === intent.role?.id)
+      : undefined;
+  const advisoryTask =
+    !intent.task?.hard && intent.task?.id
+      ? input.taskDefinitions?.find((task) => task.task_type === intent.task?.id)
+      : undefined;
+  const requiredCapabilities = unique([
+    ...input.request.requiredCapabilities,
+    ...(stablePiAdvisoryIntent ? [] : (intent.capabilities?.required ?? [])),
+  ]);
+  const preferredCapabilities = unique([
+    ...input.request.preferredCapabilities,
+    ...(stablePiAdvisoryIntent ? (intent.capabilities?.required ?? []) : []),
+    ...(intent.capabilities?.preferred ?? []),
+    ...(advisoryRole?.preferred_capabilities ?? []),
+    ...(advisoryTask?.required_capabilities ?? []),
+    ...(advisoryTask?.preferred_capabilities ?? []),
+  ]);
+  const requiredModalities = unique([
+    ...input.request.requiredModalities,
+    ...(stablePiAdvisoryIntent ? [] : (intent.modalities?.required ?? [])),
+  ]);
+  const toolClasses = intent.toolClasses ?? [];
+
+  return {
+    ...input,
+    request: {
+      ...input.request,
+      requestedRoleId: hardRoleId ?? input.request.requestedRoleId,
+      taskType: hardTaskType ?? input.request.taskType,
+      requiredCapabilities,
+      preferredCapabilities,
+      requiredModalities,
+      needsTools:
+        input.request.needsTools ||
+        (intent.source === "explicit_user" && toolClasses.length > 0) ||
+        toolClasses.includes("shell.execute") ||
+        toolClasses.includes("browser.control"),
+    },
+  };
+}
+
 export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
-  const { policySnapshot, rolePolicyApplied } = buildPolicySnapshot(input);
-  const { eligible, eligibility } = evaluateEligibility(input, policySnapshot);
+  const normalizedInput = normalizeRoutingIntentInput(input);
+  const { policySnapshot, rolePolicyApplied } = buildPolicySnapshot(normalizedInput);
+  const { eligible, eligibility } = evaluateEligibility(normalizedInput, policySnapshot);
   const metricsByEndpoint = new Map(
     eligible.map((candidate) => [
       candidate.identity.endpoint_id,
-      getCandidateMetricScores(candidate, input, policySnapshot, rolePolicyApplied),
+      getCandidateMetricScores(candidate, normalizedInput, policySnapshot, rolePolicyApplied),
     ]),
   );
   const redistributedWeights = getRedistributedWeights(policySnapshot.strategy, [
@@ -1120,17 +1423,17 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
   const scored = eligible.map((candidate) =>
     scoreCandidate(
       candidate,
-      input,
+      normalizedInput,
       policySnapshot,
       metricsByEndpoint.get(candidate.identity.endpoint_id) ??
-        getCandidateMetricScores(candidate, input, policySnapshot, rolePolicyApplied),
+        getCandidateMetricScores(candidate, normalizedInput, policySnapshot, rolePolicyApplied),
       redistributedWeights,
       rolePolicyApplied,
     ),
   );
 
   scored.sort((left, right) => {
-    if (Math.abs(right.total_score - left.total_score) > SCORE_TIE_EPSILON) {
+    if (Math.abs(right.total_score - left.total_score) > ROUTER_SCORE_TIE_EPSILON) {
       return right.total_score - left.total_score;
     }
 
@@ -1140,20 +1443,36 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
       buildTieBreak(
         leftCandidate,
         metricsByEndpoint.get(left.endpoint_id) ??
-          getCandidateMetricScores(leftCandidate, input, policySnapshot, rolePolicyApplied),
+          getCandidateMetricScores(
+            leftCandidate,
+            normalizedInput,
+            policySnapshot,
+            rolePolicyApplied,
+          ),
       ),
       buildTieBreak(
         rightCandidate,
         metricsByEndpoint.get(right.endpoint_id) ??
-          getCandidateMetricScores(rightCandidate, input, policySnapshot, rolePolicyApplied),
+          getCandidateMetricScores(
+            rightCandidate,
+            normalizedInput,
+            policySnapshot,
+            rolePolicyApplied,
+          ),
       ),
     );
   });
 
   const chosen = scored[0];
+  const runnerUp = scored[1];
+  const tieBreakApplied =
+    Boolean(chosen) &&
+    Boolean(runnerUp) &&
+    Math.abs((chosen?.total_score ?? 0) - (runnerUp?.total_score ?? 0)) <= ROUTER_SCORE_TIE_EPSILON;
   const selectionReasons: SelectionReasonCode[] = chosen
     ? unique<SelectionReasonCode>([
         "BEST_TOTAL_SCORE",
+        ...(tieBreakApplied ? (["TIE_BREAK_APPLIED"] as const) : []),
         ...chosen.selectionReasons,
         ...(scored.length > 1 ? (["FALLBACK_CHAIN_COMPUTED"] as const) : []),
       ])
@@ -1168,10 +1487,10 @@ export function routeRequest(input: RouteRequestInput): RouterDecisionRecord {
   );
 
   return {
-    routing_decision_id: `decision-${input.request.requestId}`,
-    request_id: input.request.requestId,
-    app_id: input.request.appId ?? "unknown-app",
-    org_id: input.request.orgId ?? null,
+    routing_decision_id: `decision-${normalizedInput.request.requestId}`,
+    request_id: normalizedInput.request.requestId,
+    app_id: normalizedInput.request.appId ?? "unknown-app",
+    org_id: normalizedInput.request.orgId ?? null,
     policy_snapshot: policySnapshot,
     eligibility,
     scored_candidates: scoredCandidates,

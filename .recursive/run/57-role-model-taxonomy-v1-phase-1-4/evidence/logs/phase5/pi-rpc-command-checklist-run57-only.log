@@ -1,0 +1,56 @@
+(node:17632) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+## /role-model setup
+{"type":"extension_ui_request","id":"3f3c2b23-c820-462d-a0d6-68fd7f656594","method":"notify","message":"Role-Model runtime unavailable: Role-Model downstream OpenAI discovery response is incompatible.\nstate: incompatible\nendpoint: http://127.0.0.1:4567/api/role-model/downstream/openai\nremediation: Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model status
+{"type":"extension_ui_request","id":"ac89614e-da81-44db-ac22-14ac5a97677e","method":"notify","message":"Role-Model runtime unavailable: Role-Model downstream OpenAI discovery response is incompatible.\nstate: incompatible\nendpoint: http://127.0.0.1:4567/api/role-model/downstream/openai\nremediation: Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model doctor
+{"type":"extension_ui_request","id":"d70429b9-9b3e-4a6a-864d-ad5650993850","method":"notify","message":"Role-Model runtime unavailable: Role-Model downstream OpenAI discovery response is incompatible.\nstate: incompatible\nendpoint: http://127.0.0.1:4567/api/role-model/downstream/openai\nremediation: Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model ui
+{"type":"extension_ui_request","id":"1217cc0f-5a2e-41fd-8c0e-0975eb31a1d4","method":"notify","message":"Role-Model runtime unavailable: Role-Model downstream OpenAI discovery response is incompatible.\nstate: incompatible\nendpoint: http://127.0.0.1:4567/api/role-model/downstream/openai\nremediation: Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias list
+{"type":"extension_ui_request","id":"0a3e3f8a-fc5b-4606-bffa-a32eb3440899","method":"notify","message":"Role-Model runtime unavailable: Role-Model downstream OpenAI discovery response is incompatible.\nstate: incompatible\nendpoint: http://127.0.0.1:4567/api/role-model/downstream/openai\nremediation: Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias recommended
+{"type":"extension_ui_request","id":"060d48e7-5776-4d88-b718-471f3220d905","method":"notify","message":"Role-Model runtime unavailable: Role-Model downstream OpenAI discovery response is incompatible.\nstate: incompatible\nendpoint: http://127.0.0.1:4567/api/role-model/downstream/openai\nremediation: Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias use default.decision-only
+{"type":"extension_ui_request","id":"417f79a2-7641-48fb-b31e-76bfe50de3b4","method":"notify","message":"Role-Model runtime unavailable: Role-Model downstream OpenAI discovery response is incompatible.\nstate: incompatible\nendpoint: http://127.0.0.1:4567/api/role-model/downstream/openai\nremediation: Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias refresh
+{"type":"extension_ui_request","id":"7928e0b9-40fe-48a8-8928-9d888bdc7240","method":"notify","message":"Role-Model runtime unavailable: Role-Model downstream OpenAI discovery response is incompatible.\nstate: incompatible\nendpoint: http://127.0.0.1:4567/api/role-model/downstream/openai\nremediation: Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+
+## /role-model alias current
+{"type":"extension_ui_request","id":"3b9eaa1d-f948-4e13-8c6a-e1e249d6348b","method":"notify","message":"Role-Model runtime unavailable: Role-Model downstream OpenAI discovery response is incompatible.\nstate: incompatible\nendpoint: http://127.0.0.1:4567/api/role-model/downstream/openai\nremediation: Upgrade Role-Model or verify /api/role-model/downstream/openai returns the current downstream OpenAI discovery contract.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM

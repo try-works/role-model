@@ -1,0 +1,41 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/71-runtime-startup-lifecycle-and-health-truth-reconciliation/role-model-router/apps/runtime-host-bridge
+
+(node:31508) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/endpoint-rehydration.test.ts (2 tests | 1 failed) 3067ms
+   ✓ endpoint rehydration > rehydrates sqlite runtime endpoints across backend restart without re-activation  1355ms
+   × endpoint rehydration > reconciles missing persisted remote activations even when sqlite already has endpoint rows 1709ms
+     → expected [ Array(1) ] to deeply equal [ …(2) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/endpoint-rehydration.test.ts > endpoint rehydration > reconciles missing persisted remote activations even when sqlite already has endpoint rows
+AssertionError: expected [ Array(1) ] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+  [
+    "moonshot.personal.primary.global.kimi-k2.5",
+-   "moonshot.personal.primary.global.kimi-k2.6",
+  ]
+
+ ❯ test/endpoint-rehydration.test.ts:262:13
+    260|           expect(
+    261|             listRuntimeEndpoints({ databasePath }).map((endpoint) => e…
+    262|           ).toEqual([
+       |             ^
+    263|             activation.endpointId,
+    264|             "moonshot.personal.primary.global.kimi-k2.6",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  20:34:36
+   Duration  6.55s (transform 1.67s, setup 0ms, collect 2.63s, tests 3.07s, environment 0ms, prepare 289ms)
+
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/endpoint-rehydration.test.ts

@@ -1,0 +1,18 @@
+{
+  "artifact": "05-manual-qa.md",
+  "artifact_hash": "a9e728e30b5d53a86d49c998b8d4cd09ce23dd2a31d1c1c3d47548765debe377",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\77-catalog-json-size-and-ui-freeze\\.recursive\\run\\77-catalog-json-size-and-ui-freeze\\05-manual-qa.md",
+  "locked_at": "2026-07-18T02:55:41Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "047a803d6847af511f434e3eb4f5d9df07b2cc763712c218b361024c0ce0ce8f",
+    "00-worktree.md": "34bfa7d67ff7058a3c6ce472761997e88abd77f1e60a5b6da02033f70e8bb27e",
+    "01-as-is.md": "a2c05d623241fda11cc200ff1ee118124476a3246768511a077744c899c9eccb",
+    "01.5-root-cause.md": "15fbd4c7e48ab6086adabd98e3c3d324f0b33017291a96c263487e0f9f0c0a7f",
+    "02-to-be-plan.md": "6d1d4f7eb6c73d68e07aba93f38962521f7aa39372f1c89806dbff725f9c6a6b",
+    "03-implementation-summary.md": "c02c88f64f8a0913b2a3671c4af12f411e07622cb37a0be930a865215ed8b7c5",
+    "03.5-code-review.md": "2c36a23227b56ead19dad004fcd8f75132ecf59bdc2d686af98953409d286b84",
+    "04-test-summary.md": "1b40b3563e79103755469493cd24a436300821a62f8016e59e99e5fb4bd57ef5"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "61cce80a2c34d5910859433542b8a6b124fcaac78bf2e6cc8c2c78063512cd1a"
+}

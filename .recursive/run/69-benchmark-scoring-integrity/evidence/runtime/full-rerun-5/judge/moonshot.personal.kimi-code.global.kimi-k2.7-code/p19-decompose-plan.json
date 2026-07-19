@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "p19-decompose-plan",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer provides a detailed, structured decomposition with 8 phases, each containing milestones and verification criteria (checklists). It fully meets the MUST requirement for structured decomposition with phases or milestones, and the deliverable is a valid JSON object with the required 'answer' key. No diff placeholders, TOOL_CALL lines, or malformed content are present.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p19-decompose-plan.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/p19-decompose-plan/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935091220
+}

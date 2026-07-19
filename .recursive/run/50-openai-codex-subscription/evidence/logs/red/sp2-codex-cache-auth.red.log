@@ -1,0 +1,37 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge[39m
+
+(node:28704) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31m❯[39m test/account-repair.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m3 skipped[39m[2m)[22m[33m 408[2mms[22m[39m
+   [2m[90m↓[39m[22m account repair mutations[2m > [22mreconnect returns the current pending device-authorization session for the same account
+   [2m[90m↓[39m[22m account repair mutations[2m > [22mupdate API key preserves account identity, bindings, and endpoint associations
+   [2m[90m↓[39m[22m account repair mutations[2m > [22mrejects overlapping repair mutations for the same account without partially mutating state
+[31m   [31m×[31m account repair mutations[2m > [22mcodex subscription poll connects from the local Codex auth cache without external OAuth fetches[39m[33m 405[2mms[22m[39m
+[31m     → Unexpected network request: codex://openai/chatgpt-device-code/start[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/account-repair.test.ts > account repair mutations > codex subscription poll connects from the local Codex auth cache without external OAuth fetches
+Error: Unexpected network request: codex://openai/chatgpt-device-code/start
+ ❯ networkFetcher test/account-repair.test.ts:395:15
+    393|           typeof input === "string" ? input : input instanceof URL ? i…
+    394|         networkRequests += 1;
+    395|         throw new Error(`Unexpected network request: ${url}`);
+       |               ^
+    396|       },
+    397|     });
+ ❯ Object.startProviderDeviceAuthorization src/index.ts:11817:36
+ ❯ test/account-repair.test.ts:400:37
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m3 skipped[39m[90m (4)[39m
+[2m   Start at [22m 19:56:11
+[2m   Duration [22m 3.64s[2m (transform 1.62s, setup 0ms, collect 2.03s, tests 408ms, environment 1ms, prepare 608ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\50-openai-codex-subscription\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/account-repair.test.ts --testNamePattern codex subscription poll connects from the local Codex auth cache without external OAuth fetches

@@ -1,0 +1,781 @@
+{
+  "requestId": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+  "routingDecisionId": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+  "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+  "conversationId": "conversation-main",
+  "decision": {
+    "routing_decision_id": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+    "request_id": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+    "app_id": "unknown-app",
+    "org_id": null,
+    "policy_snapshot": {
+      "policy_id": "balanced-policy",
+      "strategy": "balanced",
+      "compute_preference": "auto",
+      "prefer_local": false,
+      "budget_mode": "disabled",
+      "tie_break_order": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "required_modalities": [
+        "text"
+      ],
+      "require_tools": false,
+      "deny_endpoints": [],
+      "allow_endpoints": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ],
+      "deny_provider_kinds": [],
+      "allow_provider_kinds": [],
+      "budget": {
+        "enabled": false,
+        "currency": "USD"
+      },
+      "privacy": {
+        "allow_remote": true
+      },
+      "targets": {
+        "latency_target_ms": 150,
+        "latency_max_ms": 300,
+        "throughput_target_tps": 40
+      }
+    },
+    "eligibility": [
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "eligible": true,
+        "exclusions": []
+      },
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "eligible": true,
+        "exclusions": []
+      }
+    ],
+    "scored_candidates": [
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "total_score": 0.8986502326621085,
+        "metric_breakdown": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.8734426131098105,
+            "source": "measured",
+            "raw": {
+              "latency_ms_p50": 6,
+              "latency_ms_p95": 6,
+              "effective_latency_ms": 6,
+              "measured_at_ms": 1782220764039,
+              "freshness_weight": 0.8043135890493013,
+              "neutral_value": 0.5,
+              "observed_value": 0.9642997683916043,
+              "effective_value": 0.8734426131098105
+            }
+          },
+          "throughput": {
+            "value": 0.7900905089545867,
+            "source": "measured",
+            "raw": {
+              "tokens_per_sec": 667,
+              "measured_at_ms": 1782220764039,
+              "freshness_weight": 0.5801810179091732,
+              "neutral_value": 0.5,
+              "observed_value": 1,
+              "effective_value": 0.7900905089545867
+            }
+          },
+          "cost": {
+            "value": 1,
+            "source": "catalog",
+            "raw": {
+              "cost_per_1k_tokens_est": 0,
+              "measured_at_ms": 1782220764039,
+              "freshness_weight": 1,
+              "neutral_value": 0.5,
+              "estimated_request_usd": 0,
+              "input_per_1m": 0,
+              "output_per_1m": 0,
+              "token_economics_source": "local-free",
+              "canonical_model_id": "lfm2.5-1.2b-instruct",
+              "target_cost_per_request": 0.01,
+              "observed_value": 1,
+              "effective_value": 1
+            }
+          },
+          "reliability": {
+            "value": 0.9690505956403686,
+            "source": "measured",
+            "raw": {
+              "failure_rate": 0,
+              "measured_at_ms": 1782220764039,
+              "freshness_weight": 0.8968353188012286,
+              "neutral_value": 0.7,
+              "observed_value": 1,
+              "effective_value": 0.9690505956403686
+            }
+          },
+          "preference": {
+            "value": 0.6,
+            "source": "declared",
+            "raw": {
+              "task_policy_present": true,
+              "cache_affinity": true,
+              "cache_affinity_delta": 0.1
+            }
+          }
+        },
+        "tie_break": {
+          "quality": 0.5,
+          "latency_ms": 6,
+          "reliability": 0.9690505956403686,
+          "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct"
+        }
+      },
+      {
+        "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        "total_score": 0.6473921473582162,
+        "metric_breakdown": {
+          "quality": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "latency": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "throughput": {
+            "value": 0.5,
+            "source": "default"
+          },
+          "cost": {
+            "value": 0.8408725157537567,
+            "source": "catalog",
+            "raw": {
+              "cost_per_1k_tokens_est": 0.0015912748424624333,
+              "measured_at_ms": null,
+              "freshness_weight": 1,
+              "neutral_value": 0.5,
+              "estimated_request_usd": 0.0065655999999999996,
+              "input_per_1m": 0.4,
+              "output_per_1m": 1.6,
+              "token_economics_source": "catalog",
+              "canonical_model_id": "openai/gpt-4.1-mini-fast",
+              "target_cost_per_request": 0.01,
+              "observed_value": 0.8408725157537567,
+              "effective_value": 0.8408725157537567
+            }
+          },
+          "reliability": {
+            "value": 0.7,
+            "source": "default"
+          },
+          "preference": {
+            "value": 0.6,
+            "source": "declared",
+            "raw": {
+              "task_policy_present": true,
+              "cache_affinity": true,
+              "cache_affinity_delta": 0.1
+            }
+          }
+        },
+        "tie_break": {
+          "quality": 0.5,
+          "latency_ms": 250,
+          "reliability": 0.7,
+          "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        }
+      }
+    ],
+    "chosen_endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "fallback_endpoint_ids": [
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ],
+    "selection_reasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "DEFAULT_PROFILE_USED",
+      "CACHE_AFFINITY_APPLIED",
+      "LOW_LATENCY_TARGET_MET",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ],
+    "used_measured": true,
+    "used_declared": true,
+    "scoring_version": "baseline-v2"
+  },
+  "routingDiagnostics": {
+    "retrievalReceiptId": "conversation-main-retrieval-receipt",
+    "routingModel": {
+      "enabled": false,
+      "endpointId": null,
+      "preferredEndpointIds": [],
+      "ignoredEndpointIds": []
+    },
+    "aliasResolution": {
+      "requestedModel": "default.decision-only",
+      "aliasId": "default.decision-only",
+      "resolvedModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "openai/gpt-4.1-mini-fast"
+      ],
+      "allowEndpoints": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ]
+    },
+    "capabilityEligibility": {
+      "requiredInputModalities": [
+        "text"
+      ],
+      "requiredOutputModalities": [
+        "text"
+      ],
+      "requiredCapabilities": [
+        "text.chat"
+      ],
+      "advisoryCapabilities": [],
+      "includedEndpoints": [
+        "llama-swap.local.lfm2-5-1-2b-instruct",
+        "openai.litellm.global.openai-gpt-4-1-mini-fast"
+      ],
+      "excludedTargets": []
+    },
+    "rewrite": {
+      "requestedModel": "default.decision-only",
+      "downstreamModelId": "lfm2.5-1.2b-instruct",
+      "applied": true,
+      "reason": "requested-model-rewritten-for-selected-endpoint"
+    },
+    "observedProfile": {
+      "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "source": "runtime-state",
+      "readMode": "per-request",
+      "measuredAtMs": 1782220764039
+    },
+    "catalogEconomics": {
+      "canonicalModelId": "lfm2.5-1.2b-instruct",
+      "tokenEconomicsSource": "local-free",
+      "inputPer1M": 0,
+      "outputPer1M": 0,
+      "estimatedRequestUsd": 0,
+      "cost_per_1k_tokens_est": 0
+    },
+    "effectiveMetrics": {
+      "quality": {
+        "value": 0.5,
+        "source": "default"
+      },
+      "latency": {
+        "value": 0.8734426131098105,
+        "source": "measured",
+        "measuredAtMs": 1782220764039,
+        "freshnessWeight": 0.8043135890493013
+      },
+      "throughput": {
+        "value": 0.7900905089545867,
+        "source": "measured",
+        "measuredAtMs": 1782220764039,
+        "freshnessWeight": 0.5801810179091732
+      },
+      "reliability": {
+        "value": 0.9690505956403686,
+        "source": "measured",
+        "measuredAtMs": 1782220764039,
+        "freshnessWeight": 0.8968353188012286
+      },
+      "cost": {
+        "value": 1,
+        "source": "catalog",
+        "measuredAtMs": 1782220764039,
+        "freshnessWeight": 1
+      }
+    },
+    "selection": {
+      "mode": "best-total-score",
+      "scoreTieEpsilon": 0.01,
+      "scoreDelta": 0.2512580853038924,
+      "winnerEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "winnerTotalScore": 0.8986502326621085,
+      "runnerUpEndpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "runnerUpTotalScore": 0.6473921473582162,
+      "tieBreakOrder": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ]
+    },
+    "throughputPenalty": {
+      "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "active": false
+    }
+  },
+  "retrievalReceipt": {
+    "receiptId": "conversation-main-retrieval-receipt",
+    "summary": {
+      "selectedTurns": 2,
+      "selectedArtifacts": 1,
+      "omittedTurns": 2,
+      "omittedArtifacts": 2,
+      "estimatedTokens": 240
+    }
+  },
+  "contextEnvelope": {
+    "conversationId": "conversation-main",
+    "latestHandoffId": "handoff-1",
+    "estimatedTokenCount": 240
+  },
+  "trace": {
+    "spans": [
+      {
+        "trace_id": "trace-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "span_id": "span-provider-load-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "request_id": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "routing_decision_id": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "span_type": "provider.load",
+        "started_at_ms": 1782220858303,
+        "ended_at_ms": 1782220858308,
+        "status": "ok",
+        "attributes": {
+          "adapter_family": "ai-sdk-openai-compatible",
+          "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct"
+        }
+      },
+      {
+        "trace_id": "trace-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "span_id": "span-provider-decode-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "parent_span_id": "span-provider-load-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "request_id": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "routing_decision_id": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "span_type": "provider.decode",
+        "started_at_ms": 1782220858308,
+        "ended_at_ms": 1782220858313,
+        "status": "ok",
+        "attributes": {
+          "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+          "text_delta_count": 1
+        }
+      }
+    ],
+    "events": [
+      {
+        "event_id": "event-provider-load-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "trace_id": "trace-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "span_id": "span-provider-load-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "request_id": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "routing_decision_id": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "timestamp_ms": 1782220858304,
+        "event_type": "trace.span.opened",
+        "payload": {
+          "adapter_family": "ai-sdk-openai-compatible",
+          "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct"
+        }
+      },
+      {
+        "event_id": "event-usage-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "trace_id": "trace-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "span_id": "span-provider-decode-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "request_id": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "routing_decision_id": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "timestamp_ms": 1782220858313,
+        "event_type": "usage.event.created",
+        "payload": {
+          "input_tokens": 11,
+          "output_tokens": 4
+        }
+      }
+    ]
+  },
+  "usageEvent": {
+    "event_id": "usage-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+    "timestamp_ms": 1782220858303,
+    "app_id": "unknown-app",
+    "request_id": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+    "routing_decision_id": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+    "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "model_id": "lfm2.5-1.2b-instruct",
+    "package_id": "ai-sdk-openai-compatible",
+    "provider_kind": "remote_openai_compat",
+    "tokens_in": 11,
+    "tokens_out": 4,
+    "latency_ms": 2,
+    "cost_estimate": 0,
+    "sample_source": "live_request"
+  },
+  "observedPerformance": {
+    "endpointVersion": "run07-registry-v1:default",
+    "sample": {
+      "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "endpoint_version": "run07-registry-v1:default",
+      "source_type": "live_request",
+      "timestamp_ms": 1782220858303,
+      "latency_ms": 2,
+      "latency_ms_p95": 2,
+      "tokens_per_sec": 2000,
+      "cost_per_1k_tokens_est": 0,
+      "failure": false,
+      "request_id": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+      "routing_decision_id": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f"
+    },
+    "history": [
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1782220764039,
+        "latency_ms": 6,
+        "latency_ms_p95": 6,
+        "tokens_per_sec": 667,
+        "failure": false,
+        "request_id": "req-7de31805-02b4-48ce-9fd2-d836020e9fed",
+        "routing_decision_id": "decision-req-7de31805-02b4-48ce-9fd2-d836020e9fed"
+      },
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1782220858303,
+        "latency_ms": 2,
+        "latency_ms_p95": 2,
+        "tokens_per_sec": 2000,
+        "cost_per_1k_tokens_est": 0,
+        "failure": false,
+        "request_id": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+        "routing_decision_id": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f"
+      }
+    ],
+    "profile": {
+      "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "endpoint_version": "run07-registry-v1:default",
+      "measured_at_ms": 1782220858303,
+      "measurement_window": {
+        "started_at_ms": 1782220764039,
+        "ended_at_ms": 1782220858303
+      },
+      "sample_size": 2,
+      "sources": {
+        "live_request_samples": 2,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 4,
+      "latency_ms_p95": 5.8,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.27941531270472214,
+      "tokens_per_sec": 1333.5,
+      "cost_per_1k_tokens_est": 0,
+      "currency": "USD"
+    }
+  },
+  "diagnostics": {
+    "routing": [
+      {
+        "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+        "severity": "info",
+        "message": "Routing diagnostics link request req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f to retrieval receipt conversation-main-retrieval-receipt."
+      }
+    ],
+    "execution": [],
+    "authAccount": [],
+    "memoryQuality": [
+      {
+        "code": "MEMORY_CONTEXT_OMITTED",
+        "severity": "warning",
+        "message": "Context assembly omitted 2 turns and 2 artifacts."
+      },
+      {
+        "code": "MEMORY_LATEST_HANDOFF_LINKED",
+        "severity": "info",
+        "message": "Context inspection preserves latest handoff handoff-1."
+      }
+    ],
+    "tooling": [],
+    "operator": [
+      {
+        "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+        "severity": "info",
+        "message": "Raw operator captures remain available through the preserved host capture surface."
+      }
+    ]
+  },
+  "capturePolicy": {
+    "environment": "local-dev",
+    "redactionLevel": "strict",
+    "retentionClass": "standard",
+    "structuredInspectionMode": "redacted",
+    "rawCaptureAvailable": true,
+    "structuredInspectionAvailable": true,
+    "redactedFields": [
+      "request.headers.authorization"
+    ],
+    "suppressedFields": [
+      "request.body",
+      "response.body"
+    ]
+  },
+  "executionTelemetry": {
+    "providerFamily": "ai-sdk-openai-compatible",
+    "finishReason": "stop",
+    "stream": {
+      "requested": false,
+      "textDeltas": 1,
+      "toolCallDeltas": 0,
+      "toolArgumentDeltas": 0
+    },
+    "streamSupport": {
+      "text": "delta",
+      "toolCalls": "delta",
+      "toolArguments": "delta"
+    },
+    "promptCaching": {
+      "supported": false,
+      "mode": "unsupported"
+    },
+    "usageSupport": {
+      "inputTokens": true,
+      "outputTokens": true,
+      "cacheReadTokens": false,
+      "cacheWriteTokens": false
+    },
+    "costProvenance": "estimated"
+  },
+  "cacheObservability": {
+    "promptCacheRequested": false,
+    "promptCacheUsed": false,
+    "cacheReadTokens": 0,
+    "cacheWriteTokens": 0,
+    "routingCacheAffinity": false
+  },
+  "tooling": {
+    "toolCalls": [],
+    "executions": [],
+    "diagnostics": []
+  },
+  "telemetrySnapshot": {
+    "providerId": "llama-swap",
+    "providerAccountId": null,
+    "sourceType": "local",
+    "endpointKind": "local_engine",
+    "servingSource": "vendor-llama-swap",
+    "region": "local",
+    "lifecycleStateAtRequest": "active",
+    "healthStatusAtRequest": null,
+    "requestedModelId": "default.decision-only",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "requestOperation": "chat",
+    "roleIds": [],
+    "toolingUsed": false,
+    "cacheState": "unsupported",
+    "eligibleEndpointIds": [
+      "llama-swap.local.lfm2-5-1-2b-instruct",
+      "openai.litellm.global.openai-gpt-4-1-mini-fast"
+    ],
+    "eligibleModelIds": [
+      "lfm2.5-1.2b-instruct",
+      "openai/gpt-4.1-mini-fast"
+    ],
+    "candidateCostSnapshot": {
+      "llama-swap.local.lfm2-5-1-2b-instruct": {
+        "modelId": "lfm2.5-1.2b-instruct",
+        "providerId": "llama-swap",
+        "providerKind": "remote_openai_compat",
+        "sourceType": "local",
+        "endpointKind": "local_engine",
+        "servingSource": "vendor-llama-swap",
+        "region": "local",
+        "tokenEconomicsSource": "local-free",
+        "estimatedRequestUsd": 0,
+        "costPer1kTokensEst": 0,
+        "inputPer1M": 0,
+        "outputPer1M": 0
+      },
+      "openai.litellm.global.openai-gpt-4-1-mini-fast": {
+        "modelId": "openai/gpt-4.1-mini-fast",
+        "providerId": null,
+        "providerKind": "remote_openai_compat",
+        "sourceType": "remote",
+        "endpointKind": "remote_api",
+        "servingSource": "vendor-litellm",
+        "region": "global",
+        "tokenEconomicsSource": "catalog",
+        "estimatedRequestUsd": 0.0065655999999999996,
+        "costPer1kTokensEst": 0.0015912748424624333,
+        "inputPer1M": 0.4,
+        "outputPer1M": 1.6
+      }
+    },
+    "selectedPricingSnapshot": {
+      "modelId": "lfm2.5-1.2b-instruct",
+      "providerId": "llama-swap",
+      "providerAccountId": null,
+      "sourceType": "local",
+      "tokenEconomicsSource": "local-free",
+      "estimatedRequestUsd": 0,
+      "costPer1kTokensEst": 0,
+      "inputPer1M": 0,
+      "outputPer1M": 0
+    },
+    "selectedUncachedCostUsd": 0,
+    "baselineMaxEligibleCostUsd": 0.0065655999999999996,
+    "routingCostSavingsUsd": 0.006566,
+    "cacheCostSavingsUsd": 0,
+    "totalAvoidedCostUsd": 0.006566,
+    "costBaselineSource": "eligible_candidate_max",
+    "costSavingsSupport": "full",
+    "dimensions": {
+      "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "candidateCount": 2
+    }
+  },
+  "inspection": {
+    "request": {
+      "requestId": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+      "routingDecisionId": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+      "requestCapture": {
+        "headers": {
+          "authorization": "[redacted]",
+          "OpenAI-Beta": "responses=v1"
+        },
+        "body": {
+          "suppressed": true,
+          "reason": "policy.rawCapture.requestBody.disabled"
+        }
+      },
+      "responseCapture": {
+        "statusCode": 200,
+        "body": {
+          "suppressed": true,
+          "reason": "policy.rawCapture.responseBody.disabled"
+        }
+      },
+      "diagnostics": {
+        "routing": [
+          {
+            "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
+            "severity": "info",
+            "message": "Routing diagnostics link request req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f to retrieval receipt conversation-main-retrieval-receipt."
+          }
+        ],
+        "execution": [],
+        "authAccount": [],
+        "memoryQuality": [
+          {
+            "code": "MEMORY_CONTEXT_OMITTED",
+            "severity": "warning",
+            "message": "Context assembly omitted 2 turns and 2 artifacts."
+          },
+          {
+            "code": "MEMORY_LATEST_HANDOFF_LINKED",
+            "severity": "info",
+            "message": "Context inspection preserves latest handoff handoff-1."
+          }
+        ],
+        "tooling": [],
+        "operator": [
+          {
+            "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
+            "severity": "info",
+            "message": "Raw operator captures remain available through the preserved host capture surface."
+          }
+        ]
+      },
+      "capturePolicy": {
+        "environment": "local-dev",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "redacted",
+        "rawCaptureAvailable": true,
+        "structuredInspectionAvailable": true,
+        "redactedFields": [
+          "request.headers.authorization"
+        ],
+        "suppressedFields": [
+          "request.body",
+          "response.body"
+        ]
+      }
+    },
+    "endpoint": {
+      "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "endpointVersion": "run07-registry-v1:default",
+      "latestProfile": {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "measured_at_ms": 1782220858303,
+        "measurement_window": {
+          "started_at_ms": 1782220764039,
+          "ended_at_ms": 1782220858303
+        },
+        "sample_size": 2,
+        "sources": {
+          "live_request_samples": 2,
+          "benchmark_samples": 0
+        },
+        "latency_ms_p50": 4,
+        "latency_ms_p95": 5.8,
+        "failure_rate": 0,
+        "freshness_score": 1,
+        "confidence_score": 0.27941531270472214,
+        "tokens_per_sec": 1333.5,
+        "cost_per_1k_tokens_est": 0,
+        "currency": "USD"
+      },
+      "recentSamples": [
+        {
+          "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+          "endpoint_version": "run07-registry-v1:default",
+          "source_type": "live_request",
+          "timestamp_ms": 1782220764039,
+          "latency_ms": 6,
+          "latency_ms_p95": 6,
+          "tokens_per_sec": 667,
+          "failure": false,
+          "request_id": "req-7de31805-02b4-48ce-9fd2-d836020e9fed",
+          "routing_decision_id": "decision-req-7de31805-02b4-48ce-9fd2-d836020e9fed"
+        },
+        {
+          "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+          "endpoint_version": "run07-registry-v1:default",
+          "source_type": "live_request",
+          "timestamp_ms": 1782220858303,
+          "latency_ms": 2,
+          "latency_ms_p95": 2,
+          "tokens_per_sec": 2000,
+          "cost_per_1k_tokens_est": 0,
+          "failure": false,
+          "request_id": "req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f",
+          "routing_decision_id": "decision-req-87c4fd75-7fec-4583-b20a-5be1c7da4b2f"
+        }
+      ]
+    }
+  },
+  "sourceType": "local",
+  "providerId": null,
+  "endpointKind": "local_engine",
+  "servingSource": "vendor-llama-swap",
+  "healthStatus": "healthy",
+  "status": "active",
+  "roleIds": [],
+  "effectiveCostUsd": 0,
+  "costCalculationBasis": "estimated_vendor_cost",
+  "costCalculationVersion": "run49.v1",
+  "selectedUncachedCostUsd": 0,
+  "baselineMaxEligibleCostUsd": 0.0065655999999999996,
+  "routingCostSavingsUsd": 0.006566,
+  "cacheCostSavingsUsd": 0,
+  "totalAvoidedCostUsd": 0.006566,
+  "costBaselineSource": "eligible_candidate_max",
+  "costSavingsSupport": "full"
+}

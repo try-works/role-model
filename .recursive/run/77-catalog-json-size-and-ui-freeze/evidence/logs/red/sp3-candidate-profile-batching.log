@@ -1,0 +1,11 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP3
+TDD Mode: strict
+Timestamp: 2026-07-18T01:45:10Z
+Command: corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/candidate-profile-scaling.test.ts
+Exit code: 1
+
+RED verified: PASS
+Expected: candidate construction uses readLatestObservedProfilesByEndpointIds and no per-endpoint profile/sample-history reads.
+Actual: both benchmark capability and candidate mapping called readEndpointProfileData(endpointId); candidate mapping filtered profile.recentSamples.
+Vitest summary: 1 failed; duration 0.901s.

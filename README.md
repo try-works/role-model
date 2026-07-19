@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/public/role-model-hero.png" alt="role-model" width="600"></p>
+
 # role-model
 
 `role-model` is an open protocol for capability-aware AI routing, plus a reference router that implements
@@ -6,22 +8,13 @@ that protocol.
 It gives a router a durable contract for describing **what a request needs**, **what an endpoint can do**,
 **what policy allows**, and **why a final routing decision was made**.
 
-## Start here
+![role-model runtime overview](docs/public/images/runtime-overview.png)
 
-The public-facing docs live under [`docs/public/`](docs/public/README.md). That folder is intentionally
-separate so a future docs site can serve directly from it without mixing onboarding content with lower-level
-reference docs.
+## What role-model does
 
-| Read this | If you want |
-| --- | --- |
-| [`docs/public/README.md`](docs/public/README.md) | the docs hub |
-| [`docs/public/introduction.md`](docs/public/introduction.md) | what role-model is and why it exists |
-| [`docs/public/quickstart.md`](docs/public/quickstart.md) | a real end-to-end smoke run |
-| [`docs/public/concepts/how-role-model-works.md`](docs/public/concepts/how-role-model-works.md) | the system flow |
-| [`docs/public/concepts/protocol-overview.md`](docs/public/concepts/protocol-overview.md) | the protocol surface |
-| [`docs/public/concepts/routing-overview.md`](docs/public/concepts/routing-overview.md) | how routing decisions happen |
-
-## What role-model is
+Every AI workload eventually faces the same question: *which model should handle this request?* The answer
+depends on task type, required capabilities, cost, latency, and whether the model is running locally or in
+the cloud. `role-model` makes that decision explicit, explainable, and portable.
 
 At a high level, `role-model` separates AI routing into a few stable pieces:
 
@@ -30,38 +23,17 @@ At a high level, `role-model` separates AI routing into a few stable pieces:
 3. **Routing policy** applies hard denies, preferences, budgets, and tie-break rules.
 4. **Observability artifacts** record the decision, trace, usage, and observed performance.
 
-That makes routing explainable and portable across different providers, hosts, and deployment shapes.
+The reference router supports **hybrid routing** across three deployment shapes:
 
-## What role-model is not
+- **Local / Local** - route between local models (e.g., llama-swap peers) based on role, task, and capability
+- **Local / Cloud** - route between a local model and a cloud provider based on cost, latency, and task difficulty
+- **Cloud / Cloud** - route between cloud providers (e.g., OpenAI, DeepSeek, Moonshot) based on capability and economics
 
-`role-model` is not:
+This means a single runtime can serve a quick chat request from a fast local model, route a complex coding
+task to a capable cloud model, and fall back to a cheaper cloud endpoint when the primary is degraded, all
+under one explainable routing contract.
 
-- a single provider SDK
-- a prompt-role library that permanently binds one persona to one model
-- a monolithic runtime host
-- a benchmark-only project with no routing contract
-
-The protocol is the canonical contract. The router in `role-model-router/` is the reference implementation
-of that contract.
-
-## What you get in this repository
-
-- canonical schemas and fixtures under [`protocol/`](protocol/README.md)
-- protocol and architecture reference docs under [`docs/`](docs)
-- shared tooling and generated types under `packages/`
-- a deterministic reference router under [`role-model-router/`](role-model-router/README.md)
-- a smoke flow that emits real routing artifacts under `runtime-output/gateway-smoke/`
-
-## Current baseline
-
-Today this repository is a **real baseline**, not only a design sketch:
-
-- the protocol and schemas are implemented
-- the router core and conformance coverage are implemented
-- the smoke path and emitted artifacts are implemented
-- some future host/runtime families are still architecture-stage rather than production-ready
-
-## Install
+## Install the runtime
 
 For end users, prefer the packaged standalone runtime over a source build.
 
@@ -72,7 +44,7 @@ curl -fsSL https://raw.githubusercontent.com/try-works/role-model/main/scripts/i
 ```
 
 The installer downloads the latest GitHub Release archive, installs it under
-`~/.local/share/role-model-router/<version>/<target>/`, and exposes a `role-model-router` launcher in
+`~/.local/share/role-model/<version>/<target>/`, and exposes a `role-model` launcher in
 `~/.local/bin`.
 
 ### Windows
@@ -82,24 +54,68 @@ irm https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.
 ```
 
 The installer downloads the latest GitHub Release archive, installs it under
-`%LOCALAPPDATA%\Programs\RoleModelRouter\<version>\<target>\`, and creates a `role-model-router.cmd`
+`%LOCALAPPDATA%\Programs\role-model\<version>\<target>\`, and creates a `role-model.cmd`
 launcher.
 
 ### Manual downloads
 
-If you do not want to use installer scripts, download the matching archive from GitHub Releases:
+If you do not want to use installer scripts, download the matching archive from GitHub Releases.
 
-- `role-model-router-linux-x64.tar.gz`
-- `role-model-router-darwin-x64.tar.gz`
-- `role-model-router-darwin-arm64.tar.gz`
-- `role-model-router-win32-x64.zip`
+| Platform | Archive | Launch |
+| --- | --- | --- |
+| Windows | `role-model-win32-x64.zip` | `role-model.bat` or `role-model.exe` |
+| macOS x64 | `role-model-darwin-x64.tar.gz` | `role-model` |
+| macOS arm64 | `role-model-darwin-arm64.tar.gz` | `role-model` |
+| Linux x64 | `role-model-linux-x64.tar.gz` | `role-model` |
 
-After extracting:
+## Installation for Pi
 
-- Windows: run `Role-Model.bat` or `role-model-runtime.exe`
-- macOS/Linux: run `role-model-runtime`
+The `pi-role-model` package connects Pi to an externally running role-model runtime.
 
-## Building from source
+Start the role-model runtime first, then install the public Pi package:
+
+```bash
+pi install npm:@try-works/pi-role-model
+```
+
+For local checkout testing from this repository, install the package directly:
+
+```bash
+pi install ./packages/pi-role-model
+```
+
+Inside Pi, run:
+
+```text
+/role-model setup
+/role-model status
+/role-model doctor
+/role-model alias list
+/role-model alias choose
+/role-model alias use <alias>
+/role-model requests
+/role-model explain latest
+```
+
+Use those slash commands only from an interactive Pi session. `pi -p "/role-model status"` is unsupported because Pi print mode does not currently invoke extension commands.
+
+By default the package connects to `http://127.0.0.1:3456` and registers role-model as the
+`role-model` provider using `/api/role-model/downstream/openai`. Set `ROLE_MODEL_ENDPOINT`
+before starting Pi to use a different local runtime. Remote endpoints require explicit
+trusted `allowRemote` behavior, and runtimes that report `authentication.required` fail
+closed unless a future supported token source is configured. For local development installs
+and the full command reference, see
+[`packages/pi-role-model/README.md`](packages/pi-role-model/README.md).
+
+For explicit provider prompts, use the provider-relative role-model alias that Pi lists for provider `role-model`, for example:
+
+```bash
+pi --no-session --provider role-model --model baseline.remote-only -p "<prompt>"
+```
+
+`baseline.remote-only` is the canonical provider-relative form. `role-model/<alias>` is compatibility-only for Pi surfaces that explicitly require a qualified id. Raw HTTP `curl` calls to the runtime are debug-only fallback tools, not the primary supported Pi workflow.
+
+## Develop from source
 
 ### Prerequisites
 
@@ -111,6 +127,14 @@ After extracting:
 corepack enable
 corepack pnpm install
 ```
+
+### Smoke test
+
+```bash
+corepack pnpm run smoke
+```
+
+For a fuller walkthrough, see [`docs/public/quickstart.md`](docs/public/quickstart.md).
 
 ### Development build
 
@@ -140,7 +164,9 @@ corepack pnpm --filter @role-model-router/runtime-ui run build
 corepack pnpm run runtime:package-sea
 ```
 
-Output: `role-model-router/dist/release/<platform-arch>/role-model-runtime`
+Output: `role-model-router/dist/release/<platform-arch>/role-model-dev` by default. Set
+`ROLE_MODEL_BUILD_CHANNEL=production` for `role-model` or `ROLE_MODEL_BUILD_CHANNEL=stage` for
+`role-model-stage`.
 
 ### Windows desktop launcher
 
@@ -155,7 +181,7 @@ corepack pnpm run runtime:package-sea
 
 # 3. Build Go launcher
 cd role-model-router/apps/launcher
-go build -o ../../dist/release/win32-x64/role-model-launcher.exe main.go
+go build -o ../../dist/release/win32-x64/role-model-launcher.exe .
 
 # 4. Bundle UI files
 cp -r ../runtime-ui/build/client ../../dist/release/win32-x64/
@@ -166,76 +192,43 @@ Then double-click `role-model-launcher.exe` in `dist/release/win32-x64/`. It wil
 - Open Microsoft Edge in app mode (dedicated window)
 - Serve the UI directly from the bridge (no separate dev server)
 
-### Platform-specific notes
+## Documentation
 
-| Platform | Launch command | Notes |
-| --- | --- | --- |
-| Windows | `Role-Model.bat` or `role-model-runtime.exe` | `Role-Model.bat` uses the dedicated launcher when present |
-| macOS | `role-model-runtime` | Launching the packaged runtime directly opens the default browser |
-| Linux | `role-model-runtime` | Launching the packaged runtime directly opens the default browser |
-
-## Quick start
-
-This repository expects **Node.js 24** and **pnpm 10.x**.
-
-```bash
-pnpm install
-pnpm run smoke
-```
-
-For a fuller walkthrough, see [`docs/public/quickstart.md`](docs/public/quickstart.md).
-For GitHub workflow ownership, release automation, and CI diagnostics, see
-[`docs/operations/02-ci-and-release-flow.md`](docs/operations/02-ci-and-release-flow.md).
-The per-release history and operator checklist live in [`CHANGELOG.md`](CHANGELOG.md) and
-[`docs/operations/03-release-checklist.md`](docs/operations/03-release-checklist.md).
-
-## Repository layout
-
-| Path | What it contains |
+| Read this | If you want |
 | --- | --- |
-| `docs/public/` | public-facing docs and future docs-site content root |
-| `docs/protocol/` | protocol concept/reference docs |
-| `docs/architecture/` | architecture and baseline model notes |
-| `protocol/` | canonical schemas and example fixtures |
-| `packages/` | schema tooling, generated types, and conformance packages |
-| `role-model-router/` | reference router packages, adapters, and smoke apps |
-| `testdata/` | endpoint metadata, traces, eval inputs, and supporting fixtures |
+| [`docs/public/README.md`](docs/public/README.md) | the docs hub |
+| [`docs/public/introduction.md`](docs/public/introduction.md) | what role-model is and why it exists |
+| [`docs/public/quickstart.md`](docs/public/quickstart.md) | a real end-to-end smoke run |
+| [`docs/public/concepts/how-role-model-works.md`](docs/public/concepts/how-role-model-works.md) | the system flow |
+| [`docs/public/concepts/protocol-overview.md`](docs/public/concepts/protocol-overview.md) | the protocol surface |
+| [`docs/public/concepts/routing-overview.md`](docs/public/concepts/routing-overview.md) | how routing decisions happen |
+| [`protocol/README.md`](protocol/README.md) | canonical schemas and fixtures |
+| [`role-model-router/README.md`](role-model-router/README.md) | reference router packages and runtime apps |
+| [`docs/protocol/routing-policy.md`](docs/protocol/routing-policy.md) | routing policy reference |
+| [`docs/protocol/taxonomy-v1.md`](docs/protocol/taxonomy-v1.md) | taxonomy V1 groups, roles, tasks, and Pi classification |
+| [`docs/protocol/roles.md`](docs/protocol/roles.md) | role metadata reference |
+| [`docs/protocol/tasks.md`](docs/protocol/tasks.md) | task metadata reference |
+| [`docs/operations/02-ci-and-release-flow.md`](docs/operations/02-ci-and-release-flow.md) | CI, release automation, and workflow ownership |
+| [`CHANGELOG.md`](CHANGELOG.md) | release history |
 
-## Reference docs
+## Acknowledgements
 
-- [`protocol/README.md`](protocol/README.md)
-- [`docs/protocol/routing-policy.md`](docs/protocol/routing-policy.md)
-- [`docs/protocol/roles.md`](docs/protocol/roles.md)
-- [`docs/protocol/tasks.md`](docs/protocol/tasks.md)
-- [`role-model-router/README.md`](role-model-router/README.md)
+`role-model` builds on the work of several open-source projects:
+
+- [**llama-swap**](https://github.com/mostlygeek/llama-swap) - the vendored local model lifecycle manager that handles process supervision, request forwarding, and model swapping for local endpoints
+- [**LiteLLM**](https://github.com/BerriAI/litellm) - the unified LLM API abstraction whose provider catalog, model metadata, and pricing data inform the routing-compatible provider inventory
 
 ## License
 
-As of 2026-06-16, the current root license for this repository is
-`BUSL-1.1` with a project-specific `Additional Use Grant`.
+This repository is licensed under `BUSL-1.1` with a project-specific
+Additional Use Grant. Internal production use, evaluation, development,
+modification, and non-production redistribution are permitted under the root
+license. Hosted or managed third-party services, paid product embedding, and
+third-party commercialization require a separate commercial license.
 
-Allowed under the root license:
+See [LICENSE](LICENSE) for the full terms. Contributions require acceptance of
+the [Contributor License Agreement](CLA.md) before they can be merged.
 
-- internal production use inside your organization
-- internal production use inside affiliates under common control
-- use of contractors or service providers acting only on your behalf to support that internal use
-- evaluation, development, modification, and non-production redistribution
-
-Not allowed under the root license without a separate commercial license from
-`try-works`:
-
-- offering `role-model` as a hosted or managed service to third parties
-- embedding or bundling `role-model` into a paid product or service for third-party use
-- selling or otherwise commercializing `role-model` or a derivative work for third-party use
-
-The full terms are in [LICENSE](LICENSE).
-
-Contributions are governed by [CLA.md](CLA.md), which gives `try-works` broad
-relicensing and sublicensing rights for future versions of the project.
-
-Only individual contributions are accepted. If an employer, client, company,
-or other entity has rights in a proposed contribution, that contribution must
-not be submitted here.
-
-Commits published before 2026-06-16 remain under the license that applied
-when they were published, including the earlier `Apache-2.0` history.
+Only individual contributions are accepted. Please do not submit work owned by
+an employer, client, company, or other entity unless you personally have the
+right to contribute it under this project's terms.

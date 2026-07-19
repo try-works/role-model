@@ -1,0 +1,36 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-ui
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/build-sync.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m app/lib/llama-swap-setup.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts [2m([22m[2m43 tests[22m[2m)[22m[32m 168[2mms[22m[39m
+ [32m✓[39m app/lib/view-models.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 122[2mms[22m[39m
+ [32m✓[39m app/lib/device-authorization.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-analytics.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m app/components/device-authorization-modal.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m app/components/local-model-role-picker.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32m✓[39m app/components/page-primitives.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 50[2mms[22m[39m
+ [32m✓[39m app/routes/control-models.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m app/lib/role-task-hierarchy.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 91[2mms[22m[39m
+ [32m✓[39m app/routes/providers.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+ [32m✓[39m app/components/device-authorization-card.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 168[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-route-models.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-chart-config.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m app/lib/theme.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m app/lib/format-score.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts [2m([22m[2m53 tests[22m[2m)[22m[32m 292[2mms[22m[39m
+ [32m✓[39m app/lib/router-candidate-labels.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-latency.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m app/lib/provider-account-state.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m app/components/telemetry-charts.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m23 passed[39m[22m[90m (23)[39m
+[2m      Tests [22m [1m[32m206 passed[39m[22m[90m (206)[39m
+[2m   Start at [22m 02:20:16
+[2m   Duration [22m 14.05s[2m (transform 32.03s, setup 0ms, collect 59.41s, tests 1.28s, environment 11ms, prepare 31.21s)[22m
+

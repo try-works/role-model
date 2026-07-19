@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "p18-tools-agent",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p18-tools-agent-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"Route latency-sensitive and high-volume requests to local.lfm2.5-8b-a1b (62 ms p95, 0.5% errors), and use remote.deepseek-v4-flash only as a fallback/capacity overflow because it is slower (245 ms p95) and less reliable (1.8% errors).\"\n}",
+  "rawResponse": "We have metrics. Compare local endpoint p95 latency 62ms, request count 1200, error rate 0.5% vs remote p95 latency 245ms, request count 900, error rate 1.8%. Local is faster and more reliable. Recommend routing strategy: route low-latency/ latency-sensitive requests to local; fallback to remote for capacity or specific models; or shift more traffic to local. Need output JSON with answer string min length 12. Let's craft a concise recommendation: \"Route latency-sensitive and high-volume requests to local.lfm2.5-8b-a1b (62 ms p95, 0.5% errors) and use remote.deepseek-v4-flash as a fallback/capacity overflow only, since it is slower (245 ms p95) and less reliable (1.8% errors).\" Then output JSON in a code fence.```json\n{\"answer\":\"Route latency-sensitive and high-volume requests to local.lfm2.5-8b-a1b (62 ms p95, 0.5% errors), and use remote.deepseek-v4-flash only as a fallback/capacity overflow because it is slower (245 ms p95) and less reliable (1.8% errors).\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"Route latency-sensitive and high-volume requests to local.lfm2.5-8b-a1b (62 ms p95, 0.5% errors), and use remote.deepseek-v4-flash only as a fallback/capacity overflow because it is slower (245 ms p95) and less reliable (1.8% errors).\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 23730,
+  "failure": false,
+  "recordedAtMs": 1783933375629
+}

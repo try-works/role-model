@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h09-agent-metrics-chain",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h09-agent-metrics-chain-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"The local endpoint has a p95 latency of 62 ms, significantly lower than the remote endpoint's 245 ms.\"\n}",
+  "rawResponse": "```json\n{\"answer\": \"The local endpoint has a p95 latency of 62 ms, significantly lower than the remote endpoint's 245 ms.\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"The local endpoint has a p95 latency of 62 ms, significantly lower than the remote endpoint's 245 ms.\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 13048,
+  "failure": false,
+  "recordedAtMs": 1783931640882
+}

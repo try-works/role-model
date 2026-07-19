@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/runtime-api.test.ts (49 tests) 118ms
+ ✓ app/lib/view-models.test.ts (34 tests) 98ms
+
+ Test Files  2 passed (2)
+      Tests  83 passed (83)
+   Start at  20:28:08
+   Duration  1.62s (transform 308ms, setup 0ms, collect 534ms, tests 215ms, environment 1ms, prepare 862ms)
+

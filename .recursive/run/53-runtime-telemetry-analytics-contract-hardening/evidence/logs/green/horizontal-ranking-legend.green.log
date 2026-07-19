@@ -1,0 +1,11 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/53/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/design-system.test.ts (53 tests | 52 skipped) 6ms
+ ✓ app/components/telemetry-charts.test.tsx (3 tests | 2 skipped) 21ms
+
+ Test Files  2 passed (2)
+      Tests  2 passed | 54 skipped (56)
+   Start at  20:52:07
+   Duration  2.84s (transform 956ms, setup 0ms, collect 2.93s, tests 27ms, environment 1ms, prepare 786ms)
+

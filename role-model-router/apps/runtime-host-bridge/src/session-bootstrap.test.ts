@@ -47,7 +47,7 @@ describe("session-bootstrap", () => {
     expect(result.stages).toHaveLength(SESSION_BOOTSTRAP_STAGE_ORDER.length);
   });
 
-  it("continues after a degraded peer stage without blocking later stages", async () => {
+  it("treats a degraded peer stage as advisory when every required stage is ready", async () => {
     const order: string[] = [];
 
     const result = await runSessionBootstrapStages({
@@ -70,7 +70,7 @@ describe("session-bootstrap", () => {
     });
 
     expect(order).toEqual(["peers", "vendors", "local-reload"]);
-    expect(result.status).toBe("degraded");
+    expect(result.status).toBe("ready");
     expect(result.stages.find((stage) => stage.stageId === "peers")?.status).toBe("degraded");
     expect(result.stages.find((stage) => stage.stageId === "vendors")?.status).toBe("ready");
   });

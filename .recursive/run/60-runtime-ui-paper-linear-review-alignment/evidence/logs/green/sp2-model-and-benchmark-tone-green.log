@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/60-runtime-ui-paper-linear-review-alignment/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/design-system.test.ts (57 tests) 360ms
+
+ Test Files  1 passed (1)
+      Tests  57 passed (57)
+   Start at  21:02:51
+   Duration  6.49s (transform 2.57s, setup 0ms, collect 3.73s, tests 360ms, environment 0ms, prepare 910ms)
+

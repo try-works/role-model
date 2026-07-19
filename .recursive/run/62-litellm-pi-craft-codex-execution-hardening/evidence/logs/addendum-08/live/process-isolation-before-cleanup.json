@@ -1,0 +1,132 @@
+{
+  "port3456": [
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "0.0.0.0",
+      "RemotePort": 0,
+      "State": 2,
+      "OwningProcess": 19056
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 62535,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 55684,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 58236,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 62416,
+      "State": 5,
+      "OwningProcess": 19056
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 64108,
+      "State": 5,
+      "OwningProcess": 19056
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 50345,
+      "State": 11,
+      "OwningProcess": 0
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 3456,
+      "RemoteAddress": "127.0.0.1",
+      "RemotePort": 58802,
+      "State": 11,
+      "OwningProcess": 0
+    }
+  ],
+  "runtimeProcess": {
+    "ProcessId": 19056,
+    "ParentProcessId": 43644,
+    "Name": "role-model-runtime.exe",
+    "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+  },
+  "isolatedCraftHeadless": [
+    {
+      "ProcessId": 63468,
+      "ParentProcessId": 22796,
+      "Name": "Craft Agents.exe",
+      "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --user-data-dir=D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless\\user-data"
+    },
+    {
+      "ProcessId": 60824,
+      "ParentProcessId": 63468,
+      "Name": "Craft Agents.exe",
+      "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=gpu-process --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless\\user-data\" --gpu-preferences=SAAAAAAAAADgAAAEAAAAAAAAAAAAAGAAAQAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --field-trial-handle=1736,i,15635142276764999050,16105925097916727019,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708988185955192 --mojo-platform-channel-handle=1728 /prefetch:2"
+    },
+    {
+      "ProcessId": 56292,
+      "ParentProcessId": 63468,
+      "Name": "Craft Agents.exe",
+      "CommandLine": "\"C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\Craft Agents.exe\" --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --user-data-dir=\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.tmp-craft-headless\\user-data\" --standard-schemes=thumbnail --secure-schemes=sentry-ipc --bypasscsp-schemes=sentry-ipc --cors-schemes=thumbnail,sentry-ipc --fetch-schemes=thumbnail,sentry-ipc --streaming-schemes=thumbnail --field-trial-handle=1736,i,15635142276764999050,16105925097916727019,262144 --enable-features=EnableTransparentHwndEnlargement,PdfUseShowSaveFilePicker --disable-features=LocalNetworkAccessChecks,ScreenAIOCREnabled,SpareRendererForSitePerProcess,TraceSiteInstanceGetProcessCreation --variations-seed-version --trace-process-track-uuid=3190708989122997041 --mojo-platform-channel-handle=1936 /prefetch:11"
+    },
+    {
+      "ProcessId": 54384,
+      "ParentProcessId": 63468,
+      "Name": "bun.exe",
+      "CommandLine": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\vendor\\bun\\bun.exe --require C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\\dist\\interceptor.cjs C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\\resources\\pi-agent-server\\index.js"
+    },
+    {
+      "ProcessId": 55216,
+      "ParentProcessId": 63468,
+      "Name": "bun.exe",
+      "CommandLine": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\vendor\\bun\\bun.exe --require C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\\dist\\interceptor.cjs C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\\resources\\pi-agent-server\\index.js"
+    },
+    {
+      "ProcessId": 44248,
+      "ParentProcessId": 63468,
+      "Name": "bun.exe",
+      "CommandLine": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\vendor\\bun\\bun.exe --require C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\\dist\\interceptor.cjs C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\\resources\\pi-agent-server\\index.js"
+    },
+    {
+      "ProcessId": 42144,
+      "ParentProcessId": 63468,
+      "Name": "bun.exe",
+      "CommandLine": "C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\vendor\\bun\\bun.exe --require C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\\dist\\interceptor.cjs C:\\Users\\erikb\\AppData\\Local\\Programs\\@craft-agentelectron\\resources\\app\\resources\\pi-agent-server\\index.js"
+    }
+  ],
+  "roleModelRelatedProcesses": [
+    {
+      "ProcessId": 19056,
+      "ParentProcessId": 43644,
+      "Name": "role-model-runtime.exe",
+      "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+    },
+    {
+      "ProcessId": 50576,
+      "ParentProcessId": 48772,
+      "Name": "pwsh.exe",
+      "CommandLine": "\"C:\\Program Files\\PowerShell\\7\\pwsh.exe\" -Command \"try { [Console]::OutputEncoding=[System.Text.Encoding]::UTF8 } catch {}\n$ErrorActionPreference = 'Continue'\n$port = Get-NetTCPConnection -LocalPort 3456 -ErrorAction SilentlyContinue | Select-Object LocalAddress,LocalPort,RemoteAddress,RemotePort,State,OwningProcess\n$runtimeProc = Get-CimInstance Win32_Process -Filter \\\"ProcessId = 19056\\\" | Select-Object ProcessId,ParentProcessId,Name,CommandLine\n$craftVerify = Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -in @(63468,60824,56292,63640) -or $_.ParentProcessId -eq 63468 } | Select-Object ProcessId,ParentProcessId,Name,CommandLine\n$sideBySide = Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'side-by-side|ckpt|role-model-runtime' } | Select-Object ProcessId,ParentProcessId,Name,CommandLine\n[pscustomobject]@{ port3456 = $port; runtimeProcess = $runtimeProc; isolatedCraftHeadless = $craftVerify; roleModelRelatedProcesses = $sideBySide } | ConvertTo-Json -Depth 8 | Tee-Object -FilePath '.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-08\\live\\process-isolation-before-cleanup.json'\""
+    }
+  ]
+}

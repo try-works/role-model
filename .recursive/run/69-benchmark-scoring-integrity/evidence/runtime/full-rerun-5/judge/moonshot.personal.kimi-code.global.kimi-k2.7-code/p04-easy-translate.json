@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "p04-easy-translate",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer 'bonjour' is the correct French translation of 'good morning', delivered in the required JSON format with the 'answer' key. The casing difference from the exemplar 'Bonjour' does not affect correctness.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p04-easy-translate.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/p04-easy-translate/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783934840355
+}

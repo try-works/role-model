@@ -1,0 +1,401 @@
+{
+  "health": {
+    "status": "degraded",
+    "executionMode": "hybrid",
+    "vendors": {
+      "llama-swap": {
+        "vendorId": "llama-swap",
+        "healthStatus": "healthy",
+        "baseUrl": "http://127.0.0.1:54994/v1",
+        "healthUrl": "http://127.0.0.1:54994/health",
+        "pid": 49720,
+        "configPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa\\vendors\\llama-swap\\config.role-model.generated.yaml"
+      },
+      "litellm": {
+        "vendorId": "litellm",
+        "healthStatus": "healthy",
+        "baseUrl": "http://127.0.0.1:59689/v1",
+        "healthUrl": "http://127.0.0.1:59689/health/liveliness",
+        "pid": 40100,
+        "configPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa\\vendors\\litellm\\litellm.generated.yaml"
+      }
+    },
+    "inactiveVendors": [],
+    "credentialLifecycleAuthority": {
+      "state": "authoritative",
+      "bootstrapStatus": "degraded"
+    },
+    "sessionBootstrap": {
+      "status": "degraded",
+      "startedAt": "2026-06-23T13:11:43.263Z",
+      "finishedAt": "2026-06-23T13:11:43.873Z",
+      "stages": [
+        {
+          "stageId": "credentials",
+          "status": "ready",
+          "startedAt": "2026-06-23T13:11:43.263Z",
+          "finishedAt": "2026-06-23T13:11:43.285Z",
+          "details": {
+            "pendingAttempted": 0,
+            "pendingSucceeded": 0,
+            "pendingConnected": 0,
+            "pendingFailed": 0,
+            "pendingDeferred": 0,
+            "refreshAttempted": 0,
+            "refreshSucceeded": 0,
+            "refreshFailed": 0
+          }
+        },
+        {
+          "stageId": "endpoints",
+          "status": "ready",
+          "startedAt": "2026-06-23T13:11:43.308Z",
+          "finishedAt": "2026-06-23T13:11:43.341Z",
+          "details": {
+            "reconciled": 0,
+            "failed": 0
+          }
+        },
+        {
+          "stageId": "peers",
+          "status": "skipped",
+          "startedAt": "2026-06-23T13:11:43.341Z",
+          "finishedAt": "2026-06-23T13:11:43.343Z",
+          "message": "no peer loads in manifest",
+          "details": {
+            "reloaded": 0,
+            "failed": 0
+          }
+        },
+        {
+          "stageId": "vendors",
+          "status": "ready",
+          "startedAt": "2026-06-23T13:11:43.343Z",
+          "finishedAt": "2026-06-23T13:11:43.344Z"
+        },
+        {
+          "stageId": "local-reload",
+          "status": "skipped",
+          "startedAt": "2026-06-23T13:11:43.344Z",
+          "finishedAt": "2026-06-23T13:11:43.345Z",
+          "message": "no llama-swap loads in manifest"
+        },
+        {
+          "stageId": "remote-health",
+          "status": "degraded",
+          "startedAt": "2026-06-23T13:11:43.345Z",
+          "finishedAt": "2026-06-23T13:11:43.873Z",
+          "details": {
+            "probed": 2,
+            "healthy": 1,
+            "degraded": 1,
+            "results": [
+              {
+                "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+                "modelId": "openai/gpt-4.1-mini-fast",
+                "reason": "healthy",
+                "healthStatus": "healthy"
+              },
+              {
+                "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+                "modelId": "moonshot/kimi-k2.5",
+                "reason": "auth",
+                "healthStatus": "degraded",
+                "message": "Remote probe returned HTTP 401."
+              }
+            ]
+          }
+        },
+        {
+          "stageId": "inventory",
+          "status": "ready",
+          "startedAt": "2026-06-23T13:11:43.873Z",
+          "finishedAt": "2026-06-23T13:11:43.873Z",
+          "details": {
+            "modelIdCount": 2,
+            "endpointIdCount": 2,
+            "localEndpointCount": 1,
+            "remoteEndpointCount": 1,
+            "emptyAliasIds": [],
+            "driftWarningCount": 0,
+            "driftWarnings": []
+          }
+        }
+      ]
+    }
+  },
+  "endpoints": [
+    {
+      "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      "modelId": "openai/gpt-4.1-mini-fast",
+      "providerId": "openai",
+      "roleIds": [],
+      "endpointKind": "remote_api",
+      "servingSource": "vendor-litellm",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "structured.output",
+        "latency.optimized"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "openai",
+      "webSearchSupport": {
+        "mode": "runtime-fallback",
+        "currentRuntimeContract": null,
+        "documentedProviderContract": null
+      },
+      "status": "active"
+    },
+    {
+      "endpointId": "moonshot.personal.primary.global.kimi-k2.5",
+      "modelId": "moonshot/kimi-k2.5",
+      "providerId": "moonshot",
+      "providerAccountId": "moonshot.personal.primary",
+      "roleIds": [
+        "general.chat"
+      ],
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "sourceType": "remote",
+      "healthStatus": "degraded",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "structured.output"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "openai",
+      "webSearchSupport": {
+        "mode": "native",
+        "currentRuntimeContract": "moonshot.chat.builtin_web_search",
+        "documentedProviderContract": "moonshot.chat.builtin_web_search"
+      },
+      "status": "active"
+    },
+    {
+      "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "modelId": "lfm2.5-1.2b-instruct",
+      "providerId": "llama-swap",
+      "roleIds": [],
+      "localModelSource": "llama-swap",
+      "endpointKind": "local_engine",
+      "servingSource": "vendor-llama-swap",
+      "sourceType": "local",
+      "healthStatus": "healthy",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "openai",
+      "webSearchSupport": {
+        "mode": "runtime-fallback",
+        "currentRuntimeContract": null,
+        "documentedProviderContract": null
+      },
+      "status": "active"
+    }
+  ],
+  "models": {
+    "object": "list",
+    "data": [
+      {
+        "id": "baseline.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "baseline.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "baseline.local-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "baseline.remote-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "controller.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "controller.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "controller.local-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "controller.remote-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "default.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "default.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "default.local-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "default.remote-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "difficulty.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "difficulty.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "difficulty.local-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "difficulty.remote-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "hybrid.decision-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "hybrid.hybrid",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct",
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "hybrid.local-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "hybrid.remote-only",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      },
+      {
+        "id": "lfm2.5-1.2b-instruct",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "llama-swap.local.lfm2-5-1-2b-instruct"
+        ]
+      },
+      {
+        "id": "moonshot/kimi-k2.5",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "moonshot.personal.primary.global.kimi-k2.5"
+        ]
+      },
+      {
+        "id": "openai/gpt-4.1-mini-fast",
+        "object": "model",
+        "owned_by": "role-model",
+        "endpoint_ids": [
+          "openai.litellm.global.openai-gpt-4-1-mini-fast"
+        ]
+      }
+    ]
+  }
+}

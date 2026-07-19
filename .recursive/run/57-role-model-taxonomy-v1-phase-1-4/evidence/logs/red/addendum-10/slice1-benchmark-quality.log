@@ -1,0 +1,105 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+ [31m❯[39m test/routing-intent.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m5 failed[39m[2m)[22m[32m 55[2mms[22m[39m
+   [32m✓[39m routing intent metadata[2m > [22muses hard role/task/capability intent as eligibility filters[32m 10[2mms[22m[39m
+   [32m✓[39m routing intent metadata[2m > [22mkeeps advisory intent out of hard eligibility while still influencing preference[32m 1[2mms[22m[39m
+   [32m✓[39m routing intent metadata[2m > [22muses advisory task metadata as task-fit scoring without hard filtering[32m 2[2mms[22m[39m
+   [32m✓[39m routing intent metadata[2m > [22mkeeps stable Pi advisory capability and modality metadata out of hard eligibility[32m 21[2mms[22m[39m
+[31m   [31m×[31m routing intent metadata[2m > [22mgetQualityMetric uses benchmark quality when live quality is unavailable[39m[32m 11[2mms[22m[39m
+[31m     → Cannot find module '../src/router.js'
+Require stack:
+- D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\test\routing-intent.test.ts[39m
+[31m   [31m×[31m routing intent metadata[2m > [22mgetQualityMetric prefers live quality_score over benchmark[39m[32m 1[2mms[22m[39m
+[31m     → Cannot find module '../src/router.js'
+Require stack:
+- D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\test\routing-intent.test.ts[39m
+[31m   [31m×[31m routing intent metadata[2m > [22mgetQualityMetric prefers judge_score over both quality_score and benchmark[39m[32m 4[2mms[22m[39m
+[31m     → Cannot find module '../src/router.js'
+Require stack:
+- D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\test\routing-intent.test.ts[39m
+[31m   [31m×[31m routing intent metadata[2m > [22mgetQualityMetric falls back to default when no quality data exists[39m[32m 1[2mms[22m[39m
+[31m     → Cannot find module '../src/router.js'
+Require stack:
+- D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\test\routing-intent.test.ts[39m
+[31m   [31m×[31m routing intent metadata[2m > [22mmultiple candidates with different benchmark scores get different quality metrics[39m[32m 1[2mms[22m[39m
+[31m     → Cannot find module '../src/router.js'
+Require stack:
+- D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\test\routing-intent.test.ts[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/routing-intent.test.ts[2m > [22mrouting intent metadata[2m > [22mgetQualityMetric uses benchmark quality when live quality is unavailable
+[31m[1mError[22m: Cannot find module '../src/router.js'
+Require stack:
+- D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\test\routing-intent.test.ts[39m
+[36m [2m❯[22m test/routing-intent.test.ts:[2m189:34[22m[39m
+    [90m187| [39m
+    [90m188| [39m  test("getQualityMetric uses benchmark quality when live quality is u…
+    [90m189| [39m    [35mconst[39m { getQualityMetric } [33m=[39m [34mrequire[39m([32m"../src/router.js"[39m)[33m;[39m
+    [90m   | [39m                                 [31m^[39m
+    [90m190| [39m    [35mconst[39m c [33m=[39m [34mcandidate[39m([32m"test-ep"[39m[33m,[39m [[32m"text.chat"[39m][33m,[39m {
+    [90m191| [39m      observed[33m:[39m {
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/routing-intent.test.ts[2m > [22mrouting intent metadata[2m > [22mgetQualityMetric prefers live quality_score over benchmark
+[31m[1mError[22m: Cannot find module '../src/router.js'
+Require stack:
+- D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\test\routing-intent.test.ts[39m
+[36m [2m❯[22m test/routing-intent.test.ts:[2m210:34[22m[39m
+    [90m208| [39m
+    [90m209| [39m  test("getQualityMetric prefers live quality_score over benchmark", (…
+    [90m210| [39m    [35mconst[39m { getQualityMetric } [33m=[39m [34mrequire[39m([32m"../src/router.js"[39m)[33m;[39m
+    [90m   | [39m                                 [31m^[39m
+    [90m211| [39m    [35mconst[39m c [33m=[39m [34mcandidate[39m([32m"test-ep"[39m[33m,[39m [[32m"text.chat"[39m][33m,[39m {
+    [90m212| [39m      observed[33m:[39m {
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/routing-intent.test.ts[2m > [22mrouting intent metadata[2m > [22mgetQualityMetric prefers judge_score over both quality_score and benchmark
+[31m[1mError[22m: Cannot find module '../src/router.js'
+Require stack:
+- D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\test\routing-intent.test.ts[39m
+[36m [2m❯[22m test/routing-intent.test.ts:[2m233:34[22m[39m
+    [90m231| [39m
+    [90m232| [39m  test("getQualityMetric prefers judge_score over both quality_score a…
+    [90m233| [39m    [35mconst[39m { getQualityMetric } [33m=[39m [34mrequire[39m([32m"../src/router.js"[39m)[33m;[39m
+    [90m   | [39m                                 [31m^[39m
+    [90m234| [39m    [35mconst[39m c [33m=[39m [34mcandidate[39m([32m"test-ep"[39m[33m,[39m [[32m"text.chat"[39m][33m,[39m {
+    [90m235| [39m      observed[33m:[39m {
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/routing-intent.test.ts[2m > [22mrouting intent metadata[2m > [22mgetQualityMetric falls back to default when no quality data exists
+[31m[1mError[22m: Cannot find module '../src/router.js'
+Require stack:
+- D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\test\routing-intent.test.ts[39m
+[36m [2m❯[22m test/routing-intent.test.ts:[2m256:34[22m[39m
+
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/routing-intent.test.ts[2m > [22mrouting intent metadata[2m > [22mmultiple candidates with different benchmark scores get different quality metrics
+[31m[1mError[22m: Cannot find module '../src/router.js'
+Require stack:
+- D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\test\routing-intent.test.ts[39m
+[36m [2m❯[22m test/routing-intent.test.ts:[2m265:34[22m[39m
+    [90m263| [39m
+    [90m264| [39m  test("multiple candidates with different benchmark scores get differ…
+    [90m265| [39m    [35mconst[39m { getQualityMetric } [33m=[39m [34mrequire[39m([32m"../src/router.js"[39m)[33m;[39m
+    [90m   | [39m                                 [31m^[39m
+    [90m266| [39m    const c1 = candidate("v4-pro", ["text.chat"], { observed: undefine…
+    [90m267| [39m    const c2 = candidate("v4-flash", ["text.chat"], { observed: undefi…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (9)[39m
+[2m   Start at [22m 16:40:51
+[2m   Duration [22m 1.47s[2m (transform 176ms, setup 0ms, collect 192ms, tests 55ms, environment 0ms, prepare 415ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/routing-intent.test.ts

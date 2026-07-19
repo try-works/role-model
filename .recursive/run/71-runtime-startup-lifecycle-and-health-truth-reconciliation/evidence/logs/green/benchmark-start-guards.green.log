@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/71-runtime-startup-lifecycle-and-health-truth-reconciliation/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/benchmark-start-guards.test.ts (9 tests) 15ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  21:25:08
+   Duration  930ms (transform 71ms, setup 0ms, collect 78ms, tests 15ms, environment 0ms, prepare 249ms)
+

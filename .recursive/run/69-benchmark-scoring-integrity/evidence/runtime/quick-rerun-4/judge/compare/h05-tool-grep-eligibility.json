@@ -1,0 +1,53 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "caseId": "h05-tool-grep-eligibility",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Ensure evaluateEligibility is called before the endpoint is served in src/router.ts ",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Confirmed evaluateEligibility is invoked in src/router.ts, indicating eligibility is",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+  ],
+  "rationale": "Both models correctly called grep_search with 'evaluateEligibility' pattern and provided bullets mentioning eligibility checks. However, GPT-5.4's bullets are more aligned with the exemplar's concise summary style, while moonshot's bullets include specific line numbers that could be hallucinated and add unnecessary detail beyond the required summary. Hence, GPT-5.4 is ranked higher for substantiv…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\",\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\"\n  ],\n  \"rationale\": \"Both models correctly called grep_search with 'evaluateEligibility' pattern and provided bullets mentioning eligibility checks. However, GPT-5.4's bullets are more aligned with the exemplar's concise summary style, while moonshot's bullets include specific line numbers that could be hallucinated and add unnecessary detail beyond the required summary. Hence, GPT-5.4 is ranked higher for substantive correctness.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nPhase 1 only: API grep_search pattern evaluateEligibility\n\n[assistant]\ngrep_search emitted.\n\n[user]\nPhase 2 only: ```json {\"bullets\":[\"<check A>\",\"<check B>\"]} with 2 real bullets",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"eligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Candidate passes allow-list and freshness checks.\",\n    \"Throughput SLA hard-deny would block sole remaining candidate.\"\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must call grep_search with evaluateEligibility pattern",
+      "[MUST] summary mentions eligibility checks.",
+      "[MUST] Emit API tool calls: grep_search",
+      "[MUST] Include JSON keys: bullets",
+      "[SHOULD] Match clues: evaluateEligibility|eligib"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 582,
+    "reasoningLength": 6571
+  },
+  "recordedAtMs": 1783932231495
+}

@@ -1,0 +1,162 @@
+[
+  {
+    "id": "tester.e2e",
+    "label": "End-to-End Test Implementation",
+    "description": "Create or update browser, API, or workflow-level tests.",
+    "primaryRole": "tester",
+    "compatibleRoles": ["tester", "coder"],
+    "requiredCapabilities": ["code.read", "code.write", "tools.function_calling"],
+    "preferredCapabilities": ["tools.browser_control"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks for Playwright/Cypress/API workflow validation.",
+      "doNotUseWhen": "User asks for unit tests only."
+    },
+    "variants": []
+  },
+  {
+    "id": "tester.plan",
+    "label": "Test Plan",
+    "description": "Design a verification strategy, test cases, and acceptance checks.",
+    "primaryRole": "tester",
+    "compatibleRoles": ["tester", "coder", "product"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks how to test or verify a feature.",
+      "doNotUseWhen": "User asks to write production code only."
+    },
+    "variants": []
+  },
+  {
+    "id": "tester.regression",
+    "label": "Regression Testing",
+    "description": "Verify existing behavior still works after changes.",
+    "primaryRole": "tester",
+    "compatibleRoles": ["tester", "coder", "operator"],
+    "requiredCapabilities": ["tools.function_calling"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks to validate no regressions.",
+      "doNotUseWhen": "User asks to design a product strategy."
+    },
+    "variants": []
+  },
+  {
+    "id": "tester.reproduce",
+    "label": "Reproduction Testing",
+    "description": "Reproduce a reported issue with clear steps, observed behavior, and expected behavior.",
+    "primaryRole": "tester",
+    "compatibleRoles": ["tester", "coder", "support"],
+    "requiredCapabilities": ["tools.function_calling"],
+    "preferredCapabilities": ["tools.command_execution"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User reports a bug and needs a reliable repro before diagnosis or fix.",
+      "doNotUseWhen": "User already provided a verified repro and asks for implementation."
+    },
+    "variants": []
+  },
+  {
+    "id": "tester.unit.plan",
+    "label": "Unit Test Planning",
+    "description": "Design unit test cases, boundaries, and assertions.",
+    "primaryRole": "tester",
+    "compatibleRoles": ["tester", "coder"],
+    "requiredCapabilities": ["reasoning.multi_step", "code.read"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks how to unit test behavior.",
+      "doNotUseWhen": "User asks for browser E2E validation."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "tester.integration.plan",
+    "label": "Integration Test Planning",
+    "description": "Design integration tests across services, APIs, or components.",
+    "primaryRole": "tester",
+    "compatibleRoles": ["tester", "coder", "operator"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["tools.function_calling"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks how to test integrations.",
+      "doNotUseWhen": "User asks for isolated unit tests only."
+    },
+    "variants": ["plan"]
+  },
+  {
+    "id": "tester.accessibility",
+    "label": "Accessibility Testing",
+    "description": "Verify accessibility expectations for UI, content, and interaction.",
+    "primaryRole": "tester",
+    "compatibleRoles": ["tester", "designer", "product"],
+    "requiredCapabilities": ["vision.input", "text.chat"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks for accessibility checks.",
+      "doNotUseWhen": "User asks for backend performance only."
+    },
+    "variants": []
+  },
+  {
+    "id": "tester.performance",
+    "label": "Performance Testing",
+    "description": "Plan or evaluate performance, load, latency, and throughput tests.",
+    "primaryRole": "tester",
+    "compatibleRoles": ["tester", "operator", "architect"],
+    "requiredCapabilities": ["tools.command_execution", "reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks to test performance.",
+      "doNotUseWhen": "User asks for UI visual polish."
+    },
+    "variants": []
+  },
+  {
+    "id": "tester.security",
+    "label": "Security Testing",
+    "description": "Plan or execute security-oriented validation checks.",
+    "primaryRole": "tester",
+    "compatibleRoles": ["tester", "security", "coder"],
+    "requiredCapabilities": ["security.analysis", "tools.function_calling"],
+    "preferredCapabilities": ["reasoning.multi_step"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks how to test security behavior.",
+      "doNotUseWhen": "User asks for legal policy review."
+    },
+    "variants": []
+  },
+  {
+    "id": "tester.acceptance",
+    "label": "Acceptance Testing",
+    "description": "Verify implementation against acceptance criteria and user outcomes.",
+    "primaryRole": "tester",
+    "compatibleRoles": ["tester", "product", "planner"],
+    "requiredCapabilities": ["reasoning.multi_step"],
+    "preferredCapabilities": ["json.schema_adherence"],
+    "requiredModalities": ["text"],
+    "toolClasses": ["filesystem.read", "filesystem.write", "shell.execute"],
+    "classifier": {
+      "useWhen": "User asks to validate readiness against requirements.",
+      "doNotUseWhen": "User asks for implementation only."
+    },
+    "variants": []
+  }
+]

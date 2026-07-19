@@ -12,6 +12,7 @@ import {
   buildJudgeGradingBrief,
   buildJudgeRequestMessages,
   buildScaffoldFollowUp,
+  buildTextDeliverableResponseFormat,
   capJudgeScoreForInvalidDeliverable,
   deliverableCompleteness,
   extractFormattedAnswer,
@@ -52,6 +53,7 @@ import {
   createBenchmarkRunProgress,
   failBenchmarkRunProgress,
   updateBenchmarkRunProgress,
+  updateBenchmarkRunProgressPlan,
 } from "./benchmark-progress.js";
 
 import {
@@ -64,7 +66,10 @@ import {
   setJudgeSubjectOverlapMode,
 } from "./benchmark-judge-runtime.js";
 
-import { evaluateBenchmarkStartGuards } from "./benchmark-start-guards.js";
+import {
+  evaluateBenchmarkStartGuards,
+  evaluateBenchmarkTargetEligibility,
+} from "./benchmark-start-guards.js";
 
 import {
   BENCHMARK_MAX_ANSWER_TURNS,
@@ -81,6 +86,16 @@ export type { BenchmarkChatCompletionsExecutionResult };
 
 export interface BenchmarkExecutionRequestOptions {
   readonly endpointId?: string;
+  readonly ignoreExecutionFailureCooldowns?: boolean;
+}
+
+function buildBenchmarkExecutionRequestOptions(
+  endpointId: string,
+): BenchmarkExecutionRequestOptions {
+  return {
+    endpointId,
+    ignoreExecutionFailureCooldowns: true,
+  };
 }
 
 function formatBenchmarkRawResponse(result: BenchmarkChatCompletionsExecutionResult): string {
@@ -184,19 +199,16 @@ interface JudgeGradeOutcome {
 function extractStructuredToolNames(
   result: BenchmarkChatCompletionsExecutionResult,
 ): readonly string[] {
-  if (!result.toolCalls?.length) {
-    return [];
-  }
+  const toolCallNames =
+    result.toolCalls?.map((toolCall) => toolCall.function.name).filter((name) => name.length > 0) ??
+    [];
+  const executedToolNames =
+    result.toolExecutions
+      ?.filter((execution) => execution.status !== "rejected")
+      .map((execution) => execution.toolName)
+      .filter((name) => name.length > 0) ?? [];
 
-  return [
-    ...new Set(
-      result.toolCalls
-
-        .map((toolCall) => toolCall.function.name)
-
-        .filter((name) => name.length > 0),
-    ),
-  ];
+  return [...new Set([...toolCallNames, ...executedToolNames])];
 }
 
 type BenchmarkToolCall = NonNullable<BenchmarkChatCompletionsExecutionResult["toolCalls"]>[number];
@@ -208,14 +220,7 @@ function mergeBenchmarkToolCalls(
   if (!latest?.length) {
     return prior;
   }
-  const merged = new Map<string, BenchmarkToolCall>();
-  for (const toolCall of prior) {
-    merged.set(toolCall.function.name, toolCall);
-  }
-  for (const toolCall of latest) {
-    merged.set(toolCall.function.name, toolCall);
-  }
-  return [...merged.values()];
+  return [...prior, ...latest];
 }
 
 function mergeStructuredToolNames(
@@ -226,13 +231,7 @@ function mergeStructuredToolNames(
 }
 
 function readTurnRawContent(result: BenchmarkChatCompletionsExecutionResult): string {
-  return [
-    readBenchmarkContentText(result),
-    readBenchmarkReasoningText(result),
-    formatBenchmarkRawResponse(result),
-  ]
-    .filter(Boolean)
-    .join("\n");
+  return formatBenchmarkRawResponse(result) || readBenchmarkContentText(result) || "";
 }
 
 export interface BenchmarkRunResult {
@@ -269,6 +268,9 @@ export interface BenchmarkRunnerDependencies {
       sourceType: "local" | "remote";
 
       healthStatus: string;
+
+      executionModeEligible?: boolean;
+      benchmarkEligible?: boolean;
     }[]
   >;
 
@@ -292,6 +294,25 @@ export interface BenchmarkRunnerDependencies {
     requestOptions?: BenchmarkExecutionRequestOptions,
   ) => Promise<BenchmarkChatCompletionsExecutionResult>;
 
+  readonly executeResponses?: (
+    body: {
+      model: string;
+      input: string | readonly Record<string, unknown>[];
+      tools?: readonly Record<string, unknown>[];
+      text?: {
+        format: {
+          type: "json_schema";
+          name: string;
+          schema: Record<string, unknown>;
+          strict: boolean;
+        };
+      };
+      temperature?: number;
+    },
+    requestId: string,
+    requestOptions?: BenchmarkExecutionRequestOptions,
+  ) => Promise<BenchmarkChatCompletionsExecutionResult>;
+
   readonly deriveEndpointVersion: (endpointId: string) => string;
 }
 
@@ -299,8 +320,23 @@ function isHealthyEndpoint(healthStatus: string): boolean {
   return healthStatus !== "policy-blocked" && healthStatus !== "offline";
 }
 
+const BENCHMARK_CODEX_ENDPOINT_ID_MARKERS = [
+  ".openai-codex-subscription.",
+  ".codex-subscription.",
+] as const;
+
 function resolveBenchmarkArtifactRoot(deps: BenchmarkRunnerDependencies): string {
   return deps.benchmarkArtifactRoot ?? path.join(path.dirname(deps.databasePath), "benchmark-runs");
+}
+
+function isCodexSubscriptionBenchmarkEndpoint(endpoint: {
+  readonly endpointId: string;
+  readonly modelId: string;
+}): boolean {
+  return (
+    endpoint.modelId.startsWith("chatgpt/") &&
+    BENCHMARK_CODEX_ENDPOINT_ID_MARKERS.some((marker) => endpoint.endpointId.includes(marker))
+  );
 }
 
 async function executeBenchmarkTurn(
@@ -319,6 +355,44 @@ async function executeBenchmarkTurn(
   const requestId = `bench-${caseItem.case_id}-${endpoint.endpointId}-${requestSuffix}-${randomUUID()}`;
 
   const omitTools = options?.omitTools === true;
+  const responseFormat = buildTextDeliverableResponseFormat(caseItem) as
+    | {
+        readonly type: "json_schema";
+        readonly json_schema: {
+          readonly name: string;
+          readonly schema: Record<string, unknown>;
+          readonly strict?: boolean;
+        };
+      }
+    | undefined;
+  const usesResponsesExecution =
+    typeof deps.executeResponses === "function" &&
+    Boolean(caseItem.tools?.length) &&
+    isCodexSubscriptionBenchmarkEndpoint(endpoint);
+
+  if (usesResponsesExecution) {
+    return deps.executeResponses(
+      {
+        model: endpoint.modelId,
+        input: messages,
+        ...(caseItem.tools && !omitTools ? { tools: caseItem.tools } : {}),
+        ...(responseFormat
+          ? {
+              text: {
+                format: {
+                  type: "json_schema" as const,
+                  name: responseFormat.json_schema.name,
+                  schema: responseFormat.json_schema.schema,
+                  strict: responseFormat.json_schema.strict === true,
+                },
+              },
+            }
+          : {}),
+      },
+      requestId,
+      buildBenchmarkExecutionRequestOptions(endpoint.endpointId),
+    );
+  }
 
   return deps.executeChatCompletions(
     {
@@ -327,11 +401,12 @@ async function executeBenchmarkTurn(
       messages,
 
       ...(caseItem.tools && !omitTools ? { tools: caseItem.tools } : {}),
+      ...(responseFormat ? { response_format: responseFormat } : {}),
     },
 
     requestId,
 
-    { endpointId: endpoint.endpointId },
+    buildBenchmarkExecutionRequestOptions(endpoint.endpointId),
   );
 }
 
@@ -378,6 +453,8 @@ async function runCaseOnEndpoint(
 
   let bestCompleteness = -1;
 
+  let scaffoldedToolCallCount = 0;
+
   try {
     for (let turn = 1; turn <= BENCHMARK_MAX_ANSWER_TURNS; turn += 1) {
       answerTurns = turn;
@@ -392,8 +469,7 @@ async function runCaseOnEndpoint(
         messages,
 
         `turn${turn}`,
-
-        { omitTools: shouldOmitToolsForTurn(caseItem, accumulatedToolNames) },
+        { omitTools: shouldOmitToolsForTurn(caseItem, accumulatedToolNames, accumulatedToolCalls) },
       );
 
       const turnToolNames = extractStructuredToolNames(latestResult);
@@ -426,14 +502,19 @@ async function runCaseOnEndpoint(
         caseItem,
         extracted,
         structuredToolNames: accumulatedToolNames,
+        toolCalls: accumulatedToolCalls,
       });
 
-      if (completeness > bestCompleteness) {
+      if (completeness >= bestCompleteness) {
         bestCompleteness = completeness;
         bestExtracted = extracted;
       }
 
-      if (completeness >= 1000) {
+      const requiresPostToolFollowUp =
+        (caseItem.expected_tool_names?.length ?? 0) > 0 &&
+        accumulatedToolCalls.length > scaffoldedToolCallCount;
+
+      if (completeness >= 1000 && !requiresPostToolFollowUp) {
         break;
       }
 
@@ -454,7 +535,9 @@ async function runCaseOnEndpoint(
         accumulatedToolNames,
         extracted,
         latestResult.toolCalls,
+        accumulatedToolCalls,
       );
+      scaffoldedToolCallCount = accumulatedToolCalls.length;
     }
 
     const rawResponse = formatBenchmarkRawResponse(latestResult);
@@ -490,11 +573,12 @@ async function runCaseOnEndpoint(
 
       answerTurns,
     };
-  } catch {
+  } catch (value) {
+    const errorMessage = value instanceof Error ? value.message : "Benchmark execution failed.";
     return {
-      actualResponse: "",
+      actualResponse: errorMessage,
 
-      rawResponse: "",
+      rawResponse: errorMessage,
 
       formattedDeliverable: "",
 
@@ -607,9 +691,11 @@ async function executeJudgeRequest(
       ...(structuredOutput ? { response_format: JUDGE_RESPONSE_FORMAT } : {}),
     };
 
-    const result = await deps.executeChatCompletions(requestBody, requestId, {
-      endpointId: judgeEndpoint.endpointId,
-    });
+    const result = await deps.executeChatCompletions(
+      requestBody,
+      requestId,
+      buildBenchmarkExecutionRequestOptions(judgeEndpoint.endpointId),
+    );
 
     const latencyMs = Date.now() - startedAtMs;
 
@@ -702,17 +788,12 @@ async function gradeWithJudge(input: {
 
   const gradingBrief = buildJudgeGradingBrief(input.caseItem);
 
-  const judgeSelfGrade =
-    input.gradedEndpointId === input.judgeEndpoint.endpointId && isJudgeSubjectOverlapMode();
-
   const baseMessages = buildJudgeRequestMessages(
     input.caseItem,
 
     deliverable,
 
     input.structuredToolNames,
-
-    { strictSelfGrade: judgeSelfGrade },
   );
 
   const persistedBrief = {
@@ -1268,7 +1349,7 @@ async function gradeCompareAcrossModels(input: {
 
         requestId,
 
-        { endpointId: input.judgeEndpoint.endpointId },
+        buildBenchmarkExecutionRequestOptions(input.judgeEndpoint.endpointId),
       );
 
       const latencyMs = Date.now() - startedAtMs;
@@ -1497,9 +1578,42 @@ export async function runRoutingCapabilityBenchmark(
 
   const cases = selectBenchmarkCases(suite, { mode, caseIds: request.caseIds });
 
+  const runId = request.runId ?? randomUUID();
+
+  const startedAtMs = Date.now();
+
+  const artifactRoot = resolveBenchmarkArtifactRoot(deps);
+
+  createBenchmarkRunProgress({
+    runId,
+
+    mode,
+
+    endpointCount: request.endpointIds?.length ?? 0,
+
+    caseCount: cases.length,
+
+    judgeEndpointId: request.judgeEndpointId ?? null,
+
+    useJudge,
+
+    compareCaseCount: useJudge && (request.endpointIds?.length ?? 0) >= 2 ? cases.length : 0,
+
+    artifactRoot,
+  });
+
   const endpoints = (await deps.listConfiguredEndpoints()).filter((endpoint) =>
     isHealthyEndpoint(endpoint.healthStatus),
   );
+
+  const targetEligibility = evaluateBenchmarkTargetEligibility({
+    endpointIds: request.endpointIds,
+    judgeEndpointId: request.judgeEndpointId,
+    endpoints,
+  });
+  if (!targetEligibility.allowed) {
+    throw new Error(targetEligibility.warnings[0] ?? "benchmark_endpoint_ineligible");
+  }
 
   const targetEndpoints = request.endpointIds?.length
     ? endpoints.filter((endpoint) => request.endpointIds?.includes(endpoint.endpointId))
@@ -1519,12 +1633,6 @@ export async function runRoutingCapabilityBenchmark(
     throw new Error("No judge endpoint available. Configure a capable remote model.");
   }
 
-  const runId = request.runId ?? randomUUID();
-
-  const startedAtMs = Date.now();
-
-  const artifactRoot = resolveBenchmarkArtifactRoot(deps);
-
   const executionSteps = targetEndpoints.length * cases.length;
 
   let completedSteps = 0;
@@ -1533,21 +1641,13 @@ export async function runRoutingCapabilityBenchmark(
 
   const compareCaseCount = useJudge && targetEndpoints.length >= 2 ? cases.length : 0;
 
-  createBenchmarkRunProgress({
-    runId,
-
-    mode,
-
+  updateBenchmarkRunProgressPlan(runId, {
     endpointCount: targetEndpoints.length,
-
     caseCount: cases.length,
-
+    totalSteps:
+      executionSteps + (useJudge ? targetEndpoints.length * cases.length : 0) + compareCaseCount,
     judgeEndpointId: judgeEndpoint.endpointId,
-
-    useJudge,
-
-    compareCaseCount,
-
+    activeJudgeEndpointId: judgeEndpoint.endpointId,
     artifactRoot,
   });
 
@@ -1995,6 +2095,23 @@ export async function runRoutingCapabilityBenchmark(
       endpointGrades,
     };
 
+    const caseTaxonomyTags: Record<
+      string,
+      {
+        readonly roleId: string;
+        readonly taskType: string;
+        readonly variant?: string;
+        readonly requiredCapabilities?: readonly string[];
+        readonly requiredModalities?: readonly string[];
+        readonly toolClasses?: readonly string[];
+      }
+    > = {};
+    for (const c of suite.cases) {
+      if (c.taxonomy_tags) {
+        caseTaxonomyTags[c.case_id] = c.taxonomy_tags;
+      }
+    }
+
     await writeBenchmarkRunResult(artifactRoot, {
       runId,
       suiteId: suite.suite_id,
@@ -2019,6 +2136,7 @@ export async function runRoutingCapabilityBenchmark(
           judgeUnavailable: caseResult.judgeUnavailable,
           cappedByValidator: caseResult.cappedByValidator,
         })),
+        caseTaxonomyTags,
       })),
     });
 

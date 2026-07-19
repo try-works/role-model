@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/effective-taxonomy.schema.json",
+  "title": "Effective Taxonomy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifest", "groups", "roles", "tasks", "scope"],
+  "properties": {
+    "manifest": { "$ref": "manifest.schema.json" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["core", "provider", "client", "org", "team", "user"] },
+        "id": { "type": "string" }
+      }
+    },
+    "groups": { "type": "array", "items": { "$ref": "group.schema.json" } },
+    "roles": { "type": "array", "items": { "$ref": "role.schema.json" } },
+    "tasks": { "type": "array", "items": { "$ref": "task-type.schema.json" } },
+    "capabilities": { "type": "array", "items": { "$ref": "capability.schema.json" } },
+    "modalities": { "type": "array", "items": { "$ref": "modality.schema.json" } },
+    "toolClasses": { "type": "array", "items": { "$ref": "tool-class.schema.json" } },
+    "rbac": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["not_applied", "applied"] },
+        "reason": { "type": "string" },
+        "allowedActions": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "taxonomy.read",
+              "taxonomy.suggest",
+              "taxonomy.create",
+              "taxonomy.update",
+              "taxonomy.deprecate",
+              "taxonomy.delete",
+              "taxonomy.bind_policy",
+              "taxonomy.use"
+            ]
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "annotations": { "type": "object" }
+  }
+}

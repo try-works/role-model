@@ -115,6 +115,33 @@ export function updateBenchmarkRunProgress(
   return next;
 }
 
+export function updateBenchmarkRunProgressPlan(
+  runId: string,
+  patch: Partial<
+    Pick<
+      BenchmarkRunProgressSnapshot,
+      | "endpointCount"
+      | "caseCount"
+      | "totalSteps"
+      | "judgeEndpointId"
+      | "activeJudgeEndpointId"
+      | "artifactRoot"
+    >
+  >,
+): BenchmarkRunProgressSnapshot | null {
+  const current = activeRuns.get(runId);
+  if (!current || current.status !== "running") {
+    return current ?? null;
+  }
+  const next: BenchmarkRunProgressSnapshot = {
+    ...current,
+    ...patch,
+    updatedAtMs: Date.now(),
+  };
+  activeRuns.set(runId, next);
+  return next;
+}
+
 export function completeBenchmarkRunProgress(
   runId: string,
   result: BenchmarkRunResult,

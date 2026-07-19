@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h07-multi-turn-sla-guard",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h07-multi-turn-sla-guard-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "```typescript\ntype DenialReason =\n  | { type: \"throughput_sla\" }\n  | { type: string };\n\ninterface EndpointCandidate {\n  id: string;\n  allowListed: boolean;\n  hardDenied: boolean;\n  hardDenialReasons?: DenialReason[];\n}\n\ninterface RoutingRequest {\n  remoteOnly: boolean;\n}\n\nexport function shouldAllowSoleCandidateThroughputFallback(\n  request: RoutingRequest,\n  allowListedEndpoints: EndpointCandidate[]\n): boolean {\n  if (!request.remoteOnly) {\n    return false;\n  }\n\n  if (allowListedEndpoints.length !== 1) {\n    return false;\n  }\n\n  const [soleCandidate] = allowListedEndpoints;\n\n  if (!soleCandidate.allowListed || !soleCandidate.hardDenied) {\n    return false;\n  }\n\n  const reasons = soleCandidate.hardDenialReasons ?? [];\n\n  if (reasons.length === 0) {\n    return false;\n  }\n\n  return reasons.every((reason) => reason.type === \"throughput_sla\");\n}\n```",
+  "rawResponse": "```typescript\ntype DenialReason =\n  | { type: \"throughput_sla\" }\n  | { type: string };\n\ninterface EndpointCandidate {\n  id: string;\n  allowListed: boolean;\n  hardDenied: boolean;\n  hardDenialReasons?: DenialReason[];\n}\n\ninterface RoutingRequest {\n  remoteOnly: boolean;\n}\n\nexport function shouldAllowSoleCandidateThroughputFallback(\n  request: RoutingRequest,\n  allowListedEndpoints: EndpointCandidate[]\n): boolean {\n  if (!request.remoteOnly) {\n    return false;\n  }\n\n  if (allowListedEndpoints.length !== 1) {\n    return false;\n  }\n\n  const [soleCandidate] = allowListedEndpoints;\n\n  if (!soleCandidate.allowListed || !soleCandidate.hardDenied) {\n    return false;\n  }\n\n  const reasons = soleCandidate.hardDenialReasons ?? [];\n\n  if (reasons.length === 0) {\n    return false;\n  }\n\n  return reasons.every((reason) => reason.type === \"throughput_sla\");\n}\n```",
+  "formattedDeliverable": "```typescript\ntype DenialReason =\n  | { type: \"throughput_sla\" }\n  | { type: string };\n\ninterface EndpointCandidate {\n  id: string;\n  allowListed: boolean;\n  hardDenied: boolean;\n  hardDenialReasons?: DenialReason[];\n}\n\ninterface RoutingRequest {\n  remoteOnly: boolean;\n}\n\nexport function shouldAllowSoleCandidateThroughputFallback(\n  request: RoutingRequest,\n  allowListedEndpoints: EndpointCandidate[]\n): boolean {\n  if (!request.remoteOnly) {\n    return false;\n  }\n\n  if (allowListedEndpoints.length !== 1) {\n    return false;\n  }\n\n  const [soleCandidate] = allowListedEndpoints;\n\n  if (!soleCandidate.allowListed || !soleCandidate.hardDenied) {\n    return false;\n  }\n\n  const reasons = soleCandidate.hardDenialReasons ?? [];\n\n  if (reasons.length === 0) {\n    return false;\n  }\n\n  return reasons.every((reason) => reason.type === \"throughput_sla\");\n}\n```",
+  "extractionMethod": "code_fence",
+  "latencyMs": 19576,
+  "failure": false,
+  "recordedAtMs": 1783931621946
+}

@@ -1,0 +1,54 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "caseId": "p17-tools-multi-hard",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- src/router.ts\\n+++ src/router.ts\\n@@ -1,2 ",
+      "perCaseScore": 0
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- src/router.ts\\n+++ src/router.ts\\n@@\\n exp",
+      "perCaseScore": 0
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both answers inaccurately validate the output schema rather than the router.ts schema fields (MODE, throughput SLA). Moonshot's apply_patch diff is a valid hunk with a real change (added comment line), while OpenAI's diff contains only a bare @@ and no actual change lines, failing the real patch requirement. Thus Moonshot ranks slightly higher.",
+  "rawResponse": "{\"relativeRanking\":[\"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\"openai.personal.openai-codex-subscription.global.gpt-5.4\"],\"rationale\":\"Both answers inaccurately validate the output schema rather than the router.ts schema fields (MODE, throughput SLA). Moonshot's apply_patch diff is a valid hunk with a real change (added comment line), while OpenAI's diff contains only a bare @@ and no actual change lines, failing the real patch requirement. Thus Moonshot ranks slightly higher.\"}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nAPI workflow: read_file src/router.ts, apply_patch minimal diff (---/+++), then JSON {\"answer\":\"what schema fields and tests you validated\"}.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -12,3 +12,3 @@\\n export const MODE = \\\"difficulty\\\";\\n\"\n      }\n    }\n  ],\n  \"answer\": \"Validated MODE and throughput SLA schema fields; added guard regression test.\"\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must call read_file and apply_patch",
+      "[MUST] acknowledges schema/test validation steps.",
+      "[MUST] Emit API tool calls: read_file, apply_patch",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: read, patch, schema|test",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 493,
+    "reasoningLength": 9085
+  },
+  "recordedAtMs": 1783932104117
+}

@@ -1,0 +1,25 @@
+Commands:
+- corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/index.test.ts --testNamePattern "aggregates generic telemetry analytics from persisted request-time routing and cost facts"
+- corepack pnpm --filter @role-model/protocol-types build
+- corepack pnpm --filter @role-model-router/core build
+- corepack pnpm --filter @role-model-router/sqlite-memory build
+- corepack pnpm --filter @role-model-router/runtime-host-bridge build
+Timestamp: 2026-06-28T14:25Z to 2026-06-28T14:29Z
+Implementation summary:
+- persisted richer taxonomy dimensions into runtime_telemetry_records
+- backfilled existing telemetry rows from runtime_observations
+- switched Observe analytics/request-list enrichment to use ledger fields instead of reparsing observation_json
+- aligned protocol-types benchmark dimension typing, core RoutingIntent fields, and host-bridge request-detail fallback typing
+Results:
+- host-bridge regression test: PASS
+- protocol-types build: PASS
+- core build: PASS
+- sqlite-memory build: PASS
+- runtime-host-bridge build: PASS
+Live rebuilt-runtime timings on http://127.0.0.1:3462:
+- POST /api/role-model/telemetry/query requestCount total: 272.58 ms
+- POST /api/role-model/telemetry/query breakdown taxonomyCapabilityId: 253.59 ms
+- POST /api/role-model/telemetry/query taxonomyToolClassId + ranking: 310.23 ms
+- /app ready: 3632 ms
+- /app/observe/requests ready: 1666 ms
+- /app/observe/routing ready: 1052 ms

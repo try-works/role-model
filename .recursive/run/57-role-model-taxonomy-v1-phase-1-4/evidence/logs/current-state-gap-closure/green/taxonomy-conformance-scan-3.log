@@ -1,0 +1,123 @@
+{
+  "groupCount": 6,
+  "roleCount": 28,
+  "taskCount": 280,
+  "genericCount": 0,
+  "lowRoleCount": 28,
+  "badHashCount": 0,
+  "lowRoles": [
+    {
+      "id": "coder",
+      "count": 10
+    },
+    {
+      "id": "architect",
+      "count": 10
+    },
+    {
+      "id": "security",
+      "count": 10
+    },
+    {
+      "id": "researcher",
+      "count": 10
+    },
+    {
+      "id": "writer",
+      "count": 10
+    },
+    {
+      "id": "operator",
+      "count": 10
+    },
+    {
+      "id": "analyst",
+      "count": 10
+    },
+    {
+      "id": "planner",
+      "count": 10
+    },
+    {
+      "id": "tester",
+      "count": 10
+    },
+    {
+      "id": "data",
+      "count": 10
+    },
+    {
+      "id": "product",
+      "count": 10
+    },
+    {
+      "id": "designer",
+      "count": 10
+    },
+    {
+      "id": "support",
+      "count": 10
+    },
+    {
+      "id": "legal",
+      "count": 10
+    },
+    {
+      "id": "finance",
+      "count": 10
+    },
+    {
+      "id": "creative",
+      "count": 10
+    },
+    {
+      "id": "educator",
+      "count": 10
+    },
+    {
+      "id": "translator",
+      "count": 10
+    },
+    {
+      "id": "marketer",
+      "count": 10
+    },
+    {
+      "id": "seller",
+      "count": 10
+    },
+    {
+      "id": "recruiter",
+      "count": 10
+    },
+    {
+      "id": "procurement",
+      "count": 10
+    },
+    {
+      "id": "coordinator",
+      "count": 10
+    },
+    {
+      "id": "knowledge",
+      "count": 10
+    },
+    {
+      "id": "strategist",
+      "count": 10
+    },
+    {
+      "id": "mathematician",
+      "count": 10
+    },
+    {
+      "id": "scientist",
+      "count": 10
+    },
+    {
+      "id": "health",
+      "count": 10
+    }
+  ],
+  "badHashes": []
+}

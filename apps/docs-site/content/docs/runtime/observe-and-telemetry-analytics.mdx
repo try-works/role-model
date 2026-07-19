@@ -1,0 +1,78 @@
+---
+title: Observe and telemetry analytics
+description: Read runtime analytics charts, request ledgers, routing telemetry, and explicit chart states without confusing them with setup controls.
+---
+
+# Observe and telemetry analytics
+
+Observe is the runtime surface for understanding what happened after requests were routed.
+
+It is not the primary setup surface. Use Connect, Local, Remote, Models, and Router to configure the runtime;
+use Observe to inspect request history, telemetry, and analytics evidence.
+
+## Where analytics appear
+
+Telemetry analytics are intentionally limited to runtime overview and Observe surfaces:
+
+| Surface | What it shows |
+| --- | --- |
+| Dashboard | high-level request, routing, latency, cost, and reliability trends |
+| Observe -> Requests | request analytics plus the request ledger for the same operator slice |
+| Observe -> Routing | routing-specific volume, avoided-cost, and decision trend views |
+
+Setup pages do not own analytics charts.
+
+## Shared filters
+
+Observe request charts and the request ledger use the same filter shape where their fields overlap.
+
+Common filters include:
+
+- source
+- endpoint
+- model
+- provider
+- role
+- operation
+- status family
+
+Analytics aggregate the full requested slice. Ledger reads keep explicit pagination or limit behavior. That
+means a chart and the visible ledger can describe the same filtered slice while still showing different row
+counts.
+
+## Chart states
+
+Charts should explain their state instead of rendering blank surfaces.
+
+The runtime UI distinguishes:
+
+- `loading`
+- `refreshing`
+- `empty`
+- `unsupported`
+- `partial`
+- `truncated`
+- `error`
+- `populated`
+
+For example, a metric can be unsupported for the selected slice, partially populated because some rows lack
+the required fields, or validly empty because no matching telemetry exists.
+
+## Backend analytics contract
+
+The runtime analytics response includes:
+
+- the applied query
+- slice metadata
+- metric support metadata
+- dimension support metadata
+- row counts for scanned, matched, and aggregated data
+- truncation metadata when truncation applies
+
+This keeps the UI from guessing why a chart is empty or incomplete.
+
+## Read next
+
+- [Fallbacks, failures, and observability](/router/fallbacks-failures-and-observability)
+- [Trace and usage artifacts](/protocol/trace-and-usage-artifacts)
+- [Routing controls and decision review](/runtime/routing-controls-and-decision-review)

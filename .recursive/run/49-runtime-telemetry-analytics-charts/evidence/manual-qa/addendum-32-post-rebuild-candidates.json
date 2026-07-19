@@ -1,0 +1,7 @@
+{
+  "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+  "modelId": "lfm2.5-1.2b-instruct",
+  "sourceType": "local",
+  "executionModeEligible": true,
+  "healthStatus": "healthy"
+}

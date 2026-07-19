@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "c02-ts-generics",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-c02-ts-generics-a1-0c7487b0-a9ac-4984-b8b1-35f2a332fa91",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: c02-ts-generics\n\n## Original question\n[user]\nFix this TypeScript generic inference bug in evaluateEligibility<T extends EndpointCandidate> and show the patch hunk plus unit test updates.\n\n## Example expected answer\nTechnical analysis referencing code, patch, schema, or tests.\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Engages with code-edit or debugging request substantively.\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: code|patch|schema|test|typescript|router\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nEngages with code-edit or debugging request substantively.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"Fixed the generic inference bug by changing the parameter types from `EndpointCandidate` to `T` so that TypeScript infers `T` from the actual `candidates` array and the `predicate` receives the inferred subtype, instead of widening to the base `EndpointCandidate` constraint.\\n\\nSource patch hunk:\\n\\n```diff\\n--- a/src/evaluateEligibility.ts\\n+++ b/src/evaluateEligibility.ts\\n@@ -10,9 +10,9 @@ function evaluateEligibility<T extends EndpointCandidate>(\\n-  candidates: EndpointCandidate[],\\n-  predicate: (candidate: EndpointCandidate) => boolean\\n+  candidates: T[],\\n+  predicate: (candidate: T) => boolean\\n ): EligibilityResult<T>[] {\\n   return candidates.map(candidate => ({\\n     candidate,\\n     eligible: predicate(candidate),\\n   }));\\n }\\n```\\n\\nUpdated unit tests:\\n\\n```typescript\\n// src/evaluateEligibility.test.ts\\nimport { evaluateEligibility } from './evaluateEligibility';\\n\\ninterface EndpointCandidate {\\n  id: string;\\n  score: number;\\n}\\n\\ninterface PremiumEndpointCandidate extends EndpointCandidate {\\n  tier: 'premium';\\n}\\n\\ndescribe('evaluateEligibility', () => {\\n  it('infers the specific candidate subtype from the candidates array', () => {\\n    const candidates: PremiumEndpointCandidate[] = [\\n      { id: '1', score: 85, tier: 'premium' },\\n      { id: '2', score: 60, tier: 'premium' },\\n    ];\\n\\n    const results = evaluateEligibility(\\n      candidates,\\n      (candidate) => candidate.score >= 70,\\n    );\\n\\n    // This assignment only type-checks if T is inferred as PremiumEndpointCandidate\\n    const first: PremiumEndpointCandidate = results[0].candidate;\\n    expect(first.tier).toBe('premium');\\n    expect(results[0].eligible).toBe(true);\\n    expect(results[1].eligible).toBe(false);\\n  });\\n\\n  it('predicate receives the inferred subtype, not the base type', () => {\\n    const candidates: PremiumEndpointCandidate[] = [\\n      { id: '1', score: 85, tier: 'premium' },\\n    ];\\n\\n    evaluateEligibility(candidates, (candidate) => {\\n      // Compile-time assertion: `tier` is accessible only on PremiumEndpointCandidate\\n      return candidate.tier === 'premium' && candidate.score >= 70;\\n    });\\n  });\\n});\\n```\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The answer fully engages with the code-edit request by providing a specific fix explanation, a syntactically correct diff patch with valid ---/+++ headers and @@ hunk markers, and updated TypeScript unit tests that verify the fixed generic inference. No placeholder diffs or malformed content. The deliverable is substantive and matches the required format.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer fully engages with the code-edit request by providing a specific fix explanation, a syntactically correct diff patch with valid ---/+++ headers and @@ hunk markers, and updated TypeScript unit tests that verify the fixed generic inference. No placeholder diffs or malformed content. The deliverable is substantive and matches the required format.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/c02-ts-generics.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nFix this TypeScript generic inference bug in evaluateEligibility<T extends EndpointCandidate> and show the patch hunk plus unit test updates.",
+    "exemplarAnswer": "Technical analysis referencing code, patch, schema, or tests.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Engages with code-edit or debugging request substantively.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: code|patch|schema|test|typescript|router"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 385,
+    "reasoningLength": 1291
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935009785
+}

@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-07-09T13:29:28.1333227+08:00",
+  "roleModelBaseUrl": "http://127.0.0.1:3456/v1",
+  "note": "Direct real Pi CLI invocations; exit codes were zero at the parent shell and stdout/stderr files are recorded.",
+  "results": [
+    {
+      "name": "pi-difficulty-remote-only-codex-hard-direct",
+      "expected": "PI_FINAL_CODEX_OK",
+      "stdoutContainsExpected": true,
+      "stdoutPreview": "PI_FINAL_CODEX_OK",
+      "stderrPreview": "",
+      "stdoutLog": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\final-runtime\\pi\\pi-difficulty-remote-only-codex-hard-direct.stdout.log",
+      "stderrLog": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\final-runtime\\pi\\pi-difficulty-remote-only-codex-hard-direct.stderr.log"
+    },
+    {
+      "name": "pi-difficulty-remote-only-deepseek-simple-direct",
+      "expected": "PI_FINAL_DEEPSEEK_OK",
+      "stdoutContainsExpected": true,
+      "stdoutPreview": "PI_FINAL_DEEPSEEK_OK",
+      "stderrPreview": "",
+      "stdoutLog": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\final-runtime\\pi\\pi-difficulty-remote-only-deepseek-simple-direct.stdout.log",
+      "stderrLog": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-14\\live\\final-runtime\\pi\\pi-difficulty-remote-only-deepseek-simple-direct.stderr.log"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "log": ".recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/logs/addendum-10/green/runtime-test-critical.rerun.log",
+  "command": "corepack pnpm run runtime:test-critical",
+  "completedAt": "2026-07-09T07:47:22.3132928+08:00",
+  "exitCode": 0
+}

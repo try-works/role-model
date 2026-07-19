@@ -1,0 +1,4 @@
+{
+  "status": 400,
+  "body": "{\"error\":\"Chosen endpoint  is not present in the registry result.\"}\n"
+}

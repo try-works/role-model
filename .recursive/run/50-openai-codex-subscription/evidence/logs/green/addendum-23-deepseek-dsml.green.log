@@ -1,0 +1,15 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge
+
+(node:24724) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (113 tests | 108 skipped) 1416ms
+   ✓ runtime-host-bridge > executes exact Kimi hosted web-search requests through to a final assistant answer  484ms
+   ✓ runtime-host-bridge > executes exact deepseek/deepseek-v4-flash web-search requests through to a final assistant answer  314ms
+   ✓ runtime-host-bridge > executes exact deepseek/deepseek-v4-pro web-search requests through to a final assistant answer  312ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed | 108 skipped (113)
+   Start at  21:40:27
+   Duration  4.16s (transform 1.44s, setup 0ms, collect 1.94s, tests 1.42s, environment 0ms, prepare 321ms)
+

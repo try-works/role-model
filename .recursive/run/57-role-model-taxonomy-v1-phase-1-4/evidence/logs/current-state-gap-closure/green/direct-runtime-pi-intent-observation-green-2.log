@@ -1,0 +1,91 @@
+{
+  "status": 200,
+  "requestId": "req-0b3611a1-9ea0-495a-a7c1-54de8e7aef53",
+  "clientRequestId": "pi-direct-role-model-intent-002",
+  "endpointId": "anthropic.team.shared.us-east-1.default",
+  "routingDiagnostics": {
+    "retrievalReceiptId": "conversation-main-retrieval-receipt",
+    "routingModel": {
+      "enabled": false,
+      "endpointId": null,
+      "preferredEndpointIds": [],
+      "ignoredEndpointIds": [
+        "openai.personal.primary.us-east-1.fast"
+      ]
+    },
+    "capabilityEligibility": {
+      "requiredInputModalities": [
+        "text"
+      ],
+      "requiredOutputModalities": [
+        "text"
+      ],
+      "requiredCapabilities": [
+        "text.chat"
+      ],
+      "advisoryCapabilities": [],
+      "includedEndpoints": [
+        "anthropic.team.shared.us-east-1.default"
+      ],
+      "excludedTargets": []
+    },
+    "rewrite": {
+      "requestedModel": "claude-3.7-sonnet",
+      "downstreamModelId": "claude-3.7-sonnet",
+      "applied": false,
+      "reason": "requested-model-matches-downstream"
+    },
+    "observedProfile": {
+      "endpointId": "anthropic.team.shared.us-east-1.default",
+      "source": "none",
+      "readMode": "per-request"
+    },
+    "catalogEconomics": {
+      "canonicalModelId": "claude-3.7-sonnet",
+      "tokenEconomicsSource": "catalog",
+      "inputPer1M": 3,
+      "outputPer1M": 15,
+      "estimatedRequestUsd": 0.061487999999999994,
+      "cost_per_1k_tokens_est": 0.014953307392996107
+    },
+    "effectiveMetrics": {
+      "quality": {
+        "value": 0.5,
+        "source": "default"
+      },
+      "latency": {
+        "value": 0.5,
+        "source": "default"
+      },
+      "throughput": {
+        "value": 0.5,
+        "source": "default"
+      },
+      "reliability": {
+        "value": 0.7,
+        "source": "default"
+      },
+      "cost": {
+        "value": 0,
+        "source": "catalog",
+        "freshnessWeight": 1
+      }
+    },
+    "selection": {
+      "mode": "best-total-score",
+      "scoreTieEpsilon": 0.01,
+      "winnerEndpointId": "anthropic.team.shared.us-east-1.default",
+      "winnerTotalScore": 0.13999999999999999,
+      "tieBreakOrder": [
+        "quality",
+        "latency_ms",
+        "reliability",
+        "endpoint_id"
+      ]
+    },
+    "throughputPenalty": {
+      "endpointId": "anthropic.team.shared.us-east-1.default",
+      "active": false
+    }
+  }
+}

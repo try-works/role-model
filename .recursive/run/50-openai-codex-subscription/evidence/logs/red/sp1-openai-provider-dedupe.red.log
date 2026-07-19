@@ -1,0 +1,83 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge[39m
+
+(node:32564) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [31m❯[39m test/provider-overlap-metadata.test.ts [2m([22m[2m45 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m44 skipped[39m[2m)[22m[33m 984[2mms[22m[39m
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mlegacy listProviders metadata mismatches exactly the 19 known overlap ids
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mmerged operator metadata aligns with validateProviderAccounts for all overlap ids
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider baseten
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider cerebras
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider cohere
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider databricks
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider deepinfra
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider deepseek
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider groq
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider minimax
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider mistral
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider morph
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider nebius
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider openrouter
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider ovhcloud
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider perplexity
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider sarvam
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider v0
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider wandb
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider xai
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22mupsert validation accepts UI-equivalent payload for overlap provider zai
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22maligned overlap provider openai keeps stable providerKind
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22maligned overlap provider anthropic keeps stable providerKind
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22maligned overlap provider moonshot keeps stable providerKind
+   [2m[90m↓[39m[22m provider overlap metadata (R1)[2m > [22maligned overlap provider azure keeps stable providerKind
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for baseten
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for cerebras
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for cohere
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for databricks
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for deepinfra
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for deepseek
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for groq
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for minimax
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for mistral
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for morph
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for nebius
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for openrouter
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for ovhcloud
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for perplexity
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for sarvam
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for v0
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for wandb
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for xai
+   [2m[90m↓[39m[22m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for zai
+[31m   [31m×[31m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes one OpenAI provider with API Key and Codex Subscription variants[39m[33m 980[2mms[22m[39m
+[31m     → expected [ { providerId: 'chatgpt', …(13) } ] to have a length of +0 but got 1[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/provider-overlap-metadata.test.ts > listProviders overlap metadata (R1 integration) > listProviders exposes one OpenAI provider with API Key and Codex Subscription variants
+AssertionError: expected [ { providerId: 'chatgpt', …(13) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ test/provider-overlap-metadata.test.ts:215:32
+    213| 
+    214|       expect(openaiProviders).toHaveLength(1);
+    215|       expect(chatgptProviders).toHaveLength(0);
+       |                                ^
+    216| 
+    217|       expect(openaiProviders[0]?.displayName).toBe("OpenAI");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m44 skipped[39m[90m (45)[39m
+[2m   Start at [22m 19:50:58
+[2m   Duration [22m 4.80s[2m (transform 2.04s, setup 0ms, collect 2.64s, tests 984ms, environment 1ms, prepare 583ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\50-openai-codex-subscription\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/provider-overlap-metadata.test.ts --testNamePattern listProviders exposes one OpenAI provider with API Key and Codex Subscription variants

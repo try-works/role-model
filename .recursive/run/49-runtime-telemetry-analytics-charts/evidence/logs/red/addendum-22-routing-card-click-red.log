@@ -1,0 +1,629 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 15[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22muses analytics charts as the primary Observe entry point[32m 5[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mkeeps the shell on the Apple baseline with explicit chart tokens[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mchart tokens used together resolve to distinct visual colors in each theme[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract[32m 131[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 48[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces[32m 20[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders surface uses an explicit save-cancel modal for api-key maintenance[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders surface keeps oauth reconnect as a one-click saved-account action[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders maintenance flows call explicit repair APIs instead of generic account writes[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproviders saved-account cards use canonical lifecycle rows and bounded archived diagnostics[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mruntime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter overview presents runtime-config posture as source of truth[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter overview lists the concrete candidate endpoints behind routing posture[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouting strategy benchmark advisory does not leak JSX control flow as page text[32m 1[2mms[22m[39m
+ [31m×[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouting strategy settings separate saved posture from draft edits and refresh derived state after save[32m 90[2mms[22m[39m
+[31m   → expected 'import { useCallback, useEffect, useS…' to contain 'onClick={() => onChange(value)}'[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes[32m 19[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mapplies the Apple palette, SF Pro / Inter typography, and explicit theme contract in shared app chrome[32m 2[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshared panels and provider selectors are owned by Apple-theme primitives[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrouter strategy execution mode uses the themed select primitive[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI dropdowns use themed select primitives instead of native selects[32m 4[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshared route effects avoid action identity loops and peer refresh feedback[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mkeeps shared states calm: transparent status pills and no section divider chrome[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy[32m 24[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent[32m 12[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mdashboard is chart-led and keeps routing analytics as a first-class handoff[32m 0[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22moverview metadata and design doc describe a telemetry-first summary with an interaction rail[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mrequest detail route renders authoritative stored cost metadata[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers[32m 3[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mshell headers do not render section eyebrow labels[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mroutes do not register refresh controls as shell header actions[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mlong fact-card values use compact text roles instead of display value typography[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI sources do not bypass Apple theme token primitives[32m 5[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI sources keep the approved Apple radius grammar[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mproduction UI sources avoid unsupported Apple typography weight 500[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mchart primitives use shared design-system geometry and type tokens[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/design-system.test.ts[2m > [22mruntime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props[32m 2[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > routing strategy settings separate saved posture from draft edits and refresh derived state after save
+AssertionError: expected 'import { useCallback, useEffect, useS…' to contain 'onClick={() => onChange(value)}'
+
+- Expected
++ Received
+
+- onClick={() => onChange(value)}
++ import { useCallback, useEffect, useState } from "react";
++ import { Link } from "react-router";
++
++ import {
++   ErrorState,
++   LoadingState,
++   SectionCard,
++   SelectField,
++   StatusPill,
++ } from "../components/page-primitives";
++ import {
++   fieldClassName,
++   getSelectablePanelClassName,
++   mutedPanelClassName,
++   primaryButtonClassName,
++   secondaryButtonClassName,
++ } from "../lib/design-system";
++ import {
++   ROUTING_MODE_OPTIONS,
++   type RuntimeRoutingMode,
++   formatRoutingModeLabel,
++   normalizeRoutingModeValue,
++ } from "../lib/routing-mode";
++ import {
++   type RouterCandidate,
++   type RuntimeConfig,
++   type RuntimeConfigRecord,
++   type RuntimeControllerAssignment,
++   type RuntimeSnapshot,
++   fetchControllerAssignment,
++   fetchRouterCandidates,
++   fetchRuntimeConfig,
++   fetchRuntimeSnapshot,
++   updateRuntimeConfig,
++ } from "../lib/runtime-api";
++ import { usePageActions } from "../lib/shell-header-context";
++
++ type RoutingStrategyChoice = RuntimeRoutingMode | "unset" | "custom";
++ type RuntimeExecutionMode = NonNullable<RuntimeConfig["executionMode"]>;
++
++ const EXECUTION_MODE_OPTIONS: ReadonlyArray<{
++   readonly value: RuntimeExecutionMode;
++   readonly label: string;
++   readonly detail: string;
++ }> = [
++   {
++     value: "hybrid",
++     label: "Hybrid",
++     detail: "Keep both local llama-swap and remote LiteLLM execution available to the runtime.",
++   },
++   {
++     value: "local_only",
++     label: "Local only",
++     detail: "Route only through local llama-swap-managed models.",
++   },
++   {
++     value: "remote_only",
++     label: "Remote only",
++     detail: "Route only through remote provider-backed endpoints.",
++   },
++   {
++     value: "decision_only",
++     label: "Decision only",
++     detail: "Keep routing and diagnostics active without enabling local or remote execution.",
++   },
++ ] as const;
++
++ function createEmptyProcessConfig() {
++   return {
++     command: null,
++     args: [],
++     env: {},
++     cwd: null,
++     startupTimeoutMs: null,
++   } as const;
++ }
++
++ function createDefaultRuntimeConfig(): RuntimeConfig {
++   return {
++     version: "1.0",
++     routingStrategy: null,
++     executionMode: "decision_only",
++     llamaSwap: {
++       enabled: false,
++       models: [],
++       process: createEmptyProcessConfig(),
++     },
++     liteLLM: {
++       enabled: false,
++       providers: [],
++       process: createEmptyProcessConfig(),
++     },
++   };
++ }
++
++ function RoutingStrategyOptionCard({
++   checked,
++   description,
++   label,
++   name,
++   onChange,
++   value,
++ }: {
++   readonly checked: boolean;
++   readonly description: string;
++   readonly label: string;
++   readonly name: string;
++   readonly onChange: (value: RoutingStrategyChoice) => void;
++   readonly value: RoutingStrategyChoice;
++ }) {
++   return (
++     <label className={getSelectablePanelClassName(checked)}>
++       <input
++         checked={checked}
++         className="sr-only"
++         name={name}
++         type="radio"
++         value={value}
++         onChange={() => onChange(value)}
++       />
++       <span className="block font-semibold text-[var(--rm-fg)]">{label}</span>
++       <span className="mt-2 block text-sm text-[var(--rm-secondary)]">{description}</span>
++     </label>
++   );
++ }
++
++ function toRoutingStrategyDraft(strategy: string | null | undefined): {
++   readonly choice: RoutingStrategyChoice;
++   readonly customValue: string;
++ } {
++   const normalized = strategy?.trim() ?? "";
++   if (!normalized) {
++     return { choice: "unset", customValue: "" };
++   }
++   const normalizedRoutingMode = normalizeRoutingModeValue(normalized);
++   if (normalizedRoutingMode) {
++     return {
++       choice: normalizedRoutingMode,
++       customValue: "",
++     };
++   }
++   return {
++     choice: "custom",
++     customValue: normalized,
++   };
++ }
++
++ function resolveRoutingStrategyChoice(
++   choice: RoutingStrategyChoice,
++   customValue: string,
++ ): string | null {
++   if (choice === "unset") {
++     return null;
++   }
++   if (choice === "custom") {
++     return customValue.trim() || null;
++   }
++   return choice;
++ }
++
++ function applyExecutionMode(
++   config: RuntimeConfig,
++   executionMode: RuntimeExecutionMode,
++ ): RuntimeConfig {
++   return {
++     ...config,
++     executionMode,
++     llamaSwap: {
++       ...config.llamaSwap,
++       enabled: executionMode === "hybrid" || executionMode === "local_only",
++     },
++     liteLLM: {
++       ...config.liteLLM,
++       enabled: executionMode === "hybrid" || executionMode === "remote_only",
++     },
++   };
++ }
++
++ export default function ControlRoutingStrategyRoute() {
++   const [configRecord, setConfigRecord] = useState<RuntimeConfigRecord | null>(null);
++   const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
++   const [controller, setController] = useState<RuntimeControllerAssignment | null>(null);
++   const [error, setError] = useState<string | null>(null);
++   const [saving, setSaving] = useState(false);
++   const [statusMessage, setStatusMessage] = useState<string | null>(null);
++   const [selectedRoutingStrategy, setSelectedRoutingStrategy] =
++     useState<RoutingStrategyChoice>("unset");
++   const [customRoutingStrategy, setCustomRoutingStrategy] = useState("");
++   const [selectedExecutionMode, setSelectedExecutionMode] =
++     useState<RuntimeExecutionMode>("hybrid");
++   const [candidates, setCandidates] = useState<readonly RouterCandidate[]>([]);
++
++   const syncDrafts = useCallback((nextRecord: RuntimeConfigRecord) => {
++     const nextConfig = nextRecord.config ?? createDefaultRuntimeConfig();
++     const routingDraft = toRoutingStrategyDraft(nextConfig.routingStrategy);
++     setSelectedRoutingStrategy(routingDraft.choice);
++     setCustomRoutingStrategy(routingDraft.customValue);
++     setSelectedExecutionMode(nextConfig.executionMode ?? "hybrid");
++   }, []);
++
++   const loadState = useCallback(async () => {
++     try {
++       const [nextConfigRecord, nextSnapshot, nextController, nextCandidates] =
++         await Promise.all([
++           fetchRuntimeConfig(),
++           fetchRuntimeSnapshot(),
++           fetchControllerAssignment(),
++           fetchRouterCandidates(),
++         ]);
++       setConfigRecord(nextConfigRecord);
++       setSnapshot(nextSnapshot);
++       setController(nextController);
++       setCandidates(nextCandidates);
++       syncDrafts(nextConfigRecord);
++       setError(null);
++     } catch (value) {
++       setError(value instanceof Error ? value.message : "Could not load routing strategy posture.");
++       throw value;
++     }
++   }, [syncDrafts]);
++
++   useEffect(() => {
++     void loadState();
++   }, [loadState]);
++
++   usePageActions(
++     <>
++       <Link className={secondaryButtonClassName} to="/app/system/runtime-config">
++         Advanced config
++       </Link>
++       <Link className={secondaryButtonClassName} to="/app/router">
++         Router detail
++       </Link>
++     </>,
++     [],
++   );
++
++   if (error) {
++     return <ErrorState label={error} />;
++   }
++   if (!configRecord || !snapshot) {
++     return <LoadingState label="Loading routing strategy posture…" />;
++   }
++
++   const config = configRecord.config ?? createDefaultRuntimeConfig();
++   const persistedRoutingStrategy = config.routingStrategy ?? null;
++   const persistedExecutionMode = config.executionMode ?? "decision_only";
++   const selectedRoutingStrategyValue = resolveRoutingStrategyChoice(
++     selectedRoutingStrategy,
++     customRoutingStrategy,
++   );
++   const hasUnsavedChanges =
++     selectedRoutingStrategyValue !== persistedRoutingStrategy ||
++     selectedExecutionMode !== persistedExecutionMode;
++   const selectedStrategyDetails = (() => {
++     if (selectedRoutingStrategy === "unset") {
++       return {
++         label: "Unset strategy",
++         detail:
++           "Persist no explicit strategy and let the runtime fall back to its baseline default.",
++       };
++     }
++     if (selectedRoutingStrategy === "custom") {
++       return {
++         label: "Custom strategy",
++         detail:
++           "Preserve a repo-specific routing mode string exactly as typed for advanced or transitional configurations.",
++       };
++     }
++     return (
++       ROUTING_MODE_OPTIONS.find((option) => option.value === selectedRoutingStrategy) ??
++       ROUTING_MODE_OPTIONS[0]
++     );
++   })();
++   const selectedExecutionModeDetails =
++     EXECUTION_MODE_OPTIONS.find((option) => option.value === selectedExecutionMode) ??
++     EXECUTION_MODE_OPTIONS[0];
++
++   const save = async () => {
++     const nextStrategy = resolveRoutingStrategyChoice(
++       selectedRoutingStrategy,
++       customRoutingStrategy,
++     );
++     if (selectedRoutingStrategy === "custom" && !nextStrategy) {
++       setError("Custom strategy cannot be empty.");
++       return;
++     }
++     setSaving(true);
++     setStatusMessage(null);
++     setError(null);
++     try {
++       const nextConfig = applyExecutionMode(
++         {
++           ...config,
++           routingStrategy: nextStrategy,
++         },
++         selectedExecutionMode,
++       );
++       await updateRuntimeConfig(nextConfig);
++       await loadState();
++       setStatusMessage("Routing strategy saved and applied.");
++     } catch (value) {
++       setError(value instanceof Error ? value.message : "Could not update routing strategy.");
++     } finally {
++       setSaving(false);
++     }
++   };
++
++   return (
++     <div className="space-y-6">
++       <SectionCard
++         title="Persisted routing posture"
++         description="Change the saved Strategy A/B/C routing mode and the effective execution mode here; both write through the runtime config control-plane record instead of living as placeholder UI state."
++       >
++         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
++           <div className="space-y-6">
++             <div className="space-y-3" role="radiogroup" aria-label="Routing strategy">
++               <p className="text-sm font-semibold text-[var(--rm-fg)]">Routing strategy</p>
++               <div className="grid gap-3 md:grid-cols-2">
++                 <RoutingStrategyOptionCard
++                   checked={selectedRoutingStrategy === "unset"}
++                   description="Leave the persisted routing mode unset."
++                   label="Use runtime default"
++                   name="routing-strategy"
++                   value="unset"
++                   onChange={setSelectedRoutingStrategy}
++                 />
++                 {ROUTING_MODE_OPTIONS.map((option) => (
++                   <RoutingStrategyOptionCard
++                     key={option.value}
++                     checked={selectedRoutingStrategy === option.value}
++                     description={option.detail}
++                     label={option.label}
++                     name="routing-strategy"
++                     value={option.value}
++                     onChange={setSelectedRoutingStrategy}
++                   />
++                 ))}
++                 <RoutingStrategyOptionCard
++                   checked={selectedRoutingStrategy === "custom"}
++                   description="Preserve a custom persisted routing mode string."
++                   label="Custom strategy"
++                   name="routing-strategy"
++                   value="custom"
++                   onChange={setSelectedRoutingStrategy}
++                 />
++               </div>
++               {selectedRoutingStrategy === "custom" ? (
++                 <label className="grid gap-2 text-sm">
++                   <span className="font-semibold text-[var(--rm-fg)]">Custom strategy</span>
++                   <input
++                     className={fieldClassName}
++                     value={customRoutingStrategy}
++                     onChange={(event) => setCustomRoutingStrategy(event.target.value)}
++                     placeholder="baseline"
++                   />
++                 </label>
++               ) : null}
++             </div>
++
++             <div className="space-y-3">
++               <SelectField
++                 label="Execution mode"
++                 value={selectedExecutionMode}
++                 onChange={(value) => setSelectedExecutionMode(value as RuntimeExecutionMode)}
++               >
++                 {EXECUTION_MODE_OPTIONS.map((option) => (
++                   <option key={option.value} value={option.value}>
++                     {option.label}
++                   </option>
++                 ))}
++               </SelectField>
++               <p className="text-sm text-[var(--rm-secondary)]">
++                 {selectedExecutionModeDetails.detail}
++               </p>
++             </div>
++
++             <div className="flex flex-wrap gap-3">
++               <button
++                 className={primaryButtonClassName}
++                 type="button"
++                 disabled={saving}
++                 onClick={() => void save()}
++               >
++                 {saving ? "Applying…" : "Save and apply strategy"}
++               </button>
++               <button
++                 className={secondaryButtonClassName}
++                 type="button"
++                 disabled={saving}
++                 onClick={() => {
++                   syncDrafts(configRecord);
++                   setStatusMessage(null);
++                   setError(null);
++                 }}
++               >
++                 Reset form
++               </button>
++             </div>
++             {statusMessage ? (
++               <p className="text-sm text-[var(--rm-secondary)]">{statusMessage}</p>
++             ) : null}
++           </div>
++
++           <div className="space-y-4">
++             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
++               <p className="font-semibold text-[var(--rm-fg)]">Saved routing settings</p>
++               <p className="mt-3 leading-6">
++                 These are the persisted settings returned by the runtime config control plane.
++               </p>
++               <div className="mt-4 flex flex-wrap gap-2">
++                 <StatusPill tone={configRecord.applied ? "success" : "warning"}>
++                   {configRecord.applied ? "config applied" : "config pending"}
++                 </StatusPill>
++                 <StatusPill tone="neutral">
++                   {formatRoutingModeLabel(persistedRoutingStrategy)}
++                 </StatusPill>
++                 <StatusPill tone="neutral">{persistedExecutionMode}</StatusPill>
++               </div>
++             </div>
++
++             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
++               <p className="font-semibold text-[var(--rm-fg)]">Draft selection</p>
++               <p className="mt-2 font-semibold text-[var(--rm-fg)]">
++                 {selectedStrategyDetails.label}
++               </p>
++               <p className="mt-3 leading-6">{selectedStrategyDetails.detail}</p>
++               <div className="mt-4 flex flex-wrap gap-2">
++                 <StatusPill tone={hasUnsavedChanges ? "warning" : "success"}>
++                   {hasUnsavedChanges ? "unsaved changes" : "matches saved"}
++                 </StatusPill>
++                 <StatusPill tone={selectedRoutingStrategy === "custom" ? "accent" : "neutral"}>
++                   {selectedRoutingStrategy === "unset"
++                     ? "default strategy"
++                     : selectedRoutingStrategy === "custom"
++                       ? "custom"
++                       : formatRoutingModeLabel(selectedRoutingStrategy)}
++                 </StatusPill>
++                 <StatusPill tone="neutral">{selectedExecutionMode}</StatusPill>
++               </div>
++             </div>
++
++             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
++               <p className="font-semibold text-[var(--rm-fg)]">Current controller</p>
++               <p className="mt-3 break-all text-[var(--rm-fg)]">
++                 {controller?.endpointId ?? "No controller assigned"}
++               </p>
++               <p className="mt-2 leading-6">
++                 {controller
++                   ? `${controller.modelId} (${controller.sourceType})`
++                   : "Assign a controller when you want controller-guided routing posture to be explicit."}
++               </p>
++             </div>
++
++             <div className={`${mutedPanelClassName} p-4 text-sm text-[var(--rm-secondary)]`}>
++               <p className="font-semibold text-[var(--rm-fg)]">Applied config record</p>
++               <p className="mt-3 break-all leading-6">{configRecord.path ?? "not configured"}</p>
++             </div>
++           </div>
++         </div>
++       </SectionCard>
++
++       <SectionCard
++         title="Benchmark-informed difficulty advisory"
++         description="When Strategy C (difficulty) is active, per-endpoint quality scores from Models → Benchmark inform the recommended max difficulty ceiling."
++       >
++         {candidates.length === 0 ? (
++           <p className="text-sm text-[var(--rm-secondary)]">
++             No routing candidates are available.
++           </p>
++         ) : (
++           <div className="space-y-3">
++             {candidates.map((candidate) => {
++               const advisory =
++                 typeof candidate.advisoryMaxDifficultyRecommendation === "object" &&
++                 candidate.advisoryMaxDifficultyRecommendation !== null
++                   ? (candidate.advisoryMaxDifficultyRecommendation as Record<string, unknown>)
++                   : null;
++               const latestProfile =
++                 typeof candidate.latestProfile === "object" && candidate.latestProfile !== null
++                   ? (candidate.latestProfile as Record<string, unknown>)
++                   : null;
++               const sources =
++                 typeof latestProfile?.sources === "object" && latestProfile.sources !== null
++                   ? (latestProfile.sources as Record<string, unknown>)
++                   : null;
++               const benchmarkSamples =
++                 typeof sources?.benchmark_samples === "number" ? sources.benchmark_samples : 0;
++               const qualityScore =
++                 typeof latestProfile?.quality_score === "number"
++                   ? latestProfile.quality_score
++                   : typeof latestProfile?.judge_score === "number"
++                     ? latestProfile.judge_score
++                     : null;
++               const minQualityScore =
++                 typeof advisory?.min_quality_score === "number"
++                   ? advisory.min_quality_score
++                   : typeof advisory?.minQualityScore === "number"
++                     ? advisory.minQualityScore
++                     : null;
++               const recommended =
++                 typeof advisory?.recommended_max_difficulty === "string"
++                   ? advisory.recommended_max_difficulty
++                   : typeof advisory?.recommendedMaxDifficulty === "string"
++                     ? advisory.recommendedMaxDifficulty
++                     : "n/a";
++
++               return (
++                 <div key={candidate.endpointId} className={`${mutedPanelClassName} p-4 text-sm`}>
++                   <p className="font-semibold text-[var(--rm-fg)]">
++                     {candidate.modelId} • {candidate.endpointId}
++                   </p>
++                   <p className="mt-2 text-[var(--rm-secondary)]">
++                     Recommended max difficulty:{" "}
++                     <span className="font-semibold text-[var(--rm-fg)]">{recommended}</span>
++                   </p>
++                   <p className="mt-1 text-[var(--rm-secondary)]">
++                     Quality score{" "}
++                     {qualityScore !== null ? `${Math.round(qualityScore * 100)}%` : "n/a"}
++                     {minQualityScore !== null
++                       ? ` vs threshold ${Math.round(minQualityScore * 100)}%`
++                       : ""}
++                   </p>
++                   <p className="mt-1 text-[var(--rm-secondary)]">
++                     Score source:{" "}
++                     {benchmarkSamples > 0
++                       ? `Models → Benchmark (${benchmarkSamples} benchmark sample${benchmarkSamples === 1 ? "" : "s"})`
++                       : "live requests only"}
++                   </p>
++                 </div>
++               );
++             })}
++           </div>
++         )}
++         <div className="mt-4">
++           <Link className={secondaryButtonClassName} to="/app/models/benchmark">
++             Open Models → Benchmark
++           </Link>
++         </div>
++       </SectionCard>
++     </div>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:834:40
+    832|   expect(controlRoutingStrategySource).toContain("Draft selection");
+    833|   expect(controlRoutingStrategySource).toContain("hasUnsavedChanges");
+    834|   expect(controlRoutingStrategySource).toContain("onClick={() => onCha…
+       |                                        ^
+    835|   expect(controlRoutingStrategySource).toContain("await loadState();");
+    836|   expect(controlRoutingStrategySource).not.toContain("void Promise.all…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m50 passed[39m[22m[90m (51)[39m
+[2m   Start at [22m 23:58:27
+[2m   Duration [22m 7.78s[2m (transform 3.24s, setup 0ms, collect 4.73s, tests 438ms, environment 1ms, prepare 1.21s)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/design-system.test.ts --reporter=verbose

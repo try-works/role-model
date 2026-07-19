@@ -1,0 +1,27 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP7
+Timestamp: 2026-07-18T01:44:11Z
+
+Artifact evidence:
+- baseline bytes: 5,434,995
+- compact bytes: 2,089,147
+- reduction: 61.56%
+- wire version: 2
+- pinned source commit: ce1478719296c77dff5633b93e1ce307e380fe30 (unchanged)
+- providers: 146
+- models: 5,270
+
+Catalog validation:
+- @role-model-router/catalog test: PASS (22/22)
+- @role-model-router/catalog build: PASS
+
+Direct consumer validation:
+- provider-account: PASS (8/8)
+- endpoint-registry: PASS (1/1)
+- protocol-routing: PASS (16/16)
+- adapter-execution: PASS (6/6)
+
+GREEN verified: PASS
+- v2 omits catalog-authoritative provenance and documented empty/default fields.
+- hydration restores exact v1 in-memory defaults and preserves non-default optionals.
+- all production file readers use readNormalizedCatalogFile.

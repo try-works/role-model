@@ -1,0 +1,134 @@
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\65-codex-subscription-prompt-cache-parity\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/65-codex-subscription-prompt-cache-parity/role-model-router/packages/provider-openai
+
+ ❯ test/index.test.ts (17 tests | 4 failed) 40ms
+   ✓ OpenAI provider adapter > can be created for the openai-compatible adapter family 2ms
+   ✓ OpenAI provider adapter > builds an OpenAI responses request and normalizes text, usage, and tool calls 6ms
+   ✓ OpenAI provider adapter > normalizes a streamed OpenAI responses transcript into final text, tool calls, and usage 2ms
+   ✓ OpenAI provider adapter > preserves hosted OpenAI responses tools instead of coercing them into function tools 0ms
+   ✓ OpenAI provider adapter > forces the OpenAI Responses API path when hosted tools are requested 0ms
+   ✓ OpenAI provider adapter > keeps Kimi hosted web search on chat-completions and disables thinking 1ms
+   ✓ OpenAI provider adapter > builds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply 1ms
+   ✓ OpenAI provider adapter > forwards forced chat-completions tool_choice to the downstream OpenAI request body 0ms
+   ✓ OpenAI provider adapter > forwards chat-completions reasoning controls to the downstream OpenAI request body 1ms
+   ✓ OpenAI provider adapter > forwards responses tool_choice, reasoning, continuation, and session-affinity hints 1ms
+   ✓ OpenAI provider adapter > normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming 1ms
+   × OpenAI provider adapter > advertises implicit prompt caching support for OpenAI-family providers 16ms
+     → expected { supported: false, …(1) } to deeply equal { supported: true, mode: 'implicit' }
+   × OpenAI provider adapter > normalizes OpenAI Responses cached-token detail fields without rewriting totals 3ms
+     → expected { requested: true, used: false, …(2) } to deeply equal { requested: true, used: true, …(2) }
+   × OpenAI provider adapter > normalizes Kimi chat-completions cached tokens from top-level usage 2ms
+     → expected { requested: true, used: false, …(2) } to deeply equal { requested: true, used: true, …(2) }
+   × OpenAI provider adapter > forwards chat-completions prompt_cache_key when prompt caching is enabled 1ms
+     → expected undefined to be 'kimi-chat-cache-key' // Object.is equality
+   ✓ OpenAI provider adapter > normalizes reasoning-only chat-completions bodies into assistant output text 0ms
+   ✓ OpenAI provider adapter > forwards null assistant content and tool-turn fields for chat completions 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > advertises implicit prompt caching support for OpenAI-family providers
+AssertionError: expected { supported: false, …(1) } to deeply equal { supported: true, mode: 'implicit' }
+
+- Expected
++ Received
+
+  {
+-   "mode": "implicit",
+-   "supported": true,
++   "mode": "unsupported",
++   "supported": false,
+  }
+
+ ❯ test/index.test.ts:856:40
+    854|     });
+    855| 
+    856|     expect(capabilities.promptCaching).toEqual({
+       |                                        ^
+    857|       supported: true,
+    858|       mode: "implicit",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > normalizes OpenAI Responses cached-token detail fields without rewriting totals
+AssertionError: expected { requested: true, used: false, …(2) } to deeply equal { requested: true, used: true, …(2) }
+
+- Expected
++ Received
+
+  {
+-   "readTokens": 1111,
++   "readTokens": 0,
+    "requested": true,
+-   "used": true,
+-   "writeTokens": 222,
++   "used": false,
++   "writeTokens": 0,
+  }
+
+ ❯ test/index.test.ts:943:36
+    941|     });
+    942| 
+    943|     expect(normalized.promptCache).toEqual({
+       |                                    ^
+    944|       requested: true,
+    945|       used: true,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > normalizes Kimi chat-completions cached tokens from top-level usage
+AssertionError: expected { requested: true, used: false, …(2) } to deeply equal { requested: true, used: true, …(2) }
+
+- Expected
++ Received
+
+  {
+-   "readTokens": 875,
++   "readTokens": 0,
+    "requested": true,
+-   "used": true,
++   "used": false,
+    "writeTokens": 0,
+  }
+
+ ❯ test/index.test.ts:1028:36
+    1026|     });
+    1027| 
+    1028|     expect(normalized.promptCache).toEqual({
+       |                                    ^
+    1029|       requested: true,
+    1030|       used: true,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > forwards chat-completions prompt_cache_key when prompt caching is enabled
+AssertionError: expected undefined to be 'kimi-chat-cache-key' // Object.is equality
+
+- Expected: 
+"kimi-chat-cache-key"
+
++ Received: 
+undefined
+
+ ❯ test/index.test.ts:1087:50
+    1085|     });
+    1086| 
+    1087|     expect(requestCapture.body.prompt_cache_key).toBe("kimi-chat-cache…
+       |                                                  ^
+    1088|   });
+    1089| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 13 passed (17)
+   Start at  08:04:08
+   Duration  1.61s (transform 259ms, setup 0ms, collect 270ms, tests 40ms, environment 0ms, prepare 503ms)
+
+D:\DEV\role-model\.worktrees\65-codex-subscription-prompt-cache-parity\role-model-router\packages\provider-openai:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/provider-openai@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

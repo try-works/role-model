@@ -1,0 +1,51 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/55-pi-role-model-package[39m
+
+ [31m❯[39m packages/pi-role-model/test/downstream-openai.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 24[2mms[22m[39m
+   [32m✓[39m downstream OpenAI discovery mapping[2m > [22mvalidates the current Role-Model downstream discovery contract[32m 3[2mms[22m[39m
+   [32m✓[39m downstream OpenAI discovery mapping[2m > [22mmaps discovery to a Pi provider config without inventing credentials[32m 2[2mms[22m[39m
+[31m   [31m×[31m downstream OpenAI discovery mapping[2m > [22mmaps every model with fields required by Pi list-models[39m[32m 18[2mms[22m[39m
+[31m     → expected { id: 'role-model/auto', …(4) } to deeply equal ObjectContaining{…}[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/pi-role-model/test/downstream-openai.test.ts > downstream OpenAI discovery mapping > maps every model with fields required by Pi list-models
+AssertionError: expected { id: 'role-model/auto', …(4) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
++ {
+    "contextWindow": 120000,
+-   "cost": {
+-     "cacheRead": 0,
+-     "cacheWrite": 0,
+-     "input": 0,
+-     "output": 0,
+-   },
+-   "input": [
+-     "text",
+-   ],
++   "id": "role-model/auto",
+    "maxTokens": 8000,
++   "name": "role-model/auto",
+    "reasoning": true,
+  }
+
+ ❯ packages/pi-role-model/test/downstream-openai.test.ts:89:39
+     87|     const provider = mapDiscoveryToProviderConfig(discovery);
+     88| 
+     89|     expect(provider.config.models[0]).toEqual(
+       |                                       ^
+     90|       expect.objectContaining({
+     91|         input: ["text"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 13:37:33
+[2m   Duration [22m 1.06s[2m (transform 121ms, setup 0ms, collect 116ms, tests 24ms, environment 0ms, prepare 364ms)[22m
+

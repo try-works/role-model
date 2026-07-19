@@ -1,0 +1,50 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p07-medium-compare",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p07-medium-compare-a1-4d9a4e2a-b193-4c17-bf23-dd31b4906b01",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p07-medium-compare\n\n## Original question\n[user]\nCompare local inference vs remote API for a personal assistant. Give pros and cons in bullet points.\n\n## Example expected answer\nAccurate explanatory answer to the user question.\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Answers the question with relevant technical detail.\n[MUST] Include JSON keys: answer\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nAnswers the question with relevant technical detail.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"Local Inference\\nPros:\\n- Stronger privacy: data stays on-device and is not sent to third-party servers\\n- No network latency: faster response times once the model is loaded\\n- No subscription or per-token API costs beyond hardware and electricity\\n- Works offline or in low-connectivity environments\\n- Full control over model choice, fine-tuning, and system prompts\\n- No reliance on external service uptime or policy changes\\n\\nCons:\\n- Requires capable local hardware (GPU/CPU/RAM), which can be expensive\\n- Generally limited to smaller or quantized models vs. state-of-the-art cloud models\\n- Setup and maintenance can be complex for non-technical users\\n- Model updates, bug fixes, and optimizations are the user's responsibility\\n- Higher battery and thermal usage on mobile devices\\n- Potentially weaker reasoning, multimodal, or multilingual capabilities\\n\\nRemote API\\nPros:\\n- Access to large, state-of-the-art models with strong general performance\\n- Easy setup: typically just an API key and an HTTP client\\n- Scalable compute: no upfront hardware investment\\n- Regular model improvements and new features managed by the provider\\n- Better support for advanced capabilities (vision, long context, function calling, agents)\\n- Cross-device sync and cloud-backed features are easier to implement\\n\\nCons:\\n- Privacy risk: personal data is sent to external servers and may be logged or retained\\n- Ongoing usage costs, which can grow unpredictably with heavy use\\n- Requires internet connectivity and suffers from network latency\\n- Dependency on provider availability, rate limits, and terms of service\\n- Limited control over model behavior, safety filters, and fine-tuning options\\n- Potential vendor lock-in and compliance challenges for sensitive data\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The answer provides a thorough comparison with pros and cons for both local inference and remote API, covering privacy, latency, cost, hardware requirements, capabilities, and maintenance. It fully addresses the question with relevant technical detail, and the JSON format is correct with the required 'answer' key.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer provides a thorough comparison with pros and cons for both local inference and remote API, covering privacy, latency, cost, hardware requirements, capabilities, and maintenance. It fully addresses the question with relevant technical detail, and the JSON format is correct with the required 'answer' key.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p07-medium-compare.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nCompare local inference vs remote API for a personal assistant. Give pros and cons in bullet points.",
+    "exemplarAnswer": "Accurate explanatory answer to the user question.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Answers the question with relevant technical detail.",
+      "[MUST] Include JSON keys: answer"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 343,
+    "reasoningLength": 3211
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783934863398
+}

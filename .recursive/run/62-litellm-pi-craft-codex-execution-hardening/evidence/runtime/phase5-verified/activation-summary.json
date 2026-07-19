@@ -1,0 +1,18 @@
+[
+  {
+    "modelId": "chatgpt/gpt-5.4",
+    "status": "no-account-found"
+  },
+  {
+    "modelId": "deepseek/deepseek-v4-flash",
+    "status": "no-account-found"
+  },
+  {
+    "modelId": "deepseek/deepseek-v4-pro",
+    "status": "no-account-found"
+  },
+  {
+    "modelId": "moonshot/kimi-k2.7-code",
+    "status": "no-account-found"
+  }
+]

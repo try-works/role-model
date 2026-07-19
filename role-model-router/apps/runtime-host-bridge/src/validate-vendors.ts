@@ -28,31 +28,53 @@ function createRemoteVendorScript(): string {
   return `const http=require("node:http");const port=Number(process.env.PORT??process.argv[2]);const server=http.createServer((req,res)=>{if(req.url==="/health/liveliness"){res.statusCode=200;res.end("ok");return;}if(req.url==="/v1/models"){res.setHeader("content-type","application/json");res.end(JSON.stringify({object:"list",data:[{id:"openai/gpt-4.1-mini-fast",object:"model",owned_by:"openai"}]}));return;}if(req.url==="/v1/responses"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedInput=typeof parsed.input==="string"?parsed.input:JSON.stringify(parsed.input??"");const isClassifier=joinedInput.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isController=joinedInput.includes("ROLE_MODEL_ROUTING_CONTROLLER");const isHardPrompt=joinedInput.includes("Analyze this code-edit workflow")||joinedInput.includes('\"toolCount\":2')||joinedInput.includes('\"toolCount\": 2')||joinedInput.includes('\"codeOrSchemaBurden\":true')||joinedInput.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});const controllerResponse=joinedInput.includes("invalid-controller-fallback")?"not-json-controller-output":JSON.stringify({strategy:"quality",preferredEndpointIds:["openai.litellm.global.openai-gpt-4-1-mini-fast"]});const responseText=isController?controllerResponse:(isClassifier?classifierResponse:"remote litellm summary");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"type":"response.created","response":{"id":"resp-remote","created_at":1,"model":"openai/gpt-4.1-mini-fast"}}'+"\\n\\n");setTimeout(()=>{res.write('data: {"type":"response.output_text.delta","item_id":"msg_1","delta":'+JSON.stringify(responseText)+'}'+"\\n\\n");setTimeout(()=>{res.end('data: {"type":"response.completed","response":{"usage":{"input_tokens":14,"output_tokens":5}},"_hidden_params":{"response_cost":0.0042,"cache_hit":true}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"resp-remote",output:[{type:"message",role:"assistant",content:[{type:"output_text",text:responseText}]}],usage:{input_tokens:14,output_tokens:5,prompt_tokens_details:{cached_tokens:9}},_hidden_params:{response_cost:0.0042,cache_hit:true}}));});return;}if(req.url==="/v1/chat/completions"){let body="";req.on("data",chunk=>body+=chunk);req.on("end",()=>{const parsed=JSON.parse(body||"{}");const joinedMessages=JSON.stringify(parsed.messages??[]);const isClassifier=joinedMessages.includes("ROLE_MODEL_DIFFICULTY_CLASSIFIER");const isController=joinedMessages.includes("ROLE_MODEL_ROUTING_CONTROLLER");const isHardPrompt=joinedMessages.includes("Analyze this code-edit workflow")||joinedMessages.includes('\"toolCount\":2')||joinedMessages.includes('\"toolCount\": 2')||joinedMessages.includes('\"codeOrSchemaBurden\":true')||joinedMessages.includes('\"codeOrSchemaBurden\": true');const classifierResponse=isHardPrompt?JSON.stringify({difficulty:"hard"}):JSON.stringify({difficulty:"easy"});const controllerResponse=joinedMessages.includes("invalid-controller-fallback")?"not-json-controller-output":JSON.stringify({strategy:"quality",preferredEndpointIds:["openai.litellm.global.openai-gpt-4-1-mini-fast"]});const responseText=isController?controllerResponse:(isClassifier?classifierResponse:"remote litellm summary");if(parsed.stream){res.writeHead(200,{"content-type":"text/event-stream; charset=utf-8"});res.write('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{"role":"assistant","content":"remote "},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.write('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{"content":"litellm summary"},"finish_reason":null}]}'+"\\n\\n");setTimeout(()=>{res.end('data: {"id":"chat-remote","object":"chat.completion.chunk","created":1,"model":"openai/gpt-4.1-mini-fast","choices":[{"index":0,"delta":{},"finish_reason":"stop"}],"usage":{"prompt_tokens":14,"completion_tokens":5},"_hidden_params":{"response_cost":0.0042,"cache_hit":true}}'+"\\n\\n"+'data: [DONE]'+"\\n\\n");},10);},10);return;}res.setHeader("content-type","application/json");res.end(JSON.stringify({id:"chat-remote",object:"chat.completion",choices:[{index:0,message:{role:"assistant",content:responseText},finish_reason:"stop"}],usage:{prompt_tokens:14,completion_tokens:5,total_tokens:19},_hidden_params:{response_cost:0.0042,cache_hit:true}}));});return;}res.statusCode=404;res.end("missing");});server.listen(port,"127.0.0.1");const shutdown=()=>server.close(()=>process.exit(0));process.on("SIGTERM",shutdown);process.on("SIGINT",shutdown);`;
 }
 
-async function postResponses(
-  baseUrl: string,
-  model: string,
-  requestId: string,
-): Promise<{
+type RuntimeVendorHttpResult = {
   statusCode: number;
   headers: Record<string, string>;
   body: unknown;
-}> {
-  const response = await fetch(`${baseUrl}/v1/responses`, {
+};
+
+async function postJsonRequest(
+  baseUrl: string,
+  requestPath: RuntimeVendorCorpusRequestPath,
+  requestId: string,
+  body: Record<string, unknown>,
+  headers?: Record<string, string>,
+): Promise<RuntimeVendorHttpResult> {
+  const response = await fetch(`${baseUrl}${requestPath}`, {
     method: "POST",
     headers: {
       "content-type": "application/json",
       "x-request-id": requestId,
+      ...headers,
     },
-    body: JSON.stringify({
-      model,
-      input: "Summarize the chosen endpoint.",
-    }),
+    body: JSON.stringify(body),
   });
   return {
     statusCode: response.status,
     headers: Object.fromEntries(response.headers.entries()),
     body: await response.json(),
   };
+}
+
+async function postResponses(
+  baseUrl: string,
+  model: string,
+  requestId: string,
+): Promise<RuntimeVendorHttpResult> {
+  return postJsonRequest(baseUrl, "/v1/responses", requestId, {
+    model,
+    input: "Summarize the chosen endpoint.",
+  });
+}
+
+async function postChatCompletions(
+  baseUrl: string,
+  requestId: string,
+  body: Record<string, unknown>,
+  headers?: Record<string, string>,
+): Promise<RuntimeVendorHttpResult> {
+  return postJsonRequest(baseUrl, "/v1/chat/completions", requestId, body, headers);
 }
 
 async function collectStreamedResponse(
@@ -108,6 +130,148 @@ async function waitForRuntimeModelEndpointsReady(
     await delay(50);
   }
   throw new Error(`Timed out waiting for runtime endpoints for models: ${modelIds.join(", ")}.`);
+}
+
+function readSelectedModelId(observation: RuntimeVendorObservation): string | null {
+  const telemetrySnapshot = observation?.telemetrySnapshot as
+    | { selectedModelId?: unknown }
+    | undefined;
+  if (
+    typeof telemetrySnapshot?.selectedModelId === "string" &&
+    telemetrySnapshot.selectedModelId.length > 0
+  ) {
+    return telemetrySnapshot.selectedModelId;
+  }
+  return typeof observation?.usageEvent?.model_id === "string" &&
+    observation.usageEvent.model_id.length > 0
+    ? observation.usageEvent.model_id
+    : null;
+}
+
+function inferCorpusProviderFamily(input: {
+  readonly providerId: string | null;
+  readonly providerFamily: string | null;
+}): string | null {
+  return input.providerFamily ?? input.providerId;
+}
+
+function buildCorpusCaseRecord(input: {
+  readonly definition: RuntimeVendorCorpusCaseDefinition;
+  readonly requestId: string;
+  readonly response: RuntimeVendorHttpResult;
+  readonly observation: RuntimeVendorObservation;
+}): RuntimeVendorCorpusCaseRecord {
+  const failureClass = readFailureClass(input.response.body);
+  const actualOutcomeClass: RuntimeVendorCorpusOutcomeClass =
+    input.response.statusCode >= 400 || failureClass ? "failure" : "success";
+  const selectedEndpointId =
+    actualOutcomeClass === "success" ? (input.observation?.endpointId ?? null) : null;
+  const selectedModelId =
+    actualOutcomeClass === "success" ? readSelectedModelId(input.observation) : null;
+  const providerId =
+    actualOutcomeClass === "success"
+      ? (((input.observation?.telemetrySnapshot as { providerId?: string | null } | undefined)
+          ?.providerId ?? null) as string | null)
+      : null;
+  const providerFamily =
+    actualOutcomeClass === "success"
+      ? (input.observation?.executionTelemetry.providerFamily ?? null)
+      : null;
+  const vendorId =
+    actualOutcomeClass === "success"
+      ? (((input.observation?.executionTelemetry as { vendorId?: string | null } | undefined)
+          ?.vendorId ?? null) as string | null)
+      : null;
+  const actualExecutionFamily =
+    actualOutcomeClass === "success"
+      ? (input.observation?.executionSemantics.executionFamily ?? null)
+      : null;
+  const adapterFamily =
+    actualOutcomeClass === "success"
+      ? (input.observation?.executionSemantics.adapterFamily ?? null)
+      : null;
+  const payloadBytes =
+    actualOutcomeClass === "success"
+      ? (input.observation?.executionSemantics.payloadBytes ?? null)
+      : null;
+  const normalizedProviderFamily = inferCorpusProviderFamily({
+    providerId,
+    providerFamily,
+  });
+  return {
+    caseId: input.definition.caseId,
+    clientKind: input.definition.clientKind,
+    category: input.definition.category,
+    requestPath: input.definition.requestPath,
+    deterministic: true,
+    routingConstraint: input.definition.routingConstraint,
+    allowedEndpointIds: [...input.definition.allowedEndpointIds],
+    expectedExecutionFamily: input.definition.expectedExecutionFamily,
+    ...(input.definition.expectedExecutionFamilies
+      ? { expectedExecutionFamilies: [...input.definition.expectedExecutionFamilies] }
+      : {}),
+    actualExecutionFamily,
+    expectedOutcomeClass: input.definition.expectedOutcomeClass,
+    actualOutcomeClass,
+    selectedEndpointId,
+    selectedModelId,
+    providerFamily: normalizedProviderFamily,
+    vendorId,
+    adapterFamily,
+    statusCode: input.response.statusCode,
+    streamTerminalStatus: input.observation?.executionTelemetry.finishReason ?? null,
+    failureClass,
+    retryCount: input.observation?.executionSemantics.retryCount ?? 0,
+    rerouteCount: input.observation?.executionSemantics.rerouteCount ?? 0,
+    payloadBytes: {
+      ingress: measurePayloadBytes(input.definition.body),
+      translated: payloadBytes?.translated ?? null,
+      providerCanonical: payloadBytes?.providerCanonical ?? null,
+      providerWire: payloadBytes?.providerWire ?? null,
+      providerResponse: payloadBytes?.providerResponse ?? null,
+    },
+    toolCallCount: input.observation?.tooling?.toolCalls.length ?? 0,
+    toolExecutionCount: input.observation?.tooling?.executions.length ?? 0,
+    idempotencyDecision: input.observation?.executionSemantics.idempotencyDecision ?? null,
+    requestId: input.requestId,
+    routingDecisionId: input.observation?.routingDecisionId ?? null,
+  };
+}
+
+function summarizeCorpusCases(
+  cases: readonly RuntimeVendorCorpusCaseRecord[],
+): RuntimeVendorCorpusSummary {
+  const categoryCounts: Record<string, number> = {};
+  let piCount = 0;
+  let craftCount = 0;
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (const corpusCase of cases) {
+    categoryCounts[corpusCase.category] = (categoryCounts[corpusCase.category] ?? 0) + 1;
+    if (corpusCase.clientKind === "pi") {
+      piCount += 1;
+    } else {
+      craftCount += 1;
+    }
+    if (corpusCase.actualOutcomeClass === "success") {
+      successCount += 1;
+    } else {
+      failureCount += 1;
+    }
+  }
+
+  return {
+    deterministic: true,
+    totalCaseCount: cases.length,
+    successCaseCount: successCount,
+    failureCaseCount: failureCount,
+    clientCaseCounts: {
+      pi: piCount,
+      craft: craftCount,
+    },
+    categoryCounts,
+  };
 }
 
 type RuntimeVendorValidationHarnessMode = "mock" | "real";
@@ -187,12 +351,216 @@ type RuntimeVendorHarnessSummary = {
   readonly realVendorCoverage: boolean;
 };
 
+type RuntimeVendorCorpusClientKind = "pi" | "craft";
+type RuntimeVendorCorpusOutcomeClass = "success" | "failure";
+type RuntimeVendorCorpusRuntimeKind = "decision" | "hybrid";
+type RuntimeVendorCorpusRequestPath = "/v1/responses" | "/v1/chat/completions";
+type RuntimeVendorObservation = Awaited<ReturnType<RuntimeBridgeBackend["readRequestObservation"]>>;
+
+type RuntimeVendorCorpusCaseDefinition = {
+  readonly caseId: string;
+  readonly clientKind: RuntimeVendorCorpusClientKind;
+  readonly category: string;
+  readonly requestPath: RuntimeVendorCorpusRequestPath;
+  readonly runtimeKind: RuntimeVendorCorpusRuntimeKind;
+  readonly routingConstraint: string;
+  readonly allowedEndpointIds: readonly string[];
+  readonly expectedExecutionFamily: string | null;
+  readonly expectedExecutionFamilies?: readonly string[];
+  readonly expectedOutcomeClass: RuntimeVendorCorpusOutcomeClass;
+  readonly body: Record<string, unknown>;
+  readonly headers?: Record<string, string>;
+};
+
+export type RuntimeVendorCorpusCaseRecord = {
+  readonly caseId: string;
+  readonly clientKind: RuntimeVendorCorpusClientKind;
+  readonly category: string;
+  readonly requestPath: RuntimeVendorCorpusRequestPath;
+  readonly deterministic: true;
+  readonly routingConstraint: string;
+  readonly allowedEndpointIds: readonly string[];
+  readonly expectedExecutionFamily: string | null;
+  readonly expectedExecutionFamilies?: readonly string[];
+  readonly actualExecutionFamily: string | null;
+  readonly expectedOutcomeClass: RuntimeVendorCorpusOutcomeClass;
+  readonly actualOutcomeClass: RuntimeVendorCorpusOutcomeClass;
+  readonly selectedEndpointId: string | null;
+  readonly selectedModelId: string | null;
+  readonly providerFamily: string | null;
+  readonly vendorId: string | null;
+  readonly adapterFamily: string | null;
+  readonly statusCode: number;
+  readonly streamTerminalStatus: string | null;
+  readonly failureClass: string | null;
+  readonly retryCount: number;
+  readonly rerouteCount: number;
+  readonly payloadBytes: {
+    readonly ingress: number;
+    readonly translated: number | null;
+    readonly providerCanonical: number | null;
+    readonly providerWire: number | null;
+    readonly providerResponse: number | null;
+  };
+  readonly toolCallCount: number;
+  readonly toolExecutionCount: number;
+  readonly idempotencyDecision: string | null;
+  readonly requestId: string;
+  readonly routingDecisionId: string | null;
+};
+
+export type RuntimeVendorCorpusSummary = {
+  readonly deterministic: true;
+  readonly totalCaseCount: number;
+  readonly successCaseCount: number;
+  readonly failureCaseCount: number;
+  readonly clientCaseCounts: {
+    readonly pi: number;
+    readonly craft: number;
+  };
+  readonly categoryCounts: Readonly<Record<string, number>>;
+};
+
+export type RuntimeVendorCorpusResult = {
+  readonly summary: RuntimeVendorCorpusSummary;
+  readonly cases: readonly RuntimeVendorCorpusCaseRecord[];
+};
+
+const LOCAL_EXECUTION_FAMILY = "vendor-llama-swap";
+const LOCAL_PROVIDER_FAMILY = "ai-sdk-openai-compatible";
+const REMOTE_EXECUTION_FAMILY = "vendor-litellm";
+const REMOTE_PROVIDER_FAMILY = "litellm-proxy";
+const CODEX_EXECUTION_FAMILY = "remote-service";
+const VALIDATION_CODEX_PROVIDER_ACCOUNT_ID = "openai.personal.openai-codex-subscription";
+const CRAFT_PREAMBLE =
+  "You are Craft Agent, powered by Craft Agents Backend. Help users connect data sources, automate workflows, and validate integrations. Follow the system contract and schema for tool validation.";
+
+function formatCorpusOrdinal(index: number): string {
+  return String(index).padStart(3, "0");
+}
+
+function slugifyModelId(modelId: string): string {
+  return modelId
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+}
+
+function deriveLocalEndpointId(modelId: string): string {
+  return `llama-swap.local.${slugifyModelId(modelId)}`;
+}
+
+function deriveRemoteEndpointId(modelId: string): string {
+  const providerId = modelId.split("/", 1)[0] ?? "remote";
+  return `${providerId}.litellm.global.${slugifyModelId(modelId)}`;
+}
+
+function deriveCodexEndpointId(modelId: string): string {
+  const runtimeModelId = modelId.replace(/^chatgpt\//, "");
+  return `openai.personal.openai-codex-subscription.global.${runtimeModelId}`;
+}
+
+function buildLongContext(label: string, index: number): string {
+  const suffix = formatCorpusOrdinal(index);
+  return Array.from(
+    { length: 24 },
+    (_, segment) =>
+      `${label} ${suffix} segment ${segment + 1}: preserve routing semantics, compare endpoints, and verify the final contract end to end.`,
+  ).join(" ");
+}
+
+function buildResponsesTools(count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    type: "function" as const,
+    name: `runtime_vendor_response_tool_${index + 1}`,
+    description: "Validate corpus tool routing for responses requests.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+  }));
+}
+
+function buildChatTools(count: number) {
+  return Array.from({ length: count }, (_, index) => ({
+    type: "function" as const,
+    function: {
+      name: `runtime_vendor_chat_tool_${index + 1}`,
+      description: "Validate corpus tool routing for chat requests.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  }));
+}
+
+function buildToolContinuationMessages(prefix: string, suffix: string, toolName: string) {
+  return [
+    {
+      role: "user",
+      content: `${prefix} run the workflow and preserve the tool context for case ${suffix}.`,
+    },
+    {
+      role: "assistant",
+      content: "",
+      tool_calls: [
+        {
+          id: `call_${suffix}`,
+          type: "function",
+          function: {
+            name: toolName,
+            arguments: "{}",
+          },
+        },
+      ],
+    },
+    {
+      role: "tool",
+      content: `Tool output for case ${suffix}.`,
+      tool_call_id: `call_${suffix}`,
+    },
+    {
+      role: "user",
+      content: `${prefix} continue after the tool output and summarize the result for case ${suffix}.`,
+    },
+  ];
+}
+
+function measurePayloadBytes(value: unknown): number {
+  return Buffer.byteLength(
+    typeof value === "string" ? value : JSON.stringify(value ?? null),
+    "utf8",
+  );
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
+}
+
+function readFailureClass(payload: unknown): string | null {
+  const payloadRecord = asRecord(payload);
+  const errorRecord = asRecord(payloadRecord?.error);
+  if (typeof errorRecord?.code === "string" && errorRecord.code.length > 0) {
+    return errorRecord.code;
+  }
+  if (typeof errorRecord?.type === "string" && errorRecord.type.length > 0) {
+    return errorRecord.type;
+  }
+  if (typeof payloadRecord?.error_class === "string" && payloadRecord.error_class.length > 0) {
+    return payloadRecord.error_class;
+  }
+  return null;
+}
+
 export type RuntimeVendorValidationPlan = {
   readonly aliasModelId: string;
   readonly difficultyAliasModelId: string;
   readonly intelligentAliasModelId: string;
+  readonly codexAliasModelId: string;
   readonly localModelId: string;
   readonly remoteModelId: string;
+  readonly codexModelId: string;
   readonly decisionConfig: RuntimeValidationConfig;
   readonly localConfig: RuntimeValidationConfig & {
     readonly llama_swap: LlamaSwapValidationConfig;
@@ -271,6 +639,408 @@ function createMockRemoteConfig(remoteModelId: string): RuntimeValidationConfig 
       },
     },
   };
+}
+
+function buildPiCorpusCases(
+  plan: RuntimeVendorValidationPlan,
+): RuntimeVendorCorpusCaseDefinition[] {
+  const localEndpointId = deriveLocalEndpointId(plan.localModelId);
+  const remoteEndpointId = deriveRemoteEndpointId(plan.remoteModelId);
+  const codexEndpointId = deriveCodexEndpointId(plan.codexModelId);
+  const aliasEndpoints = [localEndpointId, remoteEndpointId, codexEndpointId];
+  const codexAliasEndpoints = [remoteEndpointId, codexEndpointId];
+  const cases: RuntimeVendorCorpusCaseDefinition[] = [];
+
+  for (let index = 1; index <= 10; index += 1) {
+    const suffix = formatCorpusOrdinal(index);
+    cases.push(
+      {
+        caseId: `pi.responses.exact-local.plain-${suffix}`,
+        clientKind: "pi",
+        category: "plain-text",
+        requestPath: "/v1/responses",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.localModelId}`,
+        allowedEndpointIds: [localEndpointId],
+        expectedExecutionFamily: LOCAL_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.localModelId,
+          input: `Summarize the local deterministic Pi case ${suffix}.`,
+        },
+      },
+      {
+        caseId: `pi.responses.exact-remote.plain-${suffix}`,
+        clientKind: "pi",
+        category: "plain-text",
+        requestPath: "/v1/responses",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.remoteModelId}`,
+        allowedEndpointIds: [remoteEndpointId],
+        expectedExecutionFamily: REMOTE_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.remoteModelId,
+          input: `Summarize the remote deterministic Pi case ${suffix}.`,
+        },
+      },
+      {
+        caseId: `pi.responses.alias-easy-${suffix}`,
+        clientKind: "pi",
+        category: "plain-text",
+        requestPath: "/v1/responses",
+        runtimeKind: "hybrid",
+        routingConstraint: `alias:${plan.difficultyAliasModelId}`,
+        allowedEndpointIds: aliasEndpoints,
+        expectedExecutionFamily: LOCAL_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.difficultyAliasModelId,
+          input: `Say hello in one sentence for deterministic Pi case ${suffix}.`,
+        },
+      },
+      {
+        caseId: `pi.responses.alias-hard-tools-${suffix}`,
+        clientKind: "pi",
+        category: "tool-bearing",
+        requestPath: "/v1/responses",
+        runtimeKind: "hybrid",
+        routingConstraint: `alias:${plan.difficultyAliasModelId}`,
+        allowedEndpointIds: aliasEndpoints,
+        expectedExecutionFamily: REMOTE_EXECUTION_FAMILY,
+        expectedExecutionFamilies: [REMOTE_EXECUTION_FAMILY, CODEX_EXECUTION_FAMILY],
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.difficultyAliasModelId,
+          input: `Analyze this code-edit workflow for deterministic Pi case ${suffix}, apply multiple constraints, verify the final contract end to end, and decompose the work before producing the answer.`,
+          tools: buildResponsesTools(2),
+        },
+      },
+      {
+        caseId: `pi.responses.non-tool-mentions-tools-${suffix}`,
+        clientKind: "pi",
+        category: "non-tool-mentions-tools",
+        requestPath: "/v1/responses",
+        runtimeKind: "hybrid",
+        routingConstraint: `alias:${plan.difficultyAliasModelId}`,
+        allowedEndpointIds: aliasEndpoints,
+        expectedExecutionFamily: LOCAL_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.difficultyAliasModelId,
+          input: `Before answering deterministic Pi case ${suffix}, explain which tools you would consider using, but do not call them.`,
+        },
+      },
+      {
+        caseId: `pi.responses.continuation-after-tool-output-${suffix}`,
+        clientKind: "pi",
+        category: "continuation-after-tool-output",
+        requestPath: "/v1/responses",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.remoteModelId}`,
+        allowedEndpointIds: [remoteEndpointId],
+        expectedExecutionFamily: null,
+        expectedOutcomeClass: "failure",
+        body: {
+          model: plan.remoteModelId,
+          input: `Continue after the prior tool output for deterministic Pi case ${suffix}.`,
+          previous_response_id: `resp_prev_pi_${suffix}`,
+          reasoning_effort: "high",
+        },
+        headers: {
+          "x-session-id": `pi-session-${suffix}`,
+          "x-client-request-id": `pi-client-${suffix}`,
+        },
+      },
+      {
+        caseId: `pi.responses.long-context-${suffix}`,
+        clientKind: "pi",
+        category: "long-context",
+        requestPath: "/v1/responses",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.remoteModelId}`,
+        allowedEndpointIds: [remoteEndpointId],
+        expectedExecutionFamily: REMOTE_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.remoteModelId,
+          input: buildLongContext("PI_LONG_CONTEXT", index),
+        },
+      },
+      {
+        caseId: `pi.responses.image-sensitive.${suffix}`,
+        clientKind: "pi",
+        category: "image-sensitive",
+        requestPath: "/v1/responses",
+        runtimeKind: "hybrid",
+        routingConstraint: `alias:${plan.codexAliasModelId}`,
+        allowedEndpointIds: codexAliasEndpoints,
+        expectedExecutionFamily: CODEX_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.codexAliasModelId,
+          input: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `Describe the uploaded image for deterministic Pi case ${suffix}.`,
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: "data:image/png;base64,abc",
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        caseId: `pi.responses.controller-remote-${suffix}`,
+        clientKind: "pi",
+        category: "plain-text",
+        requestPath: "/v1/responses",
+        runtimeKind: "hybrid",
+        routingConstraint: `alias:${plan.intelligentAliasModelId}`,
+        allowedEndpointIds: aliasEndpoints,
+        expectedExecutionFamily: LOCAL_EXECUTION_FAMILY,
+        expectedExecutionFamilies: [LOCAL_EXECUTION_FAMILY, REMOTE_EXECUTION_FAMILY],
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.intelligentAliasModelId,
+          input: `Prefer the strongest remote endpoint for deterministic Pi case ${suffix}.`,
+        },
+      },
+      {
+        caseId: `pi.responses.reasoning-continuation-remote-${suffix}`,
+        clientKind: "pi",
+        category: "plain-text",
+        requestPath: "/v1/responses",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.remoteModelId}`,
+        allowedEndpointIds: [remoteEndpointId],
+        expectedExecutionFamily: null,
+        expectedOutcomeClass: "failure",
+        body: {
+          model: plan.remoteModelId,
+          input: `Use higher reasoning effort for deterministic Pi case ${suffix}.`,
+          reasoning_effort: "high",
+        },
+        headers: {
+          "x-session-id": `pi-reasoning-session-${suffix}`,
+          "x-client-request-id": `pi-reasoning-client-${suffix}`,
+          "x-prompt-cache-key": `pi-cache-${suffix}`,
+        },
+      },
+    );
+  }
+
+  return cases;
+}
+
+function buildCraftCorpusCases(
+  plan: RuntimeVendorValidationPlan,
+): RuntimeVendorCorpusCaseDefinition[] {
+  const localEndpointId = deriveLocalEndpointId(plan.localModelId);
+  const remoteEndpointId = deriveRemoteEndpointId(plan.remoteModelId);
+  const aliasEndpoints = [localEndpointId, remoteEndpointId];
+  const codexEndpointId = deriveCodexEndpointId(plan.codexModelId);
+  const codexAliasEndpoints = [remoteEndpointId, codexEndpointId];
+  const cases: RuntimeVendorCorpusCaseDefinition[] = [];
+
+  for (let index = 1; index <= 10; index += 1) {
+    const suffix = formatCorpusOrdinal(index);
+    cases.push(
+      {
+        caseId: `craft.chat.dual-user-preamble.${suffix}`,
+        clientKind: "craft",
+        category: "plain-text",
+        requestPath: "/v1/chat/completions",
+        runtimeKind: "hybrid",
+        routingConstraint: `alias:${plan.difficultyAliasModelId}`,
+        allowedEndpointIds: aliasEndpoints,
+        expectedExecutionFamily: LOCAL_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.difficultyAliasModelId,
+          messages: [
+            { role: "user", content: CRAFT_PREAMBLE },
+            { role: "user", content: `hello from Craft deterministic case ${suffix}` },
+          ],
+        },
+      },
+      {
+        caseId: `craft.chat.assistant-preamble.${suffix}`,
+        clientKind: "craft",
+        category: "plain-text",
+        requestPath: "/v1/chat/completions",
+        runtimeKind: "hybrid",
+        routingConstraint: `alias:${plan.difficultyAliasModelId}`,
+        allowedEndpointIds: aliasEndpoints,
+        expectedExecutionFamily: LOCAL_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.difficultyAliasModelId,
+          messages: [
+            { role: "assistant", content: CRAFT_PREAMBLE },
+            { role: "user", content: `hello from assistant-prefilled Craft case ${suffix}` },
+          ],
+        },
+      },
+      {
+        caseId: `craft.chat.exact-local.plain-${suffix}`,
+        clientKind: "craft",
+        category: "plain-text",
+        requestPath: "/v1/chat/completions",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.localModelId}`,
+        allowedEndpointIds: [localEndpointId],
+        expectedExecutionFamily: LOCAL_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.localModelId,
+          messages: [{ role: "user", content: `Summarize exact local Craft case ${suffix}.` }],
+        },
+      },
+      {
+        caseId: `craft.chat.exact-remote.plain-${suffix}`,
+        clientKind: "craft",
+        category: "plain-text",
+        requestPath: "/v1/chat/completions",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.remoteModelId}`,
+        allowedEndpointIds: [remoteEndpointId],
+        expectedExecutionFamily: REMOTE_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.remoteModelId,
+          messages: [{ role: "user", content: `Summarize exact remote Craft case ${suffix}.` }],
+        },
+      },
+      {
+        caseId: `craft.chat.declared-tools.${suffix}`,
+        clientKind: "craft",
+        category: "tool-bearing",
+        requestPath: "/v1/chat/completions",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.remoteModelId}`,
+        allowedEndpointIds: [remoteEndpointId],
+        expectedExecutionFamily: REMOTE_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.remoteModelId,
+          messages: [
+            { role: "user", content: CRAFT_PREAMBLE },
+            { role: "user", content: `hello from declared-tools Craft case ${suffix}` },
+          ],
+          tools: buildChatTools(33),
+        },
+      },
+      {
+        caseId: `craft.chat.active-tool-turn.${suffix}`,
+        clientKind: "craft",
+        category: "continuation-after-tool-output",
+        requestPath: "/v1/chat/completions",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.remoteModelId}`,
+        allowedEndpointIds: [remoteEndpointId],
+        expectedExecutionFamily: REMOTE_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.remoteModelId,
+          messages: buildToolContinuationMessages(
+            "Craft corpus",
+            suffix,
+            "runtime_vendor_chat_tool_1",
+          ),
+          tools: buildChatTools(10),
+        },
+      },
+      {
+        caseId: `craft.chat.non-tool-mentions-tools.${suffix}`,
+        clientKind: "craft",
+        category: "non-tool-mentions-tools",
+        requestPath: "/v1/chat/completions",
+        runtimeKind: "hybrid",
+        routingConstraint: `alias:${plan.difficultyAliasModelId}`,
+        allowedEndpointIds: aliasEndpoints,
+        expectedExecutionFamily: LOCAL_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.difficultyAliasModelId,
+          messages: [
+            {
+              role: "user",
+              content: `For deterministic Craft case ${suffix}, explain which tools you would consider using, but do not call them.`,
+            },
+          ],
+        },
+      },
+      {
+        caseId: `craft.chat.continuation-after-tool-output.${suffix}`,
+        clientKind: "craft",
+        category: "continuation-after-tool-output",
+        requestPath: "/v1/chat/completions",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.remoteModelId}`,
+        allowedEndpointIds: [remoteEndpointId],
+        expectedExecutionFamily: REMOTE_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.remoteModelId,
+          messages: buildToolContinuationMessages(
+            "Craft continuation corpus",
+            suffix,
+            "runtime_vendor_chat_tool_1",
+          ),
+          tools: buildChatTools(12),
+        },
+      },
+      {
+        caseId: `craft.chat.long-context.${suffix}`,
+        clientKind: "craft",
+        category: "long-context",
+        requestPath: "/v1/chat/completions",
+        runtimeKind: "hybrid",
+        routingConstraint: `exact-model:${plan.remoteModelId}`,
+        allowedEndpointIds: [remoteEndpointId],
+        expectedExecutionFamily: REMOTE_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.remoteModelId,
+          messages: [{ role: "user", content: buildLongContext("CRAFT_LONG_CONTEXT", index) }],
+        },
+      },
+      {
+        caseId: `craft.chat.inline-image.${suffix}`,
+        clientKind: "craft",
+        category: "image-sensitive",
+        requestPath: "/v1/chat/completions",
+        runtimeKind: "hybrid",
+        routingConstraint: `alias:${plan.codexAliasModelId}`,
+        allowedEndpointIds: codexAliasEndpoints,
+        expectedExecutionFamily: CODEX_EXECUTION_FAMILY,
+        expectedOutcomeClass: "success",
+        body: {
+          model: plan.codexAliasModelId,
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: `Describe this image for Craft case ${suffix}.` },
+                { type: "image", data: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB" },
+              ],
+            },
+          ],
+        },
+      },
+    );
+  }
+
+  return cases;
 }
 
 async function allocatePort(): Promise<number> {
@@ -363,11 +1133,13 @@ export async function createRuntimeVendorValidationPlan(options: {
 }): Promise<RuntimeVendorValidationPlan> {
   const scopePrefix = options.scopeId ?? "runtime-vendor-validation";
   const harnessMode = options.harnessMode ?? "real";
-  const aliasModelId = "gpt-5.4";
-  const difficultyAliasModelId = "gpt-5.4-difficulty";
-  const intelligentAliasModelId = "gpt-5.4-intelligent";
+  const aliasModelId = "baseline.hybrid";
+  const difficultyAliasModelId = "difficulty.hybrid";
+  const intelligentAliasModelId = "controller.hybrid";
+  const codexAliasModelId = "difficulty.remote-only";
   const localModelId = "local/llama-3.1-8b-instruct";
   const remoteModelId = "openai/gpt-4.1-mini-fast";
+  const codexModelId = "chatgpt/gpt-5.4";
 
   if (harnessMode === "mock") {
     const localConfig = createMockLocalConfig(localModelId);
@@ -376,8 +1148,10 @@ export async function createRuntimeVendorValidationPlan(options: {
       aliasModelId,
       difficultyAliasModelId,
       intelligentAliasModelId,
+      codexAliasModelId,
       localModelId,
       remoteModelId,
+      codexModelId,
       decisionConfig: createDecisionConfig(),
       localConfig,
       remoteConfig,
@@ -408,6 +1182,10 @@ export async function createRuntimeVendorValidationPlan(options: {
           [intelligentAliasModelId]: {
             mode: "intelligent",
             model_ids: [localModelId, remoteModelId],
+          },
+          [codexAliasModelId]: {
+            mode: "difficulty",
+            model_ids: [remoteModelId, codexModelId],
           },
         },
         llama_swap: localConfig.llama_swap,
@@ -450,8 +1228,10 @@ export async function createRuntimeVendorValidationPlan(options: {
     aliasModelId,
     difficultyAliasModelId,
     intelligentAliasModelId,
+    codexAliasModelId,
     localModelId,
     remoteModelId,
+    codexModelId,
     decisionConfig: createDecisionConfig(),
     localConfig,
     remoteConfig,
@@ -482,6 +1262,10 @@ export async function createRuntimeVendorValidationPlan(options: {
         [intelligentAliasModelId]: {
           mode: "intelligent",
           model_ids: [localModelId, remoteModelId],
+        },
+        [codexAliasModelId]: {
+          mode: "difficulty",
+          model_ids: [remoteModelId, codexModelId],
         },
       },
       llama_swap: localConfig.llama_swap,
@@ -572,11 +1356,117 @@ async function startRemoteUpstreamProcess(input: {
   };
 }
 
+function createValidationCodexAuthAdapter() {
+  return {
+    startDeviceCodeLogin: async () => ({
+      loginId: "login-runtime-vendor-codex-001",
+      verificationUrl: "https://auth.openai.com/codex/device",
+      userCode: "VRUN-6201",
+      wsUrl: "ws://127.0.0.1:4595",
+      pid: 4595,
+    }),
+    readAccount: async ({ codexHome }: { readonly codexHome: string }) => {
+      await mkdir(codexHome, { recursive: true });
+      await writeFile(
+        path.join(codexHome, "auth.json"),
+        JSON.stringify(
+          {
+            auth_mode: "chatgpt",
+            tokens: {
+              access_token: "codex-access-runtime-vendor-001",
+              refresh_token: "codex-refresh-runtime-vendor-001",
+              account_id: "codex-account-runtime-vendor-001",
+            },
+            last_refresh: "2026-07-08T09:00:00.000Z",
+          },
+          null,
+          2,
+        ),
+        "utf8",
+      );
+      return {
+        account: {
+          type: "chatgpt",
+          email: "runtime-vendor@example.com",
+          planType: "pro",
+        },
+        requiresOpenaiAuth: true,
+      };
+    },
+  };
+}
+
+function createValidationCodexExecutionAdapter() {
+  return {
+    executeRequest: async ({
+      requestId,
+      requestCapture,
+    }: {
+      readonly requestId: string;
+      readonly requestCapture: {
+        readonly url: string;
+      };
+    }) => {
+      if (requestCapture.url.endsWith("/v1/responses")) {
+        return {
+          statusCode: 200,
+          body: {
+            id: `resp-${requestId}`,
+            output: [
+              {
+                type: "message",
+                role: "assistant",
+                content: [{ type: "output_text", text: "IMAGE_OK" }],
+              },
+            ],
+            usage: {
+              input_tokens: 24,
+              output_tokens: 2,
+            },
+          },
+          vendorMetadata: {
+            vendorId: "chatgpt-codex-responses",
+            latencyMs: 8,
+          },
+        };
+      }
+      return {
+        statusCode: 200,
+        body: {
+          id: `chatcmpl-${requestId}`,
+          choices: [
+            {
+              index: 0,
+              finish_reason: "stop",
+              message: {
+                role: "assistant",
+                content: "IMAGE_OK",
+              },
+            },
+          ],
+          usage: {
+            prompt_tokens: 24,
+            completion_tokens: 2,
+          },
+        },
+        vendorMetadata: {
+          vendorId: "chatgpt-codex-responses",
+          latencyMs: 8,
+        },
+      };
+    },
+  };
+}
+
 async function startRuntimeForConfig(input: {
   readonly repoRoot: string;
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
   readonly config: Record<string, unknown>;
+  readonly codex?: {
+    readonly providerAccountId: string;
+    readonly modelId: string;
+  };
 }) {
   const configDir = path.join(input.runtimeStateRoot, input.scopeId);
   await mkdir(configDir, { recursive: true });
@@ -589,12 +1479,42 @@ async function startRuntimeForConfig(input: {
     runtimeStateRoot: input.runtimeStateRoot,
     scopeId: input.scopeId,
     unifiedRuntimeConfigPath: configPath,
+    ...(input.codex
+      ? {
+          codexAuthAdapter: createValidationCodexAuthAdapter(),
+          codexExecutionAdapter: createValidationCodexExecutionAdapter(),
+        }
+      : {}),
   });
+  if (input.codex) {
+    const pending = await backend.startProviderDeviceAuthorization({
+      providerAccountId: input.codex.providerAccountId,
+      providerId: "openai",
+      providerKind: "provider-openai",
+      variantId: "openai-codex-subscription",
+      orgScope: "personal",
+      accountScope: "workspace-default",
+      allowedModels: [input.codex.modelId],
+      deniedModels: [],
+      entitlementTags: ["chat"],
+      budgetPolicyRef: "budget.default",
+      quotaPolicyRef: "quota.default",
+    });
+    await backend.pollProviderDeviceAuthorization({
+      authRequestId: pending.authRequestId,
+    });
+    await backend.activateEndpoint({
+      providerAccountId: input.codex.providerAccountId,
+      modelId: input.codex.modelId,
+      region: "global",
+    });
+    await backend.updateRuntimeConfig({});
+  }
   const server = await startBridgeServer({
     host: "127.0.0.1",
     port: 0,
-    registry: backend.registry,
-    getRegistry: () => backend.registry,
+    registry: backend.effectiveRegistry,
+    getRegistry: () => backend.effectiveRegistry,
     executeChatCompletions: backend.executeChatCompletions,
     executeResponses: backend.executeResponses,
     readRuntimeSummary: backend.readRuntimeSummary,
@@ -628,6 +1548,120 @@ async function startRuntimeForConfig(input: {
       await server.close();
       await backend.shutdown();
     },
+  };
+}
+
+async function readObservationWithRetry(
+  backend: Pick<RuntimeBridgeBackend, "readRequestObservation">,
+  requestId: string,
+  attempts = 5,
+): Promise<RuntimeVendorObservation> {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const observation = await backend.readRequestObservation(requestId);
+    if (observation) {
+      return observation;
+    }
+    if (attempt < attempts) {
+      await delay(25);
+    }
+  }
+  return null;
+}
+
+async function resolveRuntimeRequestId(
+  backend: Pick<RuntimeBridgeBackend, "listTelemetryRequests">,
+  clientRequestId: string,
+  attempts = 5,
+): Promise<string | null> {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const match = (await backend.listTelemetryRequests({ limit: 20 })).find(
+      (record) => record.clientRequestId === clientRequestId,
+    );
+    if (match?.requestId) {
+      return match.requestId;
+    }
+    if (attempt < attempts) {
+      await delay(25);
+    }
+  }
+  return null;
+}
+
+async function runDeterministicRuntimeVendorCorpus(input: {
+  readonly plan: RuntimeVendorValidationPlan;
+  readonly decisionRuntime: Awaited<ReturnType<typeof startRuntimeForConfig>>;
+  readonly hybridRuntime: Awaited<ReturnType<typeof startRuntimeForConfig>>;
+}): Promise<RuntimeVendorCorpusResult> {
+  const caseDefinitions = [...buildPiCorpusCases(input.plan), ...buildCraftCorpusCases(input.plan)];
+  const caseRecords: RuntimeVendorCorpusCaseRecord[] = [];
+
+  for (const definition of caseDefinitions) {
+    const requestId = `req-${definition.caseId.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`;
+    const runtime =
+      definition.runtimeKind === "decision" ? input.decisionRuntime : input.hybridRuntime;
+    const response =
+      definition.requestPath === "/v1/responses"
+        ? await postJsonRequest(
+            runtime.baseUrl,
+            "/v1/responses",
+            requestId,
+            definition.body,
+            definition.headers,
+          )
+        : await postChatCompletions(
+            runtime.baseUrl,
+            requestId,
+            definition.body,
+            definition.headers,
+          );
+    const runtimeRequestId = await resolveRuntimeRequestId(runtime.backend, requestId);
+    const observation = runtimeRequestId
+      ? await readObservationWithRetry(runtime.backend, runtimeRequestId)
+      : null;
+    const record = buildCorpusCaseRecord({
+      definition,
+      requestId: runtimeRequestId ?? requestId,
+      response,
+      observation,
+    });
+
+    if (record.actualOutcomeClass !== definition.expectedOutcomeClass) {
+      throw new Error(
+        `Corpus case ${definition.caseId} produced outcome ${record.actualOutcomeClass} instead of ${definition.expectedOutcomeClass} (status=${record.statusCode}, failure=${record.failureClass ?? "none"}).`,
+      );
+    }
+    const expectedExecutionFamilies: readonly (string | null)[] =
+      definition.expectedExecutionFamilies ?? [definition.expectedExecutionFamily];
+    if (!expectedExecutionFamilies.includes(record.actualExecutionFamily)) {
+      throw new Error(
+        `Corpus case ${definition.caseId} produced execution family ${record.actualExecutionFamily ?? "null"} instead of ${expectedExecutionFamilies.map((family) => family ?? "null").join(" or ")}.`,
+      );
+    }
+    if (definition.expectedOutcomeClass === "success") {
+      if (!observation) {
+        throw new Error(`Corpus case ${definition.caseId} is missing request-detail evidence.`);
+      }
+      if (!record.routingDecisionId) {
+        throw new Error(`Corpus case ${definition.caseId} is missing a routing decision id.`);
+      }
+      if (
+        record.payloadBytes.translated === null ||
+        record.payloadBytes.providerCanonical === null ||
+        record.payloadBytes.providerWire === null ||
+        record.payloadBytes.providerResponse === null
+      ) {
+        throw new Error(
+          `Corpus case ${definition.caseId} is missing provider payload-byte evidence.`,
+        );
+      }
+    }
+
+    caseRecords.push(record);
+  }
+
+  return {
+    summary: summarizeCorpusCases(caseRecords),
+    cases: caseRecords,
   };
 }
 
@@ -730,6 +1764,7 @@ export async function runRuntimeVendorValidation(options: {
     local: Awaited<ReturnType<RuntimeBridgeBackend["readEndpointProfile"]>>;
     remote: Awaited<ReturnType<RuntimeBridgeBackend["readEndpointProfile"]>>;
   };
+  corpus: RuntimeVendorCorpusResult;
 }> {
   const runtimeStateRoot =
     options.runtimeStateRoot ??
@@ -827,6 +1862,10 @@ export async function runRuntimeVendorValidation(options: {
             runtimeStateRoot,
             scopeId: `${scopePrefix}-hybrid`,
             config: plan.hybridConfig,
+            codex: {
+              providerAccountId: VALIDATION_CODEX_PROVIDER_ACCOUNT_ID,
+              modelId: plan.codexModelId,
+            },
           });
           try {
             await waitForRuntimeModelEndpointsReady(hybridRuntime.backend, [
@@ -968,6 +2007,10 @@ export async function runRuntimeVendorValidation(options: {
                   },
                 },
               },
+              codex: {
+                providerAccountId: VALIDATION_CODEX_PROVIDER_ACCOUNT_ID,
+                modelId: plan.codexModelId,
+              },
             });
             let hybridDifficultyRepeatObservation: Awaited<
               ReturnType<RuntimeBridgeBackend["readRequestObservation"]>
@@ -1066,6 +2109,11 @@ export async function runRuntimeVendorValidation(options: {
             const remoteObservedProfile = await remoteRuntime.backend.readEndpointProfile(
               remoteDirect.endpointId,
             );
+            const corpus = await runDeterministicRuntimeVendorCorpus({
+              plan,
+              decisionRuntime,
+              hybridRuntime,
+            });
             return {
               decisionOnly: {
                 statusCode: decisionResponse.statusCode,
@@ -1150,6 +2198,7 @@ export async function runRuntimeVendorValidation(options: {
                 local: localObservedProfile,
                 remote: remoteObservedProfile,
               },
+              corpus,
             };
           } finally {
             await hybridRuntime.close();
@@ -1166,7 +2215,7 @@ export async function runRuntimeVendorValidation(options: {
   } finally {
     await decisionRuntime.close();
     if (!options.runtimeStateRoot) {
-      await rm(runtimeStateRoot, { recursive: true, force: true });
+      await rm(runtimeStateRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
     }
     if (previousOpenAiApiKey === undefined) {
       process.env.OPENAI_API_KEY = undefined;
@@ -1176,11 +2225,14 @@ export async function runRuntimeVendorValidation(options: {
   }
 }
 
-if (import.meta.url === new URL(process.argv[1], "file:").toString()) {
+if (process.argv[1] === __filename) {
   const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
-  const runtimeStateRoot = process.argv[2];
+  const firstArg = process.argv[2];
+  const secondArg = process.argv[3];
+  const runtimeStateRoot = firstArg === "mock" || firstArg === "real" ? undefined : firstArg;
+  const harnessArg = firstArg === "mock" || firstArg === "real" ? firstArg : secondArg;
   const harnessMode =
-    process.argv[3] === "mock" || process.env.ROLE_MODEL_VENDOR_VALIDATION_HARNESS === "mock"
+    harnessArg === "mock" || process.env.ROLE_MODEL_VENDOR_VALIDATION_HARNESS === "mock"
       ? "mock"
       : "real";
   void runRuntimeVendorValidation({ repoRoot, runtimeStateRoot, harnessMode }).then((result) => {

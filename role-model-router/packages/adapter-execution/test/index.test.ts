@@ -109,6 +109,7 @@ describe("executeRoutedRequest", () => {
             outputTokens: 24,
             cacheReadTokens: 0,
             cacheWriteTokens: 0,
+            source: "measured",
           },
           vendorMetadata: {
             vendorId: "litellm",
@@ -396,6 +397,12 @@ describe("executeRoutedRequest", () => {
     expect(result.requestCapture.url).toBe("https://api.openai.test/v1/responses");
     expect(result.normalized.outputText).toBe("OpenAI summary");
     expect(result.usageEvent.tokens_in).toBe(32);
+    expect(result.usageEvent).toMatchObject({
+      tokens_in_source: "measured",
+      tokens_in_available: true,
+      tokens_out_source: "measured",
+      tokens_out_available: true,
+    });
     expect(result.usageEvent.cost_actual).toBe(0.0042);
     expect(result.trace.spans.map((span) => span.span_type)).toEqual([
       "provider.load",
@@ -406,7 +413,7 @@ describe("executeRoutedRequest", () => {
   test("prefers cloud-source request shape hints over catalog defaults", () => {
     const adapters: ProviderAdapter[] = [
       {
-        adapterFamily: "ai-sdk-openai",
+        adapterFamily: "litellm-proxy",
         negotiateCapabilities: () => ({
           structuredOutputs: "unsupported",
           toolCalling: {
@@ -430,7 +437,7 @@ describe("executeRoutedRequest", () => {
           },
         }),
         buildRequest: ({ target }) => ({
-          providerFamily: "ai-sdk-openai",
+          providerFamily: "litellm-proxy",
           endpointId: target.endpointId,
           url:
             target.requestShapeHints?.providerShape === "openai.chat.completions"
@@ -440,7 +447,7 @@ describe("executeRoutedRequest", () => {
           body: {},
         }),
         normalizeResponse: ({ requestCapture, responseCapture }) => ({
-          providerFamily: "ai-sdk-openai",
+          providerFamily: "litellm-proxy",
           requestCapture,
           responseCapture,
           outputText: "ok",
@@ -1191,7 +1198,7 @@ describe("executeRoutedRequest", () => {
   test("filters mixed-vendor fallback endpoint ids to vendor-compatible fallback model ids for live provider execution", async () => {
     const adapters: ProviderAdapter[] = [
       {
-        adapterFamily: "ai-sdk-openai",
+        adapterFamily: "litellm-proxy",
         negotiateCapabilities: () => ({
           structuredOutputs: "unsupported",
           toolCalling: {
@@ -1619,7 +1626,7 @@ describe("executeRoutedRequest", () => {
       },
       adapters,
       executeProviderRequest: async ({ target, requestCapture, fallbackModelIds }) => {
-        expect(target.adapterFamily).toBe("ai-sdk-openai");
+        expect(target.adapterFamily).toBe("litellm-proxy");
         expect(requestCapture.url).toBe("http://127.0.0.1:4000/v1/chat/completions");
         expect(fallbackModelIds).toEqual(["openai/gpt-4.1-mini-slow"]);
         return {

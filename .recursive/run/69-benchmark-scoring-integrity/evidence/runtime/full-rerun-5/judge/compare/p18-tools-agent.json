@@ -1,0 +1,52 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p18-tools-agent",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n  ",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n  ",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both responses correctly call list_endpoints and get_metrics, and recommend routing changes using the provided latency data. They are substantively equivalent.",
+  "rawResponse": "{\"relativeRanking\":[\"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\"openai.personal.openai-codex-subscription.global.gpt-5.4\"],\"rationale\":\"Both responses correctly call list_endpoints and get_metrics, and recommend routing changes using the provided latency data. They are substantively equivalent.\"}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nPlan and execute a multi-step agent task: inspect endpoints, compare latency profiles, and recommend routing strategy changes.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"Keep local as the default for low-latency traffic, but retain remote deepseek-v4-flash as the fallback for harder requests where quality matters more than p95 latency.\"\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must call list_endpoints and get_metrics, then recommend routing changes using the provided endpoint and latency data.",
+      "[MUST] Emit API tool calls: list_endpoints, get_metrics, get_metrics",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: read|search|list|patch|tool|plan"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 306,
+    "reasoningLength": 4364
+  },
+  "recordedAtMs": 1783936389493
+}

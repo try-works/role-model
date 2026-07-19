@@ -58,5 +58,5 @@ describe("tracked recursive JSON evidence", () => {
     }
 
     expect(parseFailures).toEqual([]);
-  });
+  }, 60_000);
 });

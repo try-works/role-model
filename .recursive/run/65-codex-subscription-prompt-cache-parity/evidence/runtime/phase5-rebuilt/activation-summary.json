@@ -1,0 +1,86 @@
+[
+  {
+    "providerAccountId": "moonshot.personal.kimi-code",
+    "modelId": "moonshot/kimi-k2.7-code",
+    "region": "global",
+    "ok": true,
+    "body": {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "providerAccountId": "moonshot.personal.kimi-code",
+      "providerId": "moonshot",
+      "modelId": "moonshot/kimi-k2.7-code",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "data",
+        "operator",
+        "translator",
+        "writer"
+      ],
+      "status": "active"
+    }
+  },
+  {
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "modelId": "deepseek/deepseek-v4-flash",
+    "region": "global",
+    "ok": true,
+    "body": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "providerId": "deepseek",
+      "modelId": "deepseek/deepseek-v4-flash",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "data",
+        "operator",
+        "translator",
+        "writer"
+      ],
+      "status": "active"
+    }
+  },
+  {
+    "providerAccountId": "deepseek.personal.deepseek-api-key",
+    "modelId": "deepseek/deepseek-v4-pro",
+    "region": "global",
+    "ok": true,
+    "body": {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "providerId": "deepseek",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "data",
+        "operator",
+        "translator",
+        "writer"
+      ],
+      "status": "active"
+    }
+  },
+  {
+    "providerAccountId": "openai.personal.openai-codex-subscription",
+    "modelId": "chatgpt/gpt-5.4",
+    "region": "global",
+    "ok": true,
+    "body": {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "providerAccountId": "openai.personal.openai-codex-subscription",
+      "providerId": "openai",
+      "modelId": "chatgpt/gpt-5.4",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "data",
+        "operator",
+        "translator",
+        "writer"
+      ],
+      "status": "active"
+    }
+  }
+]

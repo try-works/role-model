@@ -1,0 +1,16 @@
+
+> role-model@0.0.0 runtime:test-browser D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4
+> corepack pnpm --filter @role-model-router/runtime-ui run test:browser
+
+
+> @role-model-router/runtime-ui@ test:browser D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-ui
+> playwright test
+
+[WebServer] (node:39196) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+  ok 1 e2e\runtime-shell.spec.ts:3:1 › shows seeded provider maintenance and session readiness over the rebuilt runtime (2.1s)
+
+  1 passed (32.5s)

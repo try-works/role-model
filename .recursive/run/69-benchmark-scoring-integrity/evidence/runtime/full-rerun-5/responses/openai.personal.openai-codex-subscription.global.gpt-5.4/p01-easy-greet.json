@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "p01-easy-greet",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p01-easy-greet-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"answer\": \"Hello!\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Hello!\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"Hello!\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 1853,
+  "failure": false,
+  "recordedAtMs": 1783934154790
+}

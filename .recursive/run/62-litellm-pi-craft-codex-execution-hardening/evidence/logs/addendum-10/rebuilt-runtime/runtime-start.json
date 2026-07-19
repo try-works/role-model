@@ -1,0 +1,17 @@
+{
+  "pid": 35508,
+  "exe": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+  "args": [
+    "--repo-root",
+    "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening",
+    "--runtime-state-root",
+    "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime",
+    "--scope-id",
+    "standalone-runtime",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "3456"
+  ],
+  "startedAt": "2026-07-09T07:31:40.8982011+08:00"
+}

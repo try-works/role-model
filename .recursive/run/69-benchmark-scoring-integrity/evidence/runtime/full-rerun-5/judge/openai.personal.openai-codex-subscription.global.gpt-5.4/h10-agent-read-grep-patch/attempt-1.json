@@ -1,0 +1,52 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h10-agent-read-grep-patch",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-h10-agent-read-grep-patch-a1-8ec2599f-7d06-4e28-913c-adf0348f8d5a",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\nRequired API tool calls: read_file, grep_search, apply_patch.\nActual structured tool calls from API: read_file, grep_search, apply_patch.\nFake tool syntax in prose (e.g. TOOL_CALL name=...) does not count unless criteria explicitly allow it.\n\nCase: h10-agent-read-grep-patch\n\n## Original question\n[user]\nEmit API tool calls in order: read_file src/router.ts, grep_search evaluateEligibility, apply_patch with a one-line comment fix diff. All three tools required.\n\n## Example expected answer\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"MODE\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -4,3 +4,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Must emit read_file, grep_search, and apply_patch tool calls.\n[MUST] Emit API tool calls: read_file, grep_search, apply_patch\n[SHOULD] Match clues: router|evaluateEligibility|patch|diff\n[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nEmit all required tool calls through the API in as few turns as needed. Do not write fake TOOL_CALL text. No final prose unless asked in a follow-up.\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMust emit read_file, grep_search, and apply_patch tool calls.\n\n## Subject deliverable to grade\n{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"*** Begin Patch\\n*** Update File: src/router.ts\\n@@\\n-// evaluateEligibility helper\\n+// Helper for evaluateEligibility\\n*** End Patch\"\n      }\n    }\n  ]\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"All three required tool calls present: read_file 'src/router.ts', grep_search 'evaluateEligibility', apply_patch with a valid Codex patch envelope containing a one-line comment fix; no placeholders; meets all MUST and MUST NOT criteria.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "All three required tool calls present: read_file 'src/router.ts', grep_search 'evaluateEligibility', apply_patch with a valid Codex patch envelope containing a one-line comment fix; no placeholders; meets all MUST and MUST NOT criteria.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/h10-agent-read-grep-patch.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nEmit API tool calls in order: read_file src/router.ts, grep_search evaluateEligibility, apply_patch with a one-line comment fix diff. All three tools required.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"MODE\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -4,3 +4,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must emit read_file, grep_search, and apply_patch tool calls.",
+      "[MUST] Emit API tool calls: read_file, grep_search, apply_patch",
+      "[SHOULD] Match clues: router|evaluateEligibility|patch|diff",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 264,
+    "reasoningLength": 3272
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935731210
+}

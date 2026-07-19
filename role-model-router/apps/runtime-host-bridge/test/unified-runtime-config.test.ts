@@ -2,6 +2,9 @@ import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 
 import {
+  DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS,
+  deriveUnifiedRuntimeRoutingAliasId,
+  deriveUnifiedRuntimeRoutingAliasMode,
   mergeUnifiedRuntimeConfigDocuments,
   normalizeUnifiedRuntimeConfigInput,
   parseUnifiedRuntimeConfigText,
@@ -56,6 +59,41 @@ routing:
     expect(result.executionMode).toBe("decision_only");
     expect(result.llamaSwap.enabled).toBe(false);
     expect(result.liteLLM.enabled).toBe(false);
+  });
+
+  test("preserves explicit execution mode from parsed YAML and normalized API payloads", () => {
+    expect(
+      parseUnifiedRuntimeConfigText(`
+version: "1.0"
+execution_mode: hybrid
+llama_swap:
+  models:
+    lfm2.5-1.2b-instruct:
+      path: ./models/lfm2.5-1.2b-instruct.gguf
+`).executionMode,
+    ).toBe("hybrid");
+
+    const normalized = normalizeUnifiedRuntimeConfigInput({
+      version: "1.1",
+      routingStrategy: "controller",
+      executionMode: "hybrid",
+      llamaSwap: {
+        enabled: true,
+        models: [
+          {
+            modelId: "lfm2.5-1.2b-instruct",
+            path: "./models/lfm2.5-1.2b-instruct.gguf",
+          },
+        ],
+      },
+      liteLLM: {
+        enabled: false,
+        providers: [],
+      },
+    });
+
+    expect(normalized.executionMode).toBe("hybrid");
+    expect(renderUnifiedRuntimeConfigText(normalized)).toContain("execution_mode: hybrid");
   });
 
   test("derives remote-only mode when only the LiteLLM section is populated", () => {
@@ -144,6 +182,66 @@ litellm_proxy:
         ],
       }),
     ]);
+  });
+
+  test("round-trips litellm router and module settings through the unified runtime config", () => {
+    const normalized = normalizeUnifiedRuntimeConfigInput({
+      version: "1.0",
+      routingStrategy: "balanced",
+      liteLLM: {
+        providers: [
+          {
+            providerId: "openai",
+            apiKeyRef: "${OPENAI_API_KEY}",
+            modelNames: ["openai/gpt-4.1-mini-fast"],
+            modelMappings: [
+              {
+                modelId: "openai/gpt-4.1-mini-fast",
+                litellmModel: "openai/gpt-4.1-mini",
+                litellmParams: {
+                  model: "openai/gpt-4.1-mini",
+                },
+              },
+            ],
+          },
+        ],
+        routerSettings: {
+          num_retries: 2,
+          timeout: 30,
+          enable_pre_call_checks: true,
+          optional_pre_call_checks: ["prompt_caching", "session_affinity"],
+        },
+        litellmSettings: {
+          request_timeout: 45,
+          default_fallbacks: ["openai/gpt-4.1-mini-slow"],
+        },
+        process: {
+          command: null,
+          args: [],
+          env: {},
+          cwd: null,
+          startupTimeoutMs: null,
+        },
+      },
+    });
+
+    expect(parseUnifiedRuntimeConfigText(renderUnifiedRuntimeConfigText(normalized))).toMatchObject(
+      {
+        liteLLM: {
+          enabled: true,
+          routerSettings: {
+            num_retries: 2,
+            timeout: 30,
+            enable_pre_call_checks: true,
+            optional_pre_call_checks: ["prompt_caching", "session_affinity"],
+          },
+          litellmSettings: {
+            request_timeout: 45,
+            default_fallbacks: ["openai/gpt-4.1-mini-slow"],
+          },
+        },
+      },
+    );
   });
 
   test("leaves process startup timeouts unset unless the unified config specifies them", () => {
@@ -295,12 +393,9 @@ observed_data:
   enabled: true
   aggregation:
     min_samples: 3
-  metric_halflives:
-    quality_ms: 900000
-    latency_ms: 300000
-    throughput_ms: 120000
-    reliability_ms: 600000
-    cost_ms: 1800000
+  metric_decay_percent_per_day:
+    latency: 10
+    throughput: 10
   throughput_sla:
     enabled: true
     min_tokens_per_sec: 24
@@ -337,12 +432,9 @@ observed_data:
                 minTokensPerSec: number;
               };
             };
-            metricHalflives: {
-              qualityMs: number;
-              latencyMs: number;
-              throughputMs: number;
-              reliabilityMs: number;
-              costMs: number;
+            metricDecayPercentPerDay: {
+              latency: number;
+              throughput: number;
             };
             throughputSla: {
               enabled: boolean;
@@ -381,12 +473,9 @@ observed_data:
           minTokensPerSec: 22,
         },
       },
-      metricHalflives: {
-        qualityMs: 900000,
-        latencyMs: 300000,
-        throughputMs: 120000,
-        reliabilityMs: 600000,
-        costMs: 1800000,
+      metricDecayPercentPerDay: {
+        latency: 10,
+        throughput: 10,
       },
       throughputSla: {
         enabled: true,
@@ -405,12 +494,9 @@ observed_data:
             aggregation: {
               minSamples: 3,
             },
-            metricHalflives: {
-              qualityMs: 900000,
-              latencyMs: 300000,
-              throughputMs: 120000,
-              reliabilityMs: 600000,
-              costMs: 1800000,
+            metricDecayPercentPerDay: {
+              latency: 10,
+              throughput: 10,
             },
             throughputSla: {
               enabled: true,
@@ -526,12 +612,9 @@ observed_data:
             aggregation: {
               minSamples: 2,
             },
-            metricHalflives: {
-              qualityMs: 900000,
-              latencyMs: 300000,
-              throughputMs: 120000,
-              reliabilityMs: 600000,
-              costMs: 1800000,
+            metricDecayPercentPerDay: {
+              latency: 10,
+              throughput: 10,
             },
             throughputSla: {
               enabled: true,
@@ -887,6 +970,37 @@ model_aliases:
     ).toContain("controller:");
   });
 
+  test("defaults controller timeout to the longer shared controller latency budget when omitted", () => {
+    const result = parseUnifiedRuntimeConfigText(`
+version: "1.0"
+controller:
+  enabled: true
+  source_type: remote
+  model_id: moonshot/kimi-k2.5
+model_aliases:
+  gpt-5.4:
+    mode: intelligent
+    model_ids:
+      - moonshot/kimi-k2.5
+litellm_proxy:
+  providers:
+    moonshot:
+      api_key: \${MOONSHOT_API_KEY}
+      model_list:
+        - model_name: moonshot/kimi-k2.5
+          litellm_params:
+            model: moonshot/kimi-k2.5
+`);
+
+    expect(result.controller).toMatchObject({
+      enabled: true,
+      sourceType: "remote",
+      modelId: "moonshot/kimi-k2.5",
+      timeoutMs: 15_000,
+    });
+    expect(DEFAULT_UNIFIED_RUNTIME_CONTROLLER_TIMEOUT_MS).toBe(15_000);
+  });
+
   test("rejects invalid difficulty-classifier and max-difficulty settings", () => {
     expect(() =>
       parseUnifiedRuntimeConfigText(`
@@ -932,11 +1046,11 @@ observed_data:
 
     expect(merged.routingStrategy).toBe("difficulty");
     expect(merged.modelAliases).toEqual([
-      expect.objectContaining({
-        aliasId: "mixed.local-remote",
+      {
+        aliasId: "difficulty.decision-only",
         mode: "difficulty",
         modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.6"],
-      }),
+      },
     ]);
     expect(merged.observedData?.throughputSla.enabled).toBe(true);
   });
@@ -958,6 +1072,240 @@ observed_data:
     );
 
     expect(merged.routingStrategy).toBe("difficulty");
-    expect(merged.modelAliases?.[0]?.aliasId).toBe("mixed.local-remote");
+    expect(merged.modelAliases?.[0]?.aliasId).toBe("difficulty.decision-only");
+  });
+
+  test("derives the primary routing alias from routing strategy and execution mode", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      {
+        version: "1.0",
+        routing: {
+          strategy: "difficulty",
+        },
+        execution_mode: "hybrid",
+        model_aliases: {
+          "mixed.local-remote": {
+            mode: "difficulty",
+            model_ids: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
+          },
+        },
+      },
+      {
+        routing_strategy: "hybrid",
+        execution_mode: "remote_only",
+      },
+    );
+
+    expect(merged.routingStrategy).toBe("hybrid");
+    expect(merged.executionMode).toBe("remote_only");
+    expect(merged.modelAliases).toEqual([
+      {
+        aliasId: "hybrid.remote-only",
+        mode: "hybrid",
+        modelIds: ["lfm2.5-1.2b-instruct", "moonshot/kimi-k2.7-code"],
+      },
+    ]);
+  });
+
+  test("derives the routing alias matrix across strategy families and execution modes", () => {
+    const executionModes = ["decision_only", "hybrid", "local_only", "remote_only"] as const;
+    const strategyCases = [
+      { strategy: null, expectedPrefix: "default", expectedMode: "basic" },
+      { strategy: "baseline", expectedPrefix: "baseline", expectedMode: "basic" },
+      { strategy: "latency-first", expectedPrefix: "baseline", expectedMode: "basic" },
+      { strategy: "controller", expectedPrefix: "controller", expectedMode: "intelligent" },
+      { strategy: "intelligent", expectedPrefix: "controller", expectedMode: "intelligent" },
+      { strategy: "difficulty", expectedPrefix: "difficulty", expectedMode: "difficulty" },
+      { strategy: "hybrid", expectedPrefix: "hybrid", expectedMode: "hybrid" },
+      { strategy: "craft-ask", expectedPrefix: "default", expectedMode: "basic" },
+    ] as const;
+
+    for (const executionMode of executionModes) {
+      for (const strategyCase of strategyCases) {
+        expect(
+          deriveUnifiedRuntimeRoutingAliasId({
+            routingStrategy: strategyCase.strategy,
+            executionMode,
+          }),
+        ).toBe(`${strategyCase.expectedPrefix}.${executionMode.replaceAll("_", "-")}`);
+        expect(deriveUnifiedRuntimeRoutingAliasMode(strategyCase.strategy, null)).toBe(
+          strategyCase.expectedMode,
+        );
+      }
+    }
+  });
+
+  test("normalizes legacy craft-ask routing strategy inputs out of persisted config", () => {
+    const parsed = parseUnifiedRuntimeConfigText(
+      [
+        'version: "1.0"',
+        "routing:",
+        '  strategy: "craft-ask"',
+        'execution_mode: "remote_only"',
+      ].join("\n"),
+    );
+
+    expect(parsed.routingStrategy).toBeNull();
+    expect(
+      deriveUnifiedRuntimeRoutingAliasId({
+        routingStrategy: parsed.routingStrategy,
+        executionMode: parsed.executionMode,
+      }),
+    ).toBe("default.remote-only");
+  });
+
+  test("normalizes persisted craft-ask alias ids out of multi-alias config payloads", () => {
+    const parsed = parseUnifiedRuntimeConfigText(
+      [
+        'version: "1.0"',
+        'execution_mode: "remote_only"',
+        "model_aliases:",
+        "  craft-ask.remote-only:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+        "  controller.remote-only:",
+        '    mode: "intelligent"',
+        "    model_ids:",
+        '      - "deepseek/deepseek-v4-flash"',
+        "  exact.gpt-5.4:",
+        '    mode: "basic"',
+        "    model_ids:",
+        '      - "chatgpt/gpt-5.4"',
+      ].join("\n"),
+    );
+
+    expect(parsed.modelAliases).toEqual([
+      {
+        aliasId: "default.remote-only",
+        mode: "basic",
+        modelIds: ["chatgpt/gpt-5.4"],
+      },
+      {
+        aliasId: "controller.remote-only",
+        mode: "intelligent",
+        modelIds: ["deepseek/deepseek-v4-flash"],
+      },
+      {
+        aliasId: "exact.gpt-5.4",
+        mode: "basic",
+        modelIds: ["chatgpt/gpt-5.4"],
+      },
+    ]);
+  });
+
+  test("canonicalizes the primary routing alias to the default matrix when persisted strategy is unset", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      {
+        version: "1.0",
+        execution_mode: "local_only",
+        model_aliases: {
+          "mixed.local-remote": {
+            mode: "difficulty",
+            model_ids: ["lfm2.5-1.2b-instruct"],
+          },
+        },
+      },
+      {
+        routing_strategy: null,
+      },
+    );
+
+    expect(merged.routingStrategy).toBeNull();
+    expect(merged.modelAliases).toEqual([
+      {
+        aliasId: "default.local-only",
+        mode: "basic",
+        modelIds: ["lfm2.5-1.2b-instruct"],
+      },
+    ]);
+  });
+
+  test("preserves custom single-alias ids when they are not the primary routing alias", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      {
+        version: "1.0",
+        routing: {
+          strategy: "controller",
+        },
+        execution_mode: "remote_only",
+        model_aliases: {
+          "gpt-5.4": {
+            mode: "intelligent",
+            model_ids: ["chatgpt/gpt-5.4"],
+          },
+        },
+      },
+      {},
+    );
+
+    expect(merged.routingStrategy).toBe("controller");
+    expect(merged.executionMode).toBe("remote_only");
+    expect(merged.modelAliases).toEqual([
+      {
+        aliasId: "gpt-5.4",
+        mode: "intelligent",
+        modelIds: ["chatgpt/gpt-5.4"],
+      },
+    ]);
+  });
+
+  test("preserves explicitly configured modern primary alias ids even when routing strategy differs", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      {
+        version: "1.0",
+        routing: {
+          strategy: "balanced",
+        },
+        execution_mode: "remote_only",
+        model_aliases: {
+          "difficulty.remote-only": {
+            mode: "difficulty",
+            model_ids: ["remote/vision-model", "remote/code-model"],
+          },
+        },
+      },
+      {},
+    );
+
+    expect(merged.routingStrategy).toBe("balanced");
+    expect(merged.executionMode).toBe("remote_only");
+    expect(merged.modelAliases).toEqual([
+      {
+        aliasId: "difficulty.remote-only",
+        mode: "difficulty",
+        modelIds: ["remote/vision-model", "remote/code-model"],
+      },
+    ]);
+  });
+
+  test("renames a single primary alias when its execution suffix becomes stale", () => {
+    const merged = mergeUnifiedRuntimeConfigDocuments(
+      {
+        version: "1.0",
+        routing: {
+          strategy: "difficulty",
+        },
+        execution_mode: "hybrid",
+        model_aliases: {
+          "difficulty.hybrid": {
+            mode: "difficulty",
+            model_ids: ["remote/vision-model", "remote/code-model"],
+          },
+        },
+      },
+      {
+        execution_mode: "remote_only",
+      },
+    );
+
+    expect(merged.executionMode).toBe("remote_only");
+    expect(merged.modelAliases).toEqual([
+      {
+        aliasId: "difficulty.remote-only",
+        mode: "difficulty",
+        modelIds: ["remote/vision-model", "remote/code-model"],
+      },
+    ]);
   });
 });

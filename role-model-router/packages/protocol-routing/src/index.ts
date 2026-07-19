@@ -26,6 +26,11 @@ export interface RoutingModelSelection {
   preferredEndpointIds: readonly string[];
 }
 
+export interface CacheContinuityRoutingHints {
+  activeEndpointId: string | null;
+  warmedEndpointIds: readonly string[];
+}
+
 export interface ProjectRuntimeRouteInputInput {
   request: RoutingRequest;
   registry: EndpointRegistryResult;
@@ -40,7 +45,12 @@ export interface ProjectRuntimeRouteInputInput {
   taskDefinitions: readonly TaskDefinitionRecord[];
   roleBindings: readonly RoleBindingRecord[];
   routingModel?: RoutingModelSelection;
+  cacheContinuity?: CacheContinuityRoutingHints;
   maxOutputTokens?: number;
+  benchmarkCapabilitiesByEndpointId?: Record<
+    string,
+    CoreEndpointCandidate["benchmarkCapability"] | null | undefined
+  >;
 }
 
 export interface ProjectRuntimeRouteInputResult {
@@ -53,6 +63,7 @@ export interface ProjectRuntimeRouteInputResult {
       preferredEndpointIds: readonly string[];
       ignoredEndpointIds: readonly string[];
     };
+    cacheContinuity?: CacheContinuityRoutingHints;
   };
 }
 
@@ -106,9 +117,34 @@ function toCatalogCostEstimateSignals(
   };
 }
 
+function normalizeCacheContinuityHints(
+  cacheContinuity: ProjectRuntimeRouteInputInput["cacheContinuity"],
+): CacheContinuityRoutingHints | undefined {
+  if (!cacheContinuity) {
+    return undefined;
+  }
+  const warmedEndpointIds = [
+    ...new Set(
+      cacheContinuity.warmedEndpointIds.filter(
+        (endpointId): endpointId is string =>
+          typeof endpointId === "string" && endpointId.trim().length > 0,
+      ),
+    ),
+  ];
+  return {
+    activeEndpointId:
+      typeof cacheContinuity.activeEndpointId === "string" &&
+      cacheContinuity.activeEndpointId.trim().length > 0
+        ? cacheContinuity.activeEndpointId
+        : null,
+    warmedEndpointIds,
+  };
+}
+
 function toCoreCandidate(
   candidate: RegistryEndpointCandidate,
   input: ProjectRuntimeRouteInputInput,
+  cacheContinuity: CacheContinuityRoutingHints | undefined,
 ): CoreEndpointCandidate {
   const observedProfile = input.observedProfilesByEndpointId[candidate.identity.endpoint_id];
   const routingModelRank = toRoutingModelRank(candidate.identity.endpoint_id, input.routingModel);
@@ -133,15 +169,23 @@ function toCoreCandidate(
     identity: candidate.identity,
     declared: candidate.declared,
     observed,
+    ...(input.benchmarkCapabilitiesByEndpointId?.[candidate.identity.endpoint_id]
+      ? {
+          benchmarkCapability:
+            input.benchmarkCapabilitiesByEndpointId[candidate.identity.endpoint_id] ?? undefined,
+        }
+      : {}),
     status: candidate.status,
     deniedByPolicy: candidate.deniedByPolicy,
     runtimeEligibility: candidate.runtimeEligibility,
     routingSignals: {
       continuityAffinity:
+        cacheContinuity?.activeEndpointId === candidate.identity.endpoint_id ||
         input.envelope.latestHandoff?.toEndpointId === candidate.identity.endpoint_id,
-      cacheAffinity:
-        input.envelope.estimatedTokenCount <= candidate.declared.max_context_tokens &&
-        input.retrievalReceipt.summary.estimatedTokens <= candidate.declared.max_context_tokens,
+      cacheAffinity: cacheContinuity
+        ? cacheContinuity.warmedEndpointIds.includes(candidate.identity.endpoint_id)
+        : input.envelope.estimatedTokenCount <= candidate.declared.max_context_tokens &&
+          input.retrievalReceipt.summary.estimatedTokens <= candidate.declared.max_context_tokens,
       ...(typeof routingModelRank === "number" ? { routingModelRank } : {}),
       catalogCostEstimate,
     },
@@ -151,6 +195,7 @@ function toCoreCandidate(
 export function projectRuntimeRouteInput(
   input: ProjectRuntimeRouteInputInput,
 ): ProjectRuntimeRouteInputResult {
+  const cacheContinuity = normalizeCacheContinuityHints(input.cacheContinuity);
   const candidateIds = new Set(
     input.registry.endpoints.map((candidate) => candidate.identity.endpoint_id),
   );
@@ -179,7 +224,9 @@ export function projectRuntimeRouteInput(
   return {
     routeInput: {
       request: input.request,
-      candidates: input.registry.endpoints.map((candidate) => toCoreCandidate(candidate, input)),
+      candidates: input.registry.endpoints.map((candidate) =>
+        toCoreCandidate(candidate, input, cacheContinuity),
+      ),
       roleDefinitions: input.roleDefinitions,
       taskDefinitions: input.taskDefinitions,
       roleBindings: input.roleBindings,
@@ -202,6 +249,7 @@ export function projectRuntimeRouteInput(
             preferredEndpointIds: [],
             ignoredEndpointIds,
           },
+      ...(cacheContinuity ? { cacheContinuity } : {}),
     },
   };
 }

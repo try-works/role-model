@@ -1,0 +1,6 @@
+## rg -n "child_process|\bspawn\b|\bexec\b|role-model-launcher|authStorage|ROLE_MODEL_DATA_TOKEN|benchmark.*purchase" packages/pi-role-model/src packages/pi-role-model/skills packages/pi-role-model/README.md README.md
+README.md:207:corepack pnpm exec tsx scripts/start-for-qa.ts
+README.md:211:corepack pnpm exec react-router dev --port 5173 --host 127.0.0.1
+README.md:243:go build -o ../../dist/release/win32-x64/role-model-launcher.exe main.go
+README.md:249:Then double-click `role-model-launcher.exe` in `dist/release/win32-x64/`. It will:
+EXIT_CODE=0

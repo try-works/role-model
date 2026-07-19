@@ -1,0 +1,72 @@
+[
+  {
+    "requestId": "qa-telemetry-measured-001",
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "inputTokens": 120000,
+    "inputTokensSource": "measured",
+    "inputTokensAvailable": true,
+    "outputTokens": 4000,
+    "outputTokensSource": "measured",
+    "outputTokensAvailable": true,
+    "promptCacheRequested": true,
+    "promptCacheRequestSource": "explicit",
+    "cacheReadTokens": 90000
+  },
+  {
+    "requestId": "qa-telemetry-estimated-001",
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "inputTokens": 107,
+    "inputTokensSource": "estimated",
+    "inputTokensAvailable": true,
+    "outputTokens": 32,
+    "outputTokensSource": "estimated",
+    "outputTokensAvailable": true,
+    "promptCacheRequested": true,
+    "promptCacheRequestSource": "synthesized",
+    "cacheReadTokens": 0
+  },
+  {
+    "requestId": "qa-telemetry-unavailable-001",
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "inputTokens": 0,
+    "inputTokensSource": "unavailable",
+    "inputTokensAvailable": false,
+    "outputTokens": 0,
+    "outputTokensSource": "unavailable",
+    "outputTokensAvailable": false,
+    "promptCacheRequested": false,
+    "promptCacheRequestSource": null,
+    "cacheReadTokens": 0
+  },
+  {
+    "requestId": "qa-telemetry-zero-001",
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "inputTokens": 0,
+    "inputTokensSource": "measured",
+    "inputTokensAvailable": true,
+    "outputTokens": 0,
+    "outputTokensSource": "measured",
+    "outputTokensAvailable": true,
+    "promptCacheRequested": true,
+    "promptCacheRequestSource": "synthesized",
+    "cacheReadTokens": 0
+  },
+  {
+    "requestId": "qa-telemetry-measured-002",
+    "endpointId": "openai.personal.primary.us-east-1.fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "inputTokens": 400,
+    "inputTokensSource": "normalized",
+    "inputTokensAvailable": true,
+    "outputTokens": 80,
+    "outputTokensSource": "normalized",
+    "outputTokensAvailable": true,
+    "promptCacheRequested": true,
+    "promptCacheRequestSource": "synthesized",
+    "cacheReadTokens": 100
+  }
+]

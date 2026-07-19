@@ -1,0 +1,47 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/packages/protocol-routing
+
+(node:54092) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (10 tests | 1 failed | 9 skipped) 23ms
+   ↓ projectRuntimeRouteInput > merges registry candidates, observed profiles, and runtime routing signals
+   × routeRuntimeRequest > treats generic reasoning capability as satisfying reasoning effort control requests 21ms
+     → expected '' to be 'remote.reasoning' // Object.is equality
+   ↓ routeRuntimeRequest > treats active role-binding effective capabilities as satisfying required task capabilities
+   ↓ routeRuntimeRequest > emits canonical runtime eligibility exclusions from registry/provider-account state
+   ↓ routeRuntimeRequest > keeps explicit policy denial ahead of routing-model guidance
+   ↓ routeRuntimeRequest > disables routing model diagnostics when every preferred endpoint is ignored
+   ↓ routeRuntimeRequest > prefers fresher latency observations when adaptive observed-data scoring is enabled
+   ↓ routeRuntimeRequest > preserves benchmark-only quality freshness for quality routing even when benchmark samples are old
+   ↓ routeRuntimeRequest > excludes endpoints under an active throughput penalty when the penalty factor is zero
+   ↓ runRuntimeRoutingValidation > loads pinned fixtures and emits deterministic routing diagnostics
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > routeRuntimeRequest > treats generic reasoning capability as satisfying reasoning effort control requests
+AssertionError: expected '' to be 'remote.reasoning' // Object.is equality
+
+- Expected
++ Received
+
+- remote.reasoning
+
+ ❯ test/index.test.ts:294:48
+    292|     });
+    293|
+    294|     expect(result.decision.chosen_endpoint_id).toBe("remote.reasoning"…
+       |                                                ^
+    295|     expect(result.decision.eligibility).toEqual([
+    296|       expect.objectContaining({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 skipped (10)
+   Start at  08:38:03
+   Duration  1.95s (transform 585ms, setup 0ms, collect 707ms, tests 23ms, environment 0ms, prepare 584ms)
+
+undefined
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\role-model-router\packages\protocol-routing:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts -t treats generic reasoning capability as satisfying reasoning effort control requests

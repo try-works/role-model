@@ -1,0 +1,47 @@
+{
+  "runId": "67421812-9a7b-4d18-9996-592bba5d06a4",
+  "mode": "full",
+  "workflowVerdict": "VALID",
+  "controlCheck": "UNKNOWN",
+  "scores": {
+    "deepseek/deepseek-v4-flash": 0.8454545454545455,
+    "deepseek/deepseek-v4-pro": 0.9436363636363636,
+    "moonshot/kimi-k2.7-code": 0.9454545454545454,
+    "chatgpt/gpt-5.4": 0.9454545454545454
+  },
+  "metrics": {
+    "case_grades": 220,
+    "judge_parse_success": "220/220",
+    "judge_parse_rate": 1.0,
+    "heuristic_fallback": "0/220",
+    "heuristic_fallback_rate": 0.0,
+    "non_trivial_rationale": "220/220",
+    "non_trivial_rationale_rate": 1.0,
+    "artifact_stats": {
+      "attempts": 220,
+      "empty_raw": 0,
+      "grading_brief": 220,
+      "compare": 55
+    },
+    "scores_by_model": {
+      "deepseek/deepseek-v4-flash": 0.8454545454545455,
+      "deepseek/deepseek-v4-pro": 0.9436363636363636,
+      "moonshot/kimi-k2.7-code": 0.9454545454545454,
+      "chatgpt/gpt-5.4": 0.9454545454545454
+    },
+    "progress": {
+      "completedSteps": 495,
+      "totalSteps": 495,
+      "runPhase": "complete"
+    },
+    "compareArtifactCount": 55
+  },
+  "accuracyGates": {
+    "judge_parse_gte75_pct": "PASS",
+    "empty_raw_lt20_pct": "PASS",
+    "grading_brief_100_pct": "PASS",
+    "heuristic_fallback_lte25_pct": "PASS",
+    "non_trivial_rationale_gte80_pct": "PASS"
+  },
+  "failedGates": []
+}

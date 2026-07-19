@@ -1,0 +1,26 @@
+Done. **`D:\pi\agent\models.json`** has been updated with all 19 models from the live role-model endpoint at `http://127.0.0.1:3456/v1`.
+
+Here's a summary of what changed:
+
+| Before | After |
+|--------|-------|
+| 1 model (`hybrid.hybrid`) | **19 models** |
+
+**Routing aliases (12):** These combine multiple backends with different routing strategies:
+
+| Routing Mode | Models |
+|---|---|
+| **basic** | `baseline.*`, `default.*` |
+| **intelligent** | `controller.*` |
+| **difficulty** | `difficulty.*` |
+| **hybrid** | `hybrid.*` |
+
+Each routing group has three variants: `decision-only`, `hybrid`, `remote-only`.
+
+**Direct models (4):**
+- `chatgpt/gpt-5.4` — 1,050K context
+- `deepseek/deepseek-v4-flash` — 1,000K context, 384K max tokens
+- `deepseek/deepseek-v4-pro` — 1,000K context, 384K max tokens
+- `moonshot/kimi-k2.7-code` — 262K context, 262K max tokens
+
+All models support reasoning and tools/function calling. All except the DeepSeek pair support image input. The file reloads automatically when you open `/model` — no restart needed.

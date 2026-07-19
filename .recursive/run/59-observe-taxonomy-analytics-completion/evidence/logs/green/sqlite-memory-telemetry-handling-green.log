@@ -1,0 +1,14 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/role-model-router/packages/sqlite-memory
+
+(node:89036) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (31 tests | 29 skipped) 692ms
+   ✓ initializeSqliteMemory > persistRuntimeTelemetryFailure persists authoritative zero-cost metadata for pre-execution failures  371ms
+   ✓ initializeSqliteMemory > persistRuntimeObservationBundle projects telemetry handling receipts into the telemetry ledger  317ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 29 skipped (31)
+   Start at  12:46:34
+   Duration  3.76s (transform 1000ms, setup 0ms, collect 1.27s, tests 692ms, environment 0ms, prepare 507ms)
+

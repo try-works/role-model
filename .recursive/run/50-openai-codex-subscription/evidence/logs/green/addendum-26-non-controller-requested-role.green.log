@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge
+
+(node:36888) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (117 tests | 115 skipped) 466ms
+   ✓ runtime-host-bridge > executes non-controller requested coder.review requests without empty chosen-endpoint failures  437ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 115 skipped (117)
+   Start at  23:17:09
+   Duration  3.67s (transform 1.60s, setup 0ms, collect 2.16s, tests 466ms, environment 1ms, prepare 378ms)
+

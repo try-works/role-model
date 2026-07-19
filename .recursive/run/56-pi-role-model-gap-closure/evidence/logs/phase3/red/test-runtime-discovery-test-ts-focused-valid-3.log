@@ -1,0 +1,2746 @@
+## corepack pnpm --filter pi-role-model exec vitest run test/runtime-discovery.test.ts
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/56-pi-role-model-gap-closure/packages/pi-role-model[39m
+
+ [31m❯[39m test/runtime-discovery.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[32m 184[2mms[22m[39m
+[31m   [31m×[31m Role-Model runtime discovery[2m > [22mfetches health, version, and downstream discovery during normal discovery[39m[32m 55[2mms[22m[39m
+[31m     → expected [] to deeply equal [ …(3) ][39m
+[31m   [31m×[31m Role-Model runtime discovery[2m > [22mblocks remote endpoints before issuing network calls[39m[32m 70[2mms[22m[39m
+[31m     → expected TypeError: fetch failed to match object { state: 'blocked-remote', …(1) }[39m
+[31m   [31m×[31m Role-Model runtime discovery[2m > [22muses compact /v1/models fallback when rich discovery is unavailable[39m[32m 14[2mms[22m[39m
+[31m     → expected [] to include 'http://127.0.0.1:3456/v1/models'[39m
+[31m   [31m×[31m Role-Model runtime discovery[2m > [22mreports malformed rich discovery as incompatible without fallback[39m[32m 43[2mms[22m[39m
+[31m     → promise resolved "{ discovery: { …(10) }, …(1) }" instead of rejecting[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/runtime-discovery.test.ts > Role-Model runtime discovery > fetches health, version, and downstream discovery during normal discovery
+AssertionError: expected [] to deeply equal [ …(3) ]
+
+- Expected
++ Received
+
+- [
+-   "http://127.0.0.1:3456/healthz",
+-   "http://127.0.0.1:3456/api/version",
+-   "http://127.0.0.1:3456/api/role-model/downstream/openai",
+- ]
++ []
+
+ ❯ test/runtime-discovery.test.ts:26:19
+     24|     });
+     25| 
+     26|     expect(calls).toEqual([
+       |                   ^
+     27|       "http://127.0.0.1:3456/healthz",
+     28|       "http://127.0.0.1:3456/api/version",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/runtime-discovery.test.ts > Role-Model runtime discovery > blocks remote endpoints before issuing network calls
+AssertionError: expected TypeError: fetch failed to match object { state: 'blocked-remote', …(1) }
+
+- Expected
++ Received
+
+- {
+-   "remediation": StringContaining "allowRemote",
+-   "state": "blocked-remote",
++ TypeError {
++   "message": "fetch failed",
++   "cause": Error {
++     "message": "getaddrinfo ENOTFOUND role-model.example.test",
++     "errno": -3008,
++     "code": "ENOTFOUND",
++     "syscall": "getaddrinfo",
++     "hostname": "role-model.example.test",
++   },
+  }
+
+ ❯ test/runtime-discovery.test.ts:38:5
+     36|   test("blocks remote endpoints before issuing network calls", async (…
+     37|     const calls: string[] = [];
+     38|     await expect(
+       |     ^
+     39|       discoverRoleModelRuntime({
+     40|         endpoint: "https://role-model.example.test",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/runtime-discovery.test.ts > Role-Model runtime discovery > uses compact /v1/models fallback when rich discovery is unavailable
+AssertionError: expected [] to include 'http://127.0.0.1:3456/v1/models'
+ ❯ test/runtime-discovery.test.ts:82:19
+     80|     });
+     81| 
+     82|     expect(calls).toContain("http://127.0.0.1:3456/v1/models");
+       |                   ^
+     83|     expect(result.state).toBe("fallback");
+     84|     expect(result.warnings.join("\n")).toContain("compact /v1/models f…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/runtime-discovery.test.ts > Role-Model runtime discovery > reports malformed rich discovery as incompatible without fallback
+AssertionError: promise resolved "{ discovery: { …(10) }, …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "discovery": {
++     "authentication": {
++       "headerName": "Authorization",
++       "note": "Inbound bearer validation is not enforced yet. If a downstream client requires a token field, use this placeholder value.",
++       "placeholderToken": "role-model-local",
++       "required": false,
++       "type": "bearer",
++     },
++     "baseUrl": "http://127.0.0.1:3456",
++     "contractVersion": "role-model.downstream.openai.v1",
++     "displayName": "Role Model Runtime",
++     "endpoints": {
++       "chatCompletions": "http://127.0.0.1:3456/v1/chat/completions",
++       "health": "http://127.0.0.1:3456/healthz",
++       "models": "http://127.0.0.1:3456/v1/models",
++       "responses": "http://127.0.0.1:3456/v1/responses",
++     },
++     "freshness": {
++       "catalogCapturedAt": "2026-06-14T20:00:43.505Z",
++       "catalogVersion": "1",
++       "generatedAt": "2026-06-22T13:41:34.197Z",
++       "runtimeInventoryRevision": "6724b58e69412806",
++     },
++     "kind": "openai-compatible",
++     "models": [
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "baseline.decision-only",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "basic",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "baseline.hybrid",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "basic",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "baseline.remote-only",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "basic",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++           ],
++         },
++         "endpoint_ids": [
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "chatgpt/gpt-5.4",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 128000,
++           "safeContextWindow": 1050000,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++           ],
++           "conditionalInput": {},
++           "guaranteedInput": [
++             "image",
++             "pdf",
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 1050000,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++           ],
++         },
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++         ],
++         "type": "model",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "controller.decision-only",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "intelligent",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "controller.hybrid",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "intelligent",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "controller.remote-only",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "intelligent",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "deepseek/deepseek-v4-flash",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           ],
++           "modelIds": [
++             "deepseek/deepseek-v4-flash",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++         ],
++         "id": "deepseek/deepseek-v4-flash",
++         "limits": {
++           "maxContextWindow": 1000000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 1000000,
++           "safeMaxOutputTokens": 384000,
++         },
++         "modalities": {
++           "availableInput": [
++             "text",
++           ],
++           "conditionalInput": {},
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 1000000,
++           "maxTokens": 384000,
++         },
++         "providerIds": [
++           "deepseek",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           ],
++           "modelIds": [
++             "deepseek/deepseek-v4-flash",
++           ],
++         },
++         "sources": [
++           "catalog:deepseek/deepseek-v4-flash",
++         ],
++         "targetModelIds": [
++           "deepseek/deepseek-v4-flash",
++         ],
++         "type": "model",
++       },
++       {
++         "canonicalModelIds": [
++           "deepseek/deepseek-v4-pro",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           ],
++           "modelIds": [
++             "deepseek/deepseek-v4-pro",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++         ],
++         "id": "deepseek/deepseek-v4-pro",
++         "limits": {
++           "maxContextWindow": 1000000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 1000000,
++           "safeMaxOutputTokens": 384000,
++         },
++         "modalities": {
++           "availableInput": [
++             "text",
++           ],
++           "conditionalInput": {},
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 1000000,
++           "maxTokens": 384000,
++         },
++         "providerIds": [
++           "deepseek",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           ],
++           "modelIds": [
++             "deepseek/deepseek-v4-pro",
++           ],
++         },
++         "sources": [
++           "catalog:deepseek/deepseek-v4-pro",
++         ],
++         "targetModelIds": [
++           "deepseek/deepseek-v4-pro",
++         ],
++         "type": "model",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "default.decision-only",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "basic",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "default.hybrid",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "basic",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "default.remote-only",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "basic",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "difficulty.decision-only",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "difficulty",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "difficulty.hybrid",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "difficulty",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "difficulty.remote-only",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "difficulty",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "hybrid.decision-only",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "hybrid",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "hybrid.hybrid",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "hybrid",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++           "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           "openai.personal.openai-codex-subscription.global.gpt-5.4",
++         ],
++         "id": "hybrid.remote-only",
++         "limits": {
++           "maxContextWindow": 1050000,
++           "maxOutputTokens": 384000,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 128000,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "pdf",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {
++             "image": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++             "pdf": {
++               "endpointIds": [
++                 "openai.personal.openai-codex-subscription.global.gpt-5.4",
++               ],
++               "targetModelIds": [
++                 "chatgpt/gpt-5.4",
++               ],
++             },
++             "video": {
++               "endpointIds": [
++                 "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++               ],
++               "targetModelIds": [
++                 "moonshot/kimi-k2.7-code",
++               ],
++             },
++           },
++           "guaranteedInput": [
++             "text",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 128000,
++         },
++         "providerIds": [
++           "deepseek",
++           "moonshot",
++           "openai",
++         ],
++         "routable": {
++           "endpointIds": [
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
++             "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++             "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           ],
++           "modelIds": [
++             "chatgpt/gpt-5.4",
++             "deepseek/deepseek-v4-flash",
++             "deepseek/deepseek-v4-pro",
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "routingMode": "hybrid",
++         "sources": [
++           "catalog:chatgpt/gpt-5.4",
++           "catalog:deepseek/deepseek-v4-flash",
++           "catalog:deepseek/deepseek-v4-pro",
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "chatgpt/gpt-5.4",
++           "deepseek/deepseek-v4-flash",
++           "deepseek/deepseek-v4-pro",
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "alias",
++       },
++       {
++         "canonicalModelIds": [
++           "moonshot/kimi-k2.7-code",
++         ],
++         "capabilities": {
++           "available": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "caching": {
++             "promptRead": false,
++             "promptWrite": false,
++             "source": "catalog",
++           },
++           "conditional": {},
++           "guaranteed": [
++             "code.edit",
++             "reasoning",
++             "structured.output",
++             "text.chat",
++             "tools.function_calling",
++           ],
++           "reasoning": {
++             "effortControl": true,
++             "supported": true,
++           },
++           "structuredOutput": {
++             "supported": true,
++           },
++           "tools": {
++             "functionCalling": true,
++           },
++         },
++         "declared": {
++           "endpointIds": [
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           ],
++           "modelIds": [
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "endpoint_ids": [
++           "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++         ],
++         "id": "moonshot/kimi-k2.7-code",
++         "limits": {
++           "maxContextWindow": 262144,
++           "maxOutputTokens": 262144,
++           "safeContextWindow": 262144,
++           "safeMaxOutputTokens": 262144,
++         },
++         "modalities": {
++           "availableInput": [
++             "image",
++             "text",
++             "video",
++           ],
++           "conditionalInput": {},
++           "guaranteedInput": [
++             "image",
++             "text",
++             "video",
++           ],
++           "output": [
++             "text",
++           ],
++         },
++         "object": "model",
++         "owned_by": "role-model",
++         "piMapping": {
++           "contextWindow": 262144,
++           "maxTokens": 262144,
++         },
++         "providerIds": [
++           "moonshot",
++         ],
++         "routable": {
++           "endpointIds": [
++             "moonshot.personal.kimi-code.global.kimi-k2.7-code",
++           ],
++           "modelIds": [
++             "moonshot/kimi-k2.7-code",
++           ],
++         },
++         "sources": [
++           "catalog:moonshot/kimi-k2.7-code",
++         ],
++         "targetModelIds": [
++           "moonshot/kimi-k2.7-code",
++         ],
++         "type": "model",
++       },
++     ],
++     "providerId": "role-model-runtime",
++     "setup": {
++       "notes": [
++         "Configure downstream tooling as an OpenAI-compatible provider.",
++         "Use /api/role-model/downstream/openai for alias capability metadata.",
++         "Use GET /v1/models for the compact OpenAI-compatible model list.",
++         "Use conservative piMapping limits unless the request is routed with explicit conditional capability support.",
++       ],
++       "recommendedModel": "default.decision-only",
++     },
++   },
++   "version": {
++     "build_date": "runtime-derived",
++     "commit": "runtime-derived",
++     "version": "1.0",
++   },
+  }
+
+ ❯ test/runtime-discovery.test.ts:97:5
+     95|         },
+     96|       }),
+     97|     ).rejects.toBeInstanceOf(RoleModelDiscoveryError);
+       |     ^
+     98| 
+     99|     await expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m4 failed[39m[22m[90m (4)[39m
+[2m   Start at [22m 15:41:32
+[2m   Duration [22m 1.31s[2m (transform 148ms, setup 0ms, collect 164ms, tests 184ms, environment 0ms, prepare 448ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\56-pi-role-model-gap-closure\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/runtime-discovery.test.ts
+EXIT_CODE=1

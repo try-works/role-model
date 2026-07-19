@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge
+
+(node:33316) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/openai-codex-subscription-matrix.test.ts (6 tests | 4 skipped) 3138ms
+   ✓ OpenAI Codex Subscription model matrix > accepts hosted web search and function-tool request surfaces for every supported OpenAI model id  3134ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 4 skipped (6)
+   Start at  20:30:16
+   Duration  7.41s (transform 1.96s, setup 0ms, collect 2.28s, tests 3.14s, environment 0ms, prepare 934ms)
+

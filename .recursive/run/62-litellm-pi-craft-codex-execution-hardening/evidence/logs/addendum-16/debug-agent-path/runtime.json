@@ -1,0 +1,8 @@
+{
+  "baseUrl": "http://127.0.0.1:56052",
+  "runtimeStateRoot": ".recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/logs/addendum-16/debug-agent-path-state",
+  "aliases": {
+    "difficultyHybrid": "difficulty.hybrid",
+    "difficultyRemoteOnly": "difficulty.remote-only"
+  }
+}

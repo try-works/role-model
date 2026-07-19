@@ -1,0 +1,40 @@
+{
+  "name": "direct-chatgpt-responses-temperature",
+  "path": "/v1/responses",
+  "requestBody": {
+    "model": "chatgpt/gpt-5.4",
+    "input": "Reply exactly ADD17_RESPONSES_TEMPERATURE_OK.",
+    "temperature": 0,
+    "stream": false
+  },
+  "status": 200,
+  "ok": true,
+  "elapsedMs": 3185,
+  "responsePreview": "{\"id\":\"chatcmpl_req-f1b5f9c7-140a-49bf-adf2-eab4c226f568\",\"object\":\"response\",\"created_at\":1783642941,\"status\":\"completed\",\"model\":\"chatgpt/gpt-5.4\",\"output\":[{\"type\":\"message\",\"id\":\"msg_chatcmpl_req-f1b5f9c7-140a-49bf-adf2-eab4c226f568\",\"r",
+  "error": null,
+  "response": {
+    "id": "chatcmpl_req-f1b5f9c7-140a-49bf-adf2-eab4c226f568",
+    "object": "response",
+    "created_at": 1783642941,
+    "status": "completed",
+    "model": "chatgpt/gpt-5.4",
+    "output": [
+      {
+        "type": "message",
+        "id": "msg_chatcmpl_req-f1b5f9c7-140a-49bf-adf2-eab4c226f568",
+        "role": "assistant",
+        "content": [
+          {
+            "type": "output_text",
+            "text": "ADD17_RESPONSES_TEMPERATURE_OK"
+          }
+        ]
+      }
+    ],
+    "usage": {
+      "input_tokens": 18,
+      "output_tokens": 13,
+      "total_tokens": 31
+    }
+  }
+}

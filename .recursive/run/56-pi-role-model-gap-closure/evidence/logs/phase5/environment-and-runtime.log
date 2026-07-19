@@ -1,0 +1,140 @@
+## Get-Command pi
+
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+ExternalScript  pi.ps1                                                        D:\pi\node_modules\.bin\pi.ps1
+
+## pi --help
+pi - AI coding assistant with read, bash, edit, write tools
+
+Usage:
+  pi [options] [@files...] [messages...]
+
+Commands:
+  pi install <source> [-l]     Install extension source and add to settings
+  pi remove <source> [-l]      Remove extension source from settings
+  pi uninstall <source> [-l]   Alias for remove
+  pi update [source|self|pi]   Update pi (use --all for pi and extensions)
+  pi list                      List installed extensions from settings
+  pi config                    Open TUI to enable/disable package resources
+  pi <command> --help          Show help for install/remove/uninstall/update/list
+
+Options:
+  --provider <name>              Provider name (default: google)
+  --model <pattern>              Model pattern or ID (supports "provider/id" and optional ":<thinking>")
+  --api-key <key>                API key (defaults to env vars)
+  --system-prompt <text>         System prompt (default: coding assistant prompt)
+  --append-system-prompt <text>  Append text or file contents to the system prompt (can be used multiple times)
+  --mode <mode>                  Output mode: text (default), json, or rpc
+  --print, -p                    Non-interactive mode: process prompt and exit
+  --continue, -c                 Continue previous session
+  --resume, -r                   Select a session to resume
+  --session <path|id>            Use specific session file or partial UUID
+  --session-id <id>              Use exact project session ID, creating it if missing
+  --fork <path|id>               Fork specific session file or partial UUID into a new session
+  --session-dir <dir>            Directory for session storage and lookup
+  --no-session                   Don't save session (ephemeral)
+  --name, -n <name>              Set session display name
+  --models <patterns>            Comma-separated model patterns for Ctrl+P cycling
+                                 Supports globs (anthropic/*, *sonnet*) and fuzzy matching
+  --no-tools, -nt                Disable all tools by default (built-in and extension)
+  --no-builtin-tools, -nbt       Disable built-in tools by default but keep extension/custom tools enabled
+  --tools, -t <tools>            Comma-separated allowlist of tool names to enable
+                                 Applies to built-in, extension, and custom tools
+  --exclude-tools, -xt <tools>   Comma-separated denylist of tool names to disable
+                                 Applies to built-in, extension, and custom tools
+  --thinking <level>             Set thinking level: off, minimal, low, medium, high, xhigh
+  --extension, -e <path>         Load an extension file (can be used multiple times)
+  --no-extensions, -ne           Disable extension discovery (explicit -e paths still work)
+  --skill <path>                 Load a skill file or directory (can be used multiple times)
+  --no-skills, -ns               Disable skills discovery and loading
+  --prompt-template <path>       Load a prompt template file or directory (can be used multiple times)
+  --no-prompt-templates, -np     Disable prompt template discovery and loading
+  --theme <path>                 Load a theme file or directory (can be used multiple times)
+  --no-themes                    Disable theme discovery and loading
+  --no-context-files, -nc        Disable AGENTS.md and CLAUDE.md discovery and loading
+  --export <file>                Export session file to HTML and exit
+  --list-models [search]         List available models (with optional fuzzy search)
+  --verbose                      Force verbose startup (overrides quietStartup setting)
+  --approve, -a                  Trust project-local files for this run
+  --no-approve, -na              Ignore project-local files for this run
+  --offline                      Disable startup network operations (same as PI_OFFLINE=1)
+  --help, -h                     Show this help
+  --version, -v                  Show version number
+
+Extensions can register additional flags (e.g., --plan from plan-mode extension).
+
+Examples:
+  # Interactive mode
+  pi
+
+  # Interactive mode with initial prompt
+  pi "List all .ts files in src/"
+
+  # Include files in initial message
+  pi @prompt.md @image.png "What color is the sky?"
+
+  # Non-interactive mode (process and exit)
+  pi -p "List all .ts files in src/"
+
+  # Multiple messages (interactive)
+  pi "Read package.json" "What dependencies do we have?"
+
+  # Continue previous session
+  pi --continue "What did we discuss?"
+
+  # Start a named session
+  pi --name "Refactor auth module"
+
+  # Use different model
+  pi --provider openai --model gpt-4o-mini "Help me refactor this code"
+
+  # Use model with provider prefix (no --provider needed)
+  pi --model openai/gpt-4o "Help me refactor this code"
+
+  # Use model with thinking level shorthand
+  pi --model sonnet:high "Solve this complex problem"
+
+  # Limit model cycling to specific models
+  pi --models claude-sonnet,claude-haiku,gpt-4o
+
+  # Limit to a specific provider with glob pattern
+  pi --models "github-copilot/*"
+
+  # Cycle models with fixed thinking levels
+  pi --models sonnet:high,haiku:low
+
+  # Start with a specific thinking level
+  pi --thinking high "Solve this complex problem"
+
+  # Read-only mode (no file modifications possible)
+  pi --tools read,grep,find,ls -p "Review the code in src/"
+
+  # Disable one tool while keeping the rest available
+  pi --exclude-tools ask_question
+
+  # Export a session file to HTML
+  pi --export ~/.pi/agent/sessions/--path--/session.jsonl
+  pi --export session.jsonl output.html
+
+Environment Variables:
+  ANTHROPIC_API_KEY                - Anthropic Claude API key
+  ANTHROPIC_OAUTH_TOKEN            - Anthropic OAuth token (alternative to API key)
+  ANT_LING_API_KEY                 - Ant Ling API key
+  OPENAI_API_KEY                   - OpenAI GPT API key
+  AZURE_OPENAI_API_KEY             - Azure OpenAI API key
+  AZURE_OPENAI_BASE_URL            - Azure OpenAI/Cognitive Services base URL (e.g. https://{resource}.openai.azure.com)
+  AZURE_OPENAI_RESOURCE_NAME       - Azure OpenAI resource name (alternative to base URL)
+## GET http://127.0.0.1:3456/healthz
+STATUS=200
+{"status":"degraded","executionMode":"remote_only","vendors":{"llama-swap":{"vendorId":"llama-swap","healthStatus":"inactive"},"litellm":{"vendorId":"litellm","healthStatus":"inactive"}},"inactiveVendors":["llama-swap","litellm"],"credentialLifecycleAuthority":{"state":"authoritative","bootstrapStatus":"degraded"},"sessionBootstrap":{"status":"degraded","startedAt":"2026-06-22T07:27:27.294Z","finishedAt":"2026-06-22T07:27:29.068Z","stages":[{"stageId":"credentials","status":"ready","startedAt":"2026-06-22T07:27:27.294Z","finishedAt":"2026-06-22T07:27:27.951Z","details":{"pendingAttempted":0,"pendingSucceeded":0,"pendingConnected":0,"pendingFailed":0,"pendingDeferred":0,"refreshAttempted":1,"refreshSucceeded":1,"refreshFailed":0}},{"stageId":"endpoints","status":"ready","startedAt":"2026-06
+## GET http://127.0.0.1:3456/api/version
+STATUS=200
+{"version":"1.0","commit":"runtime-derived","build_date":"runtime-derived"}
+
+## GET http://127.0.0.1:3456/api/role-model/downstream/openai
+STATUS=200
+{"contractVersion":"role-model.downstream.openai.v1","kind":"openai-compatible","providerId":"role-model-runtime","displayName":"Role Model Runtime","baseUrl":"http://127.0.0.1:3456","endpoints":{"health":"http://127.0.0.1:3456/healthz","models":"http://127.0.0.1:3456/v1/models","chatCompletions":"http://127.0.0.1:3456/v1/chat/completions","responses":"http://127.0.0.1:3456/v1/responses"},"authentication":{"type":"bearer","headerName":"Authorization","required":false,"placeholderToken":"role-model-local","note":"Inbound bearer validation is not enforced yet. If a downstream client requires a token field, use this placeholder value."},"models":[{"id":"baseline.decision-only","object":"model","owned_by":"role-model","endpoint_ids":["deepseek.personal.deepseek-credential.global.deepseek-v4-fl
+## GET http://127.0.0.1:3456/v1/models
+STATUS=200
+{"object":"list","data":[{"id":"baseline.decision-only","object":"model","owned_by":"role-model","endpoint_ids":["deepseek.personal.deepseek-credential.global.deepseek-v4-flash","deepseek.personal.deepseek-credential.global.deepseek-v4-pro","moonshot.personal.kimi-code.global.kimi-k2.7-code","openai.personal.openai-codex-subscription.global.gpt-5.4"],"context_window":262144,"max_tokens":128000,"input":["text","image"],"input_modalities":["image","pdf","text","video"],"output_modalities":["text"],"capabilities":["code.edit","reasoning","structured.output","text.chat","tools.function_calling"],"role_model":{"type":"alias","routing_mode":"basic","discovery_url":"http://127.0.0.1:3456/api/role-model/downstream/openai","capability_revision":"6724b58e69412806","context_window":262144,"max_tokens

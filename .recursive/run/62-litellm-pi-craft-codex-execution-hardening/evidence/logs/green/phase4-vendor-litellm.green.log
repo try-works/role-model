@@ -1,0 +1,15 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/vendor-litellm
+
+ ✓ test/index.test.ts (13 tests) 2908ms
+   ✓ vendor-litellm > starts a managed LiteLLM vendor and captures cost plus cache metadata from responses  595ms
+   ✓ vendor-litellm > captures response cost from LiteLLM headers when the proxy strips hidden params  505ms
+   ✓ vendor-litellm > captures cache status from LiteLLM headers when the proxy omits hidden cache markers  580ms
+   ✓ vendor-litellm > forwards fallback model ids into the LiteLLM request body  564ms
+   ✓ vendor-litellm > streams chat-completions deltas through the managed LiteLLM vendor  472ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  01:56:03
+   Duration  7.67s (transform 436ms, setup 0ms, collect 736ms, tests 2.91s, environment 0ms, prepare 1.36s)
+

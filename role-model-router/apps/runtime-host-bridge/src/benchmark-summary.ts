@@ -1,6 +1,9 @@
 import { readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import { canonicalTaxonomy } from "@role-model-router/core";
+import type { TaxonomyDimensionScoreMap } from "@role-model/protocol-types";
+
 import type { BenchmarkCompareRecord, BenchmarkRunManifest } from "./benchmark-artifacts.js";
 import { resolveBenchmarkRunArtifactDir } from "./benchmark-artifacts.js";
 
@@ -38,6 +41,17 @@ export interface BenchmarkPersistedEndpointGrade {
     readonly judgeUnavailable?: boolean;
     readonly cappedByValidator?: boolean;
   }[];
+  readonly caseTaxonomyTags?: Record<
+    string,
+    {
+      readonly roleId: string;
+      readonly taskType: string;
+      readonly variant?: string;
+      readonly requiredCapabilities?: readonly string[];
+      readonly requiredModalities?: readonly string[];
+      readonly toolClasses?: readonly string[];
+    }
+  >;
 }
 
 export interface BenchmarkPersistedRunResult {
@@ -80,6 +94,10 @@ export interface BenchmarkSummarySubject {
   >;
   readonly passingCaseIds: readonly string[];
   readonly caseCount: number;
+  readonly taxonomyScores?: Partial<TaxonomyDimensionScoreMap>;
+  readonly taxonomyCoverage?: Partial<
+    Record<keyof TaxonomyDimensionScoreMap, Record<string, number>>
+  >;
 }
 
 export interface BenchmarkSummaryResponse {
@@ -111,6 +129,17 @@ export interface BenchmarkCapability {
   readonly scoresByBucket: Partial<
     Record<"easy" | "medium" | "hard", { readonly score: number; readonly cases?: number }>
   >;
+  readonly taskScores?: Record<string, number>;
+  readonly roleScores?: Record<string, number>;
+  readonly eligibleRoleScores?: Record<string, number>;
+  readonly groupScores?: Record<string, number>;
+  readonly coverage?: {
+    readonly overallCases: number;
+    readonly roleCases?: Record<string, number>;
+    readonly groupCases?: Record<string, number>;
+    readonly lowCoverageRoleIds?: readonly string[];
+    readonly lowCoverageGroupIds?: readonly string[];
+  };
   readonly benchmarkSamples: number;
   readonly sampleCount: number;
   readonly measuredAtMs: number | null;
@@ -118,6 +147,155 @@ export interface BenchmarkCapability {
   readonly lastRunId: string | null;
   readonly lastRunCompletedAtMs: number | null;
   readonly judgeEndpointId: string | null;
+}
+
+const BENCHMARK_LOW_COVERAGE_CASE_COUNT = 2;
+
+function computeTaxonomyAggregates(
+  caseResults: readonly { readonly caseId: string; readonly score: number }[],
+  caseTaxonomyTags: Record<
+    string,
+    {
+      readonly roleId: string;
+      readonly taskType: string;
+      readonly variant?: string;
+      readonly requiredCapabilities?: readonly string[];
+      readonly requiredModalities?: readonly string[];
+      readonly toolClasses?: readonly string[];
+    }
+  >,
+): {
+  readonly scores: BenchmarkSummarySubject["taxonomyScores"];
+  readonly coverage: BenchmarkSummarySubject["taxonomyCoverage"];
+} {
+  const byRole: Record<string, { total: number; count: number }> = {};
+  const byTask: Record<string, { total: number; count: number }> = {};
+  const byVariant: Record<string, { total: number; count: number }> = {};
+  const byCapability: Record<string, { total: number; count: number }> = {};
+  const byModality: Record<string, { total: number; count: number }> = {};
+  const byToolClass: Record<string, { total: number; count: number }> = {};
+
+  for (const cr of caseResults) {
+    const tags = caseTaxonomyTags[cr.caseId];
+    if (!tags) continue;
+
+    if (!byRole[tags.roleId]) byRole[tags.roleId] = { total: 0, count: 0 };
+    byRole[tags.roleId].total += cr.score;
+    byRole[tags.roleId].count++;
+
+    if (!byTask[tags.taskType]) byTask[tags.taskType] = { total: 0, count: 0 };
+    byTask[tags.taskType].total += cr.score;
+    byTask[tags.taskType].count++;
+
+    if (tags.variant) {
+      if (!byVariant[tags.variant]) byVariant[tags.variant] = { total: 0, count: 0 };
+      byVariant[tags.variant].total += cr.score;
+      byVariant[tags.variant].count++;
+    }
+
+    for (const cap of tags.requiredCapabilities ?? []) {
+      if (!byCapability[cap]) byCapability[cap] = { total: 0, count: 0 };
+      byCapability[cap].total += cr.score;
+      byCapability[cap].count++;
+    }
+
+    for (const mod of tags.requiredModalities ?? []) {
+      if (!byModality[mod]) byModality[mod] = { total: 0, count: 0 };
+      byModality[mod].total += cr.score;
+      byModality[mod].count++;
+    }
+
+    for (const tc of tags.toolClasses ?? []) {
+      if (!byToolClass[tc]) byToolClass[tc] = { total: 0, count: 0 };
+      byToolClass[tc].total += cr.score;
+      byToolClass[tc].count++;
+    }
+  }
+
+  return {
+    scores: {
+      byRole: Object.fromEntries(Object.entries(byRole).map(([k, v]) => [k, v.total / v.count])),
+      byTask: Object.fromEntries(Object.entries(byTask).map(([k, v]) => [k, v.total / v.count])),
+      byVariant: Object.fromEntries(
+        Object.entries(byVariant).map(([k, v]) => [k, v.total / v.count]),
+      ),
+      byCapability: Object.fromEntries(
+        Object.entries(byCapability).map(([k, v]) => [k, v.total / v.count]),
+      ),
+      byModality: Object.fromEntries(
+        Object.entries(byModality).map(([k, v]) => [k, v.total / v.count]),
+      ),
+      byToolClass: Object.fromEntries(
+        Object.entries(byToolClass).map(([k, v]) => [k, v.total / v.count]),
+      ),
+    },
+    coverage: {
+      byRole: Object.fromEntries(Object.entries(byRole).map(([k, v]) => [k, v.count])),
+      byTask: Object.fromEntries(Object.entries(byTask).map(([k, v]) => [k, v.count])),
+      byVariant: Object.fromEntries(Object.entries(byVariant).map(([k, v]) => [k, v.count])),
+      byCapability: Object.fromEntries(Object.entries(byCapability).map(([k, v]) => [k, v.count])),
+      byModality: Object.fromEntries(Object.entries(byModality).map(([k, v]) => [k, v.count])),
+      byToolClass: Object.fromEntries(Object.entries(byToolClass).map(([k, v]) => [k, v.count])),
+    },
+  };
+}
+
+function buildEligibleRoleScores(input: {
+  readonly roleScores?: Record<string, number>;
+  readonly availableRoleIds?: readonly string[];
+}): Record<string, number> | undefined {
+  if (!input.roleScores) {
+    return undefined;
+  }
+  if (!input.availableRoleIds || input.availableRoleIds.length === 0) {
+    return undefined;
+  }
+  const allowed = new Set(input.availableRoleIds);
+  const filtered = Object.fromEntries(
+    Object.entries(input.roleScores).filter(([roleId]) => allowed.has(roleId)),
+  );
+  return Object.keys(filtered).length > 0 ? filtered : undefined;
+}
+
+function buildGroupScores(input: {
+  readonly eligibleRoleScores?: Record<string, number>;
+  readonly roleCases?: Record<string, number>;
+}): {
+  readonly groupScores?: Record<string, number>;
+  readonly groupCases?: Record<string, number>;
+} {
+  if (!input.eligibleRoleScores) {
+    return {};
+  }
+
+  const groupsByRoleId = new Map(
+    canonicalTaxonomy.roles.map((role) => [
+      role.id,
+      [role.primaryGroupId, ...role.secondaryGroupIds],
+    ]),
+  );
+  const totalsByGroupId: Record<string, number> = {};
+  const countsByGroupId: Record<string, number> = {};
+
+  for (const [roleId, score] of Object.entries(input.eligibleRoleScores)) {
+    const groupIds = groupsByRoleId.get(roleId) ?? [];
+    const roleCases = input.roleCases?.[roleId] ?? 1;
+    for (const groupId of groupIds) {
+      totalsByGroupId[groupId] = (totalsByGroupId[groupId] ?? 0) + score * roleCases;
+      countsByGroupId[groupId] = (countsByGroupId[groupId] ?? 0) + roleCases;
+    }
+  }
+
+  const groupScores = Object.fromEntries(
+    Object.entries(totalsByGroupId).map(([groupId, total]) => [
+      groupId,
+      total / (countsByGroupId[groupId] ?? 1),
+    ]),
+  );
+  return {
+    groupScores: Object.keys(groupScores).length > 0 ? groupScores : undefined,
+    groupCases: Object.keys(countsByGroupId).length > 0 ? countsByGroupId : undefined,
+  };
 }
 
 export const EMPTY_BENCHMARK_SUMMARY: BenchmarkSummaryResponse = {
@@ -254,6 +432,18 @@ async function buildBenchmarkSummaryResponse(input: {
         scoresByBucket: grade.byDifficulty,
         passingCaseIds,
         caseCount: grade.caseResults.length,
+        ...(grade.caseTaxonomyTags
+          ? (() => {
+              const aggregates = computeTaxonomyAggregates(
+                grade.caseResults,
+                grade.caseTaxonomyTags,
+              );
+              return {
+                taxonomyScores: aggregates.scores,
+                taxonomyCoverage: aggregates.coverage,
+              };
+            })()
+          : {}),
       });
     }
   }
@@ -468,6 +658,7 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
   readonly latestProfile: Record<string, unknown> | null | undefined;
   readonly difficultyProfiles?: Record<string, unknown> | null;
   readonly summary: BenchmarkSummaryResponse;
+  readonly availableRoleIds?: readonly string[];
 }): BenchmarkCapability | null {
   const capability = buildBenchmarkCapability({
     latestProfile: input.latestProfile,
@@ -482,10 +673,41 @@ export function buildBenchmarkCapabilityForEndpoint(input: {
     (subject) => subject.endpointId === input.endpointId,
   );
   if (summarySubject) {
+    const roleScores = summarySubject.taxonomyScores?.byRole;
+    const eligibleRoleScores = buildEligibleRoleScores({
+      roleScores,
+      availableRoleIds: input.availableRoleIds,
+    });
+    const { groupScores, groupCases } = buildGroupScores({
+      eligibleRoleScores,
+      roleCases: summarySubject.taxonomyCoverage?.byRole,
+    });
+    const lowCoverageRoleIds = Object.entries(summarySubject.taxonomyCoverage?.byRole ?? {})
+      .filter(([, cases]) => cases < BENCHMARK_LOW_COVERAGE_CASE_COUNT)
+      .map(([roleId]) => roleId);
+    const lowCoverageGroupIds = Object.entries(groupCases ?? {})
+      .filter(([, cases]) => cases < BENCHMARK_LOW_COVERAGE_CASE_COUNT)
+      .map(([groupId]) => groupId);
+
     return {
       ...capability,
       overallScore: summarySubject.overallScore,
       scoresByBucket: summarySubject.scoresByBucket,
+      ...(summarySubject.taxonomyScores?.byTask
+        ? { taskScores: summarySubject.taxonomyScores.byTask }
+        : {}),
+      ...(roleScores ? { roleScores } : {}),
+      ...(eligibleRoleScores ? { eligibleRoleScores } : {}),
+      ...(groupScores ? { groupScores } : {}),
+      coverage: {
+        overallCases: summarySubject.caseCount,
+        ...(summarySubject.taxonomyCoverage?.byRole
+          ? { roleCases: summarySubject.taxonomyCoverage.byRole }
+          : {}),
+        ...(groupCases ? { groupCases } : {}),
+        lowCoverageRoleIds,
+        lowCoverageGroupIds,
+      },
     };
   }
   return capability;

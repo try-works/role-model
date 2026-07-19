@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "h08-multi-turn-tool-refine",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h08-multi-turn-tool-refine-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ],\n  \"answer\": \"controller\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"controller\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"state/runtime-config.yaml\"\n      }\n    }\n  ],\n  \"answer\": \"controller\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 3961,
+  "failure": false,
+  "recordedAtMs": 1783931772583
+}

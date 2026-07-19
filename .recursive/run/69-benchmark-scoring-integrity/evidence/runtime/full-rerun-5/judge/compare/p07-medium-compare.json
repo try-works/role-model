@@ -1,0 +1,50 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p07-medium-compare",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"Local Inference\\nPros:\\n- Stronger privacy: data stays on-device and is not sent to third-party servers\\n- No network latency: faster response times once the model is loaded\\n- No subscription or per-token API costs beyond ha",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"- Local inference\\n  - Pros:\\n    - Better privacy; data stays on your device or network.\\n    - Lower recurring cost after setup for frequent use.\\n    - Works offline or with limited internet.\\n    - Lower latency for simpl",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both answers accurately address the comparison with relevant technical detail and proper bullet points. The first answer offers slightly more specific and practical details (e.g., quantization, battery impact, compliance), making it a bit more thorough. The second answer is also correct but includes less technical depth, though its rule-of-thumb section is useful. Therefore, the first is ranked h…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both answers accurately address the comparison with relevant technical detail and proper bullet points. The first answer offers slightly more specific and practical details (e.g., quantization, battery impact, compliance), making it a bit more thorough. The second answer is also correct but includes less technical depth, though its rule-of-thumb section is useful. Therefore, the first is ranked higher.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nCompare local inference vs remote API for a personal assistant. Give pros and cons in bullet points.",
+    "exemplarAnswer": "Accurate explanatory answer to the user question.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Answers the question with relevant technical detail.",
+      "[MUST] Include JSON keys: answer"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 574,
+    "reasoningLength": 4590
+  },
+  "recordedAtMs": 1783936005470
+}

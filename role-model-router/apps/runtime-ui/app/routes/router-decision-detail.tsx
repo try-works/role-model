@@ -5,14 +5,21 @@ import {
   CodeBlock,
   EmptyState,
   ErrorState,
-  FactCard,
   LoadingState,
   SectionCard,
+  StatusPill,
 } from "../components/page-primitives";
-import { secondaryButtonClassName } from "../lib/design-system";
+import {
+  bodyStrongTextClassName,
+  cardClassName,
+  foregroundEmphasisClassName,
+  mutedPanelClassName,
+  secondaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
+} from "../lib/design-system";
 import { formatRoutingModeLabel } from "../lib/routing-mode";
 import { type RouterDecisionDetail, fetchRouterDecisionDetail } from "../lib/runtime-api";
-import { usePageActions } from "../lib/shell-header-context";
 
 export default function RouterDecisionDetailRoute() {
   const { requestId = "" } = useParams();
@@ -48,15 +55,6 @@ export default function RouterDecisionDetailRoute() {
     };
   }, [requestId]);
 
-  const observePath = detail?.observeRequestPath ?? `/app/observe/requests/${requestId}`;
-
-  usePageActions(
-    <Link className={secondaryButtonClassName} to={observePath}>
-      Open Observe detail
-    </Link>,
-    [observePath],
-  );
-
   if (error) {
     return <ErrorState label={error} />;
   }
@@ -82,63 +80,110 @@ export default function RouterDecisionDetailRoute() {
     typeof latestProfile?.judge_score === "number" ? latestProfile.judge_score : null;
   const measuredAtMs =
     typeof latestProfile?.measured_at_ms === "number" ? latestProfile.measured_at_ms : null;
+  const observePath = detail?.observeRequestPath ?? `/app/observe/requests/${requestId}`;
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <FactCard
-          label="Request"
-          value={detail.requestId}
-          detail="Request id that anchors the Router decision record."
-          emphasis
-        />
-        <FactCard
-          label="Decision"
-          value={detail.routingDecisionId ?? "n/a"}
-          detail="Routing decision id when the runtime persisted one."
-        />
-        <FactCard
-          label="Chosen endpoint"
-          value={detail.selectedEndpointId}
-          detail={detail.selectedModelId ?? "unknown model"}
-        />
-        <FactCard
-          label="Strategy"
-          value={detail.strategyLabel ? formatRoutingModeLabel(detail.strategyLabel) : "n/a"}
-          detail="Effective Router strategy summary for this request."
-        />
-      </div>
+      <SectionCard
+        title="Routing decision detail"
+        description="Keep the chosen endpoint, strategy, fallback order, and linked request context in one compact decision-inspector surface."
+      >
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,372px)]">
+          <div className="space-y-4">
+            <div className="grid gap-4 xl:grid-cols-2">
+              <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                <p className={utilityLabelClassName}>Request</p>
+                <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
+                  {detail.requestId}
+                </p>
+                <p className={supportingTextClassName}>
+                  Request id that anchors the Router decision record.
+                </p>
+              </div>
+              <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                <p className={utilityLabelClassName}>Decision</p>
+                <p className={`${bodyStrongTextClassName} break-all text-[var(--rm-fg)]`}>
+                  {detail.routingDecisionId ?? "n/a"}
+                </p>
+                <p className={supportingTextClassName}>
+                  Persisted routing decision id when the runtime stored one.
+                </p>
+              </div>
+            </div>
 
-      {judgeScore !== null && benchmarkSamples > 0 ? (
-        <SectionCard
-          title="Benchmark provenance"
-          description="This endpoint profile includes benchmark-sourced judge scores that may have informed routing quality."
-        >
-          <div className="space-y-2 text-sm text-[var(--rm-secondary)]">
-            <p>
-              Benchmark judge score:{" "}
-              <span className="font-medium text-[var(--rm-fg)]">
-                {Math.round(judgeScore * 100)}%
-              </span>
-            </p>
-            {measuredAtMs !== null ? (
-              <p>
-                Profile measured at:{" "}
-                <span className="font-medium text-[var(--rm-fg)]">
-                  {new Date(measuredAtMs).toLocaleString()}
-                </span>
+            <div className={`${mutedPanelClassName} p-4`}>
+              <p className={foregroundEmphasisClassName}>Chosen endpoint</p>
+              <p className={`mt-4 break-all ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                {detail.selectedEndpointId}
               </p>
-            ) : null}
-            <p>
-              Source: Models → Benchmark ({benchmarkSamples} benchmark sample
-              {benchmarkSamples === 1 ? "" : "s"})
-            </p>
-            <Link className={secondaryButtonClassName} to="/app/models/benchmark">
-              Open Models → Benchmark
-            </Link>
+              <p className={`mt-2 ${supportingTextClassName}`}>
+                {detail.selectedModelId ?? "unknown model"}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <StatusPill tone="accent">
+                  {detail.strategyLabel ? formatRoutingModeLabel(detail.strategyLabel) : "n/a"}
+                </StatusPill>
+                <StatusPill tone="neutral">
+                  {detail.fallbackEndpointIds.length} fallback
+                  {detail.fallbackEndpointIds.length === 1 ? "" : "s"}
+                </StatusPill>
+              </div>
+            </div>
           </div>
-        </SectionCard>
-      ) : null}
+
+          <div className="space-y-3">
+            <div className={`${mutedPanelClassName} p-4 text-[var(--rm-secondary)]`}>
+              <p className={foregroundEmphasisClassName}>Linked request</p>
+              <p className={`mt-3 ${supportingTextClassName}`}>
+                Router promotes the linked request here, while Observe still owns the deeper trace
+                workflow.
+              </p>
+              <div className="mt-4">
+                <Link className={secondaryButtonClassName} to={observePath}>
+                  Observe request detail
+                </Link>
+              </div>
+            </div>
+
+            <div className={`${mutedPanelClassName} p-4 text-[var(--rm-secondary)]`}>
+              <p className={foregroundEmphasisClassName}>Benchmark provenance</p>
+              {judgeScore !== null && benchmarkSamples > 0 ? (
+                <>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <p className={utilityLabelClassName}>Judge score</p>
+                      <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                        {Math.round(judgeScore * 100)}%
+                      </p>
+                    </div>
+                    <div>
+                      <p className={utilityLabelClassName}>Benchmark samples</p>
+                      <p className={`mt-2 ${bodyStrongTextClassName} text-[var(--rm-fg)]`}>
+                        {benchmarkSamples}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-4 border-t border-[var(--rm-border)] pt-4">
+                    <p className={utilityLabelClassName}>Profile measured</p>
+                    <p className={`mt-2 ${supportingTextClassName}`}>
+                      {measuredAtMs !== null ? new Date(measuredAtMs).toLocaleString() : "n/a"}
+                    </p>
+                  </div>
+                  <div className="mt-4">
+                    <Link className={secondaryButtonClassName} to="/app/models/benchmark">
+                      Models → Benchmark
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <p className={`mt-3 ${supportingTextClassName}`}>
+                  No benchmark-backed judge score was recorded for this endpoint profile.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </SectionCard>
 
       <SectionCard
         title="Fallback endpoints"
@@ -147,11 +192,19 @@ export default function RouterDecisionDetailRoute() {
         {detail.fallbackEndpointIds.length === 0 ? (
           <EmptyState label="No fallback endpoints were recorded for this decision." />
         ) : (
-          <ul className="space-y-2 text-sm text-[var(--rm-secondary)]">
-            {detail.fallbackEndpointIds.map((endpointId) => (
-              <li key={endpointId}>{endpointId}</li>
+          <div className="space-y-2">
+            {detail.fallbackEndpointIds.map((endpointId, index) => (
+              <div
+                key={endpointId}
+                className={`${cardClassName} flex items-center justify-between gap-3 px-4 py-3`}
+              >
+                <p className={bodyStrongTextClassName}>{endpointId}</p>
+                <p className={supportingTextClassName}>
+                  {`fallback ${String(index + 1).padStart(2, "0")}`}
+                </p>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </SectionCard>
 
@@ -175,6 +228,11 @@ export default function RouterDecisionDetailRoute() {
           title="Linked request"
           description="Router promotes the request detail payload here, but Observe still owns the deeper trace workflow."
         >
+          <div className="mb-4">
+            <Link className={secondaryButtonClassName} to={observePath}>
+              Observe request detail
+            </Link>
+          </div>
           <CodeBlock>{JSON.stringify(detail.request, null, 2)}</CodeBlock>
         </SectionCard>
         <SectionCard

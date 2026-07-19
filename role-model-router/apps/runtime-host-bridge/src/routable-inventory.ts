@@ -160,10 +160,8 @@ function inventoryEntriesForAlias(
   alias: UnifiedRuntimeModelAliasConfig,
   inventory: RoutableInventory,
 ): readonly RoutableInventoryEntry[] {
-  if (alias.mode === "difficulty") {
-    return inventory.entries;
-  }
-  return inventory.entries;
+  const aliasModelIds = new Set(alias.modelIds);
+  return inventory.entries.filter((entry) => aliasModelIds.has(entry.modelId));
 }
 
 export function resolveAliasAllowEndpoints(
@@ -173,23 +171,12 @@ export function resolveAliasAllowEndpoints(
 ): AliasAllowEndpointResolution {
   const driftWarnings = warnAliasModelIdDrift(alias, inventory);
   const candidateEntries = inventoryEntriesForAlias(alias, inventory);
-  const allowEndpointIds = new Set(candidateEntries.map((entry) => entry.endpointId));
-
-  for (const hintModelId of alias.modelIds) {
-    for (const entry of inventory.entries) {
-      if (entry.modelId === hintModelId) {
-        allowEndpointIds.add(entry.endpointId);
-      }
-    }
-  }
-
-  const allowEndpoints = [...allowEndpointIds].sort(compareText);
-  const resolvedModelIds = [
-    ...new Set([
-      ...inventory.modelIds,
-      ...alias.modelIds.filter((modelId) => inventory.modelIds.includes(modelId)),
-    ]),
-  ].sort(compareText);
+  const allowEndpoints = [...new Set(candidateEntries.map((entry) => entry.endpointId))].sort(
+    compareText,
+  );
+  const resolvedModelIds = [...new Set(candidateEntries.map((entry) => entry.modelId))].sort(
+    compareText,
+  );
 
   if (allowEndpoints.length === 0) {
     return {

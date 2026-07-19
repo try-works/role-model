@@ -19,7 +19,7 @@ const tempRoots: string[] = [];
 afterEach(async () => {
   await Promise.all(
     tempRoots.splice(0).map(async (tempRoot) => {
-      await rm(tempRoot, { recursive: true, force: true });
+      await rm(tempRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
     }),
   );
 });
@@ -88,12 +88,17 @@ describe("runRuntimeVendorValidation", () => {
         observation: expect.objectContaining({
           routingDiagnostics: expect.objectContaining({
             aliasResolution: {
-              requestedModel: "gpt-5.4",
-              aliasId: "gpt-5.4",
-              resolvedModelIds: ["local/llama-3.1-8b-instruct", "openai/gpt-4.1-mini-fast"],
+              requestedModel: "baseline.hybrid",
+              aliasId: "baseline.hybrid",
+              resolvedModelIds: [
+                "chatgpt/gpt-5.4",
+                "local/llama-3.1-8b-instruct",
+                "openai/gpt-4.1-mini-fast",
+              ],
               allowEndpoints: [
                 "llama-swap.local.local-llama-3-1-8b-instruct",
                 "openai.litellm.global.openai-gpt-4-1-mini-fast",
+                "openai.personal.openai-codex-subscription.global.gpt-5.4",
               ],
             },
           }),
@@ -203,7 +208,7 @@ describe("runRuntimeVendorValidation", () => {
             },
             rewrite: {
               applied: true,
-              requestedModel: "gpt-5.4",
+              requestedModel: "baseline.hybrid",
             },
           },
         },
@@ -271,7 +276,7 @@ describe("runRuntimeVendorValidation", () => {
             },
             rewrite: {
               applied: true,
-              requestedModel: "gpt-5.4",
+              requestedModel: "baseline.hybrid",
             },
           },
         },
@@ -318,11 +323,12 @@ describe("runRuntimeVendorValidation", () => {
       observation: {
         routingDiagnostics: {
           aliasResolution: {
-            requestedModel: "gpt-5.4-intelligent",
-            aliasId: "gpt-5.4-intelligent",
+            requestedModel: "controller.hybrid",
+            aliasId: "controller.hybrid",
             allowEndpoints: [
               "llama-swap.local.local-llama-3-1-8b-instruct",
               "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              "openai.personal.openai-codex-subscription.global.gpt-5.4",
             ],
           },
           controllerRouting: {
@@ -361,13 +367,13 @@ describe("runRuntimeVendorValidation", () => {
       observation: {
         routingDiagnostics: {
           aliasResolution: {
-            requestedModel: "gpt-5.4-intelligent",
-            aliasId: "gpt-5.4-intelligent",
+            requestedModel: "controller.hybrid",
+            aliasId: "controller.hybrid",
           },
           controllerRouting: {
             active: true,
             fallbackApplied: true,
-            fallbackReason: "invalid-controller-output",
+            fallbackReason: "controller-heuristic-fallback",
           },
         },
       },
@@ -409,15 +415,16 @@ describe("runRuntimeVendorValidation", () => {
       ).difficultyHybrid,
     ).toMatchObject({
       easyVendorId: expect.stringMatching(/^(llama-swap|litellm)$/),
-      hardVendorId: "litellm",
+      hardVendorId: expect.stringMatching(/^(litellm|chatgpt-codex-responses)$/),
       easyObservation: {
         routingDiagnostics: {
           aliasResolution: {
-            requestedModel: "gpt-5.4-difficulty",
-            aliasId: "gpt-5.4-difficulty",
+            requestedModel: "difficulty.hybrid",
+            aliasId: "difficulty.hybrid",
             allowEndpoints: [
               "llama-swap.local.local-llama-3-1-8b-instruct",
               "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              "openai.personal.openai-codex-subscription.global.gpt-5.4",
             ],
           },
           difficultyRouting: {
@@ -429,11 +436,12 @@ describe("runRuntimeVendorValidation", () => {
       hardObservation: {
         routingDiagnostics: {
           aliasResolution: {
-            requestedModel: "gpt-5.4-difficulty",
-            aliasId: "gpt-5.4-difficulty",
+            requestedModel: "difficulty.hybrid",
+            aliasId: "difficulty.hybrid",
             allowEndpoints: [
               "llama-swap.local.local-llama-3-1-8b-instruct",
               "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              "openai.personal.openai-codex-subscription.global.gpt-5.4",
             ],
           },
           difficultyRouting: {
@@ -527,21 +535,32 @@ describe("runRuntimeVendorValidation", () => {
         }),
       ]),
     );
-    expect(result.health).toEqual(
-      expect.objectContaining({
-        status: "healthy",
-        executionMode: "hybrid",
-        inactiveVendors: [],
-        vendors: expect.objectContaining({
-          "llama-swap": expect.objectContaining({
-            healthStatus: "healthy",
-          }),
-          litellm: expect.objectContaining({
-            healthStatus: "healthy",
-          }),
+    expect(result.health).toMatchObject({
+      status: "healthy",
+      executionMode: "hybrid",
+      inactiveVendors: [],
+      vendors: expect.objectContaining({
+        "llama-swap": expect.objectContaining({
+          healthStatus: "healthy",
+        }),
+        litellm: expect.objectContaining({
+          healthStatus: "healthy",
         }),
       }),
-    );
+      sessionBootstrap: expect.objectContaining({
+        status: "ready",
+        stages: expect.arrayContaining([
+          expect.objectContaining({
+            stageId: "inventory",
+            status: "ready",
+            details: expect.objectContaining({
+              driftWarningCount: 0,
+              driftWarnings: [],
+            }),
+          }),
+        ]),
+      }),
+    });
     const feedbackResult = result as typeof result & {
       observations?: {
         local?: {
@@ -664,7 +683,220 @@ describe("runRuntimeVendorValidation", () => {
         }),
       }),
     );
-  }, 15_000);
+    const corpusResult = result as typeof result & {
+      corpus?: {
+        summary?: {
+          deterministic?: boolean;
+          totalCaseCount?: number;
+          successCaseCount?: number;
+          failureCaseCount?: number;
+          clientCaseCounts?: {
+            pi?: number;
+            craft?: number;
+          };
+          categoryCounts?: Record<string, number>;
+        };
+        cases?: Array<{
+          caseId: string;
+          clientKind: "pi" | "craft";
+          category: string;
+          requestPath: "/v1/responses" | "/v1/chat/completions";
+          deterministic: boolean;
+          routingConstraint: string;
+          allowedEndpointIds: readonly string[];
+          expectedExecutionFamily: string | null;
+          expectedExecutionFamilies?: readonly string[];
+          actualExecutionFamily: string | null;
+          expectedOutcomeClass: "success" | "failure";
+          actualOutcomeClass: "success" | "failure";
+          selectedEndpointId: string | null;
+          selectedModelId: string | null;
+          providerFamily: string | null;
+          adapterFamily: string | null;
+          statusCode: number;
+          streamTerminalStatus: string | null;
+          failureClass: string | null;
+          retryCount: number;
+          rerouteCount: number;
+          payloadBytes: {
+            ingress: number;
+            translated: number | null;
+            providerCanonical: number | null;
+            providerWire: number | null;
+            providerResponse: number | null;
+          };
+          toolCallCount: number;
+          toolExecutionCount: number;
+          idempotencyDecision: string | null;
+          requestId: string;
+          routingDecisionId: string | null;
+        }>;
+      };
+    };
+    expect(corpusResult.corpus?.summary).toMatchObject({
+      deterministic: true,
+      totalCaseCount: 200,
+      clientCaseCounts: {
+        pi: 100,
+        craft: 100,
+      },
+      categoryCounts: expect.objectContaining({
+        "plain-text": expect.any(Number),
+        "tool-bearing": expect.any(Number),
+        "non-tool-mentions-tools": expect.any(Number),
+        "continuation-after-tool-output": expect.any(Number),
+        "long-context": expect.any(Number),
+        "image-sensitive": expect.any(Number),
+      }),
+    });
+    const corpusCases = corpusResult.corpus?.cases ?? [];
+    expect(corpusCases).toHaveLength(200);
+    for (const corpusCase of corpusCases) {
+      expect(corpusCase.deterministic).toBe(true);
+      expect(corpusCase.routingConstraint.length).toBeGreaterThan(0);
+      expect(corpusCase.requestId.length).toBeGreaterThan(0);
+      expect(corpusCase.statusCode).toBeGreaterThanOrEqual(200);
+      expect(corpusCase.payloadBytes.ingress).toBeGreaterThan(0);
+      expect(corpusCase.retryCount).toBeGreaterThanOrEqual(0);
+      expect(corpusCase.rerouteCount).toBeGreaterThanOrEqual(0);
+      expect(corpusCase.toolCallCount).toBeGreaterThanOrEqual(0);
+      expect(corpusCase.toolExecutionCount).toBeGreaterThanOrEqual(0);
+      if (corpusCase.actualOutcomeClass === "success") {
+        expect(corpusCase.actualExecutionFamily).toMatch(
+          /^(vendor-llama-swap|vendor-litellm|remote-service)$/,
+        );
+        expect(corpusCase.selectedEndpointId).toBeTruthy();
+        expect(corpusCase.providerFamily).toBeTruthy();
+        expect(corpusCase.adapterFamily).toBeTruthy();
+        expect(corpusCase.payloadBytes.translated).toBeGreaterThan(0);
+        expect(corpusCase.payloadBytes.providerCanonical).toBeGreaterThan(0);
+        expect(corpusCase.payloadBytes.providerWire).toBeGreaterThan(0);
+        expect(corpusCase.payloadBytes.providerResponse).toBeGreaterThan(0);
+        expect(corpusCase.routingDecisionId).toBeTruthy();
+      }
+    }
+    const corpusCasesById = new Map(
+      corpusCases.map((corpusCase) => [corpusCase.caseId, corpusCase]),
+    );
+    expect(corpusCasesById.get("pi.responses.exact-local.plain-001")).toMatchObject({
+      clientKind: "pi",
+      category: "plain-text",
+      requestPath: "/v1/responses",
+      expectedExecutionFamily: "vendor-llama-swap",
+      actualExecutionFamily: "vendor-llama-swap",
+      expectedOutcomeClass: "success",
+      actualOutcomeClass: "success",
+      selectedEndpointId: "llama-swap.local.local-llama-3-1-8b-instruct",
+      providerFamily: "llama-swap",
+      adapterFamily: "ai-sdk-openai-compatible",
+      idempotencyDecision: "not_needed",
+    });
+    expect(corpusCasesById.get("pi.responses.alias-hard-tools-001")).toMatchObject({
+      clientKind: "pi",
+      category: "tool-bearing",
+      requestPath: "/v1/responses",
+      expectedExecutionFamilies: ["vendor-litellm", "remote-service"],
+      expectedOutcomeClass: "success",
+      actualOutcomeClass: "success",
+      providerFamily: "openai",
+    });
+    const piHardToolsCase = corpusCasesById.get("pi.responses.alias-hard-tools-001");
+    expect(piHardToolsCase?.actualExecutionFamily).toMatch(/^(vendor-litellm|remote-service)$/);
+    if (piHardToolsCase?.actualExecutionFamily === "vendor-litellm") {
+      expect(piHardToolsCase).toMatchObject({
+        selectedEndpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+        adapterFamily: "litellm-proxy",
+        vendorId: "litellm",
+      });
+    } else {
+      expect(piHardToolsCase).toMatchObject({
+        selectedEndpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        adapterFamily: "codex-subscription-responses",
+        vendorId: "chatgpt-codex-responses",
+      });
+    }
+    expect(corpusCasesById.get("pi.responses.image-sensitive.001")).toMatchObject({
+      clientKind: "pi",
+      category: "image-sensitive",
+      requestPath: "/v1/responses",
+      expectedExecutionFamily: "remote-service",
+      actualExecutionFamily: "remote-service",
+      expectedOutcomeClass: "success",
+      actualOutcomeClass: "success",
+      selectedEndpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      providerFamily: "openai",
+      adapterFamily: "codex-subscription-responses",
+      vendorId: "chatgpt-codex-responses",
+    });
+    expect(corpusCasesById.get("pi.responses.controller-remote-001")).toMatchObject({
+      clientKind: "pi",
+      category: "plain-text",
+      requestPath: "/v1/responses",
+      expectedExecutionFamilies: ["vendor-llama-swap", "vendor-litellm"],
+      expectedOutcomeClass: "success",
+      actualOutcomeClass: "success",
+    });
+    expect(
+      corpusCasesById.get("pi.responses.controller-remote-001")?.actualExecutionFamily,
+    ).toMatch(/^(vendor-llama-swap|vendor-litellm)$/);
+    expect(corpusCasesById.get("craft.chat.dual-user-preamble.001")).toMatchObject({
+      clientKind: "craft",
+      category: "plain-text",
+      requestPath: "/v1/chat/completions",
+      expectedExecutionFamily: "vendor-llama-swap",
+      actualExecutionFamily: "vendor-llama-swap",
+      expectedOutcomeClass: "success",
+      actualOutcomeClass: "success",
+      selectedEndpointId: "llama-swap.local.local-llama-3-1-8b-instruct",
+    });
+    expect(corpusCasesById.get("craft.chat.declared-tools.001")).toMatchObject({
+      clientKind: "craft",
+      category: "tool-bearing",
+      requestPath: "/v1/chat/completions",
+      expectedExecutionFamily: "vendor-litellm",
+      actualExecutionFamily: "vendor-litellm",
+      expectedOutcomeClass: "success",
+      actualOutcomeClass: "success",
+      selectedEndpointId: "openai.litellm.global.openai-gpt-4-1-mini-fast",
+      providerFamily: "openai",
+      adapterFamily: "litellm-proxy",
+      vendorId: "litellm",
+    });
+    const piToolBearingCase = corpusCasesById.get("pi.responses.alias-hard-tools-001");
+    expect(piToolBearingCase).toBeDefined();
+    if (!piToolBearingCase) {
+      throw new Error("expected deterministic Pi tool-bearing corpus case to exist");
+    }
+    expect(piToolBearingCase.payloadBytes.translated).not.toBe(
+      piToolBearingCase.payloadBytes.ingress,
+    );
+    expect(piToolBearingCase.payloadBytes.providerCanonical).toBe(
+      piToolBearingCase.payloadBytes.providerWire,
+    );
+    if (piToolBearingCase.actualExecutionFamily === "vendor-litellm") {
+      expect(piToolBearingCase.payloadBytes.translated).not.toBe(
+        piToolBearingCase.payloadBytes.providerCanonical,
+      );
+    } else {
+      expect(piToolBearingCase.actualExecutionFamily).toBe("remote-service");
+      expect(piToolBearingCase.payloadBytes.translated).toBe(
+        piToolBearingCase.payloadBytes.providerCanonical,
+      );
+    }
+    expect(corpusCasesById.get("craft.chat.inline-image.001")).toMatchObject({
+      clientKind: "craft",
+      category: "image-sensitive",
+      requestPath: "/v1/chat/completions",
+      expectedExecutionFamily: "remote-service",
+      actualExecutionFamily: "remote-service",
+      expectedOutcomeClass: "success",
+      actualOutcomeClass: "success",
+      selectedEndpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      providerFamily: "openai",
+      adapterFamily: "codex-subscription-responses",
+      vendorId: "chatgpt-codex-responses",
+    });
+  }, 180_000);
 
   test("plans a real-vendor harness with repo-owned mock upstreams", async () => {
     const runtimeStateRoot = await mkdtemp(

@@ -1,0 +1,470 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-route-models.test.ts app/components/telemetry-charts.test.tsx "--" "app/lib/design-system.test.ts" "--runInBand"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/provider-account-state.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-latency.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m app/lib/router-candidate-labels.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m app/lib/device-authorization.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m app/lib/view-models.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 153[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-route-models.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m app/lib/telemetry-analytics.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m app/lib/runtime-api.test.ts [2m([22m[2m40 tests[22m[2m)[22m[32m 107[2mms[22m[39m
+ [32m✓[39m app/components/telemetry-charts.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [31m❯[39m app/lib/design-system.test.ts [2m([22m[2m44 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 161[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdefines navigation groups and layout templates for every runtime route[32m 6[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22muses analytics charts as the primary Observe entry point[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mkeeps the shell on the Apple baseline with explicit chart tokens[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mglobal shell chrome keeps legacy vendor ui out of the main runtime contract[32m 60[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mstudio implementation targets render repo-owned workspace sections instead of placeholder blueprints[32m 15[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mintegration and system implementation targets render live upstream and peer surfaces[32m 10[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter implementation targets render repo-owned routing explanation surfaces[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface exposes explicit in-place maintenance actions for saved remote accounts[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface uses an explicit save-cancel modal for api-key maintenance[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders surface keeps oauth reconnect as a one-click saved-account action[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders maintenance flows call explicit repair APIs instead of generic account writes[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproviders saved-account cards use canonical lifecycle rows and bounded archived diagnostics[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrouter routes preserve empty-state and observe-link affordances[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmerged router overview stays observational while routing strategy owns editing controls[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mmeta-guidance panels stay removed from overview and observe routes[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdesign system doc marks the converted pages as live routes[32m 2[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mcontrol routes tolerate an unassigned controller before endpoint activation[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mapplies the Apple palette, SF Pro / Inter typography, and explicit theme contract in shared app chrome[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshared panels and provider selectors are owned by Apple-theme primitives[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshared route effects avoid action identity loops and peer refresh feedback[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mkeeps shared states calm: transparent status pills and no section divider chrome[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mremote, models, router, and system runtime config routes are first-class pages in the retained taxonomy[32m 11[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlocal setup surfaces stay discoverable from navigation and empty registry states[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve and local log surfaces render structured ledgers rather than raw iframe placeholders[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mobserve ownership keeps requests canonical and raw-host surfaces adjacent[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrequests and request detail stay telemetry-first while exposing raw-host handoffs[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mactivity route frames raw-host metrics as adjacent to canonical telemetry[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mlogs route exposes request-detail handoffs while preserving raw-host framing[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mregistry and system layouts avoid redundant KPI strips and placeholder note panels[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mdashboard is chart-led and keeps routing analytics as a first-class handoff[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22moverview metadata and design doc describe a telemetry-first summary with an interaction rail[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mworkbench and observe routes expose routing controls and receipts in repo-owned UI surfaces[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mrequest detail route renders authoritative stored cost metadata[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshell header owns route metadata and page actions without duplicate page headers[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mshell headers do not render section eyebrow labels[32m 0[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mroutes do not register refresh controls as shell header actions[32m 0[2mms[22m[39m
+[31m   [31m×[31m runtime design system[2m > [22mlong fact-card values use compact text roles instead of display value typography[39m[32m 26[2mms[22m[39m
+[31m     → expected 'import {\n  Children,\n  isValidEleme…' to contain 'valueClassName'[39m
+   [32m✓[39m runtime design system[2m > [22mproduction UI sources do not bypass Apple theme token primitives[32m 4[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproduction UI sources keep the approved Apple radius grammar[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mproduction UI sources avoid unsupported Apple typography weight 500[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mchart primitives use shared design-system geometry and type tokens[32m 1[2mms[22m[39m
+   [32m✓[39m runtime design system[2m > [22mruntime route definitions stay slim and future scaffolds avoid duplicate header props[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > long fact-card values use compact text roles instead of display value typography
+AssertionError: expected 'import {\n  Children,\n  isValidEleme…' to contain 'valueClassName'
+
+- Expected
++ Received
+
+- valueClassName
++ import {
++   Children,
++   isValidElement,
++   useEffect,
++   useId,
++   useMemo,
++   useRef,
++   useState,
++   type ReactElement,
++   type ReactNode,
++ } from "react";
++
++ import { cn } from "../lib/cn";
++ import {
++   bodyTextClassName,
++   cardClassName,
++   codeBlockClassName,
++   eyebrowClassName,
++   largeValueClassName,
++   mutedPanelClassName,
++   raisedPanelClassName,
++   sectionTitleClassName,
++   selectChevronStyle,
++   selectFieldClassName,
++   utilityLabelClassName,
++ } from "../lib/design-system";
++
++ export function SectionCard({
++   title,
++   description,
++   children,
++   className,
++ }: {
++   title: string;
++   description?: string;
++   children: ReactNode;
++   className?: string;
++ }) {
++   return (
++     <section className={cn(`${cardClassName} px-5 py-5 md:px-6 md:py-6`, className)}>
++       <div className="mb-5">
++         <h2 className={`text-[var(--rm-fg)] ${sectionTitleClassName}`}>{title}</h2>
++         {description ? (
++           <p className={`mt-2 max-w-[60ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>
++             {description}
++           </p>
++         ) : null}
++       </div>
++       {children}
++     </section>
++   );
++ }
++
++ export function StatCard({ label, value }: { label: string; value: string }) {
++   return (
++     <div className={`${raisedPanelClassName} p-5`}>
++       <p className={eyebrowClassName}>{label}</p>
++       <p className={`mt-4 text-[var(--rm-fg)] ${largeValueClassName}`}>{value}</p>
++     </div>
++   );
++ }
++
++ export function FactCard({
++   label,
++   value,
++   detail,
++   emphasis = false,
++   className,
++ }: {
++   label: string;
++   value: ReactNode;
++   detail?: ReactNode;
++   emphasis?: boolean;
++   className?: string;
++ }) {
++   return (
++     <div
++       className={cn(
++         `${emphasis ? raisedPanelClassName : mutedPanelClassName} p-4 md:p-5`,
++         className,
++       )}
++     >
++       <p className={eyebrowClassName}>{label}</p>
++       <p
++         className={`mt-3 break-words tabular-nums text-[var(--rm-fg)] ${largeValueClassName}`}
++       >
++         {value}
++       </p>
++       {detail ? (
++         <p className={`mt-2 max-w-[28ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>
++           {detail}
++         </p>
++       ) : null}
++     </div>
++   );
++ }
++
++ export function StatusPill({
++   tone,
++   children,
++ }: {
++   tone: "neutral" | "accent" | "warning" | "success";
++   children: ReactNode;
++ }) {
++   const toneClass =
++     tone === "accent"
++       ? "border-[color:var(--rm-accent-muted)] bg-transparent text-[var(--rm-accent)]"
++       : tone === "warning"
++         ? "border-[var(--rm-warning)] bg-transparent text-[var(--rm-warning)]"
++         : tone === "success"
++           ? "border-[var(--rm-success)] bg-transparent text-[var(--rm-success)]"
++           : "border-[var(--rm-border)] bg-transparent text-[var(--rm-secondary)]";
++
++   return (
++     <span
++       className={cn(
++         "inline-flex items-center rounded-[var(--rm-radius-pill)] border px-3 py-1.5 text-[12px] font-normal uppercase tracking-[0.16em] leading-3",
++         toneClass,
++       )}
++     >
++       {children}
++     </span>
++   );
++ }
++
++ type SelectOptionModel = {
++   readonly value: string;
++   readonly label: string;
++   readonly disabled: boolean;
++ };
++
++ type SelectOptionElement = ReactElement<{
++   readonly children?: ReactNode;
++   readonly disabled?: boolean;
++   readonly value?: string | number;
++ }>;
++
++ function getNodeText(node: ReactNode): string {
++   if (typeof node === "string" || typeof node === "number") {
++     return String(node);
++   }
++   if (Array.isArray(node)) {
++     return node.map(getNodeText).join("");
++   }
++   if (isValidElement<{ children?: ReactNode }>(node)) {
++     return getNodeText(node.props.children);
++   }
++   return "";
++ }
++
++ function getSelectOptions(children: ReactNode): SelectOptionModel[] {
++   return Children.toArray(children).flatMap((child): SelectOptionModel[] => {
++     if (!isValidElement(child)) {
++       return [];
++     }
++     const option = child as SelectOptionElement;
++     const label = getNodeText(option.props.children).trim();
++     const rawValue = option.props.value;
++     return [
++       {
++         value: rawValue === undefined ? label : String(rawValue),
++         label,
++         disabled: Boolean(option.props.disabled),
++       },
++     ];
++   });
++ }
++
++ export function SelectField({
++   label,
++   value,
++   children,
++   onChange,
++   className,
++ }: {
++   label: string;
++   value: string;
++   children: ReactNode;
++   onChange: (value: string) => void;
++   className?: string;
++ }) {
++   const labelId = useId();
++   const listboxId = useId();
++   const rootRef = useRef<HTMLDivElement | null>(null);
++   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
++   const options = useMemo(() => getSelectOptions(children), [children]);
++   const selectedIndex = options.findIndex((option) => option.value === value);
++   const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : null;
++   const firstEnabledIndex = options.findIndex((option) => !option.disabled);
++   const [open, setOpen] = useState(false);
++   const [activeIndex, setActiveIndex] = useState(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex);
++
++   useEffect(() => {
++     setActiveIndex(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex);
++   }, [firstEnabledIndex, selectedIndex]);
++
++   useEffect(() => {
++     if (!open) {
++       return;
++     }
++
++     const handlePointerDown = (event: MouseEvent) => {
++       if (!rootRef.current?.contains(event.target as Node)) {
++         setOpen(false);
++       }
++     };
++     const handleKeyDown = (event: KeyboardEvent) => {
++       if (event.key === "Escape") {
++         setOpen(false);
++       }
++     };
++
++     document.addEventListener("mousedown", handlePointerDown);
++     document.addEventListener("keydown", handleKeyDown);
++     return () => {
++       document.removeEventListener("mousedown", handlePointerDown);
++       document.removeEventListener("keydown", handleKeyDown);
++     };
++   }, [open]);
++
++   useEffect(() => {
++     if (open && activeIndex >= 0) {
++       optionRefs.current[activeIndex]?.focus();
++     }
++   }, [activeIndex, open]);
++
++   const moveActive = (direction: 1 | -1) => {
++     if (options.length === 0) {
++       return;
++     }
++     let nextIndex = activeIndex >= 0 ? activeIndex : firstEnabledIndex;
++     for (let attempt = 0; attempt < options.length; attempt += 1) {
++       nextIndex = (nextIndex + direction + options.length) % options.length;
++       if (!options[nextIndex]?.disabled) {
++         setActiveIndex(nextIndex);
++         return;
++       }
++     }
++   };
++
++   const chooseOption = (option: SelectOptionModel) => {
++     if (option.disabled) {
++       return;
++     }
++     onChange(option.value);
++     setOpen(false);
++   };
++
++   return (
++     <div className="relative grid gap-2" ref={rootRef}>
++       <span className={`${utilityLabelClassName} text-[var(--rm-fg)]`} id={labelId}>
++         {label}
++       </span>
++       <button
++         aria-controls={listboxId}
++         aria-expanded={open}
++         aria-haspopup="listbox"
++         aria-labelledby={labelId}
++         className={cn(`${selectFieldClassName} flex items-center text-left`, className)}
++         onClick={() => setOpen((current) => !current)}
++         onKeyDown={(event) => {
++           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
++             event.preventDefault();
++             setOpen(true);
++             setActiveIndex(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex);
++           }
++         }}
++         style={selectChevronStyle}
++         type="button"
++       >
++         <span className={selectedOption ? "truncate" : "truncate text-[var(--rm-muted)]"}>
++           {selectedOption?.label ?? "Select…"}
++         </span>
++       </button>
++       {open ? (
++         <div
++           aria-labelledby={labelId}
++           className="absolute left-0 top-full z-50 mt-2 max-h-[320px] w-full overflow-y-auto rounded-[var(--rm-radius-panel)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] p-1 shadow-[0_18px_48px_rgba(0,0,0,0.18)]"
++           id={listboxId}
++           role="listbox"
++         >
++           {options.map((option, index) => {
++             const selected = option.value === value;
++             const active = index === activeIndex;
++             return (
++               <button
++                 aria-disabled={option.disabled || undefined}
++                 aria-selected={selected}
++                 className={cn(
++                   "flex min-h-[40px] w-full items-center rounded-[var(--rm-radius-md)] px-3 py-2 text-left text-[15px] font-normal leading-5 tracking-[-0.016em] transition",
++                   selected
++                     ? "bg-[var(--rm-accent)] text-[var(--rm-on-primary)]"
++                     : active
++                       ? "bg-[var(--rm-accent-ghost)] text-[var(--rm-fg)]"
++                       : "bg-transparent text-[var(--rm-secondary)] hover:bg-[var(--rm-panel)] hover:text-[var(--rm-fg)]",
++                   option.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
++                 )}
++                 key={`${option.value}:${option.label}`}
++                 onClick={() => chooseOption(option)}
++                 onKeyDown={(event) => {
++                   if (event.key === "ArrowDown") {
++                     event.preventDefault();
++                     moveActive(1);
++                   } else if (event.key === "ArrowUp") {
++                     event.preventDefault();
++                     moveActive(-1);
++                   } else if (event.key === "Enter" || event.key === " ") {
++                     event.preventDefault();
++                     chooseOption(option);
++                   }
++                 }}
++                 ref={(node) => {
++                   optionRefs.current[index] = node;
++                 }}
++                 role="option"
++                 tabIndex={active ? 0 : -1}
++                 type="button"
++               >
++                 <span className="truncate">{option.label}</span>
++               </button>
++             );
++           })}
++         </div>
++       ) : null}
++     </div>
++   );
++ }
++
++ export function LoadingState({ label }: { label: string }) {
++   return (
++     <p className={`${mutedPanelClassName} border-dashed p-6 text-sm text-[var(--rm-secondary)]`}>
++       {label}
++     </p>
++   );
++ }
++
++ export function EmptyState({ label }: { label: string }) {
++   return (
++     <p className={`${mutedPanelClassName} border-dashed p-6 text-sm text-[var(--rm-secondary)]`}>
++       {label}
++     </p>
++   );
++ }
++
++ export function ErrorState({ label }: { label: string }) {
++   return (
++     <p className="rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-sm text-[var(--rm-error)]">
++       {label}
++     </p>
++   );
++ }
++
++ export function CodeBlock({ children, className }: { children: ReactNode; className?: string }) {
++   return <pre className={cn(codeBlockClassName, className)}>{children}</pre>;
++ }
++
++ export function DisclosureSection({
++   summary,
++   children,
++   defaultOpen = false,
++ }: {
++   summary: string;
++   children: ReactNode;
++   defaultOpen?: boolean;
++ }) {
++   return (
++     <details className={`${cardClassName} px-5 py-4 md:px-6`} open={defaultOpen ? true : undefined}>
++       <summary
++         className={`cursor-pointer list-none text-[var(--rm-fg)] marker:content-none [&::-webkit-details-marker]:hidden ${sectionTitleClassName}`}
++       >
++         {summary}
++       </summary>
++       <div className="mt-4">{children}</div>
++     </details>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:1023:34
+    1021| 
+    1022|   test("long fact-card values use compact text roles instead of displa…
+    1023|     expect(pagePrimitivesSource).toContain("valueClassName");
+       |                                  ^
+    1024|     expect(sessionReadinessRouteSource).toContain("bodyStrongTextClass…
+    1025|     expect(sessionReadinessRouteSource).toContain("valueClassName={bod…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m147 passed[39m[22m[90m (148)[39m
+[2m   Start at [22m 20:05:03
+[2m   Duration [22m 3.55s[2m (transform 3.76s, setup 0ms, collect 9.25s, tests 536ms, environment 6ms, prepare 5.48s)[22m
+
+D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-ui@ test: `vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/device-authorization.test.ts app/lib/design-system.test.ts app/lib/provider-account-state.test.ts app/lib/router-candidate-labels.test.ts app/lib/benchmark-latency.test.ts app/lib/benchmark-model-cards.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-route-models.test.ts app/components/telemetry-charts.test.tsx "--" "app/lib/design-system.test.ts" "--runInBand"`
+Exit status 1

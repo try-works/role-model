@@ -1,0 +1,237 @@
+{
+  "capturedAt": "2026-06-22T05:59:43.7365996Z",
+  "piReadonly": {
+    "configPath": "D:\\pi\\agent\\models.json",
+    "providerId": "role-model",
+    "baseUrl": "http://127.0.0.1:3456/v1",
+    "modelIds": [
+      "hybrid.hybrid"
+    ],
+    "staticHybrid": [
+      {
+        "id": "hybrid.hybrid",
+        "name": "Hybrid (Local)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 16384,
+        "reasoning": false
+      }
+    ],
+    "changedPiFiles": false
+  },
+  "discoveryFromConfiguredV1Url": {
+    "url": "http://127.0.0.1:3456/v1/models",
+    "object": "list",
+    "modelCount": 19,
+    "hybrid": {
+      "id": "hybrid.hybrid",
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model_type": "alias",
+      "role_model_routing_mode": "hybrid",
+      "discovery_url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+      "capability_revision": "6724b58e69412806",
+      "tools": {
+        "function_calling": true
+      },
+      "reasoning": {
+        "supported": true,
+        "effort_control": true
+      },
+      "structured_output": {
+        "supported": true
+      },
+      "caching": {
+        "prompt_read": false,
+        "prompt_write": false,
+        "source": "catalog"
+      }
+    }
+  },
+  "richDiscoveryDirect": {
+    "url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+    "contractVersion": "role-model.downstream.openai.v1",
+    "modelCount": 19,
+    "hybrid": {
+      "id": "hybrid.hybrid",
+      "type": "alias",
+      "routingMode": "hybrid",
+      "endpoint_ids": [
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-flash",
+        "deepseek.personal.deepseek-credential.global.deepseek-v4-pro",
+        "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "openai.personal.openai-codex-subscription.global.gpt-5.4"
+      ],
+      "piMapping": {
+        "contextWindow": 262144,
+        "maxTokens": 128000
+      },
+      "modalities": {
+        "guaranteedInput": [
+          "text"
+        ],
+        "availableInput": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "conditionalInput": {
+          "image": {
+            "targetModelIds": [
+              "chatgpt/gpt-5.4",
+              "moonshot/kimi-k2.7-code"
+            ],
+            "endpointIds": [
+              "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+              "openai.personal.openai-codex-subscription.global.gpt-5.4"
+            ]
+          },
+          "pdf": {
+            "targetModelIds": [
+              "chatgpt/gpt-5.4"
+            ],
+            "endpointIds": [
+              "openai.personal.openai-codex-subscription.global.gpt-5.4"
+            ]
+          },
+          "video": {
+            "targetModelIds": [
+              "moonshot/kimi-k2.7-code"
+            ],
+            "endpointIds": [
+              "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+            ]
+          }
+        },
+        "output": [
+          "text"
+        ]
+      },
+      "capabilities": {
+        "guaranteed": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "available": [
+          "code.edit",
+          "reasoning",
+          "structured.output",
+          "text.chat",
+          "tools.function_calling"
+        ],
+        "conditional": {},
+        "tools": {
+          "functionCalling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effortControl": true
+        },
+        "structuredOutput": {
+          "supported": true
+        },
+        "caching": {
+          "promptRead": false,
+          "promptWrite": false,
+          "source": "catalog"
+        }
+      },
+      "limits": {
+        "safeContextWindow": 262144,
+        "safeMaxOutputTokens": 128000,
+        "maxContextWindow": 1050000,
+        "maxOutputTokens": 384000
+      }
+    }
+  },
+  "richDiscoveryViaV1AdvertisedUrl": {
+    "url": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+    "contractVersion": "role-model.downstream.openai.v1",
+    "sameHybridContextWindow": true,
+    "sameHybridMaxTokens": true
+  },
+  "aliasCoverage": {
+    "runtimeConfigPath": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\runtime-config.yaml",
+    "configuredAliasIds": [
+      "baseline.decision-only",
+      "baseline.hybrid",
+      "baseline.remote-only",
+      "controller.decision-only",
+      "controller.hybrid",
+      "controller.remote-only",
+      "default.decision-only",
+      "default.hybrid",
+      "default.remote-only",
+      "difficulty.decision-only",
+      "difficulty.hybrid",
+      "difficulty.remote-only",
+      "hybrid.decision-only",
+      "hybrid.hybrid",
+      "hybrid.remote-only"
+    ],
+    "v1AliasIds": [
+      "baseline.decision-only",
+      "baseline.hybrid",
+      "baseline.remote-only",
+      "controller.decision-only",
+      "controller.hybrid",
+      "controller.remote-only",
+      "default.decision-only",
+      "default.hybrid",
+      "default.remote-only",
+      "difficulty.decision-only",
+      "difficulty.hybrid",
+      "difficulty.remote-only",
+      "hybrid.decision-only",
+      "hybrid.hybrid",
+      "hybrid.remote-only"
+    ],
+    "richAliasIds": [
+      "baseline.decision-only",
+      "baseline.hybrid",
+      "baseline.remote-only",
+      "controller.decision-only",
+      "controller.hybrid",
+      "controller.remote-only",
+      "default.decision-only",
+      "default.hybrid",
+      "default.remote-only",
+      "difficulty.decision-only",
+      "difficulty.hybrid",
+      "difficulty.remote-only",
+      "hybrid.decision-only",
+      "hybrid.hybrid",
+      "hybrid.remote-only"
+    ],
+    "missingFromV1": [],
+    "missingFromRich": [],
+    "allConfiguredAliasesInV1": true,
+    "allConfiguredAliasesInRichDiscovery": true
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "exitCode": 0,
+  "sessionId": "run65-codex-cache-v4-sameprompt",
+  "model": "chatgpt/gpt-5.4",
+  "responseId": "chatcmpl_req-450eaa65-3b8d-42a9-b1e0-895176426f39",
+  "responseModel": "gpt-5.4",
+  "usage": {
+    "input": 2557,
+    "output": 35,
+    "cacheRead": 6144,
+    "cacheWrite": 0,
+    "totalTokens": 8736,
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0
+    }
+  },
+  "footerPromptTokens": 8701.0,
+  "footerCacheHitRatePercent": 70.6126,
+  "expectedFooterText": null,
+  "assistantText": "CODEX_CACHE_COLD_65"
+}

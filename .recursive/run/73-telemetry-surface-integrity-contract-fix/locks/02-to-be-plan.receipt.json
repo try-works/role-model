@@ -1,0 +1,14 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "143115fdb7561e7ec7d5866e3deb98925eb9c65650b7445737cc2d75a71d2c85",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\73-telemetry-surface-integrity-contract-fix\\.recursive\\run\\73-telemetry-surface-integrity-contract-fix\\02-to-be-plan.md",
+  "locked_at": "2026-07-16T19:44:13Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "b0bdd63637158a5c8b4b9829f85dfccf7e8374b42cd48e7be8bbd748c60ccf76",
+    "00-worktree.md": "38a22f1b0340a1127e914da23a3652e9c58977e4d5fea26aa2d027e8092ea8b0",
+    "01-as-is.md": "4e15082d0193985e361463428417c99547819c5d7a3dc71cf3f85b4e6e647b2d",
+    "01.5-root-cause.md": "0ec095593359c7a0c57a3e0576a55f66aa32319c5b17b57c19ff14218a76eb06"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "c6ea7a015b96ffdb3448e4f5a5e0f5f4f609d01dd4cb44369b87e284c9242a3a"
+}

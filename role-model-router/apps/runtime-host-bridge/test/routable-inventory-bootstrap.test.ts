@@ -122,14 +122,14 @@ describe("routable inventory bootstrap", () => {
       inventory,
     );
 
-    expect(plan.routingRequest.allowEndpoints).toEqual(
-      expect.arrayContaining(["peer.local.lfm", "moonshot.personal.kimi-code.global.kimi-k2.6"]),
-    );
+    expect(plan.routingRequest.allowEndpoints).toEqual([
+      "moonshot.personal.kimi-code.global.kimi-k2.6",
+    ]);
     expect(plan.routingDiagnostics?.aliasResolution?.driftWarnings?.length).toBeGreaterThan(0);
     expect(plan.routingDiagnostics?.aliasResolution?.poolEmptyReason).toBeUndefined();
   });
 
-  test("lists alias endpoint pools from inventory on model list responses", () => {
+  test("keeps stale-only aliases in model list responses with an empty endpoint pool", () => {
     const inventory = buildRoutableInventory(registry, sources);
     const models = createModelListResponse(
       registry,
@@ -144,9 +144,12 @@ describe("routable inventory bootstrap", () => {
     );
     const aliasEntry = models.data.find((entry) => entry.id === "mixed.local-remote");
 
-    expect(aliasEntry?.endpoint_ids).toEqual(
-      expect.arrayContaining(["peer.local.lfm", "moonshot.personal.kimi-code.global.kimi-k2.6"]),
-    );
+    expect(aliasEntry).toEqual({
+      id: "mixed.local-remote",
+      object: "model",
+      owned_by: "role-model",
+      endpoint_ids: [],
+    });
   });
 
   test("exposes inventory summary and inventory bootstrap stage after startup", async () => {

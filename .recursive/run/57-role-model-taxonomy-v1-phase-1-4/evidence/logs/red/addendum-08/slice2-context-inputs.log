@@ -1,0 +1,57 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [31m❯[39m test/request-intent.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 66[2mms[22m[39m
+[31m   [31m×[31m Role-Model provider request intent injection[2m > [22minjects classified role_model intent for known Role-Model aliases[39m[32m 30[2mms[22m[39m
+[31m     → expected { Object (model, messages, ...) } to match object { role_model: { …(2) } }
+(17 matching properties omitted from actual)[39m
+   [32m✓[39m Role-Model provider request intent injection[2m > [22minjects classified role_model intent for known direct Role-Model models[32m 4[2mms[22m[39m
+   [32m✓[39m Role-Model provider request intent injection[2m > [22mdoes not modify non Role-Model provider payloads or explicit role_model intent[32m 0[2mms[22m[39m
+   [32m✓[39m Role-Model provider request intent injection[2m > [22mextracts tool signals and passes them to classifier (F7)[32m 4[2mms[22m[39m
+   [32m✓[39m Role-Model provider request intent injection[2m > [22mextracts image attachment signals from message content parts (F7)[32m 2[2mms[22m[39m
+   [32m✓[39m Role-Model provider request intent injection[2m > [22mruntime override can redirect to a different role family when local guess is wrong (F8)[32m 19[2mms[22m[39m
+   [32m✓[39m Role-Model provider request intent injection[2m > [22mextracts file attachment signals from message content parts (F7)[32m 3[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/request-intent.test.ts[2m > [22mRole-Model provider request intent injection[2m > [22minjects classified role_model intent for known Role-Model aliases
+[31m[1mAssertionError[22m: expected { Object (model, messages, ...) } to match object { role_model: { …(2) } }
+(17 matching properties omitted from actual)[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "role_model": {[22m
+[2m      "contract_version": 1,[22m
+[2m      "intent": {[22m
+[2m        "classification_contract_version": "role-model.classification.v1",[22m
+[32m-       "role_hint_id": "coder",[39m
+[31m+       "role_hint_id": "tester",[39m
+[2m        "task_source": "heuristic",[22m
+[32m-       "task_type": "coder.edit",[39m
+[31m+       "task_type": "tester.reproduce",[39m
+[2m        "taxonomy_version": "1.0.0-alpha.1",[22m
+[2m      },[22m
+[2m    },[22m
+[2m  }[22m
+
+[36m [2m❯[22m test/request-intent.test.ts:[2m17:20[22m[39m
+    [90m 15| [39m
+    [90m 16| [39m    [34mexpect[39m(result)[33m.[39mnot[33m.[39m[34mtoBe[39m(payload)[33m;[39m
+    [90m 17| [39m    [34mexpect[39m(result)[33m.[39m[34mtoMatchObject[39m({
+    [90m   | [39m                   [31m^[39m
+    [90m 18| [39m      role_model[33m:[39m {
+    [90m 19| [39m        contract_version[33m:[39m [34m1[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 07:06:01
+[2m   Duration [22m 946ms[2m (transform 149ms, setup 0ms, collect 164ms, tests 66ms, environment 0ms, prepare 281ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/request-intent.test.ts

@@ -1,0 +1,59 @@
+{
+  "model": "default.hybrid",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Review this diff for security risks and likely regressions."
+    }
+  ],
+  "role_model": {
+    "contract_version": 1,
+    "intent": {
+      "taxonomy_version": "1.0.0-alpha.1",
+      "content_revision": "taxonomy-v1-alpha.1",
+      "classification_contract_version": "role-model.classification.v1",
+      "classification_version": "role-model.pi-classifier.v1",
+      "source": "heuristic",
+      "confidence": 0.72,
+      "role_hint_id": "security",
+      "role_source": "heuristic",
+      "task_type": "security.audit",
+      "task_action": "audit",
+      "task_variant": null,
+      "task_source": "heuristic",
+      "task_confidence": 0.72,
+      "preferred_capabilities": [
+        "security.analysis",
+        "code.read"
+      ],
+      "required_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "tool_classes": [
+        "filesystem.read"
+      ],
+      "context_tokens_estimate": 15,
+      "evidence": [
+        "security/risk/diff signal",
+        "Selected taxonomy task security.audit."
+      ],
+      "alternatives": [
+        {
+          "role_hint_id": "coder",
+          "task_type": "coder.review"
+        },
+        {
+          "role_hint_id": "security",
+          "task_type": "security.audit.supply_chain"
+        },
+        {
+          "role_hint_id": "security",
+          "task_type": "security.threat_model"
+        }
+      ]
+    }
+  }
+}

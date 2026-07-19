@@ -1,0 +1,56 @@
+===== /role-model status =====
+exit=0 signal= error=
+STDOUT:
+{"type":"extension_ui_request","id":"96bf32e2-f1a5-4b2f-b9f3-79d06261c183","method":"notify","message":"Role-Model runtime unavailable: Role-Model runtime unavailable: fetch failed\nstate: unavailable\nendpoint: http://127.0.0.1:3456\nremediation: Start the external Role-Model runtime and confirm /healthz responds.","notifyType":"error"}
+{"id":"/role-model status","type":"response","command":"prompt","success":true}
+STDERR:
+
+===== /role-model setup =====
+exit=0 signal= error=
+STDOUT:
+{"type":"extension_ui_request","id":"f56caf1a-a5c1-4c91-a9c0-13a8099354af","method":"notify","message":"Role-Model runtime unavailable: Role-Model runtime unavailable: fetch failed\nstate: unavailable\nendpoint: http://127.0.0.1:3456\nremediation: Start the external Role-Model runtime and confirm /healthz responds.","notifyType":"error"}
+{"id":"/role-model setup","type":"response","command":"prompt","success":true}
+STDERR:
+
+===== /role-model doctor =====
+exit=0 signal= error=
+STDOUT:
+{"type":"extension_ui_request","id":"37a193c5-b534-489e-a382-6ed9dbdea0b2","method":"notify","message":"Role-Model runtime unavailable: Role-Model runtime unavailable: fetch failed\nstate: unavailable\nendpoint: http://127.0.0.1:3456\nremediation: Start the external Role-Model runtime and confirm /healthz responds.","notifyType":"error"}
+{"id":"/role-model doctor","type":"response","command":"prompt","success":true}
+STDERR:
+
+===== /role-model alias list =====
+exit=0 signal= error=
+STDOUT:
+{"type":"extension_ui_request","id":"8e1bf9d5-65ac-4db3-ba97-c193ca13b642","method":"notify","message":"Role-Model runtime unavailable: Role-Model runtime unavailable: fetch failed\nstate: unavailable\nendpoint: http://127.0.0.1:3456\nremediation: Start the external Role-Model runtime and confirm /healthz responds.","notifyType":"error"}
+{"id":"/role-model alias list","type":"response","command":"prompt","success":true}
+STDERR:
+
+===== /role-model alias recommended =====
+exit=0 signal= error=
+STDOUT:
+{"type":"extension_ui_request","id":"2164c3a3-79ff-424c-b8c0-2cfea9610abe","method":"notify","message":"Role-Model runtime unavailable: Role-Model runtime unavailable: fetch failed\nstate: unavailable\nendpoint: http://127.0.0.1:3456\nremediation: Start the external Role-Model runtime and confirm /healthz responds.","notifyType":"error"}
+{"id":"/role-model alias recommended","type":"response","command":"prompt","success":true}
+STDERR:
+
+===== /role-model alias use default.decision-only =====
+exit=0 signal= error=
+STDOUT:
+{"type":"extension_ui_request","id":"514d3e1e-af26-4d1f-a611-2c86fdbc4ccb","method":"notify","message":"Role-Model runtime unavailable: Role-Model runtime unavailable: fetch failed\nstate: unavailable\nendpoint: http://127.0.0.1:3456\nremediation: Start the external Role-Model runtime and confirm /healthz responds.","notifyType":"error"}
+{"id":"/role-model alias use default.decision-only","type":"response","command":"prompt","success":true}
+STDERR:
+
+===== /role-model alias refresh =====
+exit=0 signal= error=
+STDOUT:
+{"type":"extension_ui_request","id":"0fadc351-99c0-4283-a364-328a45365f16","method":"notify","message":"Role-Model runtime unavailable: Role-Model runtime unavailable: fetch failed\nstate: unavailable\nendpoint: http://127.0.0.1:3456\nremediation: Start the external Role-Model runtime and confirm /healthz responds.","notifyType":"error"}
+{"id":"/role-model alias refresh","type":"response","command":"prompt","success":true}
+STDERR:
+
+===== /role-model alias current =====
+exit=0 signal= error=
+STDOUT:
+{"type":"extension_ui_request","id":"53e6696a-0468-4a9b-95a9-2a79b29207ba","method":"notify","message":"Role-Model runtime unavailable: Role-Model runtime unavailable: fetch failed\nstate: unavailable\nendpoint: http://127.0.0.1:3456\nremediation: Start the external Role-Model runtime and confirm /healthz responds.","notifyType":"error"}
+{"id":"/role-model alias current","type":"response","command":"prompt","success":true}
+STDERR:
+

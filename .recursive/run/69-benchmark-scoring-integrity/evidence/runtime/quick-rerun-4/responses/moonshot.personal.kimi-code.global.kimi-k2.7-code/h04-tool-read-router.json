@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h04-tool-read-router",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h04-tool-read-router-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"createRouter\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"createRouter\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    }\n  ],\n  \"answer\": \"createRouter\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 48299,
+  "failure": false,
+  "recordedAtMs": 1783931557495
+}

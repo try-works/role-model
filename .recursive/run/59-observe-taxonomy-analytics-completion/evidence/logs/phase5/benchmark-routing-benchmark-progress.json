@@ -1,0 +1,277 @@
+{
+  "runId": "3f937a1f-4bb7-4348-9519-efceb579ba21",
+  "status": "completed",
+  "mode": "full",
+  "startedAtMs": 1782658570747,
+  "updatedAtMs": 1782659388551,
+  "totalSteps": 27,
+  "completedSteps": 27,
+  "endpointIndex": 0,
+  "endpointCount": 4,
+  "currentEndpointId": null,
+  "currentEndpointModelId": null,
+  "caseIndex": 3,
+  "caseCount": 3,
+  "currentCaseId": "h07-multi-turn-sla-guard",
+  "currentPhase": null,
+  "runPhase": "complete",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "activeJudgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "artifactRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\state\\runtime-host-bridge\\memory\\benchmark-runs",
+  "result": {
+    "runId": "3f937a1f-4bb7-4348-9519-efceb579ba21",
+    "suiteId": "routing-capability-v2",
+    "suiteVersion": "3.4",
+    "mode": "full",
+    "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "startedAtMs": 1782658570746,
+    "completedAtMs": 1782659388547,
+    "artifactRoot": "C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\\state\\runtime-host-bridge\\memory\\benchmark-runs\\3f937a1f-4bb7-4348-9519-efceb579ba21",
+    "endpointGrades": [
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+        "modelId": "deepseek/deepseek-v4-flash",
+        "sourceType": "remote",
+        "overallScore": 1,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 1,
+            "score": 1
+          },
+          "hard": {
+            "cases": 2,
+            "score": 1
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p08-medium-summarize",
+            "difficultyBucket": "medium",
+            "score": 1,
+            "rationale": "The answer accurately summarizes the benefits of difficulty-based routing with relevant technical detail, and the JSON format meets the required schema with only the 'answer' field.",
+            "gradingMethod": "judge",
+            "latencyMs": 12452,
+            "actualPreview": "{\n  \"answer\": \"Difficulty-based routing optimizes cost, latency, and resource usage by directing simple queries to smaller, faster local models and complex queries to more powerful remote models. This approach reduces overall inference cost",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The code defines twoSum, uses Map for O(n) single pass, returns two numeric indices, no nested loops, complete TypeScript with no placeholders. Meets all MUST and SHOULD criteria.",
+            "gradingMethod": "judge",
+            "latencyMs": 17175,
+            "actualPreview": "{\n  \"code\": \"function twoSum(nums: number[], target: number): [number, number] {\\n    const map = new Map<number, number>();\\n    for (let i = 0; i < nums.length; i++) {\\n        const complement = target - nums[i];\\n        if (map.has(com",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The function uses multi-turn context by checking sole endpoint hard-denied by throughput SLA only, and references throughput SLA, sole candidate, and fallback allow. It provides complete working TypeScript without placeholders or errors.",
+            "gradingMethod": "judge",
+            "latencyMs": 34013,
+            "actualPreview": "{\n  \"code\": \"/**\\n * Represents the status of an allow-listed endpoint regarding hard denials.\\n */\\ninterface EndpointInfo {\\n  isHardDeniedByThroughputSLA: boolean;\\n  isHardDeniedByOtherReason: boolean;\\n}\\n\\n/**\\n * Determines whether t",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ]
+      },
+      {
+        "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+        "modelId": "deepseek/deepseek-v4-pro",
+        "sourceType": "remote",
+        "overallScore": 1,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 1,
+            "score": 1
+          },
+          "hard": {
+            "cases": 2,
+            "score": 1
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p08-medium-summarize",
+            "difficultyBucket": "medium",
+            "score": 1,
+            "rationale": "The answer directly addresses the question with specific benefits like cost, latency, throughput, scaling, and resource utilization, fulfilling all checklist items.",
+            "gradingMethod": "judge",
+            "latencyMs": 16437,
+            "actualPreview": "{\n  \"answer\": \"Difficulty-based routing dynamically directs queries to local or remote models based on estimated complexity. This optimizes cost by handling simple tasks with fast, low-cost local models, reserving expensive remote resources",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The code defines function twoSum, uses Map, single loop, returns two numeric indices. No nested O(n^2) loops. Meets all checklist criteria.",
+            "gradingMethod": "judge",
+            "latencyMs": 14537,
+            "actualPreview": "{\n  \"code\": \"function twoSum(nums: number[], target: number): [number, number] {\\n    const map = new Map<number, number>();\\n    for (let i = 0; i < nums.length; i++) {\\n        const complement = target - nums[i];\\n        if (map.has(com",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The function correctly implements sole-candidate fallback when hard-denied only by throughput SLA. It references throughput SLA, sole candidate, and fallback allow, uses multi-turn context, and contains no placeholders or malformed output.",
+            "gradingMethod": "judge",
+            "latencyMs": 39463,
+            "actualPreview": "{\n  \"code\": \"/**\\n * Determines whether to allow a fallback to the sole candidate when every\\n * allow-listed endpoint has been hard-denied exclusively due to throughput SLA.\\n *\\n * @param candidates - Array of candidates (endpoints) that ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ]
+      },
+      {
+        "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+        "modelId": "moonshot/kimi-k2.7-code",
+        "sourceType": "remote",
+        "overallScore": 1,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 1,
+            "score": 1
+          },
+          "hard": {
+            "cases": 2,
+            "score": 1
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p08-medium-summarize",
+            "difficultyBucket": "medium",
+            "score": 1,
+            "rationale": "The response directly answers the question with a detailed technical summary covering cost optimization, latency, privacy, resilience, and resource balancing. It includes the required JSON key 'answer' and is well-formed. No violations of MUST NOT rules.",
+            "gradingMethod": "judge",
+            "latencyMs": 22422,
+            "actualPreview": "{\n  \"answer\": \"Difficulty-based routing optimizes cost by sending simple queries to local, low-cost models and reserving expensive remote API calls for complex tasks that require frontier capability. It reduces latency for routine requests ",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The code defines twoSum, uses a Map, iterates nums once, returns two numeric indices, and has no nested loops. It meets all MUST deliverables, matches the expected pattern, and contains no placeholders or malformed content.",
+            "gradingMethod": "judge",
+            "latencyMs": 24758,
+            "actualPreview": "{\n  \"code\": \"function twoSum(nums: number[], target: number): [number, number] {\\n  const seen = new Map<number, number>();\\n  for (let i = 0; i < nums.length; i++) {\\n    const num = nums[i];\\n    const complement = target - num;\\n    if (",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The code correctly implements a guard that checks for sole allow-listed candidate hard-denied only by throughput SLA, uses multi-turn context (remoteOnly, 'throughput_sla'), references sole, allow-listed, and fallback logic. Complete working TypeScript; no placeholders or diff artifacts. Satisfies all must and must-not criteria.",
+            "gradingMethod": "judge",
+            "latencyMs": 52380,
+            "actualPreview": "{\n  \"code\": \"interface AliasRequest {\\n  remoteOnly: boolean;\\n}\\n\\ninterface EndpointCandidate {\\n  endpointId: string;\\n  allowListed: boolean;\\n  hardDenied: boolean;\\n  hardDenyReasons?: string[];\\n}\\n\\nfunction allowSoleCandidateThroug",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ]
+      },
+      {
+        "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        "modelId": "chatgpt/gpt-5.4",
+        "sourceType": "remote",
+        "overallScore": 1,
+        "byDifficulty": {
+          "easy": {
+            "cases": 0,
+            "score": 0
+          },
+          "medium": {
+            "cases": 1,
+            "score": 1
+          },
+          "hard": {
+            "cases": 2,
+            "score": 1
+          }
+        },
+        "caseResults": [
+          {
+            "caseId": "p08-medium-summarize",
+            "difficultyBucket": "medium",
+            "score": 1,
+            "rationale": "The answer provides relevant technical detail about difficulty-based routing benefits for mixed local/remote pools (cost, latency, privacy, throughput, robustness, resource efficiency, etc.). It is formatted as required JSON with an 'answer' key and no forbidden elements.",
+            "gradingMethod": "judge",
+            "latencyMs": 13402,
+            "actualPreview": "{\n  \"answer\": \"Difficulty-based routing improves quality, cost, and latency by sending easy requests to cheaper or local models and reserving stronger remote models for hard cases. In a mixed local/remote pool, this reduces unnecessary remo",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h01-implement-two-sum",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "Deliverable defines function twoSum, uses a Map (new Map), iterates nums once (single for loop, no nested O(n^2)), returns two numeric indices, and provides complete, working TypeScript without placeholders. All MUST criteria satisfied.",
+            "gradingMethod": "judge",
+            "latencyMs": 13134,
+            "actualPreview": "{\n  \"code\": \"function twoSum(nums: number[], target: number): [number, number] {\\n  const seen = new Map<number, number>();\\n\\n  for (let i = 0; i < nums.length; i++) {\\n    const complement = target - nums[i];\\n    const matchIndex = seen.",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          },
+          {
+            "caseId": "h07-multi-turn-sla-guard",
+            "difficultyBucket": "hard",
+            "score": 1,
+            "rationale": "The response delivers a complete TypeScript guard function that references throughput SLA (throughput-related denial reasons), sole candidate (exactly one allow-listed candidate), and fallback allow (returns true to permit fallback). It uses the multi-turn context and satisfies all MUST requirements without placeholders or disallowed formats.",
+            "gradingMethod": "judge",
+            "latencyMs": 42825,
+            "actualPreview": "{\n  \"code\": \"type EndpointCandidate = {\\n  endpointId: string;\\n  allowListed: boolean;\\n  hardDenied: boolean;\\n  denialReasons?: readonly string[] | null;\\n};\\n\\nexport function shouldAllowSoleCandidateThroughputFallback(\\n  candidates: r",
+            "parseSuccess": true,
+            "judgeError": null,
+            "judgeUnavailable": false,
+            "cappedByValidator": false
+          }
+        ]
+      }
+    ]
+  }
+}

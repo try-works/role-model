@@ -1,0 +1,10 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-host-bridge[39m
+
+ [32m✓[39m test/benchmark-start-guards.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m   Start at [22m 09:10:19
+[2m   Duration [22m 1.29s[2m (transform 144ms, setup 0ms, collect 155ms, tests 11ms, environment 0ms, prepare 361ms)[22m
+

@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:39492) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (181 tests | 180 skipped) 1085ms
+   ✓ runtime-host-bridge > executes direct exact-model chat requests through the Codex subscription endpoint  1081ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 180 skipped (181)
+   Start at  12:59:21
+   Duration  4.54s (transform 1.91s, setup 0ms, collect 2.59s, tests 1.08s, environment 0ms, prepare 275ms)
+

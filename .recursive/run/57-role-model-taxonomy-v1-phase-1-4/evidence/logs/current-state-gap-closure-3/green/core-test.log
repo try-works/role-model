@@ -1,0 +1,18 @@
+
+> @role-model-router/core@0.0.0 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+ [32m✓[39m test/taxonomy-docs.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m test/routing-intent.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m test/taxonomy-catalog.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 236[2mms[22m[39m
+ [32m✓[39m test/taxonomy-data-files.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 518[2mms[22m[39m
+   [33m[2m✓[22m[39m taxonomy data and schema files[2m > [22mtaxonomy schemas validate canonical data and reject proposal-contract drift [33m 479[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+[2m   Start at [22m 20:58:00
+[2m   Duration [22m 1.83s[2m (transform 330ms, setup 0ms, collect 555ms, tests 779ms, environment 2ms, prepare 1.61s)[22m
+

@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 import {
+  bodyStrongTextClassName,
+  modalEyebrowClassName,
   mutedPanelClassName,
+  panelBodyTextClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
 } from "../lib/design-system";
@@ -61,16 +64,10 @@ export function LlamaSwapSetupHint({
   return (
     <>
       <div className={panelClassName}>
-        <p className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]">
-          Llama-swap setup
-        </p>
-        <p className="mt-3 text-sm font-medium text-[var(--rm-fg)]">
-          {llamaSwapHintHeadline(status)}
-        </p>
+        <p className={modalEyebrowClassName}>Llama-swap setup</p>
+        <p className={`mt-3 ${bodyStrongTextClassName}`}>{llamaSwapHintHeadline(status)}</p>
         {variant === "prominent" ? (
-          <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--rm-secondary)]">
-            {llamaSwapHintDetail()}
-          </p>
+          <p className={`mt-2 max-w-[60ch] ${panelBodyTextClassName}`}>{llamaSwapHintDetail()}</p>
         ) : null}
         <div className="mt-4 flex flex-wrap gap-2">
           <button

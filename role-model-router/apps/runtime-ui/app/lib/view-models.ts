@@ -501,6 +501,77 @@ export function buildProviderMaintenanceRows(input: {
     });
 }
 
+export function buildConfiguredRemoteConnectionRows(input: {
+  readonly accounts: readonly RuntimeAccount[];
+  readonly endpoints: readonly RuntimeEndpoint[];
+  readonly models: readonly RuntimeModelRecord[];
+}): Array<{
+  key: string;
+  account: RuntimeAccount | null;
+  providerAccountId: string;
+  providerId: string;
+  authMode: string;
+  baseUrlOverride: string | null;
+  endpointCount: number;
+  endpoints: Array<{
+    endpointId: string;
+    modelId: string;
+    displayName: string;
+    healthStatus: string;
+    routingEligible: boolean;
+    benchmarkEligible: boolean;
+    roleIds: readonly string[];
+  }>;
+}> {
+  const accountsById = new Map(
+    input.accounts.map((account) => [account.providerAccountId, account] as const),
+  );
+  const modelDisplayNameById = new Map(
+    input.models.map((model) => [model.id, model.displayName ?? toTitleLabel(model.id)] as const),
+  );
+  const remoteEndpoints = input.endpoints.filter(
+    (endpoint) =>
+      endpoint.sourceType === "remote" &&
+      typeof endpoint.providerAccountId === "string" &&
+      endpoint.providerAccountId.length > 0 &&
+      endpoint.status !== "inactive",
+  );
+  const providerAccountIds = uniqueStrings(
+    remoteEndpoints.map((endpoint) => endpoint.providerAccountId),
+  ).sort(sortLexical);
+
+  return providerAccountIds.map((providerAccountId) => {
+    const account = accountsById.get(providerAccountId) ?? null;
+    const endpoints = remoteEndpoints
+      .filter((endpoint) => endpoint.providerAccountId === providerAccountId)
+      .sort(
+        (left, right) =>
+          sortLexical(left.modelId, right.modelId) ||
+          sortLexical(left.endpointId, right.endpointId),
+      )
+      .map((endpoint) => ({
+        endpointId: endpoint.endpointId,
+        modelId: endpoint.modelId,
+        displayName: modelDisplayNameById.get(endpoint.modelId) ?? toTitleLabel(endpoint.modelId),
+        healthStatus: resolveEndpointReadinessStatus(endpoint),
+        routingEligible: endpoint.routingEligible !== false,
+        benchmarkEligible: endpoint.benchmarkEligible !== false,
+        roleIds: endpoint.roleIds ?? [],
+      }));
+
+    return {
+      key: providerAccountId,
+      account,
+      providerAccountId,
+      providerId: account?.providerId ?? endpoints[0]?.modelId.split("/")[0] ?? "unknown-provider",
+      authMode: account?.authMode ?? "unknown",
+      baseUrlOverride: account?.baseUrlOverride ?? null,
+      endpointCount: endpoints.length,
+      endpoints,
+    };
+  });
+}
+
 export function buildArchivedArtifactRows(
   summary: Pick<RuntimeSummary, "credentialLifecycle">,
 ): Array<{
@@ -734,6 +805,37 @@ function summarizeStreamLabel(
   return "Streaming unavailable";
 }
 
+function readFailureMessageFromDimensions(
+  dimensions: Record<string, unknown> | null | undefined,
+): string | null {
+  if (!dimensions || typeof dimensions !== "object") {
+    return null;
+  }
+  const errorContext = dimensions.errorContext;
+  if (!errorContext || typeof errorContext !== "object") {
+    return null;
+  }
+  const message = (errorContext as Record<string, unknown>).message;
+  return typeof message === "string" && message.trim().length > 0 ? message.trim() : null;
+}
+
+function humanizeTelemetryErrorClass(errorClass: string | null | undefined): string {
+  if (typeof errorClass !== "string" || errorClass.trim().length === 0) {
+    return "ok";
+  }
+  const normalized = errorClass.replace(/[_-]+/g, " ").trim();
+  return normalized.length > 0 ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : "ok";
+}
+
+function buildTelemetryStatusLabel(
+  row: Pick<RuntimeTelemetryRequestRecord, "statusCode" | "errorClass" | "dimensions">,
+): string {
+  if (!row.errorClass) {
+    return `${row.statusCode ?? 0} ok`;
+  }
+  return `${row.statusCode ?? 0} ${readFailureMessageFromDimensions(row.dimensions) ?? humanizeTelemetryErrorClass(row.errorClass)}`;
+}
+
 export function summarizeTelemetryStats(
   summary: RuntimeTelemetrySummary,
 ): Array<{ label: string; value: string; detail: string }> {
@@ -741,19 +843,19 @@ export function summarizeTelemetryStats(
     {
       label: "Requests",
       value: String(summary.requestCount),
-      detail: `${summary.sourceBreakdown.local.requestCount} local / ${summary.sourceBreakdown.remote.requestCount} remote in the current telemetry window`,
+      detail: `${summary.sourceBreakdown.local.requestCount} local · ${summary.sourceBreakdown.remote.requestCount} remote`,
     },
     {
       label: "Failures",
       value: String(summary.failureCount),
-      detail: `${summary.successCount} successful requests recorded`,
+      detail: `${summary.successCount} successful requests`,
     },
     {
       label: "Latency",
       value: summary.averageLatencyMs !== null ? `${summary.averageLatencyMs} ms avg` : "n/a",
       detail:
         summary.p95LatencyMs !== null && summary.averageLatencyMs !== null
-          ? `${summary.p95LatencyMs} ms p95 / ${summary.averageLatencyMs} ms avg across structured telemetry`
+          ? `${summary.p95LatencyMs} ms p95 · ${summary.averageLatencyMs} ms avg`
           : summary.p95LatencyMs !== null
             ? `${summary.p95LatencyMs} ms p95 — average not available`
             : summary.averageLatencyMs !== null
@@ -763,7 +865,7 @@ export function summarizeTelemetryStats(
     {
       label: "Tokens",
       value: String(summary.totalTokens),
-      detail: `${summary.cachedRequestCount} cached request${summary.cachedRequestCount === 1 ? "" : "s"} and ${formatEffectiveCurrency(summary.totalEffectiveCostUsd)} cost recorded`,
+      detail: `${summary.cachedRequestCount} cached · ${formatEffectiveCurrency(summary.totalEffectiveCostUsd)}`,
     },
   ];
 }
@@ -788,7 +890,7 @@ export function buildTelemetryComparisonCards(
     endpointId: row.endpointId,
     modelId: row.modelId,
     sourceLabel: formatSourceLabel(row.sourceType),
-    providerLabel: row.providerFamily ?? row.providerKind ?? row.providerId ?? "unknown provider",
+    providerLabel: row.providerId ?? row.providerFamily ?? row.providerKind ?? "unknown provider",
     cacheLabel: summarizeCachePosture({
       promptCacheSupported: row.promptCacheSupported,
       cachedRequestCount: row.cachedRequestCount,
@@ -823,6 +925,7 @@ export function buildTelemetryRequestRows(
       | "estimatedCostUsd"
       | "errorClass"
       | "statusCode"
+      | "dimensions"
       | "providerFamily"
       | "providerKind"
       | "providerId"
@@ -864,9 +967,9 @@ export function buildTelemetryRequestRows(
       endpointId: row.endpointId,
       modelId: row.modelId,
       sourceLabel: formatSourceLabel(row.sourceType),
-      statusLabel: `${row.statusCode ?? 0} ${row.errorClass ?? "ok"}`,
+      statusLabel: buildTelemetryStatusLabel(row),
       providerFamilyLabel:
-        row.providerFamily ?? row.providerKind ?? row.providerId ?? "unknown provider",
+        row.providerId ?? row.providerFamily ?? row.providerKind ?? "unknown provider",
       finishReasonLabel: row.finishReason ?? "unknown",
       cacheLabel: summarizeCachePosture({
         promptCacheSupported: row.promptCacheSupported,
@@ -908,6 +1011,7 @@ export function buildDashboardLatestRequestRows(
       | "estimatedCostUsd"
       | "errorClass"
       | "statusCode"
+      | "dimensions"
       | "providerFamily"
       | "providerKind"
       | "providerId"
@@ -1307,6 +1411,8 @@ export function buildConfiguredProviderRows(input: {
   activeEndpointCount: number;
   healthStatuses: string[];
   pendingDeviceAuthorizationCount: number;
+  envUnresolvedAccountCount: number;
+  expiredAuthAccountCount: number;
   credentialsMissingAccountCount: number;
   connectedWithoutEndpointCount: number;
   readyAccountCount: number;
@@ -1343,12 +1449,16 @@ export function buildConfiguredProviderRows(input: {
         .map((endpoint) => endpoint.providerAccountId as string),
     );
     let pendingDeviceAuthorizationCount = 0;
+    let envUnresolvedAccountCount = 0;
+    let expiredAuthAccountCount = 0;
     let credentialsMissingAccountCount = 0;
     let connectedWithoutEndpointCount = 0;
     let readyAccountCount = 0;
 
     if (providerRollup) {
       pendingDeviceAuthorizationCount = providerRollup.countsByLifecycle.pendingAuthorization;
+      envUnresolvedAccountCount = providerRollup.countsByLifecycle.envUnresolved;
+      expiredAuthAccountCount = providerRollup.countsByLifecycle.expiredAuth;
       credentialsMissingAccountCount = providerRollup.countsByLifecycle.credentialsMissing;
       connectedWithoutEndpointCount = providerRollup.countsByLifecycle.connectedNoEndpoint;
       readyAccountCount = providerRollup.countsByLifecycle.executionReady;
@@ -1360,6 +1470,14 @@ export function buildConfiguredProviderRows(input: {
         }
         if (pendingDeviceAuthorizationAccountIds.has(account.providerAccountId)) {
           pendingDeviceAuthorizationCount += 1;
+          continue;
+        }
+        if (account.healthStatus === "env-unresolved") {
+          envUnresolvedAccountCount += 1;
+          continue;
+        }
+        if (account.healthStatus === "expired-auth") {
+          expiredAuthAccountCount += 1;
           continue;
         }
         if (account.healthStatus === "credentials-missing") {
@@ -1396,6 +1514,8 @@ export function buildConfiguredProviderRows(input: {
         sortLexical,
       ),
       pendingDeviceAuthorizationCount,
+      envUnresolvedAccountCount,
+      expiredAuthAccountCount,
       credentialsMissingAccountCount,
       connectedWithoutEndpointCount,
       readyAccountCount,
@@ -1455,15 +1575,42 @@ function summarizeSourceTypes(sourceTypes: readonly string[]): string {
   return sourceTypes[0] ?? "unknown";
 }
 
-function summarizeModelStatus(statuses: readonly string[]): string {
-  if (statuses.includes("active")) {
-    return "active";
+function resolveEndpointReadinessStatus(
+  endpoint: Pick<RuntimeEndpoint, "healthStatus" | "status">,
+): string {
+  if (endpoint.healthStatus && endpoint.healthStatus.length > 0) {
+    return endpoint.healthStatus;
+  }
+  if (endpoint.status === "active") {
+    return "healthy";
+  }
+  return endpoint.status ?? "unknown";
+}
+
+function summarizeModelStatus(
+  endpoints: readonly Pick<RuntimeEndpoint, "healthStatus" | "status">[],
+): string {
+  const statuses = endpoints.map(resolveEndpointReadinessStatus);
+  if (statuses.length === 0) {
+    return "inactive";
+  }
+  if (statuses.every((status) => status === "healthy")) {
+    return "healthy";
+  }
+  if (statuses.every((status) => status === "offline")) {
+    return "offline";
+  }
+  if (statuses.some((status) => status === "healthy")) {
+    return "degraded";
   }
   if (statuses.includes("degraded")) {
     return "degraded";
   }
-  if (statuses.includes("offline")) {
-    return "offline";
+  if (statuses.includes("provider-unavailable")) {
+    return "provider-unavailable";
+  }
+  if (statuses.includes("policy-blocked")) {
+    return "policy-blocked";
   }
   return statuses[0] ?? "unknown";
 }
@@ -1472,7 +1619,7 @@ export function buildConfiguredModelCards(input: {
   readonly models: readonly RuntimeModelRecord[];
   readonly endpoints: readonly RuntimeEndpoint[];
   readonly accounts: readonly RuntimeAccount[];
-  readonly requests: readonly RuntimeRequestListItem[];
+  readonly requests?: readonly RuntimeRequestListItem[] | null;
   readonly controller?:
     | (Pick<RuntimeControllerAssignment, "endpointId" | "modelId"> &
         Partial<Pick<RuntimeControllerAssignment, "scope">>)
@@ -1488,7 +1635,7 @@ export function buildConfiguredModelCards(input: {
   sourceSummary: string;
   endpointCount: number;
   endpointIds: string[];
-  requestCount: number;
+  requestCount: number | null;
   status: string;
   roleIds: string[];
   toolCallingSupported: boolean;
@@ -1521,9 +1668,9 @@ export function buildConfiguredModelCards(input: {
           ),
         ),
       ].sort((left, right) => left.localeCompare(right, "en"));
-      const requestCount = input.requests.filter((request) =>
-        endpointIds.includes(request.endpointId ?? ""),
-      ).length;
+      const requestCount = Array.isArray(input.requests)
+        ? input.requests.filter((request) => endpointIds.includes(request.endpointId ?? "")).length
+        : null;
       const controllerState: "active" | "eligible" | "inactive" =
         input.controller &&
         input.controller.modelId === model.id &&
@@ -1545,7 +1692,7 @@ export function buildConfiguredModelCards(input: {
         endpointCount: endpointIds.length,
         endpointIds,
         requestCount,
-        status: summarizeModelStatus(endpoints.map((endpoint) => endpoint.status ?? "unknown")),
+        status: summarizeModelStatus(endpoints),
         roleIds,
         toolCallingSupported: endpoints.some((endpoint) => endpoint.toolCallingSupported === true),
         controllerState,

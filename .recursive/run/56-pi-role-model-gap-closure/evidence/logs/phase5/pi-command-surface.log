@@ -1,0 +1,38 @@
+## setup: pi -p "/role-model setup" --no-tools --no-builtin-tools
+setup_EXIT_CODE=1
+## status: pi -p "/role-model status" --no-tools --no-builtin-tools
+status_EXIT_CODE=1
+## doctor: pi -p "/role-model doctor" --no-tools --no-builtin-tools
+doctor_EXIT_CODE=1
+## ui: pi -p "/role-model ui" --no-tools --no-builtin-tools
+ui_EXIT_CODE=1
+## alias-list: pi -p "/role-model alias list" --no-tools --no-builtin-tools
+alias-list_EXIT_CODE=1
+## alias-recommended: pi -p "/role-model alias recommended" --no-tools --no-builtin-tools
+alias-recommended_EXIT_CODE=1
+## alias-use: pi -p "/role-model alias use baseline.decision-only" --no-tools --no-builtin-tools
+alias-use_EXIT_CODE=1
+## alias-refresh: pi -p "/role-model alias refresh" --no-tools --no-builtin-tools
+alias-refresh_EXIT_CODE=1
+## list-models: pi --list-models role-model
+provider    model                       context  max-out  thinking  images
+role-model  baseline.decision-only      262.1K   128K     yes       yes   
+role-model  baseline.hybrid             262.1K   128K     yes       yes   
+role-model  baseline.remote-only        262.1K   128K     yes       yes   
+role-model  chatgpt/gpt-5.4             1.1M     128K     yes       yes   
+role-model  controller.decision-only    262.1K   128K     yes       yes   
+role-model  controller.hybrid           262.1K   128K     yes       yes   
+role-model  controller.remote-only      262.1K   128K     yes       yes   
+role-model  deepseek/deepseek-v4-flash  1M       384K     yes       no    
+role-model  deepseek/deepseek-v4-pro    1M       384K     yes       no    
+role-model  default.decision-only       262.1K   128K     yes       yes   
+role-model  default.hybrid              262.1K   128K     yes       yes   
+role-model  default.remote-only         262.1K   128K     yes       yes   
+role-model  difficulty.decision-only    262.1K   128K     yes       yes   
+role-model  difficulty.hybrid           262.1K   128K     yes       yes   
+role-model  difficulty.remote-only      262.1K   128K     yes       yes   
+role-model  hybrid.decision-only        262.1K   128K     yes       yes   
+role-model  hybrid.hybrid               262.1K   128K     yes       yes   
+role-model  hybrid.remote-only          262.1K   128K     yes       yes   
+role-model  moonshot/kimi-k2.7-code     262.1K   262.1K   yes       yes   
+list-models_EXIT_CODE=0

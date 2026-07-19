@@ -1,0 +1,18 @@
+{
+  "model": "difficulty.remote-only",
+  "input": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "input_text",
+          "text": "A 1x1 png is attached only to verify image-capable routing. Reply with exactly IMAGE_OK."
+        },
+        {
+          "type": "input_image",
+          "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z4x8AAAAASUVORK5CYII="
+        }
+      ]
+    }
+  ]
+}

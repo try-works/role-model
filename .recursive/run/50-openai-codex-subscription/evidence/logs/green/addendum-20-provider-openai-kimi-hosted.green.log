@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/packages/provider-openai
+
+ ✓ test/index.test.ts (10 tests | 7 skipped) 7ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed | 7 skipped (10)
+   Start at  21:00:39
+   Duration  2.01s (transform 476ms, setup 0ms, collect 393ms, tests 7ms, environment 0ms, prepare 598ms)
+

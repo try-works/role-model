@@ -250,6 +250,19 @@ export function removeRemoteActivation(
   };
 }
 
+export function removeRemoteActivationsByConfiguredModel(
+  intent: OperatorIntentV1,
+  providerAccountId: string,
+  modelId: string,
+): OperatorIntentV1 {
+  return {
+    ...intent,
+    remoteActivations: intent.remoteActivations.filter(
+      (entry) => !(entry.providerAccountId === providerAccountId && entry.modelId === modelId),
+    ),
+  };
+}
+
 export function upsertPeerLoad(
   intent: OperatorIntentV1,
   peerLoad: OperatorIntentPeerLoad,

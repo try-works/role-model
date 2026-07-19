@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "h09-agent-metrics-chain",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Deliverable includes required tool calls: list_endpoints, get_metrics for both endpoints. The JSON answer string explicitly compares remote vs local p95 latency, fulfilling the 'MUST call list_endpoints and get_metrics for both compared endpoints before summarizing latency, and the answer must explicitly compare remote vs local p95 latency' criteria.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h09-agent-metrics-chain.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/h09-agent-metrics-chain/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935246289
+}

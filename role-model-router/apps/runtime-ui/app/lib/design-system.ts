@@ -396,6 +396,18 @@ const observeRequestsRoute = createRoute({
     "Canonical runtime telemetry rows with direct drill-in to request captures, endpoint profile context, and tooling receipts.",
 });
 
+const observeRoutingRoute = createRoute({
+  id: "observe-routing",
+  to: "/app/observe/routing",
+  label: "Routing",
+  section: "Observe",
+  icon: GitBranch,
+  template: "ledger-inspector",
+  title: "Routing analytics",
+  description:
+    "Historical routing mix, difficulty, model selection, and avoided-cost analytics from persisted request-time telemetry facts.",
+});
+
 const observeRequestDetailRoute = createRoute({
   id: "observe-request-detail",
   to: "/app/observe/requests/:requestId",
@@ -510,6 +522,7 @@ const runtimeRouteDefinitions = [
   routerDecisionDetailRoute,
   observeActivityRoute,
   observeRequestsRoute,
+  observeRoutingRoute,
   observeLogsRoute,
   integrationsDownstreamRoute,
   integrationsUpstreamRoute,
@@ -572,7 +585,7 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
   {
     title: "Observe",
     icon: Activity,
-    items: [observeActivityRoute, observeRequestsRoute, observeLogsRoute],
+    items: [observeRequestsRoute, observeRoutingRoute, observeActivityRoute, observeLogsRoute],
   },
   {
     title: "Connect",
@@ -592,74 +605,267 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
 ] as const;
 
 export const runtimeTheme = {
-  maxContentWidth: "1480px",
+  maxContentWidth: "1840px",
   radii: {
-    shell: "0px",
-    panel: "0px",
-    field: "0px",
-    badge: "0px",
+    sm: "8px",
+    md: "12px",
+    lg: "16px",
+    pill: "9999px",
+    shell: "28px",
+    panel: "16px",
+    field: "12px",
+    badge: "9999px",
   },
   colors: {
     light: {
-      bg: "#fafaf9",
-      surface: "#f5f5f4",
-      surfaceStrong: "#f5f5f4",
-      panel: "#e7e5e4",
-      fg: "#1c1917",
-      secondary: "rgba(28, 25, 23, 0.70)",
-      muted: "rgba(28, 25, 23, 0.40)",
-      border: "#e7e5e4",
-      borderStrong: "#f5f5f4",
-      accent: "#003B8E",
-      accentMuted: "rgba(0, 59, 142, 0.60)",
-      accentSubtle: "rgba(0, 59, 142, 0.20)",
-      accentGhost: "rgba(0, 59, 142, 0.10)",
-      error: "#C8102E",
-      errorMuted: "rgba(200, 16, 46, 0.60)",
-      errorSubtle: "rgba(200, 16, 46, 0.20)",
-      errorGhost: "rgba(200, 16, 46, 0.10)",
-      success: "#166534",
-      successMuted: "rgba(22, 101, 52, 0.60)",
-      successSubtle: "rgba(22, 101, 52, 0.20)",
-      warning: "#b45309",
-      warningMuted: "rgba(180, 83, 9, 0.60)",
-      telemetryLocal: "#1f2937",
-      telemetryRemote: "#003B8E",
-      telemetryHealthy: "#166534",
-      telemetryDegraded: "#b45309",
-      telemetryRaw: "#57534e",
+      bg: "#FFFFFF",
+      panelMuted: "#ECEEF2",
+      surface: "#F7F8F8",
+      surfaceStrong: "#FFFFFF",
+      panel: "#F3F4F6",
+      fg: "#0F1115",
+      secondary: "#3A4150",
+      muted: "#69707D",
+      border: "#E3E6EC",
+      borderStrong: "#CED3DE",
+      accent: "#5E6AD2",
+      accentInk: "#5E6AD2",
+      accentFocus: "#828FFF",
+      accentOnDark: "#828FFF",
+      accentMuted: "rgba(94, 106, 210, 0.78)",
+      accentSubtle: "rgba(94, 106, 210, 0.14)",
+      accentGhost: "rgba(94, 106, 210, 0.08)",
+      dividerSoft: "#E3E6EC",
+      hairline: "#E3E6EC",
+      chipTranslucent: "rgba(9, 11, 17, 0.06)",
+      onPrimary: "#FFFFFF",
+      telemetryLocal: "#0F1115",
+      telemetryRemote: "#5E6AD2",
+      telemetryHealthy: "#27A644",
+      telemetryDegraded: "#B67A11",
+      telemetryRaw: "#69707D",
+      error: "#D84F6A",
+      errorMuted: "rgba(216, 79, 106, 0.76)",
+      errorSubtle: "rgba(216, 79, 106, 0.14)",
+      errorGhost: "rgba(216, 79, 106, 0.10)",
+      success: "#27A644",
+      successMuted: "rgba(39, 166, 68, 0.76)",
+      successSubtle: "rgba(39, 166, 68, 0.10)",
+      warning: "#B67A11",
+      warningMuted: "rgba(182, 122, 17, 0.78)",
+      warningSubtle: "rgba(182, 122, 17, 0.14)",
+      info: "#3F87F5",
+      advisory: "#9664E8",
     },
     dark: {
-      bg: "#0c0a09",
-      surface: "#1c1917",
-      surfaceStrong: "#1c1917",
-      panel: "#292524",
-      fg: "#fafaf9",
-      secondary: "rgba(250, 250, 249, 0.70)",
-      muted: "rgba(250, 250, 249, 0.40)",
-      border: "#292524",
-      borderStrong: "#1c1917",
-      accent: "#60a5fa",
-      accentMuted: "rgba(96, 165, 250, 0.60)",
-      accentSubtle: "rgba(96, 165, 250, 0.20)",
-      accentGhost: "rgba(96, 165, 250, 0.10)",
-      error: "#fb7185",
-      errorMuted: "rgba(251, 113, 133, 0.60)",
-      errorSubtle: "rgba(251, 113, 133, 0.20)",
-      errorGhost: "rgba(251, 113, 133, 0.10)",
-      success: "#86efac",
-      successMuted: "rgba(134, 239, 172, 0.60)",
-      successSubtle: "rgba(134, 239, 172, 0.20)",
-      warning: "#fbbf24",
-      warningMuted: "rgba(251, 191, 36, 0.60)",
-      telemetryLocal: "#d6d3d1",
-      telemetryRemote: "#60a5fa",
-      telemetryHealthy: "#86efac",
-      telemetryDegraded: "#fbbf24",
-      telemetryRaw: "#a8a29e",
+      bg: "#010102",
+      surface: "#0F1011",
+      surfaceStrong: "#141516",
+      panel: "#18191A",
+      panelMuted: "#191A1B",
+      fg: "#F7F8F8",
+      secondary: "#D0D6E0",
+      muted: "#8A8F98",
+      border: "#23252A",
+      borderStrong: "#34343A",
+      accent: "#5E6AD2",
+      accentInk: "#F7F8F8",
+      accentFocus: "#828FFF",
+      accentOnDark: "#828FFF",
+      accentMuted: "rgba(130, 143, 255, 0.86)",
+      accentSubtle: "rgba(94, 106, 210, 0.20)",
+      accentGhost: "rgba(94, 106, 210, 0.12)",
+      dividerSoft: "rgba(247, 248, 248, 0.06)",
+      hairline: "#23252A",
+      chipTranslucent: "rgba(247, 248, 248, 0.08)",
+      onPrimary: "#FFFFFF",
+      telemetryLocal: "#9DA8C8",
+      telemetryRemote: "#5E6AD2",
+      telemetryHealthy: "#27A644",
+      telemetryDegraded: "#D9A441",
+      telemetryRaw: "#62666D",
+      error: "#E06C89",
+      errorMuted: "rgba(224, 108, 137, 0.82)",
+      errorSubtle: "rgba(224, 108, 137, 0.20)",
+      errorGhost: "rgba(255, 125, 166, 0.10)",
+      success: "#27A644",
+      successMuted: "rgba(39, 166, 68, 0.82)",
+      successSubtle: "rgba(39, 166, 68, 0.14)",
+      warning: "#D9A441",
+      warningMuted: "rgba(217, 164, 65, 0.82)",
+      warningSubtle: "rgba(217, 164, 65, 0.12)",
+      info: "#6EA8FF",
+      advisory: "#B479FF",
     },
   },
 } as const;
+
+export const chartColors = {
+  local: "var(--rm-chart-local)",
+  remote: "var(--rm-chart-remote)",
+  tokens: "var(--rm-chart-tokens)",
+  cacheHit: "var(--rm-chart-cache-hit)",
+  cacheRate: "var(--rm-chart-cache-rate)",
+  latency: "var(--rm-chart-latency)",
+  cost: "var(--rm-chart-cost)",
+  failure: "var(--rm-chart-failure)",
+  success: "var(--rm-chart-success)",
+  neutral1: "var(--rm-chart-neutral-1)",
+  neutral2: "var(--rm-chart-neutral-2)",
+  ink: "var(--rm-chart-ink)",
+  cyan: "var(--rm-chart-cyan)",
+  highlightPink: "var(--rm-chart-highlight-pink)",
+  violet: "var(--rm-chart-violet)",
+  linkBlue: "var(--rm-chart-link-blue)",
+  linkDeep: "var(--rm-chart-link-deep)",
+  linkSoft: "var(--rm-chart-link-soft)",
+  error: "var(--rm-chart-error)",
+  errorDeep: "var(--rm-chart-error-deep)",
+  errorSoft: "var(--rm-chart-error-soft)",
+  warning: "var(--rm-chart-warning)",
+  warningDeep: "var(--rm-chart-warning-deep)",
+  warningSoft: "var(--rm-chart-warning-soft)",
+} as const;
+
+export const chartAxisTickStyle = {
+  fill: "var(--rm-muted)",
+  fontSize: 12,
+} as const;
+
+export const chartAxisCategoryTickStyle = {
+  fill: "var(--rm-secondary)",
+  fontSize: 13,
+} as const;
+
+export const chartBarRadius: [number, number, number, number] = [8, 8, 0, 0];
+
+export const chartRankingBarRadius: [number, number, number, number] = [0, 8, 8, 0];
+
+export const chartHorizontalRankingLegend = {
+  placement: "bottom",
+  axisCategoryWidth: 0,
+} as const;
+
+export const telemetryChartLayoutContract = {
+  leftAxisGutter: { min: 40, max: 88 },
+  rightAxisReserve: { min: 34, max: 64 },
+  legendInset: 12,
+  plotMargin: { top: 4, right: 0, bottom: 0, left: 0 },
+  plotHeight: 280,
+  tickCharacterWidth: 7,
+  tickHorizontalPadding: 16,
+} as const;
+
+export interface ResolvedTelemetryChartLayout {
+  readonly leftAxisGutter: number;
+  readonly rightAxisReserve: number;
+  readonly legendInset: number;
+  readonly plotMargin: typeof telemetryChartLayoutContract.plotMargin;
+  readonly plotHeight: number;
+}
+
+function resolveChartAxisWidth(
+  labels: readonly string[],
+  bounds: { readonly min: number; readonly max: number },
+): number {
+  const widestLabelLength = labels.reduce(
+    (widest, label) => Math.max(widest, [...label].length),
+    0,
+  );
+  return Math.min(
+    bounds.max,
+    Math.max(
+      bounds.min,
+      widestLabelLength * telemetryChartLayoutContract.tickCharacterWidth +
+        telemetryChartLayoutContract.tickHorizontalPadding,
+    ),
+  );
+}
+
+export function resolveTelemetryChartLayout(input: {
+  readonly leftTickLabels: readonly string[];
+  readonly rightTickLabels?: readonly string[];
+}): ResolvedTelemetryChartLayout {
+  const rightTickLabels = input.rightTickLabels ?? [];
+  return {
+    leftAxisGutter: resolveChartAxisWidth(
+      input.leftTickLabels,
+      telemetryChartLayoutContract.leftAxisGutter,
+    ),
+    rightAxisReserve:
+      rightTickLabels.length > 0
+        ? resolveChartAxisWidth(rightTickLabels, telemetryChartLayoutContract.rightAxisReserve)
+        : 0,
+    legendInset: telemetryChartLayoutContract.legendInset,
+    plotMargin: telemetryChartLayoutContract.plotMargin,
+    plotHeight: telemetryChartLayoutContract.plotHeight,
+  };
+}
+
+export function formatTelemetryChartTick(value: number): string {
+  if (!Number.isFinite(value)) {
+    return "";
+  }
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: Math.abs(value) < 1 ? 2 : 0,
+  }).format(value);
+}
+
+export const telemetryChartStates = {
+  loading: {
+    label: "Loading",
+    tone: "muted",
+    copy: "Loading chart data.",
+  },
+  refreshing: {
+    label: "Refreshing",
+    tone: "muted",
+    copy: "Refreshing chart data while keeping the last populated view visible.",
+  },
+  empty: {
+    label: "Empty",
+    tone: "muted",
+    copy: "No telemetry rows match the current filters.",
+  },
+  unsupported: {
+    label: "Unsupported",
+    tone: "warning",
+    copy: "The selected metric or dimension is not supported by this telemetry slice.",
+  },
+  partial: {
+    label: "Partial",
+    tone: "warning",
+    copy: "Some matching rows do not carry the selected metric or dimension.",
+  },
+  truncated: {
+    label: "Truncated",
+    tone: "warning",
+    copy: "The backend explicitly limited the telemetry slice.",
+  },
+  error: {
+    label: "Error",
+    tone: "error",
+    copy: "Telemetry analytics could not be loaded.",
+  },
+  populated: {
+    label: "Populated",
+    tone: "neutral",
+    copy: "Chart values come from backend-owned telemetry analytics.",
+  },
+} as const;
+
+export function getTelemetryChartStatePillTone(
+  stateKind: keyof typeof telemetryChartStates,
+): "neutral" | "warning" | "error" {
+  const tone = telemetryChartStates[stateKind].tone;
+  if (tone === "warning") {
+    return "warning";
+  }
+  if (tone === "error") {
+    return "error";
+  }
+  return "neutral";
+}
 
 export const shellQuickLinks = [
   { label: "Controller JSON", href: "/api/role-model/controller" },
@@ -670,26 +876,128 @@ export const shellQuickLinks = [
 ] as const;
 
 export const cardClassName =
-  "rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface)] shadow-[var(--rm-shadow-card)]";
+  "rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface)] shadow-[var(--rm-shadow-card)]";
 
 export const raisedPanelClassName =
-  "rounded-none border border-[var(--rm-border)] bg-[var(--rm-surface-strong)]";
+  "rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-surface-strong)]";
 
 export const mutedPanelClassName =
-  "rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)]";
+  "rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)]";
+
+export const insetPanelClassName = `${mutedPanelClassName} p-4 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-secondary)]`;
+
+export const errorNoticeClassName =
+  "rounded-[var(--rm-radius-panel)] border border-[var(--rm-error)] bg-[var(--rm-error-ghost)] p-6 text-[14px] font-normal leading-[21px] tracking-[0em] text-[var(--rm-error)]";
+
+export const eyebrowClassName =
+  "text-[12px] font-normal uppercase leading-4 tracking-[0.08em] text-[var(--rm-muted)]";
+
+export const navLabelClassName = "text-[13px] font-normal leading-[18px] tracking-[0em]";
+export const navLabelTextStyle = {
+  fontSize: "13px",
+  fontWeight: 400,
+  lineHeight: "18px",
+  letterSpacing: "0em",
+} as const;
+export const pillLabelClassName = navLabelClassName;
+
+export function getPrimarySectionLinkClassName(isActive: boolean): string {
+  return [
+    `flex min-h-[41px] items-center rounded-[var(--linear-radius-8)] px-3 py-2.5 transition-colors ${navLabelClassName}`,
+    isActive
+      ? "bg-[var(--rm-surface-strong)] text-[var(--rm-fg)]"
+      : "text-[var(--rm-secondary)] hover:bg-[var(--rm-surface-strong)] hover:text-[var(--rm-fg)]",
+  ].join(" ");
+}
+
+export function getSecondaryNavigationLinkClassName(isActive: boolean): string {
+  return [
+    `inline-flex min-h-[31px] items-center rounded-[var(--rm-radius-pill)] px-3.5 py-1.5 ${navLabelClassName} transition-colors`,
+    isActive
+      ? "bg-[var(--rm-accent)] text-[color:var(--rm-on-primary)]"
+      : "bg-[var(--rm-panel-muted)] text-[var(--rm-secondary)] hover:text-[var(--rm-fg)]",
+  ].join(" ");
+}
+
+export const utilityLabelClassName =
+  "text-[12px] font-normal uppercase leading-4 tracking-[0.08em]";
+
+export const supportingTextClassName = "text-[14px] leading-[21px] text-[var(--rm-secondary)]";
+
+export const rightAlignedSupportingTextClassName =
+  "text-right text-[14px] leading-[21px] text-[var(--rm-secondary)]";
+
+export const foregroundEmphasisClassName = "font-semibold text-[var(--rm-fg)]";
+
+export const utilityStrongTextClassName =
+  "text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
+
+export const inlineTitleClassName = "text-[16px] font-semibold leading-[22px] text-[var(--rm-fg)]";
+
+export const compactTitleClassName = "text-[15px] font-semibold leading-5 text-[var(--rm-fg)]";
+
+export const metaTextClassName = "text-xs uppercase tracking-[0.24em] text-[var(--rm-muted)]";
+
+export const accentActionTextClassName = "text-sm font-semibold text-[var(--rm-accent)]";
+
+export const bodyTextClassName = "text-[14px] font-normal leading-[21px] tracking-[0em]";
+
+export const bodyStrongTextClassName = "text-[14px] font-semibold leading-[21px] tracking-[0em]";
+
+export const panelBodyTextClassName = `${bodyTextClassName} text-[var(--rm-secondary)]`;
+
+export const displayTitleClassName =
+  "[font-family:var(--rm-font-display)] text-[22px] font-normal leading-[28px] tracking-[-0.018em]";
+
+export const sectionTitleClassName =
+  "[font-family:var(--rm-font-display)] text-[18px] font-normal leading-6 tracking-[-0.016em]";
+
+export const largeValueClassName =
+  "[font-family:var(--rm-font-display)] text-[22px] font-semibold leading-[28px] tracking-[-0.018em]";
+
+export const monoUtilityStrongTextClassName =
+  "break-words font-mono text-[13px] font-semibold leading-[18px] text-[var(--rm-fg)]";
+
+export const modalEyebrowClassName = eyebrowClassName;
+
+export const modalTitleClassName =
+  "[font-family:var(--rm-font-display)] text-[28px] font-normal leading-[34px] tracking-[-0.022em] text-[var(--rm-fg)]";
+
+export const monoCodeValueClassName =
+  "font-mono text-[28px] font-normal leading-[34px] tracking-[0.28em] text-[var(--rm-fg)]";
+
+export const monoMetaTextClassName =
+  "break-all font-mono text-[13px] font-normal leading-[18px] text-[var(--rm-muted)]";
+
+export const inlineLinkClassName =
+  "text-[13px] font-normal leading-[18px] text-[var(--rm-accent)] underline-offset-2 hover:underline";
 
 export const fieldClassName =
-  "w-full rounded-none border border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] px-3 py-2.5 text-sm text-[var(--rm-fg)] shadow-sm outline-none transition placeholder:text-[var(--rm-muted)] focus:border-[var(--rm-accent)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+  "w-full rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] px-[20px] py-3 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-[var(--rm-fg)] outline-none transition placeholder:text-[var(--rm-muted)] focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+
+export const selectFieldClassName =
+  "w-full min-h-[40px] rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] py-2 pl-[20px] pr-10 !text-[13px] !font-normal !leading-[18px] !tracking-[0em] text-[var(--rm-fg)] outline-none transition focus:border-[var(--rm-accent-focus)] focus:ring-2 focus:ring-[var(--rm-accent-subtle)]";
+
+export const selectChevronStyle = {
+  appearance: "none",
+  backgroundImage: "var(--rm-select-chevron)",
+  backgroundPosition: "right 16px center",
+  backgroundRepeat: "no-repeat",
+  backgroundSize: "12px 8px",
+} as const;
 
 export const primaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-none border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-4 py-2 text-sm font-medium tracking-wide text-[var(--rm-bg)] transition hover:border-[color:var(--rm-accent-muted)] hover:bg-[color:var(--rm-accent-muted)] disabled:opacity-60";
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-[22px] py-[11px] text-[15px] font-semibold leading-5 tracking-[-0.01em] text-[color:var(--rm-on-primary)] transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-[44px] items-center justify-center rounded-none border border-[var(--rm-border-strong)] bg-[var(--rm-surface-strong)] px-4 py-2 text-sm font-medium tracking-wide text-[var(--rm-fg)] shadow-sm transition hover:border-[var(--rm-fg)]";
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[15px] font-semibold leading-5 tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
+
+export const utilityButtonClassName =
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-md)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-[15px] py-2 text-[13px] font-semibold leading-4 tracking-[-0.01em] text-[var(--rm-fg)] transition hover:border-[var(--rm-border-strong)] hover:bg-[var(--rm-panel)]";
 
 export function getSelectablePanelClassName(selected: boolean): string {
   return [
-    "w-full rounded-none border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rm-accent-subtle)]",
+    "w-full rounded-[var(--rm-radius-panel)] border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--rm-accent-subtle)]",
     selected
       ? "border-[var(--rm-accent)] bg-[var(--rm-accent-ghost)] text-[var(--rm-fg)]"
       : "border-[var(--rm-border)] bg-[var(--rm-surface)] text-[var(--rm-secondary)] hover:border-[var(--rm-fg)]",
@@ -697,10 +1005,10 @@ export function getSelectablePanelClassName(selected: boolean): string {
 }
 
 export const codeBlockClassName =
-  "overflow-x-auto rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 text-xs leading-6 text-[var(--rm-secondary)]";
+  "max-w-full overflow-x-auto whitespace-pre-wrap break-words [overflow-wrap:anywhere] rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 text-xs leading-6 text-[var(--rm-secondary)]";
 
 export const listRowClassName =
-  "flex flex-col gap-3 rounded-none border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 md:flex-row md:items-start md:justify-between";
+  "flex flex-col gap-3 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] bg-[var(--rm-panel)] p-4 md:flex-row md:items-start md:justify-between";
 
 export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinition | undefined {
   if (pathname === "/app/local/peers") {
@@ -768,6 +1076,9 @@ export function getRuntimeRouteDefinition(pathname: string): RuntimeRouteDefinit
   }
   if (pathname === "/app/observe") {
     return observeRequestsRoute;
+  }
+  if (pathname === "/app/observe/routing") {
+    return observeRoutingRoute;
   }
   if (pathname === "/app/requests") {
     return observeRequestsRoute;

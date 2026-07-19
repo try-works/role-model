@@ -1,0 +1,265 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-host-bridge
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/apps/runtime-host-bridge[39m
+
+(node:13548) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53216) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:18936) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:29364) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:45124) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:50344) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:9696) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38712) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:51484) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:39108) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:36004) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30072) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7208) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:38928) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:26016) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/session-bootstrap-health.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1040[2mms[22m[39m
+   [33m[2m✓[22m[39m session bootstrap health[2m > [22mexposes bootstrap receipts on /healthz summary after async startup [33m 1036[2mms[22m[39m
+ [32m✓[39m test/routable-inventory-bootstrap.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1098[2mms[22m[39m
+   [33m[2m✓[22m[39m routable inventory bootstrap[2m > [22mexposes inventory summary and inventory bootstrap stage after startup [33m 1043[2mms[22m[39m
+ [32m✓[39m test/validate-tools.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1143[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeToolsValidation[2m > [22mexecutes runtime-owned MCP tool calls and persists their observation receipts [33m 1140[2mms[22m[39m
+ [32m✓[39m test/session-readiness-api.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1185[2mms[22m[39m
+   [33m[2m✓[22m[39m session readiness API[2m > [22mexposes bootstrap, inventory, and readiness fields over HTTP [33m 1180[2mms[22m[39m
+ [32m✓[39m test/benchmark-data-clear.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1414[2mms[22m[39m
+   [33m[2m✓[22m[39m benchmark global data clear[2m > [22mDELETE /api/role-model/benchmark/data clears sqlite samples and artifact runs [33m 1157[2mms[22m[39m
+ [32m✓[39m test/endpoint-rehydration.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1734[2mms[22m[39m
+   [33m[2m✓[22m[39m endpoint rehydration[2m > [22mrehydrates sqlite runtime endpoints across backend restart without re-activation [33m 1722[2mms[22m[39m
+(node:47932) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21864) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2396) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/validate-catalog-economics.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 2926[2mms[22m[39m
+   [33m[2m✓[22m[39m runCatalogEconomicsValidation[2m > [22mhides moonshotai, routes easy cost work to local peer, and emits catalogEconomics [33m 2923[2mms[22m[39m
+(node:44608) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:33008) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:37840) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/operator-intent-corrupt-bootstrap.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 727[2mms[22m[39m
+   [33m[2m✓[22m[39m operator intent corrupt manifest[2m > [22msurfaces corrupt operator-intent diagnostics and blocks bootstrap [33m 723[2mms[22m[39m
+ [32m✓[39m test/remote-health-bootstrap.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 794[2mms[22m[39m
+   [33m[2m✓[22m[39m remote health bootstrap[2m > [22mskips remote-health probes in decision_only mode [33m 791[2mms[22m[39m
+(node:45600) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/validate-restart-rehydration.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 4215[2mms[22m[39m
+   [33m[2m✓[22m[39m runRestartRehydrationValidation[2m > [22mrehydrates activated endpoints and mixed alias model list after backend restart [33m 4212[2mms[22m[39m
+(node:1812) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/benchmark-summary.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 120[2mms[22m[39m
+ [32m✓[39m test/account-repair.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 4946[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mreconnect returns the current pending device-authorization session for the same account [33m 1152[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mupdate API key preserves account identity, bindings, and endpoint associations [33m 909[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mrejects overlapping repair mutations for the same account without partially mutating state [33m 1191[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mcodex subscription start returns a real device-code session and poll connects through managed Codex auth [33m 1688[2mms[22m[39m
+(node:10152) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/benchmark-runner-compare.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 290[2mms[22m[39m
+(node:26648) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/benchmark-runner-judge.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 1686[2mms[22m[39m
+   [33m[2m✓[22m[39m benchmark-runner judge remediation[2m > [22mcreates run progress before async endpoint discovery resolves [33m 567[2mms[22m[39m
+ [32m✓[39m test/validate-operations.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1368[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeOperationsValidation[2m > [22mvalidates isolated scopes and runtime-state maintenance drills [33m 1365[2mms[22m[39m
+ [32m✓[39m test/executable.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 231[2mms[22m[39m
+ [32m✓[39m test/catalog-economics-providers.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 2764[2mms[22m[39m
+   [33m[2m✓[22m[39m catalog economics provider surfaces[2m > [22mhides moonshotai from listProviders while keeping operator moonshot [33m 1612[2mms[22m[39m
+   [33m[2m✓[22m[39m catalog economics provider surfaces[2m > [22mlists moonshot/kimi-k2.7-code on moonshot and kimi-code variants [33m 1149[2mms[22m[39m
+ [32m✓[39m test/taxonomy-discovery.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 264[2mms[22m[39m
+ [32m✓[39m test/unified-runtime-config.test.ts [2m([22m[2m24 tests[22m[2m)[22m[32m 129[2mms[22m[39m
+ [32m✓[39m src/operator-intent.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m src/oauth-credential.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m test/runtime-assets.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m test/benchmark-artifacts.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32m✓[39m test/litellm-catalog.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 75[2mms[22m[39m
+ [32m✓[39m test/downstream-openai-discovery.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m src/routable-inventory.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+(node:51812) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30052) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/model-capability-resolver.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m test/controller-routing-contract.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m test/craft-ask-difficulty.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+ [32m✓[39m test/request-capability-inference.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m src/remote-health-probe.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m test/alias-capability-routing.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m test/validate-observability.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 9744[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeObservabilityValidation[2m > [22mproves structured request, capture, metrics, and otel observability over the real host path [33m 9739[2mms[22m[39m
+ [32m✓[39m src/local-model-role-bindings.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m test/validate-ui.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 9863[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeUiValidation[2m > [22mvalidates runtime config reads and the main control-plane mutations [33m 9860[2mms[22m[39m
+ [32m✓[39m test/benchmark-start-guards.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/session-bootstrap.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+(node:54040) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m test/local-policy.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 6972[2mms[22m[39m
+   [33m[2m✓[22m[39m local policy persistence[2m > [22mreadLocalPolicy returns defaults when file does not exist [33m 548[2mms[22m[39m
+   [33m[2m✓[22m[39m local policy persistence[2m > [22mupdateLocalPolicy writes merged policy to file [33m 836[2mms[22m[39m
+   [33m[2m✓[22m[39m local policy persistence[2m > [22mreadLocalPolicy reads persisted file [33m 402[2mms[22m[39m
+   [33m[2m✓[22m[39m local policy persistence[2m > [22mupdateLocalPolicy merges with existing policy [33m 470[2mms[22m[39m
+   [33m[2m✓[22m[39m local swap history[2m > [22mlistSwapHistory returns empty array when no events [33m 404[2mms[22m[39m
+   [33m[2m✓[22m[39m local swap history[2m > [22mlistSwapHistory returns events in descending order [33m 580[2mms[22m[39m
+   [33m[2m✓[22m[39m model overrides[2m > [22mreadModelOverrides returns empty object when file does not exist [33m 756[2mms[22m[39m
+   [33m[2m✓[22m[39m model overrides[2m > [22mupdateModelOverrides writes to file [33m 523[2mms[22m[39m
+   [33m[2m✓[22m[39m model overrides[2m > [22mreadModelOverrides reads persisted file [33m 445[2mms[22m[39m
+   [33m[2m✓[22m[39m peer configuration[2m > [22mreadPeers returns empty array when file does not exist [33m 433[2mms[22m[39m
+   [33m[2m✓[22m[39m peer configuration[2m > [22mupdatePeers writes to file [33m 532[2mms[22m[39m
+   [33m[2m✓[22m[39m peer configuration[2m > [22mreadPeers reads persisted file [33m 494[2mms[22m[39m
+   [33m[2m✓[22m[39m peer configuration[2m > [22mcheckPeerHealth returns false for unreachable url [33m 545[2mms[22m[39m
+ [32m✓[39m test/credential-ref-env.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/benchmark-candidates-routing-quality.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m test/benchmark-judge-runtime.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/runtime-routing-model.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m test/benchmark-validation-metrics.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/benchmark-reasoning.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m test/validate-ui-cleanup.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m test/benchmark-progress.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m test/restart-rehydration.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 14315[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart [33m 1571[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mkeeps restarted remote endpoints healthy when provider /models returns unprefixed ids [33m 1848[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mdoes not count expired pending device authorization as an active readiness blocker after restart [33m 1721[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22marchives orphan pending authorizations and orphan credential files instead of counting them as active readiness [33m 1216[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22marchives invalid persisted provider accounts instead of surfacing them as active lifecycle records [33m 1739[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22msurfaces failed pending authorization polling in bootstrap stage details after restart [33m 1234[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mclassifies failed startup OAuth refresh as expired auth after restart [33m 1556[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mpolls the earliest-expiring pending authorizations first and surfaces deferred count [33m 2663[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mrehydrates a pending Codex Subscription device-code session after restart [33m 755[2mms[22m[39m
+ [32m✓[39m test/openai-codex-subscription-matrix.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 15359[2mms[22m[39m
+   [33m[2m✓[22m[39m OpenAI Codex Subscription model matrix[2m > [22mlistProviders exposes the full Codex Subscription 5.3+ matrix for OpenAI [33m 1456[2mms[22m[39m
+   [33m[2m✓[22m[39m OpenAI Codex Subscription model matrix[2m > [22mrejects pre-5.3 Codex Subscription model ids during device authorization setup [33m 729[2mms[22m[39m
+   [33m[2m✓[22m[39m OpenAI Codex Subscription model matrix[2m > [22maccepts hosted web search and function-tool request surfaces for every supported OpenAI model id [33m 9538[2mms[22m[39m
+   [33m[2m✓[22m[39m OpenAI Codex Subscription model matrix[2m > [22mkeeps every supported OpenAI GPT-5.3+ subscription model coder.patch routable [33m 3617[2mms[22m[39m
+ [32m✓[39m test/validate-vendors.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 15389[2mms[22m[39m
+   [33m[2m✓[22m[39m runRuntimeVendorValidation[2m > [22mexecutes decision-only, local-only, remote-only, and hybrid vendor modes end to end [33m 15373[2mms[22m[39m
+ [32m✓[39m test/provider-overlap-metadata.test.ts [2m([22m[2m45 tests[22m[2m)[22m[33m 21217[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for baseten [33m 2118[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for cerebras [33m 1273[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for cohere [33m 1252[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for databricks [33m 1165[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for deepinfra [33m 1823[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for deepseek [33m 731[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for groq [33m 682[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for minimax [33m 672[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for mistral [33m 636[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for morph [33m 653[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for nebius [33m 1284[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for openrouter [33m 695[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for ovhcloud [33m 635[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for perplexity [33m 644[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for sarvam [33m 690[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for v0 [33m 680[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for wandb [33m 673[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for xai [33m 592[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes validation-canonical providerKind for zai [33m 785[2mms[22m[39m
+   [33m[2m✓[22m[39m listProviders overlap metadata (R1 integration)[2m > [22mlistProviders exposes one OpenAI provider with API Key and Codex Subscription variants [33m 656[2mms[22m[39m
+ [32m✓[39m test/index.test.ts [2m([22m[2m152 tests[22m[2m)[22m[33m 56855[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22msuppresses placeholder provider accounts when using the packaged CLI defaults [33m 769[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpurges stale runtime-config LiteLLM endpoints when startup has no runtime config [33m 541[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mloads placeholder accounts only when fixture-root is explicitly provided [33m 847[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that executes chat-completions through the real routing and adapter path [33m 1034[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that persists structured request and endpoint inspection state [33m 911[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests [33m 1333[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists applied role policy diagnostics and injected system instructions for runtime-backed chat requests [33m 948[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mdoes not seed placeholder Anthropic/OpenAI accounts, endpoints, models, or router guidance in the default runtime bootstrap [33m 713[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists alias-resolution diagnostics for runtime-backed chat requests [33m 1278[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes every canonical remote alias through the runtime-backed chat path [33m 8259[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists difficulty-routing diagnostics for runtime-backed chat requests [33m 702[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mallows an observed max-difficulty override when bucketed performance supports a harder request [33m 676[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mroutes hard requests using bucketed observed profiles and records the selected difficulty bucket [33m 802[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mkeeps fresh endpoint-wide metrics when stale hard-bucket quality is overlaid [33m 764[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22muses the configured remote classifier result for difficulty-mode runtime-backed chat requests [33m 685[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22muses the configured remote controller result for intelligent runtime-backed chat requests [33m 712[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22muses the default controller timeout budget for realistic remote controller latency [33m 4580[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mrecords sanitized controller guidance through the live HTTP bridge for intelligent aliases [33m 1257[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpreserves accepted controller directives for known compatibility strategy aliases [33m 1379[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mgives controller routing enough output budget to avoid empty truncated guidance [33m 902[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mretries controller routing once with a compact prompt when the first controller response is empty [33m 893[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mfalls back to heuristic controller guidance when the live controller returns prose instead of JSON [33m 1069[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mserves coherent live role and task policy over the HTTP control plane [33m 325[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mrehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config [33m 2055[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests [33m 572[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mfalls back deterministically when the configured classifier times out [33m 602[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mreuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded [33m 662[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mreports cache invalidation reasons before reclassifying a repeated request [33m 648[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mcreates a runtime backend that exposes provider presets, runtime summary, and account upserts [33m 701[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists runtime-managed role policy and task allowlists across backend restart [33m 478[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes env-backed api-key accounts through the live provider path when the env credential resolves [33m 392[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mkeeps Kimi Code and DeepSeek coding endpoints coder.patch-eligible from the tracked catalog [33m 940[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mregisters configured local OpenAI-compatible peers as execution-ready model endpoints [33m 482[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes non-controller requested coder.review requests without empty chosen-endpoint failures [33m 363[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexposes llama-swap ownership and config metadata on local model and endpoint readback [33m 921[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mrejects local model activation when no configured local endpoint exposes the requested model [33m 332[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mrehydrates connected OAuth accounts from stored token files on backend restart [33m 631[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mrestores pending OAuth device-authorizations from SQLite after backend restart [33m 533[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes chat-completions through an activated Kimi Code endpoint [33m 454[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes exact Kimi hosted web-search requests through to a final assistant answer [33m 479[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22msurfaces exact deepseek/deepseek-v4-flash web-search requests as consumer-managed tool calls [33m 338[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22msurfaces exact deepseek/deepseek-v4-pro web-search requests as consumer-managed tool calls [33m 321[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mnormalizes DeepSeek DSML web_search markup into consumer-visible tool calls [33m 831[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mnormalizes DeepSeek DSML web_open markup into consumer-visible tool calls [33m 329[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mnormalizes DeepSeek DSML web_browse markup into consumer-visible tool calls [33m 376[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mpersists applied role policy diagnostics and injected policy messages for runtime-backed responses requests [33m 390[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mserves structured request and endpoint inspection routes through the bridge server [33m 424[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22maggregates generic telemetry analytics from persisted request-time routing and cost facts [33m 546[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22maggregates telemetry analytics over the full requested slice with contract metadata and aligned ledger filters [33m 1499[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mkeeps duplicate caller request ids as separate canonical telemetry rows [33m 461[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mrecords caller correlation and live request classification for failed chat completions [33m 320[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mreads bucketed endpoint profiles with an advisory max-difficulty recommendation [33m 856[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mstreams canonical telemetry updates over SSE after new requests are persisted [33m 4367[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers [33m 918[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge[2m > [22mexecutes chat-completions through an api-key-static provider via environment credential [33m 337[2mms[22m[39m
+ [32m✓[39m test/backend-unified-runtime-config.test.ts [2m([22m[2m23 tests[22m[2m)[22m[33m 61781[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mrouter candidates expose every configured endpoint and mark current execution-mode eligibility [33m 2015[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mrejects benchmark runs that target endpoints excluded by execution mode [33m 2058[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces the derived execution mode in the runtime summary when a unified config file is provided [33m 832[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mreads and updates unified runtime config through the backend [33m 721[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mmerges partial runtime config updates without dropping existing routing strategy [33m 974[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mcanonicalizes the primary routing alias to the live routing matrix on startup [33m 1968[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mcreates and updates unified runtime config when the configured path does not exist yet [33m 776[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mpersists explicit hybrid execution mode from routing strategy updates [33m 868[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mbootstraps the primary routing alias when routing posture is saved without preconfigured aliases [33m 3783[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mbootstraps a settings-specific primary routing alias for remote-only posture without preconfigured aliases [33m 3795[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mmaintains the routing alias matrix across strategy families and execution modes [33m 34266[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mpersists the full canonical routing alias matrix instead of a single primary alias [33m 2409[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mnormalizes legacy craft-ask routing strategy updates to the default alias family [33m 1211[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mrewrites persisted craft-ask alias ids out of startup config materialization [33m 850[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mrewrites legacy craft-ask matrix rows from persisted config even when the canonical matrix already exists [33m 849[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mrenames the primary routing alias when routing strategy and execution mode change [33m 314[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mdoes not mark all candidates ignored when routing guidance has no preferred endpoints [33m 394[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mpreserves synthesized activated endpoint models across runtime config updates [33m 410[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mreturns no controller assignment when the unified config has no endpoints yet [33m 308[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces normalized provider docs and npm metadata through listProviders [33m 473[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22mpreserves manual account authority and provenance on exact runtime-config account-id collision [33m 1057[2mms[22m[39m
+   [33m[2m✓[22m[39m runtime-host-bridge unified runtime backend[2m > [22msurfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config [33m 1182[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m52 passed[39m[22m[90m (52)[39m
+[2m      Tests [22m [1m[32m437 passed[39m[22m[90m (437)[39m
+[2m   Start at [22m 18:01:55
+[2m   Duration [22m 65.19s[2m (transform 5.82s, setup 0ms, collect 40.94s, tests 240.40s, environment 25ms, prepare 23.01s)[22m
+

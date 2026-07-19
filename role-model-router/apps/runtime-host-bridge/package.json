@@ -17,6 +17,7 @@
     "@role-model-router/bench-routing": "workspace:*",
     "@role-model-router/catalog": "workspace:*",
     "@role-model-router/context-envelope": "workspace:*",
+    "@role-model-router/core": "workspace:*",
     "@role-model-router/endpoint-registry": "workspace:*",
     "@role-model-router/profile-aggregator": "workspace:*",
     "@role-model-router/provider-mcp": "workspace:*",
@@ -33,11 +34,14 @@
     "@role-model-router/vendor-abstraction": "workspace:*",
     "@role-model-router/vendor-llama-swap": "workspace:*",
     "@role-model-router/vendor-litellm": "workspace:*",
-    "yaml": "^2.8.1"
+    "yaml": "^2.8.1",
+    "@role-model/protocol-types": "workspace:*"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run test/index.test.ts test/account-repair.test.ts test/endpoint-rehydration.test.ts test/restart-rehydration.test.ts test/session-readiness-api.test.ts test/session-bootstrap-health.test.ts test/remote-health-bootstrap.test.ts test/routable-inventory-bootstrap.test.ts test/operator-intent-corrupt-bootstrap.test.ts test/validate-restart-rehydration.test.ts test/validate-catalog-economics.test.ts test/backend-unified-runtime-config.test.ts test/executable.test.ts test/runtime-assets.test.ts test/unified-runtime-config.test.ts test/validate-operations.test.ts test/validate-tools.test.ts test/validate-vendors.test.ts test/local-policy.test.ts test/benchmark-artifacts.test.ts test/benchmark-candidates-routing-quality.test.ts test/benchmark-data-clear.test.ts test/benchmark-start-guards.test.ts test/benchmark-validation-metrics.test.ts test/benchmark-runner-judge.test.ts test/benchmark-runner-compare.test.ts test/benchmark-judge-runtime.test.ts test/benchmark-progress.test.ts test/benchmark-summary.test.ts src/benchmark-reasoning.test.ts src/local-model-role-bindings.test.ts src/operator-intent.test.ts src/oauth-credential.test.ts src/session-bootstrap.test.ts src/remote-health-probe.test.ts src/routable-inventory.test.ts",
+    "test": "vitest run",
+    "test:critical": "vitest run test/account-repair.test.ts test/unified-runtime-config.test.ts test/provider-overlap-metadata.test.ts test/benchmark-summary.test.ts test/validate-observability.test.ts test/validate-ui.test.ts",
+    "test:router": "vitest run test/controller-routing-contract.test.ts test/runtime-routing-model.test.ts test/request-capability-inference.test.ts test/alias-capability-routing.test.ts test/restart-rehydration.test.ts test/endpoint-rehydration.test.ts test/model-capability-resolver.test.ts test/session-readiness-api.test.ts test/downstream-openai-discovery.test.ts test/validate-restart-rehydration.test.ts test/validate-observability.test.ts",
     "package-sea": "tsx src/package-sea.ts",
     "validate-packaging": "corepack pnpm build && tsx src/validate-packaging.ts"
   }

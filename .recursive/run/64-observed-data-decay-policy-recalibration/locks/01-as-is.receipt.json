@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "7275220e6e77eb7e72cfe3590ee106cf9aa153d5b33d9405c9759e268582c4b3",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\64-observed-data-decay-policy-recalibration\\.recursive\\run\\64-observed-data-decay-policy-recalibration\\01-as-is.md",
+  "locked_at": "2026-07-11T22:44:53Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "d4361f9ee9b42dfce2efd50d5427c214537e9a9c90879926fb6b28f2c03b5540",
+    "00-worktree.md": "de05484ed3f8efe511a4a7417a61c4fc2cd427daa4711ca85380eea5dab68c3d"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "7c9882cddeaa7ea85570058dc70990a95b1d08fa76d417c52614f7ad6965d9b8"
+}

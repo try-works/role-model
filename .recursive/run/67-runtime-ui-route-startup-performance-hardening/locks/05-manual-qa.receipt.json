@@ -1,0 +1,17 @@
+{
+  "artifact": "05-manual-qa.md",
+  "artifact_hash": "aa723b08cb13a684f9b617734cd6713f99afb243453e338306a019b6011e1b62",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\67-runtime-ui-route-startup-performance-hardening\\.recursive\\run\\67-runtime-ui-route-startup-performance-hardening\\05-manual-qa.md",
+  "locked_at": "2026-07-12T14:07:11Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "bc79360aedc7c2479101991adb179c69de1d3e1b347805161435011a5ab1c6fe",
+    "00-worktree.md": "d8434fb5c3af7cc7a32f04e193245e8500355db242999eb70e1d5f549afb2356",
+    "01-as-is.md": "48d23a72e7b574c756ea80eaadc1ece989d6f1d93f741d8767950d7767227b70",
+    "01.5-root-cause.md": "ee70d0d529dac571eb9771c4d7d9e14cdfaef99f4827cbb23cac75677eba95f7",
+    "02-to-be-plan.md": "4637b6b211156db26e826a10605853fe3d792349b749b3de0f0fe9c0d8f38908",
+    "03-implementation-summary.md": "15eb3d07eee8fe69db2d6d19d606c55efec08ca445971bc106dd435f273b89f6",
+    "04-test-summary.md": "1f78d46ebec1545836ecc09a0b3edc03430ec744a574ae496e835074c106a786"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "0d88b28f2a914deab9d92d3b91638ab03c903b25933579e56309a8ecf8e79ff2"
+}

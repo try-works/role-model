@@ -1,0 +1,70 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/request-capability-inference.test.ts (2 tests) 31ms
+(node:42268) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/model-capability-resolver.test.ts (3 tests) 36ms
+ ✓ test/downstream-openai-discovery.test.ts (2 tests) 48ms
+(node:5576) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:35816) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/alias-capability-routing.test.ts (2 tests) 38ms
+ ✓ test/routable-inventory-bootstrap.test.ts (3 tests) 468ms
+   ✓ routable inventory bootstrap > exposes inventory summary and inventory bootstrap stage after startup  437ms
+ ✓ test/index.test.ts (138 tests) 42847ms
+   ✓ runtime-host-bridge > creates a runtime backend that persists structured request and endpoint inspection state  382ms
+   ✓ runtime-host-bridge > persists routing-mode override and rewrite-skipped diagnostics for exact-model runtime-backed chat requests  316ms
+   ✓ runtime-host-bridge > persists applied role policy diagnostics and injected system instructions for runtime-backed chat requests  346ms
+   ✓ runtime-host-bridge > persists alias-resolution diagnostics for runtime-backed chat requests  584ms
+   ✓ runtime-host-bridge > executes every canonical remote alias through the runtime-backed chat path  4224ms
+   ✓ runtime-host-bridge > persists difficulty-routing diagnostics for runtime-backed chat requests  540ms
+   ✓ runtime-host-bridge > allows an observed max-difficulty override when bucketed performance supports a harder request  592ms
+   ✓ runtime-host-bridge > routes hard requests using bucketed observed profiles and records the selected difficulty bucket  605ms
+   ✓ runtime-host-bridge > keeps fresh endpoint-wide metrics when stale hard-bucket quality is overlaid  591ms
+   ✓ runtime-host-bridge > uses the configured remote classifier result for difficulty-mode runtime-backed chat requests  522ms
+   ✓ runtime-host-bridge > uses the configured remote controller result for intelligent runtime-backed chat requests  497ms
+   ✓ runtime-host-bridge > uses the default controller timeout budget for realistic remote controller latency  4513ms
+   ✓ runtime-host-bridge > records sanitized controller guidance through the live HTTP bridge for intelligent aliases  858ms
+   ✓ runtime-host-bridge > preserves accepted controller directives for known compatibility strategy aliases  821ms
+   ✓ runtime-host-bridge > gives controller routing enough output budget to avoid empty truncated guidance  908ms
+   ✓ runtime-host-bridge > retries controller routing once with a compact prompt when the first controller response is empty  809ms
+   ✓ runtime-host-bridge > falls back to heuristic controller guidance when the live controller returns prose instead of JSON  798ms
+   ✓ runtime-host-bridge > rehydrates persisted controller assignment for controller aliases after restart even without a controller block in runtime config  1612ms
+   ✓ runtime-host-bridge > persists alias-default hybrid arbitration and rewrite-applied diagnostics for runtime-backed chat requests  528ms
+   ✓ runtime-host-bridge > falls back deterministically when the configured classifier times out  850ms
+   ✓ runtime-host-bridge > reuses cached difficulty classification for repeated requests in the same conversation when invalidation thresholds are not exceeded  635ms
+   ✓ runtime-host-bridge > reports cache invalidation reasons before reclassifying a repeated request  756ms
+   ✓ runtime-host-bridge > creates a runtime backend that exposes provider presets, runtime summary, and account upserts  772ms
+   ✓ runtime-host-bridge > persists runtime-managed role policy and task allowlists across backend restart  470ms
+   ✓ runtime-host-bridge > executes env-backed api-key accounts through the live provider path when the env credential resolves  377ms
+   ✓ runtime-host-bridge > keeps Kimi Code and DeepSeek coding endpoints coder.patch-eligible from the tracked catalog  609ms
+   ✓ runtime-host-bridge > registers configured local OpenAI-compatible peers as execution-ready model endpoints  477ms
+   ✓ runtime-host-bridge > executes non-controller requested coder.review requests without empty chosen-endpoint failures  386ms
+   ✓ runtime-host-bridge > exposes llama-swap ownership and config metadata on local model and endpoint readback  1106ms
+   ✓ runtime-host-bridge > rejects local model activation when no configured local endpoint exposes the requested model  525ms
+   ✓ runtime-host-bridge > rehydrates connected OAuth accounts from stored token files on backend restart  680ms
+   ✓ runtime-host-bridge > restores pending OAuth device-authorizations from SQLite after backend restart  503ms
+   ✓ runtime-host-bridge > executes chat-completions through an activated Kimi Code endpoint  424ms
+   ✓ runtime-host-bridge > executes exact Kimi hosted web-search requests through to a final assistant answer  455ms
+   ✓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-flash web-search requests as consumer-managed tool calls  353ms
+   ✓ runtime-host-bridge > surfaces exact deepseek/deepseek-v4-pro web-search requests as consumer-managed tool calls  333ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_search markup into consumer-visible tool calls  385ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_open markup into consumer-visible tool calls  342ms
+   ✓ runtime-host-bridge > normalizes DeepSeek DSML web_browse markup into consumer-visible tool calls  355ms
+   ✓ runtime-host-bridge > persists applied role policy diagnostics and injected policy messages for runtime-backed responses requests  389ms
+   ✓ runtime-host-bridge > serves structured request and endpoint inspection routes through the bridge server  723ms
+   ✓ runtime-host-bridge > aggregates generic telemetry analytics from persisted request-time routing and cost facts  566ms
+   ✓ runtime-host-bridge > aggregates telemetry analytics over the full requested slice with contract metadata and aligned ledger filters  1500ms
+   ✓ runtime-host-bridge > keeps duplicate caller request ids as separate canonical telemetry rows  478ms
+   ✓ runtime-host-bridge > records caller correlation and live request classification for failed chat completions  301ms
+   ✓ runtime-host-bridge > reads bucketed endpoint profiles with an advisory max-difficulty recommendation  333ms
+   ✓ runtime-host-bridge > streams canonical telemetry updates over SSE after new requests are persisted  4364ms
+   ✓ runtime-host-bridge > executes chat-completions through a LiteLLM-derived moonshot-oauth endpoint with X-Msh headers  702ms
+   ✓ runtime-host-bridge > executes chat-completions through an api-key-static provider via environment credential  315ms
+
+ Test Files  6 passed (6)
+      Tests  150 passed (150)
+   Start at  07:56:53
+   Duration  45.95s (transform 2.00s, setup 0ms, collect 7.34s, tests 43.47s, environment 2ms, prepare 2.41s)

@@ -1,0 +1,182 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/role-model-router/packages/runtime-observability
+
+(node:59168) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/index.test.ts (4 tests | 3 failed) 893ms
+   × runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates 533ms
+     → expected { …(20) } to match object { …(9) }
+(76 matching properties omitted from actual)
+   ✓ runtime-observability > tags live-request samples with the classified difficulty bucket when difficulty routing is present  347ms
+   × extractTaxonomyFields > extracts all fields from a fully populated normalizedIntent 5ms
+     → expected { taxonomy_role_id: 'coder', …(6) } to deeply equal { …(21) }
+   × extractTaxonomyFields > returns null for missing fields 4ms
+     → expected { taxonomy_role_id: null, …(6) } to deeply equal { …(21) }
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > runtime-observability > creates a redacted runtime observation bundle with diagnostics and profile updates
+AssertionError: expected { …(20) } to match object { …(9) }
+(76 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -60,42 +60,13 @@
+    },
+    "requestId": "req-adapter-validation",
+    "routingDecisionId": "decision-req-adapter-validation",
+    "taxonomyDimensions": {
+      "classification_contract_version": "role-model.classification.v1",
+-     "taxonomy_alternative_count": 2,
+-     "taxonomy_alternative_role_ids": [
+-       "coder",
+-       "security",
+-     ],
+-     "taxonomy_alternative_task_types": [
+-       "coder.test.write",
+-       "security.audit",
+-     ],
+-     "taxonomy_capability_ids": [
+-       "code.read",
+-       "security.analysis",
+-     ],
+-     "taxonomy_classification_source": "heuristic.classifier",
+      "taxonomy_confidence": 0.85,
+-     "taxonomy_content_revision": "taxonomy-v1-alpha.1",
+-     "taxonomy_group_id": null,
+-     "taxonomy_modality_ids": [
+-       "json",
+-       "text",
+-     ],
+-     "taxonomy_original_role_hint_id": "coder",
+-     "taxonomy_original_task_type": "coder.review",
+      "taxonomy_role_id": "coder",
+      "taxonomy_role_source": "heuristic",
+-     "taxonomy_task_action": "review",
+-     "taxonomy_task_confidence": 0.8,
+      "taxonomy_task_source": "heuristic",
+      "taxonomy_task_type": "coder.review",
+-     "taxonomy_task_variant": "security",
+-     "taxonomy_tool_class_ids": [
+-       "filesystem.read",
+-       "shell.execute",
+-     ],
+      "taxonomy_version": "1.0.0-alpha.1",
+    },
+  }
+
+ ❯ test/index.test.ts:100:22
+     98|       });
+     99| 
+    100|       expect(bundle).toMatchObject({
+       |                      ^
+    101|         requestId: validation.decision.request_id,
+    102|         routingDecisionId: validation.decision.routing_decision_id,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/index.test.ts > extractTaxonomyFields > extracts all fields from a fully populated normalizedIntent
+AssertionError: expected { taxonomy_role_id: 'coder', …(6) } to deeply equal { …(21) }
+
+- Expected
++ Received
+
+  {
+    "classification_contract_version": "role-model.classification.v1",
+-   "taxonomy_alternative_count": 2,
+-   "taxonomy_alternative_role_ids": [
+-     "coder",
+-     "security",
+-   ],
+-   "taxonomy_alternative_task_types": [
+-     "coder.test.write",
+-     "security.audit",
+-   ],
+-   "taxonomy_capability_ids": [
+-     "code.read",
+-     "security.analysis",
+-   ],
+-   "taxonomy_classification_source": "heuristic.classifier",
+    "taxonomy_confidence": 0.85,
+-   "taxonomy_content_revision": "taxonomy-v1-alpha.1",
+-   "taxonomy_group_id": null,
+-   "taxonomy_modality_ids": [
+-     "json",
+-     "text",
+-   ],
+-   "taxonomy_original_role_hint_id": "coder",
+-   "taxonomy_original_task_type": "coder.review",
+    "taxonomy_role_id": "coder",
+    "taxonomy_role_source": "heuristic",
+-   "taxonomy_task_action": "review",
+-   "taxonomy_task_confidence": 0.8,
+    "taxonomy_task_source": "heuristic",
+    "taxonomy_task_type": "coder.review",
+-   "taxonomy_task_variant": "security",
+-   "taxonomy_tool_class_ids": [
+-     "filesystem.read",
+-     "shell.execute",
+-   ],
+    "taxonomy_version": "1.0.0-alpha.1",
+  }
+
+ ❯ test/index.test.ts:353:20
+    351|       ],
+    352|     });
+    353|     expect(result).toEqual({
+       |                    ^
+    354|       taxonomy_original_role_hint_id: "coder",
+    355|       taxonomy_original_task_type: "coder.review",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/index.test.ts > extractTaxonomyFields > returns null for missing fields
+AssertionError: expected { taxonomy_role_id: null, …(6) } to deeply equal { …(21) }
+
+- Expected
++ Received
+
+  {
+    "classification_contract_version": null,
+-   "taxonomy_alternative_count": null,
+-   "taxonomy_alternative_role_ids": null,
+-   "taxonomy_alternative_task_types": null,
+-   "taxonomy_capability_ids": null,
+-   "taxonomy_classification_source": null,
+    "taxonomy_confidence": null,
+-   "taxonomy_content_revision": null,
+-   "taxonomy_group_id": null,
+-   "taxonomy_modality_ids": null,
+-   "taxonomy_original_role_hint_id": null,
+-   "taxonomy_original_task_type": null,
+    "taxonomy_role_id": null,
+    "taxonomy_role_source": null,
+-   "taxonomy_task_action": null,
+-   "taxonomy_task_confidence": null,
+    "taxonomy_task_source": null,
+    "taxonomy_task_type": null,
+-   "taxonomy_task_variant": null,
+-   "taxonomy_tool_class_ids": null,
+    "taxonomy_version": null,
+  }
+
+ ❯ test/index.test.ts:384:20
+    382|     };
+    383|     const result = mod.extractTaxonomyFields({});
+    384|     expect(result).toEqual({
+       |                    ^
+    385|       taxonomy_original_role_hint_id: null,
+    386|       taxonomy_original_task_type: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed (4)
+   Start at  08:36:03
+   Duration  5.11s (transform 2.27s, setup 0ms, collect 2.53s, tests 893ms, environment 1ms, prepare 812ms)
+
+undefined
+D:\DEV\role-model\.worktrees\59-observe-taxonomy-analytics-completion\role-model-router\packages\runtime-observability:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts

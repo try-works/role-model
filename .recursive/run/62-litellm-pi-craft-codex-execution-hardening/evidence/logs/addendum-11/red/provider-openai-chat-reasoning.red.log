@@ -1,0 +1,49 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/provider-openai
+
+ ❯ test/index.test.ts (13 tests | 1 failed) 31ms
+   ✓ OpenAI provider adapter > can be created for the openai-compatible adapter family 2ms
+   ✓ OpenAI provider adapter > builds an OpenAI responses request and normalizes text, usage, and tool calls 6ms
+   ✓ OpenAI provider adapter > normalizes a streamed OpenAI responses transcript into final text, tool calls, and usage 2ms
+   ✓ OpenAI provider adapter > preserves hosted OpenAI responses tools instead of coercing them into function tools 0ms
+   ✓ OpenAI provider adapter > forces the OpenAI Responses API path when hosted tools are requested 0ms
+   ✓ OpenAI provider adapter > keeps Kimi hosted web search on chat-completions and disables thinking 1ms
+   ✓ OpenAI provider adapter > builds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply 1ms
+   ✓ OpenAI provider adapter > forwards forced chat-completions tool_choice to the downstream OpenAI request body 0ms
+   × OpenAI provider adapter > forwards chat-completions reasoning controls to the downstream OpenAI request body 13ms
+     → expected undefined to be 'high' // Object.is equality
+   ✓ OpenAI provider adapter > forwards responses tool_choice, reasoning, continuation, and session-affinity hints 1ms
+   ✓ OpenAI provider adapter > normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming 1ms
+   ✓ OpenAI provider adapter > normalizes reasoning-only chat-completions bodies into assistant output text 1ms
+   ✓ OpenAI provider adapter > forwards null assistant content and tool-turn fields for chat completions 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > forwards chat-completions reasoning controls to the downstream OpenAI request body
+AssertionError: expected undefined to be 'high' // Object.is equality
+
+- Expected:
+"high"
+
++ Received:
+undefined
+
+ ❯ test/index.test.ts:642:50
+    640|     expect(requestCapture.providerFamily).toBe("deepseek");
+    641|     expect(requestCapture.url).toBe("https://api.deepseek.test/v1/chat…
+    642|     expect(requestCapture.body.reasoning_effort).toBe("high");
+       |                                                  ^
+    643|     expect(requestCapture.body.reasoning).toBeUndefined();
+    644|     expect(requestCapture.body.thinking).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 passed (13)
+   Start at  09:17:29
+   Duration  1.87s (transform 312ms, setup 0ms, collect 261ms, tests 31ms, environment 1ms, prepare 697ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\packages\provider-openai:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts

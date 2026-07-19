@@ -1,0 +1,131 @@
+{
+  "status": "degraded",
+  "executionMode": "hybrid",
+  "vendors": {
+    "llama-swap": {
+      "vendorId": "llama-swap",
+      "healthStatus": "inactive"
+    },
+    "litellm": {
+      "vendorId": "litellm",
+      "healthStatus": "inactive"
+    }
+  },
+  "inactiveVendors": [
+    "llama-swap",
+    "litellm"
+  ],
+  "credentialLifecycleAuthority": {
+    "state": "authoritative",
+    "bootstrapStatus": "degraded"
+  },
+  "sessionBootstrap": {
+    "status": "degraded",
+    "startedAt": "2026-07-15T13:16:18.809Z",
+    "finishedAt": "2026-07-15T13:16:32.946Z",
+    "stages": [
+      {
+        "stageId": "credentials",
+        "status": "degraded",
+        "startedAt": "2026-07-15T13:16:18.809Z",
+        "finishedAt": "2026-07-15T13:16:19.669Z",
+        "details": {
+          "pendingAttempted": 0,
+          "pendingSucceeded": 0,
+          "pendingConnected": 0,
+          "pendingFailed": 0,
+          "pendingDeferred": 0,
+          "refreshAttempted": 1,
+          "refreshSucceeded": 0,
+          "refreshFailed": 1
+        }
+      },
+      {
+        "stageId": "endpoints",
+        "status": "ready",
+        "startedAt": "2026-07-15T13:16:19.67Z",
+        "finishedAt": "2026-07-15T13:16:19.727Z",
+        "details": {
+          "source": "sqlite+manifest",
+          "count": 4,
+          "reconciled": 1,
+          "failed": 0,
+          "skipped": 3
+        }
+      },
+      {
+        "stageId": "peers",
+        "status": "skipped",
+        "startedAt": "2026-07-15T13:16:19.727Z",
+        "finishedAt": "2026-07-15T13:16:19.728Z",
+        "message": "no peer loads in manifest",
+        "details": {
+          "reloaded": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "vendors",
+        "status": "ready",
+        "startedAt": "2026-07-15T13:16:19.728Z",
+        "finishedAt": "2026-07-15T13:16:19.728Z"
+      },
+      {
+        "stageId": "local-reload",
+        "status": "skipped",
+        "startedAt": "2026-07-15T13:16:19.728Z",
+        "finishedAt": "2026-07-15T13:16:19.73Z",
+        "message": "no llama-swap loads in manifest"
+      },
+      {
+        "stageId": "remote-health",
+        "status": "degraded",
+        "startedAt": "2026-07-15T13:16:19.73Z",
+        "finishedAt": "2026-07-15T13:16:32.945Z",
+        "details": {
+          "probed": 3,
+          "healthy": 0,
+          "degraded": 3,
+          "results": [
+            {
+              "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+              "modelId": "deepseek/deepseek-v4-flash",
+              "reason": "timeout",
+              "healthStatus": "offline",
+              "message": "The operation was aborted due to timeout"
+            },
+            {
+              "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+              "modelId": "deepseek/deepseek-v4-pro",
+              "reason": "timeout",
+              "healthStatus": "offline",
+              "message": "The operation was aborted due to timeout"
+            },
+            {
+              "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+              "modelId": "moonshot/kimi-k2.7-code",
+              "reason": "credentials-missing",
+              "healthStatus": "degraded",
+              "message": "No authorization credential is available for remote probe."
+            }
+          ]
+        }
+      },
+      {
+        "stageId": "inventory",
+        "status": "ready",
+        "startedAt": "2026-07-15T13:16:32.945Z",
+        "finishedAt": "2026-07-15T13:16:32.946Z",
+        "details": {
+          "modelIdCount": 1,
+          "endpointIdCount": 1,
+          "localEndpointCount": 0,
+          "remoteEndpointCount": 1,
+          "emptyAliasIds": [],
+          "driftWarningCount": 0,
+          "driftWarnings": []
+        }
+      }
+    ]
+  }
+}

@@ -7,29 +7,31 @@ import {
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
   StatusPill,
 } from "../components/page-primitives";
 import {
+  compactTitleClassName,
   fieldClassName,
   listRowClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
-import {
-  type RuntimeSnapshot,
-  fetchRuntimeSnapshot,
-  submitRerankRequest,
-} from "../lib/runtime-api";
+import { type RuntimeSnapshot, fetchRuntimeModels, submitRerankRequest } from "../lib/runtime-api";
 import { usePageActions } from "../lib/shell-header-context";
 import { buildWorkbenchModelOptions } from "../lib/view-models";
 
+const formFieldLabelClassName = utilityLabelClassName;
+
 export default function StudioRerankRoute() {
-  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<Pick<RuntimeSnapshot, "models"> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [model, setModel] = useState("");
   const [query, setQuery] = useState("Which option best summarizes the runtime?");
   const [documentsText, setDocumentsText] = useState(
-    "The runtime routes requests.\nThe runtime owns provider account onboarding.\nThe runtime UI is a Swiss-style operator shell.",
+    "The runtime routes requests.\nThe runtime owns provider account onboarding.\nThe runtime UI is a calm Apple-inspired operator shell.",
   );
   const [path, setPath] = useState<"/v1/rerank" | "/v1/reranking">("/v1/rerank");
   const [submitting, setSubmitting] = useState(false);
@@ -39,10 +41,10 @@ export default function StudioRerankRoute() {
   } | null>(null);
 
   useEffect(() => {
-    void fetchRuntimeSnapshot()
-      .then((value) => {
-        setSnapshot(value);
-        setModel((current) => current || value.models[0]?.id || "");
+    void fetchRuntimeModels()
+      .then((models) => {
+        setSnapshot({ models });
+        setModel((current) => current || models[0]?.id || "");
       })
       .catch((value: unknown) =>
         setError(
@@ -140,43 +142,31 @@ export default function StudioRerankRoute() {
             <LoadingState label="Loading rerank request context…" />
           ) : (
             <form className="space-y-4" onSubmit={onSubmit}>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Contract</span>
-                <select
-                  className={fieldClassName}
-                  value={path}
-                  onChange={(event) =>
-                    setPath(event.target.value as "/v1/rerank" | "/v1/reranking")
-                  }
-                >
-                  <option value="/v1/rerank">/v1/rerank</option>
-                  <option value="/v1/reranking">/v1/reranking</option>
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Model</span>
-                <select
-                  className={fieldClassName}
-                  value={model}
-                  onChange={(event) => setModel(event.target.value)}
-                >
-                  {modelOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Query</span>
+              <SelectField
+                label="Contract"
+                value={path}
+                onChange={(value) => setPath(value as "/v1/rerank" | "/v1/reranking")}
+              >
+                <option value="/v1/rerank">/v1/rerank</option>
+                <option value="/v1/reranking">/v1/reranking</option>
+              </SelectField>
+              <SelectField label="Model" value={model} onChange={setModel}>
+                {modelOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </SelectField>
+              <label className="grid gap-2">
+                <span className={formFieldLabelClassName}>Query</span>
                 <textarea
                   className={`${fieldClassName} min-h-28`}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                 />
               </label>
-              <label className="grid gap-2 text-sm">
-                <span className="font-medium text-[var(--rm-fg)]">Candidate documents</span>
+              <label className="grid gap-2">
+                <span className={formFieldLabelClassName}>Candidate documents</span>
                 <textarea
                   className={`${fieldClassName} min-h-40`}
                   value={documentsText}
@@ -205,10 +195,10 @@ export default function StudioRerankRoute() {
                   <div key={`${row.index}-${row.score}`} className={listRowClassName}>
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-medium text-[var(--rm-fg)]">Document {row.index + 1}</p>
+                        <p className={compactTitleClassName}>Document {row.index + 1}</p>
                         <StatusPill tone="accent">{row.score.toFixed(4)}</StatusPill>
                       </div>
-                      <p className="text-sm text-[var(--rm-secondary)]">{row.text}</p>
+                      <p className={supportingTextClassName}>{row.text}</p>
                     </div>
                   </div>
                 ))}
@@ -220,7 +210,7 @@ export default function StudioRerankRoute() {
             title="Contract details"
             description="Keep raw transport artifacts adjacent so the request contract remains operator-readable."
           >
-            <CodeBlock className="min-h-60 text-sm">
+            <CodeBlock className="min-h-60">
               {result?.rawPayload ?? '{\n  "status": "No rerank request yet"\n}'}
             </CodeBlock>
           </SectionCard>

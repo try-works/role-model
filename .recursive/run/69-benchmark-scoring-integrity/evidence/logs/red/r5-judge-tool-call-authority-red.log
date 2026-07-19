@@ -1,0 +1,94 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity/role-model-router/packages/bench-judge[39m
+
+ [31m❯[39m src/index.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 52[2mms[22m[39m
+   [32m✓[39m bench-judge grading prompts[2m > [22mbuildJudgeGradingPrompt includes structured briefing sections for p17[32m 5[2mms[22m[39m
+[31m   [31m×[31m bench-judge grading prompts[2m > [22mbuildJudgeGradingPrompt treats recorded API tool calls as authoritative even when deliverable repeats tool_calls[39m[32m 38[2mms[22m[39m
+[31m     → expected 'You are grading a model response for …' to contain 'Treat the recorded API tool-call list…'[39m
+   [32m✓[39m bench-judge grading prompts[2m > [22mbuildCompareGradingPrompt shares briefing sections with per-case judge[32m 1[2mms[22m[39m
+   [32m✓[39m bench-judge grading prompts[2m > [22mparseJudgeGradingResponse accepts strict JSON score payloads[32m 2[2mms[22m[39m
+   [32m✓[39m bench-judge grading prompts[2m > [22mextractCompareGradingJsonText pulls compare JSON from reasoning preambles[32m 2[2mms[22m[39m
+   [32m✓[39m bench-judge grading prompts[2m > [22mextractJudgeGradingJsonText pulls JSON from reasoning preambles[32m 1[2mms[22m[39m
+   [32m✓[39m bench-judge grading prompts[2m > [22mparseJudgeGradingResponse sanitizes runaway regex-noise rationale text[32m 1[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/index.test.ts > bench-judge grading prompts > buildJudgeGradingPrompt treats recorded API tool calls as authoritative even when deliverable repeats tool_calls
+AssertionError: expected 'You are grading a model response for …' to contain 'Treat the recorded API tool-call list…'
+
+- Expected
++ Received
+
+- Treat the recorded API tool-call list above as authoritative
++ You are grading a model response for a routing capability benchmark.
++ Return JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.
++ Score 1.0 = fully meets expected response and grading criteria.
++ Score 0.0 = completely wrong or refusal without attempt.
++ Ignore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.
++ For code-fix cases, verify the fix is correct — unchanged buggy code must score 0.
++ Placeholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.
++ For apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.
++ Required API tool calls: run_tests.
++ Actual structured tool calls from API: run_tests.
++ Fake tool syntax in prose (e.g. TOOL_CALL name=...) does not count unless criteria explicitly allow it.
++
++ Case: h11-decompose-code-verify
++
++ ## Original question
++ [user]
++ Phase 1: bullet milestones. Phase 2: write BenchmarkRunProgress. Phase 3: call run_tests.
++
++ ## Example expected answer
++ Milestone bullets, BenchmarkRunProgress interface, run_tests tool call
++ (exemplar quality: derived)
++
++ ## Key deliverables (grade against this checklist)
++ [MUST] Structured phases
++ [MUST] includes BenchmarkRunProgress interface fields
++ [MUST] run_tests tool emitted.
++
++ ## MUST NOT
++ MUST NOT emit prose-only TOOL_CALL lines without API tool_calls
++
++ ## Answer format requirements
++ BENCHMARK DELIVERABLE RULES:
++ Step 1: emit required API tool calls. Step 2: after tools, output ONLY a ```json fence: {"bullets":["...","..."]}.
++
++ ## Grading criteria (authoritative)
++ Structured phases; includes BenchmarkRunProgress interface fields; run_tests tool emitted.
++
++ ## Subject deliverable to grade
++ {
++   "tool_calls": [
++     {
++       "name": "run_tests",
++       "arguments": {
++         "command": "pnpm test benchmark-progress"
++       }
++     }
++   ],
++   "bullets": [
++     "BenchmarkRunProgress includes runId, status, completedSteps, and totalSteps.",
++     "run_tests was executed with pnpm test benchmark-progress."
++   ]
++ }
+
+ ❯ src/index.test.ts:95:20
+     93| 
+     94|     expect(prompt).toContain("Actual structured tool calls from API: r…
+     95|     expect(prompt).toContain("Treat the recorded API tool-call list ab…
+       |                    ^
+     96|     expect(prompt).toContain("Do not penalize the deliverable for also…
+     97|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m6 passed[39m[22m[90m (7)[39m
+[2m   Start at [22m 19:08:47
+[2m   Duration [22m 2.28s[2m (transform 227ms, setup 0ms, collect 193ms, tests 52ms, environment 1ms, prepare 603ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\69-benchmark-scoring-integrity\role-model-router\packages\bench-judge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/index.test.ts

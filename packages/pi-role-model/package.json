@@ -1,0 +1,29 @@
+{
+  "name": "@try-works/pi-role-model",
+  "version": "0.1.3",
+  "type": "module",
+  "description": "Pi package for connecting Pi to an externally running Role-Model runtime.",
+  "license": "BUSL-1.1",
+  "keywords": ["pi-package", "pi-role-model", "role-model", "routing", "llm-gateway"],
+  "homepage": "https://github.com/try-works/role-model#readme",
+  "bugs": {
+    "url": "https://github.com/try-works/role-model/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/try-works/role-model.git",
+    "directory": "packages/pi-role-model"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": ["data", "extensions", "skills", "src"],
+  "pi": {
+    "extensions": ["extensions/role-model.ts"],
+    "skills": ["skills"]
+  },
+  "scripts": {
+    "build": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

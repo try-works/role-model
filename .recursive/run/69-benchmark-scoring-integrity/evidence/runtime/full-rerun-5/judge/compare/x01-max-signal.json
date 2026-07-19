@@ -1,0 +1,55 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "x01-max-signal",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    },\n    {\n      \"",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both deliverables meet all MUST requirements: structured plan, required tool calls, patch with real content, and JSON keys. Moonshot’s apply_patch uses a standard unified diff with explicit hunk marker and adds a comment that exactly matches the phrase ‘sole-candidate fallback comment’, aligning precisely with the task instruction. Codex’s patch uses a non‑standard patch envelope, which is still…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both deliverables meet all MUST requirements: structured plan, required tool calls, patch with real content, and JSON keys. Moonshot’s apply_patch uses a standard unified diff with explicit hunk marker and adds a comment that exactly matches the phrase ‘sole-candidate fallback comment’, aligning precisely with the task instruction. Codex’s patch uses a non‑standard patch envelope, which is still acceptable per the rules, and its comment is a broader description. Moonshot’s closer adherence to the literal instruction gives it a slight edge.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nWorkflow: (1) API read_file src/router.ts and grep_search throughputSla (2) apply_patch sole-candidate fallback comment (3) JSON with plan milestones, patch_summary, test_snippet.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"MODE\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ],\n  \"plan\": [\n    \"Read router config\",\n    \"Patch MODE to difficulty\",\n    \"Add SLA guard test\"\n  ],\n  \"patch_summary\": \"Switched MODE default to difficulty and documented throughput SLA guard.\",\n  \"test_snippet\": \"expect(guardSoleCandidate(...)).toAllowFallbackWhenHardDenied();\"\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Structured plan with milestones",
+      "[MUST] read_file, grep_search, apply_patch tool calls",
+      "[MUST] test checklist.",
+      "[MUST] Emit API tool calls: read_file, grep_search, apply_patch",
+      "[MUST] Include JSON keys: plan, patch_summary",
+      "[SHOULD] Match clues: milestone|plan, patch, test",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 714,
+    "reasoningLength": 11435
+  },
+  "recordedAtMs": 1783936551324
+}

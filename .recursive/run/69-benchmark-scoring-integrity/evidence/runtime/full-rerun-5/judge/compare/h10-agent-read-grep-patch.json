@@ -1,0 +1,52 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h10-agent-read-grep-patch",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n ",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    },\n    {\n ",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Moonshot's apply_patch provided a standard unified diff with ---/+++ headers and an @@ hunk, satisfying the MUST requirements. OpenAI's apply_patch used non-standard *** delimiters and lacked ---/+++ headers, violating the MUST NOT against malformed patch content. Both correctly emitted read_file and grep_search with evaluateEligibility, and all required tools were present.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Moonshot's apply_patch provided a standard unified diff with ---/+++ headers and an @@ hunk, satisfying the MUST requirements. OpenAI's apply_patch used non-standard *** delimiters and lacked ---/+++ headers, violating the MUST NOT against malformed patch content. Both correctly emitted read_file and grep_search with evaluateEligibility, and all required tools were present.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nEmit API tool calls in order: read_file src/router.ts, grep_search evaluateEligibility, apply_patch with a one-line comment fix diff. All three tools required.",
+    "exemplarAnswer": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"read_file\",\n      \"arguments\": {\n        \"path\": \"src/router.ts\"\n      }\n    },\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"MODE\"\n      }\n    },\n    {\n      \"name\": \"apply_patch\",\n      \"arguments\": {\n        \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -4,3 +4,3 @@\\n-MODE=fast\\n+MODE=difficulty\\n\"\n      }\n    }\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must emit read_file, grep_search, and apply_patch tool calls.",
+      "[MUST] Emit API tool calls: read_file, grep_search, apply_patch",
+      "[SHOULD] Match clues: router|evaluateEligibility|patch|diff",
+      "[MUST] apply_patch must contain either ---/+++ headers plus an @@ hunk marker and real change content, or a valid Codex patch envelope with real content; line numbers are optional and bare @@ is acceptable"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 545,
+    "reasoningLength": 6348
+  },
+  "recordedAtMs": 1783936890757
+}

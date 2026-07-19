@@ -1,0 +1,22 @@
+node:fs:560
+  return binding.open(
+                 ^
+
+Error: ENOENT: no such file or directory, open 'D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core\data\taxonomy\taskTypes.json'
+    at Object.openSync (node:fs:560:18)
+    at Object.readFileSync (node:fs:444:35)
+    at [stdin]:17:19
+    at Array.filter (<anonymous>)
+    at [stdin]:14:64
+    at runScriptInThisContext (node:internal/vm:219:10)
+    at node:internal/process/execution:451:12
+    at [stdin]-wrapper:6:24
+    at runScriptInContext (node:internal/process/execution:449:60)
+    at evalFunction (node:internal/process/execution:283:30) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'D:\\DEV\\role-model\\.worktrees\\57-role-model-taxonomy-v1-phase-1-4\\role-model-router\\packages\\core\\data\\taxonomy\\taskTypes.json'
+}
+
+Node.js v24.11.0

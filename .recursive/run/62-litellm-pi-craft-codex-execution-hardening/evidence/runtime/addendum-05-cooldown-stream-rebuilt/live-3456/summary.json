@@ -1,0 +1,249 @@
+{
+  "capturedAt": "2026-07-08T12:41:37.674Z",
+  "baseUrl": "http://127.0.0.1:3456",
+  "aliasId": "difficulty.remote-only",
+  "summaries": [
+    {
+      "caseId": "q-d3-pi-alias-stream-text",
+      "clientRequestId": "run62-live-pi-stream-text-3456",
+      "statusCode": 200,
+      "requestId": "req-526be184-ec5b-4a76-ae8a-222d9cc59ac3",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "providerId": "deepseek",
+      "providerFamily": "deepseek",
+      "vendorId": null,
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai-compatible",
+      "finishReason": "stop",
+      "cooldowns": [],
+      "failedAttempts": [],
+      "stream": {
+        "eventCount": 40,
+        "firstChunk": {
+          "id": "c7d987e8-0283-434a-9911-7a1f9dc540dc",
+          "object": "chat.completion.chunk",
+          "created": 1783514448,
+          "model": "deepseek-v4-pro",
+          "system_fingerprint": "fp_9954b31ca7_prod0820_fp8_kvcache_20260402",
+          "choices": [
+            {
+              "index": 0,
+              "delta": {
+                "role": "assistant",
+                "content": null,
+                "reasoning_content": ""
+              },
+              "logprobs": null,
+              "finish_reason": null
+            }
+          ]
+        },
+        "firstChunkReasoningOnly": false
+      }
+    },
+    {
+      "caseId": "q-d4-craft-alias-stream-text",
+      "clientRequestId": "run62-live-craft-stream-text-3456",
+      "statusCode": 200,
+      "requestId": "req-2e822190-68bc-455a-a649-d73af1ed96aa",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "providerId": "deepseek",
+      "providerFamily": "deepseek",
+      "vendorId": null,
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai-compatible",
+      "finishReason": "stop",
+      "cooldowns": [],
+      "failedAttempts": [],
+      "stream": {
+        "eventCount": 55,
+        "firstChunk": {
+          "id": "f2b24dd1-527f-4fc6-9a8b-763fc55af67a",
+          "object": "chat.completion.chunk",
+          "created": 1783514451,
+          "model": "deepseek-v4-pro",
+          "system_fingerprint": "fp_9954b31ca7_prod0820_fp8_kvcache_20260402",
+          "choices": [
+            {
+              "index": 0,
+              "delta": {
+                "role": "assistant",
+                "content": null,
+                "reasoning_content": ""
+              },
+              "logprobs": null,
+              "finish_reason": null
+            }
+          ]
+        },
+        "firstChunkReasoningOnly": false
+      }
+    },
+    {
+      "caseId": "q-c3-pi-alias-tools",
+      "clientRequestId": "run62-live-pi-tools-3456",
+      "statusCode": 200,
+      "requestId": "req-677ae3aa-1f09-4fa4-8ec9-1eb223580bba",
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "providerId": "deepseek",
+      "providerFamily": "deepseek",
+      "vendorId": null,
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai-compatible",
+      "finishReason": "stop",
+      "cooldowns": [],
+      "failedAttempts": [],
+      "stream": null
+    },
+    {
+      "caseId": "q-c4-craft-alias-inline-image",
+      "clientRequestId": "run62-live-craft-image-3456",
+      "statusCode": 200,
+      "requestId": "req-583016c9-6be5-429c-8db3-09b3256e79a2",
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "providerId": "openai",
+      "providerFamily": "openai",
+      "vendorId": "codex-app-server",
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai",
+      "finishReason": "stop",
+      "cooldowns": [],
+      "failedAttempts": [],
+      "stream": null
+    },
+    {
+      "caseId": "q-d1-direct-exact-gpt",
+      "clientRequestId": "run62-live-direct-gpt-3456",
+      "statusCode": 200,
+      "requestId": "req-ee575e08-98e3-4a77-bcb0-5256f67ddb00",
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "providerId": "openai",
+      "providerFamily": "openai",
+      "vendorId": "codex-app-server",
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai",
+      "finishReason": "stop",
+      "cooldowns": [],
+      "failedAttempts": [],
+      "stream": null
+    },
+    {
+      "caseId": "q-c3-pi-alias-inline-image",
+      "statusCode": 200,
+      "requestId": "req-ee70688d-c373-41d8-923e-1b47a67bf7b8",
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "providerId": "openai",
+      "providerFamily": "openai",
+      "vendorId": "codex-app-server",
+      "executionFamily": "remote-service",
+      "adapterFamily": "ai-sdk-openai"
+    }
+  ],
+  "endpointList": [
+    {
+      "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+      "modelId": "deepseek/deepseek-v4-pro",
+      "providerId": "deepseek",
+      "providerAccountId": "deepseek.personal.deepseek-api-key",
+      "roleIds": [
+        "analyst",
+        "coder",
+        "coordinator",
+        "creative",
+        "data",
+        "designer",
+        "educator",
+        "finance",
+        "health",
+        "knowledge",
+        "legal",
+        "marketer",
+        "mathematician",
+        "operator",
+        "planner",
+        "procurement",
+        "product",
+        "recruiter",
+        "seller",
+        "strategist",
+        "support",
+        "translator",
+        "writer"
+      ],
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+        "code.edit"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "none",
+      "webSearchSupport": {
+        "mode": "runtime-fallback",
+        "currentRuntimeContract": null,
+        "documentedProviderContract": "deepseek.anthropic.server_web_search"
+      },
+      "status": "active"
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "modelId": "chatgpt/gpt-5.4",
+      "providerId": "openai",
+      "providerAccountId": "openai.personal.openai-codex-subscription",
+      "roleIds": [
+        "analyst",
+        "architect",
+        "coder",
+        "coordinator",
+        "creative",
+        "data",
+        "designer",
+        "educator",
+        "finance",
+        "health",
+        "knowledge",
+        "legal",
+        "marketer",
+        "mathematician",
+        "operator",
+        "planner",
+        "procurement",
+        "product",
+        "recruiter",
+        "researcher",
+        "scientist",
+        "security",
+        "seller",
+        "strategist",
+        "support",
+        "tester",
+        "translator",
+        "writer"
+      ],
+      "endpointKind": "remote_api",
+      "servingSource": "remote-service",
+      "sourceType": "remote",
+      "healthStatus": "healthy",
+      "capabilities": [
+        "text.chat",
+        "tools.function_calling",
+        "reasoning",
+        "structured.output",
+        "code.edit"
+      ],
+      "toolCallingSupported": true,
+      "toolCallingStyle": "none",
+      "webSearchSupport": {
+        "mode": "native",
+        "currentRuntimeContract": "openai.responses.web_search",
+        "documentedProviderContract": "openai.responses.web_search"
+      },
+      "status": "active"
+    }
+  ]
+}

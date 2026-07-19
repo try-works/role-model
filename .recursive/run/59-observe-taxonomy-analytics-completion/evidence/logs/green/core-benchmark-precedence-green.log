@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/role-model-router/packages/core
+
+ ✓ test/routing-intent.test.ts (28 tests) 44ms
+
+ Test Files  1 passed (1)
+      Tests  28 passed (28)
+   Start at  17:56:45
+   Duration  1.32s (transform 243ms, setup 0ms, collect 292ms, tests 44ms, environment 0ms, prepare 313ms)
+

@@ -1,0 +1,90 @@
+> {"id":"cmd-0","type":"prompt","message":"/role-model setup"}
+< {"type":"extension_ui_request","id":"11e429ee-7502-4503-990c-6ceb5d4f900e","method":"notify","message":"Role-Model provider configured at http://127.0.0.1:4567\nrecommended alias: default.decision-only","notifyType":"info"}
+< {"id":"cmd-0","type":"response","command":"prompt","success":true}
+> {"id":"cmd-1","type":"prompt","message":"/role-model status"}
+< {"type":"extension_ui_request","id":"68e19ccc-b121-451f-91ab-75544ff2a7f1","method":"notify","message":"Role Model Runtime\nstate: ready\nendpoint: http://127.0.0.1:4567\nversion: 0.0.0-qa\naliases: 20\nselected alias: default.decision-only\nprovider: registered\nauth: placeholder\nendpoint trust: local\nfallback: no\nwarnings: none","notifyType":"info"}
+< {"id":"cmd-1","type":"response","command":"prompt","success":true}
+> {"id":"cmd-2","type":"prompt","message":"/role-model doctor"}
+< {"type":"extension_ui_request","id":"0ba6f634-e839-46b1-9e51-9c7cfa0aa19a","method":"notify","message":"doctor: ok\nendpoint: http://127.0.0.1:4567\nhealth: ok\nversion: ok\ndownstream discovery: ok\nfallback: no\nauth: ok\nendpoint trust: ok\nprovider: ok\naliases: ok\ndegraded models: none\nmodels: 22\nrecommended alias: default.decision-only","notifyType":"info"}
+< {"id":"cmd-2","type":"response","command":"prompt","success":true}
+> {"id":"cmd-3","type":"prompt","message":"/role-model alias list"}
+< {"type":"extension_ui_request","id":"0a03e7a7-02d4-43c7-919c-8ca376de8a57","method":"notify","message":"- baseline.decision-only [ready]\n- baseline.hybrid [ready]\n- baseline.local-only [ready]\n- baseline.remote-only [ready]\n- controller.decision-only [ready]\n- controller.hybrid [ready]\n- controller.local-only [ready]\n- controller.remote-only [ready]\n- default.decision-only (recommended) [ready, recommended, selected]\n- default.hybrid [ready]\n- default.local-only [ready]\n- default.remote-only [ready]\n- difficulty.decision-only [ready]\n- difficulty.hybrid [ready]\n- difficulty.local-only [ready]\n- difficulty.remote-only [ready]\n- hybrid.decision-only [ready]\n- hybrid.hybrid [ready]\n- hybrid.local-only [ready]\n- hybrid.remote-only [ready]","notifyType":"info"}
+< {"id":"cmd-3","type":"response","command":"prompt","success":true}
+> {"id":"cmd-4","type":"prompt","message":"/role-model alias recommended"}
+< {"type":"extension_ui_request","id":"d96a67f2-b10f-4cef-be4b-10678575976b","method":"notify","message":"Recommended Role-Model alias: default.decision-only","notifyType":"info"}
+< {"id":"cmd-4","type":"response","command":"prompt","success":true}
+> {"id":"cmd-5","type":"prompt","message":"/role-model alias use default.decision-only"}
+< {"type":"extension_ui_request","id":"4c93174a-4f3e-410f-8f80-353d2d5766d3","method":"notify","message":"selected alias: default.decision-only\nactive model: role-model/default.decision-only","notifyType":"info"}
+< {"id":"cmd-5","type":"response","command":"prompt","success":true}
+> {"id":"cmd-6","type":"prompt","message":"/role-model alias current"}
+< {"type":"extension_ui_request","id":"47e7dc08-04d0-442c-b2e4-c5eb73d941f2","method":"notify","message":"Current Role-Model alias: default.decision-only","notifyType":"info"}
+< {"id":"cmd-6","type":"response","command":"prompt","success":true}
+SUMMARY {
+  "responses": [
+    {
+      "id": "cmd-0",
+      "success": true
+    },
+    {
+      "id": "cmd-1",
+      "success": true
+    },
+    {
+      "id": "cmd-2",
+      "success": true
+    },
+    {
+      "id": "cmd-3",
+      "success": true
+    },
+    {
+      "id": "cmd-4",
+      "success": true
+    },
+    {
+      "id": "cmd-5",
+      "success": true
+    },
+    {
+      "id": "cmd-6",
+      "success": true
+    }
+  ],
+  "notifications": [
+    {
+      "id": "11e429ee-7502-4503-990c-6ceb5d4f900e",
+      "message": "Role-Model provider configured at http://127.0.0.1:4567\nrecommended alias: default.decision-only",
+      "notifyType": "info"
+    },
+    {
+      "id": "68e19ccc-b121-451f-91ab-75544ff2a7f1",
+      "message": "Role Model Runtime\nstate: ready\nendpoint: http://127.0.0.1:4567\nversion: 0.0.0-qa\naliases: 20\nselected alias: default.decision-only\nprovider: registered\nauth: placeholder\nendpoint trust: local\nfallback: no\nwarnings: none",
+      "notifyType": "info"
+    },
+    {
+      "id": "0ba6f634-e839-46b1-9e51-9c7cfa0aa19a",
+      "message": "doctor: ok\nendpoint: http://127.0.0.1:4567\nhealth: ok\nversion: ok\ndownstream discovery: ok\nfallback: no\nauth: ok\nendpoint trust: ok\nprovider: ok\naliases: ok\ndegraded models: none\nmodels: 22\nrecommended alias: default.decision-only",
+      "notifyType": "info"
+    },
+    {
+      "id": "0a03e7a7-02d4-43c7-919c-8ca376de8a57",
+      "message": "- baseline.decision-only [ready]\n- baseline.hybrid [ready]\n- baseline.local-only [ready]\n- baseline.remote-only [ready]\n- controller.decision-only [ready]\n- controller.hybrid [ready]\n- controller.local-only [ready]\n- controller.remote-only [ready]\n- default.decision-only (recommended) [ready, recommended, selected]\n- default.hybrid [ready]\n- default.local-only [ready]\n- default.remote-only [ready]\n- difficulty.decision-only [ready]\n- difficulty.hybrid [ready]\n- difficulty.local-only [ready]\n- difficulty.remote-only [ready]\n- hybrid.decision-only [ready]\n- hybrid.hybrid [ready]\n- hybrid.local-only [ready]\n- hybrid.remote-only [ready]",
+      "notifyType": "info"
+    },
+    {
+      "id": "d96a67f2-b10f-4cef-be4b-10678575976b",
+      "message": "Recommended Role-Model alias: default.decision-only",
+      "notifyType": "info"
+    },
+    {
+      "id": "4c93174a-4f3e-410f-8f80-353d2d5766d3",
+      "message": "selected alias: default.decision-only\nactive model: role-model/default.decision-only",
+      "notifyType": "info"
+    },
+    {
+      "id": "47e7dc08-04d0-442c-b2e4-c5eb73d941f2",
+      "message": "Current Role-Model alias: default.decision-only",
+      "notifyType": "info"
+    }
+  ]
+}

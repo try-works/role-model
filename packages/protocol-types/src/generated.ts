@@ -88,6 +88,115 @@ export interface DeclaredCapabilityProfile {
   platform_constraints?: string[];
 }
 
+export type NullableNonNegativeInteger = number | null;
+
+export type StringList = string[];
+
+export interface DownstreamOpenAIConditionalSupport {
+  targetModelIds: StringList;
+  endpointIds: StringList;
+}
+
+export interface ConditionalSupportMap {
+  [k: string]: DownstreamOpenAIConditionalSupport;
+}
+
+export interface DownstreamOpenAIModelRecord {
+  id: string;
+  object: "model";
+  owned_by: "role-model";
+  endpoint_ids: StringList;
+  type: "model" | "alias";
+  routingMode?: "basic" | "difficulty" | "intelligent" | "hybrid";
+  targetModelIds: StringList;
+  canonicalModelIds: StringList;
+  providerIds: StringList;
+  limits: {
+    safeContextWindow: NullableNonNegativeInteger;
+    safeMaxOutputTokens: NullableNonNegativeInteger;
+    maxContextWindow: NullableNonNegativeInteger;
+    maxOutputTokens: NullableNonNegativeInteger;
+  };
+  modalities: {
+    guaranteedInput: StringList;
+    availableInput: StringList;
+    conditionalInput: ConditionalSupportMap;
+    output: StringList;
+  };
+  capabilities: {
+    guaranteed: StringList;
+    available: StringList;
+    conditional: ConditionalSupportMap;
+    tools: {
+      functionCalling: boolean;
+    };
+    reasoning: {
+      supported: boolean;
+      effortControl: boolean;
+    };
+    structuredOutput: {
+      supported: boolean;
+    };
+    caching: {
+      promptRead: boolean | null;
+      promptWrite: boolean | null;
+      source: "catalog" | "unknown" | "mixed";
+    };
+  };
+  declared: DownstreamOpenAIModelEndpointSet;
+  routable: DownstreamOpenAIModelEndpointSet;
+  piMapping: {
+    contextWindow: NullableNonNegativeInteger;
+    maxTokens: NullableNonNegativeInteger;
+    compat?: {
+      supportsDeveloperRole?: boolean;
+      sendSessionAffinityHeaders?: boolean;
+      supportsLongCacheRetention?: boolean;
+    };
+  };
+  sources: StringList;
+}
+
+export interface DownstreamOpenAIModelEndpointSet {
+  modelIds: StringList;
+  endpointIds: StringList;
+}
+
+export interface DownstreamOpenAIDiscovery {
+  contractVersion: "role-model.downstream.openai.v1";
+  kind: "openai-compatible";
+  providerId: "role-model-runtime";
+  displayName: string;
+  baseUrl: string;
+  endpoints: {
+    health: string;
+    models: string;
+    chatCompletions: string;
+    responses: string;
+  };
+  authentication: {
+    type: "bearer";
+    headerName: "Authorization";
+    required: false;
+    placeholderToken: string;
+    note: string;
+  };
+  /**
+   * @minItems 1
+   */
+  models: [DownstreamOpenAIModelRecord, ...DownstreamOpenAIModelRecord[]];
+  setup: {
+    recommendedModel: string | null;
+    notes: string[];
+  };
+  freshness: {
+    generatedAt: string;
+    catalogVersion: string;
+    catalogCapturedAt: string | null;
+    runtimeInventoryRevision: string;
+  };
+}
+
 export interface EndpointIdentity {
   endpoint_id: string;
   endpoint_kind: "local_engine" | "remote_api" | "browser_engine" | "dispatch_adapter";
@@ -237,7 +346,7 @@ export interface RoleDefinition {
 
 export interface MetricEntry {
   value: number;
-  source: "measured" | "declared" | "default" | "catalog";
+  source: "measured" | "declared" | "default" | "catalog" | "benchmark";
   raw?: {
     [k: string]: unknown;
   };
@@ -303,6 +412,7 @@ export interface RouterDecision {
   fallback_endpoint_ids: string[];
   selection_reasons: (
     | "BEST_TOTAL_SCORE"
+    | "TIE_BREAK_APPLIED"
     | "MEASURED_PROFILE_USED"
     | "DECLARED_PROFILE_USED"
     | "DEFAULT_PROFILE_USED"
@@ -317,6 +427,11 @@ export interface RouterDecision {
     | "ROLE_POLICY_APPLIED"
     | "TASK_POLICY_APPLIED"
     | "FALLBACK_CHAIN_COMPUTED"
+    | "BENCHMARK_TASK_SCORE"
+    | "BENCHMARK_ROLE_SCORE"
+    | "BENCHMARK_GROUP_SCORE"
+    | "BENCHMARK_FALLBACK_OVERALL_SCORE"
+    | "TELEMETRY_TASK_PERFORMANCE"
   )[];
   used_measured: boolean;
   used_declared: boolean;
@@ -432,7 +547,11 @@ export interface UsageEvent {
   package_id?: string;
   provider_kind: string;
   tokens_in: number;
+  tokens_in_source?: "measured" | "normalized" | "estimated" | "unavailable";
+  tokens_in_available?: boolean;
   tokens_out: number;
+  tokens_out_source?: "measured" | "normalized" | "estimated" | "unavailable";
+  tokens_out_available?: boolean;
   latency_ms: number;
   cost_actual?: number;
   cost_estimate?: number;

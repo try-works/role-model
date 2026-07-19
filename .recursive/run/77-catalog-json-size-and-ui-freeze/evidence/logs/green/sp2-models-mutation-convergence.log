@@ -1,0 +1,17 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP2
+Timestamp: 2026-07-18T01:20:48Z
+Focused command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/control-models.test.ts -t "configured model mutation convergence"
+Focused result: PASS (2 passed, 16 skipped; 1.81s)
+
+Refactor/owning command: corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/routes/control-models.test.ts app/routes/startup-bootstrap-regression.test.ts
+Result: PASS (29/29; 2.02s)
+
+Build command: corepack pnpm --filter @role-model-router/runtime-ui run build
+Result: PASS; React Router production client built and TypeScript --noEmit passed.
+
+GREEN verified: PASS
+- Save uses the returned RuntimeAccount to replace only canonical account truth.
+- Eject reloads only accounts, endpoints, models, and controller.
+- Role policy, candidates, and request history are absent from mutation convergence.
+- Dead duplicate initial-loader/refresh helpers were removed during REFACTOR.

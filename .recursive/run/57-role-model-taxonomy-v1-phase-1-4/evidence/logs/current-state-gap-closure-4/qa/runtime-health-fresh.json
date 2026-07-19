@@ -1,0 +1,118 @@
+{
+  "status": "healthy",
+  "executionMode": "hybrid",
+  "vendors": {
+    "llama-swap": {
+      "vendorId": "llama-swap",
+      "healthStatus": "healthy",
+      "baseUrl": "http://127.0.0.1:58227/v1",
+      "healthUrl": "http://127.0.0.1:58227/health",
+      "pid": 9864,
+      "configPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa\\vendors\\llama-swap\\config.role-model.generated.yaml"
+    },
+    "litellm": {
+      "vendorId": "litellm",
+      "healthStatus": "healthy",
+      "baseUrl": "http://127.0.0.1:58238/v1",
+      "healthUrl": "http://127.0.0.1:58238/health/liveliness",
+      "pid": 45036,
+      "configPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-runtime-qa\\vendors\\litellm\\litellm.generated.yaml"
+    }
+  },
+  "inactiveVendors": [],
+  "credentialLifecycleAuthority": {
+    "state": "authoritative",
+    "bootstrapStatus": "ready"
+  },
+  "sessionBootstrap": {
+    "status": "ready",
+    "startedAt": "2026-06-24T00:31:37.14Z",
+    "finishedAt": "2026-06-24T00:31:37.213Z",
+    "stages": [
+      {
+        "stageId": "credentials",
+        "status": "ready",
+        "startedAt": "2026-06-24T00:31:37.14Z",
+        "finishedAt": "2026-06-24T00:31:37.16Z",
+        "details": {
+          "pendingAttempted": 0,
+          "pendingSucceeded": 0,
+          "pendingConnected": 0,
+          "pendingFailed": 0,
+          "pendingDeferred": 0,
+          "refreshAttempted": 0,
+          "refreshSucceeded": 0,
+          "refreshFailed": 0
+        }
+      },
+      {
+        "stageId": "endpoints",
+        "status": "ready",
+        "startedAt": "2026-06-24T00:31:37.161Z",
+        "finishedAt": "2026-06-24T00:31:37.165Z",
+        "details": {
+          "reconciled": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "peers",
+        "status": "skipped",
+        "startedAt": "2026-06-24T00:31:37.165Z",
+        "finishedAt": "2026-06-24T00:31:37.165Z",
+        "message": "no peer loads in manifest",
+        "details": {
+          "reloaded": 0,
+          "failed": 0
+        }
+      },
+      {
+        "stageId": "vendors",
+        "status": "ready",
+        "startedAt": "2026-06-24T00:31:37.165Z",
+        "finishedAt": "2026-06-24T00:31:37.165Z"
+      },
+      {
+        "stageId": "local-reload",
+        "status": "skipped",
+        "startedAt": "2026-06-24T00:31:37.165Z",
+        "finishedAt": "2026-06-24T00:31:37.165Z",
+        "message": "no llama-swap loads in manifest"
+      },
+      {
+        "stageId": "remote-health",
+        "status": "ready",
+        "startedAt": "2026-06-24T00:31:37.166Z",
+        "finishedAt": "2026-06-24T00:31:37.212Z",
+        "details": {
+          "probed": 1,
+          "healthy": 1,
+          "degraded": 0,
+          "results": [
+            {
+              "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+              "modelId": "openai/gpt-4.1-mini-fast",
+              "reason": "healthy",
+              "healthStatus": "healthy"
+            }
+          ]
+        }
+      },
+      {
+        "stageId": "inventory",
+        "status": "ready",
+        "startedAt": "2026-06-24T00:31:37.212Z",
+        "finishedAt": "2026-06-24T00:31:37.213Z",
+        "details": {
+          "modelIdCount": 2,
+          "endpointIdCount": 2,
+          "localEndpointCount": 1,
+          "remoteEndpointCount": 1,
+          "emptyAliasIds": [],
+          "driftWarningCount": 0,
+          "driftWarnings": []
+        }
+      }
+    ]
+  }
+}

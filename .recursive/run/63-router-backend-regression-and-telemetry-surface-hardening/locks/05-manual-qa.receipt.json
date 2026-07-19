@@ -1,0 +1,17 @@
+{
+  "artifact": "05-manual-qa.md",
+  "artifact_hash": "95c94c4107a28f9dbdafcfbfcf654e757a3e193dc2b1d0618934e89ead937389",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\63-router-backend-regression-and-telemetry-surface-hardening\\.recursive\\run\\63-router-backend-regression-and-telemetry-surface-hardening\\05-manual-qa.md",
+  "locked_at": "2026-07-11T13:26:04Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "f52537f1b712097b958ac053fa11a20de95708081ba1f962b8ceb0992135796b",
+    "00-worktree.md": "8884465450396cc689dcf06cb48ea411616b99d8ceb334c6324d5988299ecdd6",
+    "01-as-is.md": "57838f0b16c20a12a3d66a97049b8fdd89f50884e1c232518005f87237b5e4e6",
+    "02-to-be-plan.md": "e624d530118f2662899737ab979e7c4b50a27af49ad79f7ea9418ed6dda5fcc7",
+    "03-implementation-summary.md": "5678712265e1fed05de79fa3e9170e7dbbc51c1427b8e1b1a3aa7fec7f3525fe",
+    "03.5-code-review.md": "98d55bb3b859300d130dbb8d823f7d67ff619c3f6696da6544dc4bee7a37d023",
+    "04-test-summary.md": "17b0a41b03fc09b1882a4a8e0cec014b56f2d2ff1ec3c9c458a2b02f33b5478e"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "cd84e7ee82055e1c0b20ae724ae3c1b0261723b464bb59a4357e5f58e22e80f1"
+}

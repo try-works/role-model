@@ -37,11 +37,22 @@ export interface RuntimeExecutionMessage {
   readonly name?: string;
 }
 
-export interface RuntimeExecutionToolDefinition {
+export interface RuntimeExecutionFunctionToolDefinition {
+  readonly kind?: "function";
   readonly name: string;
   readonly description?: string;
   readonly inputSchema: Record<string, unknown>;
 }
+
+export interface RuntimeExecutionHostedToolDefinition {
+  readonly kind: "hosted";
+  readonly name: string;
+  readonly raw: Record<string, unknown>;
+}
+
+export type RuntimeExecutionToolDefinition =
+  | RuntimeExecutionFunctionToolDefinition
+  | RuntimeExecutionHostedToolDefinition;
 
 export interface StructuredOutputRequest {
   readonly name: string;
@@ -51,7 +62,36 @@ export interface StructuredOutputRequest {
 export interface PromptCacheRequest {
   readonly mode: "prefer" | "require" | "disabled";
   readonly key?: string;
+  readonly source?: "explicit" | "synthesized";
 }
+
+export interface RuntimeExecutionReasoningRequest {
+  readonly channel?: "reasoning" | "thinking";
+  readonly effort?: string;
+  readonly raw?: Record<string, unknown>;
+}
+
+export interface RuntimeExecutionSessionAffinity {
+  readonly sessionId?: string;
+  readonly clientRequestId?: string;
+}
+
+export type RuntimeExecutionTransportPreference = "auto" | "sse" | "websocket";
+
+export interface RuntimeExecutionContinuationRequest {
+  readonly previousResponseId?: string;
+}
+
+export type RuntimeExecutionToolChoice =
+  | "none"
+  | "auto"
+  | "required"
+  | {
+      readonly type: "function";
+      readonly function: {
+        readonly name: string;
+      };
+    };
 
 export interface RuntimeExecutionRequest {
   readonly messages: readonly RuntimeExecutionMessage[];
@@ -59,8 +99,14 @@ export interface RuntimeExecutionRequest {
   readonly temperature?: number;
   readonly stream?: boolean;
   readonly tools?: readonly RuntimeExecutionToolDefinition[];
+  readonly toolChoice?: RuntimeExecutionToolChoice;
+  readonly parallelToolCalls?: boolean;
+  readonly reasoning?: RuntimeExecutionReasoningRequest;
   readonly structuredOutput?: StructuredOutputRequest | null;
   readonly promptCache?: PromptCacheRequest;
+  readonly sessionAffinity?: RuntimeExecutionSessionAffinity;
+  readonly transportPreference?: RuntimeExecutionTransportPreference;
+  readonly continuation?: RuntimeExecutionContinuationRequest;
 }
 
 export interface ProviderCapabilityMatrix {
@@ -83,6 +129,7 @@ export interface ProviderCapabilityMatrix {
     readonly outputTokens: boolean;
     readonly cacheReadTokens: boolean;
     readonly cacheWriteTokens: boolean;
+    readonly streamOptionsIncludeUsage?: boolean;
   };
 }
 
@@ -99,8 +146,20 @@ export interface ProviderResponseCapture {
   readonly endpointId: string;
   readonly statusCode: number;
   readonly body: unknown;
+  readonly dynamicToolExecutions?: readonly {
+    readonly toolCallId: string;
+    readonly toolName: string;
+    readonly connectorId: string;
+    readonly connectorKind: string;
+    readonly status: "succeeded" | "failed" | "rejected";
+    readonly output: unknown;
+    readonly diagnostics: readonly {
+      readonly code: string;
+      readonly message: string;
+    }[];
+  }[];
   readonly vendorMetadata?: {
-    readonly vendorId: string;
+    readonly vendorId?: string;
     readonly resolvedModelId?: string;
     readonly latencyMs?: number;
     readonly costUsd?: number;
@@ -134,6 +193,7 @@ export interface NormalizedProviderResponse {
   };
   readonly promptCache: {
     readonly requested: boolean;
+    readonly requestSource?: "explicit" | "synthesized";
     readonly used: boolean;
     readonly readTokens: number;
     readonly writeTokens: number;
@@ -143,6 +203,11 @@ export interface NormalizedProviderResponse {
     readonly outputTokens: number;
     readonly cacheReadTokens: number;
     readonly cacheWriteTokens: number;
+    readonly source?: "measured" | "normalized" | "estimated" | "unavailable";
+    readonly inputTokensSource?: "measured" | "normalized" | "estimated" | "unavailable";
+    readonly outputTokensSource?: "measured" | "normalized" | "estimated" | "unavailable";
+    readonly inputTokensAvailable?: boolean;
+    readonly outputTokensAvailable?: boolean;
   };
   readonly errorClass: string | null;
   readonly latencyMs: number;
@@ -326,6 +391,10 @@ function findLocalSource(
   return registrySources.local.find((source) => source.endpointId === endpointId);
 }
 
+function isLiteLLMProviderAccountId(providerAccountId: string): boolean {
+  return providerAccountId.endsWith(".litellm");
+}
+
 export function resolveExecutionTarget(
   input: Omit<ExecuteRoutedRequestInput, "executionRequest" | "adapters" | "captures">,
 ): ResolvedExecutionTarget {
@@ -337,11 +406,6 @@ export function resolveExecutionTarget(
     throw new Error(`Chosen endpoint ${endpointId} is not present in the registry result.`);
   }
 
-  const allProviders = new Map([
-    ...input.catalog.providers.map((p) => [p.providerId, p] as const),
-    ...(input.additionalProviders ?? []).map((p) => [p.providerId, p] as const),
-  ]);
-
   const cloudSource = findCloudSource(input.registrySources, endpointId);
   if (cloudSource) {
     const account = input.accounts.find(
@@ -352,7 +416,15 @@ export function resolveExecutionTarget(
         `Provider account ${cloudSource.providerAccountId} is not present for chosen endpoint ${endpointId}.`,
       );
     }
-    const provider = allProviders.get(account.providerId);
+    const catalogProvider = input.catalog.providers.find(
+      (entry) => entry.providerId === account.providerId,
+    );
+    const additionalProvider = (input.additionalProviders ?? []).find(
+      (entry) => entry.providerId === account.providerId,
+    );
+    const provider = isLiteLLMProviderAccountId(account.providerAccountId)
+      ? (additionalProvider ?? catalogProvider)
+      : (catalogProvider ?? additionalProvider);
     if (!provider) {
       throw new Error(
         `Provider ${account.providerId} is not present in the catalog or additional providers for chosen endpoint ${endpointId}.`,
@@ -371,7 +443,9 @@ export function resolveExecutionTarget(
       providerId: provider.providerId,
       providerKind: provider.providerKind,
       providerAccountId: account.providerAccountId,
-      adapterFamily: provider.adapterFamily,
+      adapterFamily: isLiteLLMProviderAccountId(account.providerAccountId)
+        ? "litellm-proxy"
+        : provider.adapterFamily,
       authFamily: provider.authFamily,
       apiBase: account.baseUrlOverride ?? provider.apiBase,
       requestShapeHints: cloudSource.requestShapeHints ?? model.requestShapeHints,
@@ -424,7 +498,7 @@ function resolveResponseCapture(
     throw new Error(`No response capture is configured for endpoint ${target.endpointId}.`);
   }
   return {
-    providerFamily: target.adapterFamily,
+    providerFamily: target.providerId,
     endpointId: target.endpointId,
     statusCode: 200,
     body: capture.body,
@@ -574,6 +648,11 @@ function createUsageEvent(
     (candidate) => candidate.identity.endpoint_id === target.endpointId,
   );
 
+  const inputTokensSource =
+    normalized.usage.inputTokensSource ?? normalized.usage.source ?? "unavailable";
+  const outputTokensSource =
+    normalized.usage.outputTokensSource ?? normalized.usage.source ?? "unavailable";
+
   return {
     event_id: `usage-${routeResult.decision.request_id}`,
     timestamp_ms: Date.now(),
@@ -586,7 +665,13 @@ function createUsageEvent(
     package_id: target.providerKind,
     provider_kind: target.candidate.identity.provider_kind,
     tokens_in: normalized.usage.inputTokens,
+    tokens_in_source: inputTokensSource,
+    tokens_in_available:
+      normalized.usage.inputTokensAvailable ?? inputTokensSource !== "unavailable",
     tokens_out: normalized.usage.outputTokens,
+    tokens_out_source: outputTokensSource,
+    tokens_out_available:
+      normalized.usage.outputTokensAvailable ?? outputTokensSource !== "unavailable",
     latency_ms: normalized.latencyMs,
     ...(typeof normalized.vendorMetadata?.costUsd === "number"
       ? { cost_actual: normalized.vendorMetadata.costUsd }

@@ -1,0 +1,14 @@
+Name: `runtime-ui-control-models`
+Phase: `RED`
+Run: `67-runtime-ui-route-startup-performance-hardening`
+Timestamp: `2026-07-12`
+Command:
+
+- `corepack pnpm --filter @role-model-router/runtime-ui exec vitest run app/lib/view-models.test.ts app/routes/control-models.test.ts`
+
+Observed failure before production edits:
+
+- the new `control-models` tests failed because the route did not yet expose `startDeferredConfiguredModelsBootstrap()` or `describeConfiguredModelRequestEvidence()`
+- the new `view-models` expectation failed because deferred request evidence still collapsed to `0` instead of a truthful nullable state
+
+RED verified: `PASS`

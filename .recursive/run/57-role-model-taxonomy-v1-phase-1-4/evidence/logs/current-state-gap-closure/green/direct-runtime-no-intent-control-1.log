@@ -1,0 +1,2 @@
+200 {"id":"chatcmpl-role-model","object":"chat.completion","created":1782231471,"model":"claude-3.7-sonnet","choices":[{"index":0,"message":{"role":"assistant","content":"Anthropic summary","tool_calls":[{"id":"toolu_01","type":"function","function":{"name":"lookupRegistry","arguments":"{\"endpointId\":\"anthropic.team.shared.us-east-1.default\"}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":40,"completion_tokens":18,"total_tokens":58}}
+

@@ -1,0 +1,113 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/53/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/design-system.test.ts (53 tests | 1 failed | 52 skipped) 21ms
+   ↓ runtime design system > defines navigation groups and layout templates for every runtime route
+   ↓ runtime design system > uses analytics charts as the primary Observe entry point
+   ↓ runtime design system > keeps the shell on the Apple baseline with explicit chart tokens
+   ↓ runtime design system > chart tokens used together resolve to distinct visual colors in each theme
+   ↓ runtime design system > global shell chrome keeps legacy vendor ui out of the main runtime contract
+   ↓ runtime design system > studio implementation targets render repo-owned workspace sections instead of placeholder blueprints
+   ↓ runtime design system > integration and system implementation targets render live upstream and peer surfaces
+   ↓ runtime design system > router implementation targets render repo-owned routing explanation surfaces
+   ↓ runtime design system > router, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler
+   ↓ runtime design system > providers surface exposes explicit in-place maintenance actions for saved remote accounts
+   ↓ runtime design system > providers surface uses an explicit save-cancel modal for api-key maintenance
+   ↓ runtime design system > providers surface keeps oauth reconnect as a one-click saved-account action
+   ↓ runtime design system > providers maintenance flows call explicit repair APIs instead of generic account writes
+   ↓ runtime design system > providers saved-account cards use canonical lifecycle rows and bounded archived diagnostics
+   ↓ runtime design system > runtime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics
+   ↓ runtime design system > router routes preserve empty-state and observe-link affordances
+   ↓ runtime design system > merged router overview stays observational while routing strategy owns editing controls
+   ↓ runtime design system > router overview presents runtime-config posture as source of truth
+   ↓ runtime design system > router overview lists the concrete candidate endpoints behind routing posture
+   ↓ runtime design system > routing strategy benchmark advisory does not leak JSX control flow as page text
+   ↓ runtime design system > routing strategy settings separate saved posture from draft edits and refresh derived state after save
+   ↓ runtime design system > meta-guidance panels stay removed from overview and observe routes
+   ↓ runtime design system > design system doc marks the converted pages as live routes
+   ↓ runtime design system > control routes tolerate an unassigned controller before endpoint activation
+   ↓ runtime design system > applies the Apple palette, SF Pro / Inter typography, and explicit theme contract in shared app chrome
+   ↓ runtime design system > shared panels and provider selectors are owned by Apple-theme primitives
+   ↓ runtime design system > router strategy execution mode uses the themed select primitive
+   ↓ runtime design system > production UI dropdowns use themed select primitives instead of native selects
+   ↓ runtime design system > shared route effects avoid action identity loops and peer refresh feedback
+   ↓ runtime design system > keeps shared states calm: transparent status pills and no section divider chrome
+   ↓ runtime design system > remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy
+   ↓ runtime design system > runtime roles route preserves role-first drill-down language for task detail
+   ↓ runtime design system > local setup surfaces stay discoverable from navigation and empty registry states
+   ↓ runtime design system > observe and local log surfaces render structured ledgers rather than raw iframe placeholders
+   ↓ runtime design system > observe ownership keeps requests canonical and raw-host surfaces adjacent
+   ↓ runtime design system > requests and request detail stay telemetry-first while exposing raw-host handoffs
+   ↓ runtime design system > activity route frames raw-host metrics as adjacent to canonical telemetry
+   ↓ runtime design system > logs route exposes request-detail handoffs while preserving raw-host framing
+   ↓ runtime design system > registry and system layouts avoid redundant KPI strips and placeholder note panels
+   ↓ runtime design system > dashboard is chart-led and keeps routing analytics as a first-class handoff
+   ↓ runtime design system > overview metadata and design doc describe a telemetry-first summary with an interaction rail
+   ↓ runtime design system > workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces
+   ↓ runtime design system > request detail route renders authoritative stored cost metadata
+   ↓ runtime design system > shell header owns route metadata and page actions without duplicate page headers
+   ↓ runtime design system > shell headers do not render section eyebrow labels
+   ↓ runtime design system > routes do not register refresh controls as shell header actions
+   ↓ runtime design system > long fact-card values use compact text roles instead of display value typography
+   ↓ runtime design system > production UI sources do not bypass Apple theme token primitives
+   ↓ runtime design system > production UI sources keep the approved Apple radius grammar
+   ↓ runtime design system > production UI sources avoid unsupported Apple typography weight 500
+   × runtime design system > chart primitives use shared design-system geometry and type tokens 19ms
+     → expected undefined to deeply equal { placement: 'bottom', …(1) }
+   ↓ runtime design system > telemetry chart states are shared design-system vocabulary
+   ↓ runtime design system > runtime route definitions stay slim and future scaffolds avoid duplicate header props
+ ❯ app/components/telemetry-charts.test.tsx (3 tests | 1 failed | 2 skipped) 34ms
+   ↓ TelemetryChartCard > keeps populated chart content visible while a background refresh is in progress
+   ↓ TelemetryChartCard > renders stable loading and empty states without fake chart data
+   × TelemetryRankingBarChart > places horizontal chart labels in a bottom legend instead of a left category axis 32ms
+     → expected '<div class="h-[280px] w-full"><div cl…' to contain 'data-chart-horizontal-legend="bottom"'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/telemetry-charts.test.tsx > TelemetryRankingBarChart > places horizontal chart labels in a bottom legend instead of a left category axis
+AssertionError: expected '<div class="h-[280px] w-full"><div cl…' to contain 'data-chart-horizontal-legend="bottom"'
+
+Expected: "data-chart-horizontal-legend="bottom""
+Received: "<div class="h-[280px] w-full"><div class="recharts-responsive-container" style="width:100%;height:100%;min-width:0"></div></div>"
+
+ ❯ app/components/telemetry-charts.test.tsx:66:20
+     64|     );
+     65| 
+     66|     expect(markup).toContain('data-chart-horizontal-legend="bottom"');
+       |                    ^
+     67|     expect(markup).toContain("qa-local-llama-8b");
+     68|     expect(markup).toContain("anthropic-claude-haiku");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > chart primitives use shared design-system geometry and type tokens
+AssertionError: expected undefined to deeply equal { placement: 'bottom', …(1) }
+
+- Expected: 
+{
+  "axisCategoryWidth": 0,
+  "placement": "bottom",
+}
+
++ Received: 
+undefined
+
+ ❯ app/lib/design-system.test.ts:1228:42
+    1226|     expect(designSystemSource).toContain("chartAxisTickStyle");
+    1227|     expect(designSystemSource).toContain("chartBarRadius");
+    1228|     expect(chartHorizontalRankingLegend).toEqual({
+       |                                          ^
+    1229|       placement: "bottom",
+    1230|       axisCategoryWidth: 0,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  2 failed | 54 skipped (56)
+   Start at  20:48:46
+   Duration  3.13s (transform 982ms, setup 0ms, collect 3.26s, tests 56ms, environment 1ms, prepare 1.08s)
+
+undefined
+D:\DEV\role-model\.worktrees\53\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/design-system.test.ts app/components/telemetry-charts.test.tsx -t chart primitives use shared|places horizontal chart labels

@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "p18-tools-agent",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p18-tools-agent-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"Route latency-sensitive traffic to local.lfm2.5-8b-a1b; keep remote.deepseek-v4-flash as fallback or for non-urgent overflow. It has much lower p95 latency (62ms vs 245ms) and lower error rate (0.5% vs 1.8%).\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Route latency-sensitive traffic to local.lfm2.5-8b-a1b; keep remote.deepseek-v4-flash as fallback or for non-urgent overflow. It has much lower p95 latency (62ms vs 245ms) and lower error rate (0.5% vs 1.8%).\"}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"list_endpoints\",\n      \"arguments\": {}\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"local.lfm2.5-8b-a1b\"\n      }\n    },\n    {\n      \"name\": \"get_metrics\",\n      \"arguments\": {\n        \"endpoint_id\": \"remote.deepseek-v4-flash\"\n      }\n    }\n  ],\n  \"answer\": \"Route latency-sensitive traffic to local.lfm2.5-8b-a1b; keep remote.deepseek-v4-flash as fallback or for non-urgent overflow. It has much lower p95 latency (62ms vs 245ms) and lower error rate (0.5% vs 1.8%).\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 8570,
+  "failure": false,
+  "recordedAtMs": 1783934454128
+}

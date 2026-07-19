@@ -1,0 +1,133 @@
+---
+title: Pi integration
+description: Install the public Pi package, connect it to a running Role-Model runtime, and choose Role-Model aliases from Pi.
+---
+
+# Pi integration
+
+The `@try-works/pi-role-model` package connects Pi to an already-running Role-Model runtime.
+
+It does not install, start, stop, update, or own the runtime process. Start `role-model-router` first, then
+install the package into Pi.
+
+## Install the package
+
+For normal use, install the public package from npm:
+
+```bash
+pi install npm:@try-works/pi-role-model
+```
+
+For local checkout testing from this repository:
+
+```bash
+pi install ./packages/pi-role-model
+```
+
+## Connect Pi to the runtime
+
+By default the package connects to the local runtime at `http://127.0.0.1:3456`.
+
+To use a different local runtime endpoint, set `ROLE_MODEL_ENDPOINT` before starting Pi:
+
+```bash
+ROLE_MODEL_ENDPOINT=http://127.0.0.1:4567 pi
+```
+
+Remote endpoints are blocked by default. Only enable remote runtime access for a trusted endpoint and trusted
+project context with explicit `allowRemote` behavior, such as launching Pi with `ROLE_MODEL_ALLOW_REMOTE=1`
+when that is the intended trust boundary.
+
+If the runtime reports `authentication.required`, the package fails closed. The current package does not read,
+copy, print, or sync Pi auth files.
+
+## Setup commands
+
+Inside an interactive Pi session, run:
+
+```text
+/role-model setup
+/role-model status
+/role-model doctor
+```
+
+`/role-model setup` discovers the runtime and registers the `role-model` provider from Role-Model's
+downstream OpenAI discovery endpoint.
+
+`/role-model doctor` checks runtime health, version discovery, downstream discovery, alias discovery, and
+provider registration state.
+
+`pi -p "/role-model status"` is unsupported. Pi print mode does not currently invoke package slash commands, so treat that as an upstream Pi bug or limitation rather than as a Role-Model routing failure.
+
+## Alias commands
+
+Use aliases to select the Role-Model routing posture Pi should use:
+
+```text
+/role-model alias list
+/role-model alias recommended
+/role-model alias choose
+/role-model alias use <alias>
+```
+
+`/role-model alias use <alias>` stores the selected alias and asks Pi to switch the active model when Pi exposes active model selection to the package.
+
+For explicit provider prompts, use the provider-relative Role-Model alias that Pi lists for provider `role-model`, for example:
+
+```bash
+pi --no-session --provider role-model --model baseline.remote-only -p "<prompt>"
+```
+
+`baseline.remote-only` is the canonical provider-relative form for explicit provider calls. `role-model/<alias>` is compatibility-only for Pi surfaces that explicitly require a qualified id.
+
+If a user tries a foreign id such as `gpt-4o` under provider `role-model`, send them back to `/role-model alias list` and `/role-model alias recommended`.
+
+## What gets registered
+
+The package registers:
+
+- provider id: `role-model`
+- canonical model ids shaped as provider-relative aliases such as `baseline.remote-only`
+- OpenAI-compatible downstream base URL from `/api/role-model/downstream/openai`
+
+Role-Model remains the routing authority. Pi sends model requests to the Role-Model downstream endpoint, and
+the runtime uses its current aliases, roles, tasks, endpoint capability metadata, and routing policy to choose
+the actual endpoint.
+
+## Taxonomy-aware requests
+
+`@try-works/pi-role-model` ships a compact taxonomy V1 snapshot and discovers the runtime taxonomy when the
+runtime is reachable. Pi uses progressive disclosure for classification:
+
+1. read compact groups such as `engineering`, `product_design`, and `governance_safety`
+2. choose likely roles such as `coder`, `security`, `researcher`, `support`, or `product`
+3. load task details only for likely roles
+4. send advisory `role_model.intent` metadata with the selected role, task, capabilities, modalities, tool
+   classes, confidence, evidence, and alternatives
+
+Examples include `coder.edit`, `security.audit`, `researcher.web_research.current`,
+`support.ticket.reply`, and `product.requirements`.
+
+The runtime validates the metadata against its active taxonomy. Unknown advisory fields are ignored with
+diagnostics instead of causing the request to fail, and the router/controller fall back to runtime policy when
+client metadata is stale or too uncertain.
+
+## Runtime ownership boundary
+
+The Pi package is intentionally narrow:
+
+- it discovers an externally running runtime
+- it registers the Role-Model provider with Pi
+- it provides setup, diagnostics, and alias-selection commands
+- it ships a Pi skill that points users back to the Role-Model runtime documentation
+
+It does not manage runtime lifecycle, install runtime binaries, copy Pi credentials, run benchmarks, or change
+Role-Model provider account setup.
+
+Raw HTTP `curl` calls to the runtime remain debug-only fallback tools when diagnosing Pi or runtime issues. They are not the primary supported integration path when the Pi provider path is healthy.
+
+## Read next
+
+- [Install the runtime](/get-started/install)
+- [Downstream OpenAI discovery](/integrations/downstream-openai-discovery)
+- [Routing controls and decision review](/runtime/routing-controls-and-decision-review)

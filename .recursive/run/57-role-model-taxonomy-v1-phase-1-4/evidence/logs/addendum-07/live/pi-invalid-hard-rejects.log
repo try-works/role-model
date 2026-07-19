@@ -1,0 +1,5 @@
+{
+  "error": "Response status code does not indicate success: 400 (Bad Request).",
+  "body": "\r\n{\r\n  \"error\": \"Requested task security.unknown is not defined in the runtime task policy.\"\r\n}",
+  "expected": "hard rejection"
+}

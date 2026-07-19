@@ -1,0 +1,7 @@
+{
+  "supportsDeveloperRole": false,
+  "supportsReasoningEffort": true,
+  "supportsUsageInStreaming": true,
+  "maxTokensField": "max_tokens",
+  "supportsStrictMode": true
+}

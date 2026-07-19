@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "p08-medium-summarize",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p08-medium-summarize-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"answer\": \"Difficulty-based routing sends easy requests to cheaper/faster local models and reserves hard requests for stronger remote models. This improves cost efficiency, lowers latency for simple tasks, preserves remote capacity, and can improve privacy by keeping more data local. It also increases overall throughput and reliability by balancing workload across the pool while maintaining quality where it matters most.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Difficulty-based routing sends easy requests to cheaper/faster local models and reserves hard requests for stronger remote models. This improves cost efficiency, lowers latency for simple tasks, preserves remote capacity, and can improve privacy by keeping more data local. It also increases overall throughput and reliability by balancing workload across the pool while maintaining quality where it matters most.\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"Difficulty-based routing sends easy requests to cheaper/faster local models and reserves hard requests for stronger remote models. This improves cost efficiency, lowers latency for simple tasks, preserves remote capacity, and can improve privacy by keeping more data local. It also increases overall throughput and reliability by balancing workload across the pool while maintaining quality where it matters most.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 4757,
+  "failure": false,
+  "recordedAtMs": 1783934201608
+}

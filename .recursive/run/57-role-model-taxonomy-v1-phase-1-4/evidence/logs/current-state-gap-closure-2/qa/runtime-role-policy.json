@@ -1,0 +1,6828 @@
+{
+  "roleDefinitions": [
+    {
+      "role_id": "coder",
+      "name": "Coder",
+      "description": "Code implementation, review, debugging, refactoring, and tests.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Coder.",
+      "task_types_supported": [
+        "coder.edit",
+        "coder.review",
+        "coder.debug.root_cause",
+        "coder.test.write",
+        "coder.refactor",
+        "coder.explain",
+        "coder.migrate",
+        "coder.generate",
+        "coder.dependency.update",
+        "coder.config"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "architect",
+      "name": "Architect",
+      "description": "System design, API design, technical planning, and tradeoff analysis.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Architect.",
+      "task_types_supported": [
+        "architect.design",
+        "architect.review",
+        "architect.plan",
+        "architect.api_design",
+        "architect.infrastructure.design",
+        "architect.data_model",
+        "architect.integration.plan",
+        "architect.scalability.review",
+        "architect.migration.strategy",
+        "architect.adr.write"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "security",
+      "name": "Security",
+      "description": "Security review, threat modeling, abuse/risk analysis.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [
+        "governance_safety"
+      ],
+      "riskLevel": "high",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Security.",
+      "task_types_supported": [
+        "security.audit",
+        "security.audit.supply_chain",
+        "security.threat_model",
+        "security.vulnerability_triage",
+        "security.policy_review",
+        "security.secrets.scan",
+        "security.auth.review",
+        "security.privacy.review",
+        "security.incident.review",
+        "security.safe_prompt.review"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "researcher",
+      "name": "Researcher",
+      "description": "Search, compare, synthesize, cite, and summarize information.",
+      "primaryGroupId": "knowledge_research",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Researcher.",
+      "task_types_supported": [
+        "researcher.web_research",
+        "researcher.web_research.current",
+        "researcher.compare_sources",
+        "researcher.literature_review",
+        "researcher.fact_check",
+        "researcher.source_find",
+        "researcher.timeline.build",
+        "researcher.market_scan",
+        "researcher.standards_lookup",
+        "researcher.document_extract"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "writer",
+      "name": "Writer",
+      "description": "Write, edit, summarize, explain, and structure prose.",
+      "primaryGroupId": "communication",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Writer.",
+      "task_types_supported": [
+        "writer.docs.write",
+        "writer.docs.public",
+        "writer.docs.edit",
+        "writer.summarize",
+        "writer.release_notes",
+        "writer.email.write",
+        "writer.blog.write",
+        "writer.proposal.write",
+        "writer.style.rewrite",
+        "writer.outline"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "operator",
+      "name": "Operator",
+      "description": "Runtime, deployment, logs, diagnostics, and operational response.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Operator.",
+      "task_types_supported": [
+        "operator.debug.startup",
+        "operator.debug.ui",
+        "operator.debug.api",
+        "operator.deploy.review",
+        "operator.incident_triage",
+        "operator.config",
+        "operator.install",
+        "operator.monitor",
+        "operator.backup.restore",
+        "operator.release.execute"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "analyst",
+      "name": "Analyst",
+      "description": "Structured analysis, metrics, comparison, prioritization, and decision support.",
+      "primaryGroupId": "product_design",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Analyst.",
+      "task_types_supported": [
+        "analyst.compare",
+        "analyst.evaluate",
+        "analyst.prioritize",
+        "analyst.metrics.define",
+        "analyst.risk.assess",
+        "analyst.root_cause",
+        "analyst.report.write",
+        "analyst.data_interpret",
+        "analyst.decision_matrix",
+        "analyst.trend.analyze"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "planner",
+      "name": "Planner",
+      "description": "Breaks goals into requirements, milestones, phased plans, and acceptance criteria.",
+      "primaryGroupId": "product_design",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Planner.",
+      "task_types_supported": [
+        "planner.requirements",
+        "planner.roadmap",
+        "planner.roadmap.release",
+        "planner.decompose",
+        "planner.milestone",
+        "planner.sprint.plan",
+        "planner.acceptance.criteria",
+        "planner.rollout",
+        "planner.dependency.map",
+        "planner.resource.plan"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "tester",
+      "name": "Tester",
+      "description": "Test design, QA, validation, reproduction, and end-to-end verification.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Tester.",
+      "task_types_supported": [
+        "tester.e2e",
+        "tester.plan",
+        "tester.regression",
+        "tester.reproduce",
+        "tester.unit.plan",
+        "tester.integration.plan",
+        "tester.accessibility",
+        "tester.performance",
+        "tester.security",
+        "tester.acceptance"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "data",
+      "name": "Data",
+      "description": "Data modeling, query analysis, schema review, transformation, and data quality.",
+      "primaryGroupId": "engineering",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Data.",
+      "task_types_supported": [
+        "data.query",
+        "data.schema.review",
+        "data.transform",
+        "data.analyze",
+        "data.visualize",
+        "data.validate",
+        "data.extract",
+        "data.join",
+        "data.quality.audit",
+        "data.metric.define"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "product",
+      "name": "Product",
+      "description": "Product requirements, user workflows, prioritization, and release readiness.",
+      "primaryGroupId": "product_design",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Product.",
+      "task_types_supported": [
+        "product.requirements",
+        "product.workflow.review",
+        "product.release_notes",
+        "product.spec.write",
+        "product.user_story",
+        "product.acceptance",
+        "product.prd.write",
+        "product.feature.prioritize",
+        "product.feedback.synthesize",
+        "product.launch.readiness"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "designer",
+      "name": "Designer",
+      "description": "Interface design, interaction design, visual review, and experience quality.",
+      "primaryGroupId": "product_design",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Designer.",
+      "task_types_supported": [
+        "designer.ui.review",
+        "designer.interaction",
+        "designer.visual_direction",
+        "designer.prototype",
+        "designer.design_system",
+        "designer.accessibility.review",
+        "designer.content.layout",
+        "designer.usability.test",
+        "designer.mobile.responsive",
+        "designer.visual.qa"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "support",
+      "name": "Support",
+      "description": "Troubleshooting, user-facing diagnosis, remediation steps, and escalation.",
+      "primaryGroupId": "communication",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Support.",
+      "task_types_supported": [
+        "support.triage",
+        "support.explain",
+        "support.escalate",
+        "support.ticket.reply",
+        "support.runbook.write",
+        "support.issue.reproduce",
+        "support.knowledge_base.suggest",
+        "support.status.update",
+        "support.customer.apology",
+        "support.faq.write"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "legal",
+      "name": "Legal",
+      "description": "Legal, licensing, compliance, terms, and policy interpretation support.",
+      "primaryGroupId": "governance_safety",
+      "secondaryGroupIds": [
+        "business"
+      ],
+      "riskLevel": "high",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Legal.",
+      "task_types_supported": [
+        "legal.review",
+        "legal.compliance_check",
+        "legal.privacy.review",
+        "legal.terms.review",
+        "legal.license.review",
+        "legal.contract.summarize",
+        "legal.risk.issue_spot",
+        "legal.policy.draft",
+        "legal.retention.review",
+        "legal.accessibility.compliance"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "finance",
+      "name": "Finance",
+      "description": "Cost, budget, pricing, ROI, billing, and financial comparison work.",
+      "primaryGroupId": "business",
+      "secondaryGroupIds": [
+        "governance_safety"
+      ],
+      "riskLevel": "high",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Finance.",
+      "task_types_supported": [
+        "finance.cost_estimate",
+        "finance.compare_options",
+        "finance.invoice.review",
+        "finance.budget.plan",
+        "finance.forecast",
+        "finance.unit_economics",
+        "finance.pricing.model",
+        "finance.variance.analyze",
+        "finance.procurement.cost",
+        "finance.roi.calculate"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "creative",
+      "name": "Creative",
+      "description": "Ideation, naming, visual direction, storytelling, and creative variants.",
+      "primaryGroupId": "communication",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Creative.",
+      "task_types_supported": [
+        "creative.brainstorm",
+        "creative.copywriting",
+        "creative.storyboard",
+        "creative.name.generate",
+        "creative.concept.develop",
+        "creative.script.write",
+        "creative.brand.voice",
+        "creative.visual.prompt",
+        "creative.tagline",
+        "creative.social.post"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "educator",
+      "name": "Educator",
+      "description": "Teaching, tutoring, curriculum, study support, quizzes, and feedback.",
+      "primaryGroupId": "knowledge_research",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Educator.",
+      "task_types_supported": [
+        "educator.tutor",
+        "educator.lesson.plan",
+        "educator.quiz.generate",
+        "educator.feedback",
+        "educator.curriculum.design",
+        "educator.study.plan",
+        "educator.example.generate",
+        "educator.rubric.create",
+        "educator.concept.explain",
+        "educator.practice.review"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "translator",
+      "name": "Translator",
+      "description": "Translation, localization, tone transfer, and multilingual communication.",
+      "primaryGroupId": "communication",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Translator.",
+      "task_types_supported": [
+        "translator.translate",
+        "translator.localize.locale",
+        "translator.review",
+        "translator.tone.adapt",
+        "translator.glossary.create",
+        "translator.subtitles.translate",
+        "translator.technical.translate",
+        "translator.back_translate",
+        "translator.locale.review",
+        "translator.multilingual.reply"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "marketer",
+      "name": "Marketer",
+      "description": "Positioning, messaging, campaigns, SEO, content strategy, and audience research.",
+      "primaryGroupId": "business",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Marketer.",
+      "task_types_supported": [
+        "marketer.positioning",
+        "marketer.campaign.plan",
+        "marketer.content.seo",
+        "marketer.copy.ad",
+        "marketer.audience.research",
+        "marketer.email.sequence",
+        "marketer.landing_page.copy",
+        "marketer.social.plan",
+        "marketer.messaging.review",
+        "marketer.launch.plan"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "seller",
+      "name": "Seller",
+      "description": "Sales discovery, outreach, proposals, account planning, and objection handling.",
+      "primaryGroupId": "business",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Seller.",
+      "task_types_supported": [
+        "seller.discovery.plan",
+        "seller.outreach.write",
+        "seller.proposal.enterprise",
+        "seller.objection.handle",
+        "seller.account.plan",
+        "seller.demo.script",
+        "seller.follow_up.write",
+        "seller.competitor.battlecard",
+        "seller.call.summary",
+        "seller.mutual_action_plan"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "recruiter",
+      "name": "Recruiter",
+      "description": "Job descriptions, interview plans, hiring rubrics, and candidate screening support.",
+      "primaryGroupId": "governance_safety",
+      "secondaryGroupIds": [
+        "business"
+      ],
+      "riskLevel": "high",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Recruiter.",
+      "task_types_supported": [
+        "recruiter.job_description",
+        "recruiter.interview.plan",
+        "recruiter.candidate.screen",
+        "recruiter.sourcing.message",
+        "recruiter.scorecard.create",
+        "recruiter.interview.feedback",
+        "recruiter.offer.prepare",
+        "recruiter.pipeline.update",
+        "recruiter.role.intake",
+        "recruiter.candidate.compare"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "procurement",
+      "name": "Procurement",
+      "description": "Vendor comparison, purchasing requirements, RFPs, and commercial review.",
+      "primaryGroupId": "business",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Procurement.",
+      "task_types_supported": [
+        "procurement.vendor.compare",
+        "procurement.rfp.write",
+        "procurement.requirements",
+        "procurement.contract.commercial",
+        "procurement.security.questionnaire",
+        "procurement.vendor.scorecard",
+        "procurement.renewal.review",
+        "procurement.sla.review",
+        "procurement.negotiation.plan",
+        "procurement.purchase.justification"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "coordinator",
+      "name": "Coordinator",
+      "description": "Meetings, schedules, task follow-up, inbox-style triage, and administrative workflows.",
+      "primaryGroupId": "communication",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Coordinator.",
+      "task_types_supported": [
+        "coordinator.meeting.agenda",
+        "coordinator.meeting.notes",
+        "coordinator.schedule.plan",
+        "coordinator.follow_up",
+        "coordinator.task.plan",
+        "coordinator.inbox.triage",
+        "coordinator.decision.log",
+        "coordinator.project.status",
+        "coordinator.reminder.plan",
+        "coordinator.handoff.prepare"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "knowledge",
+      "name": "Knowledge",
+      "description": "Notes, memory, knowledge bases, retrieval organization, and institutional context.",
+      "primaryGroupId": "knowledge_research",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Knowledge.",
+      "task_types_supported": [
+        "knowledge.organize",
+        "knowledge.retrieve",
+        "knowledge.memory.update",
+        "knowledge.kb.write",
+        "knowledge.note.summarize",
+        "knowledge.taxonomy.design",
+        "knowledge.link.map",
+        "knowledge.runbook.update",
+        "knowledge.archive.clean",
+        "knowledge.context.brief"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "strategist",
+      "name": "Strategist",
+      "description": "Business strategy, market entry, competitive analysis, and organizational tradeoffs.",
+      "primaryGroupId": "business",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Strategist.",
+      "task_types_supported": [
+        "strategist.business.plan",
+        "strategist.market.analyze",
+        "strategist.competitive.review",
+        "strategist.risk.scenario",
+        "strategist.swot",
+        "strategist.okr.define",
+        "strategist.board.brief",
+        "strategist.operating.model",
+        "strategist.pricing.strategy",
+        "strategist.partnership.evaluate"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "mathematician",
+      "name": "Mathematician",
+      "description": "Mathematical solving, verification, modeling, and explanation.",
+      "primaryGroupId": "knowledge_research",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Mathematician.",
+      "task_types_supported": [
+        "mathematician.solve",
+        "mathematician.verify",
+        "mathematician.model",
+        "mathematician.explain",
+        "mathematician.statistics.analyze",
+        "mathematician.optimize",
+        "mathematician.proof.write",
+        "mathematician.formula.derive",
+        "mathematician.simulation.plan",
+        "mathematician.error.check"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "scientist",
+      "name": "Scientist",
+      "description": "Scientific reasoning, experimental design, evidence review, and method critique.",
+      "primaryGroupId": "knowledge_research",
+      "secondaryGroupIds": [],
+      "riskLevel": "standard",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Scientist.",
+      "task_types_supported": [
+        "scientist.experiment.design",
+        "scientist.evidence.review",
+        "scientist.method.critique",
+        "scientist.literature.synthesize",
+        "scientist.hypothesis.formulate",
+        "scientist.protocol.write",
+        "scientist.data.interpret",
+        "scientist.peer_review",
+        "scientist.safety.review",
+        "scientist.technical.explain"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "health",
+      "name": "Health",
+      "description": "General health information, symptom-safety triage, care-navigation support, and wellness explanations.",
+      "primaryGroupId": "governance_safety",
+      "secondaryGroupIds": [
+        "knowledge_research"
+      ],
+      "riskLevel": "high",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Health.",
+      "task_types_supported": [
+        "health.info.general",
+        "health.info.safety",
+        "health.care_navigation",
+        "health.wellness.plan",
+        "health.medication.info",
+        "health.appointment.prepare",
+        "health.symptom.organize",
+        "health.exercise.general",
+        "health.nutrition.general",
+        "health.mental_wellness.info"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "general.chat",
+      "name": "General Chat",
+      "description": "General Chat tasks.",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as General Chat.",
+      "task_types_supported": [
+        "text.chat"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "coder.patch",
+      "name": "Coder Patch",
+      "description": "Coder Patch tasks.",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Coder Patch.",
+      "task_types_supported": [
+        "code.edit"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "coder.review",
+      "name": "Coder Review",
+      "description": "Coder Review tasks.",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Coder Review.",
+      "task_types_supported": [
+        "code.edit"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "tool.agent",
+      "name": "Tool Agent",
+      "description": "Tool Agent tasks.",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Tool Agent.",
+      "task_types_supported": [
+        "tool.use"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "embedder",
+      "name": "Embedder",
+      "description": "Embedder tasks.",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Embedder.",
+      "task_types_supported": [
+        "embedding.create"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "classifier",
+      "name": "Classifier",
+      "description": "Classifier tasks.",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Classifier.",
+      "task_types_supported": [
+        "classification.assign"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    },
+    {
+      "role_id": "language.detector",
+      "name": "Language Detector",
+      "description": "Language Detector tasks.",
+      "role_kind": "assistant",
+      "default_system_instructions": "Operate as Language Detector.",
+      "task_types_supported": [
+        "language.detect"
+      ],
+      "required_capabilities": [],
+      "preferred_capabilities": [],
+      "forbidden_capabilities": [],
+      "tool_policy": {
+        "mode": "allowed"
+      },
+      "routing_policy_overrides": {},
+      "output_contracts": [],
+      "safety_policy_refs": []
+    }
+  ],
+  "taskDefinitions": [
+    {
+      "task_type": "coder.edit",
+      "description": "Modify source code, configuration, tests, or build files.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.read",
+        "code.write"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coder.review",
+      "description": "Review source changes for correctness, regressions, maintainability, and missing tests.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.read"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder",
+        "security",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coder.debug.root_cause",
+      "description": "Investigate a failure to identify the underlying cause before proposing or applying fixes.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.read",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "tools.function_calling"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder",
+        "operator",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coder.test.write",
+      "description": "Create or update tests for code behavior.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.read",
+        "code.write"
+      ],
+      "preferred_capabilities": [
+        "tools.function_calling"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coder.refactor",
+      "description": "Improve structure without intended behavior changes.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.read",
+        "code.write"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coder.explain",
+      "description": "Explain code behavior, architecture, or implementation details.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.read",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coder.migrate",
+      "description": "Move code across APIs, frameworks, versions, or platforms.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.read",
+        "code.write"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder",
+        "architect",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coder.generate",
+      "description": "Create new code from a specification.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.write"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tester.e2e",
+      "description": "Create or update browser, API, or workflow-level tests.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.read",
+        "code.write",
+        "tools.function_calling"
+      ],
+      "preferred_capabilities": [
+        "tools.browser_control"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tester",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "architect.design",
+      "description": "Design architecture, modules, APIs, ownership boundaries, or technical approach.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "architect",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "architect.review",
+      "description": "Review a design or implementation for architecture and long-term maintainability.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "code.read"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "architect",
+        "coder",
+        "security"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "architect.plan",
+      "description": "Produce a technical implementation plan, phases, or tradeoff analysis.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "architect",
+        "planner",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "architect.api_design",
+      "description": "Design public APIs, contracts, schemas, or integration boundaries.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "architect",
+        "coder",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "security.audit",
+      "description": "Analyze a system, implementation, or configuration for security risk.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis"
+      ],
+      "preferred_capabilities": [
+        "code.read"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "security",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "security.audit.supply_chain",
+      "description": "Review dependencies, packages, build provenance, lockfiles, and release artifacts for supply-chain risk.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis",
+        "code.read"
+      ],
+      "preferred_capabilities": [
+        "web.search"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "security",
+        "operator",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "security.threat_model",
+      "description": "Identify assets, attackers, trust boundaries, threats, and mitigations.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "security",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "security.vulnerability_triage",
+      "description": "Assess vulnerability reports, severity, exploitability, and mitigation priority.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis"
+      ],
+      "preferred_capabilities": [
+        "web.search"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "security",
+        "operator",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "security.policy_review",
+      "description": "Review permissions, RBAC, access policy, or compliance controls.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "security",
+        "legal",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "researcher.web_research",
+      "description": "Find and synthesize current external information.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "web.search",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "researcher",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "researcher.web_research.current",
+      "description": "Verify the latest state of fast-changing facts, releases, policies, products, or public information.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "web.search",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "researcher",
+        "analyst",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "researcher.compare_sources",
+      "description": "Compare multiple sources, claims, or documents.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "researcher",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "researcher.literature_review",
+      "description": "Review papers, standards, reports, or long-form technical sources.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "long_context"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "researcher",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "researcher.fact_check",
+      "description": "Verify a claim against sources or local evidence.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "web.search"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "researcher",
+        "writer",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "writer.docs.write",
+      "description": "Write or improve documentation, guides, READMEs, or public docs.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "code.read"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "writer",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "writer.docs.public",
+      "description": "Write public-facing docs, installation instructions, guides, or website copy.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "writer",
+        "product",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "writer.docs.edit",
+      "description": "Edit existing docs for clarity, structure, consistency, and correctness.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "code.read"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "writer",
+        "coder",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "writer.summarize",
+      "description": "Condense content while preserving important points.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "writer",
+        "researcher",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "writer.release_notes",
+      "description": "Write user-facing release notes, changelogs, or announcement copy.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "code.read"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "writer",
+        "product",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "operator.debug.startup",
+      "description": "Diagnose runtime, launch, environment, or process startup failures.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "operator",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "operator.debug.ui",
+      "description": "Diagnose UI runtime, rendering, browser, interaction, or frontend workflow failures.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.browser_control",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "operator",
+        "tester",
+        "coder",
+        "designer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "operator.debug.api",
+      "description": "Diagnose API, HTTP, webhook, auth, integration, or service response failures.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.function_calling",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "operator",
+        "coder",
+        "architect",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "operator.deploy.review",
+      "description": "Review deployment configuration, release readiness, or rollout risk.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "operator",
+        "security",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "operator.incident_triage",
+      "description": "Triage outages, regressions, alerts, logs, or production symptoms.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "operator",
+        "coder",
+        "security"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "operator.config",
+      "description": "Configure services, endpoints, environments, or runtime settings.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.function_calling"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "operator",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "operator.install",
+      "description": "Install, configure, and verify software on a local or managed environment.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.function_calling"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "operator",
+        "coder",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "analyst.compare",
+      "description": "Compare options, systems, plans, models, vendors, or tradeoffs.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "analyst",
+        "architect",
+        "researcher"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "analyst.evaluate",
+      "description": "Score or assess quality, fit, risk, or performance against criteria.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "analyst",
+        "product",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "analyst.prioritize",
+      "description": "Rank work, risks, options, or next steps.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "analyst",
+        "planner",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "planner.requirements",
+      "description": "Convert goals into requirements, acceptance criteria, and constraints.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "planner",
+        "product",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "planner.roadmap",
+      "description": "Build phased plans, milestones, dependencies, and rollout sequencing.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "planner",
+        "product",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "planner.roadmap.release",
+      "description": "Plan phased release work, readiness gates, changelog, docs, packaging, and rollout steps.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "planner",
+        "product",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "planner.decompose",
+      "description": "Break a goal into tasks, phases, or executable work items.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "planner",
+        "operator",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tester.plan",
+      "description": "Design a verification strategy, test cases, and acceptance checks.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tester",
+        "coder",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tester.regression",
+      "description": "Verify existing behavior still works after changes.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.function_calling"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tester",
+        "coder",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tester.reproduce",
+      "description": "Reproduce a reported issue with clear steps, observed behavior, and expected behavior.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.function_calling"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tester",
+        "coder",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "data.query",
+      "description": "Write, inspect, or explain queries over structured data.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "data.query"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "data",
+        "analyst",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "data.schema.review",
+      "description": "Review database, event, API, or analytics schemas.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "data.schema"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "data",
+        "architect",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "data.transform",
+      "description": "Transform, normalize, clean, or map data between shapes.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "data.transform"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "data",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "product.requirements",
+      "description": "Define user-facing behavior, constraints, and acceptance criteria.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "product",
+        "planner",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "product.workflow.review",
+      "description": "Review user workflows, ergonomics, states, or product flows.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "product",
+        "designer",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "product.release_notes",
+      "description": "Define user-facing release messaging and notable behavior changes.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "product",
+        "writer",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "designer.ui.review",
+      "description": "Review interface layout, hierarchy, visual polish, accessibility, or usability.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "vision.input",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "designer",
+        "product",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "designer.interaction",
+      "description": "Design states, flows, controls, and interaction behavior.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "designer",
+        "product",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "designer.visual_direction",
+      "description": "Define visual style, hierarchy, mood, layout direction, or asset guidance.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "vision.input",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "vision.output"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "designer",
+        "creative",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "support.triage",
+      "description": "Understand a user issue and route it to next steps.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "support",
+        "operator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "support.explain",
+      "description": "Explain a system behavior or remediation in user-facing terms.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "support",
+        "writer",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "support.escalate",
+      "description": "Prepare escalation context, severity, repro notes, and routing for another team.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "support",
+        "operator",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "legal.review",
+      "description": "Review terms, licenses, policies, or compliance-sensitive text.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "legal.analysis"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "legal",
+        "security"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "legal.compliance_check",
+      "description": "Check whether a plan, policy, or document appears to satisfy stated compliance constraints.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "legal.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "legal",
+        "security",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "finance.cost_estimate",
+      "description": "Estimate cost, budget, or pricing impact.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "finance.analysis"
+      ],
+      "preferred_capabilities": [
+        "web.search"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "finance",
+        "analyst",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "finance.compare_options",
+      "description": "Compare cost, budget, pricing, or ROI across options.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "finance.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "finance",
+        "analyst",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "creative.brainstorm",
+      "description": "Generate creative options, names, concepts, or variants.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.divergent"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "creative",
+        "writer",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "creative.copywriting",
+      "description": "Produce persuasive, brand, product, or campaign copy variants.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.divergent"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "creative",
+        "writer",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "creative.storyboard",
+      "description": "Plan a visual, narrative, product, or media sequence.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "vision.output"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "creative",
+        "writer",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "educator.tutor",
+      "description": "Teach a concept interactively with explanations, examples, and checks for understanding.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "education.tutoring",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "educator",
+        "writer",
+        "mathematician",
+        "scientist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "educator.lesson.plan",
+      "description": "Create a lesson, curriculum segment, study path, or learning sequence.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "education.tutoring"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "educator",
+        "planner",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "educator.quiz.generate",
+      "description": "Generate questions, answer keys, rubrics, or practice exercises.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "education.assessment"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "educator",
+        "tester",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "educator.feedback",
+      "description": "Provide constructive feedback on a learner's work.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "education.assessment",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "educator",
+        "writer",
+        "mathematician"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "translator.translate",
+      "description": "Translate text from one language to another while preserving meaning.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language.translation",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "translator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "translator.localize.locale",
+      "description": "Adapt language, examples, formatting, idioms, and tone for a target locale.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language.localization",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "translator",
+        "marketer",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "translator.review",
+      "description": "Review translated or localized content for accuracy, tone, and consistency.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language.translation"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "translator",
+        "writer",
+        "marketer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "marketer.positioning",
+      "description": "Define audience, value proposition, differentiation, and messaging.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.analysis",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "marketer",
+        "product",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "marketer.campaign.plan",
+      "description": "Plan campaign channels, audience, message, assets, timing, and success measures.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "marketer",
+        "planner",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "marketer.content.seo",
+      "description": "Plan or write content aligned with search intent and discovery.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.analysis",
+        "web.search"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "marketer",
+        "writer",
+        "researcher"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "marketer.copy.ad",
+      "description": "Produce short-form ad, landing-page, or campaign copy variants.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.copy",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.divergent"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "marketer",
+        "creative",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "seller.discovery.plan",
+      "description": "Prepare discovery questions, qualification criteria, and account research prompts.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "sales.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "seller",
+        "product",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "seller.outreach.write",
+      "description": "Write prospecting, follow-up, or account-specific outreach messages.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "sales.communication",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "seller",
+        "writer",
+        "marketer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "seller.proposal.enterprise",
+      "description": "Draft or review enterprise sales proposals, rollout plans, and buying-committee materials.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "sales.analysis",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "seller",
+        "procurement",
+        "security",
+        "legal"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "seller.objection.handle",
+      "description": "Prepare responses to buyer concerns, risks, pricing objections, or adoption blockers.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "sales.communication"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "seller",
+        "marketer",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "recruiter.job_description",
+      "description": "Write or revise role descriptions, responsibilities, qualifications, and hiring signals.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "recruiting.analysis",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "recruiter",
+        "writer",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "recruiter.interview.plan",
+      "description": "Create interview loops, questions, rubrics, and evaluation criteria.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "recruiting.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "recruiter",
+        "planner",
+        "educator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "recruiter.candidate.screen",
+      "description": "Summarize job-relevant candidate materials against explicit criteria.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "recruiting.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "recruiter",
+        "analyst",
+        "legal"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "procurement.vendor.compare",
+      "description": "Compare vendors against requirements, cost, risk, security, and operational fit.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "procurement.analysis",
+        "finance.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "procurement",
+        "finance",
+        "security",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "procurement.rfp.write",
+      "description": "Draft request-for-proposal questions, scoring criteria, and response templates.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "procurement.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "procurement",
+        "legal",
+        "security",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "procurement.requirements",
+      "description": "Define purchasing, security, legal, operational, and commercial requirements.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "procurement.analysis"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "procurement",
+        "security",
+        "finance",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "procurement.contract.commercial",
+      "description": "Review commercial contract terms such as pricing, renewal, SLA, and termination from a business perspective.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "procurement.analysis",
+        "finance.analysis"
+      ],
+      "preferred_capabilities": [
+        "legal.analysis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "procurement",
+        "legal",
+        "finance"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coordinator.meeting.agenda",
+      "description": "Create meeting agendas, prep notes, goals, and decision points.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "coordination.workflow"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coordinator",
+        "planner",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coordinator.meeting.notes",
+      "description": "Summarize meeting notes into decisions, action items, owners, and follow-ups.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "coordination.workflow",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coordinator",
+        "writer",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coordinator.schedule.plan",
+      "description": "Plan schedule options, sequencing, reminders, or coordination logistics.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "calendar.planning"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coordinator",
+        "planner",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coordinator.follow_up",
+      "description": "Draft follow-up messages, reminders, and action-item communications.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "communication.follow_up"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coordinator",
+        "writer",
+        "seller",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "knowledge.organize",
+      "description": "Structure notes, docs, links, memory, or project information into a usable system.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "knowledge.organization",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "knowledge",
+        "writer",
+        "researcher"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "knowledge.retrieve",
+      "description": "Find and synthesize relevant remembered, local, or indexed knowledge.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "knowledge.retrieval"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "knowledge",
+        "researcher",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "knowledge.memory.update",
+      "description": "Decide what durable memory or knowledge-base state should be created or updated.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "memory.write",
+        "knowledge.organization"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "knowledge",
+        "coordinator",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "knowledge.kb.write",
+      "description": "Write help-center, internal KB, runbook, or reference entries.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "knowledge.organization",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "text.chat"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "knowledge",
+        "writer",
+        "support",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "strategist.business.plan",
+      "description": "Develop business strategy, operating model, market approach, or strategic initiative plan.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "strategy.analysis"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "strategist",
+        "product",
+        "finance",
+        "marketer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "strategist.market.analyze",
+      "description": "Analyze market dynamics, segments, competitors, trends, and opportunities.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "market.analysis"
+      ],
+      "preferred_capabilities": [
+        "web.search"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "strategist",
+        "researcher",
+        "marketer",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "strategist.competitive.review",
+      "description": "Compare competitors, alternatives, differentiation, and strategic risks.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "strategy.analysis",
+        "market.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "strategist",
+        "marketer",
+        "analyst",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "strategist.risk.scenario",
+      "description": "Explore scenarios, assumptions, risks, mitigations, and decision triggers.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "strategy.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "strategist",
+        "analyst",
+        "planner",
+        "finance"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "mathematician.solve",
+      "description": "Solve a math problem with steps and final result.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "math.solve"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "mathematician",
+        "educator",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "mathematician.verify",
+      "description": "Check a calculation, proof, derivation, or quantitative claim.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "math.verify"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "mathematician",
+        "tester",
+        "educator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "mathematician.model",
+      "description": "Build or critique a mathematical, statistical, or optimization model.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "math.modeling",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "mathematician",
+        "data",
+        "analyst",
+        "finance"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "mathematician.explain",
+      "description": "Explain mathematical concepts, steps, or intuition.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "math.solve",
+        "education.tutoring"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "mathematician",
+        "educator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "scientist.experiment.design",
+      "description": "Design experiments, controls, variables, measurements, and interpretation plans.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "science.method",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "scientist",
+        "analyst",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "scientist.evidence.review",
+      "description": "Review scientific claims, evidence quality, limitations, and uncertainty.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "science.analysis",
+        "citation.synthesis"
+      ],
+      "preferred_capabilities": [
+        "web.search"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "scientist",
+        "researcher",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "scientist.method.critique",
+      "description": "Critique study design, methodology, bias, confounds, and validity.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "science.method",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "scientist",
+        "researcher",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "scientist.literature.synthesize",
+      "description": "Synthesize findings across scientific or technical literature.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "science.analysis",
+        "long_context"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "scientist",
+        "researcher",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "health.info.general",
+      "description": "Provide general, non-diagnostic health information and explain concepts.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "health.general_info",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "health",
+        "educator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "health.info.safety",
+      "description": "Provide cautious safety boundaries, urgency guidance, and care-seeking prompts.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "health.safety",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "health",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "health.care_navigation",
+      "description": "Help prepare questions, organize information, or plan discussion with a clinician.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "health.general_info",
+        "coordination.workflow"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "health",
+        "coordinator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "health.wellness.plan",
+      "description": "Create general wellness, habit, or tracking plans within safe non-medical boundaries.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "health.general_info"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "health",
+        "planner",
+        "educator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coder.dependency.update",
+      "description": "Update package dependencies, lockfiles, or version constraints.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.read",
+        "code.write"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder",
+        "security",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coder.config",
+      "description": "Modify project, build, lint, test, or runtime configuration files.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.read",
+        "code.write"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "architect.infrastructure.design",
+      "description": "Design infrastructure topology, deployment units, or service boundaries.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "architect",
+        "operator",
+        "security"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "architect.data_model",
+      "description": "Design entities, schemas, data ownership, and persistence boundaries.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step",
+        "data.schema"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "architect",
+        "data",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "architect.integration.plan",
+      "description": "Plan how systems, APIs, events, and services should integrate.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "architect",
+        "operator",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "architect.scalability.review",
+      "description": "Review scalability, bottlenecks, throughput, and growth tradeoffs.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "architect",
+        "operator",
+        "data"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "architect.migration.strategy",
+      "description": "Plan migrations across systems, data stores, APIs, or platforms.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "architect",
+        "coder",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "architect.adr.write",
+      "description": "Write or review ADRs and architectural decision rationale.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "architect",
+        "writer",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "security.secrets.scan",
+      "description": "Inspect code, config, or logs for exposed secrets and credential risks.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis",
+        "code.read"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "security",
+        "coder",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "security.auth.review",
+      "description": "Review authentication, authorization, sessions, tokens, and access flows.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "security",
+        "architect",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "security.privacy.review",
+      "description": "Review data collection, retention, sharing, and privacy-sensitive flows.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis",
+        "legal.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "security",
+        "legal",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "security.incident.review",
+      "description": "Review suspected incidents, indicators, containment, and follow-up actions.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "security",
+        "operator",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "security.safe_prompt.review",
+      "description": "Review prompts, tools, or agent behavior for misuse and policy risk.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "security",
+        "researcher",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "researcher.source_find",
+      "description": "Find credible sources, documents, links, or references for a topic.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "web.search",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "researcher",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "researcher.timeline.build",
+      "description": "Build a chronology of events, releases, decisions, or changes.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "long_context"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "researcher",
+        "analyst",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "researcher.market_scan",
+      "description": "Gather current market, vendor, competitor, or product information.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "web.search",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "researcher",
+        "strategist",
+        "marketer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "researcher.standards_lookup",
+      "description": "Find relevant standards, protocols, policies, or technical references.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "web.search",
+        "long_context"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "researcher",
+        "architect",
+        "legal"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "researcher.document_extract",
+      "description": "Extract facts, claims, obligations, or details from documents.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "long_context"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "researcher",
+        "analyst",
+        "legal"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "writer.email.write",
+      "description": "Draft clear emails for business, support, sales, or coordination contexts.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "writer",
+        "coordinator",
+        "seller",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "writer.blog.write",
+      "description": "Draft blog posts, articles, essays, or explanatory long-form content.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "writer",
+        "marketer",
+        "researcher"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "writer.proposal.write",
+      "description": "Draft proposals, narratives, scopes, or persuasive structured documents.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "writer",
+        "seller",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "writer.style.rewrite",
+      "description": "Rewrite text for tone, clarity, audience, or style.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "writer",
+        "translator",
+        "marketer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "writer.outline",
+      "description": "Create structured outlines for documents, talks, articles, or plans.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "writer",
+        "planner",
+        "educator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "operator.monitor",
+      "description": "Plan or configure monitoring, alerts, health checks, and runtime signals.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.function_calling",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "tools.command_execution"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "operator",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "operator.backup.restore",
+      "description": "Plan or execute backup, restore, recovery, or state verification work.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.command_execution",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "operator",
+        "data",
+        "security"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "operator.release.execute",
+      "description": "Execute or coordinate release steps, validation, rollback, and post-release checks.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.command_execution"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "operator",
+        "planner",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "analyst.metrics.define",
+      "description": "Define metrics, KPIs, dimensions, and measurement logic.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "analyst",
+        "product",
+        "data"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "analyst.risk.assess",
+      "description": "Identify, score, and compare risks across options or plans.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "analyst",
+        "security",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "analyst.root_cause",
+      "description": "Analyze non-code causes behind outcomes, incidents, or business symptoms.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "analyst",
+        "operator",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "analyst.report.write",
+      "description": "Produce a structured analytical report with findings and recommendations.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "analyst",
+        "writer",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "analyst.data_interpret",
+      "description": "Interpret charts, tables, metrics, or experiment results.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step",
+        "data.query"
+      ],
+      "preferred_capabilities": [
+        "text.chat"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "analyst",
+        "data",
+        "scientist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "analyst.decision_matrix",
+      "description": "Create a weighted decision matrix or scoring rubric.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "analyst",
+        "planner",
+        "procurement"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "analyst.trend.analyze",
+      "description": "Analyze trends, changes, seasonality, or directional movement.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "web.search"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "analyst",
+        "researcher",
+        "data"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "planner.milestone",
+      "description": "Define milestones, gates, sequencing, and completion criteria.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "planner",
+        "product",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "planner.sprint.plan",
+      "description": "Plan sprint scope, backlog slices, and delivery sequencing.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "planner",
+        "coder",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "planner.acceptance.criteria",
+      "description": "Write acceptance criteria and verifiable completion checks.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "planner",
+        "tester",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "planner.rollout",
+      "description": "Plan rollout stages, risks, communications, and rollback points.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "planner",
+        "operator",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "planner.dependency.map",
+      "description": "Map prerequisites, blockers, owners, and sequencing dependencies.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "planner",
+        "architect",
+        "coordinator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "planner.resource.plan",
+      "description": "Estimate effort, staffing, ownership, and resource needs.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "planner",
+        "finance",
+        "coordinator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tester.unit.plan",
+      "description": "Design unit test cases, boundaries, and assertions.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step",
+        "code.read"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tester",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tester.integration.plan",
+      "description": "Design integration tests across services, APIs, or components.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "tools.function_calling"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tester",
+        "coder",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tester.accessibility",
+      "description": "Verify accessibility expectations for UI, content, and interaction.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "vision.input",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tester",
+        "designer",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tester.performance",
+      "description": "Plan or evaluate performance, load, latency, and throughput tests.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.command_execution",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tester",
+        "operator",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tester.security",
+      "description": "Plan or execute security-oriented validation checks.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "security.analysis",
+        "tools.function_calling"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tester",
+        "security",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tester.acceptance",
+      "description": "Verify implementation against acceptance criteria and user outcomes.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tester",
+        "product",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "data.analyze",
+      "description": "Analyze structured data for patterns, summaries, and conclusions.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "data.query",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "data",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "data.visualize",
+      "description": "Plan charts, tables, or visual summaries for data.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "data.query",
+        "vision.output"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "data",
+        "analyst",
+        "designer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "data.validate",
+      "description": "Validate data quality, constraints, completeness, and anomalies.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "data.query",
+        "data.schema"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "data",
+        "tester",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "data.extract",
+      "description": "Extract structured data from text, files, tables, or documents.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "data.transform",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "data",
+        "researcher"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "data.join",
+      "description": "Combine datasets, keys, records, or tables into a coherent shape.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "data.query",
+        "data.transform"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "data",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "data.quality.audit",
+      "description": "Audit quality, lineage, anomalies, duplication, and fitness for use.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "data.query",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "data",
+        "analyst",
+        "tester"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "data.metric.define",
+      "description": "Define metrics, dimensions, calculations, and caveats.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "data.query",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "data",
+        "analyst",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "product.spec.write",
+      "description": "Write product specs with behavior, states, and constraints.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "product",
+        "planner",
+        "designer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "product.user_story",
+      "description": "Write user stories, scenarios, and user value statements.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "product",
+        "writer",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "product.acceptance",
+      "description": "Define acceptance criteria from a product perspective.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "product",
+        "planner",
+        "tester"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "product.prd.write",
+      "description": "Write product requirements documents and decision context.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "product",
+        "writer",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "product.feature.prioritize",
+      "description": "Prioritize product features by value, cost, risk, and evidence.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "product",
+        "analyst",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "product.feedback.synthesize",
+      "description": "Synthesize user feedback, themes, pain points, and opportunities.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "long_context"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "product",
+        "analyst",
+        "researcher"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "product.launch.readiness",
+      "description": "Assess product readiness, blockers, messaging, and rollout risk.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "product",
+        "planner",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "designer.prototype",
+      "description": "Design prototype structure, screens, or flows.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "vision.output"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "designer",
+        "product",
+        "creative"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "designer.design_system",
+      "description": "Define or review components, tokens, states, and visual rules.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "vision.input"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "designer",
+        "architect",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "designer.accessibility.review",
+      "description": "Review UI accessibility, contrast, semantics, and interaction clarity.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "vision.input",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "designer",
+        "tester",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "designer.content.layout",
+      "description": "Design page structure, information hierarchy, and content placement.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "vision.input",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "vision.output"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "designer",
+        "writer",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "designer.usability.test",
+      "description": "Plan usability tests, tasks, observations, and evaluation criteria.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "designer",
+        "tester",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "designer.mobile.responsive",
+      "description": "Review or design responsive and mobile UI behavior.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "vision.input",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "designer",
+        "coder",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "designer.visual.qa",
+      "description": "Inspect visual implementation for polish, overlap, spacing, and hierarchy.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "vision.input",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "tools.browser_control"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "designer",
+        "tester",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "support.ticket.reply",
+      "description": "Draft a response to a user support issue.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "support",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "support.runbook.write",
+      "description": "Write troubleshooting runbooks and remediation steps.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "communication.user_facing",
+        "knowledge.organization"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "support",
+        "operator",
+        "knowledge"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "support.issue.reproduce",
+      "description": "Convert a user issue into reproducible steps and expected behavior.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "coordination.workflow"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "support",
+        "tester",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "support.knowledge_base.suggest",
+      "description": "Suggest or draft reusable knowledge-base entries from support issues.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "communication.user_facing",
+        "knowledge.organization"
+      ],
+      "preferred_capabilities": [
+        "text.chat"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "support",
+        "knowledge",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "support.status.update",
+      "description": "Draft clear incident or issue status updates for users.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "text.chat"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "support",
+        "operator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "support.customer.apology",
+      "description": "Draft empathetic apologies, explanations, and next steps.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "text.chat"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "support",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "support.faq.write",
+      "description": "Write FAQs, troubleshooting answers, and support snippets.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "communication.user_facing",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "knowledge.organization"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "support",
+        "writer",
+        "knowledge"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "legal.privacy.review",
+      "description": "Review privacy terms, data processing, notices, or user rights text.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "legal.analysis"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "legal",
+        "security"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "legal.terms.review",
+      "description": "Review terms of service, acceptable use, or contract language.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "legal.analysis"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "legal",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "legal.license.review",
+      "description": "Review software licenses, obligations, compatibility, or notices.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "legal.analysis",
+        "code.read"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "legal",
+        "security",
+        "coder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "legal.contract.summarize",
+      "description": "Summarize contract clauses, obligations, risks, and open questions.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "legal.analysis",
+        "long_context"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "legal",
+        "procurement",
+        "finance"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "legal.risk.issue_spot",
+      "description": "Identify legal-sensitive issues, risks, and questions for counsel.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "legal.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "legal",
+        "security",
+        "procurement"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "legal.policy.draft",
+      "description": "Draft internal or public policy language for review.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "legal.analysis",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "legal",
+        "writer",
+        "security"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "legal.retention.review",
+      "description": "Review retention, deletion, audit, or records-management implications.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "legal.analysis",
+        "data.schema"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "legal",
+        "data",
+        "security"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "legal.accessibility.compliance",
+      "description": "Review accessibility obligations or compliance-oriented text.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "legal.analysis"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "legal",
+        "designer",
+        "tester"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "finance.invoice.review",
+      "description": "Review invoices, charges, billing details, and anomalies.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "finance.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "finance",
+        "procurement"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "finance.budget.plan",
+      "description": "Plan budget allocations, constraints, and spend categories.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "finance.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "finance",
+        "planner",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "finance.forecast",
+      "description": "Forecast cost, spend, revenue, or usage under assumptions.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "finance.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "finance",
+        "analyst",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "finance.unit_economics",
+      "description": "Analyze margins, unit costs, payback, or per-user economics.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "finance.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "finance",
+        "strategist",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "finance.pricing.model",
+      "description": "Build or critique pricing structures and assumptions.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "finance.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "finance",
+        "strategist",
+        "seller"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "finance.variance.analyze",
+      "description": "Analyze actual vs expected cost, budget, or revenue.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "finance.analysis",
+        "data.query"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "finance",
+        "analyst",
+        "data"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "finance.procurement.cost",
+      "description": "Analyze purchasing, vendor, or contract cost implications.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "finance.analysis",
+        "procurement.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "finance",
+        "procurement"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "finance.roi.calculate",
+      "description": "Calculate or estimate return on investment and payback.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "finance.analysis",
+        "math.solve"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "finance",
+        "analyst",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "creative.name.generate",
+      "description": "Generate names for products, features, projects, or campaigns.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.divergent"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "creative",
+        "marketer",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "creative.concept.develop",
+      "description": "Develop creative concepts, themes, or directions.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.divergent"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "creative",
+        "designer",
+        "marketer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "creative.script.write",
+      "description": "Write scripts for video, audio, demos, or narrative scenes.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "vision.output"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "creative",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "creative.brand.voice",
+      "description": "Define or apply brand voice, tone, and language style.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "marketing.copy"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "creative",
+        "marketer",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "creative.visual.prompt",
+      "description": "Write prompts or briefs for visual generation or visual direction.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "vision.output",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.divergent"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "creative",
+        "designer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "creative.tagline",
+      "description": "Generate concise taglines, slogans, and campaign lines.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.copy",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.divergent"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "creative",
+        "marketer",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "creative.social.post",
+      "description": "Draft social posts, captions, and short creative variants.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat",
+        "marketing.copy"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "creative",
+        "marketer",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "educator.curriculum.design",
+      "description": "Design curriculum structure, modules, outcomes, and sequencing.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "education.tutoring",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "educator",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "educator.study.plan",
+      "description": "Create study plans, schedules, practice progression, and review cadence.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "education.tutoring",
+        "calendar.planning"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "educator",
+        "planner",
+        "coordinator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "educator.example.generate",
+      "description": "Generate examples, analogies, worked examples, or practice cases.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "education.tutoring",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "educator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "educator.rubric.create",
+      "description": "Create grading rubrics, criteria, and scoring guidance.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "education.assessment"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "educator",
+        "tester",
+        "recruiter"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "educator.concept.explain",
+      "description": "Explain concepts at an appropriate learner level.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "education.tutoring",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "educator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "educator.practice.review",
+      "description": "Review practice answers and suggest improvement steps.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "education.assessment",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "educator",
+        "mathematician",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "translator.tone.adapt",
+      "description": "Adapt translated or original text to a tone or audience.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language.localization",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "translator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "translator.glossary.create",
+      "description": "Create or maintain bilingual/multilingual terminology lists.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language.translation"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "translator",
+        "knowledge"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "translator.subtitles.translate",
+      "description": "Translate subtitles, captions, or timed dialogue.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language.translation",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "translator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "translator.technical.translate",
+      "description": "Translate technical docs, UI strings, or implementation text.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language.translation",
+        "code.read"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "translator",
+        "coder",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "translator.back_translate",
+      "description": "Translate content back to check meaning preservation.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language.translation"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "translator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "translator.locale.review",
+      "description": "Review locale-specific wording, formats, and cultural fit.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language.localization"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "translator",
+        "marketer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "translator.multilingual.reply",
+      "description": "Draft replies in a target language for support, sales, or coordination.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language.translation",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "text.chat"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "translator",
+        "support",
+        "seller"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "marketer.audience.research",
+      "description": "Research or define target audiences, segments, and needs.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.analysis",
+        "web.search"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "marketer",
+        "researcher",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "marketer.email.sequence",
+      "description": "Draft nurture, launch, or campaign email sequences.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.copy",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "marketer",
+        "writer",
+        "seller"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "marketer.landing_page.copy",
+      "description": "Write or revise landing page messaging and conversion copy.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.copy",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "marketer",
+        "writer",
+        "designer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "marketer.social.plan",
+      "description": "Plan social channels, posts, cadence, and campaign themes.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "marketer",
+        "creative",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "marketer.messaging.review",
+      "description": "Review messaging for clarity, differentiation, and audience fit.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.analysis",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "marketer",
+        "product",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "marketer.launch.plan",
+      "description": "Plan marketing launch messaging, channels, and readiness.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "marketing.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "marketer",
+        "product",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "seller.account.plan",
+      "description": "Plan account strategy, stakeholders, risks, and next steps.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "sales.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "seller",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "seller.demo.script",
+      "description": "Write product demo scripts and discovery-aligned walkthroughs.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "sales.communication",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "seller",
+        "product",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "seller.follow_up.write",
+      "description": "Draft sales follow-up notes after calls, demos, or objections.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "sales.communication",
+        "communication.follow_up"
+      ],
+      "preferred_capabilities": [
+        "text.chat"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "seller",
+        "coordinator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "seller.competitor.battlecard",
+      "description": "Create competitive sales positioning and objection responses.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "sales.analysis",
+        "market.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "seller",
+        "marketer",
+        "strategist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "seller.call.summary",
+      "description": "Summarize sales calls into needs, risks, next steps, and owners.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "sales.analysis",
+        "coordination.workflow"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "seller",
+        "coordinator",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "seller.mutual_action_plan",
+      "description": "Create shared buyer/seller action plans, timelines, and owners.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "sales.analysis",
+        "coordination.workflow"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "seller",
+        "planner",
+        "procurement"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "recruiter.sourcing.message",
+      "description": "Draft candidate outreach and sourcing messages.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "recruiting.analysis",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "text.chat"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "recruiter",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "recruiter.scorecard.create",
+      "description": "Create hiring scorecards, competencies, and evaluation criteria.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "recruiting.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "recruiter",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "recruiter.interview.feedback",
+      "description": "Structure interview notes and job-relevant feedback.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "recruiting.analysis",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "recruiter",
+        "writer",
+        "legal"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "recruiter.offer.prepare",
+      "description": "Prepare offer discussion points, constraints, and candidate communication.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "recruiting.analysis",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "recruiter",
+        "finance",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "recruiter.pipeline.update",
+      "description": "Summarize hiring pipeline status, blockers, and next steps.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "recruiting.analysis",
+        "coordination.workflow"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "recruiter",
+        "coordinator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "recruiter.role.intake",
+      "description": "Define hiring role intake questions, requirements, and constraints.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "recruiting.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "recruiter",
+        "product",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "recruiter.candidate.compare",
+      "description": "Compare candidates against explicit job criteria.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "recruiting.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "recruiter",
+        "analyst",
+        "legal"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "procurement.security.questionnaire",
+      "description": "Draft or review vendor security questionnaire content.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "procurement.analysis",
+        "security.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "procurement",
+        "security"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "procurement.vendor.scorecard",
+      "description": "Build vendor scoring criteria, weights, and summaries.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "procurement.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "procurement",
+        "analyst",
+        "finance"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "procurement.renewal.review",
+      "description": "Review renewal timing, pricing, usage, risk, and negotiation points.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "procurement.analysis",
+        "finance.analysis"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "procurement",
+        "finance",
+        "legal"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "procurement.sla.review",
+      "description": "Review service levels, support terms, penalties, and operational fit.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "procurement.analysis",
+        "legal.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "procurement",
+        "operator",
+        "legal"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "procurement.negotiation.plan",
+      "description": "Prepare vendor negotiation strategy, asks, and fallback positions.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "procurement.analysis",
+        "finance.analysis"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "procurement",
+        "finance",
+        "seller"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "procurement.purchase.justification",
+      "description": "Draft justification for purchase, renewal, or vendor selection.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "procurement.analysis",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "procurement",
+        "finance",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coordinator.task.plan",
+      "description": "Organize tasks, owners, deadlines, and dependencies.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "coordination.workflow"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coordinator",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coordinator.inbox.triage",
+      "description": "Triage messages, requests, priorities, and responses.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "coordination.workflow",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coordinator",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coordinator.decision.log",
+      "description": "Create or update decision logs, owners, and rationale.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "coordination.workflow",
+        "knowledge.organization"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coordinator",
+        "knowledge",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coordinator.project.status",
+      "description": "Draft project status updates, risks, and next steps.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "coordination.workflow",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coordinator",
+        "planner",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coordinator.reminder.plan",
+      "description": "Plan reminders, follow-ups, and timing.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "calendar.planning",
+        "communication.follow_up"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coordinator",
+        "knowledge"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "coordinator.handoff.prepare",
+      "description": "Prepare handoff notes, context, decisions, and open items.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "coordination.workflow",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coordinator",
+        "support",
+        "operator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "knowledge.note.summarize",
+      "description": "Summarize notes into reusable facts, decisions, and follow-ups.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "knowledge.organization",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "knowledge",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "knowledge.taxonomy.design",
+      "description": "Design categories, tags, and organization for knowledge systems.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "knowledge.organization",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "knowledge",
+        "architect"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "knowledge.link.map",
+      "description": "Map relationships between docs, notes, concepts, or references.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "knowledge.organization",
+        "long_context"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "knowledge",
+        "researcher"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "knowledge.runbook.update",
+      "description": "Update runbooks, operating procedures, and durable instructions.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "knowledge.organization",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "text.chat"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "knowledge",
+        "operator",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "knowledge.archive.clean",
+      "description": "Clean, deduplicate, or organize old knowledge records.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "knowledge.organization"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "knowledge",
+        "coordinator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "knowledge.context.brief",
+      "description": "Create concise context briefs for projects, users, or teams.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "knowledge.retrieval",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "long_context"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "knowledge",
+        "writer",
+        "coordinator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "strategist.swot",
+      "description": "Analyze strengths, weaknesses, opportunities, and threats.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "strategy.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "strategist",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "strategist.okr.define",
+      "description": "Define objectives, key results, initiatives, and measures.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "strategy.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "strategist",
+        "planner",
+        "product"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "strategist.board.brief",
+      "description": "Prepare board or executive strategy briefs.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "strategy.analysis",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "strategist",
+        "writer",
+        "finance"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "strategist.operating.model",
+      "description": "Design organizational operating models, responsibilities, and cadence.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "strategy.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "strategist",
+        "planner",
+        "coordinator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "strategist.pricing.strategy",
+      "description": "Develop pricing strategy, packaging, and market fit.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "strategy.analysis",
+        "finance.analysis"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "strategist",
+        "finance",
+        "marketer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "strategist.partnership.evaluate",
+      "description": "Evaluate partnerships, channels, alliances, or ecosystem opportunities.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "strategy.analysis",
+        "market.analysis"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "strategist",
+        "seller",
+        "procurement"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "mathematician.statistics.analyze",
+      "description": "Analyze statistical results, distributions, uncertainty, or significance.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "math.solve",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "mathematician",
+        "data",
+        "scientist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "mathematician.optimize",
+      "description": "Formulate or solve optimization problems and constraints.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "math.modeling",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "mathematician",
+        "analyst",
+        "finance"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "mathematician.proof.write",
+      "description": "Write or structure mathematical proofs.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "math.verify",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "text.chat"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "mathematician",
+        "educator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "mathematician.formula.derive",
+      "description": "Derive equations, formulas, or transformations.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "math.solve",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "mathematician",
+        "scientist"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "mathematician.simulation.plan",
+      "description": "Plan simulations, assumptions, variables, and outputs.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "math.modeling",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "mathematician",
+        "scientist",
+        "data"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "mathematician.error.check",
+      "description": "Check arithmetic, formulas, calculations, and numerical consistency.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "math.verify"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "mathematician",
+        "tester",
+        "finance"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "scientist.hypothesis.formulate",
+      "description": "Formulate testable hypotheses and expected observations.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "science.method",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "scientist",
+        "educator",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "scientist.protocol.write",
+      "description": "Write experimental protocols, materials, steps, and measurements.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "science.method",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "scientist",
+        "planner"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "scientist.data.interpret",
+      "description": "Interpret scientific data, results, uncertainty, and limitations.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "science.analysis",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "scientist",
+        "data",
+        "analyst"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "scientist.peer_review",
+      "description": "Review scientific writing, claims, methods, and evidence quality.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "science.analysis",
+        "long_context"
+      ],
+      "preferred_capabilities": [
+        "citation.synthesis"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "scientist",
+        "researcher",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "scientist.safety.review",
+      "description": "Review safety considerations for experiments or technical methods.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "science.method",
+        "reasoning.multi_step"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "scientist",
+        "security",
+        "health"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "scientist.technical.explain",
+      "description": "Explain scientific concepts, mechanisms, or findings clearly.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "science.analysis",
+        "text.chat"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "scientist",
+        "educator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "health.medication.info",
+      "description": "Provide general medication information and safety boundaries.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "health.general_info",
+        "health.safety"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "health",
+        "researcher"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "health.appointment.prepare",
+      "description": "Help prepare questions, notes, and concerns for a healthcare visit.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "health.general_info",
+        "coordination.workflow"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "health",
+        "coordinator",
+        "writer"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "health.symptom.organize",
+      "description": "Organize symptoms, timing, context, and questions for care discussion.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "health.safety",
+        "coordination.workflow"
+      ],
+      "preferred_capabilities": [
+        "json.schema_adherence"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "health",
+        "coordinator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "health.exercise.general",
+      "description": "Provide general exercise information within safe boundaries.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "health.general_info"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "health",
+        "educator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "health.nutrition.general",
+      "description": "Provide general nutrition information and meal-planning concepts.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "health.general_info"
+      ],
+      "preferred_capabilities": [
+        "communication.user_facing"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "health",
+        "educator"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "health.mental_wellness.info",
+      "description": "Provide general mental wellness information and support-seeking guidance.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "health.safety",
+        "communication.user_facing"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "health",
+        "support"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "text.chat",
+      "description": "Legacy compatibility task for general chat requests.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "text.chat"
+      ],
+      "preferred_capabilities": [],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "general.chat"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "code.edit",
+      "description": "Legacy compatibility task for code editing, patching, and review requests.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "code.edit"
+      ],
+      "preferred_capabilities": [
+        "reasoning.multi_step"
+      ],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "coder.patch",
+        "coder.review"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "tool.use",
+      "description": "Legacy compatibility task for requests that need tool calling.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "tools.function_calling"
+      ],
+      "preferred_capabilities": [],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "tool.agent"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "embedding.create",
+      "description": "Legacy compatibility task for embedding generation.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "embedding"
+      ],
+      "preferred_capabilities": [],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "embedder"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "classification.assign",
+      "description": "Legacy compatibility task for assigning labels or categories.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "classification"
+      ],
+      "preferred_capabilities": [],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "classifier"
+      ],
+      "default_benchmark_suites": []
+    },
+    {
+      "task_type": "language.detect",
+      "description": "Legacy compatibility task for language detection.",
+      "required_inputs": [
+        "text"
+      ],
+      "required_capabilities": [
+        "language_detection"
+      ],
+      "preferred_capabilities": [],
+      "quality_metrics": [],
+      "allowed_roles": [
+        "language.detector"
+      ],
+      "default_benchmark_suites": []
+    }
+  ]
+}

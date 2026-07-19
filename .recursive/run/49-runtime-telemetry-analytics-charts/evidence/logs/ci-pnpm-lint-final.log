@@ -1,0 +1,10 @@
+
+> role-model@0.0.0 lint D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts
+> biome check . && corepack pnpm run lint:rust
+
+Checked 572 files in 896ms. No fixes applied.
+
+> role-model@0.0.0 lint:rust D:\DEV\role-model\.worktrees\49-runtime-telemetry-analytics-charts
+> cargo fmt --manifest-path role-model-router/rust/Cargo.toml --all --check && cargo clippy --manifest-path role-model-router/rust/Cargo.toml --workspace --all-targets -- -D warnings
+
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.14s

@@ -1,0 +1,65 @@
+
+> @role-model-router/protocol-routing@0.0.0 test D:\DEV\role-model\.worktrees\65-codex-subscription-prompt-cache-parity\role-model-router\packages\protocol-routing
+> vitest run test
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/65-codex-subscription-prompt-cache-parity/role-model-router/packages/protocol-routing
+
+(node:58824) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/observed-data-decay-policy.test.ts (2 tests) 18ms
+ ✓ test/catalog-economics-routing.test.ts (3 tests) 189ms
+ ❯ test/index.test.ts (11 tests | 1 failed) 340ms
+   ✓ projectRuntimeRouteInput > merges registry candidates, observed profiles, and runtime routing signals 12ms
+   × projectRuntimeRouteInput > separates active continuity restore from advisory warmed-cache preference 43ms
+     → expected { identity: { …(7) }, …(6) } to match object { …(2) }
+(19 matching properties omitted from actual)
+   ✓ routeRuntimeRequest > treats generic reasoning capability as satisfying reasoning effort control requests 7ms
+   ✓ routeRuntimeRequest > treats active role-binding effective capabilities as satisfying required task capabilities 2ms
+   ✓ routeRuntimeRequest > emits canonical runtime eligibility exclusions from registry/provider-account state 9ms
+   ✓ routeRuntimeRequest > keeps explicit policy denial ahead of routing-model guidance 2ms
+   ✓ routeRuntimeRequest > disables routing model diagnostics when every preferred endpoint is ignored 1ms
+   ✓ routeRuntimeRequest > does not over-penalize a remote latency sample that is only minutes old 1ms
+   ✓ routeRuntimeRequest > preserves benchmark-only quality freshness for quality routing even when benchmark samples are old 1ms
+   ✓ routeRuntimeRequest > excludes endpoints under an active throughput penalty when the penalty factor is zero 1ms
+   ✓ runRuntimeRoutingValidation > loads pinned fixtures and emits deterministic routing diagnostics 257ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > projectRuntimeRouteInput > separates active continuity restore from advisory warmed-cache preference
+AssertionError: expected { identity: { …(7) }, …(6) } to match object { …(2) }
+(19 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -2,8 +2,8 @@
+    "identity": {
+      "endpoint_id": "cache.active.b",
+    },
+    "routingSignals": {
+      "cacheAffinity": true,
+-     "continuityAffinity": true,
++     "continuityAffinity": false,
+    },
+  }
+
+ ❯ test/index.test.ts:354:48
+    352|       },
+    353|     });
+    354|     expect(projected.routeInput.candidates[1]).toMatchObject({
+       |                                                ^
+    355|       identity: { endpoint_id: "cache.active.b" },
+    356|       routingSignals: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 15 passed (16)
+   Start at  08:30:16
+   Duration  4.59s (transform 1.57s, setup 0ms, collect 2.93s, tests 547ms, environment 1ms, prepare 2.25s)
+
+D:\DEV\role-model\.worktrees\65-codex-subscription-prompt-cache-parity\role-model-router\packages\protocol-routing:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/protocol-routing@0.0.0 test: `vitest run test`
+Exit status 1

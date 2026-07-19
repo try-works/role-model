@@ -1,0 +1,111 @@
+{
+  "requestId": "req-a3aab38a-5f60-4cef-bcdb-c190b36cf9df",
+  "routingDecisionId": "decision-req-a3aab38a-5f60-4cef-bcdb-c190b36cf9df",
+  "endpointId": "routing.failed.pre-execution",
+  "clientRequestId": null,
+  "sourceType": "remote",
+  "providerId": null,
+  "endpointKind": null,
+  "servingSource": null,
+  "healthStatus": "unknown",
+  "status": "unknown",
+  "roleIds": [],
+  "statusFamily": "failure",
+  "usageEvent": {
+    "request_id": "req-a3aab38a-5f60-4cef-bcdb-c190b36cf9df",
+    "routing_decision_id": "decision-req-a3aab38a-5f60-4cef-bcdb-c190b36cf9df",
+    "endpoint_id": "routing.failed.pre-execution",
+    "model_id": "difficulty.remote-only",
+    "provider_kind": null,
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "latency_ms": 1626,
+    "cost_actual": null,
+    "cost_estimate": null,
+    "currency": "USD",
+    "error_class": "execution_failed",
+    "timestamp_ms": 1783647612402
+  },
+  "executionTelemetry": {
+    "providerFamily": null,
+    "finishReason": null,
+    "promptCaching": {
+      "supported": true
+    },
+    "usageSupport": {
+      "inputTokens": true,
+      "outputTokens": true,
+      "cacheReadTokens": true,
+      "cacheWriteTokens": true
+    },
+    "costProvenance": "unavailable"
+  },
+  "executionSemantics": {
+    "executionFamily": "unknown",
+    "adapterFamily": "unknown",
+    "payloadBytes": {
+      "ingress": 0,
+      "translated": 0,
+      "providerCanonical": 0,
+      "providerWire": 0,
+      "providerResponse": 0
+    },
+    "retryCount": 0,
+    "rerouteCount": 0,
+    "cooldownDecision": "not_applied",
+    "idempotencyDecision": "not_needed",
+    "toolSideEffectState": "none"
+  },
+  "telemetrySnapshot": {
+    "providerId": null,
+    "providerAccountId": null,
+    "sourceType": "remote",
+    "endpointKind": null,
+    "servingSource": null,
+    "region": null,
+    "lifecycleStateAtRequest": "unknown",
+    "healthStatusAtRequest": "unknown",
+    "requestedModelId": "difficulty.remote-only",
+    "requestOperation": "chat",
+    "roleIds": [],
+    "toolingUsed": false,
+    "cacheState": null,
+    "eligibleEndpointIds": [],
+    "eligibleModelIds": [],
+    "candidateCostSnapshot": null,
+    "selectedPricingSnapshot": null,
+    "selectedUncachedCostUsd": 0,
+    "baselineMaxEligibleCostUsd": 0,
+    "routingCostSavingsUsd": 0,
+    "cacheCostSavingsUsd": 0,
+    "totalAvoidedCostUsd": 0,
+    "costBaselineSource": null,
+    "costSavingsSupport": null
+  },
+  "capturePolicy": {
+    "environment": "telemetry-ledger-fallback",
+    "redactionLevel": "unknown",
+    "retentionClass": "unknown",
+    "structuredInspectionMode": "unavailable",
+    "rawCaptureAvailable": false,
+    "structuredInspectionAvailable": false,
+    "redactedFields": [],
+    "suppressedFields": []
+  },
+  "observationAvailability": {
+    "source": "telemetry-ledger-fallback",
+    "rawObservationAvailable": false,
+    "structuredInspectionAvailable": false,
+    "reason": "Raw observation retention has expired or the preserved observation bundle is unavailable; canonical request detail is reconstructed from the telemetry ledger."
+  },
+  "effectiveCostUsd": 0,
+  "costCalculationBasis": "no_execution_zero",
+  "costCalculationVersion": "run49.v1",
+  "selectedUncachedCostUsd": 0,
+  "baselineMaxEligibleCostUsd": 0,
+  "routingCostSavingsUsd": 0,
+  "cacheCostSavingsUsd": 0,
+  "totalAvoidedCostUsd": 0,
+  "costBaselineSource": null,
+  "costSavingsSupport": null
+}

@@ -1,0 +1,57 @@
+[
+  {
+    "requestId": "req-462d0f38-396e-40b3-b8e4-80e6705f7ab8",
+    "routingDecisionId": "decision-req-462d0f38-396e-40b3-b8e4-80e6705f7ab8",
+    "selectedEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "strategyLabel": "difficulty",
+    "decidedAtMs": 1783451439690,
+    "sourceType": "remote",
+    "providerId": "openai",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-c4aeed83-b526-4df5-8835-d9186b1c2b72",
+    "routingDecisionId": "decision-req-c4aeed83-b526-4df5-8835-d9186b1c2b72",
+    "selectedEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "strategyLabel": "difficulty",
+    "decidedAtMs": 1783450623927,
+    "sourceType": "remote",
+    "providerId": "openai",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-be5ccf36-2ece-4792-baa2-36edd25e582c",
+    "routingDecisionId": "decision-req-be5ccf36-2ece-4792-baa2-36edd25e582c",
+    "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "selectedModelId": "deepseek/deepseek-v4-flash",
+    "strategyLabel": "difficulty",
+    "decidedAtMs": 1783450221382,
+    "sourceType": "remote",
+    "providerId": "deepseek",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-75cf0117-eb61-497f-a2a6-44f90877f5db",
+    "routingDecisionId": "decision-req-75cf0117-eb61-497f-a2a6-44f90877f5db",
+    "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-flash",
+    "selectedModelId": "deepseek/deepseek-v4-flash",
+    "strategyLabel": "difficulty",
+    "decidedAtMs": 1783450214666,
+    "sourceType": "remote",
+    "providerId": "deepseek",
+    "finishReason": "stop"
+  },
+  {
+    "requestId": "req-5c3e2ff2-f851-4b99-922b-6b454946f780",
+    "routingDecisionId": "decision-req-5c3e2ff2-f851-4b99-922b-6b454946f780",
+    "selectedEndpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "selectedModelId": "chatgpt/gpt-5.4",
+    "strategyLabel": "difficulty",
+    "decidedAtMs": 1783450206881,
+    "sourceType": "remote",
+    "providerId": "openai",
+    "finishReason": "stop"
+  }
+]

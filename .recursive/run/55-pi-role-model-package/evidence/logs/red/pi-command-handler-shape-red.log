@@ -1,0 +1,38 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/55-pi-role-model-package[39m
+
+ [31m❯[39m packages/pi-role-model/test/extension.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 24[2mms[22m[39m
+[31m   [31m×[31m Pi extension registration[2m > [22mregisters the role-model provider and one role-model command[39m[32m 22[2mms[22m[39m
+[31m     → expected { …(2) } to deeply equal ObjectContaining{…}[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  packages/pi-role-model/test/extension.test.ts > Pi extension registration > registers the role-model provider and one role-model command
+AssertionError: expected { …(2) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "handler": Any<Function>,
++ {
++   "description": "Configure and inspect the Role-Model provider for Pi.",
++   "run": [Function run],
+  }
+
+ ❯ packages/pi-role-model/test/extension.test.ts:63:33
+     61|     expect(commands).toHaveLength(1);
+     62|     expect(commands[0]?.name).toBe("role-model");
+     63|     expect(commands[0]?.config).toEqual(
+       |                                 ^
+     64|       expect.objectContaining({
+     65|         handler: expect.any(Function),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 13:40:26
+[2m   Duration [22m 1.10s[2m (transform 138ms, setup 0ms, collect 163ms, tests 24ms, environment 0ms, prepare 283ms)[22m
+

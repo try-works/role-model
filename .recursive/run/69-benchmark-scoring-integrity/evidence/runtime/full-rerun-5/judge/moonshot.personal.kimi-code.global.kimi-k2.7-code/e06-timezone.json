@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "e06-timezone",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The model response provides the correct answer 'Coordinated Universal Time' in a single phrase as requested, and includes the required JSON key 'answer'. No prohibited content.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/e06-timezone.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/e06-timezone/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783934794828
+}

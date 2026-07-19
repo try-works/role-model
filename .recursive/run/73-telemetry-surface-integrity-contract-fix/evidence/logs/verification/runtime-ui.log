@@ -1,0 +1,131 @@
+
+> @role-model-router/runtime-ui@ test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\apps\runtime-ui
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/apps/runtime-ui
+
+ ✓ app/routes/startup-bootstrap-regression.test.ts (11 tests) 29ms
+ ✓ app/lib/live-refresh.test.ts (2 tests) 99ms
+stderr | app/lib/stale-refresh-diagnostics.test.ts > stale-refresh-diagnostics > emit and flush diagnostics > batches diagnostics until flushed
+[telemetry] Background analytics refresh reused stale data {
+  routeId: 'dashboard',
+  staleChartCount: 2,
+  charts: [
+    {
+      title: 'Chart A',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart B',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    }
+  ]
+}
+
+ ✓ app/lib/router-candidate-labels.test.ts (5 tests) 134ms
+stderr | app/lib/stale-refresh-diagnostics.test.ts > stale-refresh-diagnostics > emit and flush diagnostics > auto-flushes at max batch size
+[telemetry] Background analytics refresh reused stale data {
+  routeId: 'dashboard',
+  staleChartCount: 10,
+  charts: [
+    {
+      title: 'Chart 0',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 1',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 2',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 3',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 4',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 5',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 6',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+ ✓ app/lib/stale-refresh-diagnostics.test.ts (14 tests) 82ms
+ ✓ app/lib/build-sync.test.ts (3 tests) 202ms
+    {
+      title: 'Chart 7',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 8',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    },
+    {
+      title: 'Chart 9',
+      query: 'range=week',
+      error: 'fail',
+      staleReused: true
+    }
+  ]
+}
+
+ ✓ app/lib/view-models.test.ts (38 tests) 307ms
+ ✓ app/lib/runtime-api.test.ts (55 tests) 470ms
+ ✓ app/components/page-primitives.test.tsx (6 tests) 86ms
+ ✓ app/components/device-authorization-card.test.tsx (2 tests) 80ms
+ ✓ app/lib/role-task-hierarchy.test.tsx (3 tests) 152ms
+ ✓ app/routes/control-models.test.ts (16 tests) 224ms
+ ✓ app/components/local-model-role-picker.test.tsx (7 tests) 164ms
+ ✓ app/lib/device-authorization.test.ts (19 tests) 24ms
+ ✓ app/lib/telemetry-analytics.test.ts (11 tests) 40ms
+ ✓ app/components/telemetry-charts.test.tsx (13 tests) 147ms
+ ✓ app/routes/providers.test.ts (7 tests) 192ms
+ ✓ app/lib/llama-swap-setup.test.ts (6 tests) 19ms
+ ✓ app/lib/telemetry-chart-config.test.ts (2 tests) 24ms
+ ✓ app/components/device-authorization-modal.test.tsx (1 test) 39ms
+ ✓ app/lib/telemetry-route-models.test.ts (3 tests) 28ms
+ ✓ app/lib/benchmark-model-cards.test.ts (5 tests) 12ms
+ ✓ app/lib/format-score.test.ts (3 tests) 10ms
+ ✓ app/root.test.tsx (3 tests) 10ms
+ ✓ app/lib/theme.test.ts (4 tests) 9ms
+ ✓ app/routes/index.test.tsx (1 test) 7ms
+ ✓ app/lib/benchmark-latency.test.ts (2 tests) 11ms
+ ✓ app/lib/provider-account-state.test.ts (2 tests) 9ms
+ ✓ app/routes/studio-audio.test.ts (2 tests) 7ms
+ ✓ app/routes/request-detail.test.tsx (6 tests) 16ms
+ ✓ app/lib/design-system.test.ts (97 tests) 396ms
+
+ Test Files  30 passed (30)
+      Tests  349 passed (349)
+   Start at  04:24:34
+   Duration  11.67s (transform 21.56s, setup 0ms, collect 66.97s, tests 3.03s, environment 14ms, prepare 32.07s)
+

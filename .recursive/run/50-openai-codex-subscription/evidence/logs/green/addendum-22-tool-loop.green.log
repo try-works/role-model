@@ -1,0 +1,12 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/index.test.ts (112 tests | 108 skipped) 1069ms
+   ✓ runtime-host-bridge > executes exact Kimi hosted web-search requests through to a final assistant answer  460ms
+   ✓ runtime-host-bridge > executes exact deepseek/deepseek-v4-flash web-search requests through to a final assistant answer  311ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed | 108 skipped (112)
+   Start at  21:26:17
+   Duration  4.01s (transform 1.58s, setup 0ms, collect 2.07s, tests 1.07s, environment 0ms, prepare 327ms)
+

@@ -1,0 +1,56 @@
+{
+  "manifest": {
+    "taxonomyVersion": "1.0.0-alpha.1",
+    "entryCounts": {
+      "groups": 6,
+      "roles": 28,
+      "taskTypes": 280
+    }
+  },
+  "groups": [
+    "engineering",
+    "product_design",
+    "knowledge_research",
+    "business",
+    "communication",
+    "governance_safety"
+  ],
+  "sampled": {
+    "engineering": {
+      "role": "security",
+      "taskCount": 10,
+      "firstTask": "security.audit",
+      "file": "roles/security/tasks.compact.json"
+    },
+    "product_design": {
+      "role": "product",
+      "taskCount": 10,
+      "firstTask": "product.requirements",
+      "file": "roles/product/tasks.compact.json"
+    },
+    "knowledge_research": {
+      "role": "researcher",
+      "taskCount": 10,
+      "firstTask": "researcher.web_research",
+      "file": "roles/researcher/tasks.compact.json"
+    },
+    "business": {
+      "role": "strategist",
+      "taskCount": 10,
+      "firstTask": "strategist.business.plan",
+      "file": "roles/strategist/tasks.compact.json"
+    },
+    "communication": {
+      "role": "support",
+      "taskCount": 10,
+      "firstTask": "support.triage",
+      "file": "roles/support/tasks.compact.json"
+    },
+    "governance_safety": {
+      "role": "health",
+      "taskCount": 10,
+      "firstTask": "health.info.general",
+      "file": "roles/health/tasks.compact.json"
+    }
+  }
+}

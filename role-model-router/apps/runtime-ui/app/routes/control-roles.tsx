@@ -6,22 +6,29 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Link } from "react-router";
 
 import {
+  DisclosureSection,
   EmptyState,
   ErrorState,
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
   StatusPill,
 } from "../components/page-primitives";
 import {
+  bodyStrongTextClassName,
+  bodyTextClassName,
   fieldClassName,
+  foregroundEmphasisClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  supportingTextClassName,
+  utilityStrongTextClassName,
 } from "../lib/design-system";
+import { RoleCatalogHierarchy, buildRoleTaskHierarchy } from "../lib/role-task-hierarchy";
 import {
   type RuntimeRolePolicy,
   type RuntimeRolePolicyRole,
@@ -125,136 +132,267 @@ function toRolePayload(draft: RoleDraft): Record<string, unknown> {
   };
 }
 
-function RoleForm({
+function updateRoleDraftField({
+  setDraft,
+  key,
+  value,
+}: {
+  setDraft: Dispatch<SetStateAction<RoleDraft>>;
+  key: keyof RoleDraft;
+  value: string;
+}) {
+  setDraft((current) => ({ ...current, [key]: value }));
+}
+
+function RoleIdentityFields({
   draft,
   setDraft,
 }: {
   draft: RoleDraft;
   setDraft: Dispatch<SetStateAction<RoleDraft>>;
 }) {
-  const update = (key: keyof RoleDraft, value: string) => {
-    setDraft((current) => ({ ...current, [key]: value }));
-  };
-
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Role id</span>
+      <label className="grid gap-2">
+        <span className={utilityStrongTextClassName}>Role id</span>
         <input
           className={fieldClassName}
           value={draft.roleId}
-          onChange={(event) => update("roleId", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "roleId",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Name</span>
+      <label className="grid gap-2">
+        <span className={utilityStrongTextClassName}>Name</span>
         <input
           className={fieldClassName}
           value={draft.name}
-          onChange={(event) => update("name", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "name",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm md:col-span-2">
-        <span className="font-medium text-[var(--rm-fg)]">Description</span>
+    </div>
+  );
+}
+
+function RoleDefaultInstructionsField({
+  draft,
+  setDraft,
+}: {
+  draft: RoleDraft;
+  setDraft: Dispatch<SetStateAction<RoleDraft>>;
+}) {
+  return (
+    <label className="grid gap-2">
+      <span className={utilityStrongTextClassName}>Default system instructions</span>
+      <textarea
+        className={`${fieldClassName} min-h-28`}
+        value={draft.defaultSystemInstructions}
+        onChange={(event) =>
+          updateRoleDraftField({
+            setDraft,
+            key: "defaultSystemInstructions",
+            value: event.target.value,
+          })
+        }
+      />
+    </label>
+  );
+}
+
+function RoleRoutingOverridesField({
+  draft,
+  setDraft,
+}: {
+  draft: RoleDraft;
+  setDraft: Dispatch<SetStateAction<RoleDraft>>;
+}) {
+  return (
+    <label className="grid gap-2">
+      <span className={utilityStrongTextClassName}>Routing policy overrides (JSON)</span>
+      <textarea
+        className={`${fieldClassName} min-h-32 font-mono`}
+        spellCheck={false}
+        value={draft.routingOverridesText}
+        onChange={(event) =>
+          updateRoleDraftField({
+            setDraft,
+            key: "routingOverridesText",
+            value: event.target.value,
+          })
+        }
+      />
+    </label>
+  );
+}
+
+function RoleAdvancedPolicyFields({
+  draft,
+  setDraft,
+  includeRoutingOverrides = true,
+}: {
+  draft: RoleDraft;
+  setDraft: Dispatch<SetStateAction<RoleDraft>>;
+  includeRoutingOverrides?: boolean;
+}) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      <label className="grid gap-2 md:col-span-2">
+        <span className={utilityStrongTextClassName}>Description</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.description}
-          onChange={(event) => update("description", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "description",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Role kind</span>
+      <label className="grid gap-2">
+        <span className={utilityStrongTextClassName}>Role kind</span>
         <input
           className={fieldClassName}
           value={draft.roleKind}
-          onChange={(event) => update("roleKind", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "roleKind",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Tool policy mode</span>
-        <select
-          className={fieldClassName}
-          value={draft.toolPolicyMode}
-          onChange={(event) => update("toolPolicyMode", event.target.value)}
-        >
-          <option value="allowed">allowed</option>
-          <option value="limited">limited</option>
-          <option value="disabled">disabled</option>
-        </select>
-      </label>
-      <label className="grid gap-2 text-sm md:col-span-2">
-        <span className="font-medium text-[var(--rm-fg)]">Default system instructions</span>
-        <textarea
-          className={`${fieldClassName} min-h-28`}
-          value={draft.defaultSystemInstructions}
-          onChange={(event) => update("defaultSystemInstructions", event.target.value)}
-        />
-      </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Supported task types</span>
+      <SelectField
+        label="Tool policy mode"
+        value={draft.toolPolicyMode}
+        onChange={(value) =>
+          updateRoleDraftField({
+            setDraft,
+            key: "toolPolicyMode",
+            value,
+          })
+        }
+      >
+        <option value="allowed">allowed</option>
+        <option value="limited">limited</option>
+        <option value="disabled">disabled</option>
+      </SelectField>
+      <label className="grid gap-2">
+        <span className={utilityStrongTextClassName}>Supported task types</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.taskTypesSupported}
-          onChange={(event) => update("taskTypesSupported", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "taskTypesSupported",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Allowed tools</span>
+      <label className="grid gap-2">
+        <span className={utilityStrongTextClassName}>Allowed tools</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.allowedTools}
-          onChange={(event) => update("allowedTools", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "allowedTools",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Required capabilities</span>
+      <label className="grid gap-2">
+        <span className={utilityStrongTextClassName}>Required capabilities</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.requiredCapabilities}
-          onChange={(event) => update("requiredCapabilities", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "requiredCapabilities",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Preferred capabilities</span>
+      <label className="grid gap-2">
+        <span className={utilityStrongTextClassName}>Preferred capabilities</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.preferredCapabilities}
-          onChange={(event) => update("preferredCapabilities", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "preferredCapabilities",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Forbidden capabilities</span>
+      <label className="grid gap-2">
+        <span className={utilityStrongTextClassName}>Forbidden capabilities</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.forbiddenCapabilities}
-          onChange={(event) => update("forbiddenCapabilities", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "forbiddenCapabilities",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Output contracts</span>
+      <label className="grid gap-2">
+        <span className={utilityStrongTextClassName}>Output contracts</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.outputContracts}
-          onChange={(event) => update("outputContracts", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "outputContracts",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm">
-        <span className="font-medium text-[var(--rm-fg)]">Safety policy refs</span>
+      <label className="grid gap-2">
+        <span className={utilityStrongTextClassName}>Safety policy refs</span>
         <textarea
           className={`${fieldClassName} min-h-24`}
           value={draft.safetyPolicyRefs}
-          onChange={(event) => update("safetyPolicyRefs", event.target.value)}
+          onChange={(event) =>
+            updateRoleDraftField({
+              setDraft,
+              key: "safetyPolicyRefs",
+              value: event.target.value,
+            })
+          }
         />
       </label>
-      <label className="grid gap-2 text-sm md:col-span-2">
-        <span className="font-medium text-[var(--rm-fg)]">Routing policy overrides (JSON)</span>
-        <textarea
-          className={`${fieldClassName} min-h-32 font-mono text-xs`}
-          spellCheck={false}
-          value={draft.routingOverridesText}
-          onChange={(event) => update("routingOverridesText", event.target.value)}
-        />
-      </label>
+      {includeRoutingOverrides ? (
+        <div className="md:col-span-2">
+          <RoleRoutingOverridesField draft={draft} setDraft={setDraft} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -262,6 +400,7 @@ function RoleForm({
 export default function ControlRolesRoute() {
   const [policy, setPolicy] = useState<RuntimeRolePolicy | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+  const [expandedRoleId, setExpandedRoleId] = useState<string | null>(null);
   const [createDraft, setCreateDraft] = useState<RoleDraft>(createBlankRoleDraft());
   const [editDraft, setEditDraft] = useState<RoleDraft | null>(null);
   const [taskRoleSelections, setTaskRoleSelections] = useState<Record<string, string[]>>({});
@@ -306,6 +445,17 @@ export default function ControlRolesRoute() {
     () => policy?.roleDefinitions.find((role) => role.role_id === selectedRoleId) ?? null,
     [policy, selectedRoleId],
   );
+  const roleTaskHierarchy = useMemo(
+    () =>
+      policy
+        ? buildRoleTaskHierarchy(policy.roleDefinitions, policy.taskDefinitions)
+        : ([] as const),
+    [policy],
+  );
+  const expandedRole = useMemo(
+    () => roleTaskHierarchy.find((role) => role.roleId === expandedRoleId) ?? null,
+    [expandedRoleId, roleTaskHierarchy],
+  );
 
   useEffect(() => {
     setEditDraft(selectedRole ? toRoleDraft(selectedRole) : null);
@@ -315,6 +465,17 @@ export default function ControlRolesRoute() {
     () => policy?.roleDefinitions.filter((role) => role.tool_policy.mode !== "allowed").length ?? 0,
     [policy],
   );
+  const selectedRoleTaskPreview = useMemo(() => {
+    if (!selectedRole) {
+      return "none";
+    }
+    const tasks = selectedRole.task_types_supported.slice(0, 3);
+    const suffix =
+      selectedRole.task_types_supported.length > 3
+        ? ` +${selectedRole.task_types_supported.length - 3} more`
+        : "";
+    return tasks.length > 0 ? `${tasks.join(", ")}${suffix}` : "none";
+  }, [selectedRole]);
 
   const saveNewRole = async () => {
     setSavingCreate(true);
@@ -404,195 +565,236 @@ export default function ControlRolesRoute() {
             <FactCard
               label="Roles"
               value={policy.roleDefinitions.length}
-              detail="Router-visible role definitions from the live runtime policy."
+              detail="Router-visible role definitions."
               emphasis
             />
             <FactCard
               label="Tasks"
               value={policy.taskDefinitions.length}
-              detail="Task contracts currently participating in role allowlists."
+              detail="Task contracts in active allowlists."
             />
             <FactCard
               label="Restricted tool policy"
               value={limitedRoleCount}
-              detail="Roles whose tool policy is limited or disabled."
+              detail="Roles with limited or disabled tool access."
             />
             <FactCard
               label="Selected role"
               value={selectedRole?.role_id ?? "None"}
-              detail="Use the editor below to change the selected role definition."
+              detail="Currently loaded into the role editor."
             />
           </div>
 
-          <SectionCard
-            title="Role catalog"
-            description="Scan live roles, supported task types, and tool posture before selecting a definition to edit."
-          >
-            {policy.roleDefinitions.length === 0 ? (
-              <EmptyState label="No runtime roles are defined yet." />
-            ) : (
-              <div className="grid gap-4 xl:grid-cols-2">
-                {policy.roleDefinitions.map((role) => (
-                  <button
-                    key={role.role_id}
-                    className={`${mutedPanelClassName} space-y-3 p-4 text-left ${
-                      selectedRoleId === role.role_id ? "border-[var(--rm-accent)]" : ""
-                    }`}
-                    type="button"
-                    onClick={() => setSelectedRoleId(role.role_id)}
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-medium text-[var(--rm-fg)]">{role.name}</p>
-                        <p className="mt-1 break-all text-xs uppercase tracking-[0.16em] text-[var(--rm-muted)]">
-                          {role.role_id}
+          <div className="space-y-6">
+            <SectionCard
+              title="Create role"
+              description="Add a new router-visible role with the runtime policy fields required by the bridge."
+            >
+              <DisclosureSection summary="Open create role form">
+                <div className="space-y-4">
+                  <RoleIdentityFields draft={createDraft} setDraft={setCreateDraft} />
+                  <RoleDefaultInstructionsField draft={createDraft} setDraft={setCreateDraft} />
+                  <DisclosureSection summary="Advanced policy fields">
+                    <RoleAdvancedPolicyFields draft={createDraft} setDraft={setCreateDraft} />
+                  </DisclosureSection>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      className={primaryButtonClassName}
+                      type="button"
+                      disabled={savingCreate}
+                      onClick={() => void saveNewRole()}
+                    >
+                      {savingCreate ? "Creating…" : "Create role"}
+                    </button>
+                    <button
+                      className={secondaryButtonClassName}
+                      type="button"
+                      disabled={savingCreate}
+                      onClick={() => setCreateDraft(createBlankRoleDraft())}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </div>
+              </DisclosureSection>
+            </SectionCard>
+
+            <SectionCard
+              title="Role catalog"
+              description="The runtime page leads with a role-first catalog before task detail editing. Scan live roles first, then open task detail only when you want the lower-level task contract for a specific role."
+            >
+              {policy.roleDefinitions.length === 0 ? (
+                <EmptyState label="No runtime roles are defined yet." />
+              ) : (
+                <div className="max-h-[68vh] overflow-auto pr-1">
+                  <RoleCatalogHierarchy
+                    roleDefinitions={policy.roleDefinitions}
+                    taskDefinitions={policy.taskDefinitions}
+                    expandedRoleId={expandedRoleId}
+                    onToggleTaskDetail={(roleId) =>
+                      setExpandedRoleId((current) => (current === roleId ? null : roleId))
+                    }
+                    selectedRoleId={selectedRoleId}
+                    onSelectRole={setSelectedRoleId}
+                  />
+                </div>
+              )}
+            </SectionCard>
+
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start">
+              <SectionCard
+                title="Role task allowlists"
+                description="Tasks stay nested under the selected role so allowlist editing follows the same role-first hierarchy shown in the catalog."
+              >
+                <div className="max-h-[52vh] overflow-auto pr-1">
+                  {policy.taskDefinitions.length === 0 ? (
+                    <EmptyState label="No task definitions are available yet." />
+                  ) : !expandedRole ? (
+                    <EmptyState label="Open Task detail on a role to inspect or edit its task memberships." />
+                  ) : (
+                    <div className="space-y-4">
+                      <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                        <p className={utilityStrongTextClassName}>{expandedRole.label}</p>
+                        <p className={supportingTextClassName}>
+                          Role id: <span className="font-mono">{expandedRole.roleId}</span>
                         </p>
                       </div>
-                      <StatusPill
-                        tone={role.tool_policy.mode === "allowed" ? "success" : "warning"}
-                      >
-                        {role.tool_policy.mode}
-                      </StatusPill>
-                    </div>
-                    <p className="text-sm leading-6 text-[var(--rm-secondary)]">
-                      {role.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {role.task_types_supported.map((taskType) => (
-                        <StatusPill key={taskType} tone="neutral">
-                          {taskType}
-                        </StatusPill>
+                      {expandedRole.tasks.map((task) => (
+                        <div key={task.taskType} className={`${mutedPanelClassName} space-y-3 p-4`}>
+                          <div>
+                            <p className={bodyStrongTextClassName}>{task.taskType}</p>
+                            <p className={`mt-1 ${supportingTextClassName}`}>{task.description}</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {task.requiredCapabilities.map((capability) => (
+                              <StatusPill key={capability} tone="neutral">
+                                {capability}
+                              </StatusPill>
+                            ))}
+                          </div>
+                          <label
+                            className={`flex items-center gap-2 rounded-[var(--rm-radius-panel)] border border-[var(--rm-border)] px-3 py-2 ${supportingTextClassName}`}
+                          >
+                            <input
+                              checked={(taskRoleSelections[task.taskType] ?? []).includes(
+                                expandedRole.roleId,
+                              )}
+                              type="checkbox"
+                              onChange={() => toggleTaskRole(task.taskType, expandedRole.roleId)}
+                            />
+                            <span>{expandedRole.roleId}</span>
+                          </label>
+                        </div>
                       ))}
+                      <button
+                        className={primaryButtonClassName}
+                        type="button"
+                        disabled={savingTasks}
+                        onClick={() => void saveTasks()}
+                      >
+                        {savingTasks ? "Saving…" : "Save task allowlists"}
+                      </button>
                     </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </SectionCard>
+                  )}
+                </div>
+              </SectionCard>
 
-          <SectionCard
-            title="Create role"
-            description="Add a new router-visible role with the full runtime policy fields required by the bridge."
-          >
-            <div className="space-y-4">
-              <RoleForm draft={createDraft} setDraft={setCreateDraft} />
-              <div className="flex flex-wrap gap-3">
-                <button
-                  className={primaryButtonClassName}
-                  type="button"
-                  disabled={savingCreate}
-                  onClick={() => void saveNewRole()}
+              <div className="space-y-6">
+                <SectionCard
+                  title="Edit selected role"
+                  description="Update the active runtime role definition in-place, including tool policy, task coverage, and routing overrides."
                 >
-                  {savingCreate ? "Creating…" : "Create role"}
-                </button>
-                <button
-                  className={secondaryButtonClassName}
-                  type="button"
-                  disabled={savingCreate}
-                  onClick={() => setCreateDraft(createBlankRoleDraft())}
-                >
-                  Reset
-                </button>
+                  <div className="max-h-[52vh] overflow-auto pr-1">
+                    {!editDraft ? (
+                      <EmptyState label="Select a role from the catalog to edit it." />
+                    ) : (
+                      <div className="space-y-4">
+                        <div className={`${mutedPanelClassName} space-y-2 p-4`}>
+                          <p className={bodyTextClassName}>
+                            <span className={foregroundEmphasisClassName}>tool policy mode:</span>{" "}
+                            {editDraft.toolPolicyMode} •{" "}
+                            <span className={foregroundEmphasisClassName}>supported tasks:</span>{" "}
+                            {selectedRoleTaskPreview}
+                          </p>
+                        </div>
+                        <RoleRoutingOverridesField
+                          draft={editDraft}
+                          setDraft={(updater) =>
+                            setEditDraft((current) => {
+                              if (!current) {
+                                return current;
+                              }
+                              return typeof updater === "function" ? updater(current) : updater;
+                            })
+                          }
+                        />
+                        <DisclosureSection summary="Edit all role fields">
+                          <div className="space-y-4">
+                            <RoleIdentityFields
+                              draft={editDraft}
+                              setDraft={(updater) =>
+                                setEditDraft((current) => {
+                                  if (!current) {
+                                    return current;
+                                  }
+                                  return typeof updater === "function" ? updater(current) : updater;
+                                })
+                              }
+                            />
+                            <RoleDefaultInstructionsField
+                              draft={editDraft}
+                              setDraft={(updater) =>
+                                setEditDraft((current) => {
+                                  if (!current) {
+                                    return current;
+                                  }
+                                  return typeof updater === "function" ? updater(current) : updater;
+                                })
+                              }
+                            />
+                            <RoleAdvancedPolicyFields
+                              draft={editDraft}
+                              includeRoutingOverrides={false}
+                              setDraft={(updater) =>
+                                setEditDraft((current) => {
+                                  if (!current) {
+                                    return current;
+                                  }
+                                  return typeof updater === "function" ? updater(current) : updater;
+                                })
+                              }
+                            />
+                          </div>
+                        </DisclosureSection>
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            className={primaryButtonClassName}
+                            type="button"
+                            disabled={savingEdit}
+                            onClick={() => void saveSelectedRole()}
+                          >
+                            {savingEdit ? "Saving…" : "Save role"}
+                          </button>
+                          <button
+                            className={secondaryButtonClassName}
+                            type="button"
+                            disabled={savingEdit}
+                            onClick={() =>
+                              setEditDraft(selectedRole ? toRoleDraft(selectedRole) : null)
+                            }
+                          >
+                            Reset
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </SectionCard>
+
+                {statusMessage ? <p className={supportingTextClassName}>{statusMessage}</p> : null}
               </div>
             </div>
-          </SectionCard>
-
-          <SectionCard
-            title="Edit selected role"
-            description="Update the active runtime role definition in-place, including tool policy, task coverage, and routing overrides."
-          >
-            {!editDraft ? (
-              <EmptyState label="Select a role from the catalog to edit it." />
-            ) : (
-              <div className="space-y-4">
-                <RoleForm
-                  draft={editDraft}
-                  setDraft={(updater) =>
-                    setEditDraft((current) => {
-                      if (!current) {
-                        return current;
-                      }
-                      return typeof updater === "function" ? updater(current) : updater;
-                    })
-                  }
-                />
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    className={primaryButtonClassName}
-                    type="button"
-                    disabled={savingEdit}
-                    onClick={() => void saveSelectedRole()}
-                  >
-                    {savingEdit ? "Saving…" : "Save role"}
-                  </button>
-                  <button
-                    className={secondaryButtonClassName}
-                    type="button"
-                    disabled={savingEdit}
-                    onClick={() => setEditDraft(selectedRole ? toRoleDraft(selectedRole) : null)}
-                  >
-                    Reset
-                  </button>
-                </div>
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard
-            title="Task allowlists"
-            description="Each task keeps its existing contract fields while allowed roles stay editable from the same live policy surface."
-          >
-            {policy.taskDefinitions.length === 0 ? (
-              <EmptyState label="No task definitions are available yet." />
-            ) : (
-              <div className="space-y-4">
-                {policy.taskDefinitions.map((task) => (
-                  <div key={task.task_type} className={`${mutedPanelClassName} space-y-3 p-4`}>
-                    <div>
-                      <p className="font-medium text-[var(--rm-fg)]">{task.task_type}</p>
-                      <p className="mt-1 text-sm text-[var(--rm-secondary)]">{task.description}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {task.required_capabilities.map((capability) => (
-                        <StatusPill key={capability} tone="neutral">
-                          {capability}
-                        </StatusPill>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                      {policy.roleDefinitions.map((role) => (
-                        <label
-                          key={`${task.task_type}:${role.role_id}`}
-                          className="flex items-center gap-2 rounded-none border border-[var(--rm-border)] px-3 py-2 text-sm text-[var(--rm-secondary)]"
-                        >
-                          <input
-                            checked={(taskRoleSelections[task.task_type] ?? []).includes(
-                              role.role_id,
-                            )}
-                            type="checkbox"
-                            onChange={() => toggleTaskRole(task.task_type, role.role_id)}
-                          />
-                          <span>{role.role_id}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                <button
-                  className={primaryButtonClassName}
-                  type="button"
-                  disabled={savingTasks}
-                  onClick={() => void saveTasks()}
-                >
-                  {savingTasks ? "Saving…" : "Save task allowlists"}
-                </button>
-              </div>
-            )}
-          </SectionCard>
-
-          {statusMessage ? (
-            <p className="text-sm text-[var(--rm-secondary)]">{statusMessage}</p>
-          ) : null}
+          </div>
         </>
       ) : null}
     </div>

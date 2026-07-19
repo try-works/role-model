@@ -1,0 +1,2742 @@
+Linting run: 50-openai-codex-subscription
+Path: D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription
+Workflow Profile: recursive-mode-audit-v2
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Reproduction Steps (Novice-Runnable)
+Remediation (copy/paste):
+  ## Reproduction Steps (Novice-Runnable)
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Current Behavior by Requirement
+Remediation (copy/paste):
+  ## Current Behavior by Requirement
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Source Requirement Inventory
+Remediation (copy/paste):
+  ## Source Requirement Inventory
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Relevant Code Pointers
+Remediation (copy/paste):
+  ## Relevant Code Pointers
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Known Unknowns
+Remediation (copy/paste):
+  ## Known Unknowns
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Evidence
+Remediation (copy/paste):
+  ## Evidence
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Traceability
+Remediation (copy/paste):
+  ## Traceability
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Audit Context
+Remediation (copy/paste):
+  ## Audit Context
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Effective Inputs Re-read
+Remediation (copy/paste):
+  ## Effective Inputs Re-read
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Earlier Phase Reconciliation
+Remediation (copy/paste):
+  ## Earlier Phase Reconciliation
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Subagent Contribution Verification
+Remediation (copy/paste):
+  ## Subagent Contribution Verification
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Worktree Diff Audit
+Remediation (copy/paste):
+  ## Worktree Diff Audit
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Gaps Found
+Remediation (copy/paste):
+  ## Gaps Found
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Repair Work Performed
+Remediation (copy/paste):
+  ## Repair Work Performed
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Requirement Completion Status
+Remediation (copy/paste):
+  ## Requirement Completion Status
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Audit Verdict
+Remediation (copy/paste):
+  ## Audit Verdict
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required section heading: ## Prior Recursive Evidence Reviewed
+Remediation (copy/paste):
+  ## Prior Recursive Evidence Reviewed
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing Traceability section content
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing required audit verdict line: Audit: PASS|FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Coverage: PASS is invalid without Audit: PASS
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Approval: PASS is invalid without Audit: PASS
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Audit Context section is empty
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty audited-phase section: ## Audit Context
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty audited-phase section: ## Effective Inputs Re-read
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty audited-phase section: ## Earlier Phase Reconciliation
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty audited-phase section: ## Subagent Contribution Verification
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty audited-phase section: ## Worktree Diff Audit
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty audited-phase section: ## Gaps Found
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty audited-phase section: ## Repair Work Performed
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty audited-phase section: ## Requirement Completion Status
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty audited-phase section: ## Audit Verdict
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Worktree Diff Audit is missing: Baseline type:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Worktree Diff Audit is missing: Baseline reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Worktree Diff Audit is missing: Comparison reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Worktree Diff Audit is missing: Normalized baseline:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Worktree Diff Audit is missing: Normalized comparison:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Worktree Diff Audit is missing: Normalized diff command:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty section: ## Prior Recursive Evidence Reviewed
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty section: ## Requirement Completion Status
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty section: ## Source Requirement Inventory
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01-as-is.md: Missing or empty section: ## Subagent Contribution Verification
+
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\01.5-root-cause.md
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Planned Changes by File
+Remediation (copy/paste):
+  ## Planned Changes by File
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Requirement Mapping
+Remediation (copy/paste):
+  ## Requirement Mapping
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Implementation Steps
+Remediation (copy/paste):
+  ## Implementation Steps
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Testing Strategy
+Remediation (copy/paste):
+  ## Testing Strategy
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Playwright Plan (if applicable)
+Remediation (copy/paste):
+  ## Playwright Plan (if applicable)
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Manual QA Scenarios
+Remediation (copy/paste):
+  ## Manual QA Scenarios
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Idempotence and Recovery
+Remediation (copy/paste):
+  ## Idempotence and Recovery
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Implementation Sub-phases
+Remediation (copy/paste):
+  ## Implementation Sub-phases
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Plan Drift Check
+Remediation (copy/paste):
+  ## Plan Drift Check
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Traceability
+Remediation (copy/paste):
+  ## Traceability
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Audit Context
+Remediation (copy/paste):
+  ## Audit Context
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Effective Inputs Re-read
+Remediation (copy/paste):
+  ## Effective Inputs Re-read
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Earlier Phase Reconciliation
+Remediation (copy/paste):
+  ## Earlier Phase Reconciliation
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Subagent Contribution Verification
+Remediation (copy/paste):
+  ## Subagent Contribution Verification
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Worktree Diff Audit
+Remediation (copy/paste):
+  ## Worktree Diff Audit
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Gaps Found
+Remediation (copy/paste):
+  ## Gaps Found
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Repair Work Performed
+Remediation (copy/paste):
+  ## Repair Work Performed
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Requirement Completion Status
+Remediation (copy/paste):
+  ## Requirement Completion Status
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Audit Verdict
+Remediation (copy/paste):
+  ## Audit Verdict
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required section heading: ## Prior Recursive Evidence Reviewed
+Remediation (copy/paste):
+  ## Prior Recursive Evidence Reviewed
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing Traceability section content
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing required audit verdict line: Audit: PASS|FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Coverage: PASS is invalid without Audit: PASS
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Approval: PASS is invalid without Audit: PASS
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Audit Context section is empty
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty audited-phase section: ## Audit Context
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty audited-phase section: ## Effective Inputs Re-read
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty audited-phase section: ## Earlier Phase Reconciliation
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty audited-phase section: ## Subagent Contribution Verification
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty audited-phase section: ## Worktree Diff Audit
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty audited-phase section: ## Gaps Found
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty audited-phase section: ## Repair Work Performed
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty audited-phase section: ## Requirement Completion Status
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty audited-phase section: ## Audit Verdict
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Worktree Diff Audit is missing: Baseline type:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Worktree Diff Audit is missing: Baseline reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Worktree Diff Audit is missing: Comparison reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Worktree Diff Audit is missing: Normalized baseline:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Worktree Diff Audit is missing: Normalized comparison:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Worktree Diff Audit is missing: Normalized diff command:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty section: ## Plan Drift Check
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty section: ## Prior Recursive Evidence Reviewed
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty section: ## Requirement Completion Status
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Missing or empty section: ## Subagent Contribution Verification
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\02-to-be-plan.md: Requirement Mapping requires 01-as-is.md to contain ## Source Requirement Inventory
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Plan Deviations
+Remediation (copy/paste):
+  ## Plan Deviations
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Implementation Evidence
+Remediation (copy/paste):
+  ## Implementation Evidence
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Traceability
+Remediation (copy/paste):
+  ## Traceability
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Audit Context
+Remediation (copy/paste):
+  ## Audit Context
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Effective Inputs Re-read
+Remediation (copy/paste):
+  ## Effective Inputs Re-read
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Earlier Phase Reconciliation
+Remediation (copy/paste):
+  ## Earlier Phase Reconciliation
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Subagent Contribution Verification
+Remediation (copy/paste):
+  ## Subagent Contribution Verification
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Worktree Diff Audit
+Remediation (copy/paste):
+  ## Worktree Diff Audit
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Gaps Found
+Remediation (copy/paste):
+  ## Gaps Found
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Repair Work Performed
+Remediation (copy/paste):
+  ## Repair Work Performed
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required section heading: ## Audit Verdict
+Remediation (copy/paste):
+  ## Audit Verdict
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing Traceability section content
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing required audit verdict line: Audit: PASS|FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Audit Context section is empty
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing or empty audited-phase section: ## Audit Context
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing or empty audited-phase section: ## Effective Inputs Re-read
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing or empty audited-phase section: ## Earlier Phase Reconciliation
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing or empty audited-phase section: ## Subagent Contribution Verification
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing or empty audited-phase section: ## Worktree Diff Audit
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing or empty audited-phase section: ## Gaps Found
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing or empty audited-phase section: ## Repair Work Performed
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing or empty audited-phase section: ## Audit Verdict
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Worktree Diff Audit is missing: Baseline type:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Worktree Diff Audit is missing: Baseline reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Worktree Diff Audit is missing: Comparison reference:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Worktree Diff Audit is missing: Normalized baseline:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Worktree Diff Audit is missing: Normalized comparison:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Worktree Diff Audit is missing: Normalized diff command:
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Worktree Diff Audit does not account for actual changed files from git diff: .tmp-runtime-3461.stderr.log, .tmp-runtime-3461.stdout.log, .tmp-runtime-3462.stderr.log, .tmp-runtime-3462.stdout.log, role-model-router/apps/runtime-host-bridge/src/cli.ts ...
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Earlier Phase Reconciliation is missing relevant addenda: .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-01.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-02.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-03.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-04.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-05.md
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Effective Inputs Re-read is missing relevant addenda: .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-01.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-02.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-03.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-04.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-05.md
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Inputs is missing relevant addenda: .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-01.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-02.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-03.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-04.md, .recursive/run/50-openai-codex-subscription/addenda/02-to-be-plan.addendum-05.md
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Missing or empty section: ## Subagent Contribution Verification
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Requirement Completion Status is missing in-scope requirements: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03-implementation-summary.md: Requirement Completion Status leaves diff-owned changed file(s) unaccounted for: .tmp-runtime-3461.stderr.log, .tmp-runtime-3461.stdout.log, .tmp-runtime-3462.stderr.log, .tmp-runtime-3462.stdout.log, docs/architecture/09-runtime-routing-strategy-interactions.md
+
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\03.5-code-review.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\04-test-summary.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\05-manual-qa.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\06-decisions-update.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\07-state-update.md
+[WARN] Missing artifact (ok if not reached yet): D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\08-memory-impact.md
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-02.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-02.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-02.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-02.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-03.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-03.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-03.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-03.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-03.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-03.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-04.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-04.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-04.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-04.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-04.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-04.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-05.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-05.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-05.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-05.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-05.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-05.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-06.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-06.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-06.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-06.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-06.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-06.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-07.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-07.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-07.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-07.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-07.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-07.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-08.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-08.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-08.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-08.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-08.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-08.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-09.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-09.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-09.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-09.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-09.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-09.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-10.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-10.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-10.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-10.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-10.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-10.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-11.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-11.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-11.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-11.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-11.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-11.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-12.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-12.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-12.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-12.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-12.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-12.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-13.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-13.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-13.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-13.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-13.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-13.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-14.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-14.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-14.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-14.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-14.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-14.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-15.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-15.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-15.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-15.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-15.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-15.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-16.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-16.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-16.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-16.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-16.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-16.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-17.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-17.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-17.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-17.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-17.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-17.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-18.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-18.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-18.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-18.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-18.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-18.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-19.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-19.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-19.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-19.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-19.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-19.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-20.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-20.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-20.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-20.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-20.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-20.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-21.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-21.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-21.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-21.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-21.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-21.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-22.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-22.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-22.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-22.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-22.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-22.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-23.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-23.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-23.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-23.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-23.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-23.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-24.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-24.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-24.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-24.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-24.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-24.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-25.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-25.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-25.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-25.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-25.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-25.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-26.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-26.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-26.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-26.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-26.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-26.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-27.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-27.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-27.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-27.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-27.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\01.5-root-cause.addendum-27.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-02.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-02.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-02.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-02.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-03.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-03.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-03.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-03.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-03.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-03.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-04.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-04.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-04.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-04.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-04.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-04.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-05.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-05.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-05.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-05.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-05.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-05.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-06.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-06.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-06.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-06.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-06.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-06.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-07.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-07.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-07.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-07.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-07.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-07.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-08.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-08.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-08.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-08.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-08.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-08.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-09.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-09.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-09.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-09.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-09.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-09.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-10.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-10.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-10.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-10.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-10.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-10.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-11.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-11.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-11.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-11.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-11.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-11.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-12.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-12.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-12.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-12.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-12.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-12.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-13.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-13.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-13.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-13.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-13.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-13.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-14.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-14.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-14.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-14.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-14.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-14.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-15.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-15.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-15.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-15.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-15.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-15.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-16.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-16.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-16.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-16.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-16.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-16.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-17.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-17.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-17.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-17.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-17.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-17.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-18.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-18.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-18.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-18.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-18.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-18.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-19.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-19.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-19.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-19.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-19.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-19.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-20.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-20.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-20.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-20.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-20.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-20.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-21.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-21.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-21.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-21.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-21.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-21.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-22.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-22.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-22.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-22.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-22.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-22.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-23.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-23.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-23.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-23.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-23.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-23.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-24.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-24.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-24.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-24.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-24.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-24.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-25.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-25.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-25.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-25.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-25.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-25.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-26.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-26.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-26.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-26.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-26.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-26.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-27.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-27.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-27.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-27.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-27.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\02-to-be-plan.addendum-27.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-01.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-01.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-01.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-01.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-02.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-02.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-02.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-02.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-03.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-03.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-03.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-03.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-03.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-03.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-04.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-04.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-04.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-04.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-04.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-04.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-05.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-05.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-05.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-05.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-05.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-05.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-06.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-06.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-06.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-06.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-06.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-06.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-07.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-07.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-07.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-07.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-07.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-07.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-08.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-08.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-08.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-08.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-08.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-08.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-09.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-09.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-09.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-09.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-09.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-09.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-10.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-10.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-10.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-10.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-10.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-10.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-11.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-11.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-11.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-11.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-11.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-11.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-12.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-12.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-12.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-12.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-12.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-12.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-19.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-19.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-19.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-19.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-19.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-19.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-20.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-20.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-20.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-20.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-20.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-20.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-21.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-21.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-21.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-21.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-21.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-21.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-24.md: Missing required header field(s): Scope note
+Remediation (copy/paste):
+  Scope note: <one sentence describing what this artifact decides/enables>.
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-25.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-25.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-25.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-25.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-25.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-25.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-26.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-26.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-26.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-26.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-26.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-26.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-27.md: Missing required section: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  - [ ] <task 1>
+  - [ ] <task 2>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-27.md: Missing required section heading: ## TODO
+Remediation (copy/paste):
+  ## TODO
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-27.md: Missing required section heading: ## Coverage Gate
+Remediation (copy/paste):
+  ## Coverage Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-27.md: Missing required section heading: ## Approval Gate
+Remediation (copy/paste):
+  ## Approval Gate
+  
+  <content>
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-27.md: Missing required gate line: Coverage: PASS|FAIL
+Remediation (copy/paste):
+  Coverage: FAIL
+
+[FAIL] D:\DEV\role-model\.worktrees\50-openai-codex-subscription\.recursive\run\50-openai-codex-subscription\addenda\03-implementation-summary.addendum-27.md: Missing required gate line: Approval: PASS|FAIL
+Remediation (copy/paste):
+  Approval: FAIL
+
+----
+
+Summary
+- FAIL: 536
+- WARN: 7
+
+[FAIL] Lint failed

@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "caseId": "c01-full-refactor",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Deliverable contains all required JSON keys (diff, schema_findings, test_updates, before_after). The unified diff is valid (headers + @@ hunk, no placeholders), correctly renames the function and normalizes strategy via a helper. Schema findings explicitly flag the missing requestedRoleId field and the conflict with additionalProperties. Test updates propose renaming tests, adding normalization assertions, and aligning the schema/test for requestedRoleId. Before/after examples cover both the code change and the schema deficiency. No reasoning prose or malformed patch detected.",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/c01-full-refactor.json",
+  "attemptArtifactPaths": [
+    "judge/openai.personal.openai-codex-subscription.global.gpt-5.4/c01-full-refactor/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935519345
+}

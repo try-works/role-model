@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "f027d2243a3dd78bd29a938f298c7a631419828bb7eabce607e417d3a33fef39",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\71-runtime-startup-lifecycle-and-health-truth-reconciliation\\.recursive\\run\\71-runtime-startup-lifecycle-and-health-truth-reconciliation\\01-as-is.md",
+  "locked_at": "2026-07-15T12:14:01Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "38a9b9648a3df54176a5ed5f80195d005c205e7f08e83fcf1f4ba973f2d2911c",
+    "00-worktree.md": "bee68f130d229d99ac360c6196c518798ab1c9d843413baf468b60d51a58f191"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "e32d1d241bbb6693997d0ae0b70aff4963ceda2a6b1f89118e0f01a5d17db111"
+}

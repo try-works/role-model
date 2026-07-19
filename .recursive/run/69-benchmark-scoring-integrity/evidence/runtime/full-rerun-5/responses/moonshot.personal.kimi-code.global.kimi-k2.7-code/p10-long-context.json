@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "p10-long-context",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p10-long-context-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"answer\": \"Root cause 1: A partial config PUT removed/overwrote the configured routing strategy, so exact remote model requests began matching no eligible endpoint and the runtime returned HTTP 400 with an empty chosen_endpoint_id.\\nFix 1: Restore the routing.strategy via merge-preserving config updates (partial PUTs must preserve the existing routing strategy rather than replace it).\\n\\nRoot cause 2: The default throughput SLA hard-denied remote endpoints whose throughput was below 24 tps whenever they were the only allow-listed candidate, leaving no eligible endpoint for the remote model.\\nFix 2: Adjust the default throughput SLA threshold / policy so that sub-24 tps remote endpoints are not hard-denied when they are the only allow-listed candidates.\"\n}",
+  "rawResponse": "```json\n{\n  \"answer\": \"Root cause 1: A partial config PUT removed/overwrote the configured routing strategy, so exact remote model requests began matching no eligible endpoint and the runtime returned HTTP 400 with an empty chosen_endpoint_id.\\nFix 1: Restore the routing.strategy via merge-preserving config updates (partial PUTs must preserve the existing routing strategy rather than replace it).\\n\\nRoot cause 2: The default throughput SLA hard-denied remote endpoints whose throughput was below 24 tps whenever they were the only allow-listed candidate, leaving no eligible endpoint for the remote model.\\nFix 2: Adjust the default throughput SLA threshold / policy so that sub-24 tps remote endpoints are not hard-denied when they are the only allow-listed candidates.\"\n}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"Root cause 1: A partial config PUT removed/overwrote the configured routing strategy, so exact remote model requests began matching no eligible endpoint and the runtime returned HTTP 400 with an empty chosen_endpoint_id.\\nFix 1: Restore the routing.strategy via merge-preserving config updates (partial PUTs must preserve the existing routing strategy rather than replace it).\\n\\nRoot cause 2: The default throughput SLA hard-denied remote endpoints whose throughput was below 24 tps whenever they were the only allow-listed candidate, leaving no eligible endpoint for the remote model.\\nFix 2: Adjust the default throughput SLA threshold / policy so that sub-24 tps remote endpoints are not hard-denied when they are the only allow-listed candidates.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 14024,
+  "failure": false,
+  "recordedAtMs": 1783932818219
+}

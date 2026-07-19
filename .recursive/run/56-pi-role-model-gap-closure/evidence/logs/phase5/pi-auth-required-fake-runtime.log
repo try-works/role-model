@@ -1,0 +1,113 @@
+const http = require('node:http');
+const { spawn } = require('node:child_process');
+
+const discovery = {
+  contractVersion: 'role-model.downstream.openai.v1',
+  kind: 'openai-compatible',
+  providerId: 'role-model-runtime',
+  displayName: 'Role-Model Runtime',
+  baseUrl: '',
+  endpoints: {},
+  authentication: {
+    type: 'bearer',
+    headerName: 'Authorization',
+    required: true,
+    placeholderToken: 'role-model-local',
+    note: 'auth required test fixture'
+  },
+  models: [{
+    id: 'role-model/auth-required-fixture',
+    object: 'model',
+    owned_by: 'role-model',
+    endpoint_ids: ['fixture'],
+    type: 'alias',
+    targetModelIds: ['fixture/model'],
+    canonicalModelIds: ['fixture/model'],
+    providerIds: ['fixture'],
+    limits: { safeContextWindow: 8192, safeMaxOutputTokens: 2048, maxContextWindow: 8192, maxOutputTokens: 2048 },
+    modalities: { guaranteedInput: ['text'], availableInput: ['text'], conditionalInput: {}, output: ['text'] },
+    capabilities: {
+      guaranteed: ['text.chat'],
+      available: ['text.chat'],
+      conditional: {},
+      tools: { functionCalling: false },
+      reasoning: { supported: false, effortControl: false },
+      structuredOutput: { supported: false },
+      caching: { promptRead: null, promptWrite: null, source: 'unknown' }
+    },
+    declared: { modelIds: ['fixture/model'], endpointIds: ['fixture'] },
+    routable: { modelIds: ['fixture/model'], endpointIds: ['fixture'] },
+    piMapping: { contextWindow: 8192, maxTokens: 2048 },
+    sources: ['phase5-fixture']
+  }],
+  setup: { recommendedModel: 'role-model/auth-required-fixture', notes: ['phase5 fixture'] },
+  freshness: { generatedAt: new Date().toISOString(), catalogVersion: 'phase5-fixture' }
+};
+
+const server = http.createServer((req, res) => {
+  const send = (status, body) => {
+    res.writeHead(status, { 'content-type': 'application/json' });
+    res.end(JSON.stringify(body));
+  };
+  if (req.url === '/healthz') return send(200, { status: 'ok' });
+  if (req.url === '/api/version') return send(200, { version: 'phase5-fixture' });
+  if (req.url === '/api/role-model/downstream/openai') return send(200, discovery);
+  return send(404, { error: 'not found' });
+});
+
+server.listen(0, '127.0.0.1', () => {
+  const { port } = server.address();
+  const endpoint = `http://127.0.0.1:${port}`;
+  discovery.baseUrl = endpoint;
+  discovery.endpoints = {
+    health: `${endpoint}/healthz`,
+    models: `${endpoint}/v1/models`,
+    chatCompletions: `${endpoint}/v1/chat/completions`,
+    responses: `${endpoint}/v1/responses`
+  };
+  console.log(`FAKE_ENDPOINT=${endpoint}`);
+  const child = spawn('pi', ['--mode', 'rpc'], {
+    shell: true,
+    cwd: process.cwd(),
+    env: { ...process.env, ROLE_MODEL_ENDPOINT: endpoint },
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  let done = false;
+  function line(prefix, data) {
+    for (const raw of data.toString().split(/\r?\n/)) {
+      if (!raw) continue;
+      console.log(prefix + raw);
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed.type === 'response' && parsed.id === 'prompt') {
+          done = true;
+          child.kill('SIGTERM');
+        }
+      } catch {}
+    }
+  }
+  child.stdout.on('data', (d) => line('', d));
+  child.stderr.on('data', (d) => line('STDERR ', d));
+  child.on('exit', (code, signal) => {
+    console.log(`RPC_EXIT_CODE=${code}`);
+    console.log(`RPC_SIGNAL=${signal}`);
+    server.close(() => process.exit(0));
+  });
+  setTimeout(() => {
+    child.stdin.write(JSON.stringify({ id: 'prompt', type: 'prompt', message: '/role-model doctor' }) + '\n');
+  }, 500);
+  setTimeout(() => {
+    if (!done) {
+      console.log('TIMEOUT waiting for prompt response');
+      child.kill('SIGTERM');
+    }
+  }, 12000);
+});
+FAKE_ENDPOINT=http://127.0.0.1:49652
+(node:23168) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+{"type":"extension_ui_request","id":"9279316b-6872-47a4-a023-9bdb333b8665","method":"notify","message":"Role-Model runtime unavailable: Role-Model downstream OpenAI discovery says auth is required; no supported Pi token source is configured.\nstate: auth-required\nendpoint: http://127.0.0.1:49652/api/role-model/downstream/openai\nremediation: Use a Role-Model runtime that does not require inbound auth, or add an explicit supported token source.","notifyType":"error"}
+{"id":"prompt","type":"response","command":"prompt","success":true}
+RPC_EXIT_CODE=null
+RPC_SIGNAL=SIGTERM
+EXIT_CODE=0

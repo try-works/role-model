@@ -1,0 +1,14 @@
+Name: `runtime-packaging-readiness`
+Phase: `RED`
+Run: `67-runtime-ui-route-startup-performance-hardening`
+Timestamp: `2026-07-12`
+Command:
+
+- `corepack pnpm run runtime:validate-packaging`
+
+Observed failure before the readiness repair:
+
+- the packaged runtime could reach `/healthz`, but the validator then failed on `/api/role-model/accounts` with `503 runtime_initializing`
+- that failure proved the packaging validator still needed a control-plane readiness barrier on `/api/role-model/runtime/summary`
+
+RED verified: `PASS`

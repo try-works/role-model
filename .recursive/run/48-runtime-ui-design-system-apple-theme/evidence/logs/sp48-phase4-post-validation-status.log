@@ -1,0 +1,26 @@
+## recursive/48-runtime-ui-design-system-apple-theme
+ M .agents/skills/recursive-mode/scripts/__pycache__/lint-recursive-run.cpython-314.pyc
+ M docs/architecture/06-router-runtime-architecture-lock.md
+ M role-model-router/apps/runtime-ui/DESIGN_SYSTEM.md
+ M role-model-router/apps/runtime-ui/app/app.css
+ M role-model-router/apps/runtime-ui/app/components/app-shell.tsx
+ M role-model-router/apps/runtime-ui/app/components/llama-swap-setup-modal.tsx
+ M role-model-router/apps/runtime-ui/app/components/page-primitives.tsx
+ M role-model-router/apps/runtime-ui/app/lib/design-system.test.ts
+ M role-model-router/apps/runtime-ui/app/lib/design-system.ts
+ M role-model-router/apps/runtime-ui/app/root.tsx
+ M role-model-router/apps/runtime-ui/app/routes/control-benchmark.tsx
+ M role-model-router/apps/runtime-ui/app/routes/control-controller.tsx
+ M role-model-router/apps/runtime-ui/app/routes/control-models.tsx
+ M role-model-router/apps/runtime-ui/app/routes/control-roles.tsx
+ M role-model-router/apps/runtime-ui/app/routes/local-logs.tsx
+ M role-model-router/apps/runtime-ui/app/routes/local-policy.tsx
+ M role-model-router/apps/runtime-ui/app/routes/local-swap.tsx
+ M role-model-router/apps/runtime-ui/app/routes/providers.tsx
+ M role-model-router/apps/runtime-ui/app/routes/request-detail.tsx
+ M role-model-router/apps/runtime-ui/package.json
+?? .recursive/run/48-runtime-ui-design-system-apple-theme/
+?? role-model-router/apps/runtime-ui/DESIGN_APPLE_REFERENCE.md
+?? role-model-router/apps/runtime-ui/app/components/theme-toggle.tsx
+?? role-model-router/apps/runtime-ui/app/lib/theme.test.ts
+?? role-model-router/apps/runtime-ui/app/lib/theme.ts

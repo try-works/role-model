@@ -1,0 +1,19 @@
+[FAIL] Refusing to lock .recursive\run\57-role-model-taxonomy-v1-phase-1-4\05-manual-qa.md
+Workflow Profile: recursive-mode-audit-v1
+- Approval gate must be PASS before locking
+- Coverage gate must be PASS before locking
+- Missing Traceability section content
+- Missing or empty section: ## QA Execution Record
+- Missing required gate line: Approval: PASS|FAIL
+- Missing required gate line: Coverage: PASS|FAIL
+- Missing required header field(s): Scope note
+- Missing required section heading: ## Approval Gate
+- Missing required section heading: ## Coverage Gate
+- Missing required section heading: ## Evidence and Artifacts
+- Missing required section heading: ## QA Execution Record
+- Missing required section heading: ## QA Scenarios and Results
+- Missing required section heading: ## Traceability
+- Missing required section heading: ## User Sign-Off
+- QA Execution Mode agent-operated requires QA Execution Record -> Agent Executor
+- QA Execution Mode agent-operated requires QA Execution Record -> Tools Used
+- QA Execution Mode agent-operated requires evidence paths under `/.recursive/run/57-role-model-taxonomy-v1-phase-1-4/evidence/`

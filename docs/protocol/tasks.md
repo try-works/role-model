@@ -2,15 +2,15 @@
 
 `TaskDefinition` models the unit of work that routing is trying to satisfy.
 
-Baseline example task types include:
+Taxonomy V1 example task types include:
 
-- `text.chat`: a user asks a general question and expects a prose answer; commonly paired with `general.chat`.
-- `code.edit`: a repository-scoped change request that expects a patch or diff; commonly paired with `coder.patch` or `coder.review`.
-- `tools.function_calling`: the task requires calling one or more tools with structured arguments; commonly paired with `tool.agent`.
-- `embeddings.text`: the input must be converted into vectors for retrieval or similarity search; commonly paired with `embedder`.
-- `text.classification`: the input must be labeled against a known taxonomy; commonly paired with `classifier`.
-- `text.language_detection`: the input must be assigned a language code; commonly paired with `language.detector`.
-- `json.schema_adherence`: the output must conform to a required JSON shape or policy contract; commonly paired with `coder.review` or another structured-output-capable role.
+- `coder.edit`: a repository-scoped change request that expects an implementation patch.
+- `coder.review`: review-focused code analysis; commonly compatible with `security` and `architect`.
+- `security.audit`: security-oriented audit work over code, configuration, prompts, or policies.
+- `researcher.web_research.current`: current public-source research with citations.
+- `product.requirements`: product requirement and acceptance-criteria drafting.
+- `support.ticket.reply`: user-facing support response drafting.
+- `architect.migration.strategy`: migration planning across systems, schemas, or APIs.
 
 Tasks define required inputs, required/preferred capabilities, quality metrics, allowed roles, and
 default benchmark suites.

@@ -1,0 +1,21 @@
+role-model-router/apps/runtime-host-bridge/src/index.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    19478 19478 │                       Boolean(execution.normalized.reasoningText) &&
+    19479 19479 │                       reasoningDeltaCount === 0,
+    19480       │ - ··················...(reasoningUnavailableReason·?·{·unavailableReason:·reasoningUnavailableReason·}·:·{}),
+          19480 │ + ··················...(reasoningUnavailableReason
+          19481 │ + ····················?·{·unavailableReason:·reasoningUnavailableReason·}
+          19482 │ + ····················:·{}),
+    19481 19483 │                   },
+    19482 19484 │                 }
+
+
+Checked 6 files in 1034ms. No fixes applied.
+Found 1 error.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+

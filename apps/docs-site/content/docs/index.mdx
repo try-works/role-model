@@ -18,6 +18,8 @@ It gives a system a durable way to describe:
 The router does **not** pick by model name alone. It routes across concrete endpoints using role and task
 metadata, declared capability, routing policy, and observed performance.
 
+![role-model runtime overview](/images/runtime-overview.png)
+
 ## Start here if you are new
 
 1. [Install](/get-started/install)
@@ -25,6 +27,10 @@ metadata, declared capability, routing policy, and observed performance.
 3. [Run the full benchmark](/get-started/run-full-benchmark)
 4. [Choose and save the routing strategy](/get-started/choose-routing-strategy)
 5. [Send the first request and inspect the decision](/get-started/first-request-and-decision)
+
+Using Pi? Install and launch the Role-Model runtime first, then follow
+[Pi integration](/integrations/pi) to install `@try-works/pi-role-model`, run `/role-model setup`, and choose
+an alias.
 
 ## What role-model does
 
@@ -50,19 +56,17 @@ The reference router follows a stable flow:
 
 The result is deterministic enough to inspect later, not just a hidden runtime guess.
 
-## Baseline roles
+## Taxonomy V1 examples
 
-The current baseline role set includes:
+The runtime taxonomy V1 catalog starts with groups, then roles, then task types. Examples:
 
-| Role ID | Primary task types | Typical use |
+| Group | Role | Task examples |
 | --- | --- | --- |
-| `general.chat` | `text.chat` | general conversational responses |
-| `coder.patch` | `code.edit` | patch-oriented code editing |
-| `coder.review` | `code.edit`, `json.schema_adherence` | review, critique, and structured verdicts |
-| `tool.agent` | `tools.function_calling` | tool orchestration and structured tool calls |
-| `embedder` | `embeddings.text` | retrieval and vector generation |
-| `classifier` | `text.classification` | labeling and taxonomy selection |
-| `language.detector` | `text.language_detection` | language identification |
+| `engineering` | `coder` | `coder.edit`, `coder.review` |
+| `engineering` / `governance_safety` | `security` | `security.audit`, `security.threat_model` |
+| `product_design` | `product` | `product.requirements`, `product.acceptance` |
+| `knowledge_research` | `researcher` | `researcher.web_research.current`, `researcher.fact_check` |
+| `communication` | `support` | `support.ticket.reply`, `support.triage` |
 
 For the full role and task mental model, read
 [Roles, tasks, and capabilities](/concepts/roles-tasks-and-capabilities). The deeper protocol contract
@@ -79,6 +83,9 @@ The canonical first-run sequence is now:
 5. review the benchmark results
 6. choose and save the routing strategy
 7. validate with a real routed request and inspect the decision
+
+Downstream clients such as Pi join after the runtime is installed and configured. They discover Role-Model
+aliases through the downstream OpenAI discovery contract instead of owning runtime setup themselves.
 
 This keeps routing strategy selection evidence-based instead of guess-based.
 

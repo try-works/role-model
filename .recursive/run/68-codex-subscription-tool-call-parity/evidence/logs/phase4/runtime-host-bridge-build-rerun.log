@@ -1,0 +1,14 @@
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\68-codex-subscription-tool-call-parity\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+src/benchmark-runner.ts(364,7): error TS2345: Argument of type '{ text?: { format: { type: "json_schema"; name: string; schema: Record<string, unknown>; strict: boolean | undefined; }; } | undefined; tools?: readonly Record<string, unknown>[] | undefined; model: string; input: readonly Record<...>[]; }' is not assignable to parameter of type '{ model: string; input: string | readonly Record<string, unknown>[]; tools?: readonly Record<string, unknown>[] | undefined; text?: { format: { type: "json_schema"; name: string; schema: Record<string, unknown>; strict: boolean; }; } | undefined; temperature?: number | undefined; }'.
+  Types of property 'text' are incompatible.
+    Type '{ format: { type: "json_schema"; name: string; schema: Record<string, unknown>; strict: boolean | undefined; }; } | undefined' is not assignable to type '{ format: { type: "json_schema"; name: string; schema: Record<string, unknown>; strict: boolean; }; } | undefined'.
+      Type '{ format: { type: "json_schema"; name: string; schema: Record<string, unknown>; strict: boolean | undefined; }; }' is not assignable to type '{ format: { type: "json_schema"; name: string; schema: Record<string, unknown>; strict: boolean; }; }'.
+        The types of 'format.strict' are incompatible between these types.
+          Type 'boolean | undefined' is not assignable to type 'boolean'.
+            Type 'undefined' is not assignable to type 'boolean'.
+D:\DEV\role-model\.worktrees\68-codex-subscription-tool-call-parity\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/runtime-host-bridge@0.0.0 build: `tsc -p tsconfig.json`
+Exit status 2

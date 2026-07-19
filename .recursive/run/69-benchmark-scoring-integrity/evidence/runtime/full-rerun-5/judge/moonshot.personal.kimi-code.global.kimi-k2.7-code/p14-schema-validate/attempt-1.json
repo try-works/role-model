@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p14-schema-validate",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p14-schema-validate-a1-848697a2-ae41-4456-a6fe-4202455fe0e4",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p14-schema-validate\n\n## Original question\n[user]\nCurrent schema and test excerpt:\n```json\n{\n  \"$id\": \"routingDiagnostics.difficultyRouting\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"difficultyBucket\": { \"type\": \"string\" },\n    \"chosenEndpointId\": { \"type\": \"string\" }\n  },\n  \"required\": [\"difficultyBucket\", \"chosenEndpointId\"],\n  \"additionalProperties\": false\n}\n```\n```ts\ntest('includes requestedRoleId when routing is controller-guided', () => {\n  expect(result.routingDiagnostics.difficultyRouting.requestedRoleId).toBe('coder.patch');\n});\n```\nValidate the schema contract for routing diagnostics and refactor the test suite if fields are missing. Return ONLY JSON with `analysis`, `missing_fields`, and `test_updates`.\n\n## Example expected answer\n{\n  \"analysis\": \"The schema omits `requestedRoleId`, so controller-guided routing diagnostics cannot satisfy the existing test expectation.\",\n  \"missing_fields\": [\n    \"requestedRoleId\"\n  ],\n  \"test_updates\": [\n    \"Add `requestedRoleId` to the schema properties and required list when controller-guided routing is emitted.\",\n    \"Keep the test assertion and extend fixtures to include `requestedRoleId: \\\"coder.patch\\\"`.\"\n  ]\n}\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Must identify that `requestedRoleId` is missing from the schema and propose concrete test updates.\n[MUST] Include JSON keys: analysis, missing_fields, test_updates\n[SHOULD] Match clues: requestedRoleId|schema|test\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nReturn ONLY a ```json fence: {\"analysis\":\"...\",\"missing_fields\":[\"...\"],\"test_updates\":[\"...\"]}.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"analysis\",\n    \"missing_fields\",\n    \"test_updates\"\n  ],\n  \"properties\": {\n    \"analysis\": {\n      \"type\": \"string\",\n      \"minLength\": 16\n    },\n    \"missing_fields\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"minItems\": 1\n    },\n    \"test_updates\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"minItems\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMust identify that `requestedRoleId` is missing from the schema and propose concrete test updates.\n\n## Subject deliverable to grade\n{\n  \"analysis\": \"The current schema only allows `difficultyBucket` and `chosenEndpointId` and sets `additionalProperties: false`. The test asserts that `routingDiagnostics.difficultyRouting.requestedRoleId` equals `'coder.patch'`, but `requestedRoleId` is not declared in the schema, so the contract validation fails and the test cannot pass.\",\n  \"missing_fields\": [\n    \"requestedRoleId\"\n  ],\n  \"test_updates\": [\n    \"Add `requestedRoleId` to `properties` as `{ \\\"type\\\": \\\"string\\\" }` and include it in `required`.\",\n    \"Update the test to first assert the routing mode is controller-guided, then assert `requestedRoleId`.\",\n    \"Add a validation test that confirms the schema rejects payloads without `requestedRoleId` when it is required.\"\n  ]\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The model correctly identifies that requestedRoleId is missing from the schema and proposes concrete test updates. All required keys are present and meet the schema requirements.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The model correctly identifies that requestedRoleId is missing from the schema and proposes concrete test updates. All required keys are present and meet the schema requirements.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p14-schema-validate.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nCurrent schema and test excerpt:\n```json\n{\n  \"$id\": \"routingDiagnostics.difficultyRouting\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"difficultyBucket\": { \"type\": \"string\" },\n    \"chosenEndpointId\": { \"type\": \"string\" }\n  },\n  \"required\": [\"difficultyBucket\", \"chosenEndpointId\"],\n  \"additionalProperties\": false\n}\n```\n```ts\ntest('includes requestedRoleId when routing is controller-guided', () => {\n  expect(result.routingDiagnostics.difficultyRouting.requestedRoleId).toBe('coder.patch');\n});\n```\nValidate the schema contract for routing diagnostics and refactor the test suite if fields are missing. Return ONLY JSON with `analysis`, `missing_fields`, and `test_updates`.",
+    "exemplarAnswer": "{\n  \"analysis\": \"The schema omits `requestedRoleId`, so controller-guided routing diagnostics cannot satisfy the existing test expectation.\",\n  \"missing_fields\": [\n    \"requestedRoleId\"\n  ],\n  \"test_updates\": [\n    \"Add `requestedRoleId` to the schema properties and required list when controller-guided routing is emitted.\",\n    \"Keep the test assertion and extend fixtures to include `requestedRoleId: \\\"coder.patch\\\"`.\"\n  ]\n}",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must identify that `requestedRoleId` is missing from the schema and propose concrete test updates.",
+      "[MUST] Include JSON keys: analysis, missing_fields, test_updates",
+      "[SHOULD] Match clues: requestedRoleId|schema|test"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 206,
+    "reasoningLength": 1492
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783934967529
+}

@@ -1,0 +1,22 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/sqlite-memory
+
+(node:61932) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/index.test.ts (34 tests) 9635ms
+   ✓ initializeSqliteMemory > persists runtime observation bundles, profile snapshots, and maintenance-policy reads  371ms
+   ✓ initializeSqliteMemory > persists and reads segmented observed samples and profiles by difficulty bucket  328ms
+   ✓ initializeSqliteMemory > flattens persisted runtime observations into canonical telemetry summary, comparison, and request rows  306ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting benchmark samples  464ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting runtime observation bundles  893ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading difficulty classification cache  451ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > retries through a transient sqlite write lock when persisting difficulty classification cache  488ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading advisory max difficulty recommendations  586ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when listing runtime telemetry records  716ms
+   ✓ persistObservedBenchmarkSample benchmark_mode > waits through a transient sqlite lock when reading batched observation telemetry columns  666ms
+
+ Test Files  1 passed (1)
+      Tests  34 passed (34)
+   Start at  01:56:03
+   Duration  14.52s (transform 1.79s, setup 0ms, collect 2.11s, tests 9.63s, environment 0ms, prepare 1.14s)
+

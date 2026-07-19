@@ -24,7 +24,15 @@ export interface ExtractedBenchmarkAnswer {
     | "missing";
 }
 
-const JSON_FENCE_PATTERN = /```(?:json)?\s*([\s\S]*?)```/gi;
+function renderCodeFenceDeliverable(code: string, language?: string): string {
+  const trimmed = code.trim();
+  if (!trimmed) {
+    return "";
+  }
+  const languageTag = (language ?? "").trim();
+  return [`\`\`\`${languageTag}`, trimmed, "```"].join("\n");
+}
+
 const PLACEHOLDER_PATTERN =
   /^\.{3}$|^<[^>]+>$|^check\s*[12]$|complete typescript|your answer here|placeholder|todo|tbd|first bullet|second bullet|one sentence comparing|fenced code block|no reasoning|your final short answer|milestone 1|what changed|short test idea|what schema fields|tests you validated/i;
 
@@ -36,6 +44,50 @@ export interface AnswerFormatCaseRef {
   readonly expected_tool_names?: readonly string[];
   readonly answer_format?: BenchmarkAnswerFormat;
   readonly grading_criteria?: string;
+}
+
+type BenchmarkToolCallLike = {
+  readonly id?: string;
+  readonly function: { readonly name: string; readonly arguments: string };
+};
+
+function buildObservedToolCallCounts(input: {
+  readonly structuredToolNames: readonly string[];
+  readonly toolCalls?: readonly BenchmarkToolCallLike[];
+}): Map<string, number> {
+  const counts = new Map<string, number>();
+  const names =
+    input.toolCalls?.map((toolCall) => toolCall.function.name).filter((name) => name.length > 0) ??
+    input.structuredToolNames;
+  for (const name of names) {
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function listMissingExpectedToolCalls(input: {
+  readonly caseItem: AnswerFormatCaseRef;
+  readonly structuredToolNames: readonly string[];
+  readonly toolCalls?: readonly BenchmarkToolCallLike[];
+}): string[] {
+  const expected = input.caseItem.expected_tool_names ?? [];
+  if (expected.length === 0) {
+    return [];
+  }
+  const observedCounts = buildObservedToolCallCounts({
+    structuredToolNames: input.structuredToolNames,
+    toolCalls: input.toolCalls,
+  });
+  const missing: string[] = [];
+  for (const name of expected) {
+    const remaining = observedCounts.get(name) ?? 0;
+    if (remaining > 0) {
+      observedCounts.set(name, remaining - 1);
+    } else {
+      missing.push(name);
+    }
+  }
+  return missing;
 }
 
 function messageText(caseItem: AnswerFormatCaseRef): string {
@@ -169,10 +221,78 @@ function parseJsonCandidate(candidate: string): unknown | null {
   }
 }
 
+function stripBenchmarkToolCallLines(raw: string): string {
+  return raw
+    .split(/\r?\n/)
+    .filter((line) => !/^TOOL_CALL name=\S+\s+args=/.test(line.trim()))
+    .join("\n");
+}
+
+function isFenceLineStart(raw: string, index: number): boolean {
+  return index === 0 || raw[index - 1] === "\n";
+}
+
+function findClosingFenceIndex(raw: string, start: number): number {
+  for (let index = start; index < raw.length; index += 1) {
+    if (raw.startsWith("```", index) && isFenceLineStart(raw, index)) {
+      return index;
+    }
+  }
+  return -1;
+}
+
+function collectFenceBodies(raw: string, languages?: readonly string[]): string[] {
+  const bodies: string[] = [];
+  let cursor = 0;
+  while (cursor < raw.length) {
+    const openIndex = raw.indexOf("```", cursor);
+    if (openIndex < 0) {
+      break;
+    }
+    let index = openIndex + 3;
+    const languageStart = index;
+    while (index < raw.length && /[a-z0-9_-]/i.test(raw[index] ?? "")) {
+      index += 1;
+    }
+    const language = raw.slice(languageStart, index).toLowerCase();
+    const languageAllowed =
+      !languages || languages.length === 0 || language.length === 0 || languages.includes(language);
+    while (index < raw.length && (raw[index] === " " || raw[index] === "\t")) {
+      index += 1;
+    }
+    const newlineLength =
+      raw[index] === "\r" && raw[index + 1] === "\n" ? 2 : raw[index] === "\n" ? 1 : 0;
+    if (newlineLength > 0) {
+      const bodyStart = index + newlineLength;
+      const closeIndex = findClosingFenceIndex(raw, bodyStart);
+      if (closeIndex < 0) {
+        break;
+      }
+      if (languageAllowed) {
+        bodies.push(raw.slice(bodyStart, closeIndex));
+      }
+      cursor = closeIndex + 3;
+      continue;
+    }
+    const closeIndex = raw.indexOf("```", index);
+    if (closeIndex < 0) {
+      break;
+    }
+    if (languageAllowed) {
+      const inlineBody = raw.slice(index, closeIndex).trim();
+      if (inlineBody) {
+        bodies.push(inlineBody);
+      }
+    }
+    cursor = closeIndex + 3;
+  }
+  return bodies;
+}
+
 function collectJsonFenceCandidates(raw: string): unknown[] {
   const candidates: unknown[] = [];
-  for (const match of raw.matchAll(JSON_FENCE_PATTERN)) {
-    const parsed = parseJsonCandidate(match[1] ?? "");
+  for (const body of collectFenceBodies(raw, ["json"])) {
+    const parsed = parseJsonCandidate(body);
     if (parsed !== null) {
       candidates.push(parsed);
     }
@@ -182,7 +302,7 @@ function collectJsonFenceCandidates(raw: string): unknown[] {
 
 function collectJsonObjectCandidates(raw: string): unknown[] {
   const candidates: unknown[] = [];
-  const trimmed = raw.trim();
+  const trimmed = stripBenchmarkToolCallLines(raw).trim();
   const start = trimmed.lastIndexOf("{");
   if (start >= 0) {
     for (let end = trimmed.length; end > start; end -= 1) {
@@ -213,17 +333,9 @@ function looksLikeReasoningProse(code: string): boolean {
 }
 
 function collectCodeFences(raw: string, language?: string): string[] {
-  const results: string[] = [];
-  for (const lang of [language ?? "typescript", "ts", "typescript"]) {
-    const pattern = new RegExp(`\`\`\`${lang}\\s*([\\s\\S]*?)\`\`\``, "gi");
-    for (const match of raw.matchAll(pattern)) {
-      const body = match[1]?.trim();
-      if (body) {
-        results.push(body);
-      }
-    }
-  }
-  return results;
+  return collectFenceBodies(raw, [language ?? "typescript", "ts", "typescript"])
+    .map((body) => body.trim())
+    .filter(Boolean);
 }
 
 function scoreCodeCandidate(code: string): number {
@@ -263,7 +375,7 @@ function isPlaceholderString(value: string): boolean {
 
 function serializeToolCalls(
   structuredToolNames: readonly string[],
-  toolCalls?: readonly { function: { name: string; arguments: string } }[],
+  toolCalls?: readonly BenchmarkToolCallLike[],
 ): Record<string, unknown>[] {
   if (toolCalls?.length) {
     return toolCalls.map((toolCall) => ({
@@ -293,13 +405,228 @@ function recordHasNonPlaceholderRequiredFields(
   });
 }
 
+function schemaRequiredKeys(schema?: Record<string, unknown>): string[] {
+  return Array.isArray(schema?.required) ? (schema.required as string[]) : [];
+}
+
+function schemaProperties(
+  schema?: Record<string, unknown>,
+): Record<string, Record<string, unknown>> {
+  if (
+    !schema ||
+    typeof schema !== "object" ||
+    !schema.properties ||
+    typeof schema.properties !== "object"
+  ) {
+    return {};
+  }
+  return schema.properties as Record<string, Record<string, unknown>>;
+}
+
+function numericSchemaValue(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function normalizeSchemaPayload(
+  record: Record<string, unknown>,
+  format: BenchmarkAnswerFormat,
+): Record<string, unknown> {
+  if (format.kind === "tool_calls_with_answer" || format.kind === "tool_calls_with_summary") {
+    const { tool_calls: _toolCalls, ...deliverableOnly } = record;
+    return deliverableOnly;
+  }
+  return record;
+}
+
+function validateSchemaValue(
+  value: unknown,
+  schema: Record<string, unknown> | undefined,
+  keyHint = "",
+): boolean {
+  if (!schema || typeof schema !== "object") {
+    return value !== undefined && value !== null;
+  }
+  const schemaType = typeof schema.type === "string" ? schema.type : undefined;
+  if (schemaType === "string") {
+    if (typeof value !== "string" || isPlaceholderString(value)) {
+      return false;
+    }
+    const minLength = numericSchemaValue(schema.minLength);
+    return minLength === null || value.trim().length >= minLength;
+  }
+  if (schemaType === "array") {
+    if (!Array.isArray(value)) {
+      return false;
+    }
+    const minItems = numericSchemaValue(schema.minItems);
+    if (minItems !== null && value.length < minItems) {
+      return false;
+    }
+    const itemSchema =
+      schema.items && typeof schema.items === "object"
+        ? (schema.items as Record<string, unknown>)
+        : undefined;
+    return value.every((item) => validateSchemaValue(item, itemSchema, keyHint));
+  }
+  if (schemaType === "object" || schema.properties || schema.required) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return false;
+    }
+    const record = value as Record<string, unknown>;
+    const required = schemaRequiredKeys(schema);
+    const properties = schemaProperties(schema);
+    if (!recordHasNonPlaceholderRequiredFields(record, required)) {
+      return false;
+    }
+    if (!required.every((key) => key in record)) {
+      return false;
+    }
+    if (schema.additionalProperties === false) {
+      const allowed = new Set(Object.keys(properties));
+      if (Object.keys(record).some((key) => !allowed.has(key))) {
+        return false;
+      }
+    }
+    for (const [propertyKey, propertySchema] of Object.entries(properties)) {
+      if (!(propertyKey in record)) {
+        continue;
+      }
+      if (!validateSchemaValue(record[propertyKey], propertySchema, propertyKey)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  if (Array.isArray(value)) {
+    return value.length > 0;
+  }
+  if (typeof value === "string") {
+    return !isPlaceholderString(value);
+  }
+  return value !== undefined && value !== null;
+}
+
+function payloadMatchesFormatSchema(
+  record: Record<string, unknown>,
+  format: BenchmarkAnswerFormat,
+): boolean {
+  if (!format.schema || typeof format.schema !== "object") {
+    return true;
+  }
+  return validateSchemaValue(normalizeSchemaPayload(record, format), format.schema);
+}
+
+function singularSchemaLabel(key: string): string {
+  if (/ies$/i.test(key)) {
+    return key.replace(/ies$/i, "y").replace(/_/g, " ");
+  }
+  return key.replace(/s$/i, "").replace(/_/g, " ");
+}
+
+function exampleStringValueForKey(key: string, index?: number): string {
+  if (/^answer$/i.test(key)) {
+    return "grounded final answer";
+  }
+  if (/^patch_summary$/i.test(key)) {
+    return "summarized the patch and why it was needed";
+  }
+  if (/^test_snippet$/i.test(key)) {
+    return "pnpm test benchmark-progress";
+  }
+  if (/^summary$/i.test(key)) {
+    return "grounded summary of the completed work";
+  }
+  if (/^bullets?$/i.test(key)) {
+    return `eligibility summary bullet ${(index ?? 0) + 1}`;
+  }
+  if (/^plan$/i.test(key)) {
+    return `plan step ${(index ?? 0) + 1}`;
+  }
+  if (/improvements?$/i.test(key)) {
+    return `strategy improvement ${(index ?? 0) + 1}`;
+  }
+  const label = singularSchemaLabel(key);
+  return index === undefined ? `${label} details` : `${label} ${(index ?? 0) + 1}`;
+}
+
+function buildSchemaExampleValue(
+  key: string,
+  schema: Record<string, unknown>,
+  includeOptionalProperties: boolean,
+): unknown {
+  const schemaType = typeof schema.type === "string" ? schema.type : undefined;
+  if (schemaType === "string") {
+    return exampleStringValueForKey(key);
+  }
+  if (schemaType === "array") {
+    const itemSchema =
+      schema.items && typeof schema.items === "object"
+        ? (schema.items as Record<string, unknown>)
+        : ({ type: "string" } as const);
+    const minItems = Math.max(1, numericSchemaValue(schema.minItems) ?? 2);
+    return Array.from({ length: minItems }, (_, index) => {
+      if (typeof itemSchema.type === "string" && itemSchema.type === "string") {
+        return exampleStringValueForKey(key, index);
+      }
+      return buildSchemaExampleValue(key, itemSchema, includeOptionalProperties);
+    });
+  }
+  if (schemaType === "object" || schema.properties) {
+    const properties = schemaProperties(schema);
+    const keys = includeOptionalProperties
+      ? Object.keys(properties)
+      : schemaRequiredKeys(schema).length > 0
+        ? schemaRequiredKeys(schema)
+        : Object.keys(properties);
+    return Object.fromEntries(
+      keys.map((propertyKey) => [
+        propertyKey,
+        buildSchemaExampleValue(
+          propertyKey,
+          properties[propertyKey] ?? { type: "string" },
+          includeOptionalProperties,
+        ),
+      ]),
+    );
+  }
+  return exampleStringValueForKey(key);
+}
+
+function buildSchemaExampleJson(
+  format: BenchmarkAnswerFormat,
+  includeOptionalProperties = false,
+): string | null {
+  if (!format.schema || typeof format.schema !== "object") {
+    return null;
+  }
+  const schema = format.schema;
+  const properties = schemaProperties(schema);
+  const keys = includeOptionalProperties
+    ? Object.keys(properties)
+    : schemaRequiredKeys(schema).length > 0
+      ? schemaRequiredKeys(schema)
+      : Object.keys(properties);
+  if (keys.length === 0) {
+    return null;
+  }
+  const example = Object.fromEntries(
+    keys.map((key) => [
+      key,
+      buildSchemaExampleValue(
+        key,
+        properties[key] ?? { type: "string" },
+        includeOptionalProperties,
+      ),
+    ]),
+  );
+  return JSON.stringify(example);
+}
+
 function pickJsonPayload(candidates: unknown[], format: BenchmarkAnswerFormat): unknown | null {
   if (candidates.length === 0) {
     return null;
   }
-  const required = Array.isArray(format.schema?.required)
-    ? (format.schema.required as string[])
-    : [];
+  const required = schemaRequiredKeys(format.schema);
   for (let index = candidates.length - 1; index >= 0; index -= 1) {
     const candidate = candidates[index];
     if (!candidate || typeof candidate !== "object") {
@@ -307,12 +634,12 @@ function pickJsonPayload(candidates: unknown[], format: BenchmarkAnswerFormat): 
     }
     const record = candidate as Record<string, unknown>;
     if (required.length === 0) {
-      return candidate;
+      if (payloadMatchesFormatSchema(record, format)) {
+        return candidate;
+      }
+      continue;
     }
-    if (
-      required.every((key) => key in record) &&
-      recordHasNonPlaceholderRequiredFields(record, required)
-    ) {
+    if (payloadMatchesFormatSchema(record, format)) {
       return candidate;
     }
   }
@@ -325,7 +652,7 @@ function extractTextJsonFields(
 ): Record<string, unknown> {
   const fenceCandidates = collectJsonFenceCandidates(raw);
   const objectCandidates = collectJsonObjectCandidates(raw);
-  const jsonPayload = pickJsonPayload([...fenceCandidates, ...objectCandidates], format);
+  const jsonPayload = pickJsonPayload([...objectCandidates, ...fenceCandidates], format);
   return jsonPayload && typeof jsonPayload === "object"
     ? (jsonPayload as Record<string, unknown>)
     : {};
@@ -366,22 +693,28 @@ export function deliverableCompleteness(input: {
   readonly caseItem: AnswerFormatCaseRef;
   readonly extracted: ExtractedBenchmarkAnswer;
   readonly structuredToolNames: readonly string[];
+  readonly toolCalls?: readonly BenchmarkToolCallLike[];
 }): number {
   if (
     isValidDeliverable({
       caseItem: input.caseItem,
       extracted: input.extracted,
       structuredToolNames: input.structuredToolNames,
+      toolCalls: input.toolCalls,
     })
   ) {
     return 1000;
   }
   const expectedTools = input.caseItem.expected_tool_names ?? [];
+  const missingTools = listMissingExpectedToolCalls({
+    caseItem: input.caseItem,
+    structuredToolNames: input.structuredToolNames,
+    toolCalls: input.toolCalls,
+  });
   const toolScore =
     expectedTools.length === 0
       ? 1
-      : expectedTools.filter((name) => input.structuredToolNames.includes(name)).length /
-        expectedTools.length;
+      : (expectedTools.length - missingTools.length) / expectedTools.length;
   const payload =
     input.extracted.payload && typeof input.extracted.payload === "object"
       ? (input.extracted.payload as Record<string, unknown>)
@@ -390,14 +723,11 @@ export function deliverableCompleteness(input: {
     return toolScore * 10;
   }
   if (input.extracted.format.kind === "tool_calls_with_answer") {
-    const answer = String(payload.answer ?? "");
-    const textScore = answer.length >= 2 && !isPlaceholderString(answer) ? 1 : 0;
+    const textScore = payloadMatchesFormatSchema(payload, input.extracted.format) ? 1 : 0;
     return toolScore * 50 + textScore * 50;
   }
   if (input.extracted.format.kind === "tool_calls_with_summary") {
-    const hasBullets = Array.isArray(payload.bullets) && payload.bullets.length >= 2;
-    const hasPlan = Array.isArray(payload.plan) && String(payload.patch_summary ?? "").length >= 8;
-    const textScore = hasBullets || hasPlan ? 1 : 0;
+    const textScore = payloadMatchesFormatSchema(payload, input.extracted.format) ? 1 : 0;
     return toolScore * 50 + textScore * 50;
   }
   if (input.extracted.format.kind === "code_fence") {
@@ -412,7 +742,7 @@ export function extractFormattedAnswer(input: {
   readonly rawContent: string;
   readonly turnRawContents?: readonly string[];
   readonly structuredToolNames: readonly string[];
-  readonly toolCalls?: readonly { function: { name: string; arguments: string } }[];
+  readonly toolCalls?: readonly BenchmarkToolCallLike[];
 }): ExtractedBenchmarkAnswer {
   const format = resolveAnswerFormat(input.caseItem);
   const apiToolCalls = serializeToolCalls(input.structuredToolNames, input.toolCalls);
@@ -445,7 +775,7 @@ export function extractFormattedAnswer(input: {
 
   const fenceCandidates = collectJsonFenceCandidates(input.rawContent);
   const objectCandidates = collectJsonObjectCandidates(input.rawContent);
-  const jsonPayload = pickJsonPayload([...fenceCandidates, ...objectCandidates], format);
+  const jsonPayload = pickJsonPayload([...objectCandidates, ...fenceCandidates], format);
 
   if (format.kind === "code_fence") {
     const codeFromFence = input.turnRawContents?.length
@@ -460,7 +790,7 @@ export function extractFormattedAnswer(input: {
     return {
       format,
       payload,
-      serialized: code ? JSON.stringify(payload, null, 2) : "",
+      serialized: renderCodeFenceDeliverable(code, format.language),
       extractionMethod: codeFromFence ? "code_fence" : codeFromJson ? "json_fence" : "missing",
     };
   }
@@ -486,6 +816,7 @@ export function isValidDeliverable(input: {
   readonly caseItem: AnswerFormatCaseRef;
   readonly extracted: ExtractedBenchmarkAnswer;
   readonly structuredToolNames: readonly string[];
+  readonly toolCalls?: readonly BenchmarkToolCallLike[];
 }): boolean {
   const { extracted, caseItem, structuredToolNames } = input;
   if (extracted.extractionMethod === "missing" || !extracted.serialized) {
@@ -501,7 +832,11 @@ export function isValidDeliverable(input: {
 
   const expectedTools = caseItem.expected_tool_names ?? [];
   if (expectedTools.length > 0) {
-    const missingTools = expectedTools.filter((name) => !structuredToolNames.includes(name));
+    const missingTools = listMissingExpectedToolCalls({
+      caseItem,
+      structuredToolNames,
+      toolCalls: input.toolCalls,
+    });
     if (missingTools.length > 0) {
       return false;
     }
@@ -522,39 +857,18 @@ export function isValidDeliverable(input: {
     const hasRequiredTools =
       expectedTools.length === 0 ||
       expectedTools.every((name) => structuredToolNames.includes(name));
-    const bullets = payload.bullets;
-    if (Array.isArray(bullets)) {
-      return (
-        hasRequiredTools &&
-        bullets.length >= 2 &&
-        bullets.every((item) => typeof item === "string" && !isPlaceholderString(item))
-      );
-    }
-    const plan = payload.plan;
-    const patchSummary = String(payload.patch_summary ?? "");
-    if (Array.isArray(plan)) {
-      return (
-        hasRequiredTools &&
-        plan.length >= 1 &&
-        patchSummary.length >= 8 &&
-        !isPlaceholderString(patchSummary)
-      );
-    }
-    const summary = String(payload.summary ?? "");
-    return hasRequiredTools && summary.length >= 8 && !isPlaceholderString(summary);
+    return hasRequiredTools && payloadMatchesFormatSchema(payload, extracted.format);
   }
 
   if (extracted.format.kind === "tool_calls_with_answer") {
     const hasRequiredTools =
       expectedTools.length === 0 ||
       expectedTools.every((name) => structuredToolNames.includes(name));
-    const answer = String(payload.answer ?? "");
-    return hasRequiredTools && answer.length >= 2 && !isPlaceholderString(answer);
+    return hasRequiredTools && payloadMatchesFormatSchema(payload, extracted.format);
   }
 
   if (extracted.format.kind === "json") {
-    const answer = String(payload.answer ?? "");
-    return answer.length >= 1 && !isPlaceholderString(answer);
+    return payloadMatchesFormatSchema(payload, extracted.format);
   }
 
   return structuredToolNames.length > 0 || Boolean(payload.tool_calls);
@@ -562,13 +876,20 @@ export function isValidDeliverable(input: {
 
 function textDeliverableFollowUp(format: BenchmarkAnswerFormat): string {
   if (format.kind === "tool_calls_with_answer") {
-    return 'Tools received. Reply with ONLY a ```json fence containing {"answer":"..."} — a real short answer, not instructions.';
+    const exampleJson = buildSchemaExampleJson(format);
+    if (exampleJson) {
+      return `Tools received. Reply with ONLY a \`\`\`json fence containing ${exampleJson} using real content.`;
+    }
+    return 'Tools received. Reply with ONLY a ```json fence containing {"answer":"grounded final answer"} using real content.';
   }
   if (format.kind === "tool_calls_with_summary") {
-    if (format.schema && "bullets" in (format.schema.properties as Record<string, unknown>)) {
-      return 'Tools received. Reply with ONLY ```json {"bullets":["...","..."]} with two real eligibility-check summary bullets.';
+    const properties = schemaProperties(format.schema);
+    if ("bullets" in properties) {
+      const exampleJson = buildSchemaExampleJson(format, true);
+      return `Tools received. Reply with ONLY \`\`\`json ${exampleJson ?? '{"bullets":["eligibility summary bullet 1","eligibility summary bullet 2"]}'} using real content.`;
     }
-    return 'Tools received. Reply with ONLY ```json {"plan":["<step>"],"patch_summary":"<what changed>","test_snippet":"<test idea>"} using real content.';
+    const exampleJson = buildSchemaExampleJson(format, true);
+    return `Tools received. Reply with ONLY \`\`\`json ${exampleJson ?? '{"plan":["plan step 1"],"patch_summary":"summarized the patch and why it was needed","test_snippet":"pnpm test benchmark-progress"}'} using real content.`;
   }
   if (format.kind === "code_fence") {
     return "Reply with ONLY one complete ```typescript code block. No prose before or after the fence.";
@@ -578,14 +899,14 @@ function textDeliverableFollowUp(format: BenchmarkAnswerFormat): string {
 
 function buildAssistantScaffoldMessage(
   assistantOutput: string,
-  toolCalls?: readonly { function: { name: string; arguments: string } }[],
+  toolCalls?: readonly BenchmarkToolCallLike[],
 ): Record<string, unknown> {
   if (toolCalls?.length) {
     return {
       role: "assistant",
       content: assistantOutput || null,
       tool_calls: toolCalls.map((toolCall, index) => ({
-        id: `bench_scaffold_${index}`,
+        id: toolCall.id ?? `bench_scaffold_${index}`,
         type: "function",
         function: {
           name: toolCall.function.name,
@@ -624,12 +945,16 @@ export function buildTextDeliverableResponseFormat(
 export function shouldOmitToolsForTurn(
   caseItem: AnswerFormatCaseRef,
   structuredToolNames: readonly string[],
+  toolCalls?: readonly BenchmarkToolCallLike[],
 ): boolean {
-  const expectedTools = caseItem.expected_tool_names ?? [];
-  if (expectedTools.length === 0) {
+  const missingTools = listMissingExpectedToolCalls({
+    caseItem,
+    structuredToolNames,
+    toolCalls,
+  });
+  if ((caseItem.expected_tool_names ?? []).length === 0) {
     return false;
   }
-  const missingTools = expectedTools.filter((name) => !structuredToolNames.includes(name));
   if (missingTools.length > 0) {
     return false;
   }
@@ -646,11 +971,78 @@ const MOCK_TOOL_CONTENT: Record<string, string> = {
   apply_patch: "Patch applied successfully. 1 file changed, 2 insertions(+), 1 deletion(-).",
 };
 
-function buildToolMessage(toolName: string, toolCallId: string): Record<string, unknown> {
+function buildMockToolContent(
+  caseItem: AnswerFormatCaseRef,
+  toolCall: BenchmarkToolCallLike,
+): string {
+  const toolName = toolCall.function.name;
+  const parsedArguments =
+    (parseJsonCandidate(toolCall.function.arguments) as Record<string, unknown> | null) ?? {};
+  const path = typeof parsedArguments.path === "string" ? parsedArguments.path : "";
+  const endpointId =
+    typeof parsedArguments.endpoint_id === "string" ? parsedArguments.endpoint_id : "";
+
+  switch (caseItem.case_id) {
+    case "p15-tools-read-one":
+    case "h08-multi-turn-tool-refine":
+      if (toolName === "read_file" && /runtime-config\.yaml$/i.test(path)) {
+        return ["routing:", "  strategy: controller", "  execution_mode: hybrid"].join("\n");
+      }
+      break;
+    case "p16-tools-search":
+      if (toolName === "grep_search") {
+        return [
+          "src/router.ts:16 if (input.throughputSlaHardDeny && eligible.length === 0) return deny('throughput_sla');",
+          "src/router.ts:44 const hardDenied = input.throughputSlaHardDeny && candidate.tokensPerSecond < 24;",
+        ].join("\n");
+      }
+      break;
+    case "t01-tools-list-dir":
+      if (toolName === "list_dir") {
+        return ["config/", "router.yaml", "routing-policy.json", "auth.env", "themes.css"].join(
+          "\n",
+        );
+      }
+      break;
+    case "p18-tools-agent":
+    case "h09-agent-metrics-chain":
+      if (toolName === "list_endpoints") {
+        return JSON.stringify(
+          {
+            endpoints: [
+              { endpoint_id: "local.lfm2.5-8b-a1b", model_id: "lfm2.5-8b-a1b", status: "active" },
+              {
+                endpoint_id: "remote.deepseek-v4-flash",
+                model_id: "deepseek/deepseek-v4-flash",
+                status: "active",
+              },
+            ],
+          },
+          null,
+          2,
+        );
+      }
+      if (toolName === "get_metrics" && endpointId === "local.lfm2.5-8b-a1b") {
+        return JSON.stringify({ p95_latency_ms: 62, request_count: 1200, error_rate: 0.005 });
+      }
+      if (toolName === "get_metrics" && endpointId === "remote.deepseek-v4-flash") {
+        return JSON.stringify({ p95_latency_ms: 245, request_count: 900, error_rate: 0.018 });
+      }
+      break;
+  }
+
+  return MOCK_TOOL_CONTENT[toolName] ?? `Mock response from ${toolName}.`;
+}
+
+function buildToolMessage(
+  caseItem: AnswerFormatCaseRef,
+  toolCall: BenchmarkToolCallLike,
+  toolCallId: string,
+): Record<string, unknown> {
   return {
     role: "tool",
     tool_call_id: toolCallId,
-    content: MOCK_TOOL_CONTENT[toolName] ?? `Mock response from ${toolName}.`,
+    content: buildMockToolContent(caseItem, toolCall),
   };
 }
 
@@ -660,15 +1052,19 @@ export function buildScaffoldFollowUp(
   assistantOutput: string,
   structuredToolNames: readonly string[],
   _extracted: ExtractedBenchmarkAnswer,
-  toolCalls?: readonly { function: { name: string; arguments: string } }[],
+  toolCalls?: readonly BenchmarkToolCallLike[],
+  allToolCalls?: readonly BenchmarkToolCallLike[],
 ): Record<string, unknown>[] {
   const assistantMessage = buildAssistantScaffoldMessage(assistantOutput, toolCalls);
-  const expectedTools = caseItem.expected_tool_names ?? [];
-  const missingTools = expectedTools.filter((name) => !structuredToolNames.includes(name));
+  const missingTools = listMissingExpectedToolCalls({
+    caseItem,
+    structuredToolNames,
+    toolCalls: allToolCalls ?? toolCalls,
+  });
 
   // Build role:"tool" messages for all completed tool calls
-  const completedToolMsgs = (toolCalls ?? []).map((_tc, index) =>
-    buildToolMessage(toolCalls?.[index]?.function?.name ?? "unknown", `bench_scaffold_${index}`),
+  const completedToolMsgs = (toolCalls ?? []).map((toolCall, index) =>
+    buildToolMessage(caseItem, toolCall, toolCall.id ?? `bench_scaffold_${index}`),
   );
 
   if (missingTools.length > 0) {

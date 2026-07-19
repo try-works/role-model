@@ -1,9 +1,12 @@
 import { describe, expect, test, vi } from "vitest";
 
+import * as runtimeApiModule from "./runtime-api";
+
 import {
   activateRuntimeEndpoint,
   clearAllBenchmarkData,
   createRolePolicyRole,
+  explicitAssignmentToRoleIds,
   fetchActivityCapture,
   fetchActivityMetrics,
   fetchAudioVoices,
@@ -12,6 +15,7 @@ import {
   fetchControllerAssignment,
   fetchDownstreamOpenAIProviderConfig,
   fetchLocalModels,
+  fetchModelTelemetryRollup,
   fetchRequestDetail,
   fetchRolePolicy,
   fetchRouterCandidates,
@@ -20,13 +24,24 @@ import {
   fetchRouterDecisions,
   fetchRouterSummary,
   fetchRuntimeConfig,
+  fetchRuntimeDashboardSnapshot,
+  fetchRuntimeShellSnapshot,
   fetchRuntimeSnapshot,
+  fetchRuntimeSummary,
+  fetchTelemetryAnalytics,
   fetchTelemetryDashboard,
   fetchTelemetryRequests,
   fetchTextLogs,
   fetchVersionInfo,
+  loadLlamaSwapModel,
+  loadPeerModel,
+  openRuntimeExternalUrl,
   pollRuntimeDeviceAuthorization,
   reconnectRuntimeAccount,
+  removeRuntimeAccountModel,
+  roleIdsToExplicitAssignment,
+  setLlamaSwapModelRoles,
+  setPeerModelRoles,
   startRuntimeDeviceAuthorization,
   submitAdvancedRequest,
   submitAudioTranscription,
@@ -50,6 +65,26 @@ function jsonResponse(body: unknown): Response {
       "content-type": "application/json",
     },
   });
+}
+
+function responseWithStatus(status: number, body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "content-type": "application/json",
+    },
+  });
+}
+
+function requestTarget(input: string | URL | Request): string {
+  if (typeof input === "string") {
+    return input;
+  }
+  if (input instanceof URL) {
+    return `${input.pathname}${input.search}`;
+  }
+  const url = new URL(input.url, "http://127.0.0.1");
+  return `${url.pathname}${url.search}`;
 }
 
 describe("fetchRuntimeSnapshot", () => {
@@ -212,6 +247,382 @@ describe("fetchRuntimeSnapshot", () => {
   });
 });
 
+describe("fetchProvidersSnapshot", () => {
+  test("loads the providers-route bootstrap data without requesting recent request history", async () => {
+    const fetchProvidersSnapshot = (
+      runtimeApiModule as {
+        fetchProvidersSnapshot?: unknown;
+      }
+    ).fetchProvidersSnapshot;
+    expect(fetchProvidersSnapshot).toBeTypeOf("function");
+    if (typeof fetchProvidersSnapshot !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+
+      switch (target) {
+        case "/api/role-model/runtime/summary":
+          return jsonResponse({
+            providerCount: 2,
+            accountCount: 1,
+            endpointCount: 3,
+            readinessSummary: {
+              pendingDeviceAuthorizationCount: 0,
+              credentialsMissingAccountCount: 0,
+              connectedWithoutEndpointCount: 0,
+              readyAccountCount: 1,
+            },
+          });
+        case "/api/role-model/providers":
+          return jsonResponse([{ providerId: "moonshot" }]);
+        case "/api/role-model/accounts":
+          return jsonResponse([{ providerAccountId: "moonshot.personal.primary" }]);
+        case "/api/role-model/accounts/device":
+          return jsonResponse([]);
+        case "/api/role-model/endpoints":
+          return jsonResponse([{ endpointId: "moonshot.personal.primary.global.kimi-k2.5" }]);
+        case "/api/role-model/roles":
+          return jsonResponse([{ roleId: "general.chat", label: "General chat" }]);
+        case "/api/role-model/models":
+          return jsonResponse([
+            {
+              id: "moonshot/kimi-k2.5",
+              object: "model",
+              owned_by: "role-model",
+              providerId: "moonshot",
+              endpoint_ids: [],
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+            },
+          ]);
+        case "/api/role-model/requests":
+          throw new Error("providers snapshot should not request recent request history");
+        default:
+          throw new Error(`Unexpected request: ${target}`);
+      }
+    });
+
+    await expect(
+      (
+        fetchProvidersSnapshot as (
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<unknown>
+      )(fetcher),
+    ).resolves.toEqual({
+      summary: {
+        providerCount: 2,
+        accountCount: 1,
+        endpointCount: 3,
+        readinessSummary: {
+          pendingDeviceAuthorizationCount: 0,
+          credentialsMissingAccountCount: 0,
+          connectedWithoutEndpointCount: 0,
+          readyAccountCount: 1,
+        },
+      },
+      providers: [{ providerId: "moonshot" }],
+      accounts: [{ providerAccountId: "moonshot.personal.primary" }],
+      deviceAuthorizations: [],
+      endpoints: [{ endpointId: "moonshot.personal.primary.global.kimi-k2.5" }],
+      roles: [{ roleId: "general.chat", label: "General chat" }],
+      models: [
+        expect.objectContaining({
+          id: "moonshot/kimi-k2.5",
+          providerId: "moonshot",
+        }),
+      ],
+    });
+    expect(requestedTargets).not.toContain("/api/role-model/requests");
+  });
+});
+
+describe("fetchRuntimeModels", () => {
+  test("loads the runtime model catalog directly from the runtime inventory endpoint", async () => {
+    const fetchRuntimeModels = (
+      runtimeApiModule as {
+        fetchRuntimeModels?: unknown;
+      }
+    ).fetchRuntimeModels;
+    expect(fetchRuntimeModels).toBeTypeOf("function");
+    if (typeof fetchRuntimeModels !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      switch (target) {
+        case "/api/role-model/models":
+          return jsonResponse([
+            {
+              id: "moonshot/kimi-k2.5",
+              object: "model",
+              owned_by: "role-model",
+              providerId: "moonshot",
+              endpoint_ids: [],
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+            },
+          ]);
+        case "/v1/models":
+          throw new Error(
+            "runtime model catalog should not fall back when the runtime endpoint succeeds",
+          );
+        default:
+          throw new Error(`Unexpected request: ${target}`);
+      }
+    });
+
+    await expect(
+      (
+        fetchRuntimeModels as (
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<unknown>
+      )(fetcher),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        id: "moonshot/kimi-k2.5",
+        providerId: "moonshot",
+      }),
+    ]);
+    expect(requestedTargets).toEqual(["/api/role-model/models"]);
+  });
+});
+
+describe("fetchRuntimeRequests", () => {
+  test("keeps the heavyweight request ledger behind an explicit runtime request-history read", async () => {
+    const fetchRuntimeRequests = (
+      runtimeApiModule as {
+        fetchRuntimeRequests?: unknown;
+      }
+    ).fetchRuntimeRequests;
+    expect(fetchRuntimeRequests).toBeTypeOf("function");
+    if (typeof fetchRuntimeRequests !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      return jsonResponse([{ requestId: "req-001", endpointId: "moonshot.personal.primary.kimi" }]);
+    });
+
+    await expect(
+      (
+        fetchRuntimeRequests as (
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<readonly unknown[]>
+      )(fetcher),
+    ).resolves.toEqual([{ requestId: "req-001", endpointId: "moonshot.personal.primary.kimi" }]);
+    expect(requestedTargets).toEqual(["/api/role-model/requests"]);
+  });
+});
+
+describe("fetchRecentRequestIds", () => {
+  test("requests the lightweight latest-ids route with an explicit limit of 10", async () => {
+    const fetchRecentRequestIds = (
+      runtimeApiModule as {
+        fetchRecentRequestIds?: unknown;
+      }
+    ).fetchRecentRequestIds;
+    expect(fetchRecentRequestIds).toBeTypeOf("function");
+    if (typeof fetchRecentRequestIds !== "function") {
+      return;
+    }
+
+    const requestedTargets: string[] = [];
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const target = requestTarget(input);
+      requestedTargets.push(target);
+      return jsonResponse(["req-010", "req-009"]);
+    });
+
+    await expect(
+      (
+        fetchRecentRequestIds as (
+          limit: number,
+          fetcher: Parameters<typeof fetchRuntimeSnapshot>[0],
+        ) => Promise<readonly string[]>
+      )(10, fetcher),
+    ).resolves.toEqual(["req-010", "req-009"]);
+    expect(requestedTargets).toEqual(["/api/role-model/requests/latest-ids?limit=10"]);
+  });
+});
+
+describe("fetchRuntimeSummary", () => {
+  test("retries transient runtime summary failures before surfacing an error", async () => {
+    vi.useFakeTimers();
+    const responses = [
+      responseWithStatus(500, { error: "bridge bootstrap still running" }),
+      responseWithStatus(500, { error: "registry warming" }),
+      jsonResponse({
+        providerCount: 3,
+        accountCount: 2,
+        endpointCount: 4,
+      }),
+    ];
+    const fetcher = vi.fn(async () => {
+      const next = responses.shift();
+      if (!next) {
+        throw new Error("Unexpected extra runtime summary fetch.");
+      }
+      return next;
+    });
+
+    const pending = fetchRuntimeSummary(fetcher);
+    await vi.runAllTimersAsync();
+
+    await expect(pending).resolves.toEqual({
+      providerCount: 3,
+      accountCount: 2,
+      endpointCount: 4,
+    });
+    expect(fetcher).toHaveBeenCalledTimes(3);
+
+    vi.useRealTimers();
+  });
+});
+
+describe("fetchRuntimeShellSnapshot", () => {
+  test("loads only the runtime shell dependencies and skips heavyweight inventory endpoints", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+
+      switch (url) {
+        case "/api/role-model/runtime/summary":
+          return jsonResponse({
+            providerCount: 3,
+            accountCount: 2,
+            endpointCount: 4,
+            lifecycleSummary: {
+              active: 2,
+              degraded: 1,
+              offline: 1,
+            },
+          });
+        case "/api/role-model/controller":
+          return jsonResponse({
+            endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+            modelId: "chatgpt/gpt-5.4",
+            sourceType: "runtime-default",
+          });
+        case "/api/role-model/runtime/config":
+          return jsonResponse({
+            path: "C:/runtime-config.yaml",
+            config: {
+              executionMode: "remote_only",
+              routingStrategy: "difficulty",
+              llamaSwap: { models: [] },
+              liteLLM: { providers: [] },
+            },
+          });
+        case "/api/version":
+          return jsonResponse({
+            version: "1.2.3",
+            commit: "abc123",
+            build_date: "2026-07-10",
+          });
+        case "/api/role-model/requests":
+        case "/api/role-model/models":
+        case "/api/role-model/providers":
+        case "/api/role-model/accounts":
+        case "/api/role-model/accounts/device":
+        case "/api/role-model/endpoints":
+        case "/api/role-model/roles":
+          throw new Error(`Heavy endpoint should not be fetched: ${url}`);
+        default:
+          throw new Error(`Unexpected request: ${url}`);
+      }
+    });
+
+    await expect(fetchRuntimeShellSnapshot(fetcher)).resolves.toEqual({
+      summary: {
+        providerCount: 3,
+        accountCount: 2,
+        endpointCount: 4,
+        lifecycleSummary: {
+          active: 2,
+          degraded: 1,
+          offline: 1,
+        },
+      },
+      controller: {
+        endpointId: "openai.personal.openai-codex-subscription.global.gpt-5.4",
+        modelId: "chatgpt/gpt-5.4",
+        sourceType: "runtime-default",
+      },
+      configRecord: {
+        path: "C:/runtime-config.yaml",
+        config: {
+          executionMode: "remote_only",
+          routingStrategy: "difficulty",
+          llamaSwap: { models: [] },
+          liteLLM: { providers: [] },
+        },
+      },
+      version: {
+        version: "1.2.3",
+        commit: "abc123",
+        build_date: "2026-07-10",
+      },
+    });
+    expect(fetcher).toHaveBeenCalledTimes(4);
+  });
+});
+
+describe("fetchRuntimeDashboardSnapshot", () => {
+  test("loads only endpoint inventory and role definitions for the overview route", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+
+      switch (url) {
+        case "/api/role-model/endpoints":
+          return jsonResponse([
+            {
+              endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+              providerId: "deepseek",
+              modelId: "deepseek/deepseek-v4-pro",
+            },
+          ]);
+        case "/api/role-model/roles":
+          return jsonResponse([{ roleId: "general.chat", label: "General chat" }]);
+        case "/api/role-model/runtime/summary":
+        case "/api/role-model/providers":
+        case "/api/role-model/accounts":
+        case "/api/role-model/accounts/device":
+        case "/api/role-model/requests":
+        case "/api/role-model/models":
+        case "/api/version":
+        case "/api/role-model/controller":
+        case "/api/role-model/runtime/config":
+          throw new Error(`Heavy endpoint should not be fetched: ${url}`);
+        default:
+          throw new Error(`Unexpected request: ${url}`);
+      }
+    });
+
+    await expect(fetchRuntimeDashboardSnapshot(fetcher)).resolves.toEqual({
+      endpoints: [
+        {
+          endpointId: "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+          providerId: "deepseek",
+          modelId: "deepseek/deepseek-v4-pro",
+        },
+      ],
+      roles: [{ roleId: "general.chat", label: "General chat" }],
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe("fetchLocalModels", () => {
   test("preserves local ownership and llama-swap config metadata from the runtime API", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request) => {
@@ -340,6 +751,27 @@ describe("fetchRequestDetail", () => {
             requestId: "req-001",
             clientRequestId: "req-client-001",
             endpointId: "openai.personal.primary.us-east-1.fast",
+            capturePolicy: {
+              redactionLevel: "strict",
+              retentionClass: "standard",
+              structuredInspectionAvailable: true,
+            },
+            privacyReceipt: {
+              samplingRate: 1,
+              retentionTtlHours: 720,
+              retainUntil: 1_700_100_000_000,
+            },
+            observationAvailability: {
+              source: "raw-observation",
+              rawObservationAvailable: true,
+            },
+            taxonomyDimensions: {
+              taxonomy_original_role_hint_id: "engineer",
+              taxonomy_group_id: "engineering",
+              taxonomy_role_id: "coder",
+              taxonomy_task_type: "coder.review",
+              taxonomy_capability_ids: ["tool-use", "traceability"],
+            },
           });
         case "/api/role-model/endpoints/openai.personal.primary.us-east-1.fast/profile":
           return jsonResponse({
@@ -357,12 +789,216 @@ describe("fetchRequestDetail", () => {
         requestId: "req-001",
         clientRequestId: "req-client-001",
         endpointId: "openai.personal.primary.us-east-1.fast",
+        capturePolicy: {
+          redactionLevel: "strict",
+          retentionClass: "standard",
+          structuredInspectionAvailable: true,
+        },
+        privacyReceipt: {
+          samplingRate: 1,
+          retentionTtlHours: 720,
+          retainUntil: 1_700_100_000_000,
+        },
+        observationAvailability: {
+          source: "raw-observation",
+          rawObservationAvailable: true,
+        },
+        taxonomyDimensions: {
+          taxonomy_original_role_hint_id: "engineer",
+          taxonomy_group_id: "engineering",
+          taxonomy_role_id: "coder",
+          taxonomy_task_type: "coder.review",
+          taxonomy_capability_ids: ["tool-use", "traceability"],
+        },
       },
       endpointProfile: {
         endpointId: "openai.personal.primary.us-east-1.fast",
         latestProfile: { endpoint_id: "openai.personal.primary.us-east-1.fast" },
         recentSamples: [],
       },
+    });
+  });
+});
+
+describe("fetchModelTelemetryRollup", () => {
+  test("aggregates richer taxonomy rollups for model detail telemetry", async () => {
+    const fetcher = vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+      expect(init?.method).toBe("POST");
+      const payload = JSON.parse(String(init?.body)) as Record<string, unknown>;
+
+      if (payload.breakdown === "taxonomyTaskType") {
+        return jsonResponse({
+          startAtMs: 1_700_000_000_000,
+          endAtMs: 1_700_604_800_000,
+          granularity: "day",
+          metrics: ["requestCount", "successCount", "averageLatencyMs"],
+          breakdown: "taxonomyTaskType",
+          buckets: [
+            {
+              startAtMs: 1_700_000_000_000,
+              endAtMs: 1_700_086_400_000,
+              totals: {
+                requestCount: 3,
+                successCount: 2,
+                averageLatencyMs: 450,
+              },
+              series: [
+                {
+                  key: "coder.review",
+                  label: "coder.review",
+                  metrics: {
+                    requestCount: 2,
+                    successCount: 2,
+                    averageLatencyMs: 320,
+                  },
+                },
+                {
+                  key: "coder.debug",
+                  label: "coder.debug",
+                  metrics: {
+                    requestCount: 1,
+                    successCount: 0,
+                    averageLatencyMs: 710,
+                  },
+                },
+              ],
+            },
+            {
+              startAtMs: 1_700_086_400_000,
+              endAtMs: 1_700_172_800_000,
+              totals: {
+                requestCount: 2,
+                successCount: 1,
+                averageLatencyMs: 510,
+              },
+              series: [
+                {
+                  key: "coder.review",
+                  label: "coder.review",
+                  metrics: {
+                    requestCount: 1,
+                    successCount: 0,
+                    averageLatencyMs: 480,
+                  },
+                },
+                {
+                  key: "coder.plan",
+                  label: "coder.plan",
+                  metrics: {
+                    requestCount: 1,
+                    successCount: 1,
+                    averageLatencyMs: 540,
+                  },
+                },
+              ],
+            },
+          ],
+          totals: {
+            requestCount: 5,
+            successCount: 3,
+            averageLatencyMs: 474,
+          },
+          ranking: null,
+          labels: {},
+        });
+      }
+
+      if ((payload.ranking as { dimension?: string } | null)?.dimension === "taxonomyGroupId") {
+        return jsonResponse({
+          startAtMs: 1_700_000_000_000,
+          endAtMs: 1_700_604_800_000,
+          granularity: "day",
+          metrics: ["requestCount"],
+          breakdown: null,
+          buckets: [],
+          totals: { requestCount: 5 },
+          ranking: {
+            dimension: "taxonomyGroupId",
+            metric: "requestCount",
+            rows: [{ key: "engineering", label: "Engineering", value: 5 }],
+          },
+          labels: {},
+        });
+      }
+
+      if ((payload.ranking as { dimension?: string } | null)?.dimension === "taxonomyRoleId") {
+        return jsonResponse({
+          startAtMs: 1_700_000_000_000,
+          endAtMs: 1_700_604_800_000,
+          granularity: "day",
+          metrics: ["requestCount"],
+          breakdown: null,
+          buckets: [],
+          totals: { requestCount: 5 },
+          ranking: {
+            dimension: "taxonomyRoleId",
+            metric: "requestCount",
+            rows: [{ key: "coder", label: "Coder", value: 5 }],
+          },
+          labels: {},
+        });
+      }
+
+      if (
+        (payload.ranking as { dimension?: string } | null)?.dimension === "taxonomyCapabilityId"
+      ) {
+        return jsonResponse({
+          startAtMs: 1_700_000_000_000,
+          endAtMs: 1_700_604_800_000,
+          granularity: "day",
+          metrics: ["requestCount"],
+          breakdown: null,
+          buckets: [],
+          totals: { requestCount: 5 },
+          ranking: {
+            dimension: "taxonomyCapabilityId",
+            metric: "requestCount",
+            rows: [
+              { key: "tool-use", label: "Tool use", value: 4 },
+              { key: "traceability", label: "Traceability", value: 3 },
+            ],
+          },
+          labels: {},
+        });
+      }
+
+      throw new Error(`Unexpected telemetry rollup payload: ${JSON.stringify(payload)}`);
+    });
+
+    await expect(fetchModelTelemetryRollup("openai/gpt-5.4", fetcher)).resolves.toEqual({
+      groups: [{ groupId: "engineering", requestCount: 5 }],
+      roles: [{ roleId: "coder", requestCount: 5 }],
+      capabilities: [
+        { capabilityId: "tool-use", requestCount: 4 },
+        { capabilityId: "traceability", requestCount: 3 },
+      ],
+      tasks: [
+        {
+          taskType: "coder.review",
+          requestCount: 3,
+          successRate: 2 / 3,
+          avgLatencyMs: 373,
+        },
+        {
+          taskType: "coder.plan",
+          requestCount: 1,
+          successRate: 1,
+          avgLatencyMs: 540,
+        },
+        {
+          taskType: "coder.debug",
+          requestCount: 1,
+          successRate: 0,
+          avgLatencyMs: 710,
+        },
+      ],
+      strengths: ["Strong recent success for coder.plan (1 req, 100% success)."],
+      warnings: [
+        "Watch coder.debug (1 req, 0% success).",
+        "Watch coder.review (3 req, 67% success).",
+      ],
+      totalRequests: 5,
+      windowDays: 7,
     });
   });
 });
@@ -419,7 +1055,7 @@ describe("router APIs", () => {
             },
             sources: {
               runtimeConfigPath: "D:\\runtime-config.yaml",
-              routingModel: "fixture",
+              routingModel: "sample",
               policyInputs: "runtime",
             },
             policySources: {
@@ -515,7 +1151,7 @@ describe("router APIs", () => {
       },
       sources: {
         runtimeConfigPath: "D:\\runtime-config.yaml",
-        routingModel: "fixture",
+        routingModel: "sample",
         policyInputs: "runtime",
       },
       policySources: {
@@ -794,6 +1430,170 @@ describe("telemetry APIs", () => {
         sourceType: "local",
       },
     ]);
+  });
+
+  test("serializes taxonomy telemetry request filters into the request query string", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      expect(url).toContain("/api/role-model/telemetry/requests?");
+      expect(url).toContain("taxonomyGroupIds=engineering");
+      expect(url).toContain("taxonomyRoleIds=coder");
+      expect(url).toContain("taxonomyTaskTypes=coder.review");
+      expect(url).toContain("taxonomyTaskVariants=deep-audit");
+      expect(url).toContain("taxonomyCapabilityIds=tool-use%2Ctraceability");
+      expect(url).toContain("taxonomyModalityIds=text");
+      expect(url).toContain("taxonomyToolClassIds=github");
+      return jsonResponse([]);
+    });
+
+    await expect(
+      fetchTelemetryRequests(
+        {
+          filters: {
+            taxonomyGroupIds: ["engineering"],
+            taxonomyRoleIds: ["coder"],
+            taxonomyTaskTypes: ["coder.review"],
+            taxonomyTaskVariants: ["deep-audit"],
+            taxonomyCapabilityIds: ["tool-use", "traceability"],
+            taxonomyModalityIds: ["text"],
+            taxonomyToolClassIds: ["github"],
+          },
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual([]);
+  });
+
+  test("posts the generic telemetry analytics query payload", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+      expect(url).toBe("/api/role-model/telemetry/query");
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toEqual({
+        "content-type": "application/json",
+      });
+      expect(JSON.parse(String(init?.body))).toEqual({
+        startAtMs: 1_700_000_000_000,
+        endAtMs: 1_700_086_400_000,
+        granularity: "hour",
+        metrics: ["requestCount", "effectiveCostUsd", "routingCostSavingsUsd"],
+        breakdown: "sourceType",
+        filters: {
+          sourceTypes: ["local", "remote"],
+        },
+        ranking: {
+          dimension: "modelId",
+          metric: "requestCount",
+          limit: 5,
+        },
+      });
+
+      return jsonResponse({
+        startAtMs: 1_700_000_000_000,
+        endAtMs: 1_700_086_400_000,
+        granularity: "hour",
+        metrics: ["requestCount", "effectiveCostUsd", "routingCostSavingsUsd"],
+        breakdown: "sourceType",
+        buckets: [
+          {
+            startAtMs: 1_700_000_000_000,
+            endAtMs: 1_700_003_600_000,
+            totals: {
+              requestCount: 2,
+              effectiveCostUsd: 0.0053,
+              routingCostSavingsUsd: 0.0054,
+            },
+            series: [
+              {
+                key: "local",
+                label: "Local",
+                metrics: {
+                  requestCount: 1,
+                  effectiveCostUsd: 0.0011,
+                  routingCostSavingsUsd: 0,
+                },
+              },
+              {
+                key: "remote",
+                label: "Remote",
+                metrics: {
+                  requestCount: 1,
+                  effectiveCostUsd: 0.0042,
+                  routingCostSavingsUsd: 0.0054,
+                },
+              },
+            ],
+          },
+        ],
+        totals: {
+          requestCount: 2,
+          effectiveCostUsd: 0.0053,
+          routingCostSavingsUsd: 0.0054,
+        },
+        ranking: {
+          dimension: "modelId",
+          metric: "requestCount",
+          rows: [
+            {
+              key: "local/mock-llama",
+              label: "local/mock-llama",
+              value: 1,
+            },
+            {
+              key: "openai/gpt-4.1-mini-fast",
+              label: "openai/gpt-4.1-mini-fast",
+              value: 1,
+            },
+          ],
+        },
+        labels: {
+          sourceType: {
+            local: "Local",
+            remote: "Remote",
+          },
+        },
+      });
+    });
+
+    await expect(
+      fetchTelemetryAnalytics(
+        {
+          startAtMs: 1_700_000_000_000,
+          endAtMs: 1_700_086_400_000,
+          granularity: "hour",
+          metrics: ["requestCount", "effectiveCostUsd", "routingCostSavingsUsd"],
+          breakdown: "sourceType",
+          filters: {
+            sourceTypes: ["local", "remote"],
+          },
+          ranking: {
+            dimension: "modelId",
+            metric: "requestCount",
+            limit: 5,
+          },
+        },
+        fetcher,
+      ),
+    ).resolves.toEqual(
+      expect.objectContaining({
+        breakdown: "sourceType",
+        buckets: expect.arrayContaining([
+          expect.objectContaining({
+            totals: expect.objectContaining({
+              requestCount: 2,
+            }),
+          }),
+        ]),
+        labels: expect.objectContaining({
+          sourceType: expect.objectContaining({
+            local: "Local",
+            remote: "Remote",
+          }),
+        }),
+      }),
+    );
   });
 
   test("subscribes to canonical telemetry SSE updates and closes the source on cleanup", () => {
@@ -1228,6 +2028,22 @@ describe("studio vendor API helpers", () => {
     ]);
   });
 
+  test("reports a clear error when the voice inventory endpoint returns HTML instead of JSON", async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response("<!DOCTYPE html><html><body>fallback</body></html>", {
+          status: 200,
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+          },
+        }),
+    );
+
+    await expect(fetchAudioVoices("moonshot/kimi-audio", fetcher)).rejects.toThrow(
+      "Request to /v1/audio/voices?model=moonshot%2Fkimi-audio returned HTML instead of JSON.",
+    );
+  });
+
   test("posts a speech-generation request and returns audio bytes as a blob", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url =
@@ -1414,6 +2230,51 @@ describe("reconnectRuntimeAccount", () => {
   });
 });
 
+describe("removeRuntimeAccountModel", () => {
+  test("deletes the configured model from the runtime account pool", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe(
+        "/api/role-model/accounts/moonshot.personal.primary/models/moonshot%2Fkimi-k2.5",
+      );
+      expect(init?.method).toBe("DELETE");
+
+      return jsonResponse({
+        success: true,
+        removedAccount: false,
+        alreadyAbsent: false,
+      });
+    });
+
+    await expect(
+      removeRuntimeAccountModel("moonshot.personal.primary", "moonshot/kimi-k2.5", fetcher),
+    ).resolves.toEqual({
+      success: true,
+      removedAccount: false,
+      alreadyAbsent: false,
+    });
+  });
+
+  test("preserves structured conflict reference paths in the client error", async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            error: "Configured model is still referenced.",
+            code: "configured_model_reference_conflict",
+            references: [{ kind: "custom-alias", path: "modelAliases.production" }],
+            mutationApplied: false,
+          }),
+          { status: 409, headers: { "content-type": "application/json" } },
+        ),
+    );
+    await expect(removeRuntimeAccountModel("acme.primary", "acme/model", fetcher)).rejects.toThrow(
+      "configured_model_reference_conflict: modelAliases.production",
+    );
+  });
+});
+
 describe("pollRuntimeDeviceAuthorization", () => {
   test("posts the auth request id to the runtime device-auth poll path", async () => {
     const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
@@ -1475,6 +2336,34 @@ describe("updateRuntimeAccountApiKey", () => {
         backend: "local-file",
         ref: "api-key/moonshot/moonshot.personal.primary",
       },
+    });
+  });
+});
+
+describe("openRuntimeExternalUrl", () => {
+  test("posts the verification URL to the runtime system browser helper", async () => {
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      expect(url).toBe("/api/role-model/system/open-url");
+      expect(init?.method).toBe("POST");
+      expect(init?.body).toBe(
+        JSON.stringify({
+          url: "https://auth.openai.com/device",
+        }),
+      );
+
+      return jsonResponse({
+        opened: true,
+        url: "https://auth.openai.com/device",
+      });
+    });
+
+    await expect(
+      openRuntimeExternalUrl("https://auth.openai.com/device", fetcher),
+    ).resolves.toEqual({
+      opened: true,
+      url: "https://auth.openai.com/device",
     });
   });
 });
@@ -1898,5 +2787,94 @@ describe("benchmark display endpoints", () => {
       affectedEndpointCount: 2,
       clearedRunCount: 3,
     });
+  });
+});
+describe("role assignment helpers", () => {
+  test("represent default all roles separately from explicit none", () => {
+    expect(roleIdsToExplicitAssignment([], true)).toEqual({
+      roleAssignmentMode: "all",
+      enabledRoleIds: [],
+      disabledRoleIds: [],
+    });
+    expect(roleIdsToExplicitAssignment([], false)).toEqual({
+      roleAssignmentMode: "include",
+      enabledRoleIds: [],
+      disabledRoleIds: [],
+    });
+    expect(
+      explicitAssignmentToRoleIds({
+        roleAssignmentMode: "include",
+        enabledRoleIds: ["coder"],
+        disabledRoleIds: [],
+      }),
+    ).toEqual(["coder"]);
+  });
+
+  test("posts default-all assignment metadata for peer and llama-swap model registration", async () => {
+    const requests: Array<{ url: string; body: unknown }> = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      requests.push({ url, body: JSON.parse(String(init?.body ?? "{}")) });
+      return jsonResponse({ success: true });
+    });
+
+    await loadPeerModel("local-peer-model", [], fetcher);
+    await loadLlamaSwapModel("local-llama-model", [], fetcher);
+
+    expect(requests).toEqual([
+      {
+        url: "/api/role-model/local/peer/models/local-peer-model/load",
+        body: {
+          roleIds: [],
+          roleAssignmentMode: "all",
+          enabledRoleIds: [],
+          disabledRoleIds: [],
+        },
+      },
+      {
+        url: "/api/role-model/local/llama-swap/models/local-llama-model/load",
+        body: {
+          roleIds: [],
+          roleAssignmentMode: "all",
+          enabledRoleIds: [],
+          disabledRoleIds: [],
+        },
+      },
+    ]);
+  });
+
+  test("puts explicit empty include assignment metadata when saving no-role local bindings", async () => {
+    const requests: Array<{ url: string; body: unknown }> = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      requests.push({ url, body: JSON.parse(String(init?.body ?? "{}")) });
+      return jsonResponse({ success: true });
+    });
+
+    await setPeerModelRoles("local-peer-model", [], fetcher);
+    await setLlamaSwapModelRoles("local-llama-model", [], fetcher);
+
+    expect(requests).toEqual([
+      {
+        url: "/api/role-model/local/peer/models/local-peer-model/roles",
+        body: {
+          roleIds: [],
+          roleAssignmentMode: "include",
+          enabledRoleIds: [],
+          disabledRoleIds: [],
+        },
+      },
+      {
+        url: "/api/role-model/local/llama-swap/models/local-llama-model/roles",
+        body: {
+          roleIds: [],
+          roleAssignmentMode: "include",
+          enabledRoleIds: [],
+          disabledRoleIds: [],
+        },
+      },
+    ]);
   });
 });

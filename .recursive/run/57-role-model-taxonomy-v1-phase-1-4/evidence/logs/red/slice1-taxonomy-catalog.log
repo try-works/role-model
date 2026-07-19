@@ -1,0 +1,34 @@
+
+> @role-model-router/core@0.0.0 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core
+> vitest run "--" "test/taxonomy-catalog.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core[39m
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/taxonomy-catalog.test.ts [ test/taxonomy-catalog.test.ts ]
+Error: Cannot find module '../src/taxonomy/index.js' imported from 'D:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core/test/taxonomy-catalog.test.ts'
+ ❯ test/taxonomy-catalog.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import {
+       | ^
+      4|   canonicalTaxonomy,
+      5|   getCanonicalTaskAction,
+
+Caused by: Error: Failed to load url ../src/taxonomy/index.js (resolved id: ../src/taxonomy/index.js) in D:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/core/test/taxonomy-catalog.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [2mno tests[22m
+[2m   Start at [22m 12:03:31
+[2m   Duration [22m 1.16s[2m (transform 107ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 319ms)[22m
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/core@0.0.0 test: `vitest run "--" "test/taxonomy-catalog.test.ts"`
+Exit status 1

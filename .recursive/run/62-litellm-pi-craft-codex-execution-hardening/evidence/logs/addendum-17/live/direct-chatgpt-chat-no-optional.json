@@ -1,0 +1,40 @@
+{
+  "name": "direct-chatgpt-chat-no-optional",
+  "path": "/v1/chat/completions",
+  "requestBody": {
+    "model": "chatgpt/gpt-5.4",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Reply exactly ADD17_CHAT_NO_OPTIONAL_OK."
+      }
+    ],
+    "stream": false
+  },
+  "status": 200,
+  "ok": true,
+  "elapsedMs": 2275,
+  "responsePreview": "ADD17_CHAT_NO_OPTIONAL_OK",
+  "error": null,
+  "response": {
+    "id": "chatcmpl-role-model",
+    "object": "chat.completion",
+    "created": 1783642928,
+    "model": "chatgpt/gpt-5.4",
+    "choices": [
+      {
+        "index": 0,
+        "message": {
+          "role": "assistant",
+          "content": "ADD17_CHAT_NO_OPTIONAL_OK"
+        },
+        "finish_reason": "stop"
+      }
+    ],
+    "usage": {
+      "prompt_tokens": 16,
+      "completion_tokens": 11,
+      "total_tokens": 27
+    }
+  }
+}

@@ -1,0 +1,6 @@
+> @role-model-router/runtime-ui@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\apps\runtime-ui
+> vitest run --reporter=verbose
+
+Test Files 29 passed (29)
+Tests 340 passed (340)
+GREEN verified: PASS after chart layout contract and dual-axis support were implemented.

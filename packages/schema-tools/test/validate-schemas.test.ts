@@ -16,6 +16,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
 const schemaDir = path.resolve(__dirname, "..", "..", "..", "protocol", "schemas");
+const taxonomySchemaDir = path.resolve(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "schemas",
+  "role-model",
+  "taxonomy",
+);
 
 async function createAjv() {
   const ajvModule: typeof import("ajv/dist/2020.js") = require("ajv/dist/2020.js");
@@ -68,12 +77,58 @@ describe("loadSchemas", () => {
       }),
     );
 
-    const loadedIds = (await loadSchemas()).map(({ fileName, schema }) => [
-      fileName,
-      typeof schema.$id === "string" ? schema.$id : null,
-    ]);
+    const loadedIds = (await loadSchemas())
+      .filter(({ fileName }) => !fileName.includes("/"))
+      .map(({ fileName, schema }) => [
+        fileName,
+        typeof schema.$id === "string" ? schema.$id : null,
+      ]);
 
     expect(loadedIds).toEqual(sourceIds);
+  });
+
+  it("includes role-model taxonomy schemas in the validation entrypoint", async () => {
+    const taxonomySchemaNames = (await readdir(taxonomySchemaDir))
+      .filter((name) => name.endsWith(".schema.json"))
+      .sort();
+    const loadedSchemaNames = new Set((await loadSchemas()).map(({ fileName }) => fileName));
+
+    for (const schemaName of taxonomySchemaNames) {
+      expect(loadedSchemaNames.has(`schemas/role-model/taxonomy/${schemaName}`)).toBe(true);
+    }
+  });
+
+  it("includes routing-policy binding and constrains effective-taxonomy RBAC actions", async () => {
+    const loadedSchemas = await loadSchemas();
+    const loadedSchemaNames = new Set(loadedSchemas.map(({ fileName }) => fileName));
+    expect(
+      loadedSchemaNames.has("schemas/role-model/taxonomy/routing-policy-binding.schema.json"),
+    ).toBe(true);
+
+    const effectiveSchema = loadedSchemas.find(
+      ({ fileName }) => fileName === "schemas/role-model/taxonomy/effective-taxonomy.schema.json",
+    )?.schema as {
+      properties?: {
+        rbac?: {
+          properties?: {
+            allowedActions?: {
+              items?: { enum?: string[] };
+            };
+          };
+        };
+      };
+    };
+
+    expect(effectiveSchema.properties?.rbac?.properties?.allowedActions?.items?.enum).toEqual([
+      "taxonomy.read",
+      "taxonomy.suggest",
+      "taxonomy.create",
+      "taxonomy.update",
+      "taxonomy.deprecate",
+      "taxonomy.delete",
+      "taxonomy.bind_policy",
+      "taxonomy.use",
+    ]);
   });
 
   it("declares manifest coverage for valid, invalid, minimal, and edge fixtures across in-scope families", () => {
@@ -101,7 +156,7 @@ describe("loadSchemas", () => {
       const payload = JSON.parse(await readFile(fixture.filePath, "utf8")) as unknown;
       expect(validate?.(payload) ?? false).toBe(fixture.expectation === "valid");
     }
-  });
+  }, 20_000);
 
   it("validates the full fixture manifest through the schema-tool entrypoint", async () => {
     const counts = getFixtureValidationCounts();

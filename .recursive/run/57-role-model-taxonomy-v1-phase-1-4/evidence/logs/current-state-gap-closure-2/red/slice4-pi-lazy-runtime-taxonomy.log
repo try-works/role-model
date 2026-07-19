@@ -1,0 +1,69 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [31m❯[39m test/effective-taxonomy.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 50[2mms[22m[39m
+   [32m✓[39m effective taxonomy resolution[2m > [22mprefers compatible live runtime compact taxonomy over the packaged snapshot[32m 18[2mms[22m[39m
+[31m   [31m×[31m effective taxonomy resolution[2m > [22mdoes not fetch every runtime role task chunk when no candidate roles are supplied[39m[32m 24[2mms[22m[39m
+[31m     → expected [ …(28) ] to deeply equal [][39m
+   [32m✓[39m effective taxonomy resolution[2m > [22mfalls back to packaged compact taxonomy when runtime taxonomy is unavailable[32m 3[2mms[22m[39m
+   [32m✓[39m effective taxonomy resolution[2m > [22mfalls back to packaged compact taxonomy when runtime taxonomy is incompatible[32m 3[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/effective-taxonomy.test.ts > effective taxonomy resolution > does not fetch every runtime role task chunk when no candidate roles are supplied
+AssertionError: expected [ …(28) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/coder/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/architect/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/security/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/researcher/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/writer/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/operator/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/analyst/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/planner/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/tester/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/data/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/product/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/designer/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/support/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/legal/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/finance/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/creative/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/educator/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/translator/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/marketer/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/seller/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/recruiter/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/procurement/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/coordinator/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/knowledge/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/strategist/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/mathematician/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/scientist/tasks.compact",
++   "http://127.0.0.1:3456/api/role-model/taxonomy/roles/health/tasks.compact",
++ ]
+
+ ❯ test/effective-taxonomy.test.ts:108:67
+    106| 
+    107|     expect(result.source).toBe("runtime");
+    108|     expect(calls.filter((url) => url.includes("/tasks.compact"))).toEq…
+       |                                                                   ^
+    109|     expect(calls).toHaveLength(3);
+    110|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m3 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 19:19:32
+[2m   Duration [22m 1.26s[2m (transform 153ms, setup 0ms, collect 162ms, tests 50ms, environment 0ms, prepare 369ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/effective-taxonomy.test.ts

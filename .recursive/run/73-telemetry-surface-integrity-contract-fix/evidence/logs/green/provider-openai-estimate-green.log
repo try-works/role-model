@@ -1,0 +1,156 @@
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts "--" "--reporter=verbose"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/packages/provider-openai[39m
+
+ [31m❯[39m test/index.test.ts [2m([22m[2m25 tests[22m[2m | [22m[31m5 failed[39m[2m)[22m[32m 45[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mcan be created for the openai-compatible adapter family[32m 2[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mbuilds an OpenAI responses request and normalizes text, usage, and tool calls[32m 6[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mnormalizes a streamed OpenAI responses transcript into final text, tool calls, and usage[32m 2[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mpreserves cached-token detail fields from a streamed OpenAI responses transcript[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mpreserves hosted OpenAI responses tools instead of coercing them into function tools[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforces the OpenAI Responses API path when hosted tools are requested[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mkeeps Kimi hosted web search on chat-completions and disables thinking[32m 1[2mms[22m[39m
+[31m   [31m×[31m OpenAI provider adapter[2m > [22mbuilds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply[39m[32m 17[2mms[22m[39m
+[31m     → expected { inputTokens: 11, …(4) } to deeply equal { inputTokens: 11, …(3) }[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards forced chat-completions tool_choice to the downstream OpenAI request body[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards chat-completions reasoning controls to the downstream OpenAI request body[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards responses tool_choice, reasoning, continuation, and session-affinity hints[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards responses parallel_tool_calls when explicitly true[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards responses parallel_tool_calls when explicitly false[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22momits responses parallel_tool_calls when the caller left it unset[32m 1[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mnormalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming[32m 1[2mms[22m[39m
+[31m   [31m×[31m OpenAI provider adapter[2m > [22mpreserves cached-token detail fields from a streamed chat-completions transcript[39m[32m 2[2mms[22m[39m
+[31m     → expected { inputTokens: 1200, …(4) } to deeply equal { inputTokens: 1200, …(3) }[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22madvertises implicit prompt caching support for OpenAI-family providers[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mnormalizes OpenAI Responses cached-token detail fields without rewriting totals[32m 0[2mms[22m[39m
+[31m   [31m×[31m OpenAI provider adapter[2m > [22mnormalizes Kimi chat-completions cached tokens from top-level usage[39m[32m 1[2mms[22m[39m
+[31m     → expected { inputTokens: 1200, …(4) } to deeply equal { inputTokens: 1200, …(3) }[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards chat-completions prompt_cache_key when prompt caching is enabled[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mnormalizes reasoning-only chat-completions bodies into assistant output text[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mforwards null assistant content and tool-turn fields for chat completions[32m 0[2mms[22m[39m
+   [32m✓[39m OpenAI provider adapter[2m > [22mrenders responses continuation turns as function_call and function_call_output items[32m 1[2mms[22m[39m
+[31m   [31m×[31m OpenAI provider adapter[2m > [22mnormalizes a streamed chat-completions transcript with nested choices[0].usage[39m[32m 1[2mms[22m[39m
+[31m     → expected { inputTokens: 37, …(4) } to deeply equal { inputTokens: 37, …(3) }[39m
+[31m   [31m×[31m OpenAI provider adapter[2m > [22mestimates input tokens when streamed usage is absent and labels provenance[39m[32m 1[2mms[22m[39m
+[31m     → expected 0 to be greater than 0[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mOpenAI provider adapter[2m > [22mbuilds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply
+[31m[1mAssertionError[22m: expected { inputTokens: 11, …(4) } to deeply equal { inputTokens: 11, …(3) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "cacheReadTokens": 0,[22m
+[2m    "cacheWriteTokens": 0,[22m
+[2m    "inputTokens": 11,[22m
+[2m    "outputTokens": 4,[22m
+[31m+   "source": "measured",[39m
+[2m  }[22m
+
+[36m [2m❯[22m test/index.test.ts:[2m597:30[22m[39m
+    [90m595| [39m    [34mexpect[39m(normalized[33m.[39moutputText)[33m.[39m[34mtoBe[39m([32m"ok"[39m)[33m;[39m
+    [90m596| [39m    [34mexpect[39m(normalized[33m.[39mfinishReason)[33m.[39m[34mtoBe[39m([32m"stop"[39m)[33m;[39m
+    [90m597| [39m    [34mexpect[39m(normalized[33m.[39musage)[33m.[39m[34mtoEqual[39m({
+    [90m   | [39m                             [31m^[39m
+    [90m598| [39m      inputTokens[33m:[39m [34m11[39m[33m,[39m
+    [90m599| [39m      outputTokens[33m:[39m [34m4[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mOpenAI provider adapter[2m > [22mpreserves cached-token detail fields from a streamed chat-completions transcript
+[31m[1mAssertionError[22m: expected { inputTokens: 1200, …(4) } to deeply equal { inputTokens: 1200, …(3) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "cacheReadTokens": 875,[22m
+[2m    "cacheWriteTokens": 0,[22m
+[2m    "inputTokens": 1200,[22m
+[2m    "outputTokens": 7,[22m
+[31m+   "source": "measured",[39m
+[2m  }[22m
+
+[36m [2m❯[22m test/index.test.ts:[2m1133:30[22m[39m
+    [90m1131| [39m      writeTokens[33m:[39m [34m0[39m[33m,[39m
+    [90m1132| [39m    })[33m;[39m
+    [90m1133| [39m    [34mexpect[39m(normalized[33m.[39musage)[33m.[39m[34mtoEqual[39m({
+    [90m   | [39m                             [31m^[39m
+    [90m1134| [39m      inputTokens[33m:[39m [34m1200[39m[33m,[39m
+    [90m1135| [39m      outputTokens[33m:[39m [34m7[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mOpenAI provider adapter[2m > [22mnormalizes Kimi chat-completions cached tokens from top-level usage
+[31m[1mAssertionError[22m: expected { inputTokens: 1200, …(4) } to deeply equal { inputTokens: 1200, …(3) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "cacheReadTokens": 875,[22m
+[2m    "cacheWriteTokens": 0,[22m
+[2m    "inputTokens": 1200,[22m
+[2m    "outputTokens": 7,[22m
+[31m+   "source": "measured",[39m
+[2m  }[22m
+
+[36m [2m❯[22m test/index.test.ts:[2m1358:30[22m[39m
+    [90m1356| [39m      writeTokens[33m:[39m [34m0[39m[33m,[39m
+    [90m1357| [39m    })[33m;[39m
+    [90m1358| [39m    [34mexpect[39m(normalized[33m.[39musage)[33m.[39m[34mtoEqual[39m({
+    [90m   | [39m                             [31m^[39m
+    [90m1359| [39m      inputTokens[33m:[39m [34m1200[39m[33m,[39m
+    [90m1360| [39m      outputTokens[33m:[39m [34m7[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mOpenAI provider adapter[2m > [22mnormalizes a streamed chat-completions transcript with nested choices[0].usage
+[31m[1mAssertionError[22m: expected { inputTokens: 37, …(4) } to deeply equal { inputTokens: 37, …(3) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "cacheReadTokens": 0,[22m
+[2m    "cacheWriteTokens": 0,[22m
+[2m    "inputTokens": 37,[22m
+[2m    "outputTokens": 6,[22m
+[31m+   "source": "measured",[39m
+[2m  }[22m
+
+[36m [2m❯[22m test/index.test.ts:[2m1736:30[22m[39m
+    [90m1734| [39m    [34mexpect[39m(normalized[33m.[39moutputText)[33m.[39m[34mtoBe[39m([32m"Routing outcomes"[39m)[33m;[39m
+    [90m1735| [39m    [34mexpect[39m(normalized[33m.[39mfinishReason)[33m.[39m[34mtoBe[39m([32m"stop"[39m)[33m;[39m
+    [90m1736| [39m    [34mexpect[39m(normalized[33m.[39musage)[33m.[39m[34mtoEqual[39m({
+    [90m   | [39m                             [31m^[39m
+    [90m1737| [39m      inputTokens[33m:[39m [34m37[39m[33m,[39m
+    [90m1738| [39m      outputTokens[33m:[39m [34m6[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/index.test.ts[2m > [22mOpenAI provider adapter[2m > [22mestimates input tokens when streamed usage is absent and labels provenance
+[31m[1mAssertionError[22m: expected 0 to be greater than 0[39m
+[36m [2m❯[22m test/index.test.ts:[2m1807:43[22m[39m
+    [90m1805| [39m    [34mexpect[39m(normalized[33m.[39mfinishReason)[33m.[39m[34mtoBe[39m([32m"stop"[39m)[33m;[39m
+    [90m1806| [39m    [34mexpect[39m(normalized[33m.[39musage[33m.[39minputTokens)[33m.[39m[34mtoBeGreaterThan[39m([34m0[39m)[33m;[39m
+    [90m1807| [39m    [34mexpect[39m(normalized[33m.[39musage[33m.[39moutputTokens)[33m.[39m[34mtoBeGreaterThan[39m([34m0[39m)[33m;[39m
+    [90m   | [39m                                          [31m^[39m
+    [90m1808| [39m    [34mexpect[39m(normalized[33m.[39musage[33m.[39msource)[33m.[39m[34mtoBe[39m([32m"estimated"[39m)[33m;[39m
+    [90m1809| [39m  })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[2m | [22m[1m[32m20 passed[39m[22m[90m (25)[39m
+[2m   Start at [22m 20:22:32
+[2m   Duration [22m 1.05s[2m (transform 198ms, setup 0ms, collect 221ms, tests 45ms, environment 0ms, prepare 255ms)[22m
+
+ ELIFECYCLE  Test failed. See above for more details.

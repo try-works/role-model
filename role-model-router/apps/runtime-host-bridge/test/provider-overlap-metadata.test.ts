@@ -4,8 +4,12 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import type { NormalizedCatalog } from "@role-model-router/catalog";
-import { deriveLiteLLMProviders, loadLiteLLMModelPrices } from "@role-model-router/catalog";
+import {
+  type NormalizedCatalog,
+  deriveLiteLLMProviders,
+  hydrateNormalizedCatalog,
+  loadLiteLLMModelPrices,
+} from "@role-model-router/catalog";
 import { validateProviderAccounts } from "@role-model-router/provider-account";
 import { describe, expect, test } from "vitest";
 
@@ -23,9 +27,9 @@ const repoRoot = path.resolve(testDir, "..", "..", "..", "..");
 const catalogRoot = path.join(repoRoot, "role-model-router", "packages", "catalog");
 
 function loadCatalog(): NormalizedCatalog {
-  return JSON.parse(
-    readFileSync(path.join(catalogRoot, "data", "normalized-catalog.json"), "utf8"),
-  ) as NormalizedCatalog;
+  return hydrateNormalizedCatalog(
+    JSON.parse(readFileSync(path.join(catalogRoot, "data", "normalized-catalog.json"), "utf8")),
+  );
 }
 
 function buildUiEquivalentAccount(providerId: string, providerKind: string) {
@@ -191,4 +195,36 @@ describe("listProviders overlap metadata (R1 integration)", () => {
       }
     },
   );
+
+  test("listProviders exposes one OpenAI provider with API Key and Codex Subscription variants", async () => {
+    const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-openai-provider-"));
+    const runtimeStateRoot = path.join(tempRoot, "state");
+    const unifiedRuntimeConfigPath = path.join(tempRoot, "runtime-config.yaml");
+    await writeFile(unifiedRuntimeConfigPath, 'version: "1.0"\n', "utf8");
+
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot: path.join(repoRoot, "testdata", "router-runtime", "fixtures"),
+      runtimeStateRoot,
+      scopeId: "runtime-host-run50-openai-provider",
+      unifiedRuntimeConfigPath,
+    });
+
+    try {
+      const providers = await backend.listProviders();
+      const openaiProviders = providers.filter((entry) => entry.providerId === "openai");
+      const chatgptProviders = providers.filter((entry) => entry.providerId === "chatgpt");
+
+      expect(openaiProviders).toHaveLength(1);
+      expect(chatgptProviders).toHaveLength(0);
+
+      expect(openaiProviders[0]?.displayName).toBe("OpenAI");
+      expect(openaiProviders[0]?.variants.map((variant) => variant.label)).toEqual([
+        "API Key",
+        "Codex Subscription",
+      ]);
+    } finally {
+      await backend.shutdown();
+    }
+  });
 });

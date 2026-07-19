@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/model-role-assignment.schema.json",
+  "title": "Model Role Assignment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["roleAssignmentMode"],
+  "properties": {
+    "roleAssignmentMode": {
+      "enum": ["all", "include", "exclude", "custom"]
+    },
+    "enabledRoleIds": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "disabledRoleIds": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "taskOverrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "capabilityOverrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "modalityOverrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "toolClassOverrides": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "extensions": { "type": "object" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "roleAssignmentMode": { "const": "all" } } },
+      "then": {
+        "properties": {
+          "enabledRoleIds": { "type": "array", "maxItems": 0 },
+          "disabledRoleIds": { "type": "array", "maxItems": 0 }
+        }
+      }
+    }
+  ]
+}

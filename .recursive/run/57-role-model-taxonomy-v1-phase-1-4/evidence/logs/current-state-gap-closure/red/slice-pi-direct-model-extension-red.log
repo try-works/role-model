@@ -1,0 +1,68 @@
+
+> @try-works/pi-role-model@0.1.1 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model
+> vitest run "--" "extension"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [32m✓[39m test/alias-store.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m test/taxonomy-classification.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m test/taxonomy-data-files.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 78[2mms[22m[39m
+ [32m✓[39m test/docs-and-safety.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m test/effective-taxonomy.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m test/commands.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m test/runtime-discovery.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m test/config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m test/request-intent.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m test/downstream-openai.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m test/package-manifest.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 13[2mms[22m[39m
+ [31m❯[39m test/extension.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 9585[2mms[22m[39m
+   [33m[2m✓[22m[39m Pi extension registration[2m > [22mregisters the role-model provider and one role-model command [33m 2529[2mms[22m[39m
+   [33m[2m✓[22m[39m Pi extension registration[2m > [22mpasses Pi setModel into alias selection command dependencies [33m 2511[2mms[22m[39m
+   [32m✓[39m Pi extension registration[2m > [22minjects provider requests with the resolved runtime taxonomy when available[32m 6[2mms[22m[39m
+[31m   [31m×[31m Pi extension registration[2m > [22minjects provider requests for direct Role-Model model records[39m[33m 4535[2mms[22m[39m
+[31m     → expected { model: 'claude-3.7-sonnet', …(1) } to deeply equal ObjectContaining{…}[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/extension.test.ts > Pi extension registration > injects provider requests for direct Role-Model model records
+AssertionError: expected { model: 'claude-3.7-sonnet', …(1) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "role_model": ObjectContaining {
+-     "intent": ObjectContaining {
+-       "role_hint_id": "security",
+-       "task_type": "security.audit",
+-     },
++ {
++   "messages": [
++     {
++       "content": "Review this diff for security risks.",
++       "role": "user",
+      },
++   ],
++   "model": "claude-3.7-sonnet",
+  }
+
+ ❯ test/extension.test.ts:183:21
+    181|     });
+    182| 
+    183|     expect(payload).toEqual(
+       |                     ^
+    184|       expect.objectContaining({
+    185|         role_model: expect.objectContaining({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m11 passed[39m[22m[90m (12)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m47 passed[39m[22m[90m (48)[39m
+[2m   Start at [22m 18:12:35
+[2m   Duration [22m 11.30s[2m (transform 1.70s, setup 0ms, collect 3.37s, tests 9.96s, environment 6ms, prepare 6.17s)[22m
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @try-works/pi-role-model@0.1.1 test: `vitest run "--" "extension"`
+Exit status 1

@@ -1,0 +1,37 @@
+
+> role-model@0.0.0 types:generate D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract
+> corepack pnpm --filter @role-model/schema-tools exec tsx src/validate-schemas.ts generate-types
+
+Generated types for benchmark-run.schema.json
+Generated types for benchmark-suite.schema.json
+Generated types for capability-taxonomy.schema.json
+Generated types for declared-capability-profile.schema.json
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\node_modules\.pnpm\@apidevtools+json-schema-ref-parser@11.9.3\node_modules\@apidevtools\json-schema-ref-parser\dist\lib\pointer.js:129
+                throw new errors_js_1.MissingPointerError(token, decodeURI(this.originalPath), targetRef, targetFound, parentPath);
+                      ^
+
+MissingPointerError: Missing $ref pointer "#/$defs/StringList". Token "$defs" does not exist.
+    at Pointer.resolve (D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\node_modules\.pnpm\@apidevtools+json-schema-ref-parser@11.9.3\node_modules\@apidevtools\json-schema-ref-parser\dist\lib\pointer.js:129:23)
+    at $Ref.resolve (D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\node_modules\.pnpm\@apidevtools+json-schema-ref-parser@11.9.3\node_modules\@apidevtools\json-schema-ref-parser\dist\lib\ref.js:111:38)
+    at $Refs._resolve (D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\node_modules\.pnpm\@apidevtools+json-schema-ref-parser@11.9.3\node_modules\@apidevtools\json-schema-ref-parser\dist\lib\refs.js:168:21)
+    at dereference$Ref (D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\node_modules\.pnpm\@apidevtools+json-schema-ref-parser@11.9.3\node_modules\@apidevtools\json-schema-ref-parser\dist\lib\dereference.js:191:27)
+    at crawl (D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\node_modules\.pnpm\@apidevtools+json-schema-ref-parser@11.9.3\node_modules\@apidevtools\json-schema-ref-parser\dist\lib\dereference.js:105:40)
+    at crawl (D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\node_modules\.pnpm\@apidevtools+json-schema-ref-parser@11.9.3\node_modules\@apidevtools\json-schema-ref-parser\dist\lib\dereference.js:136:44)
+    at dereference (D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\node_modules\.pnpm\@apidevtools+json-schema-ref-parser@11.9.3\node_modules\@apidevtools\json-schema-ref-parser\dist\lib\dereference.js:55:26)
+    at $RefParser.dereference (D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\node_modules\.pnpm\@apidevtools+json-schema-ref-parser@11.9.3\node_modules\@apidevtools\json-schema-ref-parser\dist\lib\index.js:196:42) {
+  code: 'EMISSINGPOINTER',
+  source: 'd:/DEV/role-model/.worktrees/54-alias-capability-discovery-contract/protocol/schemas/',
+  path: null,
+  toJSON: [Function: toJSON],
+  targetToken: '$defs',
+  targetRef: '#/$defs/StringList',
+  targetFound: '#',
+  parentPath: '#/properties/targetModelIds',
+  Symbol(nodejs.util.inspect.custom): [Function: inspect]
+}
+
+Node.js v24.11.0
+undefined
+D:\DEV\role-model\.worktrees\54-alias-capability-discovery-contract\packages\schema-tools:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: tsx src/validate-schemas.ts generate-types
+ ELIFECYCLE  Command failed with exit code 1.

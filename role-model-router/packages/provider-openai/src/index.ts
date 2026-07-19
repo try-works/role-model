@@ -5,20 +5,45 @@ import type {
   ProviderAdapterNormalizeContext,
   ProviderCapabilityMatrix,
   ProviderRequestCapture,
+  RuntimeExecutionToolDefinition,
 } from "@role-model-router/adapter-execution";
 import { normalizeToolCallArguments } from "@role-model-router/adapter-execution";
 
 export function createOpenAIProviderAdapter(adapterFamily = "ai-sdk-openai"): ProviderAdapter {
   return {
     adapterFamily,
-    negotiateCapabilities: ({ executionRequest }) =>
-      getOpenAICapabilities(Boolean(executionRequest.structuredOutput)),
+    negotiateCapabilities: ({ executionRequest, target }) =>
+      getOpenAICapabilities(Boolean(executionRequest.structuredOutput), target.providerId),
     buildRequest: buildOpenAIRequest,
     normalizeResponse: normalizeOpenAIResponse,
   };
 }
 
-function getOpenAICapabilities(hasStructuredOutput: boolean): ProviderCapabilityMatrix {
+type OpenAIModelRequestPolicy = {
+  readonly upstreamModelId?: string;
+  readonly omitChatCompletionsBodyKeys?: readonly "temperature"[];
+};
+
+const OPENAI_MODEL_REQUEST_POLICIES: Record<string, OpenAIModelRequestPolicy> = {
+  "moonshot/kimi-k2.5": {
+    omitChatCompletionsBodyKeys: ["temperature"],
+  },
+  "moonshot/kimi-k2.6": {
+    omitChatCompletionsBodyKeys: ["temperature"],
+  },
+  "moonshot/kimi-k2.7-code": {
+    omitChatCompletionsBodyKeys: ["temperature"],
+  },
+  "moonshot/kimi-k3": {
+    upstreamModelId: "k3",
+    omitChatCompletionsBodyKeys: ["temperature"],
+  },
+};
+
+function getOpenAICapabilities(
+  hasStructuredOutput: boolean,
+  providerId: string,
+): ProviderCapabilityMatrix {
   return {
     structuredOutputs: hasStructuredOutput ? "native" : "unsupported",
     toolCalling: {
@@ -31,16 +56,31 @@ function getOpenAICapabilities(hasStructuredOutput: boolean): ProviderCapability
       toolArguments: "delta",
     },
     promptCaching: {
-      supported: false,
-      mode: "unsupported",
+      supported: true,
+      mode: "implicit",
     },
     usage: {
       inputTokens: true,
       outputTokens: true,
-      cacheReadTokens: false,
-      cacheWriteTokens: false,
+      cacheReadTokens: true,
+      cacheWriteTokens: true,
+      ...(providerId === "moonshot" ? { streamOptionsIncludeUsage: true } : {}),
     },
   };
+}
+
+function resolveProviderLocalModelId(modelId: string): string {
+  const override = OPENAI_MODEL_REQUEST_POLICIES[modelId]?.upstreamModelId;
+  if (override) {
+    return override;
+  }
+  return modelId.includes("/") ? modelId.split("/").slice(1).join("/") : modelId;
+}
+
+function shouldOmitChatCompletionsBodyKey(modelId: string, key: "temperature"): boolean {
+  return (
+    OPENAI_MODEL_REQUEST_POLICIES[modelId]?.omitChatCompletionsBodyKeys?.includes(key) ?? false
+  );
 }
 
 function toOpenAIProviderMessageContent(
@@ -74,38 +114,344 @@ function toOpenAIInput(
   });
 }
 
+function toOpenAIResponseToolOutput(
+  content: ProviderAdapterExecutionContext["executionRequest"]["messages"][number]["content"],
+): string {
+  if (typeof content === "string") {
+    return content;
+  }
+  if (content === null || content === undefined) {
+    return "";
+  }
+  return content
+    .map((part) => (typeof part?.text === "string" ? part.text : ""))
+    .filter((part) => part.length > 0)
+    .join("");
+}
+
+function toOpenAIResponseToolArguments(argumentsValue: unknown): string {
+  if (typeof argumentsValue === "string") {
+    return argumentsValue;
+  }
+  if (argumentsValue === undefined) {
+    return "";
+  }
+  try {
+    return JSON.stringify(argumentsValue);
+  } catch {
+    return String(argumentsValue);
+  }
+}
+
+function hasResponsesToolReplayHistory(
+  messages: ProviderAdapterExecutionContext["executionRequest"]["messages"],
+): boolean {
+  return messages.some(
+    (message) =>
+      (message.role === "assistant" && message.tool_calls?.length) || message.role === "tool",
+  );
+}
+
+function toOpenAIResponsesInput(
+  messages: ProviderAdapterExecutionContext["executionRequest"]["messages"],
+): Array<Record<string, unknown>> {
+  const input: Array<Record<string, unknown>> = [];
+  for (const message of messages) {
+    if (message.role === "assistant" && message.tool_calls?.length) {
+      const assistantContent = toOpenAIProviderMessageContent(
+        message.content === undefined ? null : message.content,
+      );
+      if (
+        assistantContent !== null &&
+        !(typeof assistantContent === "string" && assistantContent.length === 0) &&
+        !(Array.isArray(assistantContent) && assistantContent.length === 0)
+      ) {
+        input.push({
+          role: "assistant",
+          content: assistantContent,
+        });
+      }
+      for (const toolCall of message.tool_calls) {
+        input.push({
+          type: "function_call",
+          call_id: toolCall.id,
+          name: toolCall.function.name,
+          arguments: toOpenAIResponseToolArguments(toolCall.function.arguments),
+        });
+      }
+      continue;
+    }
+    if (message.role === "tool" && typeof message.tool_call_id === "string") {
+      input.push({
+        type: "function_call_output",
+        call_id: message.tool_call_id,
+        output: toOpenAIResponseToolOutput(message.content),
+      });
+      continue;
+    }
+    input.push(
+      toOpenAIInput([message])[0] ?? {
+        role: message.role,
+        content: null,
+      },
+    );
+  }
+  return input;
+}
+
 function toOpenAITools(
   tools: NonNullable<ProviderAdapterExecutionContext["executionRequest"]["tools"]>,
 ): Array<Record<string, unknown>> {
-  return tools.map((tool) => ({
-    type: "function",
-    name: tool.name,
-    description: tool.description,
-    parameters: tool.inputSchema,
-  }));
+  return tools.map((tool) =>
+    tool.kind === "hosted"
+      ? tool.raw
+      : {
+          type: "function",
+          name: tool.name,
+          description: tool.description,
+          parameters: tool.inputSchema,
+        },
+  );
+}
+
+function isKimiBuiltinHostedTool(tool: RuntimeExecutionToolDefinition): boolean {
+  if (tool.kind !== "hosted") {
+    return false;
+  }
+  const rawType = tool.raw?.type;
+  const rawFunction = tool.raw?.function;
+  return (
+    rawType === "builtin_function" &&
+    typeof rawFunction === "object" &&
+    rawFunction !== null &&
+    (rawFunction as Record<string, unknown>).name === "$web_search"
+  );
+}
+
+function hasOnlyKimiBuiltinHostedTools(
+  tools: readonly RuntimeExecutionToolDefinition[] | undefined,
+): boolean {
+  return Boolean(tools?.length) && (tools ?? []).every((tool) => isKimiBuiltinHostedTool(tool));
+}
+
+function buildOpenAIHeaders(input: ProviderAdapterExecutionContext): Record<string, string> {
+  const sessionId =
+    typeof input.executionRequest.sessionAffinity?.sessionId === "string"
+      ? input.executionRequest.sessionAffinity.sessionId
+      : undefined;
+  const clientRequestId =
+    typeof input.executionRequest.sessionAffinity?.clientRequestId === "string"
+      ? input.executionRequest.sessionAffinity.clientRequestId
+      : undefined;
+  const usesLiteLLMContinuityHeaders =
+    input.target.adapterFamily === "litellm-proxy" ||
+    input.target.candidate.identity.serving_source === "vendor-litellm";
+  return {
+    authorization: `Bearer ${input.target.account?.credentialRef.ref ?? "OPENAI_API_KEY"}`,
+    ...(sessionId ? { "session-id": sessionId } : {}),
+    ...(clientRequestId ? { "x-client-request-id": clientRequestId } : {}),
+    ...(usesLiteLLMContinuityHeaders && sessionId ? { "x-litellm-session-id": sessionId } : {}),
+    ...(usesLiteLLMContinuityHeaders && (clientRequestId ?? sessionId)
+      ? { "x-litellm-trace-id": clientRequestId ?? sessionId ?? "" }
+      : {}),
+  };
+}
+
+function toOpenAIReasoning(
+  reasoning: ProviderAdapterExecutionContext["executionRequest"]["reasoning"],
+): { key: "reasoning" | "thinking"; value: Record<string, unknown> } | undefined {
+  if (!reasoning) {
+    return undefined;
+  }
+
+  const value = {
+    ...(reasoning.raw ?? {}),
+    ...(typeof reasoning.effort === "string" ? { effort: reasoning.effort } : {}),
+  };
+  if (Object.keys(value).length === 0) {
+    return undefined;
+  }
+  return {
+    key: reasoning.channel === "thinking" ? "thinking" : "reasoning",
+    value,
+  };
+}
+
+function toOpenAIChatCompletionsReasoning(
+  reasoning: ProviderAdapterExecutionContext["executionRequest"]["reasoning"],
+): Record<string, unknown> | undefined {
+  if (!reasoning) {
+    return undefined;
+  }
+
+  if (reasoning.channel === "thinking") {
+    return {
+      thinking: {
+        ...(reasoning.raw ?? {}),
+        ...(typeof reasoning.effort === "string" ? { effort: reasoning.effort } : {}),
+      },
+    };
+  }
+
+  if (typeof reasoning.effort === "string") {
+    return {
+      reasoning_effort: reasoning.effort,
+    };
+  }
+
+  if (reasoning.raw) {
+    return {
+      reasoning: reasoning.raw,
+    };
+  }
+
+  return undefined;
 }
 
 function toOpenAIChatTools(
   tools: NonNullable<ProviderAdapterExecutionContext["executionRequest"]["tools"]>,
 ): Array<Record<string, unknown>> {
-  return tools.map((tool) => ({
-    type: "function",
-    function: {
-      name: tool.name,
-      ...(tool.description ? { description: tool.description } : {}),
-      parameters: tool.inputSchema,
-    },
-  }));
+  return tools.map((tool) =>
+    tool.kind === "hosted"
+      ? tool.raw
+      : {
+          type: "function",
+          function: {
+            name: tool.name,
+            ...(tool.description ? { description: tool.description } : {}),
+            parameters: tool.inputSchema,
+          },
+        },
+  );
 }
 
-function resolveProviderShape(target: ProviderAdapterExecutionContext["target"]): string {
-  return target.requestShapeHints?.providerShape ?? "openai.responses";
+function toOpenAIResponsesToolChoice(
+  toolChoice: ProviderAdapterExecutionContext["executionRequest"]["toolChoice"],
+): ProviderAdapterExecutionContext["executionRequest"]["toolChoice"] | Record<string, unknown> {
+  if (
+    typeof toolChoice === "object" &&
+    toolChoice !== null &&
+    !Array.isArray(toolChoice) &&
+    toolChoice.type === "function"
+  ) {
+    const functionName =
+      typeof toolChoice.function?.name === "string" ? toolChoice.function.name.trim() : "";
+    if (functionName.length > 0) {
+      return {
+        type: "function",
+        name: functionName,
+      };
+    }
+  }
+  return toolChoice;
+}
+
+function asFunctionToolDefinition(
+  tool: RuntimeExecutionToolDefinition,
+): Extract<RuntimeExecutionToolDefinition, { readonly kind?: "function" }> {
+  if (tool.kind === "hosted") {
+    throw new Error("Hosted OpenAI tools are only supported on the Responses API path.");
+  }
+  return tool;
+}
+
+function resolveProviderShape(input: {
+  readonly target: ProviderAdapterExecutionContext["target"];
+  readonly executionRequest?: ProviderAdapterExecutionContext["executionRequest"];
+}): string {
+  const hasHostedTools = (input.executionRequest?.tools ?? []).some(
+    (tool) => tool.kind === "hosted",
+  );
+  if (hasHostedTools) {
+    if (hasOnlyKimiBuiltinHostedTools(input.executionRequest?.tools)) {
+      return input.target.requestShapeHints?.providerShape ?? "openai.chat.completions";
+    }
+    return "openai.responses";
+  }
+  return input.target.requestShapeHints?.providerShape ?? "openai.responses";
 }
 
 function readLatencyMs(input: {
   readonly responseCapture: ProviderAdapterNormalizeContext["responseCapture"];
 }): number {
   return input.responseCapture.vendorMetadata?.latencyMs ?? 120;
+}
+
+type OpenAICacheFacts = {
+  readonly readTokens: number;
+  readonly writeTokens: number;
+  readonly used: boolean;
+  readonly readSupported: boolean;
+  readonly writeSupported: boolean;
+};
+
+function readNumericField(value: unknown, key: string): number | undefined {
+  if (!value || typeof value !== "object" || !(key in value)) {
+    return undefined;
+  }
+  const field = (value as Record<string, unknown>)[key];
+  return typeof field === "number" ? field : undefined;
+}
+
+function readOpenAIUsageCacheFacts(
+  usage: unknown,
+  vendorMetadata?: ProviderAdapterNormalizeContext["responseCapture"]["vendorMetadata"],
+): OpenAICacheFacts {
+  const promptDetails =
+    usage && typeof usage === "object" && "prompt_tokens_details" in usage
+      ? (usage as Record<string, unknown>).prompt_tokens_details
+      : undefined;
+  const inputDetails =
+    usage && typeof usage === "object" && "input_tokens_details" in usage
+      ? (usage as Record<string, unknown>).input_tokens_details
+      : undefined;
+  const readTokensFromBody =
+    readNumericField(inputDetails, "cached_tokens") ??
+    readNumericField(promptDetails, "cached_tokens") ??
+    readNumericField(usage, "cached_tokens");
+  const writeTokensFromBody =
+    readNumericField(inputDetails, "cache_write_tokens") ??
+    readNumericField(promptDetails, "cache_write_tokens") ??
+    readNumericField(usage, "cache_write_tokens");
+  const readSupported =
+    typeof readTokensFromBody === "number" ||
+    typeof vendorMetadata?.cacheReadTokens === "number" ||
+    typeof vendorMetadata?.cacheUsed === "boolean";
+  const writeSupported =
+    typeof writeTokensFromBody === "number" || typeof vendorMetadata?.cacheWriteTokens === "number";
+  const readTokens = readTokensFromBody ?? vendorMetadata?.cacheReadTokens ?? 0;
+  const writeTokens = writeTokensFromBody ?? vendorMetadata?.cacheWriteTokens ?? 0;
+  const used = vendorMetadata?.cacheUsed ?? readTokens > 0;
+
+  return {
+    readTokens,
+    writeTokens,
+    used,
+    readSupported,
+    writeSupported,
+  };
+}
+
+function estimateTokensFromRequestCapture(
+  requestCapture: ProviderRequestCapture,
+  outputText = "",
+): { inputTokens: number; outputTokens: number; source: "estimated" | "unavailable" } {
+  try {
+    const inputText = JSON.stringify(requestCapture.body);
+    const outputBytes = new TextEncoder().encode(outputText).length;
+    const inputBytes = new TextEncoder().encode(inputText).length;
+    return {
+      inputTokens: Math.max(1, Math.ceil(inputBytes / 4)),
+      outputTokens: Math.max(0, Math.ceil(outputBytes / 4)),
+      source: "estimated",
+    };
+  } catch {
+    return {
+      inputTokens: 0,
+      outputTokens: 0,
+      source: "unavailable",
+    };
+  }
 }
 
 function readAssistantContent(
@@ -254,6 +600,8 @@ function parseOpenAIChatCompletionsStreamTranscript(rawTranscript: string): {
     if (!firstChoice) {
       continue;
     }
+
+    usage = (firstChoice as { usage?: typeof usage }).usage ?? usage;
 
     if (typeof firstChoice.finish_reason === "string" && firstChoice.finish_reason.length > 0) {
       finishReason = firstChoice.finish_reason;
@@ -559,29 +907,54 @@ export function buildOpenAIRequest(
     readonly capabilities: ProviderCapabilityMatrix;
   },
 ): ProviderRequestCapture {
-  const providerShape = resolveProviderShape(input.target);
+  const providerShape = resolveProviderShape(input);
+  const headers = buildOpenAIHeaders(input);
   if (providerShape === "openai.chat.completions") {
+    const usesKimiBuiltinHostedWebSearch = hasOnlyKimiBuiltinHostedTools(
+      input.executionRequest.tools,
+    );
+    const reasoning = toOpenAIChatCompletionsReasoning(input.executionRequest.reasoning);
     return {
-      providerFamily: input.target.adapterFamily,
+      providerFamily: input.target.providerId,
       endpointId: input.target.endpointId,
       url: `${input.target.apiBase}/chat/completions`,
-      headers: {
-        authorization: `Bearer ${input.target.account?.credentialRef.ref ?? "OPENAI_API_KEY"}`,
-      },
+      headers,
       body: {
-        model: input.target.modelId.includes("/")
-          ? input.target.modelId.split("/").slice(1).join("/")
-          : input.target.modelId,
+        model: resolveProviderLocalModelId(input.target.modelId),
         messages: toOpenAIInput(input.executionRequest.messages),
-        ...(typeof input.executionRequest.temperature === "number"
+        ...(typeof input.executionRequest.temperature === "number" &&
+        !shouldOmitChatCompletionsBodyKey(input.target.modelId, "temperature")
           ? { temperature: input.executionRequest.temperature }
           : {}),
         ...(typeof input.executionRequest.maxOutputTokens === "number"
           ? { max_tokens: input.executionRequest.maxOutputTokens }
           : {}),
         ...(input.executionRequest.stream ? { stream: true } : {}),
+        ...(input.executionRequest.stream && input.capabilities.usage.streamOptionsIncludeUsage
+          ? { stream_options: { include_usage: true } }
+          : {}),
         ...(input.executionRequest.tools?.length
           ? { tools: toOpenAIChatTools(input.executionRequest.tools ?? []) }
+          : {}),
+        ...(input.executionRequest.toolChoice !== undefined
+          ? { tool_choice: input.executionRequest.toolChoice }
+          : {}),
+        ...(typeof input.executionRequest.parallelToolCalls === "boolean"
+          ? { parallel_tool_calls: input.executionRequest.parallelToolCalls }
+          : {}),
+        ...(input.executionRequest.promptCache &&
+        input.executionRequest.promptCache.mode !== "disabled" &&
+        input.capabilities.promptCaching.supported &&
+        typeof input.executionRequest.promptCache.key === "string"
+          ? { prompt_cache_key: input.executionRequest.promptCache.key }
+          : {}),
+        ...(reasoning ?? {}),
+        ...(usesKimiBuiltinHostedWebSearch
+          ? {
+              thinking: {
+                type: "disabled",
+              },
+            }
           : {}),
         ...(input.executionRequest.structuredOutput &&
         input.capabilities.structuredOutputs === "native"
@@ -600,19 +973,20 @@ export function buildOpenAIRequest(
     };
   }
 
+  const reasoning = toOpenAIReasoning(input.executionRequest.reasoning);
   return {
-    providerFamily: input.target.adapterFamily,
+    providerFamily: input.target.providerId,
     endpointId: input.target.endpointId,
     url: `${input.target.apiBase}/responses`,
     headers: {
-      authorization: `Bearer ${input.target.account?.credentialRef.ref ?? "OPENAI_API_KEY"}`,
+      ...headers,
       "OpenAI-Beta": "responses=v1",
     },
     body: {
-      model: input.target.modelId.includes("/")
-        ? input.target.modelId.split("/").slice(1).join("/")
-        : input.target.modelId,
-      input: toOpenAIInput(input.executionRequest.messages),
+      model: resolveProviderLocalModelId(input.target.modelId),
+      input: hasResponsesToolReplayHistory(input.executionRequest.messages)
+        ? toOpenAIResponsesInput(input.executionRequest.messages)
+        : toOpenAIInput(input.executionRequest.messages),
       ...(typeof input.executionRequest.temperature === "number"
         ? { temperature: input.executionRequest.temperature }
         : {}),
@@ -622,6 +996,22 @@ export function buildOpenAIRequest(
       ...(input.executionRequest.stream ? { stream: true } : {}),
       ...(input.executionRequest.tools?.length
         ? { tools: toOpenAITools(input.executionRequest.tools ?? []) }
+        : {}),
+      ...(input.executionRequest.toolChoice !== undefined
+        ? { tool_choice: toOpenAIResponsesToolChoice(input.executionRequest.toolChoice) }
+        : {}),
+      ...(typeof input.executionRequest.parallelToolCalls === "boolean"
+        ? { parallel_tool_calls: input.executionRequest.parallelToolCalls }
+        : {}),
+      ...(reasoning ? { [reasoning.key]: reasoning.value } : {}),
+      ...(typeof input.executionRequest.continuation?.previousResponseId === "string"
+        ? { previous_response_id: input.executionRequest.continuation.previousResponseId }
+        : {}),
+      ...(input.executionRequest.promptCache &&
+      input.executionRequest.promptCache.mode !== "disabled" &&
+      input.capabilities.promptCaching.supported &&
+      typeof input.executionRequest.promptCache.key === "string"
+        ? { prompt_cache_key: input.executionRequest.promptCache.key }
         : {}),
       ...(input.executionRequest.structuredOutput &&
       input.capabilities.structuredOutputs === "native"
@@ -645,7 +1035,7 @@ export function normalizeOpenAIResponse(
     readonly executionRequest?: ProviderAdapterNormalizeContext["executionRequest"];
   },
 ): NormalizedProviderResponse {
-  const providerShape = resolveProviderShape(input.target);
+  const providerShape = resolveProviderShape(input);
   if (providerShape === "openai.chat.completions") {
     const streamedBody =
       typeof input.responseCapture.body === "string"
@@ -669,9 +1059,17 @@ export function normalizeOpenAIResponse(
       usage?: {
         prompt_tokens?: number;
         completion_tokens?: number;
+        prompt_tokens_details?: {
+          cached_tokens?: number;
+          cache_write_tokens?: number;
+        };
+        cached_tokens?: number;
+        cache_write_tokens?: number;
       };
     };
     const firstChoice = body.choices?.[0];
+    const cacheFacts = readOpenAIUsageCacheFacts(body.usage, input.responseCapture.vendorMetadata);
+    const vendorMetadata = input.responseCapture.vendorMetadata;
     const outputText = readAssistantContent(firstChoice?.message);
     const reasoningText = readAssistantReasoning(firstChoice?.message);
     const toolCalls = (firstChoice?.message?.tool_calls ?? [])
@@ -681,6 +1079,18 @@ export function normalizeOpenAIResponse(
         arguments: normalizeToolCallArguments(entry.function?.arguments),
         providerToolId: entry.id,
       }));
+
+    const hasMeasuredUsage =
+      typeof body.usage?.prompt_tokens === "number" ||
+      typeof body.usage?.completion_tokens === "number";
+    const estimatedUsage = hasMeasuredUsage
+      ? null
+      : estimateTokensFromRequestCapture(input.requestCapture, outputText);
+    const usageSource = hasMeasuredUsage
+      ? input.target.adapterFamily === "ai-sdk-openai-compatible"
+        ? "normalized"
+        : "measured"
+      : (estimatedUsage?.source ?? "unavailable");
 
     return {
       providerFamily: input.responseCapture.providerFamily,
@@ -706,42 +1116,49 @@ export function normalizeOpenAIResponse(
         toolArgumentDeltas: streamedBody?.streamStats.toolArgumentDeltas ?? toolCalls.length,
       },
       promptCache: {
-        requested: Boolean(input.executionRequest?.promptCache),
-        used: false,
-        readTokens: 0,
-        writeTokens: 0,
+        requested: typeof input.requestCapture.body.prompt_cache_key === "string",
+        ...(typeof input.requestCapture.body.prompt_cache_key === "string" &&
+        input.executionRequest?.promptCache?.source
+          ? { requestSource: input.executionRequest.promptCache.source }
+          : {}),
+        used: cacheFacts.used,
+        readTokens: cacheFacts.readTokens,
+        writeTokens: cacheFacts.writeTokens,
       },
       usage: {
-        inputTokens: body.usage?.prompt_tokens ?? 0,
-        outputTokens: body.usage?.completion_tokens ?? 0,
-        cacheReadTokens: 0,
-        cacheWriteTokens: 0,
+        inputTokens: body.usage?.prompt_tokens ?? estimatedUsage?.inputTokens ?? 0,
+        outputTokens: body.usage?.completion_tokens ?? estimatedUsage?.outputTokens ?? 0,
+        cacheReadTokens: cacheFacts.readTokens,
+        cacheWriteTokens: cacheFacts.writeTokens,
+        source: usageSource,
+        inputTokensSource: usageSource,
+        outputTokensSource: usageSource,
+        inputTokensAvailable: usageSource !== "unavailable",
+        outputTokensAvailable: usageSource !== "unavailable",
       },
       errorClass: null,
       latencyMs: readLatencyMs(input),
       diagnostics: [],
-      ...(input.responseCapture.vendorMetadata
+      ...(input.responseCapture.vendorMetadata ||
+      cacheFacts.readSupported ||
+      cacheFacts.writeSupported
         ? {
             vendorMetadata: {
-              vendorId: input.responseCapture.vendorMetadata.vendorId,
-              ...(typeof input.responseCapture.vendorMetadata.latencyMs === "number"
-                ? { latencyMs: input.responseCapture.vendorMetadata.latencyMs }
+              vendorId: vendorMetadata?.vendorId,
+              ...(typeof vendorMetadata?.latencyMs === "number"
+                ? { latencyMs: vendorMetadata.latencyMs }
                 : {}),
-              ...(typeof input.responseCapture.vendorMetadata.costUsd === "number"
-                ? { costUsd: input.responseCapture.vendorMetadata.costUsd }
+              ...(typeof vendorMetadata?.costUsd === "number"
+                ? { costUsd: vendorMetadata.costUsd }
                 : {}),
-              ...(typeof input.responseCapture.vendorMetadata.cacheStatus === "string"
-                ? { cacheStatus: input.responseCapture.vendorMetadata.cacheStatus }
+              ...(typeof vendorMetadata?.cacheStatus === "string"
+                ? { cacheStatus: vendorMetadata.cacheStatus }
                 : {}),
-              ...(typeof input.responseCapture.vendorMetadata.cacheUsed === "boolean"
-                ? { cacheUsed: input.responseCapture.vendorMetadata.cacheUsed }
+              ...(typeof vendorMetadata?.cacheUsed === "boolean" || cacheFacts.readSupported
+                ? { cacheUsed: cacheFacts.used }
                 : {}),
-              ...(typeof input.responseCapture.vendorMetadata.cacheReadTokens === "number"
-                ? { cacheReadTokens: input.responseCapture.vendorMetadata.cacheReadTokens }
-                : {}),
-              ...(typeof input.responseCapture.vendorMetadata.cacheWriteTokens === "number"
-                ? { cacheWriteTokens: input.responseCapture.vendorMetadata.cacheWriteTokens }
-                : {}),
+              ...(cacheFacts.readSupported ? { cacheReadTokens: cacheFacts.readTokens } : {}),
+              ...(cacheFacts.writeSupported ? { cacheWriteTokens: cacheFacts.writeTokens } : {}),
             },
           }
         : {}),
@@ -765,8 +1182,16 @@ export function normalizeOpenAIResponse(
     usage?: {
       input_tokens?: number;
       output_tokens?: number;
+      input_tokens_details?: {
+        cached_tokens?: number;
+        cache_write_tokens?: number;
+      };
+      cached_tokens?: number;
+      cache_write_tokens?: number;
     };
   };
+  const cacheFacts = readOpenAIUsageCacheFacts(body.usage, input.responseCapture.vendorMetadata);
+  const vendorMetadata = input.responseCapture.vendorMetadata;
 
   const outputText = (body.output ?? [])
     .flatMap((entry) =>
@@ -782,6 +1207,17 @@ export function normalizeOpenAIResponse(
       arguments: normalizeToolCallArguments(entry.arguments),
       providerToolId: entry.call_id,
     }));
+
+  const hasMeasuredUsage =
+    typeof body.usage?.input_tokens === "number" || typeof body.usage?.output_tokens === "number";
+  const estimatedUsage = hasMeasuredUsage
+    ? null
+    : estimateTokensFromRequestCapture(input.requestCapture, outputText);
+  const usageSource = hasMeasuredUsage
+    ? input.target.adapterFamily === "ai-sdk-openai-compatible"
+      ? "normalized"
+      : "measured"
+    : (estimatedUsage?.source ?? "unavailable");
 
   return {
     providerFamily: input.responseCapture.providerFamily,
@@ -805,42 +1241,49 @@ export function normalizeOpenAIResponse(
       toolArgumentDeltas: streamedBody?.streamStats.toolArgumentDeltas ?? toolCalls.length,
     },
     promptCache: {
-      requested: Boolean(input.executionRequest?.promptCache),
-      used: false,
-      readTokens: 0,
-      writeTokens: 0,
+      requested: typeof input.requestCapture.body.prompt_cache_key === "string",
+      ...(typeof input.requestCapture.body.prompt_cache_key === "string" &&
+      input.executionRequest?.promptCache?.source
+        ? { requestSource: input.executionRequest.promptCache.source }
+        : {}),
+      used: cacheFacts.used,
+      readTokens: cacheFacts.readTokens,
+      writeTokens: cacheFacts.writeTokens,
     },
     usage: {
-      inputTokens: body.usage?.input_tokens ?? 0,
-      outputTokens: body.usage?.output_tokens ?? 0,
-      cacheReadTokens: 0,
-      cacheWriteTokens: 0,
+      inputTokens: body.usage?.input_tokens ?? estimatedUsage?.inputTokens ?? 0,
+      outputTokens: body.usage?.output_tokens ?? estimatedUsage?.outputTokens ?? 0,
+      cacheReadTokens: cacheFacts.readTokens,
+      cacheWriteTokens: cacheFacts.writeTokens,
+      source: usageSource,
+      inputTokensSource: usageSource,
+      outputTokensSource: usageSource,
+      inputTokensAvailable: usageSource !== "unavailable",
+      outputTokensAvailable: usageSource !== "unavailable",
     },
     errorClass: null,
     latencyMs: readLatencyMs(input),
     diagnostics: [],
-    ...(input.responseCapture.vendorMetadata
+    ...(input.responseCapture.vendorMetadata ||
+    cacheFacts.readSupported ||
+    cacheFacts.writeSupported
       ? {
           vendorMetadata: {
-            vendorId: input.responseCapture.vendorMetadata.vendorId,
-            ...(typeof input.responseCapture.vendorMetadata.latencyMs === "number"
-              ? { latencyMs: input.responseCapture.vendorMetadata.latencyMs }
+            vendorId: vendorMetadata?.vendorId,
+            ...(typeof vendorMetadata?.latencyMs === "number"
+              ? { latencyMs: vendorMetadata.latencyMs }
               : {}),
-            ...(typeof input.responseCapture.vendorMetadata.costUsd === "number"
-              ? { costUsd: input.responseCapture.vendorMetadata.costUsd }
+            ...(typeof vendorMetadata?.costUsd === "number"
+              ? { costUsd: vendorMetadata.costUsd }
               : {}),
-            ...(typeof input.responseCapture.vendorMetadata.cacheStatus === "string"
-              ? { cacheStatus: input.responseCapture.vendorMetadata.cacheStatus }
+            ...(typeof vendorMetadata?.cacheStatus === "string"
+              ? { cacheStatus: vendorMetadata.cacheStatus }
               : {}),
-            ...(typeof input.responseCapture.vendorMetadata.cacheUsed === "boolean"
-              ? { cacheUsed: input.responseCapture.vendorMetadata.cacheUsed }
+            ...(typeof vendorMetadata?.cacheUsed === "boolean" || cacheFacts.readSupported
+              ? { cacheUsed: cacheFacts.used }
               : {}),
-            ...(typeof input.responseCapture.vendorMetadata.cacheReadTokens === "number"
-              ? { cacheReadTokens: input.responseCapture.vendorMetadata.cacheReadTokens }
-              : {}),
-            ...(typeof input.responseCapture.vendorMetadata.cacheWriteTokens === "number"
-              ? { cacheWriteTokens: input.responseCapture.vendorMetadata.cacheWriteTokens }
-              : {}),
+            ...(cacheFacts.readSupported ? { cacheReadTokens: cacheFacts.readTokens } : {}),
+            ...(cacheFacts.writeSupported ? { cacheWriteTokens: cacheFacts.writeTokens } : {}),
           },
         }
       : {}),

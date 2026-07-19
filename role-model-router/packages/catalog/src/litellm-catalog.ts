@@ -40,6 +40,16 @@ const KNOWN_PROVIDER_OVERRIDES: Readonly<Record<string, Partial<LiteLLMProviderI
     adapterFamily: "ai-sdk-openai",
     apiBase: "https://api.openai.com/v1",
     envVars: ["OPENAI_API_KEY"],
+    supportedAuthModes: ["api-key-static", "oauth2-device-code"],
+    controlPlaneRequirements: ["workspace.required", "codex.subscription.cached-login"],
+    oauth: {
+      apiBase: "https://api.openai.com/v1",
+      oauthHost: "https://auth.openai.com",
+      clientId: "codex-subscription",
+      deviceAuthorizationEndpoint: "codex://openai/chatgpt-device-code/start",
+      tokenEndpoint: "codex://openai/chatgpt-device-code/token",
+      requiredHeaders: [],
+    },
   },
   anthropic: {
     displayName: "Anthropic",
@@ -338,7 +348,6 @@ export async function loadLiteLLMModelPrices(repoRoot: string): Promise<unknown>
   const liteLLMPath = path.join(repoRoot, "role-model-router", "vendor", "litellm");
   const candidates = [
     path.join(liteLLMPath, "model_prices_and_context_window.json"),
-    path.join(repoRoot, "testdata", "catalog", "litellm-model-prices.json"),
     path.join(
       repoRoot,
       "role-model-router",
@@ -347,6 +356,7 @@ export async function loadLiteLLMModelPrices(repoRoot: string): Promise<unknown>
       "data",
       "model-prices.json",
     ),
+    path.join(repoRoot, "testdata", "catalog", "litellm-model-prices.json"),
   ];
 
   for (const candidate of candidates) {

@@ -1,0 +1,13 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/65-codex-subscription-prompt-cache-parity/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/telemetry-chart-config.test.ts (2 tests) 9ms
+ ✓ app/lib/telemetry-route-models.test.ts (3 tests) 14ms
+ ✓ app/lib/telemetry-analytics.test.ts (10 tests) 23ms
+ ✓ app/lib/runtime-api.test.ts (51 tests) 134ms
+
+ Test Files  4 passed (4)
+      Tests  66 passed (66)
+   Start at  10:27:12
+   Duration  1.81s (transform 816ms, setup 0ms, collect 1.39s, tests 179ms, environment 2ms, prepare 2.41s)
+

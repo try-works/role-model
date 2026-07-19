@@ -1,0 +1,245 @@
+{
+  "requestId": "req-15553569-c713-4849-8cea-26f94521d7ec",
+  "clientRequestId": "run65-kimi-cache-v1",
+  "routingDecisionId": "decision-req-15553569-c713-4849-8cea-26f94521d7ec",
+  "endpointId": "routing.failed.pre-execution",
+  "conversationId": "conversation-main",
+  "usageEvent": {
+    "timestamp_ms": 1783820832311,
+    "request_id": "req-15553569-c713-4849-8cea-26f94521d7ec",
+    "routing_decision_id": "decision-req-15553569-c713-4849-8cea-26f94521d7ec",
+    "endpoint_id": "routing.failed.pre-execution",
+    "model_id": "moonshot/kimi-k2.7-code",
+    "tokens_in": 0,
+    "tokens_out": 0,
+    "latency_ms": 296,
+    "cost_actual": null,
+    "cost_estimate": null,
+    "currency": "USD",
+    "error_class": "no_eligible_target"
+  },
+  "observedPerformance": {
+    "endpointVersion": "pre-execution-failure",
+    "sample": {
+      "endpoint_id": "routing.failed.pre-execution",
+      "endpoint_version": "pre-execution-failure",
+      "source_type": "live_request",
+      "timestamp_ms": 1783820832311,
+      "latency_ms": 296,
+      "failure": true,
+      "error_class": "no_eligible_target",
+      "request_id": "req-15553569-c713-4849-8cea-26f94521d7ec",
+      "routing_decision_id": "decision-req-15553569-c713-4849-8cea-26f94521d7ec"
+    },
+    "history": [
+      {
+        "endpoint_id": "routing.failed.pre-execution",
+        "endpoint_version": "pre-execution-failure",
+        "source_type": "live_request",
+        "timestamp_ms": 1783820832311,
+        "latency_ms": 296,
+        "failure": true,
+        "error_class": "no_eligible_target",
+        "request_id": "req-15553569-c713-4849-8cea-26f94521d7ec",
+        "routing_decision_id": "decision-req-15553569-c713-4849-8cea-26f94521d7ec"
+      }
+    ],
+    "profile": {
+      "endpoint_id": "routing.failed.pre-execution",
+      "endpoint_version": "pre-execution-failure",
+      "measured_at_ms": 1783820832311,
+      "measurement_window": {
+        "started_at_ms": 1783820832311,
+        "ended_at_ms": 1783820832311
+      },
+      "sample_size": 1,
+      "sources": {
+        "live_request_samples": 1,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 296,
+      "latency_ms_p95": 296,
+      "failure_rate": 1,
+      "freshness_score": 1,
+      "confidence_score": 0.1762914343888821,
+      "error_class_rates": {
+        "no_eligible_target": 1
+      }
+    }
+  },
+  "diagnostics": {
+    "routing": [],
+    "execution": [
+      {
+        "code": "no_eligible_target",
+        "severity": "error",
+        "message": "No execution target is currently eligible for model moonshot/kimi-k2.7-code."
+      }
+    ],
+    "authAccount": [],
+    "memoryQuality": [],
+    "tooling": [],
+    "operator": []
+  },
+  "capturePolicy": {
+    "environment": "runtime-pre-execution-failure",
+    "redactionLevel": "strict",
+    "retentionClass": "standard",
+    "structuredInspectionMode": "summary-only",
+    "rawCaptureAvailable": false,
+    "structuredInspectionAvailable": true,
+    "redactedFields": [],
+    "suppressedFields": [
+      "request.body"
+    ]
+  },
+  "executionTelemetry": {
+    "finishReason": "error",
+    "promptCaching": {
+      "supported": true
+    },
+    "usageSupport": {
+      "inputTokens": true,
+      "outputTokens": true,
+      "cacheReadTokens": true,
+      "cacheWriteTokens": true
+    },
+    "costProvenance": "unavailable"
+  },
+  "executionSemantics": {
+    "executionFamily": "unknown",
+    "adapterFamily": "unknown",
+    "payloadBytes": {
+      "ingress": 0,
+      "translated": 0,
+      "providerCanonical": 0,
+      "providerWire": 0,
+      "providerResponse": 0
+    },
+    "retryCount": 0,
+    "rerouteCount": 0,
+    "cooldownDecision": "not_applied",
+    "idempotencyDecision": "not_needed",
+    "toolSideEffectState": "none"
+  },
+  "telemetrySnapshot": {
+    "providerId": null,
+    "providerAccountId": null,
+    "sourceType": "remote",
+    "endpointKind": "unknown",
+    "servingSource": "unknown",
+    "region": null,
+    "lifecycleStateAtRequest": "unknown",
+    "healthStatusAtRequest": null,
+    "requestedModelId": "moonshot/kimi-k2.7-code",
+    "requestOperation": "chat",
+    "roleIds": [],
+    "toolingUsed": true,
+    "cacheState": "unknown",
+    "eligibleEndpointIds": [],
+    "eligibleModelIds": [],
+    "candidateCostSnapshot": {},
+    "selectedPricingSnapshot": null,
+    "selectedUncachedCostUsd": 0,
+    "baselineMaxEligibleCostUsd": 0,
+    "routingCostSavingsUsd": 0,
+    "cacheCostSavingsUsd": 0,
+    "totalAvoidedCostUsd": 0,
+    "costBaselineSource": null,
+    "costSavingsSupport": null,
+    "dimensions": {
+      "errorContext": {
+        "message": "No execution target is currently eligible for model moonshot/kimi-k2.7-code.",
+        "statusCode": 400,
+        "type": "routing_error",
+        "code": "no_eligible_target",
+        "requestedModel": "moonshot/kimi-k2.7-code"
+      },
+      "capabilityEligibility": {
+        "requestedModel": "moonshot/kimi-k2.7-code"
+      }
+    }
+  },
+  "privacyReceipt": {
+    "samplingRate": 1,
+    "retentionTtlHours": 720,
+    "retainUntil": 1786412832311
+  },
+  "inspection": {
+    "request": {
+      "requestId": "req-15553569-c713-4849-8cea-26f94521d7ec",
+      "clientRequestId": "run65-kimi-cache-v1",
+      "routingDecisionId": "decision-req-15553569-c713-4849-8cea-26f94521d7ec",
+      "requestCapture": {
+        "body": {
+          "suppressed": true,
+          "reason": "Pre-execution failure; raw request body is omitted from failure observation."
+        }
+      },
+      "responseCapture": {
+        "statusCode": 400,
+        "body": {
+          "message": "No execution target is currently eligible for model moonshot/kimi-k2.7-code.",
+          "statusCode": 400,
+          "type": "routing_error",
+          "code": "no_eligible_target",
+          "requestedModel": "moonshot/kimi-k2.7-code"
+        }
+      },
+      "diagnostics": {
+        "routing": [],
+        "execution": [
+          {
+            "code": "no_eligible_target",
+            "severity": "error",
+            "message": "No execution target is currently eligible for model moonshot/kimi-k2.7-code."
+          }
+        ],
+        "authAccount": [],
+        "memoryQuality": [],
+        "tooling": [],
+        "operator": []
+      },
+      "capturePolicy": {
+        "environment": "runtime-pre-execution-failure",
+        "redactionLevel": "strict",
+        "retentionClass": "standard",
+        "structuredInspectionMode": "summary-only",
+        "rawCaptureAvailable": false,
+        "structuredInspectionAvailable": true,
+        "redactedFields": [],
+        "suppressedFields": [
+          "request.body"
+        ]
+      }
+    },
+    "endpoint": {
+      "endpointId": "routing.failed.pre-execution",
+      "endpointVersion": "pre-execution-failure",
+      "recentSamples": []
+    }
+  },
+  "sourceType": "local",
+  "providerId": null,
+  "endpointKind": null,
+  "servingSource": null,
+  "healthStatus": "unknown",
+  "status": "unknown",
+  "roleIds": [],
+  "observationAvailability": {
+    "source": "raw-observation",
+    "rawObservationAvailable": true,
+    "structuredInspectionAvailable": true,
+    "reason": "Request detail is backed by the preserved runtime observation bundle plus telemetry ledger supplements."
+  },
+  "effectiveCostUsd": 0,
+  "costCalculationBasis": "no_execution_zero",
+  "costCalculationVersion": "run49.v1",
+  "selectedUncachedCostUsd": 0,
+  "baselineMaxEligibleCostUsd": 0,
+  "routingCostSavingsUsd": 0,
+  "cacheCostSavingsUsd": 0,
+  "totalAvoidedCostUsd": 0,
+  "costBaselineSource": null,
+  "costSavingsSupport": null
+}

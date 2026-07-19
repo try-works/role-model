@@ -1,0 +1,57 @@
+## corepack pnpm --filter pi-role-model test -- test/extension.test.ts
+
+> pi-role-model@0.0.0 test D:\DEV\role-model\.worktrees\56-pi-role-model-gap-closure\packages\pi-role-model
+> vitest run "--" "test/extension.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/56-pi-role-model-gap-closure/packages/pi-role-model[39m
+
+ [31m❯[39m test/docs-and-safety.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 54[2mms[22m[39m
+[31m   [31m×[31m Pi installation docs, skill, and safety guardrails[2m > [22mships the role-model skill and README Installation for Pi section[39m[32m 43[2mms[22m[39m
+[31m     → expected '# role-model\n\n`role-model` is an op…' to contain 'ROLE_MODEL_ENDPOINT'[39m
+   [32m✓[39m Pi installation docs, skill, and safety guardrails[2m > [22mdoes not couple the package to auth storage, launchers, or managed runtime processes[32m 9[2mms[22m[39m
+ [31m❯[39m test/package-manifest.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 26[2mms[22m[39m
+[31m   [31m×[31m pi-role-model package manifest[2m > [22mdeclares a Pi package with the expected extension and skill paths[39m[32m 23[2mms[22m[39m
+[31m     → expected undefined to deeply equal ArrayContaining{…}[39m
+ [31m❯[39m test/downstream-openai.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[32m 45[2mms[22m[39m
+   [32m✓[39m downstream OpenAI discovery mapping[2m > [22mvalidates the current Role-Model downstream discovery contract[32m 3[2mms[22m[39m
+   [32m✓[39m downstream OpenAI discovery mapping[2m > [22mmaps discovery to a Pi provider config without inventing credentials[32m 2[2mms[22m[39m
+   [32m✓[39m downstream OpenAI discovery mapping[2m > [22mmaps every model with fields required by Pi list-models[32m 1[2mms[22m[39m
+[31m   [31m×[31m downstream OpenAI discovery mapping[2m > [22mfails closed when the runtime says bearer auth is required[39m[32m 23[2mms[22m[39m
+[31m     → expected [Function] to throw an error[39m
+[31m   [31m×[31m downstream OpenAI discovery mapping[2m > [22mfalls back from missing piMapping to safe limits and marks degraded records[39m[32m 9[2mms[22m[39m
+[31m     → expected { id: 'role-model/auto', …(6) } to deeply equal ObjectContaining{…}[39m
+[31m   [31m×[31m downstream OpenAI discovery mapping[2m > [22muses explicit conservative defaults only when no Role-Model limits are available[39m[32m 3[2mms[22m[39m
+[31m     → expected { id: 'role-model/auto', …(6) } to deeply equal ObjectContaining{…}[39m
+[31m   [31m×[31m downstream OpenAI discovery mapping[2m > [22mmaps rich reasoning and image modality shapes without leaking diagnostics into Pi model config[39m[32m 2[2mms[22m[39m
+[31m     → expected { id: 'role-model/auto', …(6) } to deeply equal ObjectContaining{…}[39m
+ [32m✓[39m test/alias-store.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 18[2mms[22m[39m
+ [31m❯[39m test/commands.test.ts [2m([22m[2m9 tests[22m[2m | [22m[31m5 failed[39m[2m)[22m[32m 53[2mms[22m[39m
+   [32m✓[39m role-model command dispatcher[2m > [22mhandles help through one command with internal subcommands[32m 4[2mms[22m[39m
+   [32m✓[39m role-model command dispatcher[2m > [22mreports status and doctor results from the configured endpoint[32m 4[2mms[22m[39m
+   [32m✓[39m role-model command dispatcher[2m > [22msupports setup, ui, recommended alias, use alias, and refresh workflows[32m 2[2mms[22m[39m
+   [32m✓[39m role-model command dispatcher[2m > [22mlists and chooses aliases without leaking secrets[32m 1[2mms[22m[39m
+[31m   [31m×[31m role-model command dispatcher[2m > [22mstatus reports rich provider, trust, auth, fallback, selected alias, and warning state[39m[32m 24[2mms[22m[39m
+[31m     → expected { ok: true, …(1) } to match object { ok: true, text: StringContaining{…} }[39m
+[31m   [31m×[31m role-model command dispatcher[2m > [22mdoctor gives remediation for blocked remote endpoints[39m[32m 6[2mms[22m[39m
+[31m     → expected 'Role-Model runtime unavailable: __vit…' to contain 'state: blocked-remote'[39m
+[31m   [31m×[31m role-model command dispatcher[2m > [22malias list marks recommended, selected, ready, and degraded aliases[39m[32m 2[2mms[22m[39m
+[31m     → expected '- role-model/auto (recommended)' to contain 'selected'[39m
+[31m   [31m×[31m role-model command dispatcher[2m > [22malias use sets Pi's active Role-Model model when supported[39m[32m 4[2mms[22m[39m
+[31m     → expected [] to deeply equal [ ObjectContaining{…} ][39m
+[31m   [31m×[31m role-model command dispatcher[2m > [22malias use reports active-model failure without claiming Pi switched models[39m[32m 1[2mms[22m[39m
+[31m     → expected true to be false // Object.is equality[39m
+ [31m❯[39m test/extension.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 31[2mms[22m[39m
+   [32m✓[39m Pi extension registration[2m > [22mregisters the role-model provider and one role-model command[32m 8[2mms[22m[39m
+[31m   [31m×[31m Pi extension registration[2m > [22mpasses Pi setModel into alias selection command dependencies[39m[32m 20[2mms[22m[39m
+[31m     → expected [] to deeply equal [ ObjectContaining{…} ][39m
+
+[2m Test Files [22m [1m[31m7 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (8)[39m
+[2m      Tests [22m [1m[31m12 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (22)[39m
+[2m   Start at [22m 15:39:40
+[2m   Duration [22m 1.78s[2m (transform 584ms, setup 0ms, collect 1.10s, tests 226ms, environment 3ms, prepare 3.01s)[22m
+
+D:\DEV\role-model\.worktrees\56-pi-role-model-gap-closure\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  pi-role-model@0.0.0 test: `vitest run "--" "test/extension.test.ts"`
+Exit status 1
+EXIT_CODE=1

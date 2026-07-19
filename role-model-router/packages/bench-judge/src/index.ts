@@ -38,6 +38,9 @@ export interface JudgeGradingResult {
 export const JUDGE_JSON_ONLY_FOLLOW_UP =
   'Reply with JSON only on one line: {"score":0.0,"rationale":"..."}. No reasoning, markdown, or extra text.';
 
+const MAX_JUDGE_RATIONALE_LENGTH = 600;
+const MAX_COMPARE_RATIONALE_LENGTH = 400;
+
 export function buildJudgeGradingPrompt(input: JudgeGradingInput): string {
   const toolLines: string[] = [];
   if (input.requiredToolCall || input.requiredToolNames?.length) {
@@ -52,6 +55,12 @@ export function buildJudgeGradingPrompt(input: JudgeGradingInput): string {
     toolLines.push(
       "Fake tool syntax in prose (e.g. TOOL_CALL name=...) does not count unless criteria explicitly allow it.",
     );
+    toolLines.push(
+      "Treat the recorded API tool-call list above as authoritative benchmark metadata for whether the model executed the required tools.",
+    );
+    toolLines.push(
+      "Do not penalize the deliverable for also containing a tool_calls field when the required API tool calls are already recorded above.",
+    );
   }
 
   const preamble = [
@@ -61,7 +70,8 @@ export function buildJudgeGradingPrompt(input: JudgeGradingInput): string {
     "Score 0.0 = completely wrong or refusal without attempt.",
     "Ignore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.",
     "For code-fix cases, verify the fix is correct — unchanged buggy code must score 0.",
-    "Placeholder diffs (----/+++), stub patches without @@ hunks, and reasoning prose submitted as code score 0.",
+    "Placeholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.",
+    "For apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.",
     ...toolLines,
     "",
     `Case: ${input.caseId}`,
@@ -126,6 +136,27 @@ function parseScoreValue(value: unknown): number | null {
   return null;
 }
 
+function sanitizeRepeatedPatternNoise(text: string): string {
+  return text.replace(
+    /(?:'[^A-Za-z0-9\s]{1,4}'\s*,\s*){4,}'[^A-Za-z0-9\s]{1,4}'/g,
+    "[regex clues omitted]",
+  );
+}
+
+function sanitizeRationaleText(text: string, maxLength: number, fallback: string): string {
+  const normalized = sanitizeRepeatedPatternNoise(text)
+    .replace(/\s+/g, " ")
+    .replace(/\s+([,.;:])/g, "$1")
+    .trim();
+  if (!normalized) {
+    return fallback;
+  }
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+  return `${normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`;
+}
+
 function extractBalancedJsonObjects(text: string): string[] {
   const objects: string[] = [];
   let depth = 0;
@@ -187,7 +218,11 @@ function tryParseJudgeJson(candidate: string): JudgeGradingResult | null {
     }
     return {
       score,
-      rationale: typeof parsed.rationale === "string" ? parsed.rationale : "Judge provided score.",
+      rationale: sanitizeRationaleText(
+        typeof parsed.rationale === "string" ? parsed.rationale : "Judge provided score.",
+        MAX_JUDGE_RATIONALE_LENGTH,
+        "Judge provided score.",
+      ),
       method: "judge",
     };
   } catch {
@@ -251,7 +286,11 @@ export function parseJudgeGradingResponse(raw: string): JudgeGradingResult | nul
       const rationaleMatch = withoutFences.match(/"rationale"\s*:\s*"([^"]*)"/i);
       return {
         score,
-        rationale: rationaleMatch?.[1] ?? "Judge provided score.",
+        rationale: sanitizeRationaleText(
+          rationaleMatch?.[1] ?? "Judge provided score.",
+          MAX_JUDGE_RATIONALE_LENGTH,
+          "Judge provided score.",
+        ),
         method: "judge",
       };
     }
@@ -342,8 +381,11 @@ function tryParseCompareJson(candidate: string): CompareGradingResult | null {
     }
     return {
       relativeRanking,
-      rationale:
+      rationale: sanitizeRationaleText(
         typeof parsed.rationale === "string" ? parsed.rationale : "Compare ranking provided.",
+        MAX_COMPARE_RATIONALE_LENGTH,
+        "Compare ranking provided.",
+      ),
     };
   } catch {
     return null;

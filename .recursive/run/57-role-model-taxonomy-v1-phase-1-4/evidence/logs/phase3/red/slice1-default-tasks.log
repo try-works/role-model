@@ -1,0 +1,34 @@
+
+> @role-model-router/tasks@0.0.0 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\tasks
+> vitest run "--" "test/default-tasks-taxonomy.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/packages/tasks[39m
+
+ [31m❯[39m test/default-tasks-taxonomy.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 12[2mms[22m[39m
+[31m   [31m×[31m default runtime tasks[2m > [22muse the taxonomy V1 task catalog[39m[32m 10[2mms[22m[39m
+[31m     → expected 7 to be greater than or equal to 280[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/default-tasks-taxonomy.test.ts > default runtime tasks > use the taxonomy V1 task catalog
+AssertionError: expected 7 to be greater than or equal to 280
+ ❯ test/default-tasks-taxonomy.test.ts:7:33
+      5| describe("default runtime tasks", () => {
+      6|   test("use the taxonomy V1 task catalog", () => {
+      7|     expect(defaultTasks.length).toBeGreaterThanOrEqual(280);
+       |                                 ^
+      8|     expect(defaultTasks).toEqual(expect.arrayContaining(["coder.edit",…
+      9|     expect(defaultTasks).toEqual(expect.arrayContaining(["health.info.…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m   Start at [22m 12:07:34
+[2m   Duration [22m 1.41s[2m (transform 261ms, setup 0ms, collect 237ms, tests 12ms, environment 0ms, prepare 451ms)[22m
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\packages\tasks:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/tasks@0.0.0 test: `vitest run "--" "test/default-tasks-taxonomy.test.ts"`
+Exit status 1

@@ -1,0 +1,1 @@
+400 /chat/completions: Invalid model name passed in model=deepseek-v4-pro. Call `/v1/models` to view available models for your key.

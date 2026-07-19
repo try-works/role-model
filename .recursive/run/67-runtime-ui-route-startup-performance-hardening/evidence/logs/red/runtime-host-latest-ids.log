@@ -1,0 +1,14 @@
+Name: `runtime-host-latest-ids`
+Phase: `RED`
+Run: `67-runtime-ui-route-startup-performance-hardening`
+Timestamp: `2026-07-12`
+Command:
+
+- `corepack pnpm --filter @role-model-router/runtime-host-bridge exec vitest run test/cli-startup-readiness.test.ts test/executable.test.ts`
+
+Observed failure before production edits:
+
+- `cli-startup-readiness.test.ts` reached the non-QA startup surface and received `404` for `/api/role-model/requests/latest-ids?limit=2`
+- `executable.test.ts` source assertions failed because `src/cli.ts`, `scripts/start.ts`, and `scripts/prod-launcher.ts` were missing `listRecentRequestIds`
+
+RED verified: `PASS`

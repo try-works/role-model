@@ -1,0 +1,14 @@
+{
+  "artifact": "02-to-be-plan.md",
+  "artifact_hash": "71f142c0859b78f2812f3574e8601b4116bcc6e7932b6334da6b7b7c984cf01a",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\72-standalone-runtime-config-authority-and-alias-rematerialization\\.recursive\\run\\72-standalone-runtime-config-authority-and-alias-rematerialization\\02-to-be-plan.md",
+  "locked_at": "2026-07-16T00:50:40Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "f7f24094e05ea3b6eb26b2349f380142b9ec2274e20935577af2054ca15d9dae",
+    "00-worktree.md": "9a9261384252d376051b68e778c7d709f26151e86e3d17475510c9cbafe47482",
+    "01-as-is.md": "acd9bdbf3c46031dcf48cf8e870d617b01a08fbf52b1d8e37d1ccdee7d225d5e",
+    "01.5-root-cause.md": "ef979b9da3ff7069e81a384ddd130501b7ea4616af5b9067022e2fb41f11f95e"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "011a190f307ab5d252740acf2403f465246ddc2cfbe0ec839d7d6aef219716cd"
+}

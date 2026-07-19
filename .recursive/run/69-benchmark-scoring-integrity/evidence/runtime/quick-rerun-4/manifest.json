@@ -1,0 +1,32 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "judgeSubjectOverlap": false,
+  "startWarnings": [],
+  "startedAtMs": 1783931330281,
+  "executionCompletedAtMs": 1783931807714,
+  "gradingCompletedAtMs": 1783932405876,
+  "endpointIds": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "caseIds": [
+    "p17-tools-multi-hard",
+    "x01-max-signal",
+    "h01-implement-two-sum",
+    "h02-fix-async-counter",
+    "h04-tool-read-router",
+    "h05-tool-grep-eligibility",
+    "h06-tool-apply-patch",
+    "h07-multi-turn-sla-guard",
+    "h08-multi-turn-tool-refine",
+    "h09-agent-metrics-chain",
+    "h10-agent-read-grep-patch",
+    "h15-max-signal-v3"
+  ],
+  "responseCount": 24,
+  "judgeArtifactCount": 48,
+  "compareArtifactCount": 12
+}

@@ -64,12 +64,9 @@ export interface ObservedDataConfigRecord {
   aggregation: {
     minSamples: number;
   };
-  metricHalflives: {
-    qualityMs: number;
-    latencyMs: number;
-    throughputMs: number;
-    reliabilityMs: number;
-    costMs: number;
+  metricDecayPercentPerDay: {
+    latency: number;
+    throughput: number;
   };
   throughputSla: {
     enabled: boolean;
@@ -77,6 +74,9 @@ export interface ObservedDataConfigRecord {
     penaltyTimeoutMs: number;
     penaltyFactor: number;
   };
+  benchmarkTaskBlendWeight?: number;
+  telemetryAdvisoryFailureThreshold?: number;
+  telemetryAdvisoryPenalty?: number;
 }
 
 export interface ThroughputPenaltyStateRecord {
@@ -97,12 +97,30 @@ export interface EndpointCandidate {
   deniedByPolicy?: boolean;
   runtimeEligibility?: RuntimeEligibilitySignals;
   routingSignals?: RuntimeRoutingSignals;
+  readonly benchmarkCapability?: {
+    readonly overallScore?: number | null;
+    readonly taskScores?: Record<string, number>;
+    readonly roleScores?: Record<string, number>;
+    readonly eligibleRoleScores?: Record<string, number>;
+    readonly groupScores?: Record<string, number>;
+    readonly coverage?: {
+      readonly overallCases: number;
+      readonly roleCases?: Record<string, number>;
+      readonly groupCases?: Record<string, number>;
+      readonly lowCoverageRoleIds?: readonly string[];
+      readonly lowCoverageGroupIds?: readonly string[];
+    };
+  };
+  readonly telemetryScores?: {
+    readonly taskSuccessRates?: Record<string, number>;
+  };
 }
 
 export interface RoutingRequest {
   requestId: string;
   appId?: string;
   orgId?: string | null;
+  roleModelIntent?: RoutingIntent;
   requestedRoleId?: string;
   taskType: string;
   requiredCapabilities: readonly string[];
@@ -120,6 +138,43 @@ export interface RoutingRequest {
   allowEndpoints?: readonly string[];
   denyProviderKinds?: readonly string[];
   allowProviderKinds?: readonly string[];
+}
+
+export interface RoutingIntent {
+  contractVersion?: number;
+  taxonomyVersion: string;
+  contentRevision?: string;
+  classificationContractVersion: string;
+  role?: {
+    id: string;
+    hard?: boolean;
+  };
+  task?: {
+    id: string;
+    hard?: boolean;
+  };
+  capabilities?: {
+    required?: readonly string[];
+    preferred?: readonly string[];
+  };
+  modalities?: {
+    required?: readonly string[];
+    output?: readonly string[];
+  };
+  toolClasses?: readonly string[];
+  source?: "explicit_user" | "trusted_context" | "heuristic" | "runtime" | (string & {});
+  roleSource?: "explicit_user" | "trusted_context" | "heuristic" | "runtime" | (string & {});
+  taskSource?: "explicit_user" | "trusted_context" | "heuristic" | "runtime" | (string & {});
+  confidence?: number;
+  taskConfidence?: number;
+  taskAction?: string;
+  taskVariant?: string | null;
+  evidence?: readonly string[];
+  alternatives?: readonly {
+    roleId?: string;
+    taskType?: string;
+    confidence?: number;
+  }[];
 }
 
 export interface RouteRequestInput {

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 
+import { readNormalizedCatalogFile } from "@role-model-router/catalog";
 import { SUPPORTED_AUTH_MODES, validateProviderAccounts } from "../src/index.ts";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,8 +74,15 @@ describe("SUPPORTED_AUTH_MODES", () => {
 
 describe("validateProviderAccounts", () => {
   test("validates provider-account fixtures against catalog provider metadata without exposing raw secrets", async () => {
-    const catalog = await readJson(
-      "role-model-router/packages/catalog/data/normalized-catalog.json",
+    const catalog = await readNormalizedCatalogFile(
+      path.join(
+        repoRoot,
+        "role-model-router",
+        "packages",
+        "catalog",
+        "data",
+        "normalized-catalog.json",
+      ),
     );
     const fixture = await readJson<{ accounts: unknown[] }>(
       "testdata/router-runtime/fixtures/provider-accounts.json",
@@ -110,8 +118,15 @@ describe("validateProviderAccounts", () => {
   });
 
   test("reports incompatible auth modes for api-key-only catalog providers", async () => {
-    const catalog = await readJson(
-      "role-model-router/packages/catalog/data/normalized-catalog.json",
+    const catalog = await readNormalizedCatalogFile(
+      path.join(
+        repoRoot,
+        "role-model-router",
+        "packages",
+        "catalog",
+        "data",
+        "normalized-catalog.json",
+      ),
     );
 
     const result = validateProviderAccounts({
@@ -458,6 +473,104 @@ describe("validateProviderAccounts", () => {
       {
         modelId: "lfm2.5-8b-a1b",
         roleIds: ["general.chat", "tool.agent"],
+      },
+    ]);
+  });
+
+  test("accepts explicit all and exclude model role assignments without legacy non-empty roleIds", () => {
+    const result = validateProviderAccounts({
+      catalog: {
+        source: {
+          vendor: "models.dev",
+          commit: "run57-taxonomy-v1",
+          capturedAt: "2026-06-23T00:00:00Z",
+          schemaVersion: "models.dev.v1",
+        },
+        providers: [
+          {
+            providerId: "local-openai-compatible",
+            displayName: "Local OpenAI-compatible",
+            npmPackage: "",
+            providerKind: "provider-openai",
+            authFamily: "none",
+            adapterFamily: "ai-sdk-openai-compatible",
+            apiBase: "http://127.0.0.1:1234/v1",
+            docsUrl: null,
+            envVars: [],
+            supportedAuthModes: ["api-key-static"],
+            controlPlaneRequirements: [],
+            localOverrideApplied: true,
+            upstreamProvenance: {
+              vendor: "models.dev",
+              commit: "run57-taxonomy-v1",
+              capturedAt: "2026-06-23T00:00:00Z",
+              schemaVersion: "models.dev.v1",
+            },
+          },
+        ],
+        models: [],
+      } as Parameters<typeof validateProviderAccounts>[0]["catalog"],
+      allowedRoleIds: ["coder", "security", "writer"],
+      accounts: [
+        {
+          providerAccountId: "local-openai-compatible.personal.local-main",
+          providerId: "local-openai-compatible",
+          providerKind: "provider-openai",
+          orgScope: "personal",
+          accountScope: "local-main",
+          credentialRef: {
+            backend: "local-file",
+            ref: "local-peers/local-openai-compatible.personal.local-main",
+          },
+          authMode: "api-key-static",
+          regionPolicy: {
+            mode: "prefer",
+            regions: ["local"],
+          },
+          baseUrlOverride: "http://127.0.0.1:1234/v1",
+          allowedModels: [],
+          modelRoleBindings: [
+            {
+              modelId: "local/all-default",
+              roleIds: [],
+              roleAssignmentMode: "all",
+              enabledRoleIds: [],
+              disabledRoleIds: [],
+            },
+            {
+              modelId: "local/no-security",
+              roleIds: [],
+              roleAssignmentMode: "exclude",
+              enabledRoleIds: [],
+              disabledRoleIds: ["security"],
+            },
+          ],
+          deniedModels: [],
+          entitlementTags: ["chat"],
+          budgetPolicyRef: "budget.default",
+          quotaPolicyRef: "quota.default",
+          status: "active",
+          healthStatus: "healthy",
+          rotationState: "stable",
+        },
+      ],
+    });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.accounts[0]?.modelRoleBindings).toEqual([
+      {
+        modelId: "local/all-default",
+        roleIds: [],
+        roleAssignmentMode: "all",
+        enabledRoleIds: [],
+        disabledRoleIds: [],
+      },
+      {
+        modelId: "local/no-security",
+        roleIds: [],
+        roleAssignmentMode: "exclude",
+        enabledRoleIds: [],
+        disabledRoleIds: ["security"],
       },
     ]);
   });

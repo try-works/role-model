@@ -1,0 +1,25 @@
+{
+  "exitCode": 0,
+  "sessionId": "run65-alias-cache-v1",
+  "model": "difficulty.remote-only",
+  "responseId": "chatcmpl_req-a56e858e-afbe-4e92-ab22-e2d8a6326e54",
+  "responseModel": "gpt-5.4",
+  "usage": {
+    "input": 2810,
+    "output": 23,
+    "cacheRead": 9216,
+    "cacheWrite": 0,
+    "totalTokens": 12049,
+    "cost": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "total": 0
+    }
+  },
+  "footerPromptTokens": 12026.0,
+  "footerCacheHitRatePercent": 76.634,
+  "expectedFooterText": null,
+  "assistantText": "ALIAS_DEEPSEEK_CACHE_65"
+}

@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p10-long-context",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"Root cause 1: A partial config PUT removed/overwrote the configured routing strategy, so exact remote model requests began matching no eligible endpoint and the runtime returned HTTP 400 with an empty chosen_endpoint_id.\\nFix",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"- Root cause 1: Partial config PUT overwrote/cleared routing.strategy state, leaving exact remote model resolution without a valid chosen_endpoint_id and producing HTTP 400 with unknown.endpoint / execution_failed.\\n  - Fix: ",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both responses correctly identify the two root causes (throughput SLA hard-deny for sub-24 TPS endpoints when sole candidate; partial config PUT dropping routing.strategy) and the merge-preserving config update fix. They fully satisfy the checklist requirements and deliver structured JSON answers without any of the disallowed patterns. No substantive differences; tie.",
+  "rawResponse": "{\"relativeRanking\":[\"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\"openai.personal.openai-codex-subscription.global.gpt-5.4\"],\"rationale\":\"Both responses correctly identify the two root causes (throughput SLA hard-deny for sub-24 TPS endpoints when sole candidate; partial config PUT dropping routing.strategy) and the merge-preserving config update fix. They fully satisfy the checklist requirements and deliver structured JSON answers without any of the disallowed patterns. No substantive differences; tie.\"}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nYou are reviewing a long incident report. Context: At 09:12 the runtime began returning HTTP 400 with empty chosen_endpoint_id for exact remote model requests after a partial config PUT. Telemetry showed unknown.endpoint and execution_failed. Later investigation found default throughput SLA hard-denied sub-24 tps remote endpoints when they were the only allow-listed candidate. Strategy C alias routing still worked because local remained eligible. Operators restored routing.strategy via merge-preserving config updates. Question: what were the two root causes and the fixes? Answer in structured bullets.",
+    "exemplarAnswer": "throughput SLA hard-deny; partial config PUT dropped routing.strategy\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Names both root causes and merge-preserving fix.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: throughput, routing\\.strategy, merge"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 517,
+    "reasoningLength": 3623
+  },
+  "recordedAtMs": 1783936052675
+}

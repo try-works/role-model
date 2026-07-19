@@ -1,0 +1,41 @@
+Name: runtime-test-browser
+WorkDir: D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening
+Command: Set-Location 'D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening'; corepack pnpm run runtime:test-browser
+ExitCode: 0
+TimestampUtc: 2026-07-12T12:18:59.7452519Z
+
+
+> role-model@0.0.0 runtime:test-browser D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening
+> corepack pnpm --filter @role-model-router/runtime-ui run test:browser
+
+
+> @role-model-router/runtime-ui@ test:browser D:\DEV\role-model\.worktrees\67-runtime-ui-route-startup-performance-hardening\role-model-router\apps\runtime-ui
+> playwright test
+
+[WebServer] (node:43572) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:51836) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:20612) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:47344) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:27272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:27272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:27272) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+
+Running 4 tests using 2 workers
+
+(node:28144) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:24704) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 1 e2e\runtime-shell.spec.ts:3:1 › shows seeded provider maintenance and session readiness over the rebuilt runtime (4.5s)
+  ok 2 e2e\shared-surface-regression.spec.ts:23:1 › keeps shared typography and tokenized controls aligned on seeded QA routes (5.3s)
+  ok 3 e2e\shared-surface-regression.spec.ts:57:1 › supports filter changes, query-param restoration, and request-list narrowing on the request analytics surface (2.4s)
+  ok 4 e2e\shared-surface-regression.spec.ts:90:1 › supports request inspection drill-in from request analytics (2.0s)
+
+  4 passed (51.0s)
+

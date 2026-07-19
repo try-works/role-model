@@ -1,0 +1,15 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "p17-tools-multi-hard",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 0,
+  "parsedRationale": "The answer describes validation of the JSON response schema (object type, required 'answer', minLength) instead of schema fields and tests from the router code as requested. The diff is properly formed, but the answer fails to meet the requirement to acknowledge routing-related schema/test validation steps, making the overall response off-target.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p17-tools-multi-hard.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/p17-tools-multi-hard/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783931834476
+}

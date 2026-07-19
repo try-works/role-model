@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-06-17T20:06:00+02:00",
+  "runtime": "http://127.0.0.1:3456",
+  "route": "http://127.0.0.1:3456/app/system/session-readiness",
+  "result": "pass",
+  "factValues": [
+    {
+      "label": "Bootstrap status",
+      "value": "Ready",
+      "fontSize": "34px",
+      "lineHeight": "40px",
+      "overflowsHorizontally": false
+    },
+    {
+      "label": "Host health",
+      "value": "healthy",
+      "fontSize": "34px",
+      "lineHeight": "40px",
+      "overflowsHorizontally": false
+    },
+    {
+      "label": "Lifecycle authority",
+      "value": "Authoritative lifecycle snapshot",
+      "fontSize": "17px",
+      "lineHeight": "21px",
+      "overflowsHorizontally": false
+    },
+    {
+      "label": "Execution mode",
+      "value": "decision_only",
+      "fontSize": "17px",
+      "lineHeight": "21px",
+      "overflowsHorizontally": false
+    },
+    {
+      "label": "Routable endpoints",
+      "value": "3",
+      "fontSize": "34px",
+      "lineHeight": "40px",
+      "overflowsHorizontally": false
+    }
+  ]
+}

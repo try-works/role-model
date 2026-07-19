@@ -1,0 +1,58 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/59-observe-taxonomy-analytics-completion/role-model-router/packages/core
+
+ ❯ test/routing-intent.test.ts (29 tests | 1 failed | 28 skipped) 26ms
+   ↓ routing intent metadata > uses hard role/task/capability intent as eligibility filters
+   ↓ routing intent metadata > keeps advisory intent out of hard eligibility while still influencing preference
+   ↓ routing intent metadata > uses advisory task metadata as task-fit scoring without hard filtering
+   ↓ routing intent metadata > keeps stable Pi advisory capability and modality metadata out of hard eligibility
+   ↓ routing intent metadata > getQualityMetric uses benchmark quality when live quality is unavailable
+   ↓ routing intent metadata > getQualityMetric prefers benchmark task score over live quality_score for benchmark-scoped requests
+   ↓ routing intent metadata > getQualityMetric prefers benchmark role score over judge_score for benchmark-scoped requests
+   ↓ routing intent metadata > getQualityMetric falls back to default when no quality data exists
+   ↓ routing intent metadata > multiple candidates with different benchmark scores get different quality metrics
+   ↓ routing intent metadata > getQualityMetric blends task-specific score when taskScores available
+   ↓ routing intent metadata > getQualityMetric falls back to overallScore when taskScores lacks requested task
+   ↓ routing intent metadata > getQualityMetric includes benchmark_task_score in raw when task data exists
+   ↓ routing intent metadata > getQualityMetric applies telemetry advisory penalty when failure rate is high
+   ↓ routing intent metadata > getQualityMetric does not apply telemetry penalty when failure rate is low
+   ↓ routing intent metadata > getQualityMetric floors telemetry-adjusted value at 0
+   ↓ routing intent metadata > getQualityMetric uses custom blend weight from config
+   ↓ routing intent metadata > getQualityMetric uses default blend weight when config absent
+   ↓ routing intent metadata > getQualityMetric falls back to eligible benchmark role score when task score is absent
+   ↓ routing intent metadata > getQualityMetric falls back to eligible benchmark group score when role score is absent
+   ↓ routing intent metadata > getQualityMetric uses custom telemetry threshold from config
+   ↓ routing intent metadata > getQualityMetric applies custom penalty when below custom threshold
+   ↓ routing intent metadata > routeRequest prefers eligible benchmark role score over stronger fallback overall score
+   ↓ routing intent metadata > routeRequest prefers benchmark role evidence over stronger measured quality after eligibility
+   × routing intent metadata > routeRequest reports fallback overall benchmark reason when role and group evidence are low coverage 23ms
+     → expected [ 'BEST_TOTAL_SCORE', …(7) ] to include 'BENCHMARK_FALLBACK_OVERALL_SCORE'
+   ↓ extractTaxonomyDimensions > extracts taxonomy fields from a fully populated normalizedIntent
+   ↓ extractTaxonomyDimensions > returns null for missing taxonomy fields
+   ↓ extractTaxonomyDimensions > returns undefined when normalizedIntent is undefined
+   ↓ extractTaxonomyDimensions > handles confidence as non-number gracefully
+   ↓ extractTaxonomyDimensions > extracts partial data when role exists but task is missing
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/routing-intent.test.ts > routing intent metadata > routeRequest reports fallback overall benchmark reason when role and group evidence are low coverage
+AssertionError: expected [ 'BEST_TOTAL_SCORE', …(7) ] to include 'BENCHMARK_FALLBACK_OVERALL_SCORE'
+ ❯ test/routing-intent.test.ts:900:40
+    898|     });
+    899| 
+    900|     expect(decision.selection_reasons).toContain("BENCHMARK_FALLBACK_O…
+       |                                        ^
+    901|     expect(decision.selection_reasons).not.toContain("BENCHMARK_ROLE_S…
+    902|     expect(decision.selection_reasons).not.toContain("BENCHMARK_GROUP_…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 28 skipped (29)
+   Start at  19:02:08
+   Duration  1.48s (transform 251ms, setup 0ms, collect 319ms, tests 26ms, environment 1ms, prepare 317ms)
+
+undefined
+D:\DEV\role-model\.worktrees\59-observe-taxonomy-analytics-completion\role-model-router\packages\core:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/routing-intent.test.ts --testNamePattern routeRequest reports fallback overall benchmark reason when role and group evidence are low coverage

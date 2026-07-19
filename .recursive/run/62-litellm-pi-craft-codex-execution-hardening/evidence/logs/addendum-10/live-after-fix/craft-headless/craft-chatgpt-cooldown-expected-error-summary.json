@@ -1,0 +1,9 @@
+{
+  "model": "chatgpt/gpt-5.4",
+  "expectedError": true,
+  "exitCode": 1,
+  "durationMs": 2644,
+  "log": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\.recursive\\run\\62-litellm-pi-craft-codex-execution-hardening\\evidence\\logs\\addendum-10\\live-after-fix\\craft-headless\\craft-chatgpt-cooldown-expected-error.log",
+  "logPreview": "file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/scripts/craft-headless-verify.mjs:300\r\n  throw new Error(finalErrorMessage);\r\n        ^\r\n\r\nError: Invalid Request: The API rejected this request.\r\n    at file:///D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/scripts/craft-headless-verify.mjs:300:9\r",
+  "containsNoEligible": false
+}

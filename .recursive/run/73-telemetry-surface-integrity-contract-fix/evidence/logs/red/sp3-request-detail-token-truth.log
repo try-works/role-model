@@ -1,0 +1,78 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/apps/runtime-ui
+
+ ❯ app/routes/request-detail.test.tsx (6 tests | 6 failed) 14ms
+   × request detail token truth > renders available measured input usage from backend truth 9ms
+     → (0 , readTokenTruth) is not a function
+   × request detail token truth > renders available normalized input usage from backend truth 1ms
+     → (0 , readTokenTruth) is not a function
+   × request detail token truth > renders available estimated input usage from backend truth 1ms
+     → (0 , readTokenTruth) is not a function
+   × request detail token truth > does not render a numeric placeholder when input usage is unavailable 1ms
+     → (0 , readTokenTruth) is not a function
+   × request detail token truth > does not infer token provenance from numeric presence 1ms
+     → (0 , readTokenTruth) is not a function
+   × request detail token truth > reads only canonical prompt-cache request provenance 0ms
+     → (0 , readPromptCacheRequestSource) is not a function
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/routes/request-detail.test.tsx > request detail token truth > renders available measured input usage from backend truth
+ FAIL  app/routes/request-detail.test.tsx > request detail token truth > renders available normalized input usage from backend truth
+ FAIL  app/routes/request-detail.test.tsx > request detail token truth > renders available estimated input usage from backend truth
+TypeError: (0 , readTokenTruth) is not a function
+ ❯ app/routes/request-detail.test.tsx:12:7
+     10|   ] as const)("renders available %s input usage from backend truth", (…
+     11|     expect(
+     12|       readTokenTruth(
+       |       ^
+     13|         {
+     14|           tokens_in: value,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  app/routes/request-detail.test.tsx > request detail token truth > does not render a numeric placeholder when input usage is unavailable
+TypeError: (0 , readTokenTruth) is not a function
+ ❯ app/routes/request-detail.test.tsx:25:7
+     23|   test("does not render a numeric placeholder when input usage is unav…
+     24|     expect(
+     25|       readTokenTruth(
+       |       ^
+     26|         {
+     27|           tokens_in: 0,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  app/routes/request-detail.test.tsx > request detail token truth > does not infer token provenance from numeric presence
+TypeError: (0 , readTokenTruth) is not a function
+ ❯ app/routes/request-detail.test.tsx:42:12
+     40| 
+     41|   test("does not infer token provenance from numeric presence", () => {
+     42|     expect(readTokenTruth({ tokens_out: 12 }, "output")).toEqual({
+       |            ^
+     43|       available: false,
+     44|       source: "unavailable",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  app/routes/request-detail.test.tsx > request detail token truth > reads only canonical prompt-cache request provenance
+TypeError: (0 , readPromptCacheRequestSource) is not a function
+ ❯ app/routes/request-detail.test.tsx:51:12
+     49| 
+     50|   test("reads only canonical prompt-cache request provenance", () => {
+     51|     expect(readPromptCacheRequestSource({ promptCacheRequestSource: "e…
+       |            ^
+     52|       "explicit",
+     53|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed (6)
+   Start at  04:03:07
+   Duration  1.68s (transform 435ms, setup 0ms, collect 707ms, tests 14ms, environment 1ms, prepare 325ms)
+
+undefined
+D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/routes/request-detail.test.tsx

@@ -1,0 +1,8 @@
+{
+  "routerContainsHybridRemoteOnly": false,
+  "routerContainsMixedLocalRemote": false,
+  "downstreamContainsHybridRemoteOnly": false,
+  "downstreamContainsMixedLocalRemote": false,
+  "routerStatus": "http-ok",
+  "downstreamStatus": "http-ok"
+}

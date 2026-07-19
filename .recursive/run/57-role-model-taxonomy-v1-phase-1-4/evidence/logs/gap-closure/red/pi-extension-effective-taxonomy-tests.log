@@ -1,0 +1,51 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [31m❯[39m test/extension.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 26[2mms[22m[39m
+   [32m✓[39m Pi extension registration[2m > [22mregisters the role-model provider and one role-model command[32m 7[2mms[22m[39m
+   [32m✓[39m Pi extension registration[2m > [22mpasses Pi setModel into alias selection command dependencies[32m 2[2mms[22m[39m
+[31m   [31m×[31m Pi extension registration[2m > [22minjects provider requests with the resolved runtime taxonomy when available[39m[32m 16[2mms[22m[39m
+[31m     → expected { model: 'role-model/auto', …(1) } to deeply equal ObjectContaining{…}[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/extension.test.ts > Pi extension registration > injects provider requests with the resolved runtime taxonomy when available
+AssertionError: expected { model: 'role-model/auto', …(1) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "role_model": ObjectContaining {
+-     "intent": ObjectContaining {
+-       "content_revision": "extension-runtime-taxonomy",
+-     },
++ {
++   "messages": [
++     {
++       "content": "Implement this small bug fix.",
++       "role": "user",
+      },
++   ],
++   "model": "role-model/auto",
+  }
+
+ ❯ test/extension.test.ts:125:21
+    123|     });
+    124| 
+    125|     expect(payload).toEqual(
+       |                     ^
+    126|       expect.objectContaining({
+    127|         role_model: expect.objectContaining({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m   Start at [22m 16:35:26
+[2m   Duration [22m 1.27s[2m (transform 186ms, setup 0ms, collect 248ms, tests 26ms, environment 0ms, prepare 275ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/extension.test.ts

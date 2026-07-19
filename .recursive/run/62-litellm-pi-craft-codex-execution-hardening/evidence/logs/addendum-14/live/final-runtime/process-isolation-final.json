@@ -1,0 +1,58 @@
+[
+  {
+    "LocalAddress": "127.0.0.1",
+    "LocalPort": 3456,
+    "State": 11,
+    "OwningProcess": 0,
+    "ProcessName": "Idle",
+    "Path": null
+  },
+  {
+    "LocalAddress": "127.0.0.1",
+    "LocalPort": 3456,
+    "State": 11,
+    "OwningProcess": 0,
+    "ProcessName": "Idle",
+    "Path": null
+  },
+  {
+    "LocalAddress": "127.0.0.1",
+    "LocalPort": 3456,
+    "State": 11,
+    "OwningProcess": 0,
+    "ProcessName": "Idle",
+    "Path": null
+  },
+  {
+    "LocalAddress": "127.0.0.1",
+    "LocalPort": 3456,
+    "State": 2,
+    "OwningProcess": 40552,
+    "ProcessName": "role-model-runtime",
+    "Path": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe"
+  },
+  {
+    "LocalAddress": "127.0.0.1",
+    "LocalPort": 3456,
+    "State": 11,
+    "OwningProcess": 0,
+    "ProcessName": "Idle",
+    "Path": null
+  },
+  {
+    "LocalAddress": "127.0.0.1",
+    "LocalPort": 3456,
+    "State": 11,
+    "OwningProcess": 0,
+    "ProcessName": "Idle",
+    "Path": null
+  },
+  {
+    "LocalAddress": "127.0.0.1",
+    "LocalPort": 3456,
+    "State": 5,
+    "OwningProcess": 40552,
+    "ProcessName": "role-model-runtime",
+    "Path": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe"
+  }
+]

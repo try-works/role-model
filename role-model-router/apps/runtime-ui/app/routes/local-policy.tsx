@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router";
 
 import { LlamaSwapSetupBanner } from "../components/llama-swap-setup-hint";
 import { EmptyState, ErrorState, LoadingState, SectionCard } from "../components/page-primitives";
 import {
+  codeBlockClassName,
+  compactTitleClassName,
   fieldClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
+  supportingTextClassName,
+  utilityLabelClassName,
 } from "../lib/design-system";
 import { fetchLocalPolicy, updateLocalPolicy } from "../lib/runtime-api";
 
@@ -80,10 +85,7 @@ export default function LocalPolicyRoute() {
           <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <label
-                  htmlFor={ttlFieldId}
-                  className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
-                >
+                <label htmlFor={ttlFieldId} className={utilityLabelClassName}>
                   TTL (seconds)
                 </label>
                 <input
@@ -94,16 +96,13 @@ export default function LocalPolicyRoute() {
                   onChange={(e) => setField("ttl", Number.parseInt(e.target.value, 10) || 0)}
                   className={fieldClassName}
                 />
-                <p className="text-xs text-[var(--rm-muted)]">
+                <p className={supportingTextClassName}>
                   Seconds a model stays loaded after last request before auto-unload.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label
-                  htmlFor={maxConcurrencyFieldId}
-                  className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--rm-muted)]"
-                >
+                <label htmlFor={maxConcurrencyFieldId} className={utilityLabelClassName}>
                   Max concurrency
                 </label>
                 <input
@@ -116,28 +115,35 @@ export default function LocalPolicyRoute() {
                   }
                   className={fieldClassName}
                 />
-                <p className="text-xs text-[var(--rm-muted)]">
+                <p className={supportingTextClassName}>
                   Maximum number of models loaded simultaneously.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <label
+              htmlFor="autoUnload"
+              className={`${mutedPanelClassName} flex cursor-pointer items-start justify-between gap-4 p-4`}
+            >
+              <span className="space-y-1">
+                <span className={`block ${compactTitleClassName}`}>Auto-unload idle models</span>
+                <span className={supportingTextClassName}>
+                  Release a model from memory after its TTL expires so the managed host does not
+                  keep inactive weights pinned indefinitely.
+                </span>
+              </span>
               <input
                 type="checkbox"
                 id="autoUnload"
                 checked={autoUnload}
                 onChange={(e) => setField("autoUnload", e.target.checked)}
-                className="h-4 w-4 rounded-none border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
+                className="mt-0.5 h-4 w-4 shrink-0 rounded-[var(--rm-radius-sm)] border-[var(--rm-border-strong)] accent-[var(--rm-accent)]"
               />
-              <label htmlFor="autoUnload" className="text-sm text-[var(--rm-fg)]">
-                Auto-unload idle models
-              </label>
-            </div>
+            </label>
 
             {saveError ? <ErrorState label={saveError} /> : null}
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex flex-wrap gap-3 pt-2">
               <button
                 type="button"
                 onClick={handleSave}
@@ -154,6 +160,9 @@ export default function LocalPolicyRoute() {
               >
                 Reset
               </button>
+              <Link className={secondaryButtonClassName} to="/app/local/llama-swap/models">
+                Open models
+              </Link>
             </div>
           </div>
         )}
@@ -165,11 +174,15 @@ export default function LocalPolicyRoute() {
         ) : Object.keys(policy).length === 0 ? (
           <EmptyState label="No policy configured. Save a policy to see it here." />
         ) : (
-          <pre
-            className={`${mutedPanelClassName} overflow-x-auto p-4 text-xs leading-6 text-[var(--rm-secondary)]`}
-          >
-            {JSON.stringify(policy, null, 2)}
-          </pre>
+          <div className={`${mutedPanelClassName} space-y-3 p-4`}>
+            <p className={supportingTextClassName}>
+              Persisted JSON stays visible here so operators can confirm the exact contract written
+              back to the runtime after saving.
+            </p>
+            <pre className={`overflow-x-auto ${codeBlockClassName}`}>
+              {JSON.stringify(policy, null, 2)}
+            </pre>
+          </div>
         )}
       </SectionCard>
     </div>

@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "9a9261384252d376051b68e778c7d709f26151e86e3d17475510c9cbafe47482",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\72-standalone-runtime-config-authority-and-alias-rematerialization\\.recursive\\run\\72-standalone-runtime-config-authority-and-alias-rematerialization\\00-worktree.md",
+  "locked_at": "2026-07-16T00:33:30Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "f7f24094e05ea3b6eb26b2349f380142b9ec2274e20935577af2054ca15d9dae"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "d235b69d1231f1319c216e0c7f24087fe1f4a937d556951ffacfd4a6f76b5a3e"
+}

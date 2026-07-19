@@ -1,0 +1,53 @@
+
+> @try-works/pi-role-model@0.1.1 test D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model
+> vitest run "--" "runtime-discovery.test.ts"
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/packages/pi-role-model[39m
+
+ [32m✓[39m test/package-manifest.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m test/docs-and-safety.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m test/alias-store.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m test/config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m test/taxonomy-classification.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m test/downstream-openai.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m test/commands.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m test/extension.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m test/taxonomy-data-files.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [31m❯[39m test/runtime-discovery.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 55[2mms[22m[39m
+[31m   [31m×[31m Role-Model runtime discovery[2m > [22mfetches health, version, and downstream discovery during normal discovery[39m[32m 37[2mms[22m[39m
+[31m     → expected false to be true // Object.is equality[39m
+   [32m✓[39m Role-Model runtime discovery[2m > [22mblocks remote endpoints before issuing network calls[32m 4[2mms[22m[39m
+   [32m✓[39m Role-Model runtime discovery[2m > [22muses compact /v1/models fallback when rich discovery is unavailable[32m 6[2mms[22m[39m
+   [32m✓[39m Role-Model runtime discovery[2m > [22mreports malformed rich discovery as incompatible without fallback[32m 5[2mms[22m[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/runtime-discovery.test.ts > Role-Model runtime discovery > fetches health, version, and downstream discovery during normal discovery
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ test/runtime-discovery.test.ts:38:68
+     36|     expect(result.version?.version).toBe("0.0.0-test");
+     37|     expect(requestInits).toHaveLength(3);
+     38|     expect(requestInits.every((init) => init.keepalive === false)).toB…
+       |                                                                    ^
+     39|     expect(
+     40|       requestInits.every(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m9 passed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m38 passed[39m[22m[90m (39)[39m
+[2m   Start at [22m 13:33:55
+[2m   Duration [22m 1.91s[2m (transform 1.46s, setup 0ms, collect 2.99s, tests 263ms, environment 4ms, prepare 4.17s)[22m
+
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @try-works/pi-role-model@0.1.1 test: `vitest run "--" "runtime-discovery.test.ts"`
+Exit status 1

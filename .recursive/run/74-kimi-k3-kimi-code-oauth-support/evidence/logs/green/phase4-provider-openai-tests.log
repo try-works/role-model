@@ -1,0 +1,13 @@
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\74-kimi-k3-kimi-code-oauth-support\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/74-kimi-k3-kimi-code-oauth-support/role-model-router/packages/provider-openai
+
+ ✓ test/index.test.ts (33 tests) 52ms
+
+ Test Files  1 passed (1)
+      Tests  33 passed (33)
+   Start at  09:22:07
+   Duration  3.44s (transform 973ms, setup 0ms, collect 1.02s, tests 52ms, environment 0ms, prepare 1.30s)

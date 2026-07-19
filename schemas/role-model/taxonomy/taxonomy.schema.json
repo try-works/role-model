@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/taxonomy.schema.json",
+  "title": "Role Model Taxonomy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "manifest",
+    "groups",
+    "roles",
+    "tasks",
+    "capabilities",
+    "modalities",
+    "toolClasses",
+    "intentPresets"
+  ],
+  "properties": {
+    "manifest": { "$ref": "manifest.schema.json" },
+    "groups": { "type": "array", "items": { "$ref": "group.schema.json" } },
+    "roles": { "type": "array", "items": { "$ref": "role.schema.json" } },
+    "tasks": { "type": "array", "items": { "$ref": "task-type.schema.json" } },
+    "capabilities": { "type": "array", "items": { "$ref": "capability.schema.json" } },
+    "modalities": { "type": "array", "items": { "$ref": "modality.schema.json" } },
+    "toolClasses": { "type": "array", "items": { "$ref": "tool-class.schema.json" } },
+    "intentPresets": { "type": "array", "items": { "$ref": "intent-preset.schema.json" } }
+  }
+}

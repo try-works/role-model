@@ -1,0 +1,214 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/70-cache-hit-token-rate-analytics-fix/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/telemetry-route-models.test.ts (3 tests | 2 failed) 42ms
+   × telemetry route chart definitions > defines the approved overview telemetry charts and query contracts 32ms
+     → expected { title: 'Cache Efficiency', …(6) } to deeply equal ObjectContaining{…}
+   × telemetry route chart definitions > builds observe requests charts from shared filters and ranked-comparison selectors 6ms
+     → expected { …(7) } to deeply equal ObjectContaining{…}
+   ✓ telemetry route chart definitions > keeps routing analytics under Observe with cost savings and routing dimensions 2ms
+ ❯ app/lib/telemetry-analytics.test.ts (11 tests | 1 failed) 51ms
+   ✓ telemetry analytics view models > builds semantic metric series when the backend response is not broken down by dimension 7ms
+   ✓ telemetry analytics view models > preserves all requested metrics when a query includes breakdown data that the chart does not directly compare 1ms
+   × telemetry analytics view models > assigns separate axes to mixed-unit cache efficiency metrics when requested 29ms
+     → expected [ …(2) ] to deeply equal ArrayContaining{…}
+   ✓ telemetry analytics view models > assigns distinct colors to each visible metric series in the same chart 2ms
+   ✓ telemetry analytics view models > collapses long breakdowns into top series plus Other using backend labels 4ms
+   ✓ telemetry analytics view models > builds ranked routing comparison rows from the analytics response 1ms
+   ✓ telemetry analytics view models > maps backend support metadata into semantic chart states 1ms
+   ✓ telemetry analytics view models > marks breakdown charts sparse when totals exist but the requested dimension has no series 1ms
+   ✓ telemetry analytics view models > surfaces explicit mixed-version taxonomy coverage messaging for partial taxonomy breakdowns 1ms
+   ✓ telemetry analytics view models > surfaces backend truncation metadata in ranking chart states 1ms
+   ✓ telemetry analytics view models > selects stable query granularity from approved time ranges 1ms
+ ❯ app/components/telemetry-charts.test.tsx (10 tests | 1 failed) 87ms
+   ✓ TelemetryChartCard > keeps populated chart content visible while a background refresh is in progress 38ms
+   ✓ TelemetryChartCard > renders stable loading and empty states without fake chart data 5ms
+   ✓ TelemetryChartCard > keeps empty chart states compact instead of reserving full plot height 2ms
+   ✓ TelemetryChartCard > uses tighter empty-state padding so compact analytics cards do not create oversized blank panels 1ms
+   ✓ TelemetryChartCard > keeps populated chart content visible for partial telemetry warnings 3ms
+   ✓ TelemetryChartCard > replaces the chart body for blocking unsupported states 2ms
+   ✓ TelemetryAnalyticsChartCard > renders a per-card error state when a chart query fails 3ms
+   × TelemetryLineTimeSeriesChart > renders dual y axes for mixed-unit cache efficiency charts 25ms
+     → expected 1 to be 2 // Object.is equality
+   ✓ TelemetryLineTimeSeriesChart > keeps same-unit line charts on a single y axis 2ms
+   ✓ TelemetryRankingBarChart > places horizontal chart labels in a bottom legend instead of a left category axis 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/telemetry-charts.test.tsx > TelemetryLineTimeSeriesChart > renders dual y axes for mixed-unit cache efficiency charts
+AssertionError: expected 1 to be 2 // Object.is equality
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ app/components/telemetry-charts.test.tsx:221:62
+    219|     );
+    220| 
+    221|     expect(markup.match(/data-recharts=\"YAxis\"/g)?.length).toBe(2);
+       |                                                              ^
+    222|     expect(markup).toContain('data-recharts="YAxis" data-orientation="…
+    223|     expect(markup).toContain('data-recharts="Line" data-datakey="cache…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  app/lib/telemetry-analytics.test.ts > telemetry analytics view models > assigns separate axes to mixed-unit cache efficiency metrics when requested
+AssertionError: expected [ …(2) ] to deeply equal ArrayContaining{…}
+
+- Expected
++ Received
+
+- ArrayContaining [
+-   ObjectContaining {
++ [
++   {
++     "colorToken": "var(--rm-chart-cache-hit)",
++     "dataKey": "cacheHitTokens",
++     "fillOpacity": 0.16,
+      "key": "cacheHitTokens",
+-     "yAxisId": "left",
++     "label": "Cache hit tokens",
++     "strokeOpacity": 1,
+    },
+-   ObjectContaining {
++   {
++     "colorToken": "var(--rm-chart-cache-rate)",
++     "dataKey": "cacheHitTokenRate",
++     "fillOpacity": 0.16,
+      "key": "cacheHitTokenRate",
+-     "yAxisId": "right",
++     "label": "Cache hit token rate",
++     "strokeOpacity": 1,
+    },
+  ]
+
+ ❯ app/lib/telemetry-analytics.test.ts:179:26
+    177|     );
+    178| 
+    179|     expect(model.series).toEqual(
+       |                          ^
+    180|       expect.arrayContaining([
+    181|         expect.objectContaining({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  app/lib/telemetry-route-models.test.ts > telemetry route chart definitions > defines the approved overview telemetry charts and query contracts
+AssertionError: expected { title: 'Cache Efficiency', …(6) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
++ {
++   "className": "col-span-12 xl:col-span-6",
++   "description": "cache-hit tokens / hit rate",
++   "emptyMessage": "No cache activity has been recorded for this slice yet.",
+    "kind": "line",
+-   "metricAxisIds": {
+-     "cacheHitTokenRate": "right",
+-     "cacheHitTokens": "left",
++   "metrics": [
++     "cacheHitTokens",
++     "cacheHitTokenRate",
++   ],
++   "query": {
++     "breakdown": null,
++     "filters": {
++       "providerIds": [
++         "openai",
++       ],
++       "sourceTypes": [
++         "remote",
++       ],
++       "statusFamilies": [
++         "failure",
++       ],
+      },
++     "granularity": "day",
+      "metrics": [
+        "cacheHitTokens",
+        "cacheHitTokenRate",
+      ],
++     "ranking": null,
++     "windowMs": 604800000,
++   },
+    "title": "Cache Efficiency",
+  }
+
+ ❯ app/lib/telemetry-route-models.test.ts:49:23
+     47|       }),
+     48|     );
+     49|     expect(charts[4]).toEqual(
+       |                       ^
+     50|       expect.objectContaining({
+     51|         title: "Cache Efficiency",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  app/lib/telemetry-route-models.test.ts > telemetry route chart definitions > builds observe requests charts from shared filters and ranked-comparison selectors
+AssertionError: expected { …(7) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
++ {
++   "className": "col-span-12 xl:col-span-6",
++   "description": "Cache-hit token volume and cache-hit rate for the filtered slice.",
++   "emptyMessage": "No cache-backed requests match the current analytics filters.",
+    "kind": "line",
+-   "metricAxisIds": {
+-     "cacheHitTokenRate": "right",
+-     "cacheHitTokens": "left",
++   "metrics": [
++     "cacheHitTokens",
++     "cacheHitTokenRate",
++   ],
++   "query": {
++     "breakdown": "providerId",
++     "filters": {
++       "endpointIds": [
++         "openai.primary.fast",
++       ],
++       "providerIds": [
++         "openai",
++       ],
++       "sourceTypes": [
++         "remote",
++       ],
++       "statusFamilies": [
++         "failure",
++       ],
+      },
++     "granularity": "day",
+      "metrics": [
+        "cacheHitTokens",
+        "cacheHitTokenRate",
+      ],
++     "ranking": null,
++     "windowMs": 2592000000,
++   },
+    "title": "Cache Efficiency Trend",
+  }
+
+ ❯ app/lib/telemetry-route-models.test.ts:142:23
+    140|       }),
+    141|     );
+    142|     expect(charts[6]).toEqual(
+       |                       ^
+    143|       expect.objectContaining({
+    144|         title: "Cache Efficiency Trend",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  4 failed | 20 passed (24)
+   Start at  22:03:29
+   Duration  2.00s (transform 506ms, setup 0ms, collect 1.27s, tests 181ms, environment 1ms, prepare 1.12s)
+
+undefined
+D:\DEV\role-model\.worktrees\70-cache-hit-token-rate-analytics-fix\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/telemetry-route-models.test.ts app/lib/telemetry-analytics.test.ts app/components/telemetry-charts.test.tsx

@@ -121,6 +121,7 @@
         "type": "string",
         "enum": [
           "BEST_TOTAL_SCORE",
+          "TIE_BREAK_APPLIED",
           "MEASURED_PROFILE_USED",
           "DECLARED_PROFILE_USED",
           "DEFAULT_PROFILE_USED",
@@ -134,7 +135,12 @@
           "HIGH_QUALITY_TARGET_MET",
           "ROLE_POLICY_APPLIED",
           "TASK_POLICY_APPLIED",
-          "FALLBACK_CHAIN_COMPUTED"
+          "FALLBACK_CHAIN_COMPUTED",
+          "BENCHMARK_TASK_SCORE",
+          "BENCHMARK_ROLE_SCORE",
+          "BENCHMARK_GROUP_SCORE",
+          "BENCHMARK_FALLBACK_OVERALL_SCORE",
+          "TELEMETRY_TASK_PERFORMANCE"
         ]
       }
     },
@@ -152,7 +158,7 @@
         "value": { "type": "number", "minimum": 0, "maximum": 1 },
         "source": {
           "type": "string",
-          "enum": ["measured", "declared", "default", "catalog"]
+          "enum": ["measured", "declared", "default", "catalog", "benchmark"]
         },
         "raw": {
           "type": "object",

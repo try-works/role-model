@@ -1,0 +1,7 @@
+{
+  "url": "ws://127.0.0.1:53565",
+  "tokenPresent": true,
+  "port": 53565,
+  "listener": null,
+  "processAlive": false
+}

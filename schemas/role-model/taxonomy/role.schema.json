@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/role.schema.json",
+  "title": "Taxonomy Role",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "label",
+    "description",
+    "primaryGroupId",
+    "secondaryGroupIds",
+    "taskIds",
+    "authority",
+    "stability",
+    "ui"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "const": "role"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "owner"],
+      "properties": {
+        "scope": {
+          "enum": ["core", "provider", "client", "org", "team", "user"]
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "stability": {
+      "enum": ["stable", "experimental", "deprecated"]
+    },
+    "replacement": {
+      "type": "string",
+      "description": "When stability is deprecated, the ID of the replacement entry."
+    },
+    "deprecationReason": {
+      "type": "string",
+      "description": "Human-readable reason for deprecation."
+    },
+    "primaryGroupId": {
+      "type": "string"
+    },
+    "secondaryGroupIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "typicalTaskIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "taskIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requiredCapabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "preferredCapabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "summary": { "type": "string" },
+        "positiveSignals": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "negativeSignals": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sortOrder"],
+      "properties": {
+        "sortOrder": { "type": "integer" },
+        "recommendedIcon": { "type": "string" },
+        "recommendedAccent": { "type": "string" },
+        "riskLevel": { "enum": ["standard", "high"] }
+      }
+    }
+  }
+}

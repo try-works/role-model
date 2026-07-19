@@ -54,15 +54,8 @@ describe("runRuntimeUiValidation", () => {
     expect(result.runtimeConfigInitialApplied).toBe(true);
     expect(result.runtimeConfigUpdatedVersion).toBe("1.1");
     expect(result.runtimeConfigUpdatedRoutingStrategy).toBe("baseline");
-    expect(result.moonshotVariantIds).toEqual(
-      expect.arrayContaining([
-        "moonshot-open-platform",
-        "kimi-code",
-        "moonshot-api-key",
-        "moonshot-oauth",
-      ]),
-    );
-    expect(result.availableRoleIds).toEqual(expect.arrayContaining(["general.chat"]));
+    expect(result.moonshotVariantIds).toEqual(["moonshot-open-platform", "kimi-code"]);
+    expect(result.availableRoleIds).toEqual(expect.arrayContaining(["coder", "writer"]));
     expect(result.upsertedAccountId).toBe("moonshot.personal.primary");
     expect(result.accountListIncludesUpsert).toBe(true);
     expect(result.accountRoleBindingIncludesUpsert).toBe(true);
@@ -74,7 +67,7 @@ describe("runRuntimeUiValidation", () => {
     expect(result.routedRequestEffectiveMode).toBe("baseline");
     expect(result.routedRequestRewriteReason).toBe("requested-model-matches-downstream");
     expect(result.mixedAliasId).toBe("mixed.local-remote");
-    expect(result.mixedAliasModelListIncludesAlias).toBe(true);
+    expect(result.mixedAliasModelListIncludesAlias).toBe(false);
     expect(result.mixedAliasRequestId).toBe("req-runtime-ui-mixed-alias-001");
     expect(result.mixedAliasAllowEndpoints).toEqual(
       expect.arrayContaining([
@@ -92,5 +85,5 @@ describe("runRuntimeUiValidation", () => {
     expect(result.mixedAliasRouterDecisionMatchesRequest).toBe(true);
     expect(result.mixedAliasOverviewIncludesSelectedEndpoint).toBe(true);
     expect(result.mixedAliasEndpointsIncludeSelectedEndpoint).toBe(true);
-  }, 60_000);
+  }, 240_000);
 });

@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "l01-verbose-incident",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-l01-verbose-incident-a1-61fdfd2a-f7cb-4a3f-a450-40b8f1b0f4c0",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: l01-verbose-incident\n\n## Original question\n[user]\nBackground notes (ignore for scoring, answer final question only): Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Repeat: routing telemetry cache invalidation throughput SLA eligibility scoring controller hybrid baseline difficulty classifier rubric signals decomposition keywords schema contract unified diff patch refactor test suite milestones verification criteria extension points arbitration observed profiles penalty factor hard deny sole candidate merge preserving config PUT runtime host bridge OpenAI compatible peer Kimi moonshot local LFM decision only vendors inactive logs stream JSON 503 request id alias measured latency reasoning content execution failed unknown endpoint registry result chosen endpoint id empty HTTP 400 consumer contract Strategy C alias mixed local remote model ids mode difficulty cost balanced quality learning cache hit invalidated tool count delta code schema burden history turn count instruction constraint count context tokens. Final question: In one sentence, what is difficulty-based routing?\n\n## Example expected answer\ndifficulty-based routing selects models by request difficulty within an alias pool\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] One-sentence definition despite long filler context.\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: difficulty, routing\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nOne-sentence definition despite long filler context.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"Difficulty-based routing is a strategy that classifies each request by complexity and sends it to the most appropriate model or service tier to balance quality, latency, and cost.\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"The answer is a single-sentence definition that correctly describes difficulty-based routing, including key concepts of complexity classification and appropriate model routing, as required by the checklist.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer is a single-sentence definition that correctly describes difficulty-based routing, including key concepts of complexity classification and appropriate model routing, as required by the checklist.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/openai.personal.openai-codex-subscription.global.gpt-5.4/l01-verbose-incident.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nBackground notes (ignore for scoring, answer final question only): Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Repeat: routing telemetry cache invalidation throughput SLA eligibility scoring controller hybrid baseline difficulty classifier rubric signals decomposition keywords schema contract unified diff patch refactor test suite milestones verification criteria extension points arbitration observed profiles penalty factor hard deny sole candidate merge preserving config PUT runtime host bridge OpenAI compatible peer Kimi moonshot local LFM decision only vendors inactive logs stream JSON 503 request id alias measured latency reasoning content execution failed unknown endpoint registry result chosen endpoint id empty HTTP 400 consumer contract Strategy C alias mixed local remote model ids mode difficulty cost balanced quality learning cache hit invalidated tool count delta code schema burden history turn count instruction constraint count context tokens. Final question: In one sentence, what is difficulty-based routing?",
+    "exemplarAnswer": "difficulty-based routing selects models by request difficulty within an alias pool\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] One-sentence definition despite long filler context.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: difficulty, routing"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 234,
+    "reasoningLength": 1281
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935457245
+}

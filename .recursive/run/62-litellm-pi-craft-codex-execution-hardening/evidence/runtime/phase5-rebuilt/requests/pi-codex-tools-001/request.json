@@ -1,0 +1,23 @@
+{
+  "model": "chatgpt/gpt-5.4",
+  "input": "A function tool is present only for verification. Do not call any tools. Reply with the exact text OK.",
+  "tools": [
+    {
+      "type": "function",
+      "name": "record_note",
+      "description": "Records a note when explicitly needed.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "note"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

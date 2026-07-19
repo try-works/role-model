@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h05-tool-grep-eligibility",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-h05-tool-grep-eligibility-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"evaluateEligibility appears in src/router.ts with a call on line 42 and a reference on line 89\",\n    \"A comment at line 156 marks the evaluateEligibility helper location\"\n  ]\n}",
+  "rawResponse": "```json\n{\"bullets\":[\"evaluateEligibility appears in src/router.ts with a call on line 42 and a reference on line 89\",\"A comment at line 156 marks the evaluateEligibility helper location\"]}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"evaluateEligibility appears in src/router.ts with a call on line 42 and a reference on line 89\",\n    \"A comment at line 156 marks the evaluateEligibility helper location\"\n  ]\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 15539,
+  "failure": false,
+  "recordedAtMs": 1783933906197
+}

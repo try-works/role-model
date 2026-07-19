@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "b51f958be58c4a9bc574e2ce354e48a640d102e31a5438476cb30142b7ea6df5",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\78-dev-stage-main-cicd-runtime-channels\\.recursive\\run\\78-dev-stage-main-cicd-runtime-channels\\01-as-is.md",
+  "locked_at": "2026-07-18T23:54:38Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "210fbbc8fab34c3623b916cc9e97bb50df0a4a176ab91bb0f83645d28b1d92a2",
+    "00-worktree.md": "4a49884cc67eb147c8c9f973ce55f5cc26a324be88c473c9507da57d7dd40b56"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "b4ea010de6083d351ed0cacf9809d6e8e657fe51ce39cec388754dcf2586caf4"
+}

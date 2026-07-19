@@ -1,0 +1,13 @@
+{
+  "artifact": "01.5-root-cause.md",
+  "artifact_hash": "b38838e464896bef886fd96a13066c4028a6669ec321a0eb9e4e58d027778429",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\66-remote-providers-deferred-request-id-loading\\.recursive\\run\\66-remote-providers-deferred-request-id-loading\\01.5-root-cause.md",
+  "locked_at": "2026-07-12T03:52:49Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "32ae8e18a796da562d1abb87a9eaa7151221a93e5ace5a2a29c4b6ad8002c4b9",
+    "00-worktree.md": "639e0130afd54144c7a314825fb146f40c4ed809f6616a1082c29ca92f1048c3",
+    "01-as-is.md": "200ab91ec99f415d77e0bc239355d75ffa5fa29ced5559b594a1de4ccfc741cc"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "4ce6165548c851b8cf4fe164db20fd80660a5f1dba9db12fbf72f141fd5d6dbb"
+}

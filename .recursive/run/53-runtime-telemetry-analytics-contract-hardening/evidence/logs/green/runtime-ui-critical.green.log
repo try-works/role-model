@@ -1,0 +1,19 @@
+
+> @role-model-router/runtime-ui@ test:critical D:\DEV\role-model\.worktrees\53\role-model-router\apps\runtime-ui
+> vitest run app/lib/runtime-api.test.ts app/lib/view-models.test.ts app/lib/telemetry-analytics.test.ts app/lib/telemetry-chart-config.test.ts app/lib/theme.test.ts app/components/page-primitives.test.tsx
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/53/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/telemetry-chart-config.test.ts (2 tests) 7ms
+ ✓ app/lib/theme.test.ts (4 tests) 7ms
+ ✓ app/lib/telemetry-analytics.test.ts (8 tests) 17ms
+ ✓ app/lib/runtime-api.test.ts (40 tests) 76ms
+ ✓ app/lib/view-models.test.ts (33 tests) 85ms
+ ✓ app/components/page-primitives.test.tsx (3 tests) 41ms
+
+ Test Files  6 passed (6)
+      Tests  90 passed (90)
+   Start at  20:27:33
+   Duration  2.00s (transform 737ms, setup 0ms, collect 2.11s, tests 233ms, environment 2ms, prepare 1.83s)
+

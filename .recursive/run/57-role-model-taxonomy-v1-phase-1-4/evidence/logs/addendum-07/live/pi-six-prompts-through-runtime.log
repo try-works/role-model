@@ -1,0 +1,32 @@
+[
+  {
+    "prompt": "Review this diff for security risks and likely regressions.",
+    "exit": 0,
+    "output": "local llama summary"
+  },
+  {
+    "prompt": "Implement this small bug fix and add a regression test.",
+    "exit": 0,
+    "output": "local llama summary"
+  },
+  {
+    "prompt": "Compare current public documentation for this API and cite differences.",
+    "exit": 0,
+    "output": "local llama summary"
+  },
+  {
+    "prompt": "Turn these support notes into a clear customer reply.",
+    "exit": 0,
+    "output": "local llama summary"
+  },
+  {
+    "prompt": "Inspect this schema and propose a migration plan.",
+    "exit": 0,
+    "output": "local llama summary"
+  },
+  {
+    "prompt": "Create product requirements and acceptance criteria for this workflow.",
+    "exit": 0,
+    "output": "local llama summary"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "name": "difficulty-remote-only-history",
+  "model": "difficulty.remote-only",
+  "status": 200,
+  "ok": true,
+  "durationMs": 5213,
+  "selectedModel": "deepseek/deepseek-v4-pro",
+  "error": null,
+  "contentPreview": "ALIAS_HISTORY_OK"
+}

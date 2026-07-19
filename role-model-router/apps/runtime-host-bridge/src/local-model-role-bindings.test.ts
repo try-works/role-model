@@ -42,6 +42,34 @@ const roleDefinitions = [
     output_contracts: [],
     safety_policy_refs: [],
   },
+  {
+    role_id: "classifier",
+    name: "Classifier",
+    description: "Classification",
+    role_kind: "task",
+    default_system_instructions: "",
+    task_types_supported: ["text.classification"],
+    required_capabilities: [],
+    preferred_capabilities: [],
+    forbidden_capabilities: [],
+    tool_policy: { mode: "allowed" as const },
+    routing_policy_overrides: {},
+    output_contracts: [],
+    safety_policy_refs: [],
+  },
+];
+
+const taskDefinitions = [
+  {
+    task_type: "text.classification",
+    description: "Classification task",
+    required_inputs: [],
+    required_capabilities: ["text.classification"],
+    preferred_capabilities: [],
+    quality_metrics: [],
+    allowed_roles: ["classifier"],
+    default_benchmark_suites: [],
+  },
 ];
 
 const registry = {
@@ -102,6 +130,7 @@ describe("local-model-role-bindings", () => {
       accounts: [peerAccount],
       registry,
       roleDefinitions: [...roleDefinitions],
+      taskDefinitions: [...taskDefinitions],
       sanitizeSegment: (value) => value.replace(/[^a-z0-9]+/gi, "-"),
     });
 
@@ -114,10 +143,76 @@ describe("local-model-role-bindings", () => {
     ]);
   });
 
+  it("treats missing model role assignment as all roles for configured runtime endpoints", () => {
+    const unassignedAccount: ProviderAccountRecord = {
+      ...peerAccount,
+      modelRoleBindings: undefined,
+    };
+
+    const bindings = buildAccountEndpointRoleBindings({
+      staticBindings: [],
+      runtimeEndpoints: [
+        {
+          endpointId: "peer.local.lfm",
+          providerAccountId: unassignedAccount.providerAccountId,
+          modelId: "lfm2.5-8b-a1b",
+        },
+      ],
+      accounts: [unassignedAccount],
+      registry,
+      roleDefinitions: [...roleDefinitions],
+      taskDefinitions: [...taskDefinitions],
+      sanitizeSegment: (value) => value.replace(/[^a-z0-9]+/gi, "-"),
+    });
+
+    expect(bindings.map((binding) => binding.role_id).sort()).toEqual([
+      "classifier",
+      "coder.assistant",
+      "general.chat",
+    ]);
+  });
+
+  it("honors include and exclude role assignment modes while preserving legacy roleIds", () => {
+    const accountWithAssignments: ProviderAccountRecord = {
+      ...peerAccount,
+      modelRoleBindings: [
+        {
+          modelId: "lfm2.5-8b-a1b",
+          roleIds: ["general.chat"],
+          roleAssignmentMode: "exclude",
+          enabledRoleIds: [],
+          disabledRoleIds: ["coder.assistant"],
+        },
+      ],
+    };
+
+    const bindings = buildAccountEndpointRoleBindings({
+      staticBindings: [],
+      runtimeEndpoints: [
+        {
+          endpointId: "peer.local.lfm",
+          providerAccountId: accountWithAssignments.providerAccountId,
+          modelId: "lfm2.5-8b-a1b",
+        },
+      ],
+      accounts: [accountWithAssignments],
+      registry,
+      roleDefinitions: [...roleDefinitions],
+      taskDefinitions: [...taskDefinitions],
+      sanitizeSegment: (value) => value.replace(/[^a-z0-9]+/gi, "-"),
+    });
+
+    expect(bindings.map((binding) => binding.role_id).sort()).toEqual([
+      "classifier",
+      "general.chat",
+    ]);
+  });
+
   it("builds llama-swap registry bindings from overrides", () => {
     const bindings = buildLlamaSwapRegistryRoleBindings({
       registry,
       roleDefinitions: [...roleDefinitions],
+      taskDefinitions: [...taskDefinitions],
       roleIdsByModelId: { "lfm2.5-8b-a1b": ["coder.assistant"] },
       sanitizeSegment: (value) => value.replace(/[^a-z0-9]+/gi, "-"),
     });
@@ -127,6 +222,22 @@ describe("local-model-role-bindings", () => {
         role_id: "coder.assistant",
         endpoint_id: "llama-swap.local.lfm",
       }),
+    ]);
+  });
+
+  it("treats missing llama-swap overrides as all roles for loaded local models", () => {
+    const bindings = buildLlamaSwapRegistryRoleBindings({
+      registry,
+      roleDefinitions: [...roleDefinitions],
+      taskDefinitions: [...taskDefinitions],
+      roleIdsByModelId: {},
+      sanitizeSegment: (value) => value.replace(/[^a-z0-9]+/gi, "-"),
+    });
+
+    expect(bindings.map((binding) => binding.role_id).sort()).toEqual([
+      "classifier",
+      "coder.assistant",
+      "general.chat",
     ]);
   });
 
@@ -179,6 +290,7 @@ describe("local-model-role-bindings", () => {
         ],
         accounts: [peerAccount],
         registry,
+        roleDefinitions: [...roleDefinitions],
         roleIdsByModelId: { "lfm2.5-8b-a1b": ["coder.assistant"] },
         compareText: (left, right) => left.localeCompare(right, "en"),
       }),
@@ -190,10 +302,48 @@ describe("local-model-role-bindings", () => {
         runtimeEndpoints: [],
         accounts: [],
         registry,
+        roleDefinitions: [...roleDefinitions],
         roleIdsByModelId: { "lfm2.5-8b-a1b": ["coder.assistant"] },
         compareText: (left, right) => left.localeCompare(right, "en"),
       }),
     ).toEqual(["coder.assistant"]);
+  });
+
+  it("resolves missing endpoint assignments as all roles in readback paths", () => {
+    const unassignedAccount: ProviderAccountRecord = {
+      ...peerAccount,
+      modelRoleBindings: undefined,
+    };
+
+    expect(
+      resolveEndpointRoleIds({
+        endpointId: "peer.local.lfm",
+        runtimeEndpoints: [
+          {
+            endpointId: "peer.local.lfm",
+            providerAccountId: unassignedAccount.providerAccountId,
+            modelId: "lfm2.5-8b-a1b",
+          },
+        ],
+        accounts: [unassignedAccount],
+        registry,
+        roleDefinitions: [...roleDefinitions],
+        roleIdsByModelId: {},
+        compareText: (left, right) => left.localeCompare(right, "en"),
+      }),
+    ).toEqual(["classifier", "coder.assistant", "general.chat"]);
+
+    expect(
+      resolveEndpointRoleIds({
+        endpointId: "llama-swap.local.lfm",
+        runtimeEndpoints: [],
+        accounts: [],
+        registry,
+        roleDefinitions: [...roleDefinitions],
+        roleIdsByModelId: {},
+        compareText: (left, right) => left.localeCompare(right, "en"),
+      }),
+    ).toEqual(["classifier", "coder.assistant", "general.chat"]);
   });
 
   it("reads llama-swap role ids from overrides", () => {
@@ -203,5 +353,72 @@ describe("local-model-role-bindings", () => {
         empty: { roleIds: [] },
       }),
     ).toEqual({ "lfm2.5-8b-a1b": ["general.chat"] });
+  });
+
+  it("preserves llama-swap all and explicit empty include assignment modes from overrides", () => {
+    expect(
+      readLlamaSwapRoleIdsByModelId(
+        {
+          all: {
+            roleIds: [],
+            roleAssignmentMode: "all",
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+          none: {
+            roleIds: [],
+            roleAssignmentMode: "include",
+            enabledRoleIds: [],
+            disabledRoleIds: [],
+          },
+          withoutSecurity: {
+            roleIds: [],
+            roleAssignmentMode: "exclude",
+            enabledRoleIds: [],
+            disabledRoleIds: ["coder.assistant"],
+          },
+        },
+        [...roleDefinitions],
+      ),
+    ).toEqual({
+      all: ["general.chat", "coder.assistant", "classifier"],
+      none: [],
+      withoutSecurity: ["general.chat", "classifier"],
+    });
+  });
+
+  it("projects task-required capabilities into effective role bindings", () => {
+    const classifierAccount: ProviderAccountRecord = {
+      ...peerAccount,
+      providerAccountId: "local-openai-compatible.personal.classifier",
+      accountScope: "classifier",
+      credentialRef: { backend: "local-file", ref: "classifier" },
+      modelRoleBindings: [{ modelId: "lfm2.5-8b-a1b", roleIds: ["classifier"] }],
+    };
+
+    const bindings = buildAccountEndpointRoleBindings({
+      staticBindings: [],
+      runtimeEndpoints: [
+        {
+          endpointId: "peer.local.lfm",
+          providerAccountId: classifierAccount.providerAccountId,
+          modelId: "lfm2.5-8b-a1b",
+        },
+      ],
+      accounts: [classifierAccount],
+      registry,
+      roleDefinitions: [...roleDefinitions],
+      taskDefinitions: [...taskDefinitions],
+      sanitizeSegment: (value) => value.replace(/[^a-z0-9]+/gi, "-"),
+    });
+
+    expect(bindings).toEqual([
+      expect.objectContaining({
+        role_id: "classifier",
+        endpoint_id: "peer.local.lfm",
+        effective_capabilities: expect.arrayContaining(["chat", "text.classification"]),
+        effective_task_types: ["text.classification"],
+      }),
+    ]);
   });
 });

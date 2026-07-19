@@ -1,0 +1,40 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/69-benchmark-scoring-integrity[39m
+
+(node:56768) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30248) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:40764) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ [32m✓[39m role-model-router/apps/runtime-host-bridge/test/account-repair.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 7714[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mreconnect returns the current pending device-authorization session for the same account [33m 1382[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mreconnect starts a fresh Codex Subscription device-code session instead of reusing a stale pending one [33m 1112[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mstarting Codex Subscription authorization again supersedes the older pending session [33m 1067[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mupdate API key preserves account identity, bindings, and endpoint associations [33m 1344[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mrejects overlapping repair mutations for the same account without partially mutating state [33m 1384[2mms[22m[39m
+   [33m[2m✓[22m[39m account repair mutations[2m > [22mcodex subscription start returns a real device-code session and poll connects through managed Codex auth [33m 1422[2mms[22m[39m
+ [32m✓[39m role-model-router/apps/runtime-host-bridge/test/openai-codex-subscription-matrix.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 16762[2mms[22m[39m
+   [33m[2m✓[22m[39m OpenAI Codex Subscription model matrix[2m > [22mlistProviders exposes the full Codex Subscription 5.3+ matrix for OpenAI [33m 1558[2mms[22m[39m
+   [33m[2m✓[22m[39m OpenAI Codex Subscription model matrix[2m > [22mrejects pre-5.3 Codex Subscription model ids during device authorization setup [33m 916[2mms[22m[39m
+   [33m[2m✓[22m[39m OpenAI Codex Subscription model matrix[2m > [22maccepts hosted web search and function-tool request surfaces for every supported OpenAI model id [33m 7807[2mms[22m[39m
+   [33m[2m✓[22m[39m OpenAI Codex Subscription model matrix[2m > [22mkeeps every supported OpenAI GPT-5.3+ subscription model coder.patch routable [33m 6381[2mms[22m[39m
+ [32m✓[39m role-model-router/apps/runtime-host-bridge/test/restart-rehydration.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 24670[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mrestores activated endpoints and session readiness summary after backend restart [33m 2395[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mkeeps restarted remote endpoints healthy when provider /models returns unprefixed ids [33m 1996[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mdoes not count expired pending device authorization as an active readiness blocker after restart [33m 2385[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22marchives orphan pending authorizations and orphan credential files instead of counting them as active readiness [33m 2262[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22marchives invalid persisted provider accounts instead of surfacing them as active lifecycle records [33m 2104[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22msurfaces failed pending authorization polling in bootstrap stage details after restart [33m 1876[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mclassifies failed startup OAuth refresh as expired auth after restart [33m 2092[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mrepairs stale bridge Kimi OAuth credentials from fresher standalone runtime tokens on restart [33m 2896[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mpolls the earliest-expiring pending authorizations first and surfaces deferred count [33m 2153[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mcleans up a pending Codex Subscription device-code session after restart [33m 1851[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mnormalizes legacy local peer role bindings during restart rehydration [33m 1793[2mms[22m[39m
+   [33m[2m✓[22m[39m restart rehydration[2m > [22mdefers persisted peer auto-reload entries during restart bootstrap when peers are not configured [33m 863[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m26 passed[39m[22m[90m (26)[39m
+[2m   Start at [22m 15:23:49
+[2m   Duration [22m 28.64s[2m (transform 2.51s, setup 0ms, collect 8.59s, tests 49.15s, environment 1ms, prepare 1.12s)[22m
+

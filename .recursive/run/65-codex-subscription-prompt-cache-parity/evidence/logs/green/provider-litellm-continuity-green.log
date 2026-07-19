@@ -1,0 +1,14 @@
+
+> @role-model-router/provider-litellm@0.0.0 test D:\DEV\role-model\.worktrees\65-codex-subscription-prompt-cache-parity\role-model-router\packages\provider-litellm
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/65-codex-subscription-prompt-cache-parity/role-model-router/packages/provider-litellm
+
+ ✓ test/index.test.ts (3 tests) 17ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  10:16:55
+   Duration  4.12s (transform 1.71s, setup 0ms, collect 1.90s, tests 17ms, environment 0ms, prepare 788ms)
+

@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "h05-tool-grep-eligibility",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h05-tool-grep-eligibility-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Confirmed evaluateEligibility is invoked in src/router.ts, indicating eligibility is checked during routing/endpoint handling.\",\n    \"Found a dedicated evaluateEligibility helper reference in src/router.ts, suggesting centralized logic that should be reviewed for guard conditions and edge-case handling.\"\n  ]\n}",
+  "rawResponse": "```json\n{\"bullets\":[\"Confirmed evaluateEligibility is invoked in src/router.ts, indicating eligibility is checked during routing/endpoint handling.\",\"Found a dedicated evaluateEligibility helper reference in src/router.ts, suggesting centralized logic that should be reviewed for guard conditions and edge-case handling.\"]}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"evaluateEligibility\"\n      }\n    }\n  ],\n  \"bullets\": [\n    \"Confirmed evaluateEligibility is invoked in src/router.ts, indicating eligibility is checked during routing/endpoint handling.\",\n    \"Found a dedicated evaluateEligibility helper reference in src/router.ts, suggesting centralized logic that should be reviewed for guard conditions and edge-case handling.\"\n  ]\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 8443,
+  "failure": false,
+  "recordedAtMs": 1783931749276
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/telemetry-taxonomy-event.schema.json",
+  "title": "Telemetry Taxonomy Event",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "taxonomy_role_id": { "type": "string", "description": "Normalized role ID from routing" },
+    "taxonomy_task_type": { "type": "string", "description": "Normalized task type from routing" },
+    "taxonomy_role_source": { "type": "string", "enum": ["heuristic", "user", "trusted"] },
+    "taxonomy_task_source": { "type": "string", "enum": ["heuristic", "user", "trusted"] },
+    "taxonomy_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "taxonomy_version": { "type": "string" },
+    "classification_contract_version": { "type": "string" }
+  }
+}

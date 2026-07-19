@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "p12-code-patch",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p12-code-patch-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"rationale\": \"Renames the function to routeRuntimeRequest and normalizes the strategy value by trimming whitespace and converting it to lowercase before returning it.\"\n}",
+  "rawResponse": "```json\n{\"diff\":\"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\"rationale\":\"Renames the function to routeRuntimeRequest and normalizes the strategy value by trimming whitespace and converting it to lowercase before returning it.\"}\n```",
+  "formattedDeliverable": "{\n  \"diff\": \"--- a/src/router.ts\\n+++ b/src/router.ts\\n@@ -1,3 +1,3 @@\\n-export function route(input: { strategy: string }) {\\n-  return input.strategy;\\n+export function routeRuntimeRequest(input: { strategy: string }) {\\n+  return input.strategy.trim().toLowerCase();\\n }\\n\",\n  \"rationale\": \"Renames the function to routeRuntimeRequest and normalizes the strategy value by trimming whitespace and converting it to lowercase before returning it.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 30434,
+  "failure": false,
+  "recordedAtMs": 1783934258670
+}

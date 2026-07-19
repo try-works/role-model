@@ -1,0 +1,87 @@
+{
+  "run_id": "63-router-backend-regression-and-telemetry-surface-hardening",
+  "review_type": "code-review",
+  "reviewed_at": "2026-07-11T10:10:00Z",
+  "reviewer": "self-audit",
+  "artifact_path": ".recursive/run/63-router-backend-regression-and-telemetry-surface-hardening/03-implementation-summary.md",
+  "artifact_content_hash": "865fb03e6cbb95e7e3ce286ba5c78bf46c63cfc4f46eaf16b2fdfedfab996228",
+  "diff_basis": {
+    "baseline_type": "local commit",
+    "baseline_reference": "fdd1c7cb052a109e4f79ada257b54b54ff7ae17e",
+    "comparison_reference": "working-tree",
+    "normalized_baseline": "fdd1c7cb052a109e4f79ada257b54b54ff7ae17e",
+    "normalized_comparison": "working-tree",
+    "normalized_diff_command": "git diff --name-only fdd1c7cb052a109e4f79ada257b54b54ff7ae17e"
+  },
+  "changed_files_reviewed": [
+    "role-model-router/packages/trace/src/index.ts",
+    "role-model-router/packages/trace/test/index.test.ts",
+    "role-model-router/packages/trace/package.json",
+    "role-model-router/packages/trace/vitest.config.ts",
+    "role-model-router/packages/usage/test/index.test.ts",
+    "role-model-router/packages/usage/package.json",
+    "role-model-router/packages/usage/vitest.config.ts",
+    "role-model-router/apps/runtime-ui/app/lib/stale-refresh-diagnostics.ts",
+    "role-model-router/apps/runtime-ui/app/lib/stale-refresh-diagnostics.test.ts",
+    "role-model-router/apps/runtime-ui/app/routes/dashboard.tsx",
+    "role-model-router/apps/runtime-ui/app/routes/requests.tsx",
+    "role-model-router/apps/runtime-ui/app/routes/observe-routing.tsx",
+    "role-model-router/apps/runtime-ui/e2e/shared-surface-regression.spec.ts",
+    "role-model-router/apps/runtime-host-bridge/package.json",
+    "package.json",
+    ".github/workflows/ci.yml",
+    "docs/architecture/10-runtime-testing-architecture.md",
+    "docs/operations/04-runtime-testing-matrix.md"
+  ],
+  "upstream_artifacts_to_re_read": [
+    ".recursive/run/63-router-backend-regression-and-telemetry-surface-hardening/00-requirements.md",
+    ".recursive/run/63-router-backend-regression-and-telemetry-surface-hardening/02-to-be-plan.md",
+    ".recursive/run/63-router-backend-regression-and-telemetry-surface-hardening/03-implementation-summary.md"
+  ],
+  "relevant_addenda": [],
+  "prior_recursive_evidence": [
+    ".recursive/run/63-router-backend-regression-and-telemetry-surface-hardening/03-implementation-summary.md"
+  ],
+  "targeted_code_references": [
+    "role-model-router/packages/trace/src/index.ts",
+    "role-model-router/apps/runtime-ui/app/lib/stale-refresh-diagnostics.ts",
+    "role-model-router/apps/runtime-ui/app/routes/dashboard.tsx",
+    "role-model-router/apps/runtime-host-bridge/package.json",
+    "role-model-router/apps/runtime-ui/e2e/shared-surface-regression.spec.ts"
+  ],
+  "audit_questions": "Verify all changed files are correct, no bugs, no security issues, no regressions, alignment with plan requirements R1-R7.",
+  "required_output": "Structured findings JSON with severity, path, line, rule, evidence, and suggestion for each issue.",
+  "files_reviewed": 19,
+  "verdict": "APPROVE",
+  "findings": [
+    {
+      "severity": "warning",
+      "path": "role-model-router/packages/trace/src/index.ts",
+      "line": 25,
+      "rule": "Overbroad error suppression",
+      "evidence": "The catch {} on readFile swallows all errors, not just ENOENT.",
+      "suggestion": "Check for err.code === 'ENOENT' specifically."
+    },
+    {
+      "severity": "suggestion",
+      "path": "role-model-router/apps/runtime-ui/app/routes/dashboard.tsx",
+      "rule": "Code duplication",
+      "evidence": "Stale banner JSX duplicated across three routes.",
+      "suggestion": "Extract to shared StaleDataBanner component."
+    },
+    {
+      "severity": "suggestion",
+      "path": "role-model-router/apps/runtime-host-bridge/package.json",
+      "rule": "Maintainability",
+      "evidence": "test:router inline string of 11 file paths.",
+      "suggestion": "Future runs could use a discovery script."
+    },
+    {
+      "severity": "suggestion",
+      "path": "role-model-router/apps/runtime-ui/e2e/shared-surface-regression.spec.ts",
+      "rule": "Brittle selector",
+      "evidence": "Hardcoded '24 hours' button text.",
+      "suggestion": "Use data-testid or regex."
+    }
+  ]
+}

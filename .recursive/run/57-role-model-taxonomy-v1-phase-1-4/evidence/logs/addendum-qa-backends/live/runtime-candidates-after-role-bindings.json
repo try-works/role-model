@@ -1,0 +1,197 @@
+[
+  {
+    "endpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
+    "modelId": "openai/gpt-4.1-mini-fast",
+    "providerId": "openai",
+    "sourceType": "remote",
+    "endpointKind": "remote_api",
+    "servingSource": "vendor-litellm",
+    "region": "global",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling",
+      "structured.output",
+      "latency.optimized"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "webSearchSupport": {
+      "mode": "runtime-fallback",
+      "currentRuntimeContract": null,
+      "documentedProviderContract": null
+    },
+    "executionModeEligible": true,
+    "controllerEligible": true,
+    "preferred": false,
+    "ignored": false,
+    "latestProfile": null,
+    "recentSamples": [],
+    "difficultyProfiles": {
+      "easy": null,
+      "medium": null,
+      "hard": null
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        }
+      }
+    }
+  },
+  {
+    "endpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "modelId": "lfm2.5-1.2b-instruct",
+    "providerId": null,
+    "sourceType": "local",
+    "endpointKind": "local_engine",
+    "servingSource": "vendor-llama-swap",
+    "region": "local",
+    "status": "active",
+    "healthStatus": "healthy",
+    "roleBindings": [
+      "analyst",
+      "architect",
+      "coder",
+      "coordinator",
+      "creative",
+      "data",
+      "designer",
+      "educator",
+      "finance",
+      "health",
+      "knowledge",
+      "legal",
+      "marketer",
+      "mathematician",
+      "operator",
+      "planner",
+      "procurement",
+      "product",
+      "recruiter",
+      "researcher",
+      "scientist",
+      "security",
+      "seller",
+      "strategist",
+      "support",
+      "tester",
+      "translator",
+      "writer"
+    ],
+    "capabilities": [
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "toolCallingSupported": true,
+    "toolCallingStyle": "openai",
+    "webSearchSupport": {
+      "mode": "runtime-fallback",
+      "currentRuntimeContract": null,
+      "documentedProviderContract": null
+    },
+    "executionModeEligible": true,
+    "controllerEligible": false,
+    "preferred": false,
+    "ignored": false,
+    "latestProfile": {
+      "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+      "endpoint_version": "run07-registry-v1:default",
+      "measured_at_ms": 1782221415002,
+      "measurement_window": {
+        "started_at_ms": 1782221415002,
+        "ended_at_ms": 1782221415002
+      },
+      "sample_size": 1,
+      "sources": {
+        "live_request_samples": 1,
+        "benchmark_samples": 0
+      },
+      "latency_ms_p50": 8,
+      "latency_ms_p95": 8,
+      "failure_rate": 0,
+      "freshness_score": 1,
+      "confidence_score": 0.1762914343888821,
+      "tokens_per_sec": 500
+    },
+    "recentSamples": [
+      {
+        "endpoint_id": "llama-swap.local.lfm2-5-1-2b-instruct",
+        "endpoint_version": "run07-registry-v1:default",
+        "source_type": "live_request",
+        "timestamp_ms": 1782221415002,
+        "latency_ms": 8,
+        "latency_ms_p95": 8,
+        "tokens_per_sec": 500,
+        "failure": false,
+        "request_id": "req-ed908f56-8f29-4c5c-9b80-1cbbf272b497",
+        "routing_decision_id": "decision-req-ed908f56-8f29-4c5c-9b80-1cbbf272b497"
+      }
+    ],
+    "difficultyProfiles": {
+      "easy": null,
+      "medium": null,
+      "hard": null
+    },
+    "advisoryMaxDifficultyRecommendation": {
+      "recommendedMaxDifficulty": null,
+      "thresholds": {
+        "minSamples": 4,
+        "maxFailureRate": 0.2,
+        "minQualityScore": 0.8,
+        "minTokensPerSec": 22
+      },
+      "evaluations": {
+        "easy": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "medium": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        },
+        "hard": {
+          "eligible": false,
+          "rejectionReasons": [
+            "no-profile"
+          ],
+          "profile": null
+        }
+      }
+    }
+  }
+]

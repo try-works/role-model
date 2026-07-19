@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "h05-tool-grep-eligibility",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 0,
+  "parsedRationale": "The bullets simply mention grep match locations, falling to provide a summary of actual eligibility checks (e.g., freshness, allow-list, or SLA denial). The tool call is correct, but the required 'summary mentions eligibility checks' is not satisfied, making the deliverable incomplete.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h05-tool-grep-eligibility.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/h05-tool-grep-eligibility/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783935205630
+}

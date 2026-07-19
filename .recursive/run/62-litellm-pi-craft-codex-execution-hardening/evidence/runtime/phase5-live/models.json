@@ -1,0 +1,905 @@
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "baseline.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "basic",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "baseline.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "basic",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "baseline.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "basic",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "controller.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "intelligent",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "controller.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "intelligent",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "controller.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "intelligent",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "default.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "basic",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "default.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "basic",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "default.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "basic",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "difficulty.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "difficulty",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "difficulty.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "difficulty",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "difficulty.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "difficulty",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "hybrid.decision-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "hybrid",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "hybrid.hybrid",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "hybrid",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    },
+    {
+      "id": "hybrid.remote-only",
+      "object": "model",
+      "owned_by": "role-model",
+      "endpoint_ids": [],
+      "context_window": 262144,
+      "max_tokens": 128000,
+      "input": [
+        "text",
+        "image"
+      ],
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "capabilities": [
+        "code.edit",
+        "reasoning",
+        "structured.output",
+        "text.chat",
+        "tools.function_calling"
+      ],
+      "role_model": {
+        "type": "alias",
+        "routing_mode": "hybrid",
+        "discovery_url": "http://127.0.0.1:59859/api/role-model/downstream/openai",
+        "capability_revision": "b2ed067064933b35",
+        "context_window": 262144,
+        "max_tokens": 128000,
+        "input_modalities": [
+          "image",
+          "pdf",
+          "text",
+          "video"
+        ],
+        "output_modalities": [
+          "text"
+        ],
+        "tools": {
+          "function_calling": true
+        },
+        "reasoning": {
+          "supported": true,
+          "effort_control": true
+        },
+        "structured_output": {
+          "supported": true
+        },
+        "caching": {
+          "prompt_read": false,
+          "prompt_write": false,
+          "source": "catalog"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+
+> @try-works/pi-role-model@0.1.3 test D:\DEV\role-model\.worktrees\65-codex-subscription-prompt-cache-parity\packages\pi-role-model
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/65-codex-subscription-prompt-cache-parity/packages/pi-role-model
+
+ ✓ test/package-manifest.test.ts (1 test) 15ms
+ ✓ test/config.test.ts (4 tests) 14ms
+ ✓ test/taxonomy-staged-loader.test.ts (2 tests) 13ms
+ ✓ test/runtime-inspection.test.ts (4 tests) 25ms
+ ✓ test/runtime-discovery.test.ts (4 tests) 36ms
+ ✓ test/downstream-openai.test.ts (9 tests) 24ms
+ ✓ test/alias-store.test.ts (1 test) 47ms
+ ✓ test/request-intent.test.ts (12 tests) 249ms
+ ✓ test/docs-and-safety.test.ts (2 tests) 59ms
+ ✓ test/commands.test.ts (13 tests) 35ms
+ ✓ test/taxonomy-classification.test.ts (14 tests) 288ms
+ ✓ test/effective-taxonomy.test.ts (5 tests) 150ms
+ ✓ test/taxonomy-data-files.test.ts (5 tests) 286ms
+
+> @role-model-router/runtime-host-bridge@0.0.0 build D:\DEV\role-model\.worktrees\65-codex-subscription-prompt-cache-parity\role-model-router\apps\runtime-host-bridge
+> tsc -p tsconfig.json
+
+ ✓ test/extension.test.ts (9 tests) 6142ms
+   ✓ Pi extension registration > registers the role-model provider and one role-model command  3539ms
+   ✓ Pi extension registration > passes Pi setModel into alias selection command dependencies  1872ms
+   ✓ Pi extension registration > forwards command context so status can reflect Pi's live active role-model selection  548ms
+(node:32676) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/validate-agent-path.test.ts (7 tests) 21676ms
+   ✓ validate-agent-path helper > runs the rebuilt-runtime alias proof through canonical runtime aliases  21168ms
+
+ Test Files  15 passed (15)
+      Tests  92 passed (92)
+   Start at  10:17:18
+   Duration  25.88s (transform 7.06s, setup 0ms, collect 9.75s, tests 29.06s, environment 7ms, prepare 13.62s)
+

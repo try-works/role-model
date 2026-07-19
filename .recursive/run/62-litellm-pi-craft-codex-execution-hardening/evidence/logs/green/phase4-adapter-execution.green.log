@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/packages/adapter-execution
+
+ ✓ test/index.test.ts (5 tests) 22ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  01:56:03
+   Duration  4.36s (transform 366ms, setup 0ms, collect 344ms, tests 22ms, environment 1ms, prepare 810ms)
+

@@ -1,0 +1,45 @@
+No projects matched the filters "D:\dev\role-model\.worktrees\74-kimi-k3-kimi-code-oauth-support" in "D:\DEV\role-model\.worktrees\74-kimi-k3-kimi-code-oauth-support"
+
+> @role-model-router/catalog@0.0.0 test D:\DEV\role-model\.worktrees\74-kimi-k3-kimi-code-oauth-support\role-model-router\packages\catalog
+> vitest run test
+
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/74-kimi-k3-kimi-code-oauth-support/role-model-router/packages/catalog[39m
+
+ [31m❯[39m test/token-economics.test.ts [2m([22m[2m6 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 306[2mms[22m[39m
+   [32m✓[39m token-economics[2m > [22mmaps operator Kimi model id to models.dev pricing row[32m 83[2mms[22m[39m
+[31m   [31m×[31m token-economics[2m > [22mmaps operator Kimi K3 model id to models.dev pricing row[39m[32m 92[2mms[22m[39m
+[31m     → expected 'moonshot/kimi-k3' to be 'moonshotai/kimi-k3' // Object.is equality[39m
+   [32m✓[39m token-economics[2m > [22mmaps operator Kimi K2.7 Code model id to models.dev pricing row[32m 75[2mms[22m[39m
+   [32m✓[39m token-economics[2m > [22muses local-free economics for local endpoints[32m 1[2mms[22m[39m
+   [32m✓[39m token-economics[2m > [22mderives catalog-based routing estimates and ranks local below Kimi[32m 52[2mms[22m[39m
+   [32m✓[39m token-economics[2m > [22mhides moonshotai from operator provider surfaces[32m 0[2mms[22m[39m
+ [32m✓[39m test/index.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 913[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/token-economics.test.ts[2m > [22mtoken-economics[2m > [22mmaps operator Kimi K3 model id to models.dev pricing row
+[31m[1mAssertionError[22m: expected 'moonshot/kimi-k3' to be 'moonshotai/kimi-k3' // Object.is equality[39m
+
+Expected: [32m"moonshot[7mai[27m/kimi-k3"[39m
+Received: [31m"moonshot/kimi-k3"[39m
+
+[36m [2m❯[22m test/token-economics.test.ts:[2m50:57[22m[39m
+    [90m 48| [39m  test("maps operator Kimi K3 model id to models.dev pricing row", asy…
+    [90m 49| [39m    [35mconst[39m catalog [33m=[39m [35mawait[39m [34mloadNormalizedCatalog[39m()[33m;[39m
+    [90m 50| [39m    expect(resolveCanonicalModelId("moonshot/kimi-k3")).toBe("moonshot…
+    [90m   | [39m                                                        [31m^[39m
+    [90m 51| [39m    expect(CANONICAL_MODEL_ID_ALIASES["moonshot/kimi-k3"]).toBe("moons…
+    [90m 52| [39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m18 passed[39m[22m[90m (19)[39m
+[2m   Start at [22m 06:06:36
+[2m   Duration [22m 2.26s[2m (transform 292ms, setup 0ms, collect 421ms, tests 1.22s, environment 1ms, prepare 741ms)[22m
+
+D:\DEV\role-model\.worktrees\74-kimi-k3-kimi-code-oauth-support\role-model-router\packages\catalog:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/catalog@0.0.0 test: `vitest run test`
+Exit status 1

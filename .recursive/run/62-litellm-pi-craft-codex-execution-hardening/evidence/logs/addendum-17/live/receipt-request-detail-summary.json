@@ -1,0 +1,76 @@
+[
+  {
+    "clientRequestId": "add17-receipt-responses",
+    "requestId": "req-8101c282-7e69-409d-9222-0b27269f2b01",
+    "statusCode": 200,
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "modelId": "chatgpt/gpt-5.4",
+    "requestedModelId": "chatgpt/gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.responses",
+    "parameterSanitization": [
+      {
+        "field": "temperature",
+        "sourceSurface": "openai.chat.completions",
+        "targetSurface": "chatgpt.codex.responses",
+        "action": "drop_with_receipt",
+        "reason": "unsupported_by_selected_backend",
+        "sourceValueKind": "present",
+        "adapterFamily": "codex-subscription-responses",
+        "providerId": "openai",
+        "vendorId": "chatgpt-codex-responses"
+      },
+      {
+        "field": "max_tokens",
+        "sourceSurface": "openai.chat.completions",
+        "targetSurface": "chatgpt.codex.responses",
+        "action": "drop_with_receipt",
+        "reason": "unsupported_by_selected_backend",
+        "sourceValueKind": "present",
+        "adapterFamily": "codex-subscription-responses",
+        "providerId": "openai",
+        "vendorId": "chatgpt-codex-responses"
+      }
+    ]
+  },
+  {
+    "clientRequestId": "add17-receipt-chat-completions",
+    "requestId": "req-9f0b2014-db09-4f51-a688-81a404ca2791",
+    "statusCode": 200,
+    "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+    "modelId": "chatgpt/gpt-5.4",
+    "requestedModelId": "chatgpt/gpt-5.4",
+    "providerId": "openai",
+    "providerFamily": "openai",
+    "vendorId": "chatgpt-codex-responses",
+    "adapterFamily": "codex-subscription-responses",
+    "sourceClient": "openai.chat.completions",
+    "parameterSanitization": [
+      {
+        "field": "temperature",
+        "sourceSurface": "openai.chat.completions",
+        "targetSurface": "chatgpt.codex.responses",
+        "action": "drop_with_receipt",
+        "reason": "unsupported_by_selected_backend",
+        "sourceValueKind": "present",
+        "adapterFamily": "codex-subscription-responses",
+        "providerId": "openai",
+        "vendorId": "chatgpt-codex-responses"
+      },
+      {
+        "field": "max_tokens",
+        "sourceSurface": "openai.chat.completions",
+        "targetSurface": "chatgpt.codex.responses",
+        "action": "drop_with_receipt",
+        "reason": "unsupported_by_selected_backend",
+        "sourceValueKind": "present",
+        "adapterFamily": "codex-subscription-responses",
+        "providerId": "openai",
+        "vendorId": "chatgpt-codex-responses"
+      }
+    ]
+  }
+]

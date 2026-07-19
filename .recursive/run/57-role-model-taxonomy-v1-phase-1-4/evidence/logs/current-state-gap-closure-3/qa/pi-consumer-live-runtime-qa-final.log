@@ -1,0 +1,19 @@
+{
+  "discoveryState": "ready",
+  "selectedModel": "default.decision-only",
+  "providerModelCount": 23,
+  "taxonomySource": "runtime",
+  "taxonomyCounts": {
+    "groups": 6,
+    "roles": 28,
+    "tasks": 280,
+    "capabilities": 46,
+    "modalities": 9,
+    "toolClasses": 15,
+    "intentPresets": 0
+  },
+  "candidateCount": 3,
+  "telemetryRequestCount": 2,
+  "routerDecisionCount": 2,
+  "forbiddenLegacyRolesAbsent": true
+}

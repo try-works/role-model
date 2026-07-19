@@ -17,9 +17,9 @@ This separation lets Router reason more durably than “pick model X for prompt 
 
 For example, a route might combine:
 
-- role `coder.patch`
-- task `code.edit`
-- capabilities `code.edit`, `reasoning.multi_step`, and `tools.function_calling`
+- role `coder`
+- task `coder.edit`
+- capabilities `coder.edit`, `reasoning.multi_step`, and `tools.function_calling`
 
 That gives you semantic control without pretending that one model label permanently owns one workflow.
 
@@ -27,10 +27,10 @@ That gives you semantic control without pretending that one model label permanen
 
 The baseline role set includes:
 
-- `general.chat`
-- `coder.patch`
+- `support`
+- `coder`
 - `coder.review`
-- `tool.agent`
+- `operator`
 - `embedder`
 - `classifier`
 - `language.detector`

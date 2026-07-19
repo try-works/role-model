@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p24-exact-local",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-p24-exact-local-a1-0c0b110e-5b03-4763-891c-3114f32d7f9f",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: p24-exact-local\n\n## Original question\n[user]\nReply exactly: routed-local\n\n## Example expected answer\nrouted-local\nRequired fields: answer\n(exemplar quality: derived)\n\n## Key deliverables (grade against this checklist)\n[MUST] Exact text routed-local.\n[MUST] Include JSON keys: answer\n[SHOULD] Match clues: routed-local\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nYour final deliverable must be ONLY a ```json fence: {\"answer\":\"...\"}. No placeholders.\nSchema:\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"answer\"\n  ],\n  \"properties\": {\n    \"answer\": {\n      \"type\": \"string\",\n      \"minLength\": 1\n    }\n  }\n}\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nExact text routed-local.\n\n## Subject deliverable to grade\n{\n  \"answer\": \"routed-local\"\n}"
+    }
+  ],
+  "rawResponse": "{\"score\":1.0,\"rationale\":\"Deliverable contains exact text 'routed-local' in required JSON key 'answer'.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "Deliverable contains exact text 'routed-local' in required JSON key 'answer'.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/p24-exact-local.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nReply exactly: routed-local",
+    "exemplarAnswer": "routed-local\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Exact text routed-local.",
+      "[MUST] Include JSON keys: answer",
+      "[SHOULD] Match clues: routed-local"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 105,
+    "reasoningLength": 728
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935138142
+}

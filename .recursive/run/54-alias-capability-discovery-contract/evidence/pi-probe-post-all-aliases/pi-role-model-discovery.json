@@ -1,0 +1,40 @@
+{
+  "piModelsPath": "D:\\pi\\agent\\models.json",
+  "piProvider": {
+    "id": "role-model",
+    "baseUrl": "http://127.0.0.1:3456/v1",
+    "modelCount": 1,
+    "configuredModelIds": [
+      "hybrid.hybrid"
+    ]
+  },
+  "piHybridStatic": {
+    "id": "hybrid.hybrid",
+    "name": "Hybrid (Local)",
+    "input": [
+      "text"
+    ],
+    "contextWindow": 128000,
+    "maxTokens": 16384,
+    "reasoning": false
+  },
+  "discoveredFromConfiguredEndpoint": {
+    "richDiscoveryUrl": "http://127.0.0.1:3456/api/role-model/downstream/openai",
+    "modelId": "hybrid.hybrid",
+    "contextWindow": 262144,
+    "maxTokens": 128000,
+    "guaranteedInput": [
+      "text"
+    ],
+    "availableInput": [
+      "image",
+      "pdf",
+      "text",
+      "video"
+    ],
+    "toolsFunctionCalling": true,
+    "reasoningSupported": true,
+    "structuredOutput": true,
+    "runtimeInventoryRevision": "6724b58e69412806"
+  }
+}

@@ -1,0 +1,9 @@
+Run: 77-catalog-json-size-and-ui-freeze
+Sub-phase: SP3
+Timestamp: 2026-07-18T01:23:30Z
+Command: corepack pnpm --filter @role-model-router/sqlite-memory exec vitest run test/index.test.ts -t "matching indexes for endpoint profile"
+Result: PASS (1 passed, 42 skipped; 2.01s)
+
+GREEN verified: PASS
+- Four idempotent endpoint/difficulty sample/profile ordering indexes are created under migration receipt run77-observed-profile-indexes-v1.
+- All four EXPLAIN QUERY PLAN assertions use their matching indexes and avoid temporary ORDER BY B-trees.

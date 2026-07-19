@@ -1,0 +1,5 @@
+--- FAIL: TestBuildRuntimeArgsUsesStandalonePaths (0.00s)
+    main_test.go:30: expected 14 args, got 12: [--repo-root C:RoleModel --runtime-state-root C:Users\tester\AppData\Local\Role Model\runtime --scope-id standalone-runtime --host 127.0.0.1 --port 3456 --static-root C:RoleModel\build\client]
+FAIL
+exit status 1
+FAIL	_/D_/DEV/role-model/.worktrees/72-standalone-runtime-config-authority-and-alias-rematerialization/role-model-router/apps/launcher	1.851s

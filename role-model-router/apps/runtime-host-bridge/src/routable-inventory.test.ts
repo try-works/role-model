@@ -99,7 +99,7 @@ describe("routable-inventory", () => {
     expect(inventory.bySourceType.remote).toHaveLength(1);
   });
 
-  it("resolves alias pools from inventory even when hint model ids are stale", () => {
+  it("keeps valid alias endpoints routable even when some hint model ids are stale", () => {
     const inventory = buildRoutableInventory(registry, sources);
     const resolved = resolveAliasAllowEndpoints(
       {
@@ -111,13 +111,26 @@ describe("routable-inventory", () => {
       registry,
     );
 
-    expect(resolved.allowEndpoints).toEqual(
-      expect.arrayContaining(["peer.local.lfm", "moonshot.personal.kimi-code.global.kimi-k2.6"]),
-    );
+    expect(resolved.allowEndpoints).toEqual(["moonshot.personal.kimi-code.global.kimi-k2.6"]);
     expect(resolved.poolEmpty).toBe(false);
-    expect(resolved.resolvedModelIds).toEqual(
-      expect.arrayContaining(["lfm2.5-8b-a1b", "moonshot/kimi-k2.6"]),
+    expect(resolved.resolvedModelIds).toEqual(["moonshot/kimi-k2.6"]);
+  });
+
+  it("resolves alias pools strictly to the alias model ids instead of widening to the full inventory", () => {
+    const inventory = buildRoutableInventory(registry, sources);
+    const resolved = resolveAliasAllowEndpoints(
+      {
+        aliasId: "controller.remote-only",
+        mode: "intelligent",
+        modelIds: ["moonshot/kimi-k2.6"],
+      },
+      inventory,
+      registry,
     );
+
+    expect(resolved.allowEndpoints).toEqual(["moonshot.personal.kimi-code.global.kimi-k2.6"]);
+    expect(resolved.poolEmpty).toBe(false);
+    expect(resolved.resolvedModelIds).toEqual(["moonshot/kimi-k2.6"]);
   });
 
   it("emits drift warnings for hint model ids outside inventory", () => {

@@ -589,6 +589,101 @@ describe("routeRequest", () => {
     );
   });
 
+  test("emits an explicit tie-break selection reason when equal-score candidates are resolved by tie-break ordering", () => {
+    const result = routeRequest({
+      request: {
+        ...baseRequest,
+        requestId: "req-router-tie-break-reason-1",
+        preferLocal: false,
+      },
+      candidates: [
+        {
+          identity: {
+            endpoint_id: "beta",
+            endpoint_kind: "cli-agent",
+            provider_kind: "provider-cli",
+            serving_source: "local-process",
+            model_id: "gpt-5.4",
+            package_id: "provider-cli",
+            variant_id: "default",
+            runtime_version: "1.0.0",
+            quantization: "none",
+            precision: "fp16",
+            host_class: "skill-router",
+            device_class: "workstation",
+            region: "local",
+            org_scope: "personal",
+          },
+          declared: {
+            endpoint_id: "beta",
+            capabilities: ["code.edit", "reasoning.multi_step", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 32768,
+            tool_calling: supportedToolCalling,
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          observed: {
+            endpoint_id: "beta",
+            judge_score: 0.87,
+            latency_ms_p50: 120,
+            latency_ms_p95: 180,
+            tokens_per_sec: 62,
+            cold_start_ms: 40,
+            failure_rate: 0,
+            cost_per_1k_tokens_est: 0,
+            freshness_score: 0.9,
+            confidence_score: 0.9,
+          },
+          status: "active",
+        },
+        {
+          identity: {
+            endpoint_id: "alpha",
+            endpoint_kind: "cli-agent",
+            provider_kind: "provider-cli",
+            serving_source: "local-process",
+            model_id: "gpt-5.4",
+            package_id: "provider-cli",
+            variant_id: "default",
+            runtime_version: "1.0.0",
+            quantization: "none",
+            precision: "fp16",
+            host_class: "skill-router",
+            device_class: "workstation",
+            region: "local",
+            org_scope: "personal",
+          },
+          declared: {
+            endpoint_id: "alpha",
+            capabilities: ["code.edit", "reasoning.multi_step", "tools.function_calling"],
+            modalities: ["text"],
+            max_context_tokens: 32768,
+            tool_calling: supportedToolCalling,
+            supports_embeddings: false,
+            platform_constraints: [],
+          },
+          observed: {
+            endpoint_id: "alpha",
+            judge_score: 0.87,
+            latency_ms_p50: 120,
+            latency_ms_p95: 180,
+            tokens_per_sec: 62,
+            cold_start_ms: 40,
+            failure_rate: 0,
+            cost_per_1k_tokens_est: 0,
+            freshness_score: 0.9,
+            confidence_score: 0.9,
+          },
+          status: "active",
+        },
+      ],
+    });
+
+    expect(result.chosen_endpoint_id).toBe("alpha");
+    expect(result.selection_reasons).toContain("TIE_BREAK_APPLIED");
+  });
+
   test("breaks ties deterministically by endpoint id last", () => {
     const tieCandidates = [
       {
@@ -712,12 +807,9 @@ describe("routeRequest", () => {
             minTokensPerSec: 22,
           },
         },
-        metricHalflives: {
-          qualityMs: 900_000,
-          latencyMs: 300_000,
-          throughputMs: 120_000,
-          reliabilityMs: 600_000,
-          costMs: 1_800_000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: {
           enabled: true,

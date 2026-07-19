@@ -1,0 +1,110 @@
+[
+  {
+    "id": "text",
+    "kind": "modality",
+    "label": "Text",
+    "description": "Plain text input/output.",
+    "classificationGuidance": "Default modality for most requests.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "image",
+    "kind": "modality",
+    "label": "Image",
+    "description": "Image input/output.",
+    "classificationGuidance": "Use when user provides or requests images/screenshots/visual inspection.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "audio",
+    "kind": "modality",
+    "label": "Audio",
+    "description": "Audio input/output.",
+    "classificationGuidance": "Use when user provides or requests audio.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "video",
+    "kind": "modality",
+    "label": "Video",
+    "description": "Video input/output.",
+    "classificationGuidance": "Use when user provides or requests video or temporal visual media.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "file",
+    "kind": "modality",
+    "label": "File",
+    "description": "File attachment input.",
+    "classificationGuidance": "Use when task depends on uploaded or local files.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "structured_json",
+    "kind": "modality",
+    "label": "Structured Json",
+    "description": "Structured JSON output.",
+    "classificationGuidance": "Use when output must be machine-readable JSON.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "tabular",
+    "kind": "modality",
+    "label": "Tabular",
+    "description": "Tables, CSV, spreadsheets, or row/column data.",
+    "classificationGuidance": "Use when the request depends on tabular data or spreadsheet-like output.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "code_patch",
+    "kind": "modality",
+    "label": "Code Patch",
+    "description": "Patch or diff output.",
+    "classificationGuidance": "Use when output should be applied to source files.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  },
+  {
+    "id": "document",
+    "kind": "modality",
+    "label": "Document",
+    "description": "Long-form document output.",
+    "classificationGuidance": "Use when output is a report, policy, proposal, contract draft, or guide.",
+    "authority": {
+      "scope": "core",
+      "owner": "try-works/role-model"
+    },
+    "stability": "stable"
+  }
+]

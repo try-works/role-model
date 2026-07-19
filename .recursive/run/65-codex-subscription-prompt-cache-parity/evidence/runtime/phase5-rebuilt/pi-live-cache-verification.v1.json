@@ -1,0 +1,167 @@
+{
+  "rebuiltRuntimeBaseUrl": "http://127.0.0.1:50692",
+  "codexSupportedZero": {
+    "exitCode": 0,
+    "sessionId": "run65-pi-smoke",
+    "model": "chatgpt/gpt-5.4",
+    "responseId": "chatcmpl_req-c8af339d-d1d7-477f-9c88-ded62f4ca77e",
+    "responseModel": "gpt-5.4",
+    "usage": {
+      "input": 4648,
+      "output": 8,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "totalTokens": 4656,
+      "cost": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "total": 0
+      }
+    },
+    "footerPromptTokens": 4648.0,
+    "footerCacheHitRatePercent": 0.0,
+    "expectedFooterText": null,
+    "assistantText": "PI_SMOKE_OK"
+  },
+  "codexPair": {
+    "cold": {
+      "exitCode": 0,
+      "sessionId": "run65-codex-cache-v4-sameprompt",
+      "model": "chatgpt/gpt-5.4",
+      "responseId": "chatcmpl_req-659b5575-d85c-4de3-9691-fb617b5575f4",
+      "responseModel": "gpt-5.4",
+      "usage": {
+        "input": 2566,
+        "output": 11,
+        "cacheRead": 4096,
+        "cacheWrite": 0,
+        "totalTokens": 6673,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "footerPromptTokens": 6662.0,
+      "footerCacheHitRatePercent": 61.483,
+      "expectedFooterText": null,
+      "assistantText": "CODEX_CACHE_COLD_65"
+    },
+    "warm": {
+      "exitCode": 0,
+      "sessionId": "run65-codex-cache-v4-sameprompt",
+      "model": "chatgpt/gpt-5.4",
+      "responseId": "chatcmpl_req-450eaa65-3b8d-42a9-b1e0-895176426f39",
+      "responseModel": "gpt-5.4",
+      "usage": {
+        "input": 2557,
+        "output": 35,
+        "cacheRead": 6144,
+        "cacheWrite": 0,
+        "totalTokens": 8736,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "footerPromptTokens": 8701.0,
+      "footerCacheHitRatePercent": 70.6126,
+      "expectedFooterText": null,
+      "assistantText": "CODEX_CACHE_COLD_65"
+    }
+  },
+  "deepseekPair": {
+    "cold": {
+      "exitCode": 0,
+      "sessionId": "run65-deepseek-cache-v1",
+      "model": "deepseek/deepseek-v4-flash",
+      "responseId": "68380b71-1f3e-4765-90f5-6faaf1225341",
+      "responseModel": "deepseek-v4-flash",
+      "usage": {
+        "input": 7350,
+        "output": 47,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 7397,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "footerPromptTokens": 7350.0,
+      "footerCacheHitRatePercent": 0.0,
+      "expectedFooterText": null,
+      "assistantText": "DEEPSEEK_CACHE_65"
+    },
+    "warm": {
+      "exitCode": 0,
+      "sessionId": "run65-deepseek-cache-v1",
+      "model": "deepseek/deepseek-v4-flash",
+      "responseId": "b9ac5629-7d28-4985-aaf6-59f2aae76e31",
+      "responseModel": "deepseek-v4-flash",
+      "usage": {
+        "input": 2186,
+        "output": 35,
+        "cacheRead": 7296,
+        "cacheWrite": 0,
+        "totalTokens": 9517,
+        "cost": {
+          "input": 0,
+          "output": 0,
+          "cacheRead": 0,
+          "cacheWrite": 0,
+          "total": 0
+        }
+      },
+      "footerPromptTokens": 9482.0,
+      "footerCacheHitRatePercent": 76.9458,
+      "expectedFooterText": null,
+      "assistantText": "DEEPSEEK_CACHE_65"
+    }
+  },
+  "kimiBlocker": {
+    "exitCode": 0,
+    "sessionId": "run65-kimi-cache-v1",
+    "model": "moonshot/kimi-k2.7-code",
+    "responseId": null,
+    "responseModel": null,
+    "usage": {
+      "input": 0,
+      "output": 0,
+      "cacheRead": 0,
+      "cacheWrite": 0,
+      "totalTokens": 0,
+      "cost": {
+        "input": 0,
+        "output": 0,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "total": 0
+      }
+    },
+    "footerPromptTokens": 0.0,
+    "footerCacheHitRatePercent": 0.0,
+    "expectedFooterText": null,
+    "assistantText": "",
+    "stopReason": "error",
+    "errorMessage": "400 No execution target is currently eligible for model moonshot/kimi-k2.7-code."
+  },
+  "requestIds": {
+    "codexSupportedZero": "req-c8af339d-d1d7-477f-9c88-ded62f4ca77e",
+    "codexCold": "req-659b5575-d85c-4de3-9691-fb617b5575f4",
+    "codexWarm": "req-450eaa65-3b8d-42a9-b1e0-895176426f39",
+    "deepseekCold": "req-41db1f80-46d8-4b7d-ad3b-650474bfbb4c",
+    "deepseekWarm": "req-0048b8e0-75b8-41b4-b484-d5c0317b2bf8",
+    "kimiBlocked": "req-15553569-c713-4849-8cea-26f94521d7ec"
+  }
+}

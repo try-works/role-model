@@ -1,0 +1,17 @@
+
+> @role-model-router/catalog@0.0.0 test D:\DEV\role-model\.worktrees\74-kimi-k3-kimi-code-oauth-support\role-model-router\packages\catalog
+> vitest run test
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/74-kimi-k3-kimi-code-oauth-support/role-model-router/packages/catalog
+
+ ✓ test/token-economics.test.ts (6 tests) 395ms
+ ✓ test/index.test.ts (13 tests) 1465ms
+   ✓ exportCatalogArtifacts > writes stable normalized catalog and vendor ledger artifacts for local validation  383ms
+   ✓ runCatalogExportCli > exports moonshot/kimi-k3 from local supplement into normalized catalog  347ms
+   ✓ runCatalogExportCli > rewrites tracked package-data catalog artifacts alongside the runtime-output export  463ms
+
+ Test Files  2 passed (2)
+      Tests  19 passed (19)
+   Start at  09:22:07
+   Duration  4.95s (transform 625ms, setup 0ms, collect 705ms, tests 1.86s, environment 1ms, prepare 1.83s)

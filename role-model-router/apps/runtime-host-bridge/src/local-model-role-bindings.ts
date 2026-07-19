@@ -9,11 +9,65 @@ type RuntimeRoleDefinitionRecord = NonNullable<
 type RuntimeRoleBindingRecord = NonNullable<
   Parameters<typeof routeRuntimeRequest>[0]["roleBindings"]
 >[number];
+type RuntimeTaskDefinitionRecord = NonNullable<
+  Parameters<typeof routeRuntimeRequest>[0]["taskDefinitions"]
+>[number];
+type ModelRoleAssignmentBinding = NonNullable<ProviderAccountRecord["modelRoleBindings"]>[number];
 
 export interface RuntimeEndpointRef {
   readonly endpointId: string;
   readonly providerAccountId: string;
   readonly modelId: string;
+}
+
+function buildEffectiveRoleCapabilities(input: {
+  readonly endpointCapabilities: readonly string[];
+  readonly roleDefinition: RuntimeRoleDefinitionRecord;
+  readonly taskDefinitions: readonly RuntimeTaskDefinitionRecord[];
+}): string[] {
+  const capabilities = new Set<string>(input.endpointCapabilities);
+  for (const capability of input.roleDefinition.required_capabilities ?? []) {
+    capabilities.add(capability);
+  }
+  for (const capability of input.roleDefinition.preferred_capabilities ?? []) {
+    capabilities.add(capability);
+  }
+  for (const taskType of input.roleDefinition.task_types_supported ?? []) {
+    const taskDefinition = input.taskDefinitions.find((entry) => entry.task_type === taskType);
+    for (const capability of taskDefinition?.required_capabilities ?? []) {
+      capabilities.add(capability);
+    }
+    for (const capability of taskDefinition?.preferred_capabilities ?? []) {
+      capabilities.add(capability);
+    }
+  }
+  return [...capabilities];
+}
+
+function resolveAssignedRoleIds(input: {
+  readonly binding?: ModelRoleAssignmentBinding;
+  readonly roleDefinitions: readonly RuntimeRoleDefinitionRecord[];
+}): readonly string[] {
+  const allRoleIds = input.roleDefinitions.map((role) => role.role_id);
+  const binding = input.binding;
+  if (!binding) {
+    return allRoleIds;
+  }
+
+  if (binding.roleAssignmentMode === "all") {
+    return allRoleIds;
+  }
+
+  if (binding.roleAssignmentMode === "exclude") {
+    const disabledRoleIds = new Set(binding.disabledRoleIds ?? []);
+    return allRoleIds.filter((roleId) => !disabledRoleIds.has(roleId));
+  }
+
+  if (binding.roleAssignmentMode === "include" || binding.roleAssignmentMode === "custom") {
+    return [...(binding.enabledRoleIds ?? binding.roleIds)];
+  }
+
+  return [...binding.roleIds];
 }
 
 export function buildAccountEndpointRoleBindings(input: {
@@ -22,6 +76,7 @@ export function buildAccountEndpointRoleBindings(input: {
   readonly accounts: readonly ProviderAccountRecord[];
   readonly registry: EndpointRegistryResult;
   readonly roleDefinitions: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions: readonly RuntimeTaskDefinitionRecord[];
   readonly sanitizeSegment: (value: string) => string;
 }): readonly RuntimeRoleBindingRecord[] {
   const roleDefinitionsById = new Map(input.roleDefinitions.map((role) => [role.role_id, role]));
@@ -41,11 +96,11 @@ export function buildAccountEndpointRoleBindings(input: {
     const modelBinding = account.modelRoleBindings?.find(
       (entry) => entry.modelId === endpoint.modelId,
     );
-    if (!modelBinding) {
-      return [];
-    }
     const endpointCapabilities = capabilitiesByEndpointId.get(endpoint.endpointId) ?? [];
-    return modelBinding.roleIds.flatMap((roleId) => {
+    return resolveAssignedRoleIds({
+      binding: modelBinding,
+      roleDefinitions: input.roleDefinitions,
+    }).flatMap((roleId) => {
       const roleDefinition = roleDefinitionsById.get(roleId);
       if (!roleDefinition) {
         return [];
@@ -57,7 +112,11 @@ export function buildAccountEndpointRoleBindings(input: {
           endpoint_id: endpoint.endpointId,
           status: "active" as const,
           policy_overrides: {},
-          effective_capabilities: endpointCapabilities,
+          effective_capabilities: buildEffectiveRoleCapabilities({
+            endpointCapabilities,
+            roleDefinition,
+            taskDefinitions: input.taskDefinitions,
+          }),
           effective_task_types: [...roleDefinition.task_types_supported],
         },
       ];
@@ -70,6 +129,7 @@ export function buildAccountEndpointRoleBindings(input: {
 export function buildLlamaSwapRegistryRoleBindings(input: {
   readonly registry: EndpointRegistryResult;
   readonly roleDefinitions: readonly RuntimeRoleDefinitionRecord[];
+  readonly taskDefinitions: readonly RuntimeTaskDefinitionRecord[];
   readonly roleIdsByModelId: Readonly<Record<string, readonly string[]>>;
   readonly sanitizeSegment: (value: string) => string;
 }): readonly RuntimeRoleBindingRecord[] {
@@ -82,7 +142,8 @@ export function buildLlamaSwapRegistryRoleBindings(input: {
       continue;
     }
     const modelId = endpoint.identity.model_id;
-    const roleIds = input.roleIdsByModelId[modelId] ?? [];
+    const roleIds =
+      input.roleIdsByModelId[modelId] ?? input.roleDefinitions.map((role) => role.role_id);
     const endpointCapabilities = [...endpoint.declared.capabilities];
     for (const roleId of roleIds) {
       const roleDefinition = roleDefinitionsById.get(roleId);
@@ -95,7 +156,11 @@ export function buildLlamaSwapRegistryRoleBindings(input: {
         endpoint_id: endpointId,
         status: "active",
         policy_overrides: {},
-        effective_capabilities: endpointCapabilities,
+        effective_capabilities: buildEffectiveRoleCapabilities({
+          endpointCapabilities,
+          roleDefinition,
+          taskDefinitions: input.taskDefinitions,
+        }),
         effective_task_types: [...roleDefinition.task_types_supported],
       });
     }
@@ -126,6 +191,7 @@ export function resolveEndpointRoleIds(input: {
   readonly runtimeEndpoints: readonly RuntimeEndpointRef[];
   readonly accounts: readonly ProviderAccountRecord[];
   readonly registry: EndpointRegistryResult;
+  readonly roleDefinitions: readonly RuntimeRoleDefinitionRecord[];
   readonly roleIdsByModelId: Readonly<Record<string, readonly string[]>>;
   readonly compareText: (left: string, right: string) => number;
 }): readonly string[] {
@@ -139,12 +205,14 @@ export function resolveEndpointRoleIds(input: {
     if (!account) {
       return [];
     }
-    return (
-      account.modelRoleBindings
-        ?.find((entry) => entry.modelId === runtimeEndpoint.modelId)
-        ?.roleIds.slice()
-        .sort(input.compareText) ?? []
-    );
+    return [
+      ...resolveAssignedRoleIds({
+        binding: account.modelRoleBindings?.find(
+          (entry) => entry.modelId === runtimeEndpoint.modelId,
+        ),
+        roleDefinitions: input.roleDefinitions,
+      }),
+    ].sort(input.compareText);
   }
 
   const registryEndpoint = input.registry.endpoints.find(
@@ -153,16 +221,42 @@ export function resolveEndpointRoleIds(input: {
   if (!registryEndpoint) {
     return [];
   }
-  return [...(input.roleIdsByModelId[registryEndpoint.identity.model_id] ?? [])].sort(
-    input.compareText,
-  );
+  return [
+    ...(input.roleIdsByModelId[registryEndpoint.identity.model_id] ??
+      input.roleDefinitions.map((role) => role.role_id)),
+  ].sort(input.compareText);
 }
 
 export function readLlamaSwapRoleIdsByModelId(
-  overrides: Readonly<Record<string, { readonly roleIds?: readonly string[] }>>,
+  overrides: Readonly<
+    Record<
+      string,
+      {
+        readonly roleIds?: readonly string[];
+        readonly roleAssignmentMode?: "all" | "include" | "exclude" | "custom";
+        readonly enabledRoleIds?: readonly string[];
+        readonly disabledRoleIds?: readonly string[];
+      }
+    >
+  >,
+  roleDefinitions: readonly RuntimeRoleDefinitionRecord[] = [],
 ): Record<string, readonly string[]> {
   const result: Record<string, readonly string[]> = {};
+  const allRoleIds = roleDefinitions.map((role) => role.role_id);
   for (const [modelId, override] of Object.entries(overrides)) {
+    if (override.roleAssignmentMode === "all") {
+      result[modelId] = [...allRoleIds];
+      continue;
+    }
+    if (override.roleAssignmentMode === "exclude") {
+      const disabledRoleIds = new Set(override.disabledRoleIds ?? []);
+      result[modelId] = allRoleIds.filter((roleId) => !disabledRoleIds.has(roleId));
+      continue;
+    }
+    if (override.roleAssignmentMode === "include" || override.roleAssignmentMode === "custom") {
+      result[modelId] = [...(override.enabledRoleIds ?? override.roleIds ?? [])];
+      continue;
+    }
     if (Array.isArray(override.roleIds) && override.roleIds.length > 0) {
       result[modelId] = [...override.roleIds];
     }

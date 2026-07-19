@@ -1,0 +1,14 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/49-runtime-telemetry-analytics-charts/role-model-router/apps/runtime-ui[39m
+
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts[2m > [22mbenchmark model cards addendum layout[2m > [22muses model-scores → run-benchmark → run-history section order[32m 6[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts[2m > [22mbenchmark model cards addendum layout[2m > [22mdoes not enable standalone Last runs by mode section[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts[2m > [22mbenchmark model cards addendum layout[2m > [22mresolves per-endpoint subjects from full and quick summaries independently[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts[2m > [22mbenchmark model cards addendum layout[2m > [22mformats hardBlend copy for routing impact[32m 1[2mms[22m[39m
+ [32m✓[39m app/lib/benchmark-model-cards.test.ts[2m > [22mbenchmark model cards addendum layout[2m > [22mbuilds benchmark endpoint inventory from configured runtime endpoints even when router candidates are filtered[32m 3[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 08:24:36
+[2m   Duration [22m 1.33s[2m (transform 74ms, setup 0ms, collect 129ms, tests 14ms, environment 0ms, prepare 392ms)[22m
+

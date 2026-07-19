@@ -2,13 +2,67 @@ name: CI
 
 on:
   push:
+    branches:
+      - dev
+      - stage
+      - main
   pull_request:
+    branches:
+      - dev
+      - stage
+      - main
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  validate:
+  promotion-guard:
+    name: promotion-guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate promotion source
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        shell: bash
+        run: |
+          if [[ "$BASE_REF" == "stage" && "$HEAD_REF" != "dev" ]]; then
+            echo "Invalid promotion source: stage only accepts dev."
+            exit 1
+          fi
+          if [[ "$BASE_REF" == "main" && "$HEAD_REF" != "stage" && "$HEAD_REF" != hotfix/* ]]; then
+            echo "Invalid promotion source: main only accepts stage or reviewed hotfix/* branches."
+            exit 1
+          fi
+
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run schemas:validate
+
+  build-test:
+    name: build-test
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -20,24 +74,71 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - run: pnpm run test
+
+  runtime-critical:
+    name: runtime-critical
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run runtime:test-critical
+
+  runtime-router:
+    name: runtime-router
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run runtime:test-router
+
+  rust:
+    name: rust
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
       - uses: dtolnay/rust-toolchain@stable
-      - name: Print toolchain versions
-        run: |
-          node --version
-          pnpm --version
-          rustc --version
-          cargo --version
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile=false
-      - name: Lint
-        run: pnpm run lint
-      - name: Validate schemas
-        run: pnpm run schemas:validate
-      - name: Build
-        run: pnpm run build
-      - name: Test
-        run: pnpm run test
-      - name: Test Rust
-        run: pnpm run test:rust
-      - name: Smoke
-        run: pnpm run smoke
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test:rust
+
+  smoke:
+    name: smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run smoke

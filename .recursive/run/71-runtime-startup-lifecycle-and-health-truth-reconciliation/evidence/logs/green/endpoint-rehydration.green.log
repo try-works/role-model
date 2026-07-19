@@ -1,0 +1,15 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/71-runtime-startup-lifecycle-and-health-truth-reconciliation/role-model-router/apps/runtime-host-bridge
+
+(node:28312) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/endpoint-rehydration.test.ts (3 tests) 5094ms
+   ✓ endpoint rehydration > rehydrates sqlite runtime endpoints across backend restart without re-activation  1644ms
+   ✓ endpoint rehydration > reconciles missing persisted remote activations even when sqlite already has endpoint rows  1705ms
+   ✓ endpoint rehydration > marks restarted remote endpoints offline and ineligible when startup probes time out  1742ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  21:24:48
+   Duration  8.33s (transform 1.63s, setup 0ms, collect 2.28s, tests 5.09s, environment 0ms, prepare 247ms)
+

@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "db6611a364ade4d7ed08db620c276dd3a280ffd9b9c7f5bcafb145772e7c1080",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\76-configured-model-membership-authority-and-eject-convergence\\.recursive\\run\\76-configured-model-membership-authority-and-eject-convergence\\01-as-is.md",
+  "locked_at": "2026-07-17T10:29:58Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "d98e2f65884e1b30d8b2b6811cdc45ff78011304066540f0d18341ecbfd85d52",
+    "00-worktree.md": "b313dd770a8e09606881446052878780ca15de662d1219c3cf6bda0b8a395f97"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "e2f4f7342235353c1cc75d7558470e970019b65fdf59a8bc7f11941b3f3da4c2"
+}

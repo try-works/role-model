@@ -1,0 +1,1151 @@
+{
+  "generatedAt": "2026-06-18T01:38:21.1712488+02:00",
+  "matrixCount": 80,
+  "passCount": 80,
+  "failCount": 0,
+  "failures": [],
+  "staleControllerCheck": {
+    "summaryController": {
+      "scope": "global",
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "modelId": "moonshot/kimi-k2.7-code",
+      "sourceType": "remote"
+    },
+    "publicController": {
+      "scope": "global",
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "modelId": "moonshot/kimi-k2.7-code",
+      "sourceType": "remote"
+    },
+    "candidateSources": [
+      "remote"
+    ],
+    "v1ModelIds": [
+      "mixed.local-remote",
+      "moonshot/kimi-k2.7-code"
+    ],
+    "pass": true
+  },
+  "matrix": [
+    {
+      "strategy": null,
+      "executionMode": "decision_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "decision_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "decision_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "decision_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "hybrid",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "hybrid",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "hybrid",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "hybrid",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "local_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "local_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "local_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "local_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "remote_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "remote_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "remote_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": null,
+      "executionMode": "remote_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "decision_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "decision_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "decision_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "decision_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "hybrid",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "hybrid",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "hybrid",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "hybrid",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "local_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "local_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "local_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "local_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "remote_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "remote_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "remote_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "baseline",
+      "executionMode": "remote_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "decision_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "decision_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "decision_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "decision_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "hybrid",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "hybrid",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "hybrid",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "hybrid",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "local_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "local_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "local_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "local_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "remote_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "remote_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "remote_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "controller",
+      "executionMode": "remote_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "decision_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "decision_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "decision_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "decision_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "hybrid",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "hybrid",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "hybrid",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "hybrid",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "local_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "local_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "local_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "local_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "remote_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "remote_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "remote_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "difficulty",
+      "executionMode": "remote_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "decision_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "decision_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "decision_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "decision_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "hybrid",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "hybrid",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "hybrid",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "hybrid",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local",
+        "remote"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "local_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "local_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "local_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "local_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "local"
+      ],
+      "v1ModelIds": [
+        "lfm2.5-1.2b-instruct",
+        "mixed.local-remote"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "remote_only",
+      "aliasMode": "basic",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "remote_only",
+      "aliasMode": "difficulty",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "remote_only",
+      "aliasMode": "intelligent",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    },
+    {
+      "strategy": "hybrid",
+      "executionMode": "remote_only",
+      "aliasMode": "hybrid",
+      "candidateSources": [
+        "remote"
+      ],
+      "v1ModelIds": [
+        "mixed.local-remote",
+        "moonshot/kimi-k2.7-code"
+      ],
+      "pass": true
+    }
+  ]
+}

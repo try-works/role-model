@@ -1,0 +1,919 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:41240) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/validate-vendors.test.ts (2 tests | 1 failed) 64284ms
+   × runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end 64270ms
+     → expected { vendorId: 'llama-swap', …(2) } to deeply equal ObjectContaining{…}
+   ✓ runRuntimeVendorValidation > plans a real-vendor harness with repo-owned mock upstreams 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-vendors.test.ts > runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end
+AssertionError: expected { vendorId: 'llama-swap', …(2) } to deeply equal ObjectContaining{…}
+
+- Expected
++ Received
+
+- ObjectContaining {
+-   "observation": ObjectContaining {
+-     "routingDiagnostics": ObjectContaining {
++ {
++   "observation": {
++     "baselineMaxEligibleCostUsd": 0.006557599999999999,
++     "cacheCostSavingsUsd": 0,
++     "cacheObservability": {
++       "cacheReadTokens": 0,
++       "cacheWriteTokens": 0,
++       "promptCacheRequested": false,
++       "promptCacheUsed": false,
++       "routingCacheAffinity": false,
++     },
++     "capturePolicy": {
++       "environment": "local-dev",
++       "rawCaptureAvailable": true,
++       "redactedFields": [
++         "request.headers.authorization",
++       ],
++       "redactionLevel": "strict",
++       "retentionClass": "standard",
++       "structuredInspectionAvailable": true,
++       "structuredInspectionMode": "redacted",
++       "suppressedFields": [
++         "request.body",
++         "response.body",
++       ],
++     },
++     "contextEnvelope": {
++       "conversationId": "conversation-main",
++       "estimatedTokenCount": 240,
++       "latestHandoffId": "handoff-1",
++     },
++     "conversationId": "conversation-main",
++     "costBaselineSource": "eligible_candidate_max",
++     "costCalculationBasis": "estimated_vendor_cost",
++     "costCalculationVersion": "run49.v1",
++     "costSavingsSupport": "full",
++     "decision": {
++       "app_id": "unknown-app",
++       "chosen_endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++       "eligibility": [
++         {
++           "eligible": true,
++           "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
++           "exclusions": [],
++         },
++         {
++           "eligible": false,
++           "endpoint_id": "openai.personal.openai-codex-subscription.global.gpt-5.4",
++           "exclusions": [
++             {
++               "code": "POLICY_DENY_ENDPOINT",
++               "detail": "Endpoint is denied by routing policy.",
++             },
++           ],
++         },
++         {
++           "eligible": true,
++           "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++           "exclusions": [],
++         },
++       ],
++       "fallback_endpoint_ids": [
++         "openai.litellm.global.openai-gpt-4-1-mini-fast",
++       ],
++       "org_id": null,
++       "policy_snapshot": {
++         "allow_endpoints": [
++           "llama-swap.local.local-llama-3-1-8b-instruct",
++           "openai.litellm.global.openai-gpt-4-1-mini-fast",
++         ],
++         "allow_provider_kinds": [],
++         "budget": {
++           "currency": "USD",
++           "enabled": false,
++         },
++         "budget_mode": "disabled",
++         "compute_preference": "auto",
++         "deny_endpoints": [],
++         "deny_provider_kinds": [],
++         "policy_id": "balanced-policy",
++         "prefer_local": false,
++         "privacy": {
++           "allow_remote": true,
++         },
++         "require_tools": false,
++         "required_capabilities": [
++           "text.chat",
++         ],
++         "required_modalities": [
++           "text",
++         ],
++         "strategy": "balanced",
++         "targets": {
++           "latency_max_ms": 300,
++           "latency_target_ms": 150,
++           "throughput_target_tps": 40,
++         },
++         "tie_break_order": [
++           "quality",
++           "latency_ms",
++           "reliability",
++           "endpoint_id",
++         ],
++       },
++       "request_id": "req-runtime-vendor-hybrid-alias",
++       "routing_decision_id": "decision-req-runtime-vendor-hybrid-alias",
++       "scored_candidates": [
++         {
++           "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++           "metric_breakdown": {
++             "cost": {
++               "raw": {
++                 "canonical_model_id": "local/llama-3.1-8b-instruct",
++                 "cost_per_1k_tokens_est": 0,
++                 "effective_value": 1,
++                 "estimated_request_usd": 0,
++                 "freshness_weight": 1,
++                 "input_per_1m": 0,
++                 "measured_at_ms": 1783482839317,
++                 "neutral_value": 0.5,
++                 "observed_value": 1,
++                 "output_per_1m": 0,
++                 "target_cost_per_request": 0.01,
++                 "token_economics_source": "local-free",
++               },
++               "source": "catalog",
++               "value": 1,
++             },
++             "latency": {
++               "raw": {
++                 "effective_latency_ms": 3,
++                 "effective_value": 0.9816831973521425,
++                 "freshness_weight": 0.9993948346487713,
++                 "latency_ms_p50": 3,
++                 "latency_ms_p95": 3,
++                 "measured_at_ms": 1783482839317,
++                 "neutral_value": 0.5,
++                 "observed_value": 0.9819748718447459,
++               },
++               "source": "measured",
++               "value": 0.9816831973521425,
++             },
++             "preference": {
++               "raw": {
++                 "cache_affinity": true,
++                 "cache_affinity_delta": 0.1,
++               },
++               "source": "declared",
++               "value": 0.6,
++             },
++             "quality": {
++               "source": "default",
++               "value": 0.5,
++             },
++             "reliability": {
++               "raw": {
++                 "effective_value": 0.9999092114597172,
++                 "failure_rate": 0,
++                 "freshness_weight": 0.9996973715323909,
++                 "measured_at_ms": 1783482839317,
++                 "neutral_value": 0.7,
++                 "observed_value": 1,
++               },
++               "source": "measured",
++               "value": 0.9999092114597172,
++             },
++             "throughput": {
++               "raw": {
++                 "effective_value": 0.9992438866123657,
++                 "freshness_weight": 0.9984877732247315,
++                 "measured_at_ms": 1783482839317,
++                 "neutral_value": 0.5,
++                 "observed_value": 1,
++                 "tokens_per_sec": 1333,
++               },
++               "source": "measured",
++               "value": 0.9992438866123657,
++             },
++           },
++           "tie_break": {
++             "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++             "latency_ms": 3,
++             "quality": 0.5,
++             "reliability": 0.9999092114597172,
++           },
++           "total_score": 0.9660677283580322,
++         },
++         {
++           "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
++           "metric_breakdown": {
++             "cost": {
++               "raw": {
++                 "canonical_model_id": "openai/gpt-4.1-mini-fast",
++                 "cost_per_1k_tokens_est": 0.0015970774476376033,
++                 "effective_value": 0.8402922552362397,
++                 "estimated_request_usd": 0.006557599999999999,
++                 "freshness_weight": 1,
++                 "input_per_1m": 0.4,
++                 "measured_at_ms": 1783482839523,
++                 "neutral_value": 0.5,
++                 "observed_value": 0.8402922552362397,
++                 "output_per_1m": 1.6,
++                 "target_cost_per_request": 0.01,
++                 "token_economics_source": "catalog",
++               },
++               "source": "catalog",
++               "value": 0.8402922552362397,
++             },
++             "latency": {
++               "raw": {
++                 "effective_latency_ms": 4,
++                 "effective_value": 0.9759833633609646,
++                 "freshness_weight": 0.9998706208964937,
++                 "latency_ms_p50": 4,
++                 "latency_ms_p95": 4,
++                 "measured_at_ms": 1783482839523,
++                 "neutral_value": 0.5,
++                 "observed_value": 0.976044953630294,
++               },
++               "source": "measured",
++               "value": 0.9759833633609646,
++             },
++             "preference": {
++               "raw": {
++                 "cache_affinity": true,
++                 "cache_affinity_delta": 0.1,
++               },
++               "source": "declared",
++               "value": 0.6,
++             },
++             "quality": {
++               "source": "default",
++               "value": 0.5,
++             },
++             "reliability": {
++               "raw": {
++                 "effective_value": 0.9999805925067227,
++                 "failure_rate": 0,
++                 "freshness_weight": 0.9999353083557424,
++                 "measured_at_ms": 1783482839523,
++                 "neutral_value": 0.7,
++                 "observed_value": 1,
++               },
++               "source": "measured",
++               "value": 0.9999805925067227,
++             },
++             "throughput": {
++               "raw": {
++                 "effective_value": 0.9998382918130466,
++                 "freshness_weight": 0.9996765836260931,
++                 "measured_at_ms": 1783482839523,
++                 "neutral_value": 0.5,
++                 "observed_value": 1,
++                 "tokens_per_sec": 1250,
++               },
++               "source": "measured",
++               "value": 0.9998382918130466,
++             },
++           },
++           "tie_break": {
++             "endpoint_id": "openai.litellm.global.openai-gpt-4-1-mini-fast",
++             "latency_ms": 4,
++             "quality": 0.5,
++             "reliability": 0.9999805925067227,
++           },
++           "total_score": 0.9189086311096484,
++         },
++       ],
++       "scoring_version": "baseline-v2",
++       "selection_reasons": [
++         "BEST_TOTAL_SCORE",
++         "DECLARED_PROFILE_USED",
++         "MEASURED_PROFILE_USED",
++         "DEFAULT_PROFILE_USED",
++         "CACHE_AFFINITY_APPLIED",
++         "LOW_LATENCY_TARGET_MET",
++         "FALLBACK_CHAIN_COMPUTED",
++       ],
++       "used_declared": true,
++       "used_measured": true,
++     },
++     "diagnostics": {
++       "authAccount": [],
++       "execution": [],
++       "memoryQuality": [
++         {
++           "code": "MEMORY_CONTEXT_OMITTED",
++           "message": "Context assembly omitted 2 turns and 2 artifacts.",
++           "severity": "warning",
++         },
++         {
++           "code": "MEMORY_LATEST_HANDOFF_LINKED",
++           "message": "Context inspection preserves latest handoff handoff-1.",
++           "severity": "info",
++         },
++       ],
++       "operator": [
++         {
++           "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
++           "message": "Raw operator captures remain available through the preserved host capture surface.",
++           "severity": "info",
++         },
++       ],
++       "routing": [
++         {
++           "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
++           "message": "Routing diagnostics link request req-runtime-vendor-hybrid-alias to retrieval receipt conversation-main-retrieval-receipt.",
++           "severity": "info",
++         },
++       ],
++       "tooling": [],
++     },
++     "effectiveCostUsd": 0,
++     "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
++     "endpointKind": "local_engine",
++     "executionSemantics": {
++       "adapterFamily": "ai-sdk-openai-compatible",
++       "cooldownDecision": "not_applied",
++       "executionFamily": "vendor-llama-swap",
++       "idempotencyDecision": "not_needed",
++       "payloadBytes": {
++         "ingress": 60,
++         "providerCanonical": 102,
++         "providerResponse": 238,
++         "providerWire": 102,
++         "translated": 73,
++       },
++       "rerouteCount": 0,
++       "retryCount": 0,
++       "sourceClient": "openai.responses",
++       "toolSideEffectState": "none",
++     },
++     "executionTelemetry": {
++       "costProvenance": "estimated",
++       "finishReason": "stop",
++       "promptCaching": {
++         "mode": "unsupported",
++         "supported": false,
++       },
++       "providerFamily": "ai-sdk-openai-compatible",
++       "stream": {
++         "requested": false,
++         "textDeltas": 1,
++         "toolArgumentDeltas": 0,
++         "toolCallDeltas": 0,
++       },
++       "streamSupport": {
++         "text": "delta",
++         "toolArguments": "delta",
++         "toolCalls": "delta",
++       },
++       "usageSupport": {
++         "cacheReadTokens": false,
++         "cacheWriteTokens": false,
++         "inputTokens": true,
++         "outputTokens": true,
++       },
++     },
++     "healthStatus": "healthy",
++     "inspection": {
++       "endpoint": {
++         "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
++         "endpointVersion": "run07-registry-v1:default",
++         "latestProfile": {
++           "confidence_score": 0.27941531270472214,
++           "cost_per_1k_tokens_est": 0,
++           "currency": "USD",
++           "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++           "endpoint_version": "run07-registry-v1:default",
++           "failure_rate": 0,
++           "freshness_score": 1,
++           "latency_ms_p50": 5,
++           "latency_ms_p95": 6.8,
++           "measured_at_ms": 1783482839724,
++           "measurement_window": {
++             "ended_at_ms": 1783482839724,
++             "started_at_ms": 1783482839317,
++           },
++           "sample_size": 2,
++           "sources": {
++             "benchmark_samples": 0,
++             "live_request_samples": 2,
++           },
++           "tokens_per_sec": 952,
++         },
++         "recentSamples": [
++           {
++             "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++             "endpoint_version": "run07-registry-v1:default",
++             "failure": false,
++             "latency_ms": 3,
++             "latency_ms_p95": 3,
++             "request_id": "req-runtime-vendor-hybrid-local",
++             "routing_decision_id": "decision-req-runtime-vendor-hybrid-local",
++             "source_type": "live_request",
++             "timestamp_ms": 1783482839317,
++             "tokens_per_sec": 1333,
++           },
++           {
++             "cost_per_1k_tokens_est": 0,
++             "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++             "endpoint_version": "run07-registry-v1:default",
++             "failure": false,
++             "latency_ms": 7,
++             "latency_ms_p95": 7,
++             "request_id": "req-runtime-vendor-hybrid-alias",
++             "routing_decision_id": "decision-req-runtime-vendor-hybrid-alias",
++             "source_type": "live_request",
++             "timestamp_ms": 1783482839724,
++             "tokens_per_sec": 571,
++           },
++         ],
++       },
++       "request": {
++         "capturePolicy": {
++           "environment": "local-dev",
++           "rawCaptureAvailable": true,
++           "redactedFields": [
++             "request.headers.authorization",
++           ],
++           "redactionLevel": "strict",
++           "retentionClass": "standard",
++           "structuredInspectionAvailable": true,
++           "structuredInspectionMode": "redacted",
++           "suppressedFields": [
++             "request.body",
++             "response.body",
++           ],
++         },
++         "diagnostics": {
++           "authAccount": [],
++           "execution": [],
++           "memoryQuality": [
++             {
++               "code": "MEMORY_CONTEXT_OMITTED",
++               "message": "Context assembly omitted 2 turns and 2 artifacts.",
++               "severity": "warning",
++             },
++             {
++               "code": "MEMORY_LATEST_HANDOFF_LINKED",
++               "message": "Context inspection preserves latest handoff handoff-1.",
++               "severity": "info",
++             },
++           ],
++           "operator": [
++             {
++               "code": "OPERATOR_RAW_CAPTURE_AVAILABLE",
++               "message": "Raw operator captures remain available through the preserved host capture surface.",
++               "severity": "info",
++             },
++           ],
++           "routing": [
++             {
++               "code": "ROUTING_RETRIEVAL_RECEIPT_LINKED",
++               "message": "Routing diagnostics link request req-runtime-vendor-hybrid-alias to retrieval receipt conversation-main-retrieval-receipt.",
++               "severity": "info",
++             },
++           ],
++           "tooling": [],
++         },
++         "requestCapture": {
++           "body": {
++             "reason": "policy.rawCapture.requestBody.disabled",
++             "suppressed": true,
++           },
++           "headers": {
++             "OpenAI-Beta": "responses=v1",
++             "authorization": "[redacted]",
++           },
++         },
++         "requestId": "req-runtime-vendor-hybrid-alias",
++         "responseCapture": {
++           "body": {
++             "reason": "policy.rawCapture.responseBody.disabled",
++             "suppressed": true,
++           },
++           "statusCode": 200,
++         },
++         "routingDecisionId": "decision-req-runtime-vendor-hybrid-alias",
++       },
++     },
++     "observationAvailability": {
++       "rawObservationAvailable": true,
++       "reason": "Request detail is backed by the preserved runtime observation bundle plus telemetry ledger supplements.",
++       "source": "raw-observation",
++       "structuredInspectionAvailable": true,
++     },
++     "observedPerformance": {
++       "endpointVersion": "run07-registry-v1:default",
++       "history": [
++         {
++           "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++           "endpoint_version": "run07-registry-v1:default",
++           "failure": false,
++           "latency_ms": 3,
++           "latency_ms_p95": 3,
++           "request_id": "req-runtime-vendor-hybrid-local",
++           "routing_decision_id": "decision-req-runtime-vendor-hybrid-local",
++           "source_type": "live_request",
++           "timestamp_ms": 1783482839317,
++           "tokens_per_sec": 1333,
++         },
++         {
++           "cost_per_1k_tokens_est": 0,
++           "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++           "endpoint_version": "run07-registry-v1:default",
++           "failure": false,
++           "latency_ms": 7,
++           "latency_ms_p95": 7,
++           "request_id": "req-runtime-vendor-hybrid-alias",
++           "routing_decision_id": "decision-req-runtime-vendor-hybrid-alias",
++           "source_type": "live_request",
++           "timestamp_ms": 1783482839724,
++           "tokens_per_sec": 571,
++         },
++       ],
++       "profile": {
++         "confidence_score": 0.27941531270472214,
++         "cost_per_1k_tokens_est": 0,
++         "currency": "USD",
++         "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++         "endpoint_version": "run07-registry-v1:default",
++         "failure_rate": 0,
++         "freshness_score": 1,
++         "latency_ms_p50": 5,
++         "latency_ms_p95": 6.8,
++         "measured_at_ms": 1783482839724,
++         "measurement_window": {
++           "ended_at_ms": 1783482839724,
++           "started_at_ms": 1783482839317,
++         },
++         "sample_size": 2,
++         "sources": {
++           "benchmark_samples": 0,
++           "live_request_samples": 2,
++         },
++         "tokens_per_sec": 952,
++       },
++       "sample": {
++         "cost_per_1k_tokens_est": 0,
++         "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++         "endpoint_version": "run07-registry-v1:default",
++         "failure": false,
++         "latency_ms": 7,
++         "latency_ms_p95": 7,
++         "request_id": "req-runtime-vendor-hybrid-alias",
++         "routing_decision_id": "decision-req-runtime-vendor-hybrid-alias",
++         "source_type": "live_request",
++         "timestamp_ms": 1783482839724,
++         "tokens_per_sec": 571,
++       },
++     },
++     "privacyReceipt": {
++       "retainUntil": 1786074839738,
++       "retentionTtlHours": 720,
++       "samplingRate": 1,
++     },
++     "providerId": null,
++     "requestId": "req-runtime-vendor-hybrid-alias",
++     "retrievalReceipt": {
++       "receiptId": "conversation-main-retrieval-receipt",
++       "summary": {
++         "estimatedTokens": 240,
++         "omittedArtifacts": 2,
++         "omittedTurns": 2,
++         "selectedArtifacts": 1,
++         "selectedTurns": 2,
++       },
++     },
++     "roleIds": [
++       "analyst",
++       "architect",
++       "coder",
++       "coordinator",
++       "creative",
++       "data",
++       "designer",
++       "educator",
++       "finance",
++       "health",
++       "knowledge",
++       "legal",
++       "marketer",
++       "mathematician",
++       "operator",
++       "planner",
++       "procurement",
++       "product",
++       "recruiter",
++       "researcher",
++       "scientist",
++       "security",
++       "seller",
++       "strategist",
++       "support",
++       "tester",
++       "translator",
++       "writer",
++     ],
++     "routingCostSavingsUsd": 0.006558,
++     "routingDecisionId": "decision-req-runtime-vendor-hybrid-alias",
++     "routingDiagnostics": {
+        "aliasResolution": {
+-         "aliasId": "baseline.hybrid",
++         "aliasId": "gpt-5.4",
+          "allowEndpoints": [
+            "llama-swap.local.local-llama-3-1-8b-instruct",
+            "openai.litellm.global.openai-gpt-4-1-mini-fast",
+          ],
+-         "requestedModel": "baseline.hybrid",
++         "requestedModel": "gpt-5.4",
+          "resolvedModelIds": [
+            "local/llama-3.1-8b-instruct",
+            "openai/gpt-4.1-mini-fast",
+          ],
+        },
++       "capabilityEligibility": {
++         "advisoryCapabilities": [],
++         "excludedTargets": [],
++         "includedEndpoints": [
++           "llama-swap.local.local-llama-3-1-8b-instruct",
++           "openai.litellm.global.openai-gpt-4-1-mini-fast",
++         ],
++         "requiredCapabilities": [
++           "text.chat",
++         ],
++         "requiredInputModalities": [
++           "text",
++         ],
++         "requiredOutputModalities": [
++           "text",
++         ],
+        },
++       "catalogEconomics": {
++         "canonicalModelId": "local/llama-3.1-8b-instruct",
++         "cost_per_1k_tokens_est": 0,
++         "estimatedRequestUsd": 0,
++         "inputPer1M": 0,
++         "outputPer1M": 0,
++         "tokenEconomicsSource": "local-free",
++       },
++       "effectiveMetrics": {
++         "cost": {
++           "freshnessWeight": 1,
++           "measuredAtMs": 1783482839317,
++           "source": "catalog",
++           "value": 1,
+          },
+-   "vendorId": StringMatching /^(llama-swap|litellm)$/,
++         "latency": {
++           "freshnessWeight": 0.9993948346487713,
++           "measuredAtMs": 1783482839317,
++           "source": "measured",
++           "value": 0.9816831973521425,
++         },
++         "quality": {
++           "source": "default",
++           "value": 0.5,
++         },
++         "reliability": {
++           "freshnessWeight": 0.9996973715323909,
++           "measuredAtMs": 1783482839317,
++           "source": "measured",
++           "value": 0.9999092114597172,
++         },
++         "throughput": {
++           "freshnessWeight": 0.9984877732247315,
++           "measuredAtMs": 1783482839317,
++           "source": "measured",
++           "value": 0.9992438866123657,
++         },
++       },
++       "observedProfile": {
++         "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
++         "measuredAtMs": 1783482839317,
++         "readMode": "per-request",
++         "source": "runtime-state",
++       },
++       "retrievalReceiptId": "conversation-main-retrieval-receipt",
++       "rewrite": {
++         "applied": true,
++         "downstreamModelId": "local/llama-3.1-8b-instruct",
++         "reason": "requested-model-rewritten-for-selected-endpoint",
++         "requestedModel": "gpt-5.4",
++       },
++       "routingModel": {
++         "enabled": false,
++         "endpointId": null,
++         "ignoredEndpointIds": [],
++         "preferredEndpointIds": [],
++       },
++       "selection": {
++         "mode": "best-total-score",
++         "runnerUpEndpointId": "openai.litellm.global.openai-gpt-4-1-mini-fast",
++         "runnerUpTotalScore": 0.9189086311096484,
++         "scoreDelta": 0.04715909724838385,
++         "scoreTieEpsilon": 0.01,
++         "tieBreakOrder": [
++           "quality",
++           "latency_ms",
++           "reliability",
++           "endpoint_id",
++         ],
++         "winnerEndpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
++         "winnerTotalScore": 0.9660677283580322,
++       },
++       "throughputPenalty": {
++         "active": false,
++         "endpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
++       },
++     },
++     "selectedUncachedCostUsd": 0,
++     "servingSource": "vendor-llama-swap",
++     "sourceType": "local",
++     "status": "active",
++     "telemetrySnapshot": {
++       "baselineMaxEligibleCostUsd": 0.006557599999999999,
++       "cacheCostSavingsUsd": 0,
++       "cacheState": "unsupported",
++       "candidateCostSnapshot": {
++         "llama-swap.local.local-llama-3-1-8b-instruct": {
++           "costPer1kTokensEst": 0,
++           "endpointKind": "local_engine",
++           "estimatedRequestUsd": 0,
++           "inputPer1M": 0,
++           "modelId": "local/llama-3.1-8b-instruct",
++           "outputPer1M": 0,
++           "providerId": "llama-swap",
++           "providerKind": "remote_openai_compat",
++           "region": "local",
++           "servingSource": "vendor-llama-swap",
++           "sourceType": "local",
++           "tokenEconomicsSource": "local-free",
++         },
++         "openai.litellm.global.openai-gpt-4-1-mini-fast": {
++           "costPer1kTokensEst": 0.0015970774476376033,
++           "endpointKind": "remote_api",
++           "estimatedRequestUsd": 0.006557599999999999,
++           "inputPer1M": 0.4,
++           "modelId": "openai/gpt-4.1-mini-fast",
++           "outputPer1M": 1.6,
++           "providerId": null,
++           "providerKind": "remote_openai_compat",
++           "region": "global",
++           "servingSource": "vendor-litellm",
++           "sourceType": "remote",
++           "tokenEconomicsSource": "catalog",
++         },
++       },
++       "costBaselineSource": "eligible_candidate_max",
++       "costSavingsSupport": "full",
++       "dimensions": {
++         "candidateCount": 2,
++         "selectedEndpointId": "llama-swap.local.local-llama-3-1-8b-instruct",
++       },
++       "eligibleEndpointIds": [
++         "llama-swap.local.local-llama-3-1-8b-instruct",
++         "openai.litellm.global.openai-gpt-4-1-mini-fast",
++       ],
++       "eligibleModelIds": [
++         "local/llama-3.1-8b-instruct",
++         "openai/gpt-4.1-mini-fast",
++       ],
++       "endpointKind": "local_engine",
++       "healthStatusAtRequest": null,
++       "lifecycleStateAtRequest": "active",
++       "providerAccountId": null,
++       "providerId": "llama-swap",
++       "region": "local",
++       "requestOperation": "responses",
++       "requestedModelId": "gpt-5.4",
++       "roleIds": [],
++       "routingCostSavingsUsd": 0.006558,
++       "selectedModelId": "local/llama-3.1-8b-instruct",
++       "selectedPricingSnapshot": {
++         "costPer1kTokensEst": 0,
++         "estimatedRequestUsd": 0,
++         "inputPer1M": 0,
++         "modelId": "local/llama-3.1-8b-instruct",
++         "outputPer1M": 0,
++         "providerAccountId": null,
++         "providerId": "llama-swap",
++         "sourceType": "local",
++         "tokenEconomicsSource": "local-free",
++       },
++       "selectedUncachedCostUsd": 0,
++       "servingSource": "vendor-llama-swap",
++       "sourceType": "local",
++       "toolingUsed": false,
++       "totalAvoidedCostUsd": 0.006558,
++     },
++     "tooling": {
++       "diagnostics": [],
++       "executions": [],
++       "toolCalls": [],
++     },
++     "totalAvoidedCostUsd": 0.006558,
++     "trace": {
++       "events": [
++         {
++           "event_id": "event-provider-load-req-runtime-vendor-hybrid-alias",
++           "event_type": "trace.span.opened",
++           "payload": {
++             "adapter_family": "ai-sdk-openai-compatible",
++             "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++           },
++           "request_id": "req-runtime-vendor-hybrid-alias",
++           "routing_decision_id": "decision-req-runtime-vendor-hybrid-alias",
++           "span_id": "span-provider-load-req-runtime-vendor-hybrid-alias",
++           "timestamp_ms": 1783482839725,
++           "trace_id": "trace-req-runtime-vendor-hybrid-alias",
++         },
++         {
++           "event_id": "event-usage-req-runtime-vendor-hybrid-alias",
++           "event_type": "usage.event.created",
++           "payload": {
++             "input_tokens": 11,
++             "output_tokens": 4,
++           },
++           "request_id": "req-runtime-vendor-hybrid-alias",
++           "routing_decision_id": "decision-req-runtime-vendor-hybrid-alias",
++           "span_id": "span-provider-decode-req-runtime-vendor-hybrid-alias",
++           "timestamp_ms": 1783482839734,
++           "trace_id": "trace-req-runtime-vendor-hybrid-alias",
++         },
++       ],
++       "spans": [
++         {
++           "attributes": {
++             "adapter_family": "ai-sdk-openai-compatible",
++             "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++           },
++           "ended_at_ms": 1783482839729,
++           "request_id": "req-runtime-vendor-hybrid-alias",
++           "routing_decision_id": "decision-req-runtime-vendor-hybrid-alias",
++           "span_id": "span-provider-load-req-runtime-vendor-hybrid-alias",
++           "span_type": "provider.load",
++           "started_at_ms": 1783482839724,
++           "status": "ok",
++           "trace_id": "trace-req-runtime-vendor-hybrid-alias",
++         },
++         {
++           "attributes": {
++             "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++             "text_delta_count": 1,
++           },
++           "ended_at_ms": 1783482839734,
++           "parent_span_id": "span-provider-load-req-runtime-vendor-hybrid-alias",
++           "request_id": "req-runtime-vendor-hybrid-alias",
++           "routing_decision_id": "decision-req-runtime-vendor-hybrid-alias",
++           "span_id": "span-provider-decode-req-runtime-vendor-hybrid-alias",
++           "span_type": "provider.decode",
++           "started_at_ms": 1783482839729,
++           "status": "ok",
++           "trace_id": "trace-req-runtime-vendor-hybrid-alias",
++         },
++       ],
++     },
++     "usageEvent": {
++       "app_id": "unknown-app",
++       "cost_estimate": 0,
++       "endpoint_id": "llama-swap.local.local-llama-3-1-8b-instruct",
++       "event_id": "usage-req-runtime-vendor-hybrid-alias",
++       "latency_ms": 7,
++       "model_id": "local/llama-3.1-8b-instruct",
++       "package_id": "ai-sdk-openai-compatible",
++       "provider_kind": "remote_openai_compat",
++       "request_id": "req-runtime-vendor-hybrid-alias",
++       "routing_decision_id": "decision-req-runtime-vendor-hybrid-alias",
++       "sample_source": "live_request",
++       "timestamp_ms": 1783482839724,
++       "tokens_in": 11,
++       "tokens_out": 4,
++     },
++   },
++   "outputText": "local llama summary",
++   "vendorId": "llama-swap",
+  }
+
+ ❯ test/validate-vendors.test.ts:85:32
+     83|       }),
+     84|     );
+     85|     expect(result.aliasHybrid).toEqual(
+       |                                ^
+     86|       expect.objectContaining({
+     87|         vendorId: expect.stringMatching(/^(llama-swap|litellm)$/),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  11:53:49
+   Duration  68.60s (transform 1.73s, setup 0ms, collect 2.50s, tests 64.28s, environment 1ms, prepare 289ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/validate-vendors.test.ts

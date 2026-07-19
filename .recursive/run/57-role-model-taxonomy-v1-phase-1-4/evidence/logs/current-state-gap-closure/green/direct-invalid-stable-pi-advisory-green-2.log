@@ -1,0 +1,4 @@
+{
+  "status": 200,
+  "body": "{\"id\":\"chatcmpl-role-model\",\"object\":\"chat.completion\",\"created\":1782233086,\"model\":\"openai/gpt-4.1-mini-fast\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"OpenAI summary\"},\"finish_reason\":\"stop\"}],\"usage\":{\"prompt_tokens\":32,\"completion_tokens\":24,\"total_tokens\":56}}\n"
+}

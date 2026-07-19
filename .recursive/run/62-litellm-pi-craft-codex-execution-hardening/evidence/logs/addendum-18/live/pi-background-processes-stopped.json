@@ -1,0 +1,17 @@
+[
+  {
+    "ProcessId": 44316,
+    "ParentProcessId": 14524,
+    "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" D:\\pi\\node_modules\\.bin/../@earendil-works/pi-coding-agent/dist/cli.js "
+  },
+  {
+    "ProcessId": 30944,
+    "ParentProcessId": 6516,
+    "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" D:\\pi\\node_modules\\.bin/../@earendil-works/pi-coding-agent/dist/cli.js "
+  },
+  {
+    "ProcessId": 51092,
+    "ParentProcessId": 31716,
+    "CommandLine": "\"C:\\Program Files\\nodejs\\node.exe\" D:\\pi\\node_modules\\.bin/../@earendil-works/pi-coding-agent/dist/cli.js "
+  }
+]

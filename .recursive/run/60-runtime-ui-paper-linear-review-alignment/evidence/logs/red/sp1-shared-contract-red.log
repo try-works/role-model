@@ -1,0 +1,864 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/60-runtime-ui-paper-linear-review-alignment/role-model-router/apps/runtime-ui
+
+ ❯ app/lib/theme.test.ts (4 tests | 1 failed) 21ms
+   ✓ runtime theme helpers > normalizes only the supported persisted Light and Dark themes 3ms
+   ✓ runtime theme helpers > uses persisted operator choice before consulting system preference 0ms
+   ✓ runtime theme helpers > falls back to system preference only before an explicit operator choice exists 0ms
+   × runtime theme helpers > maps active themes to the browser chrome colors used by the Linear review shell 14ms
+     → expected '#f5f5f7' to be '#fbfbfc' // Object.is equality
+ ❯ app/components/page-primitives.test.tsx (4 tests | 1 failed) 69ms
+   ✓ SelectField typeahead > matches the next enabled option by typed prefix 4ms
+   ✓ SelectField typeahead > cycles repeated same-letter typeahead across enabled matches 1ms
+   ✓ SelectField rendering > renders the selected label inside a shrinkable truncated span 39ms
+   × StatusPill rendering > renders solid token-backed pills with contrasting text 22ms
+     → expected '<span class="inline-flex items-center…' to contain 'bg-[var(--rm-pill-accent-bg)]'
+ ❯ app/lib/design-system.test.ts (55 tests | 3 failed) 192ms
+   ✓ runtime design system > defines navigation groups and layout templates for every runtime route 8ms
+   ✓ runtime design system > uses analytics charts as the primary Observe entry point 2ms
+   × runtime design system > keeps the shell on the Paper Linear baseline with explicit chart tokens 14ms
+     → expected '1440px' to be '1760px' // Object.is equality
+   ✓ runtime design system > chart tokens used together resolve to distinct visual colors in each theme 1ms
+   ✓ runtime design system > global shell chrome keeps legacy vendor ui out of the main runtime contract 62ms
+   ✓ runtime design system > studio implementation targets render repo-owned workspace sections instead of placeholder blueprints 19ms
+   ✓ runtime design system > integration and system implementation targets render live upstream and peer surfaces 9ms
+   ✓ runtime design system > router implementation targets render repo-owned routing explanation surfaces 0ms
+   ✓ runtime design system > router, connect registry, and remote surfaces expose alias/readiness ownership instead of generic filler 1ms
+   ✓ runtime design system > providers surface exposes explicit in-place maintenance actions for saved remote accounts 1ms
+   ✓ runtime design system > providers surface uses an explicit save-cancel modal for api-key maintenance 1ms
+   ✓ runtime design system > providers surface keeps oauth reconnect as a one-click saved-account action 0ms
+   ✓ runtime design system > providers maintenance flows call explicit repair APIs instead of generic account writes 0ms
+   ✓ runtime design system > providers saved-account cards use canonical lifecycle rows and bounded archived diagnostics 1ms
+   ✓ runtime design system > runtime, session readiness, workbench, and advanced surfaces use canonical lifecycle diagnostics 1ms
+   ✓ runtime design system > router routes preserve empty-state and observe-link affordances 1ms
+   ✓ runtime design system > merged router overview stays observational while routing strategy owns editing controls 1ms
+   ✓ runtime design system > router overview presents runtime-config posture as source of truth 1ms
+   ✓ runtime design system > router overview lists the concrete candidate endpoints behind routing posture 0ms
+   ✓ runtime design system > routing strategy benchmark advisory does not leak JSX control flow as page text 0ms
+   ✓ runtime design system > routing strategy settings separate saved posture from draft edits and refresh derived state after save 1ms
+   ✓ runtime design system > meta-guidance panels stay removed from overview and observe routes 0ms
+   ✓ runtime design system > design system doc marks the converted pages as live routes 2ms
+   ✓ runtime design system > control routes tolerate an unassigned controller before endpoint activation 1ms
+   × runtime design system > applies the Paper Linear palette, Inter typography, and explicit theme contract in shared app chrome 10ms
+     → expected '@import "tailwindcss";\n\n:root {\n  …' to contain '--rm-font-display: "Inter"'
+   ✓ runtime design system > shared panels and provider selectors are owned by Apple-theme primitives 1ms
+   ✓ runtime design system > router strategy execution mode uses the themed select primitive 0ms
+   ✓ runtime design system > production UI dropdowns use themed select primitives instead of native selects 3ms
+   ✓ runtime design system > shared route effects avoid action identity loops and peer refresh feedback 0ms
+   × runtime design system > keeps shared states on solid token-backed pills and no section divider chrome 21ms
+     → expected 'import {\n  Children,\n  type ReactEl…' to contain 'bg-[var(--rm-pill-accent-bg)] text-[v…'
+   ✓ runtime design system > remote, models, router, and system runtime config routes are first-class pages in the retained taxonomy 12ms
+   ✓ runtime design system > runtime roles route preserves role-first drill-down language for task detail 0ms
+   ✓ runtime design system > local setup surfaces stay discoverable from navigation and empty registry states 0ms
+   ✓ runtime design system > observe and local log surfaces render structured ledgers rather than raw iframe placeholders 0ms
+   ✓ runtime design system > observe ownership keeps requests canonical and raw-host surfaces adjacent 0ms
+   ✓ runtime design system > requests and request detail stay telemetry-first while exposing raw-host handoffs 0ms
+   ✓ runtime design system > routing analytics controls expose richer taxonomy pivots for observe charts 0ms
+   ✓ runtime design system > activity route frames raw-host metrics as adjacent to canonical telemetry 0ms
+   ✓ runtime design system > logs route exposes request-detail handoffs while preserving raw-host framing 0ms
+   ✓ runtime design system > registry and system layouts avoid redundant KPI strips and placeholder note panels 0ms
+   ✓ runtime design system > dashboard is chart-led and keeps routing analytics as a first-class handoff 0ms
+   ✓ runtime design system > overview metadata and design doc describe a telemetry-first summary with an interaction rail 1ms
+   ✓ runtime design system > workbench and observe routes expose routing controls and receipts in repo-owned UI surfaces 0ms
+   ✓ runtime design system > request detail and model detail expose structured taxonomy evidence rather than raw-only telemetry 0ms
+   ✓ runtime design system > request detail route renders authoritative stored cost metadata 1ms
+   ✓ runtime design system > shell header owns route metadata and page actions without duplicate page headers 1ms
+   ✓ runtime design system > shell headers do not render section eyebrow labels 0ms
+   ✓ runtime design system > routes do not register refresh controls as shell header actions 0ms
+   ✓ runtime design system > long fact-card values use compact text roles instead of display value typography 0ms
+   ✓ runtime design system > production UI sources do not bypass Apple theme token primitives 2ms
+   ✓ runtime design system > production UI sources keep the approved Apple radius grammar 0ms
+   ✓ runtime design system > production UI sources avoid unsupported Apple typography weight 500 0ms
+   ✓ runtime design system > chart primitives use shared design-system geometry and type tokens 1ms
+   ✓ runtime design system > telemetry chart states are shared design-system vocabulary 1ms
+   ✓ runtime design system > runtime route definitions stay slim and future scaffolds avoid duplicate header props 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/page-primitives.test.tsx > StatusPill rendering > renders solid token-backed pills with contrasting text
+AssertionError: expected '<span class="inline-flex items-center…' to contain 'bg-[var(--rm-pill-accent-bg)]'
+
+Expected: "bg-[var(--rm-pill-accent-bg)]"
+Received: "<span class="inline-flex items-center rounded-[var(--rm-radius-pill)] border px-3 py-1.5 text-[12px] font-normal uppercase tracking-[0.16em] leading-3 border-[color:var(--rm-accent-muted)] bg-transparent text-[var(--rm-accent)]">Selected</span>"
+
+ ❯ app/components/page-primitives.test.tsx:53:20
+     51|     const markup = renderToStaticMarkup(<StatusPill tone="accent">Sele…
+     52| 
+     53|     expect(markup).toContain("bg-[var(--rm-pill-accent-bg)]");
+       |                    ^
+     54|     expect(markup).toContain("text-[var(--rm-pill-accent-ink)]");
+     55|     expect(markup).toContain("border-transparent");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > keeps the shell on the Paper Linear baseline with explicit chart tokens
+AssertionError: expected '1440px' to be '1760px' // Object.is equality
+
+Expected: "1760px"
+Received: "1440px"
+
+ ❯ app/lib/design-system.test.ts:505:42
+    503| 
+    504|   test("keeps the shell on the Paper Linear baseline with explicit cha…
+    505|     expect(runtimeTheme.maxContentWidth).toBe("1760px");
+       |                                          ^
+    506|     expect(runtimeTheme.radii.sm).toBe("8px");
+    507|     expect(runtimeTheme.radii.md).toBe("11px");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > applies the Paper Linear palette, Inter typography, and explicit theme contract in shared app chrome
+AssertionError: expected '@import "tailwindcss";\n\n:root {\n  …' to contain '--rm-font-display: "Inter"'
+
+- Expected
++ Received
+
+- --rm-font-display: "Inter"
++ @import "tailwindcss";
++
++ :root {
++   --rm-font-display: "SF Pro Display", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
++     sans-serif;
++   --rm-font-body: "SF Pro Text", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
++   --rm-font-mono: "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
++   --rm-radius-sm: 8px;
++   --rm-radius-md: 11px;
++   --rm-radius-lg: 18px;
++   --rm-radius-pill: 9999px;
++   --rm-radius-shell: 18px;
++   --rm-radius-panel: 18px;
++   --rm-radius-field: 11px;
++   --rm-radius-badge: 9999px;
++   --rm-shadow-card: none;
++   --rm-shadow-ui: none;
++   --rm-shadow-product: 0 3px 5px 30px rgba(0, 0, 0, 0.22);
++   --rm-shell-width: 1440px;
++   --rm-space-xxs: 4px;
++   --rm-space-xs: 8px;
++   --rm-space-sm: 12px;
++   --rm-space-md: 17px;
++   --rm-space-lg: 24px;
++   --rm-space-xl: 32px;
++   --rm-space-xxl: 48px;
++   --rm-space-section: 80px;
++   --rm-nav-height-global: 44px;
++   --rm-nav-height-sub: 52px;
++   --rm-sticky-bar-height: 64px;
++   --rm-field-height: 44px;
++   --rm-icon-button-size: 44px;
++   --rm-button-pill-padding: 11px 22px;
++   --rm-button-utility-padding: 8px 15px;
++   --rm-button-hero-padding: 14px 28px;
++   --rm-card-padding: 24px;
++   --rm-search-padding: 12px 20px;
++   --rm-on-primary: #ffffff;
++   --rm-chart-ink: #171717;
++   --rm-chart-cyan: #50e3c2;
++   --rm-chart-highlight-pink: #ff0080;
++   --rm-chart-violet: #7928ca;
++   --rm-chart-link-blue: #0070f3;
++   --rm-chart-link-deep: #0761d1;
++   --rm-chart-link-soft: #d3e5ff;
++   --rm-chart-error: #ee0000;
++   --rm-chart-error-deep: #c50000;
++   --rm-chart-error-soft: #f7d4d6;
++   --rm-chart-warning: #f5a623;
++   --rm-chart-warning-deep: #ab570a;
++   --rm-chart-warning-soft: #ffefcf;
++ }
++
++ html[data-theme="light"] {
++   color-scheme: light;
++   --rm-bg: #f5f5f7;
++   --rm-surface: #ffffff;
++   --rm-surface-strong: #ffffff;
++   --rm-panel: #fafafc;
++   --rm-fg: #1d1d1f;
++   --rm-secondary: rgba(29, 29, 31, 0.72);
++   --rm-muted: rgba(29, 29, 31, 0.48);
++   --rm-border: #e0e0e0;
++   --rm-border-strong: #d2d2d7;
++   --rm-divider-soft: #f0f0f0;
++   --rm-hairline: #e0e0e0;
++   --rm-chip-translucent: rgba(210, 210, 215, 0.64);
++   --rm-accent: #0066cc;
++   --rm-accent-ink: #0066cc;
++   --rm-accent-focus: #0071e3;
++   --rm-accent-on-dark: #2997ff;
++   --rm-accent-muted: rgba(0, 102, 204, 0.72);
++   --rm-accent-subtle: rgba(0, 102, 204, 0.14);
++   --rm-accent-ghost: rgba(0, 102, 204, 0.08);
++   --rm-error: #c8102e;
++   --rm-error-muted: rgba(200, 16, 46, 0.72);
++   --rm-error-subtle: rgba(200, 16, 46, 0.14);
++   --rm-error-ghost: rgba(200, 16, 46, 0.08);
++   --rm-success: #166534;
++   --rm-success-muted: rgba(22, 101, 52, 0.72);
++   --rm-success-subtle: rgba(22, 101, 52, 0.14);
++   --rm-warning: #b45309;
++   --rm-warning-muted: rgba(180, 83, 9, 0.72);
++   --rm-warning-subtle: rgba(180, 83, 9, 0.14);
++   --rm-telemetry-local: #1d1d1f;
++   --rm-telemetry-remote: #0066cc;
++   --rm-telemetry-healthy: #166534;
++   --rm-telemetry-degraded: #b45309;
++   --rm-telemetry-raw: #7a7a7a;
++   --rm-chart-local: #1d1d1f;
++   --rm-chart-remote: #0066cc;
++   --rm-chart-tokens: #ff0080;
++   --rm-chart-cache-hit: #7928ca;
++   --rm-chart-cache-rate: #0761d1;
++   --rm-chart-latency: #ff0080;
++   --rm-chart-cost: #0761d1;
++   --rm-chart-failure: #ee0000;
++   --rm-chart-success: #166534;
++   --rm-chart-neutral-1: rgba(29, 29, 31, 0.72);
++   --rm-chart-neutral-2: rgba(29, 29, 31, 0.38);
++   --rm-chart-grid: rgba(29, 29, 31, 0.1);
++   --rm-chart-tooltip-bg: rgba(255, 255, 255, 0.96);
++   --rm-chart-tooltip-border: rgba(29, 29, 31, 0.12);
++   --rm-chart-skeleton: rgba(29, 29, 31, 0.08);
++   --rm-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
++ }
++
++ html[data-theme="dark"] {
++   color-scheme: dark;
++   --rm-bg: #000000;
++   --rm-surface: #272729;
++   --rm-surface-strong: #2a2a2c;
++   --rm-panel: #252527;
++   --rm-fg: #ffffff;
++   --rm-secondary: rgba(255, 255, 255, 0.72);
++   --rm-muted: rgba(255, 255, 255, 0.48);
++   --rm-border: rgba(255, 255, 255, 0.12);
++   --rm-border-strong: rgba(255, 255, 255, 0.18);
++   --rm-divider-soft: rgba(255, 255, 255, 0.1);
++   --rm-hairline: rgba(255, 255, 255, 0.12);
++   --rm-chip-translucent: rgba(210, 210, 215, 0.24);
++   --rm-accent: #0066cc;
++   --rm-accent-ink: #2997ff;
++   --rm-accent-focus: #0071e3;
++   --rm-accent-on-dark: #2997ff;
++   --rm-accent-muted: rgba(0, 102, 204, 0.72);
++   --rm-accent-subtle: rgba(41, 151, 255, 0.18);
++   --rm-accent-ghost: rgba(41, 151, 255, 0.1);
++   --rm-error: #fb7185;
++   --rm-error-muted: rgba(251, 113, 133, 0.72);
++   --rm-error-subtle: rgba(251, 113, 133, 0.18);
++   --rm-error-ghost: rgba(251, 113, 133, 0.1);
++   --rm-success: #86efac;
++   --rm-success-muted: rgba(134, 239, 172, 0.72);
++   --rm-success-subtle: rgba(134, 239, 172, 0.18);
++   --rm-warning: #fbbf24;
++   --rm-warning-muted: rgba(251, 191, 36, 0.72);
++   --rm-warning-subtle: rgba(251, 191, 36, 0.18);
++   --rm-telemetry-local: #ffffff;
++   --rm-telemetry-remote: #2997ff;
++   --rm-telemetry-healthy: #86efac;
++   --rm-telemetry-degraded: #fbbf24;
++   --rm-telemetry-raw: #cccccc;
++   --rm-chart-local: #f5f5f7;
++   --rm-chart-remote: #2997ff;
++   --rm-chart-tokens: #ff5ca8;
++   --rm-chart-cache-hit: #a86cf7;
++   --rm-chart-cache-rate: #8bc6ff;
++   --rm-chart-latency: #ff5ca8;
++   --rm-chart-cost: #4da3ff;
++   --rm-chart-failure: #fb7185;
++   --rm-chart-success: #86efac;
++   --rm-chart-neutral-1: rgba(255, 255, 255, 0.72);
++   --rm-chart-neutral-2: rgba(255, 255, 255, 0.38);
++   --rm-chart-grid: rgba(255, 255, 255, 0.12);
++   --rm-chart-tooltip-bg: rgba(39, 39, 41, 0.96);
++   --rm-chart-tooltip-border: rgba(255, 255, 255, 0.12);
++   --rm-chart-skeleton: rgba(255, 255, 255, 0.08);
++   --rm-select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' stroke='%23d2d2d7' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
++ }
++
++ html {
++   scrollbar-gutter: stable;
++   background: var(--rm-bg);
++ }
++
++ body {
++   margin: 0;
++   min-height: 100vh;
++   background: var(--rm-bg);
++   color: var(--rm-fg);
++   font-family: var(--rm-font-body);
++   text-rendering: optimizeLegibility;
++   -webkit-font-smoothing: antialiased;
++ }
++
++ h1,
++ h2,
++ h3,
++ h4,
++ h5,
++ h6 {
++   font-family: var(--rm-font-display);
++ }
++
++ ::selection {
++   background: var(--rm-accent-ghost);
++ }
++
++ code,
++ pre {
++   font-family: var(--rm-font-mono);
++ }
++
++ a {
++   color: inherit;
++   text-decoration: none;
++ }
++
++ button,
++ input,
++ select,
++ textarea {
++   font: inherit;
++ }
++
++ select {
++   appearance: none;
++   background-image: var(--rm-select-chevron);
++   background-position: right 14px center;
++   background-repeat: no-repeat;
++   background-size: 12px 8px;
++   padding-right: 42px;
++ }
++
++ select::-ms-expand {
++   display: none;
++ }
++
++ option {
++   background: var(--rm-surface);
++   color: var(--rm-fg);
++ }
++
+
+ ❯ app/lib/design-system.test.ts:919:20
+    917| 
+    918|   test("applies the Paper Linear palette, Inter typography, and explic…
+    919|     expect(appCss).toContain('--rm-font-display: "Inter"');
+       |                    ^
+    920|     expect(appCss).toContain('--rm-font-body: "Inter"');
+    921|     expect(appCss).not.toContain("SF Pro");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  app/lib/design-system.test.ts > runtime design system > keeps shared states on solid token-backed pills and no section divider chrome
+AssertionError: expected 'import {\n  Children,\n  type ReactEl…' to contain 'bg-[var(--rm-pill-accent-bg)] text-[v…'
+
+- Expected
++ Received
+
+- bg-[var(--rm-pill-accent-bg)] text-[var(--rm-pill-accent-ink)]
++ import {
++   Children,
++   type ReactElement,
++   type ReactNode,
++   isValidElement,
++   useEffect,
++   useId,
++   useMemo,
++   useRef,
++   useState,
++ } from "react";
++
++ import { cn } from "../lib/cn";
++ import {
++   bodyTextClassName,
++   cardClassName,
++   codeBlockClassName,
++   errorNoticeClassName,
++   eyebrowClassName,
++   largeValueClassName,
++   mutedPanelClassName,
++   raisedPanelClassName,
++   sectionTitleClassName,
++   selectChevronStyle,
++   selectFieldClassName,
++   utilityLabelClassName,
++ } from "../lib/design-system";
++
++ export function SectionCard({
++   title,
++   description,
++   children,
++   className,
++ }: {
++   title: string;
++   description?: string;
++   children: ReactNode;
++   className?: string;
++ }) {
++   return (
++     <section className={cn(`${cardClassName} min-w-0 px-5 py-5 md:px-6 md:py-6`, className)}>
++       <div className="mb-5">
++         <h2 className={`text-[var(--rm-fg)] ${sectionTitleClassName}`}>{title}</h2>
++         {description ? (
++           <p className={`mt-2 max-w-[60ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>
++             {description}
++           </p>
++         ) : null}
++       </div>
++       {children}
++     </section>
++   );
++ }
++
++ export function StatCard({ label, value }: { label: string; value: string }) {
++   return (
++     <div className={`${raisedPanelClassName} p-5`}>
++       <p className={eyebrowClassName}>{label}</p>
++       <p className={`mt-4 text-[var(--rm-fg)] ${largeValueClassName}`}>{value}</p>
++     </div>
++   );
++ }
++
++ export function FactCard({
++   label,
++   value,
++   detail,
++   emphasis = false,
++   className,
++   valueClassName = largeValueClassName,
++ }: {
++   label: string;
++   value: ReactNode;
++   detail?: ReactNode;
++   emphasis?: boolean;
++   className?: string;
++   valueClassName?: string;
++ }) {
++   return (
++     <div
++       className={cn(
++         `${emphasis ? raisedPanelClassName : mutedPanelClassName} p-4 md:p-5`,
++         className,
++       )}
++     >
++       <p className={eyebrowClassName}>{label}</p>
++       <p className={`mt-3 break-words tabular-nums text-[var(--rm-fg)] ${valueClassName}`}>
++         {value}
++       </p>
++       {detail ? (
++         <p className={`mt-2 max-w-[28ch] ${bodyTextClassName} text-[var(--rm-secondary)]`}>
++           {detail}
++         </p>
++       ) : null}
++     </div>
++   );
++ }
++
++ export function StatusPill({
++   tone,
++   children,
++   className,
++ }: {
++   tone: "neutral" | "accent" | "warning" | "success" | "error";
++   children: ReactNode;
++   className?: string;
++ }) {
++   const toneClass =
++     tone === "accent"
++       ? "border-[color:var(--rm-accent-muted)] bg-transparent text-[var(--rm-accent)]"
++       : tone === "warning"
++         ? "border-[var(--rm-warning)] bg-transparent text-[var(--rm-warning)]"
++         : tone === "error"
++           ? "border-[var(--rm-error)] bg-transparent text-[var(--rm-error)]"
++         : tone === "success"
++           ? "border-[var(--rm-success)] bg-transparent text-[var(--rm-success)]"
++           : "border-[var(--rm-border)] bg-transparent text-[var(--rm-secondary)]";
++
++   return (
++     <span
++       className={cn(
++         "inline-flex items-center rounded-[var(--rm-radius-pill)] border px-3 py-1.5 text-[12px] font-normal uppercase tracking-[0.16em] leading-3",
++         toneClass,
++         className,
++       )}
++     >
++       {children}
++     </span>
++   );
++ }
++
++ export type SelectOptionModel = {
++   readonly value: string;
++   readonly label: string;
++   readonly disabled: boolean;
++ };
++
++ type SelectOptionElement = ReactElement<{
++   readonly children?: ReactNode;
++   readonly disabled?: boolean;
++   readonly value?: string | number;
++ }>;
++
++ function getNodeText(node: ReactNode): string {
++   if (typeof node === "string" || typeof node === "number") {
++     return String(node);
++   }
++   if (Array.isArray(node)) {
++     return node.map(getNodeText).join("");
++   }
++   if (isValidElement<{ children?: ReactNode }>(node)) {
++     return getNodeText(node.props.children);
++   }
++   return "";
++ }
++
++ function getSelectOptions(children: ReactNode): SelectOptionModel[] {
++   return Children.toArray(children).flatMap((child): SelectOptionModel[] => {
++     if (!isValidElement(child)) {
++       return [];
++     }
++     const option = child as SelectOptionElement;
++     const label = getNodeText(option.props.children).trim();
++     const rawValue = option.props.value;
++     return [
++       {
++         value: rawValue === undefined ? label : String(rawValue),
++         label,
++         disabled: Boolean(option.props.disabled),
++       },
++     ];
++   });
++ }
++
++ export function getSelectTypeaheadMatchIndex(
++   options: readonly SelectOptionModel[],
++   query: string,
++   currentIndex: number,
++ ): number {
++   const normalizedQuery = query.trim().toLocaleLowerCase();
++   if (!normalizedQuery || options.length === 0) {
++     return -1;
++   }
++
++   const startIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
++   for (let offset = 0; offset < options.length; offset += 1) {
++     const index = (startIndex + offset) % options.length;
++     const option = options[index];
++     if (!option?.disabled && option.label.trim().toLocaleLowerCase().startsWith(normalizedQuery)) {
++       return index;
++     }
++   }
++   return -1;
++ }
++
++ export function SelectField({
++   label,
++   value,
++   children,
++   onChange,
++   className,
++ }: {
++   label: string;
++   value: string;
++   children: ReactNode;
++   onChange: (value: string) => void;
++   className?: string;
++ }) {
++   const labelId = useId();
++   const listboxId = useId();
++   const rootRef = useRef<HTMLDivElement | null>(null);
++   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
++   const typeaheadTextRef = useRef("");
++   const typeaheadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
++   const options = useMemo(() => getSelectOptions(children), [children]);
++   const selectedIndex = options.findIndex((option) => option.value === value);
++   const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : null;
++   const firstEnabledIndex = options.findIndex((option) => !option.disabled);
++   const [open, setOpen] = useState(false);
++   const [activeIndex, setActiveIndex] = useState(
++     selectedIndex >= 0 ? selectedIndex : firstEnabledIndex,
++   );
++
++   useEffect(() => {
++     setActiveIndex(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex);
++   }, [firstEnabledIndex, selectedIndex]);
++
++   useEffect(() => {
++     return () => {
++       if (typeaheadTimerRef.current) {
++         clearTimeout(typeaheadTimerRef.current);
++       }
++     };
++   }, []);
++
++   useEffect(() => {
++     if (!open) {
++       return;
++     }
++
++     const handlePointerDown = (event: MouseEvent) => {
++       if (!rootRef.current?.contains(event.target as Node)) {
++         setOpen(false);
++       }
++     };
++     const handleKeyDown = (event: KeyboardEvent) => {
++       if (event.key === "Escape") {
++         setOpen(false);
++       }
++     };
++
++     document.addEventListener("mousedown", handlePointerDown);
++     document.addEventListener("keydown", handleKeyDown);
++     return () => {
++       document.removeEventListener("mousedown", handlePointerDown);
++       document.removeEventListener("keydown", handleKeyDown);
++     };
++   }, [open]);
++
++   useEffect(() => {
++     if (open && activeIndex >= 0) {
++       optionRefs.current[activeIndex]?.focus();
++     }
++   }, [activeIndex, open]);
++
++   const moveActive = (direction: 1 | -1) => {
++     if (options.length === 0) {
++       return;
++     }
++     let nextIndex = activeIndex >= 0 ? activeIndex : firstEnabledIndex;
++     for (let attempt = 0; attempt < options.length; attempt += 1) {
++       nextIndex = (nextIndex + direction + options.length) % options.length;
++       if (!options[nextIndex]?.disabled) {
++         setActiveIndex(nextIndex);
++         return;
++       }
++     }
++   };
++
++   const chooseOption = (option: SelectOptionModel) => {
++     if (option.disabled) {
++       return;
++     }
++     onChange(option.value);
++     setOpen(false);
++   };
++
++   const handleTypeahead = (event: React.KeyboardEvent) => {
++     if (
++       event.key.length !== 1 ||
++       event.altKey ||
++       event.ctrlKey ||
++       event.metaKey ||
++       options.length === 0
++     ) {
++       return false;
++     }
++
++     event.preventDefault();
++
++     const key = event.key.toLocaleLowerCase();
++     const nextQuery = `${typeaheadTextRef.current}${key}`;
++     const isRepeatedKey =
++       nextQuery.length > 1 && Array.from(nextQuery).every((character) => character === key);
++     const effectiveQuery = isRepeatedKey ? key : nextQuery;
++     const currentIndex = activeIndex >= 0 ? activeIndex : selectedIndex;
++     const matchIndex = getSelectTypeaheadMatchIndex(options, effectiveQuery, currentIndex);
++
++     typeaheadTextRef.current = effectiveQuery;
++     if (typeaheadTimerRef.current) {
++       clearTimeout(typeaheadTimerRef.current);
++     }
++     typeaheadTimerRef.current = setTimeout(() => {
++       typeaheadTextRef.current = "";
++     }, 700);
++
++     if (matchIndex >= 0) {
++       setOpen(true);
++       setActiveIndex(matchIndex);
++     }
++
++     return true;
++   };
++
++   return (
++     <div className="relative grid min-w-0 gap-2" ref={rootRef}>
++       <span className={`${utilityLabelClassName} text-[var(--rm-fg)]`} id={labelId}>
++         {label}
++       </span>
++       <button
++         aria-controls={listboxId}
++         aria-expanded={open}
++         aria-haspopup="listbox"
++         aria-labelledby={labelId}
++         className={cn(
++           `${selectFieldClassName} flex min-w-0 items-center justify-between gap-3 text-left`,
++           className,
++         )}
++         onClick={() => setOpen((current) => !current)}
++         onKeyDown={(event) => {
++           if (handleTypeahead(event)) {
++             return;
++           }
++           if (event.key === "ArrowDown" || event.key === "ArrowUp") {
++             event.preventDefault();
++             setOpen(true);
++             setActiveIndex(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex);
++           }
++         }}
++         style={selectChevronStyle}
++         title={selectedOption?.label ?? "Select…"}
++         type="button"
++       >
++         <span
++           className={
++             selectedOption
++               ? "min-w-0 flex-1 truncate"
++               : "min-w-0 flex-1 truncate text-[var(--rm-muted)]"
++           }
++         >
++           {selectedOption?.label ?? "Select…"}
++         </span>
++       </button>
++       {open ? (
++         <div
++           aria-labelledby={labelId}
++           className="absolute left-0 top-full z-50 mt-2 max-h-[320px] w-full overflow-y-auto rounded-[var(--rm-radius-panel)] border border-[var(--rm-border-strong)] bg-[var(--rm-surface)] p-1 shadow-[0_18px_48px_rgba(0,0,0,0.18)]"
++           id={listboxId}
++           role="listbox"
++           tabIndex={-1}
++         >
++           {options.map((option, index) => {
++             const selected = option.value === value;
++             const active = index === activeIndex;
++             return (
++               <button
++                 aria-disabled={option.disabled || undefined}
++                 aria-selected={selected}
++                 className={cn(
++                   "flex min-h-[40px] w-full items-center rounded-[var(--rm-radius-md)] px-3 py-2 text-left text-[15px] font-normal leading-5 tracking-[-0.016em] transition",
++                   selected
++                     ? "bg-[var(--rm-accent)] text-[var(--rm-on-primary)]"
++                     : active
++                       ? "bg-[var(--rm-accent-ghost)] text-[var(--rm-fg)]"
++                       : "bg-transparent text-[var(--rm-secondary)] hover:bg-[var(--rm-panel)] hover:text-[var(--rm-fg)]",
++                   option.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
++                 )}
++                 key={`${option.value}:${option.label}`}
++                 onClick={() => chooseOption(option)}
++                 onKeyDown={(event) => {
++                   if (handleTypeahead(event)) {
++                     return;
++                   }
++                   if (event.key === "ArrowDown") {
++                     event.preventDefault();
++                     moveActive(1);
++                   } else if (event.key === "ArrowUp") {
++                     event.preventDefault();
++                     moveActive(-1);
++                   } else if (event.key === "Enter" || event.key === " ") {
++                     event.preventDefault();
++                     chooseOption(option);
++                   }
++                 }}
++                 ref={(node) => {
++                   optionRefs.current[index] = node;
++                 }}
++                 role="option"
++                 tabIndex={active ? 0 : -1}
++                 type="button"
++               >
++                 <span className="truncate">{option.label}</span>
++               </button>
++             );
++           })}
++         </div>
++       ) : null}
++     </div>
++   );
++ }
++
++ export function LoadingState({ label }: { label: string }) {
++   return (
++     <p className={`${mutedPanelClassName} border-dashed p-6 text-sm text-[var(--rm-secondary)]`}>
++       {label}
++     </p>
++   );
++ }
++
++ export function EmptyState({ label }: { label: string }) {
++   return (
++     <p className={`${mutedPanelClassName} border-dashed p-6 text-sm text-[var(--rm-secondary)]`}>
++       {label}
++     </p>
++   );
++ }
++
++ export function ErrorState({ label }: { label: string }) {
++   return (
++     <p className={errorNoticeClassName}>
++       {label}
++     </p>
++   );
++ }
++
++ export function CodeBlock({ children, className }: { children: ReactNode; className?: string }) {
++   return <pre className={cn(codeBlockClassName, className)}>{children}</pre>;
++ }
++
++ export function DisclosureSection({
++   summary,
++   children,
++   defaultOpen = false,
++ }: {
++   summary: string;
++   children: ReactNode;
++   defaultOpen?: boolean;
++ }) {
++   return (
++     <details className={`${cardClassName} px-5 py-4 md:px-6`} open={defaultOpen ? true : undefined}>
++       <summary
++         className={`cursor-pointer list-none text-[var(--rm-fg)] marker:content-none [&::-webkit-details-marker]:hidden ${sectionTitleClassName}`}
++       >
++         {summary}
++       </summary>
++       <div className="mt-4">{children}</div>
++     </details>
++   );
++ }
++
+
+ ❯ app/lib/design-system.test.ts:972:34
+
+    970| 
+    971|   test("keeps shared states on solid token-backed pills and no section…
+    972|     expect(pagePrimitivesSource).toContain("bg-[var(--rm-pill-accent-b…
+       |                                  ^
+    973|     expect(pagePrimitivesSource).toContain("bg-[var(--rm-pill-warning-…
+    974|     expect(pagePrimitivesSource).toContain("bg-[var(--rm-pill-success-…
+ Test Files  3 failed (3)
+      Tests  5 failed | 58 passed (63)
+   Start at  20:37:45
+   Duration  3.28s (transform 1.29s, setup 0ms, collect 2.54s, tests 282ms, environment 1ms, prepare 1.01s)
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  app/lib/theme.test.ts > runtime theme helpers > maps active themes to the browser chrome colors used by the Linear review shell
+AssertionError: expected '#f5f5f7' to be '#fbfbfc' // Object.is equality
+
+Expected: "#fbfbfc"
+Received: "#f5f5f7"
+
+ ❯ app/lib/theme.test.ts:31:36
+     29| 
+     30|   test("maps active themes to the browser chrome colors used by the Li…
+     31|     expect(getThemeColor("light")).toBe("#fbfbfc");
+       |                                    ^
+     32|     expect(getThemeColor("dark")).toBe("#010102");
+     33|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+undefined
+D:\DEV\role-model\.worktrees\60-runtime-ui-paper-linear-review-alignment\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/lib/theme.test.ts app/components/page-primitives.test.tsx app/lib/design-system.test.ts

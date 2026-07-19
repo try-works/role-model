@@ -1,0 +1,71 @@
+
+> @role-model-router/adapter-execution@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\adapter-execution
+> vitest run
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/packages/adapter-execution
+
+ ❯ test/index.test.ts (5 tests | 1 failed) 42ms
+   × executeRoutedRequest > selects the OpenAI-family adapter and preserves routed execution context 32ms
+     → expected { …(17) } to match object { tokens_in_source: 'measured', …(3) }
+(17 matching properties omitted from actual)
+   ✓ executeRoutedRequest > prefers cloud-source request shape hints over catalog defaults 2ms
+   ✓ executeRoutedRequest > fails when the chosen endpoint cannot be resolved to a supported provider adapter 2ms
+   ✓ executeRoutedRequest > can execute through a live provider-request callback instead of fixture captures 2ms
+   ✓ executeRoutedRequest > filters mixed-vendor fallback endpoint ids to vendor-compatible fallback model ids for live provider execution 2ms
+(node:30648) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/cli.test.ts (1 test) 211ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > executeRoutedRequest > selects the OpenAI-family adapter and preserves routed execution context
+AssertionError: expected { …(17) } to match object { tokens_in_source: 'measured', …(3) }
+(17 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "tokens_in_available": true,
+-   "tokens_in_source": "measured",
+-   "tokens_out_available": true,
+-   "tokens_out_source": "measured",
++   "app_id": "app-runtime",
++   "cost_actual": 0.0042,
++   "cost_estimate": 0.0042,
++   "currency": "USD",
++   "endpoint_id": "openai.personal.primary.us-east-1.fast",
++   "event_id": "usage-req-adapter-validation",
++   "latency_ms": 120,
++   "model_id": "openai/gpt-4.1-mini-fast",
++   "org_id": "org-runtime",
++   "package_id": "provider-openai",
++   "provider_kind": "remote_openai_compat",
++   "request_id": "req-adapter-validation",
++   "routing_decision_id": "decision-req-adapter-validation",
++   "sample_source": "live_request",
++   "timestamp_ms": 1784231443240,
++   "tokens_in": 32,
++   "tokens_out": 24,
+  }
+
+ ❯ test/index.test.ts:399:31
+    397|     expect(result.normalized.outputText).toBe("OpenAI summary");
+    398|     expect(result.usageEvent.tokens_in).toBe(32);
+    399|     expect(result.usageEvent).toMatchObject({
+       |                               ^
+    400|       tokens_in_source: "measured",
+    401|       tokens_in_available: true,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 5 passed (6)
+   Start at  03:50:42
+   Duration  1.82s (transform 631ms, setup 0ms, collect 903ms, tests 252ms, environment 1ms, prepare 549ms)
+
+D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\adapter-execution:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/adapter-execution@0.0.0 test: `vitest run`
+Exit status 1

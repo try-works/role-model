@@ -1,0 +1,25 @@
+{
+  "id": "chatcmpl_req-11e69dc3-51b8-460b-87f4-5f6c9deba910",
+  "object": "response",
+  "created_at": 1783914390,
+  "status": "completed",
+  "model": "chatgpt/gpt-5.4",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_chatcmpl_req-11e69dc3-51b8-460b-87f4-5f6c9deba910",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "CAT"
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 11,
+    "output_tokens": 5,
+    "total_tokens": 16
+  }
+}

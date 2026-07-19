@@ -1,0 +1,52 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h02-fix-async-counter",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "requestId": "bench-judge-h02-fix-async-counter-a1-17e25dc2-7245-4c40-a027-8026f1ff6924",
+  "attempt": 1,
+  "promptMessages": [
+    {
+      "role": "system",
+      "content": "You grade benchmark responses. Output ONLY one JSON object on a single line: {\"score\":0.0,\"rationale\":\"...\"}. No chain-of-thought, no markdown fences, no prose before or after the JSON. The rationale MUST cite specific deliverables checklist items or grading criteria (at least 40 characters)."
+    },
+    {
+      "role": "user",
+      "content": "You are grading a model response for a routing capability benchmark.\nReturn JSON only with keys: score (number 0 to 1), rationale (string). No markdown fences.\nScore 1.0 = fully meets expected response and grading criteria.\nScore 0.0 = completely wrong or refusal without attempt.\nIgnore chain-of-thought or reasoning preambles. Grade ONLY the extracted formatted deliverable.\nFor code-fix cases, verify the fix is correct — unchanged buggy code must score 0.\nPlaceholder diffs (----/+++), patches missing ---/+++ headers or any @@ hunk marker, malformed Codex patch envelopes, and reasoning prose submitted as code score 0.\nFor apply_patch, accept either ---/+++ headers with an @@ hunk marker and real change lines, or a Codex patch envelope (*** Begin Patch / *** Update File / @@ / *** End Patch). Bare @@ without line numbers is acceptable.\n\nCase: h02-fix-async-counter\n\n## Original question\n[user]\nFix this async race so count reliably prints 3. Serialize increments with a mutex/lock/queue:\n```ts\nlet count = 0;\nasync function increment() {\n  const current = count;\n  await Promise.resolve();\n  count = current + 1;\n}\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count);\n```\nOutput one complete ```typescript fence with runnable fixed code only.\n\n## Example expected answer\n```typescript\nlet count = 0;\nlet chain = Promise.resolve();\nfunction withLock<T>(fn: () => Promise<T>): Promise<T> {\n  const run = chain.then(fn);\n  chain = run.catch(() => undefined);\n  return run;\n}\nasync function increment() {\n  await withLock(async () => {\n    const current = count;\n    await Promise.resolve();\n    count = current + 1;\n  });\n}\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count);\n```\n(exemplar quality: authored)\n\n## Key deliverables (grade against this checklist)\n[MUST] Must fix race on shared count (mutex, semaphore, queue, or atomic increment pattern)\n[MUST] Final code should reliably reach count 3.\n[SHOULD] Match clues: Mutex|mutex|lock|queue|semaphore|atomic|Promise\\.resolve\n[MUST] Provide complete working TypeScript — no placeholders or partial helpers only\n\n## MUST NOT\nMUST NOT use diff placeholders (----/+++, [file header])\nMUST NOT emit prose-only TOOL_CALL lines without API tool_calls\nMUST NOT submit reasoning prose as the graded code deliverable\nMUST NOT leave apply_patch arguments as placeholder or malformed patch content\n\n## Answer format requirements\nBENCHMARK DELIVERABLE RULES:\nReasoning allowed. Final message must contain exactly one ```typescript fenced code block with complete working code. No placeholders.\nReasoning is allowed before the deliverable, but only the formatted deliverable is graded.\n\n## Grading criteria (authoritative)\nMust fix race on shared count (mutex, semaphore, queue, or atomic increment pattern). Final code should reliably reach count 3.\n\n## Subject deliverable to grade\n```typescript\nclass AsyncLock {\n  private locked = false;\n  private queue: Array<() => void> = [];\n\n  async acquire(): Promise<() => void> {\n    return new Promise((resolve) => {\n      const release = () => {\n        const next = this.queue.shift();\n        if (next) next();\n        else this.locked = false;\n      };\n\n      if (!this.locked) {\n        this.locked = true;\n        resolve(release);\n      } else {\n        this.queue.push(() => resolve(release));\n      }\n    });\n  }\n}\n\nasync function main() {\n  const lock = new AsyncLock();\n  let count = 0;\n\n  async function increment() {\n    const release = await lock.acquire();\n    try {\n      const current = count;\n      await Promise.resolve();\n      count = current + 1;\n    } finally {\n      release();\n    }\n  }\n\n  await Promise.all([increment(), increment(), increment()]);\n  console.log(count);\n}\n\nmain();\n```"
+    }
+  ],
+  "rawResponse": "{\"score\": 1.0, \"rationale\": \"The response provides a complete TypeScript fix using a custom AsyncLock class (which uses a queue-based lock mechanism). This serializes the read-modify-write steps across all three increment calls, ensuring the final count reliably reaches 3. No placeholders or other prohibited content are present.\"}",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The response provides a complete TypeScript fix using a custom AsyncLock class (which uses a queue-based lock mechanism). This serializes the read-modify-write steps across all three increment calls, ensuring the final count reliably reaches 3. No placeholders or other prohibited content are present.",
+  "gradingMethod": "judge",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/h02-fix-async-counter.json",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nFix this async race so count reliably prints 3. Serialize increments with a mutex/lock/queue:\n```ts\nlet count = 0;\nasync function increment() {\n  const current = count;\n  await Promise.resolve();\n  count = current + 1;\n}\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count);\n```\nOutput one complete ```typescript fence with runnable fixed code only.",
+    "exemplarAnswer": "```typescript\nlet count = 0;\nlet chain = Promise.resolve();\nfunction withLock<T>(fn: () => Promise<T>): Promise<T> {\n  const run = chain.then(fn);\n  chain = run.catch(() => undefined);\n  return run;\n}\nasync function increment() {\n  await withLock(async () => {\n    const current = count;\n    await Promise.resolve();\n    count = current + 1;\n  });\n}\nawait Promise.all([increment(), increment(), increment()]);\nconsole.log(count);\n```",
+    "exemplarQuality": "authored",
+    "deliverablesChecklist": [
+      "[MUST] Must fix race on shared count (mutex, semaphore, queue, or atomic increment pattern)",
+      "[MUST] Final code should reliably reach count 3.",
+      "[SHOULD] Match clues: Mutex|mutex|lock|queue|semaphore|atomic|Promise\\.resolve",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "judgeError": null,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 332,
+    "reasoningLength": 2444
+  },
+  "judgeCircuitOpen": false,
+  "recordedAtMs": 1783935160482
+}

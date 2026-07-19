@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-06-17T18:39:40.091Z",
+  "hasBoundaryNotes": false,
+  "hasProviderAccounts": true,
+  "hasRouteError": false,
+  "hasUpstreamTargetInventory": true,
+  "hasWhenToUseUpstream": false,
+  "headings": [
+    "Provider accounts in scope",
+    "Upstream target inventory"
+  ],
+  "mainClientWidth": 691,
+  "mainScrollWidth": 691,
+  "url": "http://127.0.0.1:3456/app/connect/upstream"
+}

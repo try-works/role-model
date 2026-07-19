@@ -1,0 +1,9 @@
+Invoke-RestMethod: 
+Line |
+  22 |  … $response = Invoke-RestMethod -Method Post -Uri 'http://127.0.0.1:456 …
+     |                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | 
+{
+  "error": "Chosen endpoint  is not present in the registry result."
+}
+

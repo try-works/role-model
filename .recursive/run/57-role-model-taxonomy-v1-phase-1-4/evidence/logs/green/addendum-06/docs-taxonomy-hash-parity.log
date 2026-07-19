@@ -1,0 +1,10 @@
+
+> role-model@0.0.0 docs:taxonomy-v1-check D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4
+> node ./scripts/check-public-taxonomy-v1-docs.mjs && corepack pnpm --filter @role-model/docs-site run docs:taxonomy-v1-check
+
+public taxonomy V1 docs/hash parity check passed for 22 Markdown files and 384 canonical identifiers
+
+> @role-model/docs-site@ docs:taxonomy-v1-check D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\apps\docs-site
+> node ./scripts/check-taxonomy-v1-docs.mjs
+
+taxonomy V1 docs/hash parity check passed for 46 MDX files and 384 canonical identifiers

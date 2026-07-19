@@ -1,0 +1,110 @@
+[
+  {
+    "id": "chatgpt/gpt-5.4",
+    "object": "model",
+    "owned_by": "role-model",
+    "providerId": "openai",
+    "displayName": "GPT-5.4",
+    "endpoint_ids": [
+      "openai.personal.openai-codex-subscription.global.gpt-5.4"
+    ],
+    "capabilities": [
+      "code.edit",
+      "reasoning",
+      "structured.output",
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "pdf"
+    ],
+    "contextWindow": 1050000,
+    "maxOutputTokens": 128000,
+    "pricing": {
+      "inputPer1M": 2.5,
+      "outputPer1M": 15,
+      "currency": "USD"
+    }
+  },
+  {
+    "id": "deepseek/deepseek-v4-flash",
+    "object": "model",
+    "owned_by": "role-model",
+    "providerId": "deepseek",
+    "displayName": "DeepSeek V4 Flash",
+    "endpoint_ids": [
+      "deepseek.personal.deepseek-credential.global.deepseek-v4-flash"
+    ],
+    "capabilities": [
+      "code.edit",
+      "reasoning",
+      "structured.output",
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "modalities": [
+      "text"
+    ],
+    "contextWindow": 1000000,
+    "maxOutputTokens": 384000,
+    "pricing": {
+      "inputPer1M": 0.14,
+      "outputPer1M": 0.28,
+      "currency": "USD"
+    }
+  },
+  {
+    "id": "deepseek/deepseek-v4-pro",
+    "object": "model",
+    "owned_by": "role-model",
+    "providerId": "deepseek",
+    "displayName": "DeepSeek V4 Pro",
+    "endpoint_ids": [
+      "deepseek.personal.deepseek-credential.global.deepseek-v4-pro"
+    ],
+    "capabilities": [
+      "code.edit",
+      "reasoning",
+      "structured.output",
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "modalities": [
+      "text"
+    ],
+    "contextWindow": 1000000,
+    "maxOutputTokens": 384000,
+    "pricing": {
+      "inputPer1M": 0.435,
+      "outputPer1M": 0.87,
+      "currency": "USD"
+    }
+  },
+  {
+    "id": "moonshot/kimi-k2.7-code",
+    "object": "model",
+    "owned_by": "role-model",
+    "providerId": "moonshot",
+    "displayName": "Kimi K2.7 Code",
+    "endpoint_ids": [
+      "moonshot.personal.kimi-code.global.kimi-k2.7-code"
+    ],
+    "capabilities": [
+      "code.edit",
+      "reasoning",
+      "structured.output",
+      "text.chat",
+      "tools.function_calling"
+    ],
+    "modalities": [
+      "text",
+      "image",
+      "video"
+    ],
+    "contextWindow": 262144,
+    "maxOutputTokens": 262144,
+    "pricing": null
+  }
+]

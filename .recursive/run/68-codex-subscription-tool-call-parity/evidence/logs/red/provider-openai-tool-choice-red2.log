@@ -1,0 +1,63 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/68-codex-subscription-tool-call-parity/role-model-router/packages/provider-openai
+
+ ❯ test/index.test.ts (23 tests | 1 failed | 22 skipped) 35ms
+   ↓ OpenAI provider adapter > can be created for the openai-compatible adapter family
+   ↓ OpenAI provider adapter > builds an OpenAI responses request and normalizes text, usage, and tool calls
+   ↓ OpenAI provider adapter > normalizes a streamed OpenAI responses transcript into final text, tool calls, and usage
+   ↓ OpenAI provider adapter > preserves cached-token detail fields from a streamed OpenAI responses transcript
+   ↓ OpenAI provider adapter > preserves hosted OpenAI responses tools instead of coercing them into function tools
+   ↓ OpenAI provider adapter > forces the OpenAI Responses API path when hosted tools are requested
+   ↓ OpenAI provider adapter > keeps Kimi hosted web search on chat-completions and disables thinking
+   ↓ OpenAI provider adapter > builds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply
+   ↓ OpenAI provider adapter > forwards forced chat-completions tool_choice to the downstream OpenAI request body
+   ↓ OpenAI provider adapter > forwards chat-completions reasoning controls to the downstream OpenAI request body
+   × OpenAI provider adapter > forwards responses tool_choice, reasoning, continuation, and session-affinity hints 31ms
+     → expected { type: 'function', …(1) } to deeply equal { type: 'function', …(1) }
+   ↓ OpenAI provider adapter > forwards responses parallel_tool_calls when explicitly true
+   ↓ OpenAI provider adapter > forwards responses parallel_tool_calls when explicitly false
+   ↓ OpenAI provider adapter > omits responses parallel_tool_calls when the caller left it unset
+   ↓ OpenAI provider adapter > normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming
+   ↓ OpenAI provider adapter > preserves cached-token detail fields from a streamed chat-completions transcript
+   ↓ OpenAI provider adapter > advertises implicit prompt caching support for OpenAI-family providers
+   ↓ OpenAI provider adapter > normalizes OpenAI Responses cached-token detail fields without rewriting totals
+   ↓ OpenAI provider adapter > normalizes Kimi chat-completions cached tokens from top-level usage
+   ↓ OpenAI provider adapter > forwards chat-completions prompt_cache_key when prompt caching is enabled
+   ↓ OpenAI provider adapter > normalizes reasoning-only chat-completions bodies into assistant output text
+   ↓ OpenAI provider adapter > forwards null assistant content and tool-turn fields for chat completions
+   ↓ OpenAI provider adapter > renders responses continuation turns as function_call and function_call_output items
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > forwards responses tool_choice, reasoning, continuation, and session-affinity hints
+AssertionError: expected { type: 'function', …(1) } to deeply equal { type: 'function', …(1) }
+
+- Expected
++ Received
+
+  {
++   "function": {
+      "name": "lookupRegistry",
++   },
+    "type": "function",
+  }
+
+ ❯ test/index.test.ts:809:45
+    807| 
+    808|     expect(requestCapture.url).toBe("https://api.openai.test/v1/respon…
+    809|     expect(requestCapture.body.tool_choice).toEqual({
+       |                                             ^
+    810|       type: "function",
+    811|       name: "lookupRegistry",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 skipped (23)
+   Start at  00:03:53
+   Duration  1.78s (transform 604ms, setup 0ms, collect 384ms, tests 35ms, environment 0ms, prepare 773ms)
+
+undefined
+D:\DEV\role-model\.worktrees\68-codex-subscription-tool-call-parity\role-model-router\packages\provider-openai:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/index.test.ts -t forwards responses tool_choice, reasoning, continuation, and session-affinity hints

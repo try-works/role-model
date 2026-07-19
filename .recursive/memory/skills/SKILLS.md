@@ -20,6 +20,9 @@ Keep this file concise. Link to child docs instead of duplicating them.
 - If the run may use delegated review, subagents, or review bundles:
   - read this router
   - read only the most relevant skill-memory docs that are actually present for the current environment and workflow
+- If the task is about how recursive-mode itself should be used in this repo:
+  - read `/.recursive/memory/skills/usage/recursive-mode-skill-and-subskills.md`
+  - then reread the installed skill and the repo-local `/.recursive/RECURSIVE.md`
 - If the run may need specialized external capability:
   - prefer the `find-skills` skill when available
   - otherwise use the Skills CLI directly and treat discovered packages as candidates until quality is checked
@@ -39,6 +42,7 @@ Keep this file concise. Link to child docs instead of duplicating them.
 
 ## Current Docs
 
+- `/.recursive/memory/skills/usage/recursive-mode-skill-and-subskills.md`
 - `/.recursive/memory/skills/usage/skill-discovery-and-evaluation.md`
 - `/.recursive/memory/skills/patterns/browser-proof-with-edge-cdp.md`
 - `/.recursive/memory/skills/patterns/biome-ci-parity-and-clean-checkouts.md`

@@ -1,0 +1,10 @@
+{
+  "authRequestId": "[redacted]",
+  "providerAccountId": "moonshot.personal.kimi-code",
+  "status": "pending",
+  "userCode": "[redacted]",
+  "verificationUri": "https://www.kimi.com/code/authorize_device",
+  "verificationUriComplete": "https://www.kimi.com/code/authorize_device?user_code=[redacted]",
+  "intervalSeconds": 5,
+  "expiresAtMs": 1783996009541
+}

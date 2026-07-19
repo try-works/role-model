@@ -1,0 +1,50 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "p08-medium-summarize",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "{\n  \"answer\": \"Difficulty-based routing for mixed local and remote model pools matches each query to the most appropriate model, balancing cost, latency, and quality. Easy or common queries are routed to lightweight local models, reducing r",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "{\n  \"answer\": \"Difficulty-based routing sends easy requests to cheaper/faster local models and reserves hard requests for stronger remote models. This improves cost efficiency, lowers latency for simple tasks, preserves remote capacity, and",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both answers correctly summarize the benefits of difficulty-based routing with relevant technical detail. The first answer (Moonshot) provides a more thorough elaboration, mentioning dynamic adaptation and hardware optimization, while the second (OpenAI) is concise but still covers key points. Thus, the first answer is slightly more comprehensive, earning it the top rank.",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both answers correctly summarize the benefits of difficulty-based routing with relevant technical detail. The first answer (Moonshot) provides a more thorough elaboration, mentioning dynamic adaptation and hardware optimization, while the second (OpenAI) is concise but still covers key points. Thus, the first answer is slightly more comprehensive, earning it the top rank.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nSummarize the benefits of difficulty-based routing for mixed local and remote model pools.",
+    "exemplarAnswer": "Accurate explanatory answer to the user question.\nRequired fields: answer",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Answers the question with relevant technical detail.",
+      "[MUST] Include JSON keys: answer"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 543,
+    "reasoningLength": 2592
+  },
+  "recordedAtMs": 1783936018644
+}

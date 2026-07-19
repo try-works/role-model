@@ -1,0 +1,189 @@
+{
+  "bottomAxisTicks": [
+    "Jul 7",
+    "Jul 8",
+    "Jul 9",
+    "Jul 10",
+    "Jul 11",
+    "Jul 12",
+    "Jul 13"
+  ],
+  "cardText": "Cache Efficiency TrendCache-hit token volume and cache-hit rate for the filtered slice.Partial1 row(s) in this slice do not support cacheHitTokens.Jul 7Jul 8Jul 9Jul 10Jul 11Jul 12Jul 1301530456000.0350.070.1050.14Cache hit tokensCache hit token rate",
+  "headingText": "Cache Efficiency Trend",
+  "leftAxisTicks": [
+    "0",
+    "15",
+    "30",
+    "45",
+    "60"
+  ],
+  "pageUrl": "http://127.0.0.1:3476/app/observe/requests",
+  "rect": {
+    "height": 534,
+    "width": 429.667,
+    "x": 320.667,
+    "y": 152.333
+  },
+  "rightAxisTicks": [
+    "0",
+    "0.035",
+    "0.07",
+    "0.105",
+    "0.14"
+  ],
+  "svgTextNodes": [
+    {
+      "anchor": "middle",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "Jul 7",
+      "width": 27.021,
+      "x": 349.823,
+      "y": 604.853
+    },
+    {
+      "anchor": "middle",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "Jul 8",
+      "width": 27.656,
+      "x": 398.505,
+      "y": 604.853
+    },
+    {
+      "anchor": "middle",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "Jul 9",
+      "width": 27.677,
+      "x": 447.495,
+      "y": 604.853
+    },
+    {
+      "anchor": "middle",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "Jul 10",
+      "width": 32.688,
+      "x": 493.99,
+      "y": 604.853
+    },
+    {
+      "anchor": "middle",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "Jul 11",
+      "width": 29.99,
+      "x": 544.339,
+      "y": 604.853
+    },
+    {
+      "anchor": "middle",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "Jul 12",
+      "width": 32.427,
+      "x": 592.12,
+      "y": 604.853
+    },
+    {
+      "anchor": "middle",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "Jul 13",
+      "width": 32.521,
+      "x": 641.073,
+      "y": 604.853
+    },
+    {
+      "anchor": "end",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0",
+      "width": 7.573,
+      "x": 347.76,
+      "y": 592.593
+    },
+    {
+      "anchor": "end",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "15",
+      "width": 12,
+      "x": 343.333,
+      "y": 539.093
+    },
+    {
+      "anchor": "end",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "30",
+      "width": 14.99,
+      "x": 340.344,
+      "y": 485.593
+    },
+    {
+      "anchor": "end",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "45",
+      "width": 14.875,
+      "x": 340.458,
+      "y": 432.093
+    },
+    {
+      "anchor": "end",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "60",
+      "width": 15.021,
+      "x": 340.313,
+      "y": 383.593
+    },
+    {
+      "anchor": "start",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0",
+      "width": 7.573,
+      "x": 665.333,
+      "y": 592.593
+    },
+    {
+      "anchor": "start",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0.035",
+      "width": 32.521,
+      "x": 665.333,
+      "y": 539.093
+    },
+    {
+      "anchor": "start",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0.07",
+      "width": 24.552,
+      "x": 665.333,
+      "y": 485.593
+    },
+    {
+      "anchor": "start",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0.105",
+      "width": 29.26,
+      "x": 665.333,
+      "y": 432.093
+    },
+    {
+      "anchor": "start",
+      "className": "recharts-text recharts-cartesian-axis-tick-value",
+      "height": 14,
+      "text": "0.14",
+      "width": 22.323,
+      "x": 665.333,
+      "y": 383.593
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "caseId": "l02-many-constraints",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "parseSuccess": true,
+  "parsedScore": 1,
+  "parsedRationale": "The answer is composed of 6 bullet points only, includes local/remote endpoints, cache invalidation reasons (TTL expiry, version mismatch, dependency update), rubric signals (higher authority, explicit flag), no 'however', under 120 words, and ends with a recommendation bullet. All MUST and SHOULD deliverables satisfied.",
+  "sourceArtifactPath": "responses/moonshot.personal.kimi-code.global.kimi-k2.7-code/l02-many-constraints.json",
+  "attemptArtifactPaths": [
+    "judge/moonshot.personal.kimi-code.global.kimi-k2.7-code/l02-many-constraints/attempt-1.json"
+  ],
+  "gradingMethod": "judge",
+  "recordedAtMs": 1783934946759
+}

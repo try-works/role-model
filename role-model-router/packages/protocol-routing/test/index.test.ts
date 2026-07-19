@@ -212,9 +212,374 @@ describe("projectRuntimeRouteInput", () => {
       ignoredEndpointIds: [],
     });
   });
+
+  test("separates active continuity restore from advisory warmed-cache preference", () => {
+    const projected = projectRuntimeRouteInput({
+      request: {
+        requestId: "req-runtime-cache-continuity-1",
+        appId: "app-runtime",
+        orgId: "org-runtime",
+        requestedRoleId: "developer",
+        taskType: "code.edit",
+        requiredCapabilities: ["code.edit"],
+        preferredCapabilities: ["reasoning.multi_step"],
+        requiredModalities: ["text"],
+        contextTokens: 180,
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+      },
+      catalog: TEST_CATALOG,
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "cache.warm.a",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run07-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "cache.warm.a",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+          {
+            identity: {
+              endpoint_id: "cache.active.b",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run07-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "cache.active.b",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+          {
+            identity: {
+              endpoint_id: "cache.cold.c",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run07-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "cache.cold.c",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 3,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      observedProfilesByEndpointId: {},
+      envelope: {
+        sessionId: "session-cache",
+        conversationId: "conversation-cache",
+        selectedTurns: [],
+        selectedArtifacts: [],
+        latestHandoff: null,
+        estimatedTokenCount: 180,
+        diagnostics: [],
+      },
+      retrievalReceipt: {
+        receiptId: "receipt-cache-1",
+        conversationId: "conversation-cache",
+        summary: {
+          selectedTurns: 0,
+          selectedArtifacts: 0,
+          omittedTurns: 0,
+          omittedArtifacts: 0,
+          estimatedTokens: 180,
+        },
+        entries: [],
+      },
+      roleDefinitions: [],
+      taskDefinitions: [],
+      roleBindings: [],
+      cacheContinuity: {
+        activeEndpointId: "cache.active.b",
+        warmedEndpointIds: ["cache.warm.a", "cache.active.b"],
+      },
+      // biome-ignore lint/suspicious/noExplicitAny: RED test for run-65 continuity input
+    } as any);
+
+    expect(projected.routeInput.candidates[0]).toMatchObject({
+      identity: { endpoint_id: "cache.warm.a" },
+      routingSignals: {
+        continuityAffinity: false,
+        cacheAffinity: true,
+      },
+    });
+    expect(projected.routeInput.candidates[1]).toMatchObject({
+      identity: { endpoint_id: "cache.active.b" },
+      routingSignals: {
+        continuityAffinity: true,
+        cacheAffinity: true,
+      },
+    });
+    expect(projected.routeInput.candidates[2]).toMatchObject({
+      identity: { endpoint_id: "cache.cold.c" },
+      routingSignals: {
+        continuityAffinity: false,
+        cacheAffinity: false,
+      },
+    });
+    expect((projected.routingDiagnostics as Record<string, unknown>).cacheContinuity).toEqual({
+      activeEndpointId: "cache.active.b",
+      warmedEndpointIds: ["cache.warm.a", "cache.active.b"],
+    });
+  });
 });
 
 describe("routeRuntimeRequest", () => {
+  test("treats generic reasoning capability as satisfying reasoning effort control requests", () => {
+    const result = routeRuntimeRequest({
+      request: {
+        requestId: "req-runtime-reasoning-effort-capability-1",
+        taskType: "text.chat",
+        requiredCapabilities: ["text.chat", "reasoning.effort_control"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 64,
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+        allowEndpoints: ["remote.reasoning"],
+      },
+      catalog: TEST_CATALOG,
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "remote.reasoning",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run07-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "remote.reasoning",
+              capabilities: ["text.chat", "reasoning"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 1,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      observedProfilesByEndpointId: {},
+      envelope: {
+        sessionId: "session-alpha",
+        conversationId: "conversation-main",
+        selectedTurns: [],
+        selectedArtifacts: [],
+        latestHandoff: null,
+        estimatedTokenCount: 0,
+        diagnostics: [],
+      },
+      retrievalReceipt: {
+        receiptId: "conversation-main-retrieval-receipt",
+        conversationId: "conversation-main",
+        summary: {
+          selectedTurns: 0,
+          selectedArtifacts: 0,
+          omittedTurns: 0,
+          omittedArtifacts: 0,
+          estimatedTokens: 0,
+        },
+        entries: [],
+      },
+      roleDefinitions: [],
+      taskDefinitions: [],
+      roleBindings: [],
+    });
+
+    expect(result.decision.chosen_endpoint_id).toBe("remote.reasoning");
+    expect(result.decision.eligibility).toEqual([
+      expect.objectContaining({
+        endpoint_id: "remote.reasoning",
+        eligible: true,
+      }),
+    ]);
+  });
+
+  test("treats active role-binding effective capabilities as satisfying required task capabilities", () => {
+    const result = routeRuntimeRequest({
+      request: {
+        requestId: "req-runtime-role-binding-capabilities-1",
+        requestedRoleId: "classifier",
+        taskType: "text.classification",
+        requiredCapabilities: ["text.classification"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 64,
+        needsTools: false,
+        strategy: "balanced",
+        preferLocal: false,
+      },
+      catalog: TEST_CATALOG,
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "remote.classifier",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "openai/gpt-4.1-mini-fast",
+              runtime_version: "run07-registry-v1",
+              region: "global",
+            },
+            declared: {
+              endpoint_id: "remote.classifier",
+              capabilities: ["text.chat"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 1,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      observedProfilesByEndpointId: {},
+      envelope: {
+        sessionId: "session-alpha",
+        conversationId: "conversation-main",
+        selectedTurns: [],
+        selectedArtifacts: [],
+        latestHandoff: null,
+        estimatedTokenCount: 0,
+        diagnostics: [],
+      },
+      retrievalReceipt: {
+        receiptId: "conversation-main-retrieval-receipt",
+        conversationId: "conversation-main",
+        summary: {
+          selectedTurns: 0,
+          selectedArtifacts: 0,
+          omittedTurns: 0,
+          omittedArtifacts: 0,
+          estimatedTokens: 0,
+        },
+        entries: [],
+      },
+      roleDefinitions: [
+        {
+          role_id: "classifier",
+          name: "Classifier",
+          description: "Classification tasks.",
+          role_kind: "assistant",
+          default_system_instructions: "",
+          task_types_supported: ["text.classification"],
+          required_capabilities: [],
+          preferred_capabilities: [],
+          forbidden_capabilities: [],
+          tool_policy: { mode: "allowed" },
+          routing_policy_overrides: {},
+          output_contracts: [],
+          safety_policy_refs: [],
+        },
+      ],
+      taskDefinitions: [
+        {
+          task_type: "text.classification",
+          description: "Classification task",
+          required_inputs: [],
+          required_capabilities: ["text.classification"],
+          preferred_capabilities: [],
+          quality_metrics: [],
+          allowed_roles: ["classifier"],
+          default_benchmark_suites: [],
+        },
+      ],
+      roleBindings: [
+        {
+          binding_id: "runtime.remote.classifier.classifier",
+          role_id: "classifier",
+          endpoint_id: "remote.classifier",
+          status: "active",
+          policy_overrides: {},
+          effective_capabilities: ["text.chat", "text.classification"],
+          effective_task_types: ["text.classification"],
+        },
+      ],
+    });
+
+    expect(result.decision.chosen_endpoint_id).toBe("remote.classifier");
+    expect(result.decision.eligibility).toEqual([
+      expect.objectContaining({
+        endpoint_id: "remote.classifier",
+        eligible: true,
+      }),
+    ]);
+  });
+
   test("emits canonical runtime eligibility exclusions from registry/provider-account state", () => {
     const registry = buildEndpointRegistry({
       catalog: {
@@ -782,7 +1147,7 @@ describe("routeRuntimeRequest", () => {
     });
   });
 
-  test("prefers fresher latency observations when adaptive observed-data scoring is enabled", () => {
+  test("does not over-penalize a remote latency sample that is only minutes old", () => {
     const result = routeRuntimeRequest({
       request: {
         requestId: "req-runtime-adaptive-latency-1",
@@ -915,12 +1280,9 @@ describe("routeRuntimeRequest", () => {
       observedDataConfig: {
         enabled: true,
         aggregation: { minSamples: 1 },
-        metricHalflives: {
-          qualityMs: 900_000,
-          latencyMs: 30_000,
-          throughputMs: 120_000,
-          reliabilityMs: 600_000,
-          costMs: 1_800_000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: {
           enabled: true,
@@ -932,7 +1294,172 @@ describe("routeRuntimeRequest", () => {
       routingTimeMs: 1_000_000,
     } as Parameters<typeof routeRuntimeRequest>[0]);
 
-    expect(result.decision.chosen_endpoint_id).toBe("local.fresh.steady");
+    expect(result.decision.chosen_endpoint_id).toBe("remote.stale.fast");
+  });
+
+  test("preserves benchmark-only quality freshness for quality routing even when benchmark samples are old", () => {
+    const result = routeRuntimeRequest({
+      request: {
+        requestId: "req-runtime-benchmark-quality-freshness-1",
+        taskType: "code.edit",
+        requiredCapabilities: ["code.edit"],
+        preferredCapabilities: [],
+        requiredModalities: ["text"],
+        contextTokens: 180,
+        needsTools: false,
+        strategy: "quality",
+        preferLocal: false,
+      },
+      catalog: TEST_CATALOG,
+      registry: {
+        endpoints: [
+          {
+            identity: {
+              endpoint_id: "a.lower-quality",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "custom/lower-quality",
+              runtime_version: "run50-benchmark-freshness-v1",
+              region: "us-east-1",
+              host_class: "server",
+              device_class: "server",
+              org_scope: "personal",
+            },
+            declared: {
+              endpoint_id: "a.lower-quality",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+          {
+            identity: {
+              endpoint_id: "b.higher-quality",
+              endpoint_kind: "remote_api",
+              provider_kind: "remote_openai_compat",
+              serving_source: "remote-service",
+              model_id: "custom/higher-quality",
+              runtime_version: "run50-benchmark-freshness-v1",
+              region: "us-east-1",
+              host_class: "server",
+              device_class: "server",
+              org_scope: "personal",
+            },
+            declared: {
+              endpoint_id: "b.higher-quality",
+              capabilities: ["code.edit"],
+              modalities: ["text"],
+              max_context_tokens: 32768,
+              tool_calling: {
+                supported: false,
+                style: "none",
+              },
+              supports_embeddings: false,
+              platform_constraints: [],
+            },
+            status: "active",
+          },
+        ],
+        diagnostics: [],
+        lifecycleSummary: {
+          active: 2,
+          degraded: 0,
+          offline: 0,
+        },
+      },
+      observedProfilesByEndpointId: {
+        "a.lower-quality": {
+          endpoint_id: "a.lower-quality",
+          measured_at_ms: 1_000,
+          judge_score: 0.64,
+          latency_ms_p50: 120,
+          latency_ms_p95: 150,
+          tokens_per_sec: 40,
+          cold_start_ms: 10,
+          failure_rate: 0.01,
+          cost_per_1k_tokens_est: 0.002,
+          freshness_score: 0.95,
+          confidence_score: 0.9,
+          sample_size: 21,
+          sources: {
+            live_request_samples: 0,
+            benchmark_samples: 21,
+          },
+        },
+        "b.higher-quality": {
+          endpoint_id: "b.higher-quality",
+          measured_at_ms: 1_000,
+          judge_score: 0.93,
+          latency_ms_p50: 120,
+          latency_ms_p95: 150,
+          tokens_per_sec: 40,
+          cold_start_ms: 10,
+          failure_rate: 0.01,
+          cost_per_1k_tokens_est: 0.002,
+          freshness_score: 0.95,
+          confidence_score: 0.9,
+          sample_size: 21,
+          sources: {
+            live_request_samples: 0,
+            benchmark_samples: 21,
+          },
+        },
+      },
+      envelope: {
+        sessionId: "session-alpha",
+        conversationId: "conversation-main",
+        selectedTurns: [],
+        selectedArtifacts: [],
+        latestHandoff: null,
+        estimatedTokenCount: 0,
+        diagnostics: [],
+      },
+      retrievalReceipt: {
+        receiptId: "conversation-main-retrieval-receipt",
+        conversationId: "conversation-main",
+        summary: {
+          selectedTurns: 0,
+          selectedArtifacts: 0,
+          omittedTurns: 0,
+          omittedArtifacts: 0,
+          estimatedTokens: 0,
+        },
+        entries: [],
+      },
+      roleDefinitions: [],
+      taskDefinitions: [],
+      roleBindings: [],
+      observedDataConfig: {
+        enabled: true,
+        aggregation: { minSamples: 1 },
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
+        },
+        throughputSla: {
+          enabled: true,
+          minTokensPerSec: 24,
+          penaltyTimeoutMs: 600_000,
+          penaltyFactor: 0,
+        },
+      },
+      routingTimeMs: 100_000_000,
+    } as Parameters<typeof routeRuntimeRequest>[0]);
+
+    expect(result.decision.chosen_endpoint_id).toBe("b.higher-quality");
+    expect(
+      result.decision.scored_candidates.find(
+        (candidate) => candidate.endpoint_id === "b.higher-quality",
+      )?.metric_breakdown.quality.value,
+    ).toBeGreaterThan(0.85);
   });
 
   test("excludes endpoints under an active throughput penalty when the penalty factor is zero", () => {
@@ -1068,12 +1595,9 @@ describe("routeRuntimeRequest", () => {
       observedDataConfig: {
         enabled: true,
         aggregation: { minSamples: 1 },
-        metricHalflives: {
-          qualityMs: 900_000,
-          latencyMs: 300_000,
-          throughputMs: 120_000,
-          reliabilityMs: 600_000,
-          costMs: 1_800_000,
+        metricDecayPercentPerDay: {
+          latency: 10,
+          throughput: 10,
         },
         throughputSla: {
           enabled: true,

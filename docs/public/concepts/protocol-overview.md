@@ -15,7 +15,7 @@ The protocol defines schemas and terms for the main routing entities:
 | `EndpointIdentity` | names the concrete endpoint being considered |
 | `DeclaredCapabilityProfile` | records what an endpoint says it supports |
 | `ObservedPerformanceProfile` | records measured behavior such as latency, cost, and failure rate |
-| `RoleDefinition` | describes a role such as `general.chat` or `coder.patch` |
+| `RoleDefinition` | describes a role such as `coder`, `researcher`, or `support` |
 | `TaskDefinition` | describes the unit of work being satisfied |
 | `RoutingPolicy` | defines hard constraints, preferences, and tie-break behavior |
 | `RouterDecision` | records the chosen endpoint, exclusions, and reasons |
@@ -60,11 +60,19 @@ The protocol separates three things that often get collapsed together:
 
 For example, a code-editing flow might combine:
 
-- a role like `coder.patch`
-- a task like `code.edit`
-- capabilities such as `code.edit`, `reasoning.multi_step`, and `tools.function_calling`
+- a role like `coder`
+- a task like `coder.edit`
+- capabilities such as `code.read`, `code.write`, `reasoning.multi_step`, and `tools.function_calling`
 
 That separation lets the router reason in a more durable way than "pick model X for prompt Y."
+
+Consumer integrations can send advisory classification metadata in `role_model.intent`. The router uses
+valid role and task hints to narrow candidates, and it falls back to controller classification when hints
+are missing, low-confidence, or outside the taxonomy.
+
+Configured models default to all roles unless an operator narrows the binding. Runtime role assignment is
+represented with all/include/exclude mode so "default to all roles" remains distinct from an intentional
+"no roles" assignment.
 
 ## Current implemented baseline
 

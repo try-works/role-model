@@ -1,0 +1,13 @@
+[
+  {
+    "requestId": "req-7de31805-02b4-48ce-9fd2-d836020e9fed",
+    "routingDecisionId": "decision-req-7de31805-02b4-48ce-9fd2-d836020e9fed",
+    "selectedEndpointId": "llama-swap.local.lfm2-5-1-2b-instruct",
+    "selectedModelId": "lfm2.5-1.2b-instruct",
+    "strategyLabel": "baseline",
+    "decidedAtMs": 1782220764039,
+    "sourceType": "local",
+    "providerId": "llama-swap",
+    "finishReason": "stop"
+  }
+]

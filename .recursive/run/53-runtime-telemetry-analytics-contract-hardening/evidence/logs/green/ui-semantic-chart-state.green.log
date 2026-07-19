@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/53/role-model-router/apps/runtime-ui
+
+ ✓ app/lib/telemetry-analytics.test.ts (8 tests | 6 skipped) 8ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 6 skipped (8)
+   Start at  20:23:02
+   Duration  1.06s (transform 73ms, setup 0ms, collect 126ms, tests 8ms, environment 0ms, prepare 356ms)
+

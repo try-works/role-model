@@ -1,0 +1,13 @@
+{
+  "artifact": "01.5-root-cause.md",
+  "artifact_hash": "ef979b9da3ff7069e81a384ddd130501b7ea4616af5b9067022e2fb41f11f95e",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\72-standalone-runtime-config-authority-and-alias-rematerialization\\.recursive\\run\\72-standalone-runtime-config-authority-and-alias-rematerialization\\01.5-root-cause.md",
+  "locked_at": "2026-07-16T00:49:59Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "f7f24094e05ea3b6eb26b2349f380142b9ec2274e20935577af2054ca15d9dae",
+    "00-worktree.md": "9a9261384252d376051b68e778c7d709f26151e86e3d17475510c9cbafe47482",
+    "01-as-is.md": "acd9bdbf3c46031dcf48cf8e870d617b01a08fbf52b1d8e37d1ccdee7d225d5e"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "e350ad50f72029a43c859ef1c3d85d7b7a9217da0a30c5da83ff4454a19a1574"
+}

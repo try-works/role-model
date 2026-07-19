@@ -1,0 +1,65 @@
+## corepack pnpm --filter pi-role-model exec vitest run test/config.test.ts
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/56-pi-role-model-gap-closure/packages/pi-role-model[39m
+
+ [31m❯[39m test/config.test.ts [2m([22m[2m4 tests[22m[2m | [22m[31m3 failed[39m[2m)[22m[32m 21[2mms[22m[39m
+   [32m✓[39m Role-Model package configuration and endpoint trust[2m > [22mdefaults to the local Role-Model runtime endpoint[32m 3[2mms[22m[39m
+[31m   [31m×[31m Role-Model package configuration and endpoint trust[2m > [22mnormalizes explicit and environment endpoint configuration[39m[32m 15[2mms[22m[39m
+[31m     → expected 'http://127.0.0.1:3456' to be 'http://localhost:4567' // Object.is equality[39m
+[31m   [31m×[31m Role-Model package configuration and endpoint trust[2m > [22mallows loopback endpoints by default[39m[32m 1[2mms[22m[39m
+[31m     → (0 , assessEndpointTrust) is not a function[39m
+[31m   [31m×[31m Role-Model package configuration and endpoint trust[2m > [22mblocks remote endpoints until allowRemote and trusted context are explicit[39m[32m 1[2mms[22m[39m
+[31m     → (0 , assessEndpointTrust) is not a function[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/config.test.ts > Role-Model package configuration and endpoint trust > normalizes explicit and environment endpoint configuration
+AssertionError: expected 'http://127.0.0.1:3456' to be 'http://localhost:4567' // Object.is equality
+
+Expected: "http://localhost:4567"
+Received: "http://127.0.0.1:3456"
+
+ ❯ test/config.test.ts:13:99
+     11|       "http://127.0.0.1:3456",
+     12|     );
+     13|     expect(createRoleModelConfig({}, { ROLE_MODEL_ENDPOINT: "http://lo…
+       |                                                                                                   ^
+     14|       "http://localhost:4567",
+     15|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  test/config.test.ts > Role-Model package configuration and endpoint trust > allows loopback endpoints by default
+TypeError: (0 , assessEndpointTrust) is not a function
+ ❯ test/config.test.ts:19:12
+     17| 
+     18|   test("allows loopback endpoints by default", () => {
+     19|     expect(assessEndpointTrust("http://localhost:3456")).toMatchObject…
+       |            ^
+     20|       allowed: true,
+     21|       remote: false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  test/config.test.ts > Role-Model package configuration and endpoint trust > blocks remote endpoints until allowRemote and trusted context are explicit
+TypeError: (0 , assessEndpointTrust) is not a function
+ ❯ test/config.test.ts:30:12
+     28| 
+     29|   test("blocks remote endpoints until allowRemote and trusted context …
+     30|     expect(assessEndpointTrust("https://role-model.example.test")).toM…
+       |            ^
+     31|       allowed: false,
+     32|       remote: true,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m3 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (4)[39m
+[2m   Start at [22m 15:40:28
+[2m   Duration [22m 1.08s[2m (transform 116ms, setup 0ms, collect 113ms, tests 21ms, environment 0ms, prepare 303ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\56-pi-role-model-gap-closure\packages\pi-role-model:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/config.test.ts
+EXIT_CODE=1

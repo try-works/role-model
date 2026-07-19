@@ -1,0 +1,20 @@
+Command: corepack pnpm exec tsx scripts/validate-agent-path.ts --build --repo-root . --out-dir .recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/runtime/addendum-04-agent-path-rebuilt
+Result: PASS
+
+Rebuilt runtime facts:
+- runtime-host-bridge rebuilt before execution
+- canonical alias used for every authoritative request: `difficulty.remote-only`
+- proof emitted 6 request receipts: 3 Pi-shaped and 3 Craft-shaped
+
+LiteLLM-backed canonical-alias cases:
+- `pi-chat-alias-text-001` -> provider `openai`, vendor `litellm`, execution `vendor-litellm`, adapter `litellm-proxy`
+- `craft-chat-alias-text-001` -> provider `openai`, vendor `litellm`, execution `vendor-litellm`, adapter `litellm-proxy`
+
+Codex-backed canonical-alias cases:
+- `pi-chat-alias-tools-001` -> provider `openai`, vendor `codex-app-server`, execution `remote-service`, adapter `ai-sdk-openai`
+- `pi-chat-alias-image-001` -> provider `openai`, vendor `codex-app-server`, execution `remote-service`, adapter `ai-sdk-openai`
+- `craft-chat-alias-declared-tools-001` -> provider `openai`, vendor `codex-app-server`, execution `remote-service`, adapter `ai-sdk-openai`
+- `craft-chat-alias-inline-image-001` -> provider `openai`, vendor `codex-app-server`, execution `remote-service`, adapter `ai-sdk-openai`
+
+Authoritative receipt root:
+- `/.recursive/run/62-litellm-pi-craft-codex-execution-hardening/evidence/runtime/addendum-04-agent-path-rebuilt/summary.json`

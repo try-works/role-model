@@ -1,0 +1,6 @@
+{
+  "ProcessId": 39732,
+  "ParentProcessId": 60592,
+  "Name": "role-model-runtime.exe",
+  "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+}

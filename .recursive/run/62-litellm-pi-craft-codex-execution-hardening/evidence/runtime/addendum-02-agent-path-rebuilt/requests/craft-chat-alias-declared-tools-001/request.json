@@ -1,0 +1,378 @@
+{
+  "model": "gpt-5.4-difficulty",
+  "messages": [
+    {
+      "role": "user",
+      "content": "You are Craft Agent, powered by Craft Agents Backend. Help users connect data sources, automate workflows, and validate integrations. Follow the system contract and schema for tool validation."
+    },
+    {
+      "role": "user",
+      "content": "Validate the integration and reply with exactly CRAFT_TOOL_OK."
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_1",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_2",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_3",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_4",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_5",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_6",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_7",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_8",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_9",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_10",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_11",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_12",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_13",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_14",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_15",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_16",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_17",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_18",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_19",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_20",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_21",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_22",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_23",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_24",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_25",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_26",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_27",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_28",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_29",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_30",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_31",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_32",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "runtime_agent_path_tool_33",
+        "description": "Agent-path validation tool schema.",
+        "parameters": {
+          "type": "object",
+          "properties": {}
+        }
+      }
+    }
+  ]
+}

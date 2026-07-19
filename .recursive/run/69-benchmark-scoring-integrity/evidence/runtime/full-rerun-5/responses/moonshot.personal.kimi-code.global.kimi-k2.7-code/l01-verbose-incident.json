@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "l01-verbose-incident",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-l01-verbose-incident-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"answer\": \"Difficulty-based routing is a request-routing strategy that classifies each incoming request by estimated complexity and sends it to the most appropriate model or endpoint, balancing cost, quality, and latency.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Difficulty-based routing is a request-routing strategy that classifies each incoming request by estimated complexity and sends it to the most appropriate model or endpoint, balancing cost, quality, and latency.\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"Difficulty-based routing is a request-routing strategy that classifies each incoming request by estimated complexity and sends it to the most appropriate model or endpoint, balancing cost, quality, and latency.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 5034,
+  "failure": false,
+  "recordedAtMs": 1783932833829
+}

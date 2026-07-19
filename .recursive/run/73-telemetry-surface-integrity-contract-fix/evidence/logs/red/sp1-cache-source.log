@@ -1,0 +1,74 @@
+
+> @role-model-router/provider-openai@0.0.0 test D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\provider-openai
+> vitest run test/index.test.ts
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/packages/provider-openai
+
+ ❯ test/index.test.ts (29 tests | 1 failed) 51ms
+   ✓ OpenAI provider adapter > can be created for the openai-compatible adapter family 3ms
+   ✓ OpenAI provider adapter > builds an OpenAI responses request and normalizes text, usage, and tool calls 6ms
+   ✓ OpenAI provider adapter > normalizes a streamed OpenAI responses transcript into final text, tool calls, and usage 2ms
+   ✓ OpenAI provider adapter > preserves cached-token detail fields from a streamed OpenAI responses transcript 1ms
+   ✓ OpenAI provider adapter > preserves hosted OpenAI responses tools instead of coercing them into function tools 1ms
+   ✓ OpenAI provider adapter > forces the OpenAI Responses API path when hosted tools are requested 1ms
+   ✓ OpenAI provider adapter > keeps Kimi hosted web search on chat-completions and disables thinking 1ms
+   ✓ OpenAI provider adapter > builds an OpenAI-compatible chat-completions request for Kimi and normalizes the reply 1ms
+   ✓ OpenAI provider adapter > forwards forced chat-completions tool_choice to the downstream OpenAI request body 0ms
+   ✓ OpenAI provider adapter > forwards chat-completions reasoning controls to the downstream OpenAI request body 1ms
+   ✓ OpenAI provider adapter > forwards responses tool_choice, reasoning, continuation, and session-affinity hints 1ms
+   ✓ OpenAI provider adapter > forwards responses parallel_tool_calls when explicitly true 0ms
+   ✓ OpenAI provider adapter > forwards responses parallel_tool_calls when explicitly false 0ms
+   ✓ OpenAI provider adapter > omits responses parallel_tool_calls when the caller left it unset 1ms
+   ✓ OpenAI provider adapter > normalizes an OpenAI-compatible chat-completions SSE transcript for Kimi streaming 1ms
+   ✓ OpenAI provider adapter > preserves cached-token detail fields from a streamed chat-completions transcript 1ms
+   ✓ OpenAI provider adapter > advertises implicit prompt caching support for OpenAI-family providers 0ms
+   ✓ OpenAI provider adapter > normalizes OpenAI Responses cached-token detail fields without rewriting totals 0ms
+   × OpenAI provider adapter > normalizes Kimi chat-completions cached tokens from top-level usage 20ms
+     → expected { requested: true, used: true, …(2) } to deeply equal { requested: true, …(4) }
+   ✓ OpenAI provider adapter > forwards chat-completions prompt_cache_key when prompt caching is enabled 0ms
+   ✓ OpenAI provider adapter > normalizes reasoning-only chat-completions bodies into assistant output text 0ms
+   ✓ OpenAI provider adapter > forwards null assistant content and tool-turn fields for chat completions 1ms
+   ✓ OpenAI provider adapter > renders responses continuation turns as function_call and function_call_output items 1ms
+   ✓ OpenAI provider adapter > normalizes a streamed chat-completions transcript with nested choices[0].usage 1ms
+   ✓ OpenAI provider adapter > estimates input tokens when streamed usage is absent and labels provenance 1ms
+   ✓ OpenAI provider adapter > marks request-size usage unavailable when the captured provider body cannot be serialized 0ms
+   ✓ OpenAI provider adapter > requests Kimi streamed usage and forwards a capable prompt cache key on the final wire body 0ms
+   ✓ OpenAI provider adapter > does not activate prompt caching for an unsupported selected capability 1ms
+   ✓ OpenAI provider adapter > normalizes nested final usage when a streamed Kimi response ends with tool_calls 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/index.test.ts > OpenAI provider adapter > normalizes Kimi chat-completions cached tokens from top-level usage
+AssertionError: expected { requested: true, used: true, …(2) } to deeply equal { requested: true, …(4) }
+
+- Expected
++ Received
+
+  {
+    "readTokens": 875,
+-   "requestSource": "explicit",
+    "requested": true,
+    "used": true,
+    "writeTokens": 0,
+  }
+
+ ❯ test/index.test.ts:1383:36
+    1381|     });
+    1382| 
+    1383|     expect(normalized.promptCache).toEqual({
+       |                                    ^
+    1384|       requested: true,
+    1385|       requestSource: "explicit",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 28 passed (29)
+   Start at  03:55:39
+   Duration  1.29s (transform 253ms, setup 0ms, collect 274ms, tests 51ms, environment 0ms, prepare 341ms)
+
+D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\packages\provider-openai:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @role-model-router/provider-openai@0.0.0 test: `vitest run test/index.test.ts`
+Exit status 1

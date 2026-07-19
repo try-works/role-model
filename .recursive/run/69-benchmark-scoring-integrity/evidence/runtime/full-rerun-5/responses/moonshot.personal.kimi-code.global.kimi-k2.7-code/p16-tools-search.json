@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "p16-tools-search",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-p16-tools-search-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ],\n  \"answer\": \"Hard-deny for throughputSla happens in src/router.ts: a hard deny is returned at line 16 when no eligible candidates exist and throughputSlaHardDeny is enabled; at line 44 candidates are hard-denied if their tokensPerSecond is below 24 and throughputSlaHardDeny is enabled.\"\n}",
+  "rawResponse": "```json\n{\n  \"answer\": \"Hard-deny for throughputSla happens in src/router.ts: a hard deny is returned at line 16 when no eligible candidates exist and throughputSlaHardDeny is enabled; at line 44 candidates are hard-denied if their tokensPerSecond is below 24 and throughputSlaHardDeny is enabled.\"\n}\n```",
+  "formattedDeliverable": "{\n  \"tool_calls\": [\n    {\n      \"name\": \"grep_search\",\n      \"arguments\": {\n        \"pattern\": \"throughputSla\"\n      }\n    }\n  ],\n  \"answer\": \"Hard-deny for throughputSla happens in src/router.ts: a hard deny is returned at line 16 when no eligible candidates exist and throughputSlaHardDeny is enabled; at line 44 candidates are hard-denied if their tokensPerSecond is below 24 and throughputSlaHardDeny is enabled.\"\n}",
+  "extractionMethod": "api_tool_calls",
+  "latencyMs": 5703,
+  "failure": false,
+  "recordedAtMs": 1783933223743
+}

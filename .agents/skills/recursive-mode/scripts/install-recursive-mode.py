@@ -8,6 +8,11 @@ Behavior is shared with install-recursive-mode.ps1:
 - creates a lightweight .recursive/AGENTS.md router for internal doc discovery
 - upserts the primary Codex AGENTS bridge into .codex/AGENTS.md
 - upserts the primary Codex plans bridge into .agent/PLANS.md
+- upserts stable assistant-memory pointers into .cursorrules, CLAUDE.md, and .github/copilot-instructions.md
+- bootstraps training memory under .recursive/memory/training/
+- copies recursive-training runtime scripts into .recursive/scripts/
+- ensures the routed delegation policy scaffold exists under .recursive/config/
+- adds the device-local router discovery inventory to .gitignore
 - mirrors the AGENTS bridge into repo-root AGENTS.md when that file already exists
 - preserves unrelated existing file content
 """
@@ -16,7 +21,14 @@ from __future__ import annotations
 
 import argparse
 import re
+import sys
 from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from recursive_router_lib import RouterConfigError, ensure_router_scaffold
 
 
 def write_utf8_no_bom(path: Path, content: str) -> None:
@@ -41,10 +53,27 @@ def ensure_file(path: Path, content: str) -> None:
         print(f"[OK] File exists: {path}")
 
 
+def ensure_gitignore_line(repo_root: Path, line: str) -> None:
+    gitignore_path = repo_root / ".gitignore"
+    normalized_line = line.strip()
+    existing = gitignore_path.read_text(encoding="utf-8") if gitignore_path.exists() else ""
+    existing_lines = existing.splitlines()
+    if any(candidate.strip() == normalized_line for candidate in existing_lines):
+        print(f"[OK] File already up to date: {gitignore_path}")
+        return
+    updated = existing
+    if updated and not updated.endswith("\n"):
+        updated += "\n"
+    updated += normalized_line + "\n"
+    write_utf8_no_bom(gitignore_path, updated)
+    action = "Updated" if existing else "Created"
+    print(f"[OK] {action} file: {gitignore_path}")
+
+
 def resolve_canonical_workflow_path(skill_root: Path) -> Path:
     candidates = [
-        skill_root / "references" / "bootstrap" / "RECURSIVE.md",
         skill_root / ".recursive" / "RECURSIVE.md",
+        skill_root / "references" / "bootstrap" / "RECURSIVE.md",
     ]
     for candidate in candidates:
         if candidate.exists():
@@ -75,11 +104,66 @@ def upsert_marked_block(file_path: Path, start_marker: str, end_marker: str, blo
         print(f"[OK] File already up to date: {file_path}")
 
 
+def normalize_plain_or_wrapped_content(content: str, start_marker: str, end_marker: str) -> str:
+    start_index = content.find(start_marker)
+    end_index = content.rfind(end_marker)
+    if start_index == -1 or end_index == -1 or end_index < start_index:
+        return content.rstrip("\r\n")
+    prefix = content[:start_index].rstrip("\r\n")
+    if prefix.strip():
+        return prefix
+    body_start = start_index + len(start_marker)
+    return content[body_start:end_index].strip("\r\n")
+
+
+def sync_plain_file(file_path: Path, content: str) -> None:
+    normalized = content.rstrip("\r\n") + "\n"
+    existing = file_path.read_text(encoding="utf-8") if file_path.exists() else ""
+    if existing != normalized:
+        write_utf8_no_bom(file_path, normalized)
+        print(f"[OK] Updated file: {file_path}")
+    else:
+        print(f"[OK] File already up to date: {file_path}")
+
+
+def upsert_or_migrate_canonical(
+    file_path: Path,
+    start_marker: str,
+    end_marker: str,
+    canonical_body: str,
+) -> None:
+    """Upsert the canonical block in file_path, preserving any surrounding content.
+
+    Migration: if the file exists without markers and its normalized content
+    equals the canonical body (written by a prior plain-file install), replace
+    it with the marked version to avoid duplicate content on the first upgrade.
+    """
+    existing = file_path.read_text(encoding="utf-8") if file_path.exists() else ""
+    block = f"{start_marker}\n{canonical_body.rstrip()}\n{end_marker}"
+    pattern = re.compile(rf"{re.escape(start_marker)}.*?{re.escape(end_marker)}", re.DOTALL)
+
+    if pattern.search(existing):
+        updated = pattern.sub(lambda _match: block, existing)
+    elif not existing.strip():
+        updated = f"{block}\n"
+    elif existing.rstrip("\r\n") == canonical_body.rstrip("\r\n"):
+        # Plain-installed canonical content — wrap in markers without duplication.
+        updated = f"{block}\n"
+    else:
+        updated = f"{existing.rstrip()}\n\n{block}\n"
+
+    if updated != existing:
+        write_utf8_no_bom(file_path, updated)
+        print(f"[OK] Updated file: {file_path}")
+    else:
+        print(f"[OK] File already up to date: {file_path}")
+
+
 def memory_router_body() -> str:
     return """## Memory Router
 
 This file is the durable memory router for the repository.
-It is not a knowledge dump. Store durable memory in sharded docs under `domains/`, `patterns/`, `incidents/`, `episodes/`, `skills/`, or `archive/`.
+It is not a knowledge dump. Store durable memory in sharded docs under `domains/`, `patterns/`, `incidents/`, `episodes/`, `training/`, `skills/`, or `archive/`.
 
 Control-plane docs are not memory docs:
 - `/.recursive/RECURSIVE.md`
@@ -93,6 +177,8 @@ Control-plane docs are not memory docs:
 
 - Read this file before loading any other memory docs.
 - Load only the memory docs relevant to the current task.
+- If the task may benefit from prior recursive-mode experiential learnings, use this index to identify the relevant docs under `/.recursive/memory/training/` and `/.recursive/memory/domains/`.
+- The optional `recursive-training-sync.py` helper is read-only; it prints startup guidance about what to read, but does not modify `MEMORY.md` or the memory plane.
 - If the task plans delegated review, subagent help, review bundles, smoke-harness portability work, or capability-sensitive execution, read `/.recursive/memory/skills/SKILLS.md` and then load the relevant skill-memory shards.
 - If Phase 8 will need to promote durable lessons, first capture run-local skill usage in the run artifact and only then promote generalized conclusions into skill-memory shards.
 - Prefer `Status: CURRENT` docs for planning and execution.
@@ -105,6 +191,7 @@ Control-plane docs are not memory docs:
 - `patterns/` - reusable playbooks and solution patterns
 - `incidents/` - recurring failure signatures and fixes
 - `episodes/` - distilled lessons from specific runs
+- `training/` - extracted experiential learnings promoted from completed recursive-mode runs
 - `skills/` - durable skill and capability memory, routed via `skills/SKILLS.md`
 - `archive/` - historical or deprecated memory docs
 
@@ -114,6 +201,7 @@ Control-plane docs are not memory docs:
 - Any doc whose `Owns-Paths` or `Watch-Paths` overlaps final changed code paths must be reviewed in Phase 8.
 - Affected `CURRENT` docs should be downgraded to `SUSPECT` until revalidated against final code, `STATE.md`, and `DECISIONS.md`.
 - If changed paths have no owning domain doc, create one or record the uncovered-path follow-up in `08-memory-impact.md`.
+- Training memory docs should keep their canonical content under `/.recursive/memory/training/`, use the memory index as the discovery surface, and record source runs plus watch-path or applicability guidance.
 - Skill-memory docs should record source runs, last validated date, environment notes, and current trust/fit guidance.
 - If a run materially teaches the repo something about skill availability, delegated-review quality, review-bundle usage, or toolchain fallback behavior, Phase 8 must either create/refresh a skill-memory shard or record why no durable lesson was promoted.
 - If the repo itself is a reusable skill/workflow distribution, durable memory must remain generalized. Do not store current-session run residue or temp-environment observations as if they were universal truth.
@@ -162,7 +250,40 @@ Keep this file concise. Link to child docs instead of duplicating them.
 - `/.recursive/memory/skills/usage/skill-discovery-and-evaluation.md`
 - `/.recursive/memory/skills/patterns/delegated-verification-and-refresh.md`
 - `/.recursive/memory/skills/patterns/phase8-skill-memory-promotion.md`
-- Add child docs here only when they are intentionally promoted as reusable repository guidance.
+    - Add child docs here only when they are intentionally promoted as reusable repository guidance.
+    """
+
+
+def cursorrules_memory_pointers_body() -> str:
+    return """# recursive-mode memory pointers
+# Canonical repository memory lives under `/.recursive/memory/`.
+# Read `/.recursive/memory/MEMORY.md` before loading any other memory docs.
+# Load only the memory docs relevant to the current task.
+# When repository experiential memory may help, run:
+#   python .recursive/scripts/recursive-training-loader.py --repo-root . --query "<task>" --files "<path1,path2>"
+# This file is only a pointer surface; the canonical memory store remains `/.recursive/memory/`.
+"""
+
+
+def claude_memory_pointers_body() -> str:
+    return """## recursive-mode memory pointers
+
+- Canonical repository memory lives under `/.recursive/memory/`.
+- Read `/.recursive/memory/MEMORY.md` before loading any other memory docs.
+- Load only the memory docs relevant to the current task.
+- When repository experiential memory may help, run `python .recursive/scripts/recursive-training-loader.py --repo-root . --query "<task>" --files "<path1,path2>"`.
+- Treat this file as a pointer only; the canonical memory store remains `/.recursive/memory/`.
+"""
+
+
+def copilot_memory_pointers_body() -> str:
+    return """## recursive-mode memory pointers
+
+- Canonical repository memory lives under `/.recursive/memory/`.
+- Read `/.recursive/memory/MEMORY.md` before loading any other memory docs.
+- Load only the memory docs relevant to the current task.
+- When repository experiential memory may help, run `python .recursive/scripts/recursive-training-loader.py --repo-root . --query "<task>" --files "<path1,path2>"`.
+- Treat this file as a pointer only; the canonical memory store remains `/.recursive/memory/`.
 """
 
 
@@ -173,8 +294,8 @@ Scope: `How recursive-mode runs should discover, evaluate, and record external s
 Owns-Paths:
 Watch-Paths:
 - `/.recursive/RECURSIVE.md`
-- `/SKILL.md`
-- `/README.md`
+- `/.recursive/memory/skills/SKILLS.md`
+- `/.recursive/run/`
 Source-Runs:
 - `none (generic repository guidance)`
 Validated-At-Commit: `generic-repository-guidance`
@@ -228,9 +349,8 @@ Scope: `How the main agent verifies delegated review or audit work before accept
 Owns-Paths:
 Watch-Paths:
 - `/.recursive/RECURSIVE.md`
-- `/skills/recursive-subagent/SKILL.md`
-- `/agents/code-reviewer.md`
-- `/agents/implementer.md`
+- `/.recursive/memory/skills/SKILLS.md`
+- `/.recursive/run/`
 Source-Runs:
 - `none (generic repository guidance)`
 Validated-At-Commit: `generic-repository-guidance`
@@ -282,10 +402,9 @@ Scope: `How Phase 8 captures run-local skill usage and promotes only durable les
 Owns-Paths:
 Watch-Paths:
 - `/.recursive/RECURSIVE.md`
-- `/references/artifact-template.md`
-- `/scripts/recursive-closeout.py`
-- `/scripts/lint-recursive-run.py`
-- `/scripts/recursive-status.py`
+- `/.recursive/memory/MEMORY.md`
+- `/.recursive/memory/skills/SKILLS.md`
+- `/.recursive/run/`
 Source-Runs:
 - `none (generic repository guidance)`
 Validated-At-Commit: `generic-repository-guidance`
@@ -346,7 +465,7 @@ It exists to reduce blind doc-by-doc scanning. It is not a second workflow spec.
 3. Read `/.recursive/DECISIONS.md` when prior rationale or relevant earlier work matters.
 4. Read `/.recursive/memory/MEMORY.md` when task context may depend on durable memory.
 5. Read `/.recursive/memory/skills/SKILLS.md` when the task may use delegated review, subagents, review bundles, smoke-harness portability work, or other capability-sensitive execution.
-6. Read `/.recursive/README.md` for repo-maintainer/bootstrap notes when changing the package itself.
+6. Read the recursive-mode package README or maintainer notes from the installed skill directory or source package checkout when changing the package itself.
 
 ## Task Routing
 
@@ -355,21 +474,33 @@ It exists to reduce blind doc-by-doc scanning. It is not a second workflow spec.
   - `/.recursive/STATE.md`
   - `/.recursive/DECISIONS.md`
   - `/.recursive/memory/MEMORY.md`
+- Authoring a new recursive-mode spec or `00-requirements.md`:
+  - `/.recursive/STATE.md`
+  - `/.recursive/DECISIONS.md`
+  - `/.recursive/memory/MEMORY.md`
+  - the installed `recursive-spec` skill
+  - relevant code and tests for the requested area
+- Benchmarking recursive-mode against a non-recursive baseline:
+  - Install the separate optional `recursive-benchmark` add-on only when the user explicitly asks for benchmarking.
+  - Prefer `find-skills` when available; otherwise use `npx skills add <recursive-benchmark-package-or-repo> --full-depth`.
+  - The default exported `recursive-mode` package intentionally excludes benchmark fixtures and benchmark skill files.
+  - After the benchmark add-on is installed, follow its packaged fixture and harness docs.
 - Working on reusable package/bootstrap/docs for this repo:
-  - `/.recursive/README.md`
-  - `/README.md`
-  - `/scripts/install-recursive-mode.py`
-  - `/scripts/install-recursive-mode.ps1`
+  - the recursive-mode package README or maintainer notes from the installed skill directory or source package checkout
+  - the recursive-mode installer scripts from the installed skill directory or source package checkout
 - Working on phase artifact structure or lint expectations:
-  - `/references/artifact-template.md`
-  - `/scripts/lint-recursive-run.py`
-  - `/scripts/recursive-status.py`
-- Working on delegated review or subagent behavior:
+  - the recursive-mode artifact template from the installed skill directory or source package checkout
+  - the recursive-mode lint/status helpers from the installed skill directory or source package checkout
+- Working on delegated review, subagent behavior, or routed CLI delegation:
   - `/.recursive/memory/skills/SKILLS.md`
-  - `/skills/recursive-subagent/SKILL.md`
-  - `/skills/recursive-review-bundle/SKILL.md`
+  - `/.recursive/config/recursive-router.json`
+  - `/.recursive/config/recursive-router-discovered.json`
+  - the installed `recursive-router`, `recursive-subagent`, and `recursive-review-bundle` skills
 - Working on memory behavior:
   - `/.recursive/memory/MEMORY.md`
+  - the installed `recursive-training` skill
+  - `/.recursive/scripts/recursive-training-loader.py`
+  - `/.recursive/memory/training/`
   - `/.recursive/memory/skills/SKILLS.md`
 
 ## Non-Canonical Bridges
@@ -410,10 +541,24 @@ Resolution rule:
 - If the user refers to a plan, create a new run only when a unique source plan/requirements artifact can be identified from repo docs or immediate task context.
 - If the command is ambiguous, ask for the run id or the repo path of the source plan/requirements artifact.
 
+Spec-authoring rule:
+
+- If the user asks to create a plan, help plan, create a spec, or write requirements for a new recursive run, prefer `recursive-spec` before orchestration.
+- `recursive-spec` should confirm the user wants spec help, ask what they want to do, read `STATE.md`, `DECISIONS.md`, `MEMORY.md`, and relevant code/tests, keep the draft in temporary non-repo storage, then create the new run only after the requirements are approved.
+
+Benchmark rule:
+
+- If the user asks to benchmark recursive-mode, compare recursive vs non-recursive execution, or generate a recursive-mode benchmark report, install and use the separate optional `recursive-benchmark` add-on on demand instead of assuming benchmark fixtures ship with the default recursive-mode package.
+- Prefer `find-skills` when available. Otherwise use `npx skills add <recursive-benchmark-package-or-repo> --full-depth`.
+
 Audit delegation rule:
 
 - If subagents are available and the audit/review context bundle is complete, delegated audit/review is the default path.
 - If the controller still chooses `self-audit`, record a concrete `Delegation Override Reason` in the audited phase artifact.
+
+Router rule:
+
+- If the user asks to route delegated work through another transport/model, configure or inspect `/.recursive/config/recursive-router.json`, refresh `/.recursive/config/recursive-router-discovered.json`, re-read both immediately before choosing the delegated CLI/model, and use `recursive-router` before dispatching the delegated role.
 """
 
 
@@ -438,6 +583,7 @@ def main() -> None:
     codex_root = repo_root / ".codex"
     memory_root = recursive_root / "memory"
     run_root = recursive_root / "run"
+    config_root = recursive_root / "config"
     agent_root = repo_root / ".agent"
 
     recursive_path = recursive_root / "RECURSIVE.md"
@@ -445,11 +591,16 @@ def main() -> None:
     state_path = recursive_root / "STATE.md"
     decisions_path = recursive_root / "DECISIONS.md"
     memory_router_path = memory_root / "MEMORY.md"
+    training_memory_root = memory_root / "training"
     skill_memory_root = memory_root / "skills"
     skill_memory_router_path = skill_memory_root / "SKILLS.md"
     skill_discovery_path = skill_memory_root / "usage" / "skill-discovery-and-evaluation.md"
     delegated_verification_path = skill_memory_root / "patterns" / "delegated-verification-and-refresh.md"
     phase8_skill_memory_path = skill_memory_root / "patterns" / "phase8-skill-memory-promotion.md"
+    cursorrules_path = repo_root / ".cursorrules"
+    claude_path = repo_root / "CLAUDE.md"
+    github_root = repo_root / ".github"
+    copilot_instructions_path = github_root / "copilot-instructions.md"
     codex_agents_path = codex_root / "AGENTS.md"
     root_agents_path = repo_root / "AGENTS.md"
     plans_path = agent_root / "PLANS.md"
@@ -462,19 +613,58 @@ def main() -> None:
     agents_end_marker = "<!-- RECURSIVE-MODE-AGENTS:END -->"
     plans_start_marker = "<!-- RECURSIVE-MODE-PLANS-BRIDGE:START -->"
     plans_end_marker = "<!-- RECURSIVE-MODE-PLANS-BRIDGE:END -->"
+    cursorrules_start_marker = "# RECURSIVE-MODE-MEMORY-POINTERS:START"
+    cursorrules_end_marker = "# RECURSIVE-MODE-MEMORY-POINTERS:END"
+    repo_md_start_marker = "<!-- RECURSIVE-MODE-MEMORY-POINTERS:START -->"
+    repo_md_end_marker = "<!-- RECURSIVE-MODE-MEMORY-POINTERS:END -->"
 
     ensure_directory(recursive_root)
     ensure_directory(codex_root)
     ensure_directory(agent_root)
+    ensure_directory(github_root)
     ensure_directory(memory_root)
+    ensure_directory(training_memory_root)
     ensure_directory(skill_memory_root)
     ensure_directory(run_root)
+    ensure_directory(config_root)
     for subdir in ("domains", "patterns", "incidents", "episodes", "archive"):
         ensure_directory(memory_root / subdir)
         ensure_file(memory_root / subdir / ".gitkeep", "")
+    ensure_file(training_memory_root / ".gitkeep", "")
     for subdir in ("availability", "usage", "issues", "patterns"):
         ensure_directory(skill_memory_root / subdir)
         ensure_file(skill_memory_root / subdir / ".gitkeep", "")
+
+    # Copy training scripts into .recursive/scripts/ for runtime use
+    scripts_dest = recursive_root / "scripts"
+    ensure_directory(scripts_dest)
+    training_scripts = [
+        "recursive-training-grpo.py",
+        "recursive-training-grpo.ps1",
+        "recursive-training-phase8-trigger.py",
+        "recursive-training-phase8-trigger.ps1",
+        "recursive-training-extract.py",
+        "recursive-training-extract.ps1",
+        "recursive-training-sync.py",
+        "recursive-training-sync.ps1",
+        "recursive-training-loader.py",
+        "recursive-training-loader.ps1",
+        "recursive-training-mcp.py",
+        "recursive-training-mcp.ps1",
+    ]
+    skill_scripts_dir = skill_root / "scripts"
+    for script_name in training_scripts:
+        src = skill_scripts_dir / script_name
+        dst = scripts_dest / script_name
+        if src.exists():
+            content = src.read_text(encoding="utf-8")
+            if not dst.exists() or dst.read_text(encoding="utf-8") != content:
+                dst.write_text(content, encoding="utf-8")
+                print(f"[OK] Copied training script: {dst}")
+            else:
+                print(f"[OK] Up to date: {dst}")
+        else:
+            print(f"[WARN] Missing training script in skill repo: {src}")
 
     ensure_file(run_root / ".gitkeep", "")
     ensure_file(recursive_path, "# RECURSIVE.md\n")
@@ -488,6 +678,14 @@ def main() -> None:
     ensure_file(phase8_skill_memory_path, phase8_skill_memory_doc())
     ensure_file(codex_agents_path, "# AGENTS.md\n")
     ensure_file(plans_path, "# PLANS.md\n")
+    ensure_file(cursorrules_path, "")
+    ensure_file(claude_path, "")
+    ensure_file(copilot_instructions_path, "")
+    ensure_gitignore_line(repo_root, "/.recursive/config/recursive-router-discovered.json")
+    try:
+        ensure_router_scaffold(repo_root)
+    except RouterConfigError as exc:
+        raise SystemExit(f"[FAIL] {exc}") from exc
 
     upsert_marked_block(
         recursive_agents_path,
@@ -507,6 +705,24 @@ def main() -> None:
         memory_end_marker,
         skill_memory_router_body().rstrip("\r\n"),
     )
+    upsert_marked_block(
+        cursorrules_path,
+        cursorrules_start_marker,
+        cursorrules_end_marker,
+        cursorrules_memory_pointers_body().rstrip("\r\n"),
+    )
+    upsert_marked_block(
+        claude_path,
+        repo_md_start_marker,
+        repo_md_end_marker,
+        claude_memory_pointers_body().rstrip("\r\n"),
+    )
+    upsert_marked_block(
+        copilot_instructions_path,
+        repo_md_start_marker,
+        repo_md_end_marker,
+        copilot_memory_pointers_body().rstrip("\r\n"),
+    )
 
     if not agents_block_path.exists():
         raise FileNotFoundError(f"Missing AGENTS bridge template: {agents_block_path}")
@@ -517,11 +733,17 @@ def main() -> None:
     upsert_marked_block(plans_path, plans_start_marker, plans_end_marker, plans_bridge_body().rstrip("\r\n"))
 
     if not args.skip_recursive_update:
-        if canonical_workflow_path.resolve() == recursive_path.resolve():
-            print("[INFO] Skipped RECURSIVE.md self-upsert because source and destination are the same file.")
-        else:
-            canonical_body = canonical_workflow_path.read_text(encoding="utf-8").rstrip("\r\n")
-            upsert_marked_block(recursive_path, recursive_start_marker, recursive_end_marker, canonical_body)
+        canonical_body = normalize_plain_or_wrapped_content(
+            canonical_workflow_path.read_text(encoding="utf-8"),
+            recursive_start_marker,
+            recursive_end_marker,
+        )
+        upsert_or_migrate_canonical(
+            recursive_path,
+            recursive_start_marker,
+            recursive_end_marker,
+            canonical_body,
+        )
     else:
         print("[INFO] Skipped RECURSIVE.md update by configuration.")
 

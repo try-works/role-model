@@ -1,0 +1,844 @@
+{
+  "total": 88,
+  "byModel": {
+    "deepseek/deepseek-v4-flash": 78,
+    "undefined": 5,
+    "deepseek/deepseek-v4-pro": 5
+  },
+  "byGroup": {
+    "engineering": [
+      "coder",
+      "architect",
+      "security",
+      "operator",
+      "tester",
+      "data"
+    ],
+    "product_design": [
+      "product",
+      "designer",
+      "analyst",
+      "planner"
+    ],
+    "knowledge_research": [
+      "researcher",
+      "scientist",
+      "mathematician",
+      "educator",
+      "knowledge"
+    ],
+    "business": [
+      "strategist",
+      "marketer",
+      "seller",
+      "finance",
+      "procurement"
+    ],
+    "communication": [
+      "writer",
+      "translator",
+      "creative",
+      "support",
+      "coordinator"
+    ],
+    "governance_safety": [
+      "legal",
+      "recruiter",
+      "health"
+    ]
+  },
+  "stats": {
+    "totalTokens": 184946,
+    "avgTokens": 2102,
+    "avgLatency": 42366
+  },
+  "results": [
+    {
+      "role": "coder",
+      "task": "coder.edit",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1009,
+      "finish": "stop",
+      "latencyMs": 15328,
+      "status": 200
+    },
+    {
+      "role": "coder",
+      "task": "coder.review",
+      "tokens": 0,
+      "finish": "?",
+      "latencyMs": 16714,
+      "status": 400
+    },
+    {
+      "role": "coder",
+      "task": "coder.debug.root_cause",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2046,
+      "finish": "stop",
+      "latencyMs": 41269,
+      "status": 200
+    },
+    {
+      "role": "coder",
+      "task": "coder.refactor",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 649,
+      "finish": "stop",
+      "latencyMs": 18397,
+      "status": 200
+    },
+    {
+      "role": "coder",
+      "task": "coder.explain",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1080,
+      "finish": "stop",
+      "latencyMs": 27190,
+      "status": 200
+    },
+    {
+      "role": "coder",
+      "task": "coder.test.write",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 3616,
+      "finish": "stop",
+      "latencyMs": 45352,
+      "status": 200
+    },
+    {
+      "role": "coder",
+      "task": "coder.migrate",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2530,
+      "finish": "stop",
+      "latencyMs": 41232,
+      "status": 200
+    },
+    {
+      "role": "architect",
+      "task": "architect.design",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 5364,
+      "finish": "stop",
+      "latencyMs": 78626,
+      "status": 200
+    },
+    {
+      "role": "architect",
+      "task": "architect.review",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 285,
+      "finish": "stop",
+      "latencyMs": 16004,
+      "status": 200
+    },
+    {
+      "role": "architect",
+      "task": "architect.api_design",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2040,
+      "finish": "stop",
+      "latencyMs": 31801,
+      "status": 200
+    },
+    {
+      "role": "security",
+      "task": "security.audit",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2416,
+      "finish": "stop",
+      "latencyMs": 42467,
+      "status": 200
+    },
+    {
+      "role": "security",
+      "task": "security.threat_model",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2414,
+      "finish": "stop",
+      "latencyMs": 41283,
+      "status": 200
+    },
+    {
+      "role": "security",
+      "task": "security.vulnerability_triage",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 152,
+      "finish": "stop",
+      "latencyMs": 16569,
+      "status": 200
+    },
+    {
+      "role": "operator",
+      "task": "operator.debug.startup",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1553,
+      "finish": "stop",
+      "latencyMs": 29856,
+      "status": 200
+    },
+    {
+      "role": "operator",
+      "task": "operator.deploy.review",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 470,
+      "finish": "stop",
+      "latencyMs": 26285,
+      "status": 200
+    },
+    {
+      "role": "operator",
+      "task": "operator.config",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2334,
+      "finish": "stop",
+      "latencyMs": 43377,
+      "status": 200
+    },
+    {
+      "role": "tester",
+      "task": "tester.e2e",
+      "tokens": 0,
+      "finish": "?",
+      "latencyMs": 39638,
+      "status": 400
+    },
+    {
+      "role": "tester",
+      "task": "tester.regression",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2784,
+      "finish": "stop",
+      "latencyMs": 55201,
+      "status": 200
+    },
+    {
+      "role": "data",
+      "task": "data.schema.review",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2151,
+      "finish": "stop",
+      "latencyMs": 45647,
+      "status": 200
+    },
+    {
+      "role": "data",
+      "task": "data.query",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2653,
+      "finish": "stop",
+      "latencyMs": 48721,
+      "status": 200
+    },
+    {
+      "role": "product",
+      "task": "product.requirements",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2556,
+      "finish": "stop",
+      "latencyMs": 45178,
+      "status": 200
+    },
+    {
+      "role": "product",
+      "task": "product.workflow.review",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 541,
+      "finish": "stop",
+      "latencyMs": 23074,
+      "status": 200
+    },
+    {
+      "role": "product",
+      "task": "product.feedback.synthesize",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1343,
+      "finish": "stop",
+      "latencyMs": 30941,
+      "status": 200
+    },
+    {
+      "role": "designer",
+      "task": "designer.ui.review",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 255,
+      "finish": "stop",
+      "latencyMs": 16472,
+      "status": 200
+    },
+    {
+      "role": "designer",
+      "task": "designer.interaction",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1764,
+      "finish": "stop",
+      "latencyMs": 33369,
+      "status": 200
+    },
+    {
+      "role": "designer",
+      "task": "designer.visual_direction",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 3765,
+      "finish": "stop",
+      "latencyMs": 66430,
+      "status": 200
+    },
+    {
+      "role": "analyst",
+      "task": "analyst.compare",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2428,
+      "finish": "stop",
+      "latencyMs": 44526,
+      "status": 200
+    },
+    {
+      "role": "analyst",
+      "task": "analyst.evaluate",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2141,
+      "finish": "stop",
+      "latencyMs": 41777,
+      "status": 200
+    },
+    {
+      "role": "analyst",
+      "task": "analyst.prioritize",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2105,
+      "finish": "stop",
+      "latencyMs": 42612,
+      "status": 200
+    },
+    {
+      "role": "planner",
+      "task": "planner.roadmap",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1879,
+      "finish": "stop",
+      "latencyMs": 33682,
+      "status": 200
+    },
+    {
+      "role": "planner",
+      "task": "planner.requirements",
+      "model": "deepseek/deepseek-v4-pro",
+      "tokens": 2394,
+      "finish": "stop",
+      "latencyMs": 73681,
+      "status": 200
+    },
+    {
+      "role": "planner",
+      "task": "planner.decompose",
+      "model": "deepseek/deepseek-v4-pro",
+      "tokens": 1962,
+      "finish": "stop",
+      "latencyMs": 42451,
+      "status": 200
+    },
+    {
+      "role": "researcher",
+      "task": "researcher.web_research.current",
+      "model": "deepseek/deepseek-v4-pro",
+      "tokens": 6943,
+      "finish": "stop",
+      "latencyMs": 124819,
+      "status": 200
+    },
+    {
+      "role": "researcher",
+      "task": "researcher.compare_sources",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1868,
+      "finish": "stop",
+      "latencyMs": 40902,
+      "status": 200
+    },
+    {
+      "role": "researcher",
+      "task": "researcher.fact_check",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1558,
+      "finish": "stop",
+      "latencyMs": 31625,
+      "status": 200
+    },
+    {
+      "role": "scientist",
+      "task": "scientist.experiment.design",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1862,
+      "finish": "stop",
+      "latencyMs": 36130,
+      "status": 200
+    },
+    {
+      "role": "scientist",
+      "task": "scientist.evidence.review",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 3057,
+      "finish": "stop",
+      "latencyMs": 61551,
+      "status": 200
+    },
+    {
+      "role": "mathematician",
+      "task": "mathematician.optimize",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2708,
+      "finish": "stop",
+      "latencyMs": 44189,
+      "status": 200
+    },
+    {
+      "role": "mathematician",
+      "task": "mathematician.model",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 3789,
+      "finish": "stop",
+      "latencyMs": 77561,
+      "status": 200
+    },
+    {
+      "role": "educator",
+      "task": "educator.lesson.plan",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1898,
+      "finish": "stop",
+      "latencyMs": 41377,
+      "status": 200
+    },
+    {
+      "role": "educator",
+      "task": "educator.tutor",
+      "tokens": 0,
+      "finish": "?",
+      "latencyMs": 31160,
+      "status": 400
+    },
+    {
+      "role": "knowledge",
+      "task": "knowledge.organize",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1862,
+      "finish": "stop",
+      "latencyMs": 33811,
+      "status": 200
+    },
+    {
+      "role": "knowledge",
+      "task": "knowledge.retrieve",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1976,
+      "finish": "stop",
+      "latencyMs": 43462,
+      "status": 200
+    },
+    {
+      "role": "strategist",
+      "task": "strategist.market.analyze",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1434,
+      "finish": "stop",
+      "latencyMs": 34983,
+      "status": 200
+    },
+    {
+      "role": "strategist",
+      "task": "strategist.competitive.review",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2300,
+      "finish": "stop",
+      "latencyMs": 41314,
+      "status": 200
+    },
+    {
+      "role": "strategist",
+      "task": "strategist.risk.scenario",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1717,
+      "finish": "stop",
+      "latencyMs": 42076,
+      "status": 200
+    },
+    {
+      "role": "marketer",
+      "task": "marketer.positioning",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 823,
+      "finish": "stop",
+      "latencyMs": 24698,
+      "status": 200
+    },
+    {
+      "role": "marketer",
+      "task": "marketer.campaign.plan",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1997,
+      "finish": "stop",
+      "latencyMs": 37741,
+      "status": 200
+    },
+    {
+      "role": "seller",
+      "task": "seller.proposal.enterprise",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 796,
+      "finish": "stop",
+      "latencyMs": 33342,
+      "status": 200
+    },
+    {
+      "role": "seller",
+      "task": "seller.outreach.write",
+      "model": "deepseek/deepseek-v4-pro",
+      "tokens": 831,
+      "finish": "stop",
+      "latencyMs": 28338,
+      "status": 200
+    },
+    {
+      "role": "finance",
+      "task": "finance.cost_estimate",
+      "tokens": 0,
+      "finish": "?",
+      "latencyMs": 61534,
+      "status": 400
+    },
+    {
+      "role": "finance",
+      "task": "finance.roi.calculate",
+      "model": "deepseek/deepseek-v4-pro",
+      "tokens": 3388,
+      "finish": "stop",
+      "latencyMs": 54515,
+      "status": 200
+    },
+    {
+      "role": "procurement",
+      "task": "procurement.vendor.compare",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1932,
+      "finish": "stop",
+      "latencyMs": 38011,
+      "status": 200
+    },
+    {
+      "role": "writer",
+      "task": "writer.docs.write",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2548,
+      "finish": "stop",
+      "latencyMs": 39966,
+      "status": 200
+    },
+    {
+      "role": "writer",
+      "task": "writer.docs.public",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1603,
+      "finish": "stop",
+      "latencyMs": 37902,
+      "status": 200
+    },
+    {
+      "role": "writer",
+      "task": "writer.release_notes",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1190,
+      "finish": "stop",
+      "latencyMs": 25094,
+      "status": 200
+    },
+    {
+      "role": "translator",
+      "task": "translator.translate",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 294,
+      "finish": "stop",
+      "latencyMs": 17214,
+      "status": 200
+    },
+    {
+      "role": "translator",
+      "task": "translator.localize.locale",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2386,
+      "finish": "stop",
+      "latencyMs": 39090,
+      "status": 200
+    },
+    {
+      "role": "creative",
+      "task": "creative.brainstorm",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 647,
+      "finish": "stop",
+      "latencyMs": 16259,
+      "status": 200
+    },
+    {
+      "role": "creative",
+      "task": "creative.copywriting",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 452,
+      "finish": "stop",
+      "latencyMs": 19319,
+      "status": 200
+    },
+    {
+      "role": "support",
+      "task": "support.ticket.reply",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 601,
+      "finish": "stop",
+      "latencyMs": 24308,
+      "status": 200
+    },
+    {
+      "role": "support",
+      "task": "support.runbook.write",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1921,
+      "finish": "stop",
+      "latencyMs": 44120,
+      "status": 200
+    },
+    {
+      "role": "coordinator",
+      "task": "coordinator.meeting.agenda",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1495,
+      "finish": "stop",
+      "latencyMs": 33312,
+      "status": 200
+    },
+    {
+      "role": "coordinator",
+      "task": "coordinator.project.status",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1175,
+      "finish": "stop",
+      "latencyMs": 29288,
+      "status": 200
+    },
+    {
+      "role": "legal",
+      "task": "legal.review",
+      "tokens": 0,
+      "finish": "?",
+      "latencyMs": 37397,
+      "status": 400
+    },
+    {
+      "role": "legal",
+      "task": "legal.compliance_check",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2222,
+      "finish": "stop",
+      "latencyMs": 54570,
+      "status": 200
+    },
+    {
+      "role": "legal",
+      "task": "legal.license.review",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1803,
+      "finish": "stop",
+      "latencyMs": 38282,
+      "status": 200
+    },
+    {
+      "role": "recruiter",
+      "task": "recruiter.job_description",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1914,
+      "finish": "stop",
+      "latencyMs": 45730,
+      "status": 200
+    },
+    {
+      "role": "recruiter",
+      "task": "recruiter.interview.plan",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2829,
+      "finish": "stop",
+      "latencyMs": 54363,
+      "status": 200
+    },
+    {
+      "role": "health",
+      "task": "health.info.general",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2505,
+      "finish": "stop",
+      "latencyMs": 53630,
+      "status": 200
+    },
+    {
+      "role": "health",
+      "task": "health.wellness.plan",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2129,
+      "finish": "stop",
+      "latencyMs": 43946,
+      "status": 200
+    },
+    {
+      "role": "coder",
+      "task": "coder.generate",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1347,
+      "finish": "stop",
+      "latencyMs": 30920,
+      "status": 200
+    },
+    {
+      "role": "coder",
+      "task": "coder.dependency.update",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2759,
+      "finish": "stop",
+      "latencyMs": 56437,
+      "status": 200
+    },
+    {
+      "role": "architect",
+      "task": "architect.infrastructure.design",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 3829,
+      "finish": "stop",
+      "latencyMs": 69646,
+      "status": 200
+    },
+    {
+      "role": "architect",
+      "task": "architect.migration.strategy",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2251,
+      "finish": "stop",
+      "latencyMs": 45261,
+      "status": 200
+    },
+    {
+      "role": "security",
+      "task": "security.secrets.scan",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2562,
+      "finish": "stop",
+      "latencyMs": 47723,
+      "status": 200
+    },
+    {
+      "role": "operator",
+      "task": "operator.monitor",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2858,
+      "finish": "stop",
+      "latencyMs": 50409,
+      "status": 200
+    },
+    {
+      "role": "tester",
+      "task": "tester.performance",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 3531,
+      "finish": "stop",
+      "latencyMs": 53229,
+      "status": 200
+    },
+    {
+      "role": "tester",
+      "task": "tester.accessibility",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2239,
+      "finish": "stop",
+      "latencyMs": 41570,
+      "status": 200
+    },
+    {
+      "role": "data",
+      "task": "data.visualize",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 15127,
+      "finish": "stop",
+      "latencyMs": 126041,
+      "status": 200
+    },
+    {
+      "role": "data",
+      "task": "data.transform",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 3282,
+      "finish": "stop",
+      "latencyMs": 63893,
+      "status": 200
+    },
+    {
+      "role": "researcher",
+      "task": "researcher.literature_review",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 3064,
+      "finish": "stop",
+      "latencyMs": 62466,
+      "status": 200
+    },
+    {
+      "role": "writer",
+      "task": "writer.blog.write",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2711,
+      "finish": "stop",
+      "latencyMs": 53347,
+      "status": 200
+    },
+    {
+      "role": "strategist",
+      "task": "strategist.business.plan",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1339,
+      "finish": "stop",
+      "latencyMs": 32684,
+      "status": 200
+    },
+    {
+      "role": "marketer",
+      "task": "marketer.audience.research",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2335,
+      "finish": "stop",
+      "latencyMs": 44163,
+      "status": 200
+    },
+    {
+      "role": "procurement",
+      "task": "procurement.security.questionnaire",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2808,
+      "finish": "stop",
+      "latencyMs": 41322,
+      "status": 200
+    },
+    {
+      "role": "coordinator",
+      "task": "coordinator.handoff.prepare",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 1601,
+      "finish": "stop",
+      "latencyMs": 34701,
+      "status": 200
+    },
+    {
+      "role": "knowledge",
+      "task": "knowledge.runbook.update",
+      "model": "deepseek/deepseek-v4-flash",
+      "tokens": 2171,
+      "finish": "stop",
+      "latencyMs": 42299,
+      "status": 200
+    }
+  ]
+}

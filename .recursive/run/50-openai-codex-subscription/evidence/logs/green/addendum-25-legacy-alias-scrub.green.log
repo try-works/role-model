@@ -1,0 +1,25 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge
+
+ ✓ test/unified-runtime-config.test.ts (24 tests | 21 skipped) 30ms
+
+ Test Files  1 passed (1)
+      Tests  3 passed | 21 skipped (24)
+   Start at  22:42:27
+   Duration  1.21s (transform 208ms, setup 0ms, collect 305ms, tests 30ms, environment 0ms, prepare 362ms)
+
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge
+
+(node:27768) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/backend-unified-runtime-config.test.ts (23 tests | 19 skipped) 2978ms
+   ✓ runtime-host-bridge unified runtime backend > normalizes legacy craft-ask routing strategy updates to the default alias family  1167ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites persisted craft-ask alias ids out of startup config materialization  722ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when the canonical matrix already exists  812ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed | 19 skipped (23)
+   Start at  22:42:30
+   Duration  5.45s (transform 1.24s, setup 0ms, collect 1.70s, tests 2.98s, environment 0ms, prepare 323ms)
+

@@ -1,0 +1,31 @@
+role-model-router/apps/runtime-host-bridge/test/index.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+
+    15044 15044 │                 },
+    15045 15045 │               ) => Promise<unknown>;
+    15046       │ - ············executeResponses:·(body:·Record<string,·unknown>,·requestId:·string)·=>·Promise<unknown>;
+          15046 │ + ············executeResponses:·(
+          15047 │ + ··············body:·Record<string,·unknown>,
+          15048 │ + ··············requestId:·string,
+          15049 │ + ············)·=>·Promise<unknown>;
+    15047 15050 │               listTelemetryRequests?: () => Promise<unknown>;
+    15048 15051 │               readRequestObservation?: (requestId: string) => Promise<unknown>;
+    ··········· │
+    15069 15072 │             body: JSON.stringify({
+    15070 15073 │               model: "chatgpt/gpt-5.4",
+    15071       │ - ············messages:·[
+    15072       │ - ··············{·role:·"user",·content:·"Try·the·cooling·endpoint·through·HTTP."·},
+    15073       │ - ············],
+          15074 │ + ············messages:·[{·role:·"user",·content:·"Try·the·cooling·endpoint·through·HTTP."·}],
+    15074 15075 │             }),
+    15075 15076 │           });
+
+
+Checked 2 files in 1034ms. No fixes applied.
+Found 1 error.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+
+

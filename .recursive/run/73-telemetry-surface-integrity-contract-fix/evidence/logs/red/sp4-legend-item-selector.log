@@ -1,0 +1,46 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/73-telemetry-surface-integrity-contract-fix/role-model-router/apps/runtime-ui
+
+ ❯ app/components/telemetry-charts.test.tsx (13 tests | 1 failed | 12 skipped) 40ms
+   ↓ telemetry chart layout contract > exports bounded data-dependent geometry and shared plot values
+   ↓ TelemetryChartCard > keeps populated chart content visible while a background refresh is in progress
+   ↓ TelemetryChartCard > renders stable loading and empty states without fake chart data
+   ↓ TelemetryChartCard > keeps empty chart states compact instead of reserving full plot height
+   ↓ TelemetryChartCard > uses tighter empty-state padding so compact analytics cards do not create oversized blank panels
+   ↓ TelemetryChartCard > keeps populated chart content visible for partial telemetry warnings
+   ↓ TelemetryChartCard > replaces the chart body for blocking unsupported states
+   ↓ TelemetryAnalyticsChartCard > renders a per-card error state when a chart query fails
+   ↓ TelemetryLineTimeSeriesChart > renders dual y axes for mixed-unit cache efficiency charts
+   ↓ TelemetryLineTimeSeriesChart > keeps same-unit line charts on a single y axis
+   ↓ shared area and bar time-series geometry > renders data-dependent dual axes and inset legend for area charts
+   ↓ shared area and bar time-series geometry > renders data-dependent dual axes and inset legend for bar charts
+   × TelemetryRankingBarChart > places horizontal chart labels in a bottom legend instead of a left category axis 38ms
+     → expected '<div class="w-full"><div data-chart-h…' to contain 'data-testid="telemetry-chart-legend-i…'
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/telemetry-charts.test.tsx > TelemetryRankingBarChart > places horizontal chart labels in a bottom legend instead of a left category axis
+AssertionError: expected '<div class="w-full"><div data-chart-h…' to contain 'data-testid="telemetry-chart-legend-i…'
+
+Expected: "data-testid="telemetry-chart-legend-item""
+Received: "<div class="w-full"><div data-chart-horizontal-plot="true" class="w-full" style="height:280px"><div data-recharts="ResponsiveContainer" data-width="100%"><div data-recharts="BarChart" data-layout="vertical"><div data-recharts="CartesianGrid"></div><div data-recharts="XAxis" data-type="number"></div><div data-recharts="YAxis" data-datakey="label" data-type="category" data-width="0"></div><div data-recharts="Tooltip"></div><div data-recharts="Bar" data-datakey="value" data-name="Ranked Comparison"><div data-recharts="Cell"></div><div data-recharts="Cell"></div></div></div></div></div><div data-chart-horizontal-legend="bottom"><div data-testid="telemetry-chart-legend" class="flex flex-wrap gap-x-4 gap-y-2 pt-4" style="padding-inline-start:12px"><div class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background-color:var(--rm-chart-warning)"></span><span class="text-[12px] font-normal uppercase leading-4 tracking-[0.08em] text-[var(--rm-secondary)]">qa-local-llama-8b</span></div><div class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background-color:var(--rm-chart-link-blue)"></span><span class="text-[12px] font-normal uppercase leading-4 tracking-[0.08em] text-[var(--rm-secondary)]">anthropic-claude-haiku</span></div></div></div></div>"
+
+ ❯ app/components/telemetry-charts.test.tsx:408:20
+    406| 
+    407|     expect(markup).toContain('data-chart-horizontal-legend="bottom"');
+    408|     expect(markup).toContain('data-testid="telemetry-chart-legend-item…
+       |                    ^
+    409|     expect(markup).toContain('data-chart-horizontal-plot="true"');
+    410|     expect(markup).toContain(`height:${telemetryChartLayoutContract.pl…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 skipped (13)
+   Start at  04:21:47
+   Duration  1.64s (transform 250ms, setup 0ms, collect 591ms, tests 40ms, environment 0ms, prepare 290ms)
+
+undefined
+D:\DEV\role-model\.worktrees\73-telemetry-surface-integrity-contract-fix\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/components/telemetry-charts.test.tsx -t places horizontal chart labels

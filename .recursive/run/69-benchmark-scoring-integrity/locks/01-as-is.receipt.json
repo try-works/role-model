@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "db41d71a61c4858d7b07c4971944b775656819f524897f02c24d65200f49cfef",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\69-benchmark-scoring-integrity\\.recursive\\run\\69-benchmark-scoring-integrity\\01-as-is.md",
+  "locked_at": "2026-07-13T01:45:02Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "43ac366614d768d291a15325a1091d210bfbdd413cbfb37a1c4040b418dd2785",
+    "00-worktree.md": "ba8934f8aa07fbfdb315ac2046e8b03c1a775bee73e421f7df1d2c1bd10e62db"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "fec568da25d074ce6ae929978c2b63e143cd86182f97e5759818ccfc4a547fea"
+}

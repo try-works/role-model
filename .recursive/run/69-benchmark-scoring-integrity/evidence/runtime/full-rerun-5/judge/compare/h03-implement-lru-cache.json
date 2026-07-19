@@ -1,0 +1,51 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "caseId": "h03-implement-lru-cache",
+  "models": [
+    {
+      "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+      "deliverablePreview": "```typescript\nclass LRUCache {\n  private capacity: number;\n  private cache: Map<number, number>;\n\n  constructor(capacity: number) {\n    this.capacity = capacity;\n    this.cache = new Map();\n  }\n\n  get(key: number): number {\n    if (!this.ca",
+      "perCaseScore": 1
+    },
+    {
+      "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+      "deliverablePreview": "```typescript\nclass LRUCache {\n  private capacity: number;\n  private map: Map<number, number>;\n\n  constructor(capacity: number) {\n    this.capacity = capacity;\n    this.map = new Map<number, number>();\n  }\n\n  get(key: number): number {\n    ",
+      "perCaseScore": 1
+    }
+  ],
+  "relativeRanking": [
+    "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+    "openai.personal.openai-codex-subscription.global.gpt-5.4"
+  ],
+  "rationale": "Both implementations correctly define LRUCache with get and put and use Map ordering for LRU eviction. However, openai's put method fails when capacity is 0: the condition size >= capacity triggers on an empty map, delete has no effect, and then the key is set, leaving an item in a zero-capacity cache. Moonshot's eviction after insertion correctly evicts the just-added key when capacity is 0, mak…",
+  "rawResponse": "{\n  \"relativeRanking\": [\n    \"moonshot.personal.kimi-code.global.kimi-k2.7-code\",\n    \"openai.personal.openai-codex-subscription.global.gpt-5.4\"\n  ],\n  \"rationale\": \"Both implementations correctly define LRUCache with get and put and use Map ordering for LRU eviction. However, openai's put method fails when capacity is 0: the condition size >= capacity triggers on an empty map, delete has no effect, and then the key is set, leaving an item in a zero-capacity cache. Moonshot's eviction after insertion correctly evicts the just-added key when capacity is 0, making it fully correct. Therefore moonshot is ranked higher.\"\n}",
+  "judgeEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+  "gradingBrief": {
+    "questionTranscript": "[user]\nImplement a TypeScript class LRUCache with constructor(capacity: number), get(key: number): number, and put(key: number, value: number): void. Use Map insertion order or explicit doubly-linked list. Output code only.",
+    "exemplarAnswer": "LRUCache class with get/put and eviction at capacity",
+    "exemplarQuality": "derived",
+    "deliverablesChecklist": [
+      "[MUST] Defines LRUCache class with get and put, evicts least-recently-used when capacity exceeded.",
+      "[SHOULD] Match clues: class\\s+LRUCache, get\\(, put\\(, capacity",
+      "[MUST] Provide complete working TypeScript — no placeholders or partial helpers only"
+    ],
+    "antiPatterns": [
+      "MUST NOT use diff placeholders (----/+++, [file header])",
+      "MUST NOT emit prose-only TOOL_CALL lines without API tool_calls",
+      "MUST NOT submit reasoning prose as the graded code deliverable",
+      "MUST NOT leave apply_patch arguments as placeholder or malformed patch content"
+    ]
+  },
+  "compareError": null,
+  "compareFallback": false,
+  "compareCircuitOpen": false,
+  "responseChannel": {
+    "hasContentText": true,
+    "hasReasoningText": true,
+    "hasOutputText": true,
+    "hasToolCalls": false,
+    "contentLength": 626,
+    "reasoningLength": 4007
+  },
+  "recordedAtMs": 1783936687682
+}

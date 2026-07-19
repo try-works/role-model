@@ -1,0 +1,14 @@
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+Access-Control-Allow-Headers: Content-Type, Authorization, X-Request-ID, X-Role-Model-Routing-Mode, X-Role-Model-Endpoint-Id, X-Role-Model-Requested-Role-Id
+content-type: application/json
+x-role-model-endpoint-id: moonshot.personal.kimi-code.global.kimi-k2.7-code
+x-role-model-adapter-family: ai-sdk-openai-compatible
+x-role-model-routing-decision-id: decision-req-337e9ce6-b086-4fe2-9a7c-f22cd0bb7714
+Date: Fri, 19 Jun 2026 21:19:37 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Content-Length: 275
+
+{"id":"chatcmpl-role-model","object":"chat.completion","created":1781903977,"model":"moonshot/kimi-k2.7-code","choices":[{"index":0,"message":{"role":"assistant","content":""},"finish_reason":"length"}],"usage":{"prompt_tokens":39,"completion_tokens":80,"total_tokens":119}}

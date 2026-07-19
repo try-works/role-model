@@ -1,0 +1,80 @@
+[
+  {
+    "Id": 57044,
+    "ProcessName": "mscopilot_proxy",
+    "Path": "C:\\Program Files (x86)\\Microsoft\\Copilot\\Application\\mscopilot_proxy.exe",
+    "StartTime": "2026-07-08T19:03:41.9269856+08:00"
+  },
+  {
+    "Id": 44316,
+    "ProcessName": "node",
+    "Path": "C:\\Program Files\\nodejs\\node.exe",
+    "StartTime": "2026-07-09T06:04:06.0603735+08:00"
+  },
+  {
+    "Id": 51800,
+    "ProcessName": "node",
+    "Path": "C:\\Program Files\\nodejs\\node.exe",
+    "StartTime": "2026-07-06T08:32:42.0882976+08:00"
+  },
+  {
+    "Id": 38368,
+    "ProcessName": "node_repl",
+    "Path": "C:\\Users\\erikb\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\1b23c930bdf84ed6\\bin\\node_repl.exe",
+    "StartTime": "2026-07-07T20:48:05.8636275+08:00"
+  },
+  {
+    "Id": 56912,
+    "ProcessName": "node_repl",
+    "Path": "C:\\Users\\erikb\\AppData\\Local\\OpenAI\\Codex\\runtimes\\cua_node\\1b23c930bdf84ed6\\bin\\node_repl.exe",
+    "StartTime": "2026-07-08T07:36:13.9944098+08:00"
+  },
+  {
+    "Id": 20080,
+    "ProcessName": "python",
+    "Path": "C:\\Python314\\python.exe",
+    "StartTime": "2026-07-05T12:58:27.8087943+08:00"
+  },
+  {
+    "Id": 19056,
+    "ProcessName": "role-model-runtime",
+    "Path": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+    "StartTime": "2026-07-08T23:09:09.0084306+08:00"
+  },
+  {
+    "Id": 12320,
+    "ProcessName": "RuntimeBroker",
+    "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
+    "StartTime": "2026-07-04T14:10:01.2737179+08:00"
+  },
+  {
+    "Id": 15952,
+    "ProcessName": "RuntimeBroker",
+    "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
+    "StartTime": "2026-07-04T14:10:04.9481762+08:00"
+  },
+  {
+    "Id": 21304,
+    "ProcessName": "RuntimeBroker",
+    "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
+    "StartTime": "2026-07-04T20:08:10.3344319+08:00"
+  },
+  {
+    "Id": 44124,
+    "ProcessName": "RuntimeBroker",
+    "Path": "C:\\Windows\\System32\\RuntimeBroker.exe",
+    "StartTime": "2026-07-05T22:41:40.252508+08:00"
+  },
+  {
+    "Id": 22544,
+    "ProcessName": "SnippingTool",
+    "Path": "C:\\Program Files\\WindowsApps\\Microsoft.ScreenSketch_11.2602.49.0_x64__8wekyb3d8bbwe\\SnippingTool\\SnippingTool.exe",
+    "StartTime": "2026-07-04T21:43:53.4503491+08:00"
+  },
+  {
+    "Id": 12540,
+    "ProcessName": "WidgetService",
+    "Path": "C:\\Program Files\\WindowsApps\\Microsoft.WidgetsPlatformRuntime_1.6.19.0_x64__8wekyb3d8bbwe\\WidgetService\\WidgetService.exe",
+    "StartTime": "2026-07-04T14:10:01.4215795+08:00"
+  }
+]

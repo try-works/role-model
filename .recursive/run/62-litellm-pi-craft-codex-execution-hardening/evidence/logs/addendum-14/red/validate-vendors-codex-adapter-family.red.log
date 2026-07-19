@@ -1,0 +1,51 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/62-litellm-pi-craft-codex-execution-hardening/role-model-router/apps/runtime-host-bridge
+
+(node:60964) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ❯ test/validate-vendors.test.ts (2 tests | 1 failed) 68573ms
+   × runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end 68557ms
+     → expected { …(27) } to match object { clientKind: 'pi', …(10) }
+(21 matching properties omitted from actual)
+   ✓ runRuntimeVendorValidation > plans a real-vendor harness with repo-owned mock upstreams 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/validate-vendors.test.ts > runRuntimeVendorValidation > executes decision-only, local-only, remote-only, and hybrid vendor modes end to end
+AssertionError: expected { …(27) } to match object { clientKind: 'pi', …(10) }
+(21 matching properties omitted from actual)
+
+- Expected
++ Received
+
+@@ -1,9 +1,9 @@
+  {
+    "actualExecutionFamily": "remote-service",
+    "actualOutcomeClass": "success",
+-   "adapterFamily": "codex-subscription-responses",
++   "adapterFamily": "ai-sdk-openai",
+    "category": "tool-bearing",
+    "clientKind": "pi",
+    "expectedExecutionFamily": "remote-service",
+    "expectedOutcomeClass": "success",
+    "providerFamily": "openai",
+
+ ❯ test/validate-vendors.test.ts:794:70
+
+    792|       idempotencyDecision: "not_needed",
+    793|     });
+    794|     expect(corpusCasesById.get("pi.responses.alias-hard-tools-001")).t…
+       |                                                                      ^
+    795|       clientKind: "pi",
+    796|       category: "tool-bearing",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  13:10:40
+   Duration  71.78s (transform 1.63s, setup 0ms, collect 2.28s, tests 68.57s, environment 0ms, prepare 341ms)
+
+undefined
+D:\DEV\role-model\.worktrees\62-litellm-pi-craft-codex-execution-hardening\role-model-router\apps\runtime-host-bridge:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run test/validate-vendors.test.ts

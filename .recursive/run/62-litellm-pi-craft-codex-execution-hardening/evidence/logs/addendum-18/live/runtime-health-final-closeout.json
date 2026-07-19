@@ -1,0 +1,121 @@
+{
+  "capturedAt": "2026-07-10T04:29:39.0471978Z",
+  "health": {
+    "status": "healthy",
+    "executionMode": "remote_only",
+    "vendors": {
+      "llama-swap": {
+        "vendorId": "llama-swap",
+        "healthStatus": "inactive"
+      },
+      "litellm": {
+        "vendorId": "litellm",
+        "healthStatus": "inactive"
+      }
+    },
+    "inactiveVendors": [
+      "llama-swap",
+      "litellm"
+    ],
+    "credentialLifecycleAuthority": {
+      "state": "authoritative",
+      "bootstrapStatus": "ready"
+    },
+    "sessionBootstrap": {
+      "status": "ready",
+      "startedAt": "2026-07-10T03:31:12.253Z",
+      "finishedAt": "2026-07-10T03:31:12.892Z",
+      "stages": [
+        {
+          "stageId": "credentials",
+          "status": "ready",
+          "startedAt": "2026-07-10T03:31:12.253Z",
+          "finishedAt": "2026-07-10T03:31:12.274Z",
+          "details": {
+            "pendingAttempted": 0,
+            "pendingSucceeded": 0,
+            "pendingConnected": 0,
+            "pendingFailed": 0,
+            "pendingDeferred": 0,
+            "refreshAttempted": 0,
+            "refreshSucceeded": 0,
+            "refreshFailed": 0
+          }
+        },
+        {
+          "stageId": "endpoints",
+          "status": "ready",
+          "startedAt": "2026-07-10T03:31:12.29Z",
+          "finishedAt": "2026-07-10T03:31:12.309Z",
+          "details": {
+            "source": "sqlite",
+            "count": 2
+          }
+        },
+        {
+          "stageId": "peers",
+          "status": "skipped",
+          "startedAt": "2026-07-10T03:31:12.31Z",
+          "finishedAt": "2026-07-10T03:31:12.31Z",
+          "message": "no peer loads in manifest",
+          "details": {
+            "reloaded": 0,
+            "failed": 0
+          }
+        },
+        {
+          "stageId": "vendors",
+          "status": "ready",
+          "startedAt": "2026-07-10T03:31:12.31Z",
+          "finishedAt": "2026-07-10T03:31:12.311Z"
+        },
+        {
+          "stageId": "local-reload",
+          "status": "skipped",
+          "startedAt": "2026-07-10T03:31:12.311Z",
+          "finishedAt": "2026-07-10T03:31:12.311Z",
+          "message": "no llama-swap loads in manifest"
+        },
+        {
+          "stageId": "remote-health",
+          "status": "ready",
+          "startedAt": "2026-07-10T03:31:12.311Z",
+          "finishedAt": "2026-07-10T03:31:12.891Z",
+          "details": {
+            "probed": 1,
+            "healthy": 1,
+            "degraded": 0,
+            "results": [
+              {
+                "endpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+                "modelId": "deepseek/deepseek-v4-pro",
+                "reason": "healthy",
+                "healthStatus": "healthy"
+              }
+            ]
+          }
+        },
+        {
+          "stageId": "inventory",
+          "status": "ready",
+          "startedAt": "2026-07-10T03:31:12.891Z",
+          "finishedAt": "2026-07-10T03:31:12.892Z",
+          "details": {
+            "modelIdCount": 2,
+            "endpointIdCount": 2,
+            "localEndpointCount": 0,
+            "remoteEndpointCount": 2,
+            "emptyAliasIds": [],
+            "driftWarningCount": 0,
+            "driftWarnings": []
+          }
+        }
+      ]
+    }
+  },
+  "processes": {
+    "ProcessId": 33808,
+    "ExecutablePath": "D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe",
+    "CommandLine": "\"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\\role-model-router\\dist\\release\\win32-x64\\role-model-runtime.exe\" --repo-root \"D:\\DEV\\role-model\\.worktrees\\62-litellm-pi-craft-codex-execution-hardening\" --runtime-state-root \"C:\\Users\\erikb\\AppData\\Local\\Role Model Runtime\" --scope-id standalone-runtime --host 127.0.0.1 --port 3456"
+  }
+}

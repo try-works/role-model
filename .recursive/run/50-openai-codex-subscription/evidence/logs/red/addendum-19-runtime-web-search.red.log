@@ -1,0 +1,29 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/runtime-web-search.test.ts [ src/runtime-web-search.test.ts ]
+Error: Cannot find module './runtime-web-search.js' imported from 'D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge/src/runtime-web-search.test.ts'
+ ❯ src/runtime-web-search.test.ts:3:1
+      1| import { describe, expect, test } from "vitest";
+      2| 
+      3| import { executeRuntimeWebSearch } from "./runtime-web-search.js";
+       | ^
+      4| 
+      5| describe("runtime-web-search", () => {
+
+Caused by: Error: Failed to load url ./runtime-web-search.js (resolved id: ./runtime-web-search.js) in D:/DEV/role-model/.worktrees/50-openai-codex-subscription/role-model-router/apps/runtime-host-bridge/src/runtime-web-search.test.ts. Does the file exist?
+ ❯ loadAndTransform ../../../node_modules/.pnpm/vite@7.3.2_@types+node@22.1_f7dc1826a0f6bcfe28ab74fd91d23836/node_modules/vite/dist/node/chunks/config.js:22663:33
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  20:17:28
+   Duration  1.30s (transform 208ms, setup 0ms, collect 0ms, tests 0ms, environment 0ms, prepare 477ms)
+
+undefined
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/runtime-web-search.test.ts

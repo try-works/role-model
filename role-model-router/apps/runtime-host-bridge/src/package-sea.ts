@@ -1,6 +1,16 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { chmod, copyFile, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  copyFile,
+  cp,
+  mkdir,
+  readFile,
+  readdir,
+  rm,
+  utimes,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -8,6 +18,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 
 import { build as buildBundle } from "esbuild";
+
+import { resolveBuildRuntimeChannel, resolveRuntimeChannelProfile } from "./runtime-channel.js";
+import { resolveRuntimeVersionInfo } from "./runtime-version.js";
 
 export interface BuildTarget {
   readonly platform: NodeJS.Platform;
@@ -78,18 +91,47 @@ const standaloneReleaseCopies = [
     destinationRelativePath: "build/client",
   },
   {
-    sourceRelativePath: "testdata/router-runtime",
-    destinationRelativePath: "testdata/router-runtime",
-  },
-  {
     sourceRelativePath: "testdata/catalog/litellm-model-prices.json",
-    destinationRelativePath: "testdata/catalog/litellm-model-prices.json",
+    destinationRelativePath: "role-model-router/packages/vendor-litellm/data/model-prices.json",
   },
   {
     sourceRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
     destinationRelativePath: "role-model-router/packages/catalog/data/normalized-catalog.json",
   },
+  {
+    sourceRelativePath: "role-model-router/packages/core/data/taxonomy",
+    destinationRelativePath: "role-model-router/packages/core/data/taxonomy",
+  },
 ] as const satisfies readonly StandaloneReleaseCopy[];
+
+const forbiddenProductionReleasePathFragments = [
+  "testdata/",
+  "testdata/router-runtime",
+  ".recursive",
+  "fixtures/provider-accounts.json",
+  "fixtures/observability-history.json",
+  "fixtures/registry-sources.json",
+] as const;
+
+const forbiddenProductionReleaseTextMarkers = [
+  "phase5.mock",
+  "mock.openai",
+  "openai.litellm",
+  "http://127.0.0.1:45679",
+  "anthropic.team.shared",
+  "cli.local.coder",
+] as const;
+
+const productionReleaseTextExtensions = new Set([
+  ".css",
+  ".html",
+  ".js",
+  ".json",
+  ".md",
+  ".txt",
+  ".yaml",
+  ".yml",
+]);
 
 export function resolveBuildTarget(
   platform: NodeJS.Platform = process.platform,
@@ -116,6 +158,76 @@ export function createSeaConfigForTarget(target: BuildTarget): SeaConfigForTarge
 
 export function listStandaloneReleaseCopies(): readonly StandaloneReleaseCopy[] {
   return standaloneReleaseCopies;
+}
+
+function normalizeReleasePath(filePath: string): string {
+  return filePath.split(path.sep).join("/");
+}
+
+async function listReleaseFiles(root: string): Promise<string[]> {
+  const entries = await readdir(root, { withFileTypes: true });
+  const files: string[] = [];
+  for (const entry of entries) {
+    const entryPath = path.join(root, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await listReleaseFiles(entryPath)));
+      continue;
+    }
+    if (entry.isFile()) {
+      files.push(entryPath);
+    }
+  }
+  return files;
+}
+
+export async function assertProductionReleaseHasNoQaArtifacts(releaseDir: string): Promise<void> {
+  const files = await listReleaseFiles(releaseDir);
+  const pathViolations = files
+    .map((filePath) => normalizeReleasePath(path.relative(releaseDir, filePath)))
+    .filter((relativePath) =>
+      forbiddenProductionReleasePathFragments.some((fragment) => relativePath.includes(fragment)),
+    );
+  if (pathViolations.length > 0) {
+    throw new Error(
+      [
+        "Production release contains QA fixture artifacts.",
+        ...pathViolations.map((relativePath) => `- ${relativePath}`),
+      ].join("\n"),
+    );
+  }
+
+  const textViolations: string[] = [];
+  for (const filePath of files) {
+    if (!productionReleaseTextExtensions.has(path.extname(filePath))) {
+      continue;
+    }
+    const text = await readFile(filePath, "utf8");
+    for (const marker of forbiddenProductionReleaseTextMarkers) {
+      if (text.includes(marker)) {
+        textViolations.push(
+          `${normalizeReleasePath(path.relative(releaseDir, filePath))}: ${marker}`,
+        );
+      }
+    }
+  }
+  if (textViolations.length > 0) {
+    throw new Error(
+      [
+        "Production release contains QA/mock data markers.",
+        ...textViolations.map((violation) => `- ${violation}`),
+      ].join("\n"),
+    );
+  }
+}
+
+export function isDirectSeaInvocation(
+  moduleUrl: string,
+  argvEntry: string | undefined = process.argv[1],
+): boolean {
+  if (!argvEntry || argvEntry.trim().length === 0) {
+    return false;
+  }
+  return moduleUrl === pathToFileURL(path.resolve(argvEntry)).href;
 }
 
 function runOrThrow(
@@ -160,15 +272,12 @@ function resolvePostjectCommand(): string {
     : path.join(repoRoot, "node_modules", ".bin", "postject");
 }
 
-function resolveGoCommand(): string {
-  return (
-    process.env.GO_BINARY ??
-    (process.platform === "win32" ? "C:\\Program Files\\Go\\bin\\go.exe" : "go")
-  );
+export function resolveGoCommand(): string {
+  return process.env.GO_BINARY ?? "go";
 }
 
-function resolvePackagedRuntimeName(): string {
-  return process.platform === "win32" ? "role-model-runtime.exe" : "role-model-runtime";
+function resolvePackagedRuntimeName(name: string): string {
+  return process.platform === "win32" ? `${name}.exe` : name;
 }
 
 function resolvePowerShellCommand(): string {
@@ -232,14 +341,31 @@ async function stageStandaloneReleaseFiles(releaseDir: string): Promise<void> {
   }
 }
 
-async function buildWindowsLauncher(releaseDir: string): Promise<void> {
+export async function stampReleaseTreeModificationTimes(
+  releaseDir: string,
+  packageBuildDate: Date,
+): Promise<void> {
+  const entries = await readdir(releaseDir, { withFileTypes: true });
+  for (const entry of entries) {
+    const entryPath = path.join(releaseDir, entry.name);
+    if (entry.isDirectory()) {
+      await stampReleaseTreeModificationTimes(entryPath, packageBuildDate);
+      continue;
+    }
+    if (entry.isFile()) {
+      await utimes(entryPath, packageBuildDate, packageBuildDate);
+    }
+  }
+  await utimes(releaseDir, packageBuildDate, packageBuildDate);
+}
+
+async function buildWindowsLauncher(releaseDir: string, launcherName: string): Promise<void> {
   if (process.platform !== "win32") {
     return;
   }
-  const launcherMainPath = path.join(routerRoot, "apps", "launcher", "main.go");
   runOrThrow(
     resolveGoCommand(),
-    ["build", "-o", path.join(releaseDir, "role-model-launcher.exe"), launcherMainPath],
+    createWindowsLauncherBuildArgs(releaseDir, launcherName),
     repoRoot,
     {
       GO111MODULE: "off",
@@ -248,14 +374,25 @@ async function buildWindowsLauncher(releaseDir: string): Promise<void> {
   );
 }
 
-function createWindowsLauncherBatchFile(): string {
+export function createWindowsLauncherBuildArgs(
+  releaseDir: string,
+  launcherName = "role-model-launcher.exe",
+): string[] {
+  const launcherPackagePath = `./${path
+    .relative(repoRoot, path.join(routerRoot, "apps", "launcher"))
+    .split(path.sep)
+    .join("/")}`;
+  return ["build", "-o", path.join(releaseDir, launcherName), launcherPackagePath];
+}
+
+export function createWindowsLauncherBatchFile(launcherName = "role-model-launcher.exe"): string {
   return [
     "@echo off",
     "set SCRIPT_DIR=%~dp0",
-    'if exist "%SCRIPT_DIR%role-model-launcher.exe" (',
-    '  "%SCRIPT_DIR%role-model-launcher.exe"',
+    `if exist "%SCRIPT_DIR%${launcherName}" (`,
+    `  "%SCRIPT_DIR%${launcherName}"`,
     ") else (",
-    "  echo ERROR: role-model-launcher.exe not found.",
+    `  echo ERROR: ${launcherName} not found.`,
     "  pause",
     "  exit /b 1",
     ")",
@@ -371,6 +508,19 @@ export async function packageSeaRuntime(): Promise<{
   if (!buildTarget) {
     throw new Error(`Unsupported runtime packaging target: ${process.platform}-${process.arch}`);
   }
+  const profile = resolveRuntimeChannelProfile(resolveBuildRuntimeChannel());
+  const packageBuildDate = new Date();
+  const packageBuildDateIso = packageBuildDate.toISOString();
+  const versionInfo = await resolveRuntimeVersionInfo({
+    repoRoot,
+    env: {
+      ...process.env,
+      BUILD_DATE:
+        process.env.BUILD_DATE && process.env.BUILD_DATE.trim().length > 0
+          ? process.env.BUILD_DATE
+          : packageBuildDateIso,
+    },
+  });
   const releaseTarget = `${buildTarget.platform}-${buildTarget.arch}`;
   runOrThrow(
     process.execPath,
@@ -392,10 +542,10 @@ export async function packageSeaRuntime(): Promise<{
   }
 
   const releaseDir = path.join(distRoot, "release", releaseTarget);
-  const outputPath = path.join(releaseDir, resolvePackagedRuntimeName());
+  const outputPath = path.join(releaseDir, resolvePackagedRuntimeName(profile.name));
   const blobPath = path.join(distRoot, "sea-prep.blob");
+  await rm(releaseDir, { recursive: true, force: true });
   await mkdir(releaseDir, { recursive: true });
-  await rm(outputPath, { force: true });
   await copyFile(process.execPath, outputPath);
   if (process.platform !== "win32") {
     await chmod(outputPath, 0o755);
@@ -403,16 +553,25 @@ export async function packageSeaRuntime(): Promise<{
   await injectSeaBlob(outputPath, blobPath);
 
   await stageStandaloneReleaseFiles(releaseDir);
-  await buildWindowsLauncher(releaseDir);
+  const launcherName = `${profile.name}-launcher.exe`;
+  await buildWindowsLauncher(releaseDir, launcherName);
   if (process.platform === "win32") {
     await writeFile(
-      path.join(releaseDir, "Role-Model.bat"),
-      createWindowsLauncherBatchFile(),
+      path.join(releaseDir, `${profile.name}.bat`),
+      createWindowsLauncherBatchFile(launcherName),
       "ascii",
     );
   }
 
   const sha256 = await writeSha256(outputPath);
+  const sourceTreeResult = spawnSync("git", ["rev-parse", "HEAD^{tree}"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
+  if (sourceTreeResult.status !== 0 || !sourceTreeResult.stdout.trim()) {
+    throw new Error("Unable to resolve source_tree for packaged runtime");
+  }
+  const sourceTree = sourceTreeResult.stdout.trim();
   await writeFile(
     path.join(releaseDir, "manifest.json"),
     JSON.stringify(
@@ -422,12 +581,22 @@ export async function packageSeaRuntime(): Promise<{
         arch: process.arch,
         target: releaseTarget,
         sha256,
+        executable_sha256: sha256,
+        core_payload_sha256: sha256,
+        source_tree: sourceTree,
+        version: versionInfo.version,
+        commit: versionInfo.commit,
+        build_date: versionInfo.build_date,
+        ...profile,
+        endpoint: `http://${profile.host}:${profile.port}`,
       },
       null,
       2,
     ),
     "utf8",
   );
+  await assertProductionReleaseHasNoQaArtifacts(releaseDir);
+  await stampReleaseTreeModificationTimes(releaseDir, new Date(versionInfo.build_date));
 
   return {
     outputPath,
@@ -436,7 +605,7 @@ export async function packageSeaRuntime(): Promise<{
   };
 }
 
-if (import.meta.url === pathToFileURL(__filename).href) {
+if (isDirectSeaInvocation(import.meta.url)) {
   const result = await packageSeaRuntime();
   console.log(JSON.stringify(result, null, 2));
 }

@@ -1,0 +1,27 @@
+[QA] Starting Role Model Runtime Bridge...
+[QA] repoRoot: D:\DEV\role-model\.worktrees\60-runtime-ui-paper-linear-review-alignment
+[QA] runtimeStateRoot: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa
+[QA] scopeId: runtime-qa
+[QA] Seeded placeholder MOONSHOT_API_KEY for local UI QA.
+[QA] Keeping runtime state for observation persistence...
+[QA] Seeded runtime config: C:\Users\erikb\AppData\Local\Temp\role-model-runtime-qa\runtime-config.yaml
+[QA] Pre-registered DeepSeek account.
+[QA] Bridge server running at http://127.0.0.1:3468
+[QA] API docs:
+  GET http://127.0.0.1:3468/api/role-model/runtime/summary
+  GET http://127.0.0.1:3468/api/role-model/providers
+  GET http://127.0.0.1:3468/api/role-model/accounts
+  GET http://127.0.0.1:3468/api/role-model/endpoints
+  GET http://127.0.0.1:3468/api/role-model/roles
+  GET http://127.0.0.1:3468/api/role-model/runtime/config
+  GET http://127.0.0.1:3468/api/role-model/router/summary
+  GET http://127.0.0.1:3468/api/role-model/router/config
+  GET http://127.0.0.1:3468/api/role-model/router/candidates
+  GET http://127.0.0.1:3468/api/role-model/router/decisions
+  GET http://127.0.0.1:3468/api/role-model/local/models
+  GET http://127.0.0.1:3468/api/role-model/local/policy
+  GET http://127.0.0.1:3468/api/role-model/local/swap
+  GET http://127.0.0.1:3468/api/role-model/local/logs
+  GET http://127.0.0.1:3468/v1/models
+  POST http://127.0.0.1:3468/v1/chat/completions
+[QA] Press Ctrl+C to stop

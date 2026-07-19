@@ -1,0 +1,21 @@
+Command: pi --no-extensions --no-tools --skill packages/pi-role-model/skills/role-model -p /help
+ExitCode: 0
+Output:
+Hello! I'm your coding assistant inside **pi** 🤖. Here's how I can help:
+
+- **Read files** – Show me any file in the project.
+- **Edit files** – I can make changes directly in your codebase.
+- **Write new files** – Create files with content you specify.
+- **Execute commands** – Run shell commands (build, test, lint, etc.).
+- **Understand your project** – I have full context of the current working directory (`D:/DEV/role-model/.worktrees/55-pi-role-model-package`).
+
+### To get started, try:
+- `read <filepath>` – Show a file
+- `edit <filepath>` – Propose changes
+- `run <command>` – Execute a terminal command
+- `ask` – Any coding question
+
+If you need help with **pi itself** (extensions, themes, skills, TUI, SDK, custom providers, etc.), just let me know – I have full documentation loaded about those topics.
+
+What would you like to do?
+

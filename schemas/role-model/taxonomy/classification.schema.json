@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://role-model.dev/schemas/taxonomy/classification.schema.json",
+  "title": "Role Model Classification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["role_model"],
+  "properties": {
+    "role_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "intent"],
+      "properties": {
+        "contract_version": { "const": 1 },
+        "intent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["taxonomy_version", "classification_contract_version"],
+          "properties": {
+            "classification_version": { "type": "string", "minLength": 1 },
+            "taxonomy_version": { "type": "string", "minLength": 1 },
+            "content_revision": { "type": "string", "minLength": 1 },
+            "classification_contract_version": { "const": "role-model.classification.v1" },
+            "source": { "type": "string", "minLength": 1 },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "role_hint_id": { "type": "string", "minLength": 1 },
+            "requested_role_id": { "type": "string", "minLength": 1 },
+            "task_type": { "type": "string", "minLength": 1 },
+            "task_action": { "type": "string", "minLength": 1 },
+            "task_variant": { "type": ["string", "null"] },
+            "task_source": { "type": "string", "minLength": 1 },
+            "task_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "required_capabilities": { "type": "array", "items": { "type": "string" } },
+            "preferred_capabilities": { "type": "array", "items": { "type": "string" } },
+            "required_modalities": { "type": "array", "items": { "type": "string" } },
+            "output_modalities": { "type": "array", "items": { "type": "string" } },
+            "tool_classes": { "type": "array", "items": { "type": "string" } },
+            "context_tokens_estimate": { "type": ["integer", "null"], "minimum": 0 },
+            "evidence": { "type": "array", "items": { "type": "string" } },
+            "alternatives": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "role_hint_id": { "type": "string" },
+                  "requested_role_id": { "type": "string" },
+                  "task_type": { "type": "string" },
+                  "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+                }
+              }
+            },
+            "extensions": { "type": "object" }
+          }
+        }
+      }
+    }
+  }
+}

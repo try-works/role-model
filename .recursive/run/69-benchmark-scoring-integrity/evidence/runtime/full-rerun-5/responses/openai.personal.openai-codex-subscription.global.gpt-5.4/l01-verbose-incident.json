@@ -1,0 +1,16 @@
+{
+  "runId": "5513dd86-aae0-456d-bfa6-02a574de1ca1",
+  "suiteId": "routing-capability-v2",
+  "mode": "full",
+  "endpointId": "openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "modelId": "chatgpt/gpt-5.4",
+  "caseId": "l01-verbose-incident",
+  "requestId": "bench-5513dd86-aae0-456d-bfa6-02a574de1ca1-l01-verbose-incident-openai.personal.openai-codex-subscription.global.gpt-5.4",
+  "actualResponse": "{\n  \"answer\": \"Difficulty-based routing is a strategy that classifies each request by complexity and sends it to the most appropriate model or service tier to balance quality, latency, and cost.\"\n}",
+  "rawResponse": "```json\n{\"answer\":\"Difficulty-based routing is a strategy that classifies each request by complexity and sends it to the most appropriate model or service tier to balance quality, latency, and cost.\"}\n```",
+  "formattedDeliverable": "{\n  \"answer\": \"Difficulty-based routing is a strategy that classifies each request by complexity and sends it to the most appropriate model or service tier to balance quality, latency, and cost.\"\n}",
+  "extractionMethod": "json_fence",
+  "latencyMs": 2648,
+  "failure": false,
+  "recordedAtMs": 1783934221732
+}

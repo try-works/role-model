@@ -54,6 +54,7 @@ export default [
     route("observe", "routes/legacy-redirect.tsx", { id: "legacy-observe" }),
     route("observe/activity", "routes/observe-activity.tsx"),
     route("observe/requests", "routes/requests.tsx"),
+    route("observe/routing", "routes/observe-routing.tsx"),
     route("observe/requests/:requestId", "routes/request-detail.tsx"),
     route("observe/logs", "routes/observe-logs.tsx"),
     route("endpoints/downstream", "routes/legacy-redirect.tsx", {

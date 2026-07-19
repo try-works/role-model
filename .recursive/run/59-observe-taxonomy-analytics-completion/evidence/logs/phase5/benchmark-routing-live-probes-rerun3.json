@@ -1,0 +1,243 @@
+[
+  {
+    "clientRequestId": "manual-proof-baseline-task-003",
+    "requestId": "req-b18247be-315d-4be5-8805-b19c109b9ed8",
+    "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "selectedModelId": "deepseek/deepseek-v4-pro",
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "BENCHMARK_TASK_SCORE",
+      "CACHE_AFFINITY_APPLIED",
+      "HIGH_QUALITY_TARGET_MET",
+      "ROLE_POLICY_APPLIED",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ],
+    "qualitySource": "benchmark",
+    "qualityRaw": {
+      "benchmark_quality_score": 1,
+      "benchmark_task_score": 1,
+      "benchmark_role_score": 1,
+      "benchmark_group_score": 1,
+      "benchmark_group_ids": [
+        "engineering"
+      ],
+      "benchmark_reason": "task",
+      "benchmark_source": "routing-capability-benchmark",
+      "freshness_weight": 0.9303959143754577,
+      "neutral_value": 0.5,
+      "benchmark_role_score_low_coverage": true,
+      "benchmark_role_case_count": 1,
+      "effective_value": 0.9651979571877288
+    },
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "manual_qa",
+      "originalRoleHintId": "coder",
+      "originalTaskType": "coder.edit",
+      "roleSource": "manual_qa",
+      "taskSource": "manual_qa",
+      "confidence": 1,
+      "taskConfidence": 1,
+      "evidence": [
+        "manual benchmark routing proof task score rerun 3"
+      ],
+      "role": {
+        "id": "coder",
+        "hard": false
+      },
+      "task": {
+        "id": "coder.edit",
+        "hard": false
+      }
+    },
+    "taxonomyDimensions": {
+      "taxonomy_original_role_hint_id": "coder",
+      "taxonomy_original_task_type": "coder.edit",
+      "taxonomy_group_id": null,
+      "taxonomy_role_id": "coder",
+      "taxonomy_task_type": "coder.edit",
+      "taxonomy_task_action": null,
+      "taxonomy_task_variant": null,
+      "taxonomy_capability_ids": null,
+      "taxonomy_modality_ids": null,
+      "taxonomy_tool_class_ids": null,
+      "taxonomy_role_source": "manual_qa",
+      "taxonomy_task_source": "manual_qa",
+      "taxonomy_classification_source": "manual_qa",
+      "taxonomy_confidence": 1,
+      "taxonomy_task_confidence": 1,
+      "taxonomy_alternative_count": null,
+      "taxonomy_alternative_role_ids": null,
+      "taxonomy_alternative_task_types": null,
+      "taxonomy_version": "1.0.0-alpha.1",
+      "taxonomy_content_revision": null,
+      "classification_contract_version": "role-model.classification.v1"
+    },
+    "routingMode": {
+      "source": "request-override",
+      "requestedOverride": "baseline",
+      "effectiveMode": "baseline"
+    },
+    "controllerRouting": null
+  },
+  {
+    "clientRequestId": "manual-proof-baseline-role-002",
+    "requestId": "req-bb86b5f0-c5da-46ba-84ed-40785c4ca53d",
+    "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "selectedModelId": "deepseek/deepseek-v4-pro",
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "BENCHMARK_TASK_SCORE",
+      "CACHE_AFFINITY_APPLIED",
+      "HIGH_QUALITY_TARGET_MET",
+      "ROLE_POLICY_APPLIED",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ],
+    "qualitySource": "benchmark",
+    "qualityRaw": {
+      "benchmark_quality_score": 1,
+      "benchmark_task_score": 1,
+      "benchmark_role_score": 1,
+      "benchmark_group_score": 1,
+      "benchmark_group_ids": [
+        "engineering"
+      ],
+      "benchmark_reason": "task",
+      "benchmark_source": "routing-capability-benchmark",
+      "freshness_weight": 0.9965180056062775,
+      "neutral_value": 0.5,
+      "benchmark_role_score_low_coverage": true,
+      "benchmark_role_case_count": 1,
+      "effective_value": 0.9982590028031387
+    },
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "manual_qa",
+      "originalRoleHintId": "coder",
+      "roleSource": "manual_qa",
+      "confidence": 1,
+      "evidence": [
+        "manual benchmark routing proof role score rerun"
+      ],
+      "role": {
+        "id": "coder",
+        "hard": false
+      }
+    },
+    "taxonomyDimensions": {
+      "taxonomy_original_role_hint_id": "coder",
+      "taxonomy_original_task_type": null,
+      "taxonomy_group_id": null,
+      "taxonomy_role_id": "coder",
+      "taxonomy_task_type": null,
+      "taxonomy_task_action": null,
+      "taxonomy_task_variant": null,
+      "taxonomy_capability_ids": null,
+      "taxonomy_modality_ids": null,
+      "taxonomy_tool_class_ids": null,
+      "taxonomy_role_source": "manual_qa",
+      "taxonomy_task_source": null,
+      "taxonomy_classification_source": "manual_qa",
+      "taxonomy_confidence": 1,
+      "taxonomy_task_confidence": null,
+      "taxonomy_alternative_count": null,
+      "taxonomy_alternative_role_ids": null,
+      "taxonomy_alternative_task_types": null,
+      "taxonomy_version": "1.0.0-alpha.1",
+      "taxonomy_content_revision": null,
+      "classification_contract_version": "role-model.classification.v1"
+    },
+    "routingMode": {
+      "source": "request-override",
+      "requestedOverride": "baseline",
+      "effectiveMode": "baseline"
+    },
+    "controllerRouting": null
+  },
+  {
+    "clientRequestId": "manual-proof-baseline-group-002",
+    "requestId": "req-8cc605c4-e66c-4e9c-8f9c-69f16aa88a86",
+    "selectedEndpointId": "deepseek.personal.deepseek-api-key.global.deepseek-v4-pro",
+    "selectedModelId": "deepseek/deepseek-v4-pro",
+    "selectionReasons": [
+      "BEST_TOTAL_SCORE",
+      "DECLARED_PROFILE_USED",
+      "MEASURED_PROFILE_USED",
+      "BENCHMARK_GROUP_SCORE",
+      "CACHE_AFFINITY_APPLIED",
+      "HIGH_QUALITY_TARGET_MET",
+      "ROLE_POLICY_APPLIED",
+      "TASK_POLICY_APPLIED",
+      "FALLBACK_CHAIN_COMPUTED"
+    ],
+    "qualitySource": "benchmark",
+    "qualityRaw": {
+      "benchmark_quality_score": 1,
+      "benchmark_group_score": 1,
+      "benchmark_group_ids": [
+        "engineering",
+        "governance_safety"
+      ],
+      "benchmark_reason": "group",
+      "benchmark_source": "routing-capability-benchmark",
+      "freshness_weight": 0.9965095633419209,
+      "neutral_value": 0.5,
+      "effective_value": 0.9982547816709604
+    },
+    "normalizedIntent": {
+      "contractVersion": 1,
+      "taxonomyVersion": "1.0.0-alpha.1",
+      "classificationContractVersion": "role-model.classification.v1",
+      "source": "manual_qa",
+      "originalRoleHintId": "security",
+      "roleSource": "manual_qa",
+      "confidence": 1,
+      "evidence": [
+        "manual benchmark routing proof group score rerun"
+      ],
+      "role": {
+        "id": "security",
+        "hard": false
+      }
+    },
+    "taxonomyDimensions": {
+      "taxonomy_original_role_hint_id": "security",
+      "taxonomy_original_task_type": null,
+      "taxonomy_group_id": null,
+      "taxonomy_role_id": "security",
+      "taxonomy_task_type": null,
+      "taxonomy_task_action": null,
+      "taxonomy_task_variant": null,
+      "taxonomy_capability_ids": null,
+      "taxonomy_modality_ids": null,
+      "taxonomy_tool_class_ids": null,
+      "taxonomy_role_source": "manual_qa",
+      "taxonomy_task_source": null,
+      "taxonomy_classification_source": "manual_qa",
+      "taxonomy_confidence": 1,
+      "taxonomy_task_confidence": null,
+      "taxonomy_alternative_count": null,
+      "taxonomy_alternative_role_ids": null,
+      "taxonomy_alternative_task_types": null,
+      "taxonomy_version": "1.0.0-alpha.1",
+      "taxonomy_content_revision": null,
+      "classification_contract_version": "role-model.classification.v1"
+    },
+    "routingMode": {
+      "source": "request-override",
+      "requestedOverride": "baseline",
+      "effectiveMode": "baseline"
+    },
+    "controllerRouting": null
+  }
+]

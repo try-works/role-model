@@ -1,0 +1,16 @@
+{
+  "runId": "ce943fe9-f5d4-444b-8ab2-447451126be9",
+  "suiteId": "routing-capability-v2",
+  "mode": "quick",
+  "endpointId": "moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "modelId": "moonshot/kimi-k2.7-code",
+  "caseId": "h02-fix-async-counter",
+  "requestId": "bench-ce943fe9-f5d4-444b-8ab2-447451126be9-h02-fix-async-counter-moonshot.personal.kimi-code.global.kimi-k2.7-code",
+  "actualResponse": "```typescript\nlet count = 0;\n\nclass Mutex {\n  private promise: Promise<void> = Promise.resolve();\n\n  async runExclusive<T>(fn: () => Promise<T>): Promise<T> {\n    const release = await this.acquire();\n    try {\n      return await fn();\n    } finally {\n      release();\n    }\n  }\n\n  private acquire(): Promise<() => void> {\n    let resolve!: () => void;\n    const p = new Promise<void>((r) => (resolve = r));\n    const wait = this.promise.then(() => p);\n    this.promise = wait;\n    return wait.then(() => resolve);\n  }\n}\n\nconst mutex = new Mutex();\n\nasync function increment() {\n  await mutex.runExclusive(async () => {\n    const current = count;\n    await Promise.resolve();\n    count = current + 1;\n  });\n}\n\n(async () => {\n  await Promise.all([increment(), increment(), increment()]);\n  console.log(count);\n})();\n```",
+  "rawResponse": "```typescript\nlet count = 0;\n\nclass Mutex {\n  private promise: Promise<void> = Promise.resolve();\n\n  async runExclusive<T>(fn: () => Promise<T>): Promise<T> {\n    const release = await this.acquire();\n    try {\n      return await fn();\n    } finally {\n      release();\n    }\n  }\n\n  private acquire(): Promise<() => void> {\n    let resolve!: () => void;\n    const p = new Promise<void>((r) => (resolve = r));\n    const wait = this.promise.then(() => p);\n    this.promise = wait;\n    return wait.then(() => resolve);\n  }\n}\n\nconst mutex = new Mutex();\n\nasync function increment() {\n  await mutex.runExclusive(async () => {\n    const current = count;\n    await Promise.resolve();\n    count = current + 1;\n  });\n}\n\n(async () => {\n  await Promise.all([increment(), increment(), increment()]);\n  console.log(count);\n})();\n```",
+  "formattedDeliverable": "```typescript\nlet count = 0;\n\nclass Mutex {\n  private promise: Promise<void> = Promise.resolve();\n\n  async runExclusive<T>(fn: () => Promise<T>): Promise<T> {\n    const release = await this.acquire();\n    try {\n      return await fn();\n    } finally {\n      release();\n    }\n  }\n\n  private acquire(): Promise<() => void> {\n    let resolve!: () => void;\n    const p = new Promise<void>((r) => (resolve = r));\n    const wait = this.promise.then(() => p);\n    this.promise = wait;\n    return wait.then(() => resolve);\n  }\n}\n\nconst mutex = new Mutex();\n\nasync function increment() {\n  await mutex.runExclusive(async () => {\n    const current = count;\n    await Promise.resolve();\n    count = current + 1;\n  });\n}\n\n(async () => {\n  await Promise.all([increment(), increment(), increment()]);\n  console.log(count);\n})();\n```",
+  "extractionMethod": "code_fence",
+  "latencyMs": 22239,
+  "failure": false,
+  "recordedAtMs": 1783931509195
+}

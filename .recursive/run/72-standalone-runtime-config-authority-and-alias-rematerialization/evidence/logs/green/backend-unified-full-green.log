@@ -1,0 +1,37 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/72-standalone-runtime-config-authority-and-alias-rematerialization/role-model-router/apps/runtime-host-bridge
+
+(node:31508) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ test/backend-unified-runtime-config.test.ts (25 tests) 51125ms
+   ✓ runtime-host-bridge unified runtime backend > router candidates expose every configured endpoint and mark current execution-mode eligibility  1837ms
+   ✓ runtime-host-bridge unified runtime backend > rejects benchmark runs that target endpoints excluded by execution mode  1653ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces the derived execution mode in the runtime summary when a unified config file is provided  695ms
+   ✓ runtime-host-bridge unified runtime backend > reads and updates unified runtime config through the backend  754ms
+   ✓ runtime-host-bridge unified runtime backend > merges partial runtime config updates without dropping existing routing strategy  769ms
+   ✓ runtime-host-bridge unified runtime backend > canonicalizes the primary routing alias to the live routing matrix on startup  1235ms
+   ✓ runtime-host-bridge unified runtime backend > creates and updates unified runtime config when the configured path does not exist yet  675ms
+   ✓ runtime-host-bridge unified runtime backend > persists explicit hybrid execution mode from routing strategy updates  1177ms
+   ✓ runtime-host-bridge unified runtime backend > bootstraps the primary routing alias when routing posture is saved without preconfigured aliases  2014ms
+   ✓ runtime-host-bridge unified runtime backend > bootstraps a settings-specific primary routing alias for remote-only posture without preconfigured aliases  2315ms
+   ✓ runtime-host-bridge unified runtime backend > maintains the routing alias matrix across strategy families and execution modes  21700ms
+   ✓ runtime-host-bridge unified runtime backend > persists the full canonical routing alias matrix instead of a single primary alias  2167ms
+   ✓ runtime-host-bridge unified runtime backend > normalizes legacy craft-ask routing strategy updates to the default alias family  1301ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites persisted craft-ask alias ids out of startup config materialization  1038ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when the canonical matrix already exists  1207ms
+   ✓ runtime-host-bridge unified runtime backend > rewrites legacy craft-ask matrix rows from persisted config even when startup does not need to re-materialize aliases  825ms
+   ✓ runtime-host-bridge unified runtime backend > renames the primary routing alias when routing strategy and execution mode change  707ms
+   ✓ runtime-host-bridge unified runtime backend > does not mark all candidates ignored when routing guidance has no preferred endpoints  966ms
+   ✓ runtime-host-bridge unified runtime backend > preserves synthesized activated endpoint models across runtime config updates  894ms
+   ✓ runtime-host-bridge unified runtime backend > returns no controller assignment when the unified config has no endpoints yet  728ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces normalized provider docs and npm metadata through listProviders  950ms
+   ✓ runtime-host-bridge unified runtime backend > preserves manual account authority and provenance on exact runtime-config account-id collision  1991ms
+   ✓ runtime-host-bridge unified runtime backend > migrates a legacy standalone runtime config into the canonical state path on startup  721ms
+   ✓ runtime-host-bridge unified runtime backend > repairs stale standalone canonical remote aliases after restart bootstrap restores persisted remote endpoints  1579ms
+   ✓ runtime-host-bridge unified runtime backend > surfaces LiteLLM-backed Moonshot models and endpoints from unified runtime config  1226ms
+
+ Test Files  1 passed (1)
+      Tests  25 passed (25)
+   Start at  09:00:38
+   Duration  54.30s (transform 1.63s, setup 0ms, collect 2.25s, tests 51.13s, environment 0ms, prepare 343ms)
+

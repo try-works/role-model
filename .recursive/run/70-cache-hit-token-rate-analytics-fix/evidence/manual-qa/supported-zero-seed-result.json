@@ -1,0 +1,8 @@
+{
+  "scopeId": "phase5-cache-efficiency-qa",
+  "databasePath": "D:\\DEV\\role-model\\.worktrees\\70-cache-hit-token-rate-analytics-fix\\.recursive\\run\\70-cache-hit-token-rate-analytics-fix\\evidence\\manual-qa\\runtime-state\\phase5-cache-efficiency-qa\\memory\\memory.sqlite",
+  "missTimestampMs": 1784000801873,
+  "expectedCacheHitTokens": 0,
+  "expectedCacheHitTokenRate": 0,
+  "expectedCacheBackedRequestRate": 0
+}

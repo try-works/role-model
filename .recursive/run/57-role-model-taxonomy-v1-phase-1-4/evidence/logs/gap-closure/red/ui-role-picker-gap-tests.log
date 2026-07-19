@@ -1,0 +1,31 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mD:/DEV/role-model/.worktrees/57-role-model-taxonomy-v1-phase-1-4/role-model-router/apps/runtime-ui[39m
+
+ [31m❯[39m app/components/local-model-role-picker.test.tsx [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 32[2mms[22m[39m
+   [32m✓[39m LocalModelRolePicker[2m > [22mshows grouped roles with an all-roles default checkbox[32m 23[2mms[22m[39m
+[31m   [31m×[31m LocalModelRolePicker[2m > [22mderives explicit role assignment states without treating empty as all[39m[32m 8[2mms[22m[39m
+[31m     → getLocalModelRolePickerState is not defined[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  app/components/local-model-role-picker.test.tsx > LocalModelRolePicker > derives explicit role assignment states without treating empty as all
+ReferenceError: getLocalModelRolePickerState is not defined
+ ❯ app/components/local-model-role-picker.test.tsx:65:5
+     63| 
+     64|   test("derives explicit role assignment states without treating empty…
+     65|     expect(
+       |     ^
+     66|       getLocalModelRolePickerState({
+     67|         roleIds: ["coder", "writer"],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 16:24:41
+[2m   Duration [22m 1.30s[2m (transform 92ms, setup 0ms, collect 339ms, tests 32ms, environment 0ms, prepare 326ms)[22m
+
+undefined
+D:\DEV\role-model\.worktrees\57-role-model-taxonomy-v1-phase-1-4\role-model-router\apps\runtime-ui:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run app/components/local-model-role-picker.test.tsx

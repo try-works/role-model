@@ -25,6 +25,9 @@
       "**/.recursive/**",
       "**/.react-router/**",
       "**/.source/**",
+      ".tmp/**",
+      ".tmp-req-*.json",
+      "tmp-req-*.json",
       "**/.worktrees/**",
       "**/build/**",
       "**/dist/**",
@@ -34,5 +37,20 @@
       "**/target/**",
       "**/runtime-output/**"
     ]
-  }
+  },
+  "overrides": [
+    {
+      "include": [
+        "role-model-router/apps/runtime-ui/app/components/page-primitives.tsx",
+        "role-model-router/apps/runtime-ui/app/components/themed-select.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    }
+  ]
 }
