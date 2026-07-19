@@ -8871,7 +8871,7 @@ describe("runtime-host-bridge", () => {
         contractVersion: "role-model.downstream.openai.v1",
         kind: "openai-compatible",
         providerId: "role-model-runtime",
-        displayName: "Role Model Runtime",
+        displayName: "role-model",
         baseUrl: `http://127.0.0.1:${server.port}`,
         endpoints: {
           health: `http://127.0.0.1:${server.port}/healthz`,
@@ -16676,7 +16676,7 @@ describe("runtime-host-bridge", () => {
       path.join(os.tmpdir(), "runtime-host-codex-auth-repair-"),
     );
     const runtimeStateRoot = path.join(runtimeContainerRoot, "state");
-    const scopeId = "runtime-host-codex-auth-repair-tests";
+    const scopeId = "runtime-host-bridge";
     const bridgeCredentialFile = path.join(
       runtimeStateRoot,
       scopeId,
@@ -22763,9 +22763,9 @@ describe("runtime-host-bridge", () => {
       port: 9191,
       repoRoot,
       runtimeStateRoot: "C:\\runtime-state",
-      scopeId: "runtime-host-bridge",
+      scopeId: "standalone-runtime",
       staticRoot: path.join(repoRoot, "role-model-router", "apps", "runtime-ui", "build", "client"),
-      unifiedRuntimeConfigPath: "C:\\runtime-state\\runtime-config.yaml",
+      unifiedRuntimeConfigPath: "C:\\runtime-state\\state\\runtime-config.yaml",
     });
   });
 
@@ -22800,23 +22800,30 @@ describe("runtime-host-bridge", () => {
       port: 9191,
       repoRoot: "/home/runner/work/role-model/role-model",
       runtimeStateRoot: "C:\\runtime-state",
-      scopeId: "runtime-host-bridge",
+      scopeId: "standalone-runtime",
       staticRoot:
         "/home/runner/work/role-model/role-model/role-model-router/apps/runtime-ui/build/client",
-      unifiedRuntimeConfigPath: "C:\\runtime-state\\runtime-config.yaml",
+      unifiedRuntimeConfigPath: "C:\\runtime-state\\state\\runtime-config.yaml",
     });
   });
 
-  test("resolves packaged bridge server options from executable path defaults", () => {
-    const packageDir = path.join(repoRoot, "role-model-router", "dist", "release", "win32-x64");
+  test("resolves packaged bridge server options from executable path defaults", async () => {
+    const packageDir = await mkdtemp(path.join(os.tmpdir(), "role-model-production-package-"));
     const packagedStaticRoot = path.join(packageDir, "build", "client");
-    const devStaticRoot = path.join(
-      repoRoot,
-      "role-model-router",
-      "apps",
-      "runtime-ui",
-      "build",
-      "client",
+    await mkdir(packagedStaticRoot, { recursive: true });
+    await writeFile(path.join(packagedStaticRoot, "index.html"), "<!doctype html>", "utf8");
+    await writeFile(
+      path.join(packageDir, "manifest.json"),
+      JSON.stringify({
+        schema_version: 1,
+        channel: "production",
+        name: "role-model",
+        host: "127.0.0.1",
+        port: 3456,
+        state_root_name: "role-model-runtime",
+        scope_id: "standalone-runtime",
+      }),
+      "utf8",
     );
     const result = (
       bridge as {
@@ -22838,22 +22845,24 @@ describe("runtime-host-bridge", () => {
         };
       }
     ).resolveBridgeServerOptions({
-      executablePath: path.join(packageDir, "role-model-runtime.exe"),
+      executablePath: path.join(packageDir, "role-model.exe"),
       localAppData: "C:\\Users\\tester\\AppData\\Local",
     });
 
-    expect(result).toEqual({
-      host: "127.0.0.1",
-      port: 3456,
-      repoRoot,
-      runtimeStateRoot: "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state",
-      scopeId: "runtime-host-bridge",
-      staticRoot: existsSync(path.join(packagedStaticRoot, "index.html"))
-        ? packagedStaticRoot
-        : devStaticRoot,
-      unifiedRuntimeConfigPath:
-        "C:\\Users\\tester\\AppData\\Local\\Role Model Runtime\\state\\runtime-config.yaml",
-    });
+    try {
+      expect(result).toEqual({
+        host: "127.0.0.1",
+        port: 3456,
+        repoRoot: packageDir,
+        runtimeStateRoot: "C:\\Users\\tester\\AppData\\Local\\role-model-runtime",
+        scopeId: "standalone-runtime",
+        staticRoot: packagedStaticRoot,
+        unifiedRuntimeConfigPath:
+          "C:\\Users\\tester\\AppData\\Local\\role-model-runtime\\state\\runtime-config.yaml",
+      });
+    } finally {
+      await rm(packageDir, { recursive: true, force: true });
+    }
   });
 
   test("prefers repoRoot frontend assets over packaged assets when repoRoot is explicit", () => {
@@ -22924,11 +22933,11 @@ describe("runtime-host-bridge", () => {
       host: "127.0.0.1",
       port: 3456,
       repoRoot: "/home/tester/role-model",
-      runtimeStateRoot: "/home/tester/.local/share/Role Model Runtime/state",
-      scopeId: "runtime-host-bridge",
+      runtimeStateRoot: "/home/tester/.local/share/role-model-runtime",
+      scopeId: "standalone-runtime",
       staticRoot: "/home/tester/role-model/role-model-router/apps/runtime-ui/build/client",
       unifiedRuntimeConfigPath:
-        "/home/tester/.local/share/Role Model Runtime/state/runtime-config.yaml",
+        "/home/tester/.local/share/role-model-runtime/state/runtime-config.yaml",
     });
   });
 });

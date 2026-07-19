@@ -3,8 +3,8 @@
 param(
     [string]$OwnerRepo = $(if ($env:ROLE_MODEL_REPOSITORY) { $env:ROLE_MODEL_REPOSITORY } else { "try-works/role-model" }),
     [string]$Version = $(if ($env:ROLE_MODEL_VERSION) { $env:ROLE_MODEL_VERSION } else { "latest" }),
-    [string]$InstallRoot = $(if ($env:ROLE_MODEL_INSTALL_ROOT) { $env:ROLE_MODEL_INSTALL_ROOT } else { Join-Path $env:LOCALAPPDATA "Programs\RoleModelRouter" }),
-    [string]$BinDir = $(if ($env:ROLE_MODEL_BIN_DIR) { $env:ROLE_MODEL_BIN_DIR } else { Join-Path $env:LOCALAPPDATA "Programs\RoleModelRouter\bin" })
+    [string]$InstallRoot = $(if ($env:ROLE_MODEL_INSTALL_ROOT) { $env:ROLE_MODEL_INSTALL_ROOT } else { Join-Path $env:LOCALAPPDATA "Programs\role-model" }),
+    [string]$BinDir = $(if ($env:ROLE_MODEL_BIN_DIR) { $env:ROLE_MODEL_BIN_DIR } else { Join-Path $env:LOCALAPPDATA "Programs\role-model\bin" })
 )
 
 $ErrorActionPreference = "Stop"
@@ -51,12 +51,12 @@ function Ensure-UserPathContains([string]$PathEntry) {
 
 $target = Get-Target
 $resolvedVersion = Resolve-Version -Repository $OwnerRepo -RequestedVersion $Version
-$assetName = "role-model-router-$target.zip"
+$assetName = "role-model-$target.zip"
 $downloadUrl = "https://github.com/$OwnerRepo/releases/download/$resolvedVersion/$assetName"
 $packageDir = Join-Path $InstallRoot (Join-Path $resolvedVersion $target)
-$launcherBatch = Join-Path $packageDir "Role-Model.bat"
-$runtimeExe = Join-Path $packageDir "role-model-runtime.exe"
-$shimPath = Join-Path $BinDir "role-model-router.cmd"
+$launcherBatch = Join-Path $packageDir "role-model.bat"
+$runtimeExe = Join-Path $packageDir "role-model.exe"
+$shimPath = Join-Path $BinDir "role-model.cmd"
 $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) ("role-model-router-" + [System.Guid]::NewGuid().ToString("N"))
 $archivePath = Join-Path $tempDir $assetName
 
@@ -84,12 +84,12 @@ try {
 
     $pathUpdated = Ensure-UserPathContains -PathEntry $BinDir
 
-    Write-Host "Installed role-model-router to $packageDir"
+    Write-Host "Installed role-model to $packageDir"
     Write-Host "Launcher command: $shimPath"
     if ($pathUpdated) {
-        Write-Host "Updated your user PATH. Open a new terminal before running role-model-router."
+        Write-Host "Updated your user PATH. Open a new terminal before running role-model."
     } else {
-        Write-Host "Run role-model-router from a new terminal."
+        Write-Host "Run role-model from a new terminal."
     }
 }
 finally {

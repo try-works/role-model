@@ -37,6 +37,51 @@ func TestBuildRuntimeArgsUsesStandalonePaths(t *testing.T) {
 	}
 }
 
+func TestReadRuntimeProfileAndBuildStageArgs(t *testing.T) {
+	packageDir := t.TempDir()
+	manifest := `{"channel":"stage","name":"role-model-stage","host":"127.0.0.1","port":3457,"state_root_name":"role-model-runtime-stage","scope_id":"standalone-runtime-stage","executable":"role-model-stage.exe"}`
+	if err := os.WriteFile(filepath.Join(packageDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write manifest: %v", err)
+	}
+
+	profile, err := readRuntimeProfile(packageDir)
+	if err != nil {
+		t.Fatalf("read profile: %v", err)
+	}
+	if profile.Name != "role-model-stage" || profile.Port != 3457 {
+		t.Fatalf("unexpected profile: %+v", profile)
+	}
+	args := buildRuntimeArgsForProfile(packageDir, filepath.Join(packageDir, "state"), profile)
+	joined := strings.Join(args, " ")
+	for _, expected := range []string{"standalone-runtime-stage", "3457"} {
+		if !strings.Contains(joined, expected) {
+			t.Fatalf("expected args to contain %q: %v", expected, args)
+		}
+	}
+}
+
+func TestReadRuntimeProfileRejectsChannelMismatch(t *testing.T) {
+	packageDir := t.TempDir()
+	manifest := `{"channel":"development","name":"role-model","host":"127.0.0.1","port":3458,"state_root_name":"role-model-runtime-dev","scope_id":"standalone-runtime-dev"}`
+	if err := os.WriteFile(filepath.Join(packageDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write manifest: %v", err)
+	}
+	if _, err := readRuntimeProfile(packageDir); err == nil {
+		t.Fatal("expected mismatched manifest to fail")
+	}
+}
+
+func TestReadRuntimeProfileRejectsExecutableRedirect(t *testing.T) {
+	packageDir := t.TempDir()
+	manifest := `{"channel":"stage","name":"role-model-stage","host":"127.0.0.1","port":3457,"state_root_name":"role-model-runtime-stage","scope_id":"standalone-runtime-stage","executable":"..\\untrusted.exe"}`
+	if err := os.WriteFile(filepath.Join(packageDir, "manifest.json"), []byte(manifest), 0o644); err != nil {
+		t.Fatalf("write manifest: %v", err)
+	}
+	if _, err := readRuntimeProfile(packageDir); err == nil {
+		t.Fatal("expected executable redirect to fail")
+	}
+}
+
 func TestBuildRuntimeArgsUsesAncestorWorkspaceRootWhenPackageLivesInsideRepo(t *testing.T) {
 	tempRoot := t.TempDir()
 	workspaceRoot := filepath.Join(tempRoot, "workspace")

@@ -250,12 +250,13 @@ describe("endpoint rehydration", () => {
           let health = await restartedBackend.readHealthStatus?.();
           for (
             let attempt = 0;
-            attempt < 20 && health?.sessionBootstrap.status === "running";
+            attempt < 200 && health?.sessionBootstrap.status === "running";
             attempt += 1
           ) {
             await delay(50);
             health = await restartedBackend.readHealthStatus?.();
           }
+          expect(health?.sessionBootstrap.status).not.toBe("running");
 
           expect(
             listRuntimeEndpoints({ databasePath })
@@ -395,6 +396,7 @@ describe("endpoint rehydration", () => {
           const url =
             typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
           if (url.endsWith("/models")) {
+            await delay(1_250);
             throw new Error("timeout while probing remote endpoint");
           }
           throw new Error(`Unexpected network request during endpoint health test: ${url}`);
@@ -404,12 +406,13 @@ describe("endpoint rehydration", () => {
           let health = await restartedBackend.readHealthStatus?.();
           for (
             let attempt = 0;
-            attempt < 20 && health?.sessionBootstrap.status === "running";
+            attempt < 200 && health?.sessionBootstrap.status === "running";
             attempt += 1
           ) {
             await delay(50);
             health = await restartedBackend.readHealthStatus?.();
           }
+          expect(health?.sessionBootstrap.status).not.toBe("running");
 
           await expect(restartedBackend.listEndpoints()).resolves.toEqual(
             expect.arrayContaining([

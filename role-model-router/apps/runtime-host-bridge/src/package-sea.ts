@@ -19,6 +19,7 @@ import { gzipSync } from "node:zlib";
 
 import { build as buildBundle } from "esbuild";
 
+import { resolveBuildRuntimeChannel, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { resolveRuntimeVersionInfo } from "./runtime-version.js";
 
 export interface BuildTarget {
@@ -275,8 +276,8 @@ export function resolveGoCommand(): string {
   return process.env.GO_BINARY ?? "go";
 }
 
-function resolvePackagedRuntimeName(): string {
-  return process.platform === "win32" ? "role-model-runtime.exe" : "role-model-runtime";
+function resolvePackagedRuntimeName(name: string): string {
+  return process.platform === "win32" ? `${name}.exe` : name;
 }
 
 function resolvePowerShellCommand(): string {
@@ -358,32 +359,40 @@ export async function stampReleaseTreeModificationTimes(
   await utimes(releaseDir, packageBuildDate, packageBuildDate);
 }
 
-async function buildWindowsLauncher(releaseDir: string): Promise<void> {
+async function buildWindowsLauncher(releaseDir: string, launcherName: string): Promise<void> {
   if (process.platform !== "win32") {
     return;
   }
-  runOrThrow(resolveGoCommand(), createWindowsLauncherBuildArgs(releaseDir), repoRoot, {
-    GO111MODULE: "off",
-    GOWORK: "off",
-  });
+  runOrThrow(
+    resolveGoCommand(),
+    createWindowsLauncherBuildArgs(releaseDir, launcherName),
+    repoRoot,
+    {
+      GO111MODULE: "off",
+      GOWORK: "off",
+    },
+  );
 }
 
-export function createWindowsLauncherBuildArgs(releaseDir: string): string[] {
+export function createWindowsLauncherBuildArgs(
+  releaseDir: string,
+  launcherName = "role-model-launcher.exe",
+): string[] {
   const launcherPackagePath = `./${path
     .relative(repoRoot, path.join(routerRoot, "apps", "launcher"))
     .split(path.sep)
     .join("/")}`;
-  return ["build", "-o", path.join(releaseDir, "role-model-launcher.exe"), launcherPackagePath];
+  return ["build", "-o", path.join(releaseDir, launcherName), launcherPackagePath];
 }
 
-export function createWindowsLauncherBatchFile(): string {
+export function createWindowsLauncherBatchFile(launcherName = "role-model-launcher.exe"): string {
   return [
     "@echo off",
     "set SCRIPT_DIR=%~dp0",
-    'if exist "%SCRIPT_DIR%role-model-launcher.exe" (',
-    '  "%SCRIPT_DIR%role-model-launcher.exe"',
+    `if exist "%SCRIPT_DIR%${launcherName}" (`,
+    `  "%SCRIPT_DIR%${launcherName}"`,
     ") else (",
-    "  echo ERROR: role-model-launcher.exe not found.",
+    `  echo ERROR: ${launcherName} not found.`,
     "  pause",
     "  exit /b 1",
     ")",
@@ -499,6 +508,7 @@ export async function packageSeaRuntime(): Promise<{
   if (!buildTarget) {
     throw new Error(`Unsupported runtime packaging target: ${process.platform}-${process.arch}`);
   }
+  const profile = resolveRuntimeChannelProfile(resolveBuildRuntimeChannel());
   const packageBuildDate = new Date();
   const packageBuildDateIso = packageBuildDate.toISOString();
   const versionInfo = await resolveRuntimeVersionInfo({
@@ -532,7 +542,7 @@ export async function packageSeaRuntime(): Promise<{
   }
 
   const releaseDir = path.join(distRoot, "release", releaseTarget);
-  const outputPath = path.join(releaseDir, resolvePackagedRuntimeName());
+  const outputPath = path.join(releaseDir, resolvePackagedRuntimeName(profile.name));
   const blobPath = path.join(distRoot, "sea-prep.blob");
   await rm(releaseDir, { recursive: true, force: true });
   await mkdir(releaseDir, { recursive: true });
@@ -543,16 +553,25 @@ export async function packageSeaRuntime(): Promise<{
   await injectSeaBlob(outputPath, blobPath);
 
   await stageStandaloneReleaseFiles(releaseDir);
-  await buildWindowsLauncher(releaseDir);
+  const launcherName = `${profile.name}-launcher.exe`;
+  await buildWindowsLauncher(releaseDir, launcherName);
   if (process.platform === "win32") {
     await writeFile(
-      path.join(releaseDir, "Role-Model.bat"),
-      createWindowsLauncherBatchFile(),
+      path.join(releaseDir, `${profile.name}.bat`),
+      createWindowsLauncherBatchFile(launcherName),
       "ascii",
     );
   }
 
   const sha256 = await writeSha256(outputPath);
+  const sourceTreeResult = spawnSync("git", ["rev-parse", "HEAD^{tree}"], {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
+  if (sourceTreeResult.status !== 0 || !sourceTreeResult.stdout.trim()) {
+    throw new Error("Unable to resolve source_tree for packaged runtime");
+  }
+  const sourceTree = sourceTreeResult.stdout.trim();
   await writeFile(
     path.join(releaseDir, "manifest.json"),
     JSON.stringify(
@@ -562,9 +581,14 @@ export async function packageSeaRuntime(): Promise<{
         arch: process.arch,
         target: releaseTarget,
         sha256,
+        executable_sha256: sha256,
+        core_payload_sha256: sha256,
+        source_tree: sourceTree,
         version: versionInfo.version,
         commit: versionInfo.commit,
         build_date: versionInfo.build_date,
+        ...profile,
+        endpoint: `http://${profile.host}:${profile.port}`,
       },
       null,
       2,

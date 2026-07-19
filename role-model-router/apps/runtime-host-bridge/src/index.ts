@@ -125,7 +125,8 @@ import {
   inferChatCompletionsCapabilityRequirements,
   inferResponsesCapabilityRequirements,
 } from "./request-capability-inference.js";
-import { resolveRuntimeVersionInfo } from "./runtime-version.js";
+import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
+import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
 
 import {
   type ProviderRequestCapture,
@@ -800,7 +801,7 @@ export interface BridgeDownstreamOpenAIProviderConfig {
   readonly contractVersion: "role-model.downstream.openai.v1";
   readonly kind: "openai-compatible";
   readonly providerId: "role-model-runtime";
-  readonly displayName: "Role Model Runtime";
+  readonly displayName: string;
   readonly baseUrl: string;
   readonly endpoints: {
     readonly health: string;
@@ -3033,6 +3034,7 @@ interface RuntimeCredentialLifecycleSummary {
 }
 
 interface RuntimeBridgeSummary {
+  runtime: RuntimeVersionInfoRecord;
   lifecycleSummary: EndpointRegistryResult["lifecycleSummary"];
   providerCount: number;
   accountCount: number;
@@ -7771,6 +7773,7 @@ export function createDownstreamOpenAIProviderConfig(
     readonly catalog?: NormalizedCatalog;
     readonly inventory?: RoutableInventory | null;
     readonly recommendedModelId?: string | null;
+    readonly displayName?: string;
   } = {},
 ): BridgeDownstreamOpenAIProviderConfig {
   if (options.catalog) {
@@ -7781,6 +7784,7 @@ export function createDownstreamOpenAIProviderConfig(
       modelAliases,
       inventory: options.inventory ?? null,
       recommendedModelId: options.recommendedModelId ?? null,
+      displayName: options.displayName,
     }) as unknown as BridgeDownstreamOpenAIProviderConfig;
   }
 
@@ -7799,7 +7803,7 @@ export function createDownstreamOpenAIProviderConfig(
     contractVersion: "role-model.downstream.openai.v1",
     kind: "openai-compatible",
     providerId: "role-model-runtime",
-    displayName: "Role Model Runtime",
+    displayName: options.displayName ?? "role-model",
     baseUrl,
     endpoints: {
       health: `${baseUrl}/healthz`,
@@ -9589,7 +9593,7 @@ function createDeviceHeaders(
 ): Record<string, string> {
   const isKimi = requiredHeaders.includes("X-Msh-Platform");
   const headers: Record<string, string> = {
-    "User-Agent": isKimi ? "KimiCLI/1.41.0" : "Role-Model-Runtime/1.0",
+    "User-Agent": isKimi ? "KimiCLI/1.41.0" : "role-model-runtime/1.0",
   };
   if (requiredHeaders.includes("X-Msh-Platform")) {
     headers["X-Msh-Platform"] = "kimi_cli";
@@ -11451,7 +11455,7 @@ interface StoredOauthTokenLocation {
   readonly scopeId: string;
 }
 
-function resolveStoredOauthTokenLocations(input: {
+export function resolveStoredOauthTokenLocations(input: {
   readonly runtimeStateRoot: string;
   readonly scopeId: string;
 }): readonly StoredOauthTokenLocation[] {
@@ -11459,6 +11463,9 @@ function resolveStoredOauthTokenLocations(input: {
     runtimeStateRoot: input.runtimeStateRoot,
     scopeId: input.scopeId,
   };
+  if (input.scopeId !== "standalone-runtime" && input.scopeId !== "runtime-host-bridge") {
+    return [activeLocation];
+  }
   const normalizedRoot = path.resolve(input.runtimeStateRoot);
   const containerRoot =
     path.basename(normalizedRoot).toLowerCase() === "state"
@@ -14126,6 +14133,7 @@ function createRequestHandler(options: StartBridgeServerOptions) {
     }
 
     if (request.method === "GET" && url.pathname === "/api/role-model/downstream/openai") {
+      const runtimeIdentity = options.readVersionInfo ? await options.readVersionInfo() : null;
       const configuredRuntimeConfig = await resolveConfiguredRuntimeConfig(
         options.readRuntimeConfig,
       );
@@ -14151,6 +14159,13 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             catalog: options.getExecutionCatalog?.(),
             inventory,
             recommendedModelId,
+            displayName:
+              runtimeIdentity &&
+              typeof runtimeIdentity === "object" &&
+              "name" in runtimeIdentity &&
+              typeof runtimeIdentity.name === "string"
+                ? runtimeIdentity.name
+                : "role-model",
           },
         ),
       );
@@ -21803,6 +21818,7 @@ export async function createRuntimeBridgeBackend(
     async readRuntimeSummary(): Promise<RuntimeBridgeSummary> {
       const credentialLifecycle = buildCredentialLifecycleSummary();
       return {
+        runtime: runtimeVersionInfo,
         lifecycleSummary: currentRegistry.lifecycleSummary,
         providerCount:
           currentNormalizedCatalog.providers.length +
@@ -21850,6 +21866,7 @@ export async function createRuntimeBridgeBackend(
       };
     },
     async readHealthStatus(): Promise<{
+      runtime: RuntimeVersionInfoRecord;
       status: "healthy" | "degraded";
       executionMode: UnifiedRuntimeExecutionMode;
       vendors: Record<string, VendorRuntimeStatus>;
@@ -21871,6 +21888,7 @@ export async function createRuntimeBridgeBackend(
       const bootstrapBlocked =
         sessionBootstrapState.status === "blocked" || sessionBootstrapState.status === "degraded";
       return {
+        runtime: runtimeVersionInfo,
         status: bootstrapBlocked ? "degraded" : summarized.status,
         executionMode: currentUnifiedRuntimeConfig?.executionMode ?? "decision_only",
         vendors,
@@ -25169,6 +25187,8 @@ export function resolveBridgeServerOptions(input: {
   unifiedRuntimeConfigPath?: string;
 }): BridgeServerOptions {
   const repoPath = resolveBridgePathApi([input.executablePath, input.repoRoot]);
+  const packagedProfile = readPackagedRuntimeProfile(input.executablePath);
+  const profile = packagedProfile ?? resolveRuntimeChannelProfile("production");
   const statePath = resolveBridgePathApi([input.localAppData], process.env.LOCALAPPDATA);
   const runtimeStatePath = resolveBridgePathApi(
     [input.runtimeStateRoot, input.localAppData],
@@ -25190,32 +25210,36 @@ export function resolveBridgeServerOptions(input: {
         return repoPath.dirname(routerRoot);
       })()
     : undefined;
-  const repoRoot = input.repoRoot?.trim() || inferredRepoRoot;
+  const packagedRoot =
+    packagedProfile && input.executablePath
+      ? repoPath.dirname(repoPath.resolve(input.executablePath))
+      : undefined;
+  const repoRoot = input.repoRoot?.trim() || inferredRepoRoot || packagedRoot;
   if (!repoRoot) {
     throw new Error("repoRoot is required for the runtime host bridge.");
   }
+  const platformStateBase =
+    input.localAppData?.trim() ||
+    process.env.LOCALAPPDATA ||
+    process.env.XDG_STATE_HOME ||
+    statePath.join(os.homedir(), ".local", "state");
   const runtimeStateRoot =
-    input.runtimeStateRoot?.trim() ||
-    statePath.join(
-      input.localAppData?.trim() || process.env.LOCALAPPDATA || os.tmpdir(),
-      "Role Model Runtime",
-      "state",
-    );
+    input.runtimeStateRoot?.trim() || statePath.join(platformStateBase, profile.state_root_name);
 
   return {
-    host: input.host?.trim() || "127.0.0.1",
-    port: input.port ? Number.parseInt(input.port, 10) : 3456,
+    host: input.host?.trim() || profile.host,
+    port: input.port ? Number.parseInt(input.port, 10) : profile.port,
     repoRoot,
     runtimeStateRoot,
-    scopeId: input.scopeId?.trim() || "runtime-host-bridge",
+    scopeId: input.scopeId?.trim() || profile.scope_id,
     staticRoot: resolveStandaloneStaticRoot({
       repoPath,
       repoRoot,
       executablePath: input.executablePath,
-      preferRepoRootBuild: Boolean(input.repoRoot?.trim()),
+      preferRepoRootBuild: Boolean(input.repoRoot?.trim()) || Boolean(packagedProfile),
     }),
     unifiedRuntimeConfigPath:
       input.unifiedRuntimeConfigPath?.trim() ||
-      runtimeStatePath.join(runtimeStateRoot, "runtime-config.yaml"),
+      runtimeStatePath.join(runtimeStateRoot, "state", "runtime-config.yaml"),
   };
 }
