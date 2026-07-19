@@ -1,0 +1,15 @@
+{
+  "artifact": "03.5-code-review.md",
+  "artifact_hash": "d435c5e595c7a2d782e695bda19c43db7c6d9b581d3acde0a5ad8fca1994199a",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\78-dev-stage-main-cicd-runtime-channels\\.recursive\\run\\78-dev-stage-main-cicd-runtime-channels\\03.5-code-review.md",
+  "locked_at": "2026-07-19T00:58:53Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "210fbbc8fab34c3623b916cc9e97bb50df0a4a176ab91bb0f83645d28b1d92a2",
+    "00-worktree.md": "4a49884cc67eb147c8c9f973ce55f5cc26a324be88c473c9507da57d7dd40b56",
+    "01-as-is.md": "b51f958be58c4a9bc574e2ce354e48a640d102e31a5438476cb30142b7ea6df5",
+    "02-to-be-plan.md": "d71ba14ab9f2d3cb710f7328f389197ac85de3c63e70413e567110d8df69298e",
+    "03-implementation-summary.md": "7661c171a4d6b06a5df229e2994b035dd3999052cbd4fcdddfbc90718b44e33a"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "a034f8f4e62a90190ccca1ba9cf644a26e17d5b4c560ddb3f37bd82e4ac0bd1b"
+}

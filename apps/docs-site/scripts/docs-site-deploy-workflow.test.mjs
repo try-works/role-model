@@ -15,3 +15,15 @@ test("docs deploy workflow skips gracefully when Cloudflare secrets are absent",
   assert.doesNotMatch(workflow, /exit 1/);
   assert.match(workflow, /if:\s*steps\.cloudflare_ready\.outputs\.ready == 'true'/);
 });
+
+test("docs deploy is a single main-only deployment even for manual runs", async () => {
+  const workflow = await readFile(workflowPath, "utf8");
+
+  assert.match(workflow, /if:\s*github\.ref == 'refs\/heads\/main'/);
+  assert.match(workflow, /--project-name role-model-dev/);
+  assert.match(workflow, /--branch main/);
+  assert.match(workflow, /Verify docs deployment/);
+  assert.match(workflow, /https:\/\/role-model\.dev\//);
+  assert.doesNotMatch(workflow, /role-model-stage/);
+  assert.doesNotMatch(workflow, /PAGES_BRANCH=\$\{\{ github\.ref_name \}\}/);
+});

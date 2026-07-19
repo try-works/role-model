@@ -21,6 +21,12 @@ describe("resolveRuntimeVersionInfo", () => {
         version: "0.0.2",
         commit: "abc123def456",
         build_date: "2026-06-29T00:00:00.000Z",
+        channel: "stage",
+        name: "role-model-stage",
+        endpoint: "http://127.0.0.1:3457",
+        source_tree: "tree123",
+        executable_sha256: "exe123",
+        core_payload_sha256: "core123",
       }),
       "utf8",
     );
@@ -35,6 +41,12 @@ describe("resolveRuntimeVersionInfo", () => {
       release_version: "0.0.2",
       commit: "abc123def456",
       build_date: "2026-06-29T00:00:00.000Z",
+      channel: "stage",
+      name: "role-model-stage",
+      endpoint: "http://127.0.0.1:3457",
+      source_tree: "tree123",
+      executable_sha256: "exe123",
+      core_payload_sha256: "core123",
       configVersion: "1.1",
     });
   });

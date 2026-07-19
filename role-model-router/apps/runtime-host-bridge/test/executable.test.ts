@@ -306,11 +306,11 @@ describe("runtime-host-bridge executable packaging", () => {
     const installScript = await readFile(installScriptPath, "utf8");
     const installPowerShell = await readFile(installPowerShellPath, "utf8");
 
-    expect(installScript).toContain("role-model-router-${TARGET}.tar.gz");
-    expect(installScript).toContain("role-model-router");
+    expect(installScript).toContain("role-model-${TARGET}.tar.gz");
+    expect(installScript).toContain("role-model");
     expect(installScript).toContain(".local/bin");
-    expect(installPowerShell).toContain("role-model-router-$target.zip");
-    expect(installPowerShell).toContain("role-model-router.cmd");
+    expect(installPowerShell).toContain("role-model-$target.zip");
+    expect(installPowerShell).toContain("role-model.cmd");
   });
 
   test("wires device-authorization readback into the packaged runtime cli server", async () => {

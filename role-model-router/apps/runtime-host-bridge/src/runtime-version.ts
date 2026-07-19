@@ -9,12 +9,43 @@ export interface RuntimeVersionInfoRecord {
   readonly commit: string;
   readonly build_date: string;
   readonly configVersion?: string;
+  readonly channel?: string;
+  readonly name?: string;
+  readonly endpoint?: string;
+  readonly source_tree?: string;
+  readonly executable_sha256?: string;
+  readonly core_payload_sha256?: string;
 }
 
 interface RuntimeVersionManifest {
   readonly version?: unknown;
   readonly commit?: unknown;
   readonly build_date?: unknown;
+  readonly channel?: unknown;
+  readonly name?: unknown;
+  readonly endpoint?: unknown;
+  readonly source_tree?: unknown;
+  readonly executable_sha256?: unknown;
+  readonly core_payload_sha256?: unknown;
+}
+
+function readManifestIdentity(
+  manifest: RuntimeVersionManifest | null,
+): Partial<RuntimeVersionInfoRecord> {
+  const fields = [
+    "channel",
+    "name",
+    "endpoint",
+    "source_tree",
+    "executable_sha256",
+    "core_payload_sha256",
+  ] as const;
+  return Object.fromEntries(
+    fields.flatMap((field) => {
+      const value = readNonEmptyString(manifest?.[field]);
+      return value ? [[field, value]] : [];
+    }),
+  );
 }
 
 export interface ResolveRuntimeVersionInfoOptions {
@@ -98,6 +129,7 @@ export async function resolveRuntimeVersionInfo(
         readNonEmptyString(env.BUILD_DATE) ??
         readNonEmptyString(env.GITHUB_RUN_CREATED_AT) ??
         "runtime-derived",
+      ...readManifestIdentity(manifest),
       ...(options.fallbackConfigVersion ? { configVersion: options.fallbackConfigVersion } : {}),
     };
   }

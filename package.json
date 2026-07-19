@@ -45,7 +45,7 @@
     "runtime:test-full": "corepack pnpm run runtime:test-critical && corepack pnpm run runtime:test-browser",
     "build": "corepack pnpm run types:generate && corepack pnpm -r --if-present build",
     "test": "corepack pnpm run test:release-workflows && corepack pnpm -r --if-present test",
-    "test:release-workflows": "node --test scripts/build-binaries-workflow.test.mjs",
+    "test:release-workflows": "node --test scripts/ci-workflow.test.mjs scripts/build-binaries-workflow.test.mjs apps/docs-site/scripts/docs-site-deploy-workflow.test.mjs",
     "test:rust": "cargo test --manifest-path role-model-router/rust/Cargo.toml --workspace",
     "smoke": "corepack pnpm --filter @role-model-router/gateway-smoke exec tsx src/index.ts",
     "ci:check": "corepack pnpm run lint && corepack pnpm run schemas:validate && corepack pnpm run build && corepack pnpm run test && corepack pnpm run runtime:test-critical && corepack pnpm run test:rust && corepack pnpm run smoke"

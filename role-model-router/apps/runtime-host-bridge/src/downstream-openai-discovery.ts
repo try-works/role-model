@@ -12,6 +12,7 @@ import type { UnifiedRuntimeModelAliasConfig } from "./unified-runtime-config.js
 
 export interface DownstreamOpenAIDiscoveryInput {
   readonly baseUrl: string;
+  readonly displayName?: string;
   readonly registry: EndpointRegistryResult;
   readonly catalog: NormalizedCatalog;
   readonly modelAliases?: readonly UnifiedRuntimeModelAliasConfig[];
@@ -92,7 +93,7 @@ export interface DownstreamOpenAIDiscoveryResponse {
   readonly contractVersion: "role-model.downstream.openai.v1";
   readonly kind: "openai-compatible";
   readonly providerId: "role-model-runtime";
-  readonly displayName: "Role Model Runtime";
+  readonly displayName: string;
   readonly baseUrl: string;
   readonly endpoints: {
     readonly health: string;
@@ -488,7 +489,7 @@ export function createDownstreamOpenAIDiscovery(
     contractVersion: "role-model.downstream.openai.v1",
     kind: "openai-compatible",
     providerId: "role-model-runtime",
-    displayName: "Role Model Runtime",
+    displayName: input.displayName ?? "role-model",
     baseUrl: input.baseUrl,
     endpoints: {
       health: `${input.baseUrl}/healthz`,

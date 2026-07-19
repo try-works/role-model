@@ -2,14 +2,29 @@ name: build-binaries
 
 on:
   workflow_dispatch:
+    inputs:
+      channel:
+        description: Runtime channel to package
+        required: true
+        default: development
+        type: choice
+        options:
+          - development
+          - stage
+          - production
   push:
     branches:
-      - main
+      - stage
     tags:
       - "v*"
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  ROLE_MODEL_BUILD_CHANNEL: ${{ github.ref_type == 'tag' && 'production' || (github.ref_name == 'stage' && 'stage' || inputs.channel || 'development') }}
+
+concurrency:
+  group: runtime-build-${{ github.ref }}-${{ inputs.channel || 'automatic' }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
 
 jobs:
   build-runtime:
@@ -17,6 +32,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     permissions:
+      actions: read
       contents: read
       attestations: write
       id-token: write
@@ -66,15 +82,80 @@ jobs:
       - name: Package SEA runtime
         run: pnpm run runtime:package-sea
 
+      - name: Verify channel manifest identity
+        id: runtime_identity
+        shell: pwsh
+        run: |
+          $manifestPath = "role-model-router/dist/release/${{ matrix.target }}/manifest.json"
+          $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+          foreach ($field in @("channel", "name", "endpoint", "source_tree", "executable_sha256", "core_payload_sha256")) {
+            if (-not $manifest.$field) { throw "Missing manifest field: $field" }
+          }
+          if ($manifest.channel -ne $env:ROLE_MODEL_BUILD_CHANNEL) {
+            throw "Manifest channel '$($manifest.channel)' does not match '$env:ROLE_MODEL_BUILD_CHANNEL'"
+          }
+          $expectedName = switch ($env:ROLE_MODEL_BUILD_CHANNEL) {
+            "production" { "role-model" }
+            "stage" { "role-model-stage" }
+            "development" { "role-model-dev" }
+          }
+          if ($manifest.name -ne $expectedName) {
+            throw "Manifest name '$($manifest.name)' does not match '$expectedName'"
+          }
+          "source_tree=$($manifest.source_tree)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "core_payload_sha256=$($manifest.core_payload_sha256)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Verify production core matches the tested stage candidate
+        if: env.ROLE_MODEL_BUILD_CHANNEL == 'production'
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $artifactName = "role-model-stage-candidate-${{ steps.runtime_identity.outputs.source_tree }}-${{ matrix.target }}"
+          $headers = @{
+            Authorization = "Bearer $env:GITHUB_TOKEN"
+            Accept = "application/vnd.github+json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $listUrl = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/actions/artifacts?name=$artifactName&per_page=20"
+          $artifact = (Invoke-RestMethod -Headers $headers -Uri $listUrl).artifacts |
+            Where-Object { -not $_.expired } |
+            Sort-Object created_at -Descending |
+            Select-Object -First 1
+          if (-not $artifact) { throw "No tested stage candidate found for $artifactName" }
+          $outerZip = Join-Path $env:RUNNER_TEMP "stage-candidate.zip"
+          $outerDir = Join-Path $env:RUNNER_TEMP "stage-candidate"
+          $innerDir = Join-Path $env:RUNNER_TEMP "stage-package"
+          Invoke-WebRequest -Headers $headers -Uri $artifact.archive_download_url -OutFile $outerZip
+          Expand-Archive -LiteralPath $outerZip -DestinationPath $outerDir -Force
+          $archive = Get-ChildItem -LiteralPath $outerDir -File | Select-Object -First 1
+          if (-not $archive) { throw "Stage candidate artifact contains no archive" }
+          New-Item -ItemType Directory -Force -Path $innerDir | Out-Null
+          if ($archive.Extension -eq ".zip") {
+            Expand-Archive -LiteralPath $archive.FullName -DestinationPath $innerDir -Force
+          } else {
+            tar -xzf $archive.FullName -C $innerDir
+            if ($LASTEXITCODE -ne 0) { throw "Failed to extract stage candidate" }
+          }
+          $stageManifest = Get-ChildItem -LiteralPath $innerDir -Recurse -Filter manifest.json |
+            Select-Object -First 1 |
+            Get-Content -Raw |
+            ConvertFrom-Json
+          if ($stageManifest.core_payload_sha256 -ne "${{ steps.runtime_identity.outputs.core_payload_sha256 }}") {
+            throw "Production core payload does not match the tested stage candidate"
+          }
+
       - name: Verify Windows standalone package
         if: matrix.target == 'win32-x64'
         shell: pwsh
         run: |
           $packageDir = "role-model-router/dist/release/win32-x64"
+          $manifest = Get-Content -LiteralPath "$packageDir/manifest.json" -Raw | ConvertFrom-Json
           @(
-            "$packageDir/role-model-runtime.exe",
-            "$packageDir/role-model-launcher.exe",
-            "$packageDir/Role-Model.bat",
+            "$packageDir/manifest.json",
+            "$packageDir/$($manifest.executable)",
+            "$packageDir/$($manifest.name)-launcher.exe",
+            "$packageDir/$($manifest.name).bat",
             "$packageDir/build/client/index.html",
             "$packageDir/role-model-router/packages/vendor-litellm/data/model-prices.json",
             "$packageDir/role-model-router/packages/catalog/data/normalized-catalog.json"
@@ -119,8 +200,17 @@ jobs:
         if: matrix.target != 'win32-x64'
         run: |
           mkdir -p role-model-router/dist/archive
-          tar -czf "role-model-router/dist/archive/role-model-router-${{ matrix.target }}.tar.gz" \
+          manifest="role-model-router/dist/release/${{ matrix.target }}/manifest.json"
+          runtime_name="$(node -p "require('./${manifest}').name")"
+          short_sha="${GITHUB_SHA:0:12}"
+          if [[ "$ROLE_MODEL_BUILD_CHANNEL" == "production" ]]; then
+            archive_name="role-model-${{ matrix.target }}.tar.gz"
+          else
+            archive_name="${runtime_name}-${short_sha}-${{ matrix.target }}.tar.gz"
+          fi
+          tar -czf "role-model-router/dist/archive/${archive_name}" \
             -C "role-model-router/dist/release/${{ matrix.target }}" .
+          echo "ARCHIVE_PATH=role-model-router/dist/archive/${archive_name}" >> "$GITHUB_ENV"
 
       - name: Archive standalone package (Windows)
         if: matrix.target == 'win32-x64'
@@ -129,16 +219,16 @@ jobs:
           $archiveDir = "role-model-router/dist/archive"
           $packageDir = "role-model-router/dist/release/win32-x64"
           New-Item -ItemType Directory -Force -Path $archiveDir | Out-Null
-          Compress-Archive -Path "$packageDir\*" -DestinationPath "$archiveDir\role-model-router-win32-x64.zip" -Force
-
-      - name: Record archive path
-        shell: pwsh
-        run: |
-          if ("${{ matrix.target }}" -eq "win32-x64") {
-            "ARCHIVE_PATH=role-model-router/dist/archive/role-model-router-win32-x64.zip" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $manifest = Get-Content -LiteralPath "$packageDir/manifest.json" -Raw | ConvertFrom-Json
+          $shortSha = $env:GITHUB_SHA.Substring(0, 12)
+          if ($env:ROLE_MODEL_BUILD_CHANNEL -eq "production") {
+            $archiveName = "role-model-win32-x64.zip"
           } else {
-            "ARCHIVE_PATH=role-model-router/dist/archive/role-model-router-${{ matrix.target }}.tar.gz" | Out-File -FilePath $env:GITHUB_ENV -Append
+            $archiveName = "$($manifest.name)-$shortSha-win32-x64.zip"
           }
+          $archivePath = "$archiveDir/$archiveName"
+          Compress-Archive -Path "$packageDir\*" -DestinationPath $archivePath -Force
+          "ARCHIVE_PATH=$archivePath" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Attest release archive (attempt 1)
         id: attest_release_archive_attempt_1
@@ -182,7 +272,7 @@ jobs:
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: role-model-runtime-${{ matrix.target }}
+          name: ${{ env.ROLE_MODEL_BUILD_CHANNEL == 'stage' && format('role-model-stage-candidate-{0}-{1}', steps.runtime_identity.outputs.source_tree, matrix.target) || format('role-model-runtime-{0}-{1}', env.ROLE_MODEL_BUILD_CHANNEL, matrix.target) }}
           path: ${{ env.ARCHIVE_PATH }}
 
       - name: Upload packaging diagnostics
@@ -198,7 +288,7 @@ jobs:
 
   publish-release:
     name: publish release
-    if: startsWith(github.ref, 'refs/tags/')
+    if: github.ref_type == 'tag'
     needs: build-runtime
     runs-on: ubuntu-latest
     timeout-minutes: 30

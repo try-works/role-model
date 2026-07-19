@@ -118,7 +118,7 @@ A human maintainer reviews every dep change. PRs that add or bump a package must
 
 ## PR workflow
 
-1. Fork, branch from `main`.
+1. Fork, branch from `dev`, and target `dev` with ordinary feature, fix, dependency, or `recursive/*` work.
 2. Install **Node.js >=24 <25** and **pnpm >=10**.
 3. Run `corepack pnpm install --frozen-lockfile`.
 4. One logical change per PR.
@@ -132,9 +132,13 @@ A human maintainer reviews every dep change. PRs that add or bump a package must
    ```
 7. Open the PR with a clear description + `Real behavior proof` + any spec/justification required.
 
+Maintainers promote reviewed integration commits with merge commits from `dev` to `stage`, then from `stage` to
+`main`. Do not target `stage` or `main` directly for ordinary work. Production hotfixes use `hotfix/*` from
+`main`, require review, and must be forwarded to both `stage` and `dev` after the production merge.
+
 **Title format** (conventional commits): `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`.
 
-**Review:** CI green, one maintainer review, coverage held or improved.
+**Review:** all required CI lanes green, one maintainer review, conversations resolved, coverage held or improved.
 
 ## Coding standards
 

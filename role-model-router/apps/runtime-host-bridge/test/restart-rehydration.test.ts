@@ -888,7 +888,7 @@ describe("restart rehydration", () => {
       `restart-standalone-oauth-repair-${Date.now()}`,
     );
     const runtimeStateRoot = path.join(runtimeContainerRoot, "state");
-    const scopeId = "restart-standalone-oauth-repair-tests";
+    const scopeId = "runtime-host-bridge";
     const bridgeCredentialPath = path.join(
       runtimeStateRoot,
       scopeId,
