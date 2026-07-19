@@ -276,6 +276,10 @@ export function resolveGoCommand(): string {
   return process.env.GO_BINARY ?? "go";
 }
 
+export function createLlamaSwapBuildArgs(outputPath: string): string[] {
+  return ["build", "-trimpath", "-buildvcs=false", "-ldflags=-buildid=", "-o", outputPath, "."];
+}
+
 function resolvePackagedRuntimeName(name: string): string {
   return process.platform === "win32" ? `${name}.exe` : name;
 }
@@ -310,7 +314,7 @@ async function buildLlamaSwapAsset(target: BuildTarget): Promise<void> {
   );
   await ensureGoCache();
   await mkdir(path.dirname(outputPath), { recursive: true });
-  runOrThrow(goCommand, ["build", "-o", outputPath, "."], vendorRoot, {
+  runOrThrow(goCommand, createLlamaSwapBuildArgs(outputPath), vendorRoot, {
     GO111MODULE: "on",
     GOWORK: "off",
     GOPATH: goCacheRoot,
