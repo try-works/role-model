@@ -49,4 +49,4 @@ PR #62 is ready for review. The approved design requires one maintainer review a
 
 ## Cleanup
 
-Temporary stage/development processes were stopped. The existing main runtime was preserved. Disposable package/state artifacts remain only under the explicit sibling QA path for inspection and can be removed after final migration closeout.
+Temporary stage/development processes were stopped. The existing main runtime was preserved. The resolved disposable QA path `D:/DEV/role-model/.worktrees/runtime-channel-qa-78` was removed after verification.
