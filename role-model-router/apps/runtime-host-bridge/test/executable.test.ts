@@ -150,6 +150,24 @@ describe("runtime-host-bridge executable packaging", () => {
     ).toBe("C:\\tools\\go\\bin\\go.exe");
   });
 
+  test("builds bundled llama-swap without commit or checkout-path identity", () => {
+    expect(
+      (
+        packageSea as {
+          createLlamaSwapBuildArgs: (outputPath: string) => readonly string[];
+        }
+      ).createLlamaSwapBuildArgs("/tmp/llama-swap"),
+    ).toEqual([
+      "build",
+      "-trimpath",
+      "-buildvcs=false",
+      "-ldflags=-buildid=",
+      "-o",
+      "/tmp/llama-swap",
+      ".",
+    ]);
+  });
+
   test("declares a runtime export condition for the built runtime dependency graph", async () => {
     const runtimeGraph = await collectRuntimeDependencyGraph();
 
