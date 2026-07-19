@@ -1,57 +1,33 @@
-# Release Checklist
+# Release checklist
 
-Use this checklist every time you cut a tagged `role-model` release.
+## Stage candidate
 
-## Before tagging
+1. Confirm the intended work is merged into `dev` with all required CI lanes green.
+2. Open and review `dev -> stage`; use a merge commit and do not rewrite stage history.
+3. Confirm the stage binary matrix completed and its artifacts include `role-model-stage`, commit/SHA identity,
+   attestations, and `core_payload_sha256`.
+4. Run the stage package on `3457` beside production on `3456` and development on `3458`; verify isolated state.
 
-1. Merge only from a commit that already passed `ci.yml`.
-2. Confirm the release commit range includes the locked recursive receipts you want the changelog generator to read.
-3. Update `apps/docs-site/content/docs/` for every user-visible install, benchmark, routing, UI, or release-flow change in the release.
-4. Confirm installer and manual-download docs still match the assets the workflow will publish.
-5. Run the local release floor:
+## Production promotion
 
-```bash
-corepack pnpm run ci:check
-corepack pnpm run docs:build
-corepack pnpm run runtime:package-sea
-```
+1. Open and review `stage -> main`; do not add untested product changes during promotion.
+2. Confirm all main promotion checks pass and merge with a merge commit.
+3. Create an annotated tag: `git tag -a vX.Y.Z -m "role-model vX.Y.Z"`.
+4. Push the tag. Production packaging must retrieve the matching stage candidate and verify the exact core payload
+   digest before publication.
+5. Approve the protected `release` environment when requested.
 
-## Tagging
+## Published assets
 
-1. Create an annotated tag: `git tag -a vX.Y.Z -m "role-model vX.Y.Z"`
-2. Push the tag: `git push origin vX.Y.Z`
+Verify the release contains `role-model-{linux-x64,darwin-x64,darwin-arm64}` archives,
+`role-model-win32-x64.zip`, `install.sh`, `install.ps1`, `SHA256SUMS.txt`, generated release highlights, and
+artifact attestations. Installer and manual-download docs must use the same filenames.
 
-## What GitHub should do
+## Rollback and hotfix
 
-The tag should trigger `build-binaries.yml`, which now:
-
-1. builds all supported runtime archives,
-2. attests the built archives, retrying transient Sigstore/Rekor timeouts before the job is allowed to fail,
-3. gathers every archive into one publish job,
-4. adds installer scripts,
-5. writes `SHA256SUMS.txt`,
-6. generates a recursive changelog from implementation, decisions, and state receipts in the tag range,
-7. creates one GitHub Release using those generated user-facing highlights.
-
-## After publish
-
-Verify the GitHub Release contains:
-
-- all four platform archives,
-- `install.sh`,
-- `install.ps1`,
-- `SHA256SUMS.txt`,
-- user-facing release highlights generated from the recursive receipts,
-- no internal recursive run names or implementation-phase wording in the public release body.
-
-Also verify:
-
-- the release is marked prerelease only when the tag is prerelease-like,
-- installer scripts still resolve the latest published release,
-- the release workflow produced artifact attestations for the archives,
-- manual-download instructions in [install.md](../public/install.md) still match the released filenames.
-
-## Environment protection
-
-Use a GitHub Actions environment named `release` for required reviewers or other deployment protections. The
-workflow references this environment, but the approval rules themselves live in repository settings.
+- Roll back a bad release by restoring the last known-good tag/assets and documenting the failed candidate; do not
+  force-reset `main`.
+- For an emergency, branch `hotfix/*` from `main`, review and validate it, merge to `main`, then forward the hotfix to
+  `stage` and `dev` through reviewed merges.
+- If a promotion branch diverges, merge the upstream promotion branch and resolve conflicts; never delete or
+  force-update long-lived history.

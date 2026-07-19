@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/public/role-model-hero.png" alt="Role Model" width="600"></p>
+<p align="center"><img src="docs/public/role-model-hero.png" alt="role-model" width="600"></p>
 
 # role-model
 
@@ -44,7 +44,7 @@ curl -fsSL https://raw.githubusercontent.com/try-works/role-model/main/scripts/i
 ```
 
 The installer downloads the latest GitHub Release archive, installs it under
-`~/.local/share/role-model-router/<version>/<target>/`, and exposes a `role-model-router` launcher in
+`~/.local/share/role-model/<version>/<target>/`, and exposes a `role-model` launcher in
 `~/.local/bin`.
 
 ### Windows
@@ -54,7 +54,7 @@ irm https://raw.githubusercontent.com/try-works/role-model/main/scripts/install.
 ```
 
 The installer downloads the latest GitHub Release archive, installs it under
-`%LOCALAPPDATA%\Programs\RoleModelRouter\<version>\<target>\`, and creates a `role-model-router.cmd`
+`%LOCALAPPDATA%\Programs\role-model\<version>\<target>\`, and creates a `role-model.cmd`
 launcher.
 
 ### Manual downloads
@@ -63,16 +63,16 @@ If you do not want to use installer scripts, download the matching archive from 
 
 | Platform | Archive | Launch |
 | --- | --- | --- |
-| Windows | `role-model-router-win32-x64.zip` | `Role-Model.bat` or `role-model-runtime.exe` |
-| macOS x64 | `role-model-router-darwin-x64.tar.gz` | `role-model-runtime` |
-| macOS arm64 | `role-model-router-darwin-arm64.tar.gz` | `role-model-runtime` |
-| Linux x64 | `role-model-router-linux-x64.tar.gz` | `role-model-runtime` |
+| Windows | `role-model-win32-x64.zip` | `role-model.bat` or `role-model.exe` |
+| macOS x64 | `role-model-darwin-x64.tar.gz` | `role-model` |
+| macOS arm64 | `role-model-darwin-arm64.tar.gz` | `role-model` |
+| Linux x64 | `role-model-linux-x64.tar.gz` | `role-model` |
 
 ## Installation for Pi
 
-The `pi-role-model` package connects Pi to an externally running Role-Model runtime.
+The `pi-role-model` package connects Pi to an externally running role-model runtime.
 
-Start the Role-Model runtime first, then install the public Pi package:
+Start the role-model runtime first, then install the public Pi package:
 
 ```bash
 pi install npm:@try-works/pi-role-model
@@ -99,7 +99,7 @@ Inside Pi, run:
 
 Use those slash commands only from an interactive Pi session. `pi -p "/role-model status"` is unsupported because Pi print mode does not currently invoke extension commands.
 
-By default the package connects to `http://127.0.0.1:3456` and registers Role-Model as the
+By default the package connects to `http://127.0.0.1:3456` and registers role-model as the
 `role-model` provider using `/api/role-model/downstream/openai`. Set `ROLE_MODEL_ENDPOINT`
 before starting Pi to use a different local runtime. Remote endpoints require explicit
 trusted `allowRemote` behavior, and runtimes that report `authentication.required` fail
@@ -107,7 +107,7 @@ closed unless a future supported token source is configured. For local developme
 and the full command reference, see
 [`packages/pi-role-model/README.md`](packages/pi-role-model/README.md).
 
-For explicit provider prompts, use the provider-relative Role-Model alias that Pi lists for provider `role-model`, for example:
+For explicit provider prompts, use the provider-relative role-model alias that Pi lists for provider `role-model`, for example:
 
 ```bash
 pi --no-session --provider role-model --model baseline.remote-only -p "<prompt>"
@@ -164,7 +164,9 @@ corepack pnpm --filter @role-model-router/runtime-ui run build
 corepack pnpm run runtime:package-sea
 ```
 
-Output: `role-model-router/dist/release/<platform-arch>/role-model-runtime`
+Output: `role-model-router/dist/release/<platform-arch>/role-model-dev` by default. Set
+`ROLE_MODEL_BUILD_CHANNEL=production` for `role-model` or `ROLE_MODEL_BUILD_CHANNEL=stage` for
+`role-model-stage`.
 
 ### Windows desktop launcher
 
@@ -179,7 +181,7 @@ corepack pnpm run runtime:package-sea
 
 # 3. Build Go launcher
 cd role-model-router/apps/launcher
-go build -o ../../dist/release/win32-x64/role-model-launcher.exe main.go
+go build -o ../../dist/release/win32-x64/role-model-launcher.exe .
 
 # 4. Bundle UI files
 cp -r ../runtime-ui/build/client ../../dist/release/win32-x64/

@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: build
-    if: github.event_name != 'pull_request'
+    if: github.ref == 'refs/heads/main'
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -122,16 +122,14 @@ jobs:
         if: steps.cloudflare_ready.outputs.ready == 'true'
         run: pnpm install --frozen-lockfile
 
-      - name: Select Pages branch
-        if: steps.cloudflare_ready.outputs.ready == 'true'
-        shell: bash
-        run: |
-          echo "PAGES_BRANCH=${{ github.ref_name }}" >> "$GITHUB_ENV"
-
       - name: Deploy docs site
         if: steps.cloudflare_ready.outputs.ready == 'true'
         run: |
           pnpm exec wrangler pages deploy apps/docs-site/build/client \
             --project-name role-model-dev \
-            --branch "$PAGES_BRANCH" \
+            --branch main \
             --commit-hash "${GITHUB_SHA}"
+
+      - name: Verify docs deployment
+        if: steps.cloudflare_ready.outputs.ready == 'true'
+        run: curl --fail --silent --show-error --retry 5 --retry-delay 5 https://role-model.dev/ > /dev/null

@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import os from "node:os";
 import path from "node:path";
 import { parseArgs } from "node:util";
 
@@ -12,6 +13,8 @@ import {
   resolveBridgeServerOptions,
   startBridgeServer,
 } from "./index.js";
+import { readPackagedRuntimeProfile } from "./runtime-channel.js";
+import { migrateLegacyProductionState } from "./runtime-state-migration.js";
 
 type CliBackend = Pick<
   RuntimeBridgeBackend,
@@ -495,6 +498,22 @@ export async function main(): Promise<void> {
     localAppData: process.env.LOCALAPPDATA,
     unifiedRuntimeConfigPath: args.values["unified-runtime-config"],
   });
+  const packagedProfile = readPackagedRuntimeProfile(process.execPath);
+  if (packagedProfile?.channel === "production" && !args.values["runtime-state-root"]) {
+    const migration = await migrateLegacyProductionState({
+      legacyRoot: path.join(process.env.LOCALAPPDATA || os.tmpdir(), "Role Model Runtime"),
+      destinationRoot: options.runtimeStateRoot,
+    });
+    if (migration.copied.length > 0 || migration.conflicts.length > 0) {
+      console.log(
+        JSON.stringify({
+          status: "legacy-state-migration",
+          copied: migration.copied.length,
+          conflicts: migration.conflicts,
+        }),
+      );
+    }
+  }
   const staticRoot = args.values["static-root"]?.trim() || options.staticRoot;
   let server: Awaited<ReturnType<typeof startBridgeServer>> | null = null;
   let backend: RuntimeBridgeBackend | null = null;

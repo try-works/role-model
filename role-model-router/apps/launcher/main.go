@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,13 +25,60 @@ const (
 	frontendShutdownWait  = 5 * time.Second
 )
 
+type runtimeProfile struct {
+	Channel       string `json:"channel"`
+	Name          string `json:"name"`
+	Host          string `json:"host"`
+	Port          int    `json:"port"`
+	StateRootName string `json:"state_root_name"`
+	ScopeID       string `json:"scope_id"`
+	Executable    string `json:"executable"`
+}
+
+func productionRuntimeProfile() runtimeProfile {
+	return runtimeProfile{
+		Channel: "production", Name: "role-model", Host: runtimeHost, Port: runtimePort,
+		StateRootName: "role-model-runtime", ScopeID: "standalone-runtime", Executable: "role-model.exe",
+	}
+}
+
+func readRuntimeProfile(packageDir string) (runtimeProfile, error) {
+	content, err := os.ReadFile(filepath.Join(packageDir, "manifest.json"))
+	if err != nil {
+		return runtimeProfile{}, fmt.Errorf("read manifest: %w", err)
+	}
+	var profile runtimeProfile
+	if err := json.Unmarshal(content, &profile); err != nil {
+		return runtimeProfile{}, fmt.Errorf("parse manifest: %w", err)
+	}
+	expected := map[string]runtimeProfile{
+		"production":  productionRuntimeProfile(),
+		"stage":       {Channel: "stage", Name: "role-model-stage", Host: runtimeHost, Port: 3457, StateRootName: "role-model-runtime-stage", ScopeID: "standalone-runtime-stage", Executable: "role-model-stage.exe"},
+		"development": {Channel: "development", Name: "role-model-dev", Host: runtimeHost, Port: 3458, StateRootName: "role-model-runtime-dev", ScopeID: "standalone-runtime-dev", Executable: "role-model-dev.exe"},
+	}
+	want, ok := expected[profile.Channel]
+	if !ok || profile.Name != want.Name || profile.Host != want.Host || profile.Port != want.Port || profile.StateRootName != want.StateRootName || profile.ScopeID != want.ScopeID {
+		return runtimeProfile{}, fmt.Errorf("manifest runtime profile does not match channel %q", profile.Channel)
+	}
+	if profile.Executable == "" {
+		profile.Executable = want.Executable
+	} else if profile.Executable != want.Executable {
+		return runtimeProfile{}, fmt.Errorf("manifest executable does not match channel %q", profile.Channel)
+	}
+	return profile, nil
+}
+
 func resolveRuntimeStateRoot(packageDir string) string {
+	return resolveRuntimeStateRootForProfile(packageDir, productionRuntimeProfile())
+}
+
+func resolveRuntimeStateRootForProfile(packageDir string, profile runtimeProfile) string {
 	cacheDir, err := os.UserCacheDir()
 	if err == nil && cacheDir != "" {
-		return filepath.Join(cacheDir, "Role Model Runtime")
+		return filepath.Join(cacheDir, profile.StateRootName)
 	}
 
-	return filepath.Join(packageDir, "runtime-state")
+	return filepath.Join(packageDir, profile.StateRootName)
 }
 
 func looksLikeWorkspaceRoot(directory string) bool {
@@ -85,15 +133,19 @@ func resolveStandaloneWorkspaceRoot(packageDir string) string {
 }
 
 func buildRuntimeArgs(packageDir string, runtimeStateRoot string) []string {
+	return buildRuntimeArgsForProfile(packageDir, runtimeStateRoot, productionRuntimeProfile())
+}
+
+func buildRuntimeArgsForProfile(packageDir string, runtimeStateRoot string, profile runtimeProfile) []string {
 	workspaceRoot := resolveStandaloneWorkspaceRoot(packageDir)
 	unifiedRuntimeConfigPath := filepath.Join(runtimeStateRoot, "state", "runtime-config.yaml")
 	return []string{
 		"--repo-root", workspaceRoot,
 		"--runtime-state-root", runtimeStateRoot,
-		"--scope-id", "standalone-runtime",
+		"--scope-id", profile.ScopeID,
 		"--unified-runtime-config", unifiedRuntimeConfigPath,
-		"--host", runtimeHost,
-		"--port", fmt.Sprintf("%d", runtimePort),
+		"--host", profile.Host,
+		"--port", fmt.Sprintf("%d", profile.Port),
 		"--static-root", filepath.Join(packageDir, "build", "client"),
 	}
 }
@@ -330,15 +382,17 @@ func run() int {
 	}
 
 	exeDir := filepath.Dir(executablePath)
-
-	var bridgeBinary string
-	if runtime.GOOS == "windows" {
-		bridgeBinary = filepath.Join(exeDir, "role-model-runtime.exe")
-	} else {
-		bridgeBinary = filepath.Join(exeDir, "role-model-runtime")
+	profile, err := readRuntimeProfile(exeDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load role-model runtime profile: %v\n", err)
+		return 1
+	}
+	bridgeBinary := filepath.Join(exeDir, profile.Executable)
+	if runtime.GOOS != "windows" {
+		bridgeBinary = filepath.Join(exeDir, strings.TrimSuffix(profile.Executable, ".exe"))
 	}
 
-	runtimeStateRoot := resolveRuntimeStateRoot(exeDir)
+	runtimeStateRoot := resolveRuntimeStateRootForProfile(exeDir, profile)
 	if err := os.MkdirAll(runtimeStateRoot, 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create runtime state directory: %v\n", err)
 		return 1
@@ -349,10 +403,10 @@ func run() int {
 		return 1
 	}
 
-	baseURL := buildRuntimeBaseURL(runtimeHost, runtimePort)
+	baseURL := buildRuntimeBaseURL(profile.Host, profile.Port)
 
-	fmt.Println("Starting Role Model Runtime...")
-	backendCmd := exec.Command(bridgeBinary, buildRuntimeArgs(exeDir, runtimeStateRoot)...)
+	fmt.Printf("Starting %s...\n", profile.Name)
+	backendCmd := exec.Command(bridgeBinary, buildRuntimeArgsForProfile(exeDir, runtimeStateRoot, profile)...)
 	backendCmd.Stdout = os.Stdout
 	backendCmd.Stderr = os.Stderr
 	backendCmd.Dir = exeDir
@@ -403,7 +457,7 @@ func run() int {
 			return 1
 		}
 
-		fmt.Println("Role Model is running. Close this window or press Ctrl+C to stop.")
+		fmt.Printf("%s is running. Close this window or press Ctrl+C to stop.\n", profile.Name)
 
 		select {
 		case signalValue := <-signalChannel:
@@ -431,7 +485,7 @@ func run() int {
 		return 1
 	}
 
-	fmt.Println("Role Model is running. Close this window or press Ctrl+C to stop.")
+	fmt.Printf("%s is running. Close this window or press Ctrl+C to stop.\n", profile.Name)
 
 	frontendResultCh := make(chan error, 1)
 	go func() {
