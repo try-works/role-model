@@ -36,9 +36,9 @@ test("promotion guard encodes dev to stage to main with a hotfix exception", () 
   assert.match(workflow, /Invalid promotion source/);
 });
 
-test("workspace tests isolate the resource-heavy Pi runtime proof", () => {
+test("workspace tests serialize the resource-heavy runtime proofs", () => {
   assert.match(
     packageManifest.scripts.test,
-    /--filter=\.\/\*\* --filter=!@try-works\/pi-role-model test.*--filter @try-works\/pi-role-model test/,
+    /--filter=\.\/\*\* --filter=!@role-model-router\/runtime-host-bridge --filter=!@try-works\/pi-role-model test.*--filter @role-model-router\/runtime-host-bridge test.*--filter @try-works\/pi-role-model test/,
   );
 });
