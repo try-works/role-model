@@ -29,8 +29,8 @@ Control-plane docs are not memory docs:
 - Taxonomy V1 catalog, groups, roles, classification fields, versioning, deprecation, docs generation: `/.recursive/memory/domains/taxonomy-v1.md`
 - Pi package classifier, metadata injection flow, context signals, runtime override, safety boundaries: `/.recursive/memory/domains/pi-role-model-package.md`
 - Benchmark routing display and env credential lessons: `/.recursive/memory/episodes/run-43-benchmark-routing-display.md`
-- GitHub Actions validation, docs deploy, binary release publication, and recursive-artifact changelog generation: `/.recursive/memory/patterns/github-ci-and-release-workflow.md`
-- Git push and merge workflow (PR-only, no direct main pushes): `/.recursive/memory/patterns/git-push-merge-workflow.md`
+- GitHub Actions lanes, serialized runtime proof suites, docs deploy, channel candidates, and tag-only releases: `/.recursive/memory/patterns/github-ci-and-release-workflow.md`
+- Git push, ordinary PRs to `dev`, reviewed `dev -> stage -> main` promotions, and hotfix convergence: `/.recursive/memory/patterns/git-push-merge-workflow.md`
 - Prefer `Status: CURRENT` docs for planning and execution.
 - `Status: SUSPECT` docs may be used as leads, but revalidate them before trust.
 - Exclude `STALE` and `DEPRECATED` docs from default retrieval unless doing historical analysis.
