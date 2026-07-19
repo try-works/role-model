@@ -2235,3 +2235,11 @@
 - SQLite summary/list paths must select dedicated projected columns through matching recency indexes. Large JSON observation blobs are detail-only and must never be parsed to reconstruct fields already persisted as columns.
 - The normalized catalog is stored and packaged as a versioned compact wire representation and is hydrated only through the catalog package boundary. Direct production or test JSON imports are prohibited so omitted defaults and provenance remain deterministic.
 - Once an HTTP streaming response is committed, bridge failures must terminate or end that response and preserve runtime health; they must not attempt a second JSON response or mutate headers. Provider-specific model rewriting remains explicit and regression-tested, including Moonshot Kimi K3 mapping.
+# Run 78 dev-stage-main CI/CD and runtime channels (2026-07-19)
+
+- `dev` is the default integration branch; ordinary feature, fix, dependency, and recursive branches target `dev` and normally squash merge.
+- Releases promote with merge commits from `dev` to `stage` and from `stage` to `main`; `main` remains production truth. Approved `hotfix/*` work starts from `main` and is forwarded to `stage` and `dev`.
+- Strict protected checks are `promotion-guard`, `quality`, `build-test`, `runtime-critical`, `runtime-router`, `rust`, and `smoke`; `dev` additionally requires `cla`.
+- Runtime channel identity is build-supplied: production `role-model:3456`, stage `role-model-stage:3457`, development `role-model-dev:3458`, each with isolated state and process identity.
+- Stage pushes build attested candidates; only production tags publish stable releases. Docs build everywhere relevant but deployment is main-only and visibly skips when Cloudflare credentials are absent.
+- Resource-heavy runtime-host and Pi proof suites run serially after ordinary workspace tests to keep the required build/test context reliable.

@@ -1,61 +1,48 @@
 Run: `/.recursive/run/78-dev-stage-main-cicd-runtime-channels/`
 Phase: `05 Manual QA upstream-gap addendum`
-Status: `DRAFT`
-Inputs:
-- `/.recursive/run/78-dev-stage-main-cicd-runtime-channels/02-to-be-plan.md`
-- `/.recursive/run/78-dev-stage-main-cicd-runtime-channels/05-manual-qa.md`
-- GitHub Actions runs `29668088068` and `29668594990`
-- User instruction approving stronger agent guidance and durable memory closeout
-Outputs:
-- `/AGENTS.md`
-- `/package.json`
-- `/scripts/ci-workflow.test.mjs`
-- `/.recursive/run/78-dev-stage-main-cicd-runtime-channels/addenda/05-manual-qa.upstream-gap.02-to-be-plan.addendum-01.md`
-Scope note: This addendum records Phase 5 evidence that exposed CI fan-out instability and a repository-level agent-instruction gap after the locked implementation plan.
+Status: `LOCKED`
+LockedAt: `2026-07-19T02:40:09Z`
+LockHash: `1cbe26cde44799c70401d06e8efec6e41ca4434108fcafc577972d82caf9c03a`
+Inputs: Phase 5 QA, GitHub Actions runs `29668088068`, `29668594990`, `29669174294`, and `29669598791`.
+Outputs: `/AGENTS.md`, serialized root test topology, and bootstrap timing regression coverage.
+Scope note: Records and closes the live-CI gaps discovered after the locked Phase 2 plan.
 
-## Gap
+## Gap and Repair
 
-The locked Phase 2 plan required stable required checks and a Codex recursive-mode bridge, but live promotion QA exposed two gaps:
+1. Pi was terminated without an assertion under workspace-wide fan-out. It now runs after ordinary workspaces.
+2. Runtime-host config updates returned transient null state under monorepo contention. The full host suite now runs alone before Pi.
+3. Endpoint rehydration asserted before asynchronous bootstrap completed. The test now waits for bounded bootstrap completion and uses a deterministic delayed probe.
+4. Ordinary agents lacked unconditional workflow instructions. Root `/AGENTS.md` now defines the `dev -> stage -> main` policy, channel ports, and canonical `role-model` spelling.
 
-1. The workspace-wide recursive test fan-out twice terminated `@try-works/pi-role-model` without a failing assertion while its resource-heavy rebuilt-runtime proof was running. The identical package passed all 95 tests in isolation and passed on rerun, so repeated blind reruns would leave a flaky required check.
-2. `/.codex/AGENTS.md` instructed recursive-mode sessions, but the repository had no root `/AGENTS.md` with unconditional branch, promotion, runtime-channel, and naming rules for ordinary agent work.
-3. After Pi isolation made the rest of the host suite run to completion on Linux, `endpoint-rehydration.test.ts` exposed a separate one-second bootstrap polling assumption. Under CI load the assertion ran while bootstrap still reported `running`, before the remote health probe could mark the endpoint offline.
+## Evidence
 
-## Evidence and compensation
-
-- Run `29668088068`, job `88142085912`, and run `29668594990`, job `88143425962`, both ended with `packages/pi-role-model test: Failed` and no failed Vitest assertion.
-- The isolated command `corepack pnpm --filter @try-works/pi-role-model test` passed 15 files and 95 tests, including the 15-second rebuilt-runtime alias proof.
-- `/package.json` now excludes `@try-works/pi-role-model` from the concurrent recursive fan-out and runs it once afterward.
-- `/scripts/ci-workflow.test.mjs` contains the RED/GREEN contract for that sequencing.
-- `/role-model-router/apps/runtime-host-bridge/test/endpoint-rehydration.test.ts` now makes the slow-probe case deterministic, waits up to the test's bounded deadline, and asserts bootstrap completion before endpoint state.
-- `/AGENTS.md` makes the delivery workflow visible without requiring recursive-mode discovery.
-
-## Implications
-
-The promotion PR must wait for this compensation to merge into `dev`, then rerun from the updated `dev` head. Phase 5 must record the resulting green promotion and post-merge stage candidate before it can lock. Phase 8 must refresh the two GitHub workflow memory patterns and the memory router.
+- RED/GREEN workflow contracts protect the sequence.
+- Full local test passed: 41 ordinary projects, runtime host 63/570, Pi 15/95.
+- Corrective PRs #64 and #66 passed all required checks and merged to `dev`.
+- Promotion PRs #67 and #68 and final main run `29670332721` passed.
 
 ## TODO
 
-- [x] Record both assertion-free CI failures.
-- [x] Add a failing sequencing contract.
-- [x] Isolate and verify the Pi package test.
-- [x] Add root agent instructions.
-- [x] Reproduce and repair the endpoint-rehydration bootstrap timing race.
-- [ ] Merge the compensation through a reviewed pull request into `dev`.
-- [ ] Re-run and complete the promotion QA.
+- [x] Record the assertion-free failures and bootstrap race
+- [x] Add failing contracts and deterministic regressions
+- [x] Serialize resource-heavy proof suites
+- [x] Add root agent instructions
+- [x] Re-run the complete promotion chain
 
 ## Traceability
 
-- `R1`: root agent guidance reinforces ordinary work targeting `dev`.
-- `R2`: the compensation preserves stable protected checks and promotion enforcement.
-- `R3`: the required `build-test` lane becomes deterministic under bounded sequencing.
-- `R4`: root guidance preserves the approved main-only docs exception.
-- `R5`-`R9`: unchanged; later Phase 5 evidence must verify their already implemented behavior and migration state.
+- R1-R2: root agent policy and required promotion guard are live.
+- R3: required build/test is now stable and diagnosable.
+- R4-R9: final Phase 5 evidence confirms the unchanged implementation and live migration.
 
 ## Coverage Gate
 
-Coverage: FAIL — promotion and final GitHub topology evidence remain incomplete.
+Coverage: PASS
 
 ## Approval Gate
 
-Approval: FAIL — this addendum remains active until the compensation and promotions are verified.
+Approval: PASS
+
+## Audit Verdict
+
+Audit: PASS

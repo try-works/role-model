@@ -1,55 +1,43 @@
-# Git Push and Merge Workflow
+# Git Push, Review, and Promotion Workflow
 
 Type: `pattern`
 Status: `CURRENT`
-Scope: `Repository-safe Git push and merge workflow expectations, especially PR-only merge discipline and direct-main anti-pattern recovery guidance.`
+Scope: `Repository branch, pull-request, promotion, and hotfix workflow.`
 Owns-Paths:
-- `/.recursive/memory/patterns/git-push-merge-workflow.md`
+- `/AGENTS.md`
+- `/CONTRIBUTING.md`
+- `/.github/pull_request_template.md`
+- `/docs/operations/02-ci-and-release-flow.md`
 Watch-Paths:
+- `/.github/workflows/ci.yml`
 - `/.recursive/DECISIONS.md`
 - `/.recursive/STATE.md`
-- `/.github/workflows/**`
 Source-Runs:
-- `260624-clever-seal`
-- `62-litellm-pi-craft-codex-execution-hardening`
-Validated-At-Commit: `26e6a4119a7338236fa7e97ff81629e80951e105`
-Last-Validated: `2026-07-08`
-Tags: `git`, `workflow`, `pull-request`, `branch-protection`, `anti-pattern`
-Created: `2026-06-24`
-Last Validated: `2026-06-24`
-Validated By: `260624-clever-seal`
+- `78-dev-stage-main-cicd-runtime-channels`
+Validated-At-Commit: `0db8a21efe943a902f7ae5a2004aff0fe2ceefea`
+Last-Validated: `2026-07-19`
+Tags: `git`, `workflow`, `pull-request`, `promotion`, `branch-protection`
 
-## Correct Workflow
+## Normal work
 
-```
-1. git checkout -b feature-branch     (create branch in worktree)
-2. ...implement, test, verify...
-3. git add -A && git commit           (commit all changes to branch)
-4. git push origin feature-branch     (push branch to remote)
-5. Open PR on GitHub                  (CI runs, review happens)
-6. Merge via PR                       (GitHub UI or API)
-```
+1. Fetch `origin/dev` and create a short-lived feature, fix, dependency, or `recursive/*` branch from it.
+2. Implement and validate in that branch; never develop directly on a long-lived branch.
+3. Push the branch and open a PR to `dev`.
+4. Require strict CI, CLA, conversation resolution, and maintainer review; ordinary work normally squash merges.
+5. Let GitHub delete the merged short-lived branch.
 
-## NEVER DO THIS
+## Promotions
 
-- **Never merge locally and push directly to main.** Always go through a PR.
-- **Never `git checkout main && git merge feature-branch && git push origin main`.** This bypasses CI, review, and branch protection.
-- **Never force push to main.** Main is protected for a reason.
+- Promote only `dev -> stage`, then `stage -> main`, through reviewed PRs and merge commits.
+- `stage` is the tested candidate boundary; `main` is production truth.
+- Never merge locally and push a long-lived branch, force-push it, or bypass the promotion guard.
+- The single-maintainer repository may need a brief, audited review-count maintenance window for an explicitly user-approved merge. Required checks and conversation gates stay active, and the review policy must be restored immediately.
 
-## Why
+## Hotfixes
 
-- PR workflow ensures CI runs against the merged result
-- Branch protection rules (CLA checks, required status checks) are enforced on PRs but not on direct pushes
-- Review history is preserved in the PR
-- Reverting a PR merge is straightforward; reverting a direct push is blocked by branch protection
+- Branch `hotfix/*` from `main`, use a reviewed PR under the explicit guard exception, then forward the resulting change through `stage` and `dev` so branches converge.
+- Do not use a hotfix name to bypass normal integration work.
 
-## What Happened (Session 260624-clever-seal)
+## Agent entry point
 
-Run 57 was merged via `git checkout main && git merge recursive/57-... && git push origin main`. This bypassed the PR workflow. The merge is live but cannot be reverted because main is force-push protected. This is recorded as an anti-pattern.
-
-## Recovery
-
-If a direct main push happens:
-1. The code is permanently on main (cannot force push to revert)
-2. A PR can still be opened retroactively from the branch for documentation/discussion
-3. Future merges MUST use the PR workflow
+- Root `/AGENTS.md` is unconditional guidance for every agent. Recursive-mode sessions additionally follow `/.codex/AGENTS.md` and `/.recursive/RECURSIVE.md`.
