@@ -327,3 +327,11 @@
   - all focused suites, validators, browser regressions, packaging validation, and rebuilt SEA runtime QA passed; disposable QA state was removed, and the later canonical-state credential drill stopped its isolated listener while intentionally preserving the authorized device-local credential update
   - user-authorized closeout QA refreshed the device-local Kimi OAuth credential, proved persistence through a rebuilt-runtime restart, and passed real Pi requests for direct `moonshot/kimi-k3`, direct `chatgpt/gpt-5.4`, and `baseline.remote-only` with coherent telemetry, request-detail, router-decision, and Observe-page receipts
   - the worktree branch is locally committed for review at closeout; no push or merge to `main` was requested
+# Run 78 delivery topology (2026-07-19)
+
+- GitHub default branch: `dev`; merged short-lived branches are automatically deleted.
+- Protected long-lived tips at validation: `dev` `52f672f6`, `stage` `8cbf1207`, `main` `0db8a21e`.
+- `dev`, `stage`, and `main` enforce strict CI, PR review, resolved conversations, administrators, no force push, and no deletion. `dev` additionally requires CLA.
+- GitHub environments exist for `development`, `staging`, `production`, and `release`; Cloudflare deploy secrets are currently absent, so docs deployment reports a successful explicit skip after building.
+- Final main CI run `29670332721` passed; final stage candidate build `29670133251` passed on four supported platforms.
+- Root `AGENTS.md`, contribution/PR/operations docs, workflow contract tests, promotion guard, runtime profiles, and channel-aware packaging are current.
