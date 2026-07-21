@@ -375,6 +375,8 @@ describe("runtime design system", () => {
           "/app/system/runtime",
           "/app/system/runtime-config",
           "/app/system/peers",
+          "/app/system/extensions",
+          "/app/system/storage-retention",
         ],
       },
     ]);

@@ -492,6 +492,30 @@ const systemPeersRoute = createRoute({
     "Peer inventory and policy page for remote model sources, auth posture, timeouts, filters, and peer-backed topology decisions.",
 });
 
+const systemExtensionsRoute = createRoute({
+  id: "system-extensions",
+  to: "/app/system/extensions",
+  label: "Extensions",
+  section: "System",
+  icon: Boxes,
+  template: "system-topology",
+  title: "Extension boundary",
+  description:
+    "Installed package lifecycle, scoped permissions, compatibility, retention, and bounded degradation without making routing depend on private workers.",
+});
+
+const systemStorageRetentionRoute = createRoute({
+  id: "system-storage-retention",
+  to: "/app/system/storage-retention",
+  label: "Storage & retention",
+  section: "System",
+  icon: LayoutGrid,
+  template: "system-topology",
+  title: "Storage & retention",
+  description:
+    "Usage by data class and tier, managed-policy conflicts, dry-run pruning, immutable receipts, progress, and rollback-safe controls.",
+});
+
 const runtimeRouteDefinitions = [
   overviewSummaryRoute,
   studioChatRoute,
@@ -529,6 +553,8 @@ const runtimeRouteDefinitions = [
   systemRuntimeRoute,
   systemSessionReadinessRoute,
   systemPeersRoute,
+  systemExtensionsRoute,
+  systemStorageRetentionRoute,
 ] as const;
 
 export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
@@ -600,6 +626,8 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       systemRuntimeRoute,
       controlRuntimeConfigRoute,
       systemPeersRoute,
+      systemExtensionsRoute,
+      systemStorageRetentionRoute,
     ],
   },
 ] as const;

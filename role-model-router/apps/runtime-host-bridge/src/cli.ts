@@ -35,6 +35,9 @@ type CliBackend = Pick<
   | "subscribeTelemetry"
   | "listProviders"
   | "listModels"
+  | "listExtensions"
+  | "readStorageRetention"
+  | "dryRunStorageRetention"
   | "listRoles"
   | "listAccounts"
   | "listProviderDeviceAuthorizations"
@@ -273,6 +276,9 @@ export function createCliServerOptions(
     ) as StartBridgeServerOptions["subscribeTelemetry"],
     listProviders: bindBackendMethod("listProviders") as StartBridgeServerOptions["listProviders"],
     listModels: bindBackendMethod("listModels") as StartBridgeServerOptions["listModels"],
+    listExtensions: bindBackendMethod("listExtensions") as StartBridgeServerOptions["listExtensions"],
+    readStorageRetention: bindBackendMethod("readStorageRetention") as StartBridgeServerOptions["readStorageRetention"],
+    dryRunStorageRetention: bindBackendMethod("dryRunStorageRetention") as StartBridgeServerOptions["dryRunStorageRetention"],
     listRoles: bindBackendMethod("listRoles") as StartBridgeServerOptions["listRoles"],
     listAccounts: bindBackendMethod("listAccounts") as StartBridgeServerOptions["listAccounts"],
     listProviderDeviceAuthorizations: bindBackendMethod(

@@ -75,6 +75,8 @@ export default [
       id: "legacy-control-session-readiness",
     }),
     route("system/peers", "routes/system-peers.tsx"),
+    route("system/extensions", "routes/extensions.tsx"),
+    route("system/storage-retention", "routes/storage-retention.tsx"),
   ]),
   route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;

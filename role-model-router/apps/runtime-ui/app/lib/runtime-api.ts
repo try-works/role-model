@@ -1341,6 +1341,46 @@ export async function fetchRuntimeModels(
   }
 }
 
+export interface RuntimeExtensionStatus {
+  readonly id: string;
+  readonly packageClass: "canonical_extension" | "fixture_worker" | "interop_adapter";
+  readonly lifecycle: "installed_disabled" | "starting" | "ready" | "degraded" | "stopping" | "stopped";
+  readonly installed: boolean;
+  readonly enabled: boolean;
+  readonly channel: string;
+  readonly scope: string;
+  readonly authorizationEpoch: number;
+  readonly health: { readonly available: boolean; readonly routingDependency: false };
+  readonly permissions: readonly string[];
+  readonly dataClasses: readonly string[];
+  readonly retention: string;
+  readonly degradation: string;
+  readonly compatibility: readonly string[];
+}
+
+export async function fetchExtensions(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<readonly RuntimeExtensionStatus[]> {
+  return fetchJson<RuntimeExtensionStatus[]>("/api/role-model/extensions", fetcher);
+}
+
+export interface RuntimeStorageRetentionSummary {
+  readonly totalBytes: number;
+  readonly categories: readonly { readonly id: string; readonly tier: string; readonly scope: string; readonly bytes: number; readonly count: number }[];
+  readonly managedPolicy: boolean;
+  readonly conflicts: readonly { readonly reason: string; readonly count: number }[];
+  readonly receipts: readonly { readonly id: string; readonly status: string; readonly affectedCount: number; readonly rollbackAvailable: boolean }[];
+  readonly activeJob: { readonly status: string; readonly progress: number } | null;
+}
+
+export async function fetchStorageRetention(fetcher: RuntimeFetcher = fetch): Promise<RuntimeStorageRetentionSummary> {
+  return fetchJson<RuntimeStorageRetentionSummary>("/api/role-model/storage-retention", fetcher);
+}
+
+export async function requestRetentionDryRun(fetcher: RuntimeFetcher = fetch): Promise<RuntimeStorageRetentionSummary> {
+  return fetchJson<RuntimeStorageRetentionSummary>("/api/role-model/storage-retention/dry-run", fetcher, { method: "POST" });
+}
+
 export async function fetchRuntimeSnapshot(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<RuntimeSnapshot> {

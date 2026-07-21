@@ -127,6 +127,7 @@ import {
 } from "./request-capability-inference.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
+import { createTrackBOperations } from "./track-b-operations.js";
 
 import {
   type ProviderRequestCapture,
@@ -2593,6 +2594,9 @@ export interface StartBridgeServerOptions {
   readonly readHealthStatus?: () => Promise<unknown>;
   readonly listProviders?: () => Promise<readonly unknown[]>;
   readonly listModels?: () => Promise<readonly unknown[]>;
+  readonly listExtensions?: () => Promise<readonly unknown[]>;
+  readonly readStorageRetention?: () => Promise<unknown>;
+  readonly dryRunStorageRetention?: () => Promise<unknown>;
   readonly listRoles?: () => Promise<readonly unknown[]>;
   readonly listAccounts?: () => Promise<readonly unknown[]>;
   readonly listProviderDeviceAuthorizations?: () => Promise<readonly unknown[]>;
@@ -2778,6 +2782,9 @@ export interface RuntimeBridgeBackend {
     }[]
   >;
   listModels(): Promise<readonly BridgeRuntimeModelRecord[]>;
+  listExtensions(): Promise<readonly unknown[]>;
+  readStorageRetention(): Promise<unknown>;
+  dryRunStorageRetention(): Promise<unknown>;
   listRoles(): Promise<
     readonly {
       roleId: string;
@@ -13987,6 +13994,33 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    if (request.method === "GET" && url.pathname === "/api/role-model/extensions") {
+      if (!options.listExtensions) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.listExtensions());
+      return;
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/role-model/storage-retention") {
+      if (!options.readStorageRetention) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.readStorageRetention());
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/role-model/storage-retention/dry-run") {
+      if (!options.dryRunStorageRetention) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      writeJson(response, 200, await options.dryRunStorageRetention());
+      return;
+    }
+
     if (request.method === "PUT" && url.pathname === "/api/role-model/runtime/config") {
       if (!options.updateRuntimeConfig) {
         writeJson(response, 404, { error: "not found" });
@@ -22225,6 +22259,21 @@ export async function createRuntimeBridgeBackend(
     },
     async listModels(): Promise<readonly BridgeRuntimeModelRecord[]> {
       return createRuntimeModelRecords(currentRegistry, currentNormalizedCatalog);
+    },
+    async listExtensions(): Promise<readonly unknown[]> {
+      const contract = JSON.parse(
+        await readFile(
+          path.join(options.repoRoot, "packages", "protocol-types", "generated", "product-contracts.json"),
+          "utf8",
+        ),
+      ) as { extensions?: readonly Record<string, unknown>[] };
+      return createTrackBOperations({statePath:path.join(options.runtimeStateRoot,options.scopeId,"track-b-production-bridge.json"),catalog:contract.extensions??[]}).listExtensions();
+    },
+    async readStorageRetention(): Promise<unknown> {
+      return createTrackBOperations({statePath:path.join(options.runtimeStateRoot,options.scopeId,"track-b-production-bridge.json"),catalog:[]}).readStorageRetention();
+    },
+    async dryRunStorageRetention(): Promise<unknown> {
+      return createTrackBOperations({statePath:path.join(options.runtimeStateRoot,options.scopeId,"track-b-production-bridge.json"),catalog:[]}).dryRunStorageRetention();
     },
     async listRoles(): Promise<
       readonly {
