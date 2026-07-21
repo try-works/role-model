@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -48,10 +48,69 @@ type BridgeState = {
   readonly storageServices: readonly StorageRecord[];
   readonly retention: {
     readonly managedPolicy: boolean;
+    readonly policies?: readonly RetentionPolicy[];
     readonly receipts: readonly unknown[];
-    readonly activeJob: unknown;
+    readonly activeJob: RetentionJob | null;
     readonly currentPlan?: RetentionPlan | null;
   };
+  readonly contribution?: ContributionState;
+  readonly recommendations?: readonly RecommendationRecord[];
+  readonly recommendationRevision?: number;
+  readonly activePack?: {
+    readonly id: string;
+    readonly version: string;
+    readonly appliedAt: string;
+  } | null;
+};
+type RetentionPolicy = {
+  readonly policyId: string;
+  readonly scope: string;
+  readonly maxBytes: number;
+  readonly maxAgeDays: number;
+};
+type RetentionJob = {
+  readonly id: string;
+  readonly status: "running" | "cancelled" | "completed";
+  readonly progress: number;
+  readonly manifestHash: string;
+  readonly scope: string;
+};
+type ContributionState = {
+  readonly mode: "disabled" | "consumer" | "contributor";
+  readonly contributionTier: "none" | "basic" | "standard" | "advanced";
+  readonly recommendationTier: "none" | "basic" | "standard" | "advanced";
+  readonly recommendationAccess: "disabled" | "download_only" | "preview_and_apply";
+  readonly allowCloudUpload: boolean;
+  readonly authorizationState:
+    | "none"
+    | "pending_disclosure"
+    | "active"
+    | "revoked"
+    | "managed_blocked";
+  readonly revocationEpoch: number;
+  readonly queuedCount: number;
+  readonly managed: boolean;
+  readonly disclosureId?: string | null;
+};
+type RecommendationRecord = {
+  readonly id: string;
+  readonly version: string;
+  readonly status: "downloaded" | "validated" | "applied" | "rejected";
+  readonly signatureValid: boolean;
+  readonly policyAllowed: boolean;
+  readonly provenance: string;
+};
+const EMPTY_CONTRIBUTION: ContributionState = {
+  mode: "consumer",
+  contributionTier: "none",
+  recommendationTier: "advanced",
+  recommendationAccess: "preview_and_apply",
+  allowCloudUpload: false,
+  authorizationState: "none",
+  revocationEpoch: 0,
+  queuedCount: 0,
+  managed: false,
+  disclosureId: null,
 };
 const EMPTY_STATE: BridgeState = {
   schemaVersion: "role-model.track-b-production-bridge.v1",
@@ -60,7 +119,17 @@ const EMPTY_STATE: BridgeState = {
   generatedAt: "1970-01-01T00:00:00.000Z",
   extensions: [],
   storageServices: [],
-  retention: { managedPolicy: false, receipts: [], activeJob: null, currentPlan: null },
+  retention: {
+    managedPolicy: false,
+    policies: [],
+    receipts: [],
+    activeJob: null,
+    currentPlan: null,
+  },
+  contribution: EMPTY_CONTRIBUTION,
+  recommendations: [],
+  recommendationRevision: 0,
+  activePack: null,
 };
 const validate = (value: BridgeState): BridgeState => {
   if (
@@ -109,7 +178,14 @@ const validate = (value: BridgeState): BridgeState => {
       !Number.isInteger(plan.sourceRevision))
   )
     throw new Error("invalid retention plan");
-  return value;
+  return {
+    ...value,
+    retention: { ...value.retention, policies: value.retention.policies ?? [] },
+    contribution: value.contribution ?? EMPTY_CONTRIBUTION,
+    recommendations: value.recommendations ?? [],
+    recommendationRevision: value.recommendationRevision ?? 0,
+    activePack: value.activePack ?? null,
+  };
 };
 const readState = async (statePath: string): Promise<BridgeState> => {
   try {
@@ -124,6 +200,45 @@ const writeState = async (statePath: string, state: BridgeState) => {
   const temporary = `${statePath}.${process.pid}.tmp`;
   await writeFile(temporary, `${JSON.stringify(state, null, 2)}\n`, "utf8");
   await rename(temporary, statePath);
+};
+const runtimePlan = (state: BridgeState, sourceRevision: number): RetentionPlan => {
+  const eligible = state.storageServices.filter(
+    (row) => !(row.holds ?? 0) && !(row.leases ?? 0) && !(row.conflicts?.length ?? 0),
+  );
+  const conflicts = state.storageServices.flatMap((row) => [
+    ...((row.holds ?? 0) ? [{ id: row.id, reason: "legal_hold" }] : []),
+    ...((row.leases ?? 0) ? [{ id: row.id, reason: "active_lease" }] : []),
+    ...(row.conflicts ?? []).map((reason) => ({ id: row.id, reason })),
+  ]);
+  const basis = {
+    sourceRevision,
+    policies: state.retention.policies ?? [],
+    inventory: state.storageServices.map(({ id, category, tier, scope, bytes, count }) => ({
+      id,
+      category,
+      tier,
+      scope,
+      bytes,
+      count,
+    })),
+  };
+  return {
+    schemaVersion: "role-model.retention-dry-run.v1",
+    channel: "production",
+    affectedCount: eligible.reduce((sum, row) => sum + row.count, 0),
+    estimatedBytes: eligible.reduce((sum, row) => sum + row.bytes, 0),
+    conflicts,
+    lostCapabilities: [...new Set(eligible.map((row) => row.category))].sort(),
+    retainedCapabilities: [
+      ...new Set(
+        state.storageServices.filter((row) => !eligible.includes(row)).map((row) => row.category),
+      ),
+    ].sort(),
+    blocks: state.retention.managedPolicy ? ["managed_policy"] : [],
+    manifestHash: createHash("sha256").update(JSON.stringify(basis)).digest("hex"),
+    rollbackAvailable: false,
+    sourceRevision,
+  };
 };
 
 export function createTrackBOperations({
@@ -178,15 +293,18 @@ export function createTrackBOperations({
         receipts: state.retention.receipts,
         activeJob: state.retention.activeJob,
         currentPlan: state.retention.currentPlan ?? null,
+        policies: state.retention.policies ?? [],
       };
     },
     async dryRunStorageRetention(): Promise<unknown> {
       const state = await readState(statePath);
       if (state.retention.managedPolicy)
         throw new Error("storage retention is controlled by managed policy");
-      const plan = state.retention.currentPlan;
-      if (!plan || plan.sourceRevision !== state.revision)
-        throw new Error("current hash-bound retention plan required");
+      const nextRevision = state.revision + 1;
+      const plan =
+        state.retention.currentPlan?.sourceRevision === state.revision
+          ? { ...state.retention.currentPlan, sourceRevision: nextRevision }
+          : runtimePlan(state, nextRevision);
       const receipt = {
         id: `dry-${createHash("sha256")
           .update(JSON.stringify([plan.manifestHash, state.revision]))
@@ -200,19 +318,253 @@ export function createTrackBOperations({
         manifestHash: plan.manifestHash,
         sourceRevision: state.revision,
       };
-      const nextRevision = state.revision + 1;
       const next: BridgeState = {
         ...state,
         revision: nextRevision,
         generatedAt: new Date().toISOString(),
         retention: {
           ...state.retention,
-          currentPlan: { ...plan, sourceRevision: nextRevision },
+          currentPlan: plan,
           receipts: [...state.retention.receipts, receipt].slice(-100),
         },
       };
       await writeState(statePath, next);
       return this.readStorageRetention();
+    },
+    async updateStorageRetentionPolicy(input: Record<string, unknown>): Promise<unknown> {
+      const state = await readState(statePath);
+      if (state.retention.managedPolicy)
+        throw new Error("storage retention is controlled by managed policy");
+      const policy: RetentionPolicy = {
+        policyId: String(input.policyId ?? ""),
+        scope: String(input.scope ?? ""),
+        maxBytes: Number(input.maxBytes),
+        maxAgeDays: Number(input.maxAgeDays),
+      };
+      if (
+        !policy.policyId ||
+        !policy.scope ||
+        !Number.isFinite(policy.maxBytes) ||
+        policy.maxBytes < 0 ||
+        !Number.isInteger(policy.maxAgeDays) ||
+        policy.maxAgeDays < 1
+      )
+        throw new Error("invalid retention policy");
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        retention: { ...state.retention, policies: [policy], currentPlan: null },
+      });
+      return this.readStorageRetention();
+    },
+    async executeStorageRetention(input: Record<string, unknown>): Promise<unknown> {
+      const state = await readState(statePath);
+      if (state.retention.managedPolicy)
+        throw new Error("storage retention is controlled by managed policy");
+      const plan = state.retention.currentPlan;
+      if (
+        !plan ||
+        plan.sourceRevision !== state.revision ||
+        input.manifestHash !== plan.manifestHash
+      )
+        throw new Error("matching hash-bound retention plan required");
+      if (plan.blocks.length) throw new Error(`retention plan blocked: ${plan.blocks.join(", ")}`);
+      const job: RetentionJob = {
+        id: `prune-${plan.manifestHash.slice(0, 12)}`,
+        status: "running",
+        progress: 0,
+        manifestHash: plan.manifestHash,
+        scope: String(input.scope ?? "global"),
+      };
+      const receipt = {
+        id: job.id,
+        status: "running",
+        affectedCount: plan.affectedCount,
+        estimatedBytes: plan.estimatedBytes,
+        conflictCount: plan.conflicts.length,
+        rollbackAvailable: plan.rollbackAvailable,
+        manifestHash: plan.manifestHash,
+      };
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        retention: {
+          ...state.retention,
+          activeJob: job,
+          currentPlan: { ...plan, sourceRevision: state.revision + 1 },
+          receipts: [...state.retention.receipts, receipt].slice(-100),
+        },
+      });
+      return this.readStorageRetention();
+    },
+    async cancelStorageRetentionJob(): Promise<unknown> {
+      const state = await readState(statePath);
+      if (!state.retention.activeJob || state.retention.activeJob.status !== "running")
+        throw new Error("no cancellable retention job");
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        retention: {
+          ...state.retention,
+          activeJob: { ...state.retention.activeJob, status: "cancelled" },
+        },
+      });
+      return this.readStorageRetention();
+    },
+    async rollbackStorageRetention(input: Record<string, unknown>): Promise<unknown> {
+      const state = await readState(statePath);
+      const source = state.retention.receipts.find(
+        (item) => (item as { id?: unknown }).id === input.receiptId,
+      ) as { id?: string; rollbackAvailable?: boolean; affectedCount?: number } | undefined;
+      if (!source?.rollbackAvailable) throw new Error("rollback is unavailable for this receipt");
+      const receipt = {
+        id: `rollback-${source.id}`,
+        status: "rolled_back",
+        affectedCount: source.affectedCount ?? 0,
+        rollbackAvailable: false,
+      };
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        retention: {
+          ...state.retention,
+          receipts: [...state.retention.receipts, receipt].slice(-100),
+        },
+      });
+      return this.readStorageRetention();
+    },
+    async readContributionState(): Promise<unknown> {
+      return (await readState(statePath)).contribution;
+    },
+    async updateContributionState(input: Record<string, unknown>): Promise<unknown> {
+      const state = await readState(statePath);
+      const current = state.contribution ?? EMPTY_CONTRIBUTION;
+      const action = String(input.action ?? "");
+      if (current.managed && action !== "complete_disclosure")
+        throw new Error("contribution is controlled by managed policy");
+      let next: ContributionState;
+      if (action === "opt_out")
+        next = {
+          ...current,
+          mode: "consumer",
+          contributionTier: "none",
+          allowCloudUpload: false,
+          authorizationState: "revoked",
+          revocationEpoch: current.revocationEpoch + 1,
+          queuedCount: 0,
+          disclosureId: null,
+        };
+      else if (action === "reenable")
+        next = {
+          ...current,
+          mode: "contributor",
+          contributionTier: "advanced",
+          allowCloudUpload: true,
+          authorizationState: "pending_disclosure",
+          revocationEpoch: current.revocationEpoch + 1,
+          queuedCount: 0,
+          disclosureId: null,
+        };
+      else if (action === "complete_disclosure" && input.disclosureId)
+        next = {
+          ...current,
+          authorizationState: "active",
+          disclosureId: String(input.disclosureId),
+        };
+      else throw new Error("unsupported contribution transition");
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        contribution: next,
+      });
+      return next;
+    },
+    async listRecommendations(): Promise<readonly RecommendationRecord[]> {
+      return (await readState(statePath)).recommendations ?? [];
+    },
+    async importRecommendationBundle(
+      bundle: Record<string, unknown>,
+      verificationKey: string,
+    ): Promise<readonly RecommendationRecord[]> {
+      const state = await readState(statePath);
+      const revision = Number(bundle.revision);
+      const sourceRows = bundle.recommendations;
+      const provenance = bundle.provenance;
+      if (
+        bundle.channel !== "production" ||
+        !Number.isInteger(revision) ||
+        revision <= (state.recommendationRevision ?? 0) ||
+        !Array.isArray(sourceRows) ||
+        sourceRows.length > 1000 ||
+        !provenance ||
+        typeof provenance !== "object"
+      )
+        throw new Error("invalid or stale recommendation bundle");
+      const unsigned = {
+        channel: bundle.channel,
+        revision,
+        recommendations: sourceRows,
+        provenance,
+      };
+      const expected = createHmac("sha256", verificationKey)
+        .update(JSON.stringify(unsigned))
+        .digest();
+      const supplied = Buffer.from(String(bundle.signature ?? ""), "hex");
+      if (supplied.length !== expected.length || !timingSafeEqual(supplied, expected))
+        throw new Error("recommendation signature validation failed");
+      const policyAllowed =
+        (state.contribution ?? EMPTY_CONTRIBUTION).recommendationAccess !== "disabled";
+      const rows = sourceRows.map((value, index) => {
+        const row = value as Record<string, unknown>;
+        if (!row.id || !row.version || !row.provenance)
+          throw new Error(`recommendation provenance incomplete at ${index}`);
+        return {
+          id: String(row.id),
+          version: String(row.version),
+          provenance: String(row.provenance),
+          status: "validated" as const,
+          signatureValid: true,
+          policyAllowed,
+        };
+      });
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        recommendations: rows,
+        recommendationRevision: revision,
+      });
+      return rows;
+    },
+    async applyRecommendation(input: Record<string, unknown>): Promise<unknown> {
+      const state = await readState(statePath);
+      const id = String(input.id ?? "");
+      const rows = [...(state.recommendations ?? [])];
+      const index = rows.findIndex((row) => row.id === id);
+      const row = rows[index];
+      if (!row) throw new Error("recommendation not found");
+      if (!row.signatureValid) throw new Error("recommendation signature validation failed");
+      if (!row.policyAllowed) throw new Error("recommendation application blocked by local policy");
+      if ((state.contribution ?? EMPTY_CONTRIBUTION).recommendationAccess !== "preview_and_apply")
+        throw new Error("recommendation application is not authorized");
+      rows[index] = { ...row, status: "applied" };
+      const activePack = { id: row.id, version: row.version, appliedAt: new Date().toISOString() };
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        recommendations: rows,
+        activePack,
+      });
+      return { recommendations: rows, activePack };
+    },
+    async readActivePack(): Promise<unknown> {
+      return (await readState(statePath)).activePack ?? null;
     },
   };
 }

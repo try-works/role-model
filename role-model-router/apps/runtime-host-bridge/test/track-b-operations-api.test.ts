@@ -1,8 +1,9 @@
+import { createHmac } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 
@@ -10,6 +11,9 @@ const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const fixtureRoot = path.join(import.meta.dirname, "fixtures");
 const roots: string[] = [];
 afterEach(async () => {
+  vi.unstubAllGlobals();
+  delete process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL;
+  delete process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY;
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
@@ -70,6 +74,30 @@ describe("Track B operations APIs", () => {
           },
         ],
       }),
+      updateStorageRetentionPolicy: async (body) => ({ ...summary, policies: [body] }),
+      executeStorageRetention: async () => ({
+        ...summary,
+        activeJob: { id: "job-1", status: "running", progress: 0 },
+      }),
+      cancelStorageRetentionJob: async () => ({
+        ...summary,
+        activeJob: { id: "job-1", status: "cancelled", progress: 0 },
+      }),
+      rollbackStorageRetention: async () => ({
+        ...summary,
+        receipts: [{ id: "rollback-1", status: "rolled_back" }],
+      }),
+      readContributionState: async () => ({
+        mode: "contributor",
+        authorizationState: "pending_disclosure",
+      }),
+      updateContributionState: async (body) => ({
+        mode: body.action === "opt_out" ? "consumer" : "contributor",
+        authorizationState: "revoked",
+      }),
+      listRecommendations: async () => [{ id: "pack-1", signatureValid: true }],
+      applyRecommendation: async () => ({ activePack: { id: "pack-1", version: "1" } }),
+      readActivePack: async () => ({ id: "pack-1", version: "1" }),
     });
     try {
       const base = `http://127.0.0.1:${server.port}`;
@@ -82,6 +110,45 @@ describe("Track B operations APIs", () => {
       });
       expect(dryRun.status).toBe(200);
       expect((await dryRun.json()).receipts[0].id).toBe("dry-1");
+      expect((await (await fetch(`${base}/api/role-model/contribution`)).json()).mode).toBe(
+        "contributor",
+      );
+      expect(
+        (
+          await (
+            await fetch(`${base}/api/role-model/contribution`, {
+              method: "PUT",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ action: "opt_out" }),
+            })
+          ).json()
+        ).mode,
+      ).toBe("consumer");
+      expect((await (await fetch(`${base}/api/role-model/recommendations`)).json())[0].id).toBe(
+        "pack-1",
+      );
+      expect(
+        (
+          await (
+            await fetch(`${base}/api/role-model/recommendations/apply`, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ id: "pack-1" }),
+            })
+          ).json()
+        ).activePack.id,
+      ).toBe("pack-1");
+      expect(
+        (
+          await (
+            await fetch(`${base}/api/role-model/storage-retention/execute`, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ manifestHash: "a".repeat(64) }),
+            })
+          ).json()
+        ).activeJob.status,
+      ).toBe("running");
     } finally {
       await server.close();
       await backend.shutdown();
@@ -191,6 +258,7 @@ describe("Track B operations APIs", () => {
         ],
         retention: {
           managedPolicy: false,
+          policies: [{ policyId: "balanced", scope: "global", maxBytes: 1024, maxAgeDays: 30 }],
           receipts: [],
           activeJob: null,
           currentPlan: {
@@ -207,6 +275,36 @@ describe("Track B operations APIs", () => {
             sourceRevision: 7,
           },
         },
+        contribution: {
+          mode: "contributor",
+          contributionTier: "advanced",
+          recommendationTier: "advanced",
+          recommendationAccess: "preview_and_apply",
+          allowCloudUpload: true,
+          authorizationState: "pending_disclosure",
+          revocationEpoch: 0,
+          queuedCount: 2,
+          managed: false,
+        },
+        recommendations: [
+          {
+            id: "pack-1",
+            version: "1",
+            status: "downloaded",
+            signatureValid: true,
+            policyAllowed: true,
+            provenance: "cloud:bundle-1",
+          },
+          {
+            id: "pack-bad",
+            version: "1",
+            status: "downloaded",
+            signatureValid: false,
+            policyAllowed: true,
+            provenance: "cloud:bundle-2",
+          },
+        ],
+        activePack: null,
       }),
     );
     const backend = await createRuntimeBridgeBackend({
@@ -238,6 +336,85 @@ describe("Track B operations APIs", () => {
       };
       expect(next.revision).toBe(8);
       expect(next.receipts.at(-1)).toMatchObject({ affectedCount: 1, rollbackAvailable: false });
+      const policy = await backend.updateStorageRetentionPolicy({
+        policyId: "strict",
+        scope: "global",
+        maxBytes: 512,
+        maxAgeDays: 14,
+      });
+      expect(policy).toMatchObject({
+        policies: [{ policyId: "strict", scope: "global", maxBytes: 512, maxAgeDays: 14 }],
+        currentPlan: null,
+      });
+      await expect(
+        backend.executeStorageRetention({ manifestHash: "a".repeat(64), scope: "global" }),
+      ).rejects.toThrow(/hash-bound/i);
+      const replanned = (await backend.dryRunStorageRetention()) as {
+        currentPlan: { manifestHash: string };
+      };
+      const started = await backend.executeStorageRetention({
+        manifestHash: replanned.currentPlan.manifestHash,
+        scope: "global",
+      });
+      expect(started).toMatchObject({ activeJob: { status: "running", progress: 0 } });
+      const cancelled = await backend.cancelStorageRetentionJob();
+      expect(cancelled).toMatchObject({ activeJob: { status: "cancelled" } });
+      const contribution = await backend.updateContributionState({ action: "opt_out" });
+      expect(contribution).toMatchObject({
+        allowCloudUpload: false,
+        queuedCount: 0,
+        authorizationState: "revoked",
+        recommendationAccess: "preview_and_apply",
+      });
+      const reenabled = await backend.updateContributionState({ action: "reenable" });
+      expect(reenabled).toMatchObject({
+        authorizationState: "pending_disclosure",
+        revocationEpoch: 2,
+      });
+      const recommendations = (await backend.listRecommendations()) as readonly {
+        id: string;
+        status: string;
+      }[];
+      expect(recommendations).toHaveLength(2);
+      await expect(backend.applyRecommendation({ id: "pack-bad" })).rejects.toThrow(/signature/i);
+      const unsigned = {
+        channel: "production",
+        revision: 1,
+        recommendations: [{ id: "pack-downloaded", version: "2", provenance: "cloud:bundle-3" }],
+        provenance: { historyAuthority: "r2_sanitized_analytical", generatedFromCount: 1 },
+      };
+      const signature = createHmac("sha256", "verification-key")
+        .update(JSON.stringify(unsigned))
+        .digest("hex");
+      process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = "https://recommendations.example";
+      process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = "verification-key";
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(
+          async () =>
+            new Response(JSON.stringify({ ...unsigned, signature }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            }),
+        ),
+      );
+      const downloaded = (await backend.downloadRecommendations()) as readonly {
+        id: string;
+        status: string;
+        signatureValid: boolean;
+      }[];
+      expect(downloaded).toEqual([
+        {
+          id: "pack-downloaded",
+          version: "2",
+          provenance: "cloud:bundle-3",
+          status: "validated",
+          signatureValid: true,
+          policyAllowed: true,
+        },
+      ]);
+      const applied = await backend.applyRecommendation({ id: "pack-downloaded" });
+      expect(applied).toMatchObject({ activePack: { id: "pack-downloaded", version: "2" } });
     } finally {
       await backend.shutdown();
     }

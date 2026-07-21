@@ -38,6 +38,16 @@ type CliBackend = Pick<
   | "listExtensions"
   | "readStorageRetention"
   | "dryRunStorageRetention"
+  | "updateStorageRetentionPolicy"
+  | "executeStorageRetention"
+  | "cancelStorageRetentionJob"
+  | "rollbackStorageRetention"
+  | "readContributionState"
+  | "updateContributionState"
+  | "listRecommendations"
+  | "downloadRecommendations"
+  | "applyRecommendation"
+  | "readActivePack"
   | "listRoles"
   | "listAccounts"
   | "listProviderDeviceAuthorizations"
@@ -276,9 +286,45 @@ export function createCliServerOptions(
     ) as StartBridgeServerOptions["subscribeTelemetry"],
     listProviders: bindBackendMethod("listProviders") as StartBridgeServerOptions["listProviders"],
     listModels: bindBackendMethod("listModels") as StartBridgeServerOptions["listModels"],
-    listExtensions: bindBackendMethod("listExtensions") as StartBridgeServerOptions["listExtensions"],
-    readStorageRetention: bindBackendMethod("readStorageRetention") as StartBridgeServerOptions["readStorageRetention"],
-    dryRunStorageRetention: bindBackendMethod("dryRunStorageRetention") as StartBridgeServerOptions["dryRunStorageRetention"],
+    listExtensions: bindBackendMethod(
+      "listExtensions",
+    ) as StartBridgeServerOptions["listExtensions"],
+    readStorageRetention: bindBackendMethod(
+      "readStorageRetention",
+    ) as StartBridgeServerOptions["readStorageRetention"],
+    dryRunStorageRetention: bindBackendMethod(
+      "dryRunStorageRetention",
+    ) as StartBridgeServerOptions["dryRunStorageRetention"],
+    updateStorageRetentionPolicy: bindBackendMethod(
+      "updateStorageRetentionPolicy",
+    ) as StartBridgeServerOptions["updateStorageRetentionPolicy"],
+    executeStorageRetention: bindBackendMethod(
+      "executeStorageRetention",
+    ) as StartBridgeServerOptions["executeStorageRetention"],
+    cancelStorageRetentionJob: bindBackendMethod(
+      "cancelStorageRetentionJob",
+    ) as StartBridgeServerOptions["cancelStorageRetentionJob"],
+    rollbackStorageRetention: bindBackendMethod(
+      "rollbackStorageRetention",
+    ) as StartBridgeServerOptions["rollbackStorageRetention"],
+    readContributionState: bindBackendMethod(
+      "readContributionState",
+    ) as StartBridgeServerOptions["readContributionState"],
+    updateContributionState: bindBackendMethod(
+      "updateContributionState",
+    ) as StartBridgeServerOptions["updateContributionState"],
+    listRecommendations: bindBackendMethod(
+      "listRecommendations",
+    ) as StartBridgeServerOptions["listRecommendations"],
+    downloadRecommendations: bindBackendMethod(
+      "downloadRecommendations",
+    ) as StartBridgeServerOptions["downloadRecommendations"],
+    applyRecommendation: bindBackendMethod(
+      "applyRecommendation",
+    ) as StartBridgeServerOptions["applyRecommendation"],
+    readActivePack: bindBackendMethod(
+      "readActivePack",
+    ) as StartBridgeServerOptions["readActivePack"],
     listRoles: bindBackendMethod("listRoles") as StartBridgeServerOptions["listRoles"],
     listAccounts: bindBackendMethod("listAccounts") as StartBridgeServerOptions["listAccounts"],
     listProviderDeviceAuthorizations: bindBackendMethod(

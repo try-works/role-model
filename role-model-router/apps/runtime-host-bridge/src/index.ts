@@ -2597,6 +2597,16 @@ export interface StartBridgeServerOptions {
   readonly listExtensions?: () => Promise<readonly unknown[]>;
   readonly readStorageRetention?: () => Promise<unknown>;
   readonly dryRunStorageRetention?: () => Promise<unknown>;
+  readonly updateStorageRetentionPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly executeStorageRetention?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly cancelStorageRetentionJob?: () => Promise<unknown>;
+  readonly rollbackStorageRetention?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly readContributionState?: () => Promise<unknown>;
+  readonly updateContributionState?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly listRecommendations?: () => Promise<readonly unknown[]>;
+  readonly downloadRecommendations?: () => Promise<readonly unknown[]>;
+  readonly applyRecommendation?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly readActivePack?: () => Promise<unknown>;
   readonly listRoles?: () => Promise<readonly unknown[]>;
   readonly listAccounts?: () => Promise<readonly unknown[]>;
   readonly listProviderDeviceAuthorizations?: () => Promise<readonly unknown[]>;
@@ -2785,6 +2795,16 @@ export interface RuntimeBridgeBackend {
   listExtensions(): Promise<readonly unknown[]>;
   readStorageRetention(): Promise<unknown>;
   dryRunStorageRetention(): Promise<unknown>;
+  updateStorageRetentionPolicy(body: Record<string, unknown>): Promise<unknown>;
+  executeStorageRetention(body: Record<string, unknown>): Promise<unknown>;
+  cancelStorageRetentionJob(): Promise<unknown>;
+  rollbackStorageRetention(body: Record<string, unknown>): Promise<unknown>;
+  readContributionState(): Promise<unknown>;
+  updateContributionState(body: Record<string, unknown>): Promise<unknown>;
+  listRecommendations(): Promise<readonly unknown[]>;
+  downloadRecommendations(): Promise<readonly unknown[]>;
+  applyRecommendation(body: Record<string, unknown>): Promise<unknown>;
+  readActivePack(): Promise<unknown>;
   listRoles(): Promise<
     readonly {
       roleId: string;
@@ -14021,6 +14041,82 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       return;
     }
 
+    const operationRoutes: Readonly<
+      Record<
+        string,
+        {
+          readonly method: string;
+          readonly callback: ((body: Record<string, unknown>) => Promise<unknown>) | undefined;
+          readonly body: boolean;
+        }
+      >
+    > = {
+      "/api/role-model/storage-retention/policy": {
+        method: "PUT",
+        callback: options.updateStorageRetentionPolicy,
+        body: true,
+      },
+      "/api/role-model/storage-retention/execute": {
+        method: "POST",
+        callback: options.executeStorageRetention,
+        body: true,
+      },
+      "/api/role-model/storage-retention/cancel": {
+        method: "POST",
+        callback: options.cancelStorageRetentionJob,
+        body: false,
+      },
+      "/api/role-model/storage-retention/rollback": {
+        method: "POST",
+        callback: options.rollbackStorageRetention,
+        body: true,
+      },
+      "/api/role-model/contribution": {
+        method: request.method === "GET" ? "GET" : "PUT",
+        callback:
+          request.method === "GET"
+            ? options.readContributionState
+            : options.updateContributionState,
+        body: request.method !== "GET",
+      },
+      "/api/role-model/recommendations": {
+        method: "GET",
+        callback: options.listRecommendations,
+        body: false,
+      },
+      "/api/role-model/recommendations/download": {
+        method: "POST",
+        callback: options.downloadRecommendations,
+        body: false,
+      },
+      "/api/role-model/recommendations/apply": {
+        method: "POST",
+        callback: options.applyRecommendation,
+        body: true,
+      },
+      "/api/role-model/recommendations/active-pack": {
+        method: "GET",
+        callback: options.readActivePack,
+        body: false,
+      },
+    };
+    const operationRoute = operationRoutes[url.pathname];
+    if (operationRoute && request.method === operationRoute.method) {
+      if (!operationRoute.callback) {
+        writeJson(response, 404, { error: "not found" });
+        return;
+      }
+      try {
+        const body = operationRoute.body ? await readJsonBody(request) : {};
+        writeJson(response, 200, await operationRoute.callback(body));
+      } catch (error) {
+        writeJson(response, 400, {
+          error: error instanceof Error ? error.message : "operation failed",
+        });
+      }
+      return;
+    }
+
     if (request.method === "PUT" && url.pathname === "/api/role-model/runtime/config") {
       if (!options.updateRuntimeConfig) {
         writeJson(response, 404, { error: "not found" });
@@ -22263,17 +22359,152 @@ export async function createRuntimeBridgeBackend(
     async listExtensions(): Promise<readonly unknown[]> {
       const contract = JSON.parse(
         await readFile(
-          path.join(options.repoRoot, "packages", "protocol-types", "generated", "product-contracts.json"),
+          path.join(
+            options.repoRoot,
+            "packages",
+            "protocol-types",
+            "generated",
+            "product-contracts.json",
+          ),
           "utf8",
         ),
       ) as { extensions?: readonly Record<string, unknown>[] };
-      return createTrackBOperations({statePath:path.join(options.runtimeStateRoot,options.scopeId,"track-b-production-bridge.json"),catalog:contract.extensions??[]}).listExtensions();
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: contract.extensions ?? [],
+      }).listExtensions();
     },
     async readStorageRetention(): Promise<unknown> {
-      return createTrackBOperations({statePath:path.join(options.runtimeStateRoot,options.scopeId,"track-b-production-bridge.json"),catalog:[]}).readStorageRetention();
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).readStorageRetention();
     },
     async dryRunStorageRetention(): Promise<unknown> {
-      return createTrackBOperations({statePath:path.join(options.runtimeStateRoot,options.scopeId,"track-b-production-bridge.json"),catalog:[]}).dryRunStorageRetention();
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).dryRunStorageRetention();
+    },
+    async updateStorageRetentionPolicy(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).updateStorageRetentionPolicy(body);
+    },
+    async executeStorageRetention(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).executeStorageRetention(body);
+    },
+    async cancelStorageRetentionJob(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).cancelStorageRetentionJob();
+    },
+    async rollbackStorageRetention(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).rollbackStorageRetention(body);
+    },
+    async readContributionState(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).readContributionState();
+    },
+    async updateContributionState(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).updateContributionState(body);
+    },
+    async listRecommendations(): Promise<readonly unknown[]> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).listRecommendations();
+    },
+    async downloadRecommendations(): Promise<readonly unknown[]> {
+      const serviceUrl = process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL;
+      const verificationKey = process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY;
+      if (!serviceUrl || !verificationKey)
+        throw new Error("recommendation service trust is not configured");
+      const baseUrl = serviceUrl.endsWith("/") ? serviceUrl : `${serviceUrl}/`;
+      const response = await fetch(new URL("recommendations", baseUrl));
+      if (!response.ok) throw new Error(`recommendation download failed with ${response.status}`);
+      const bundle = (await response.json()) as Record<string, unknown>;
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).importRecommendationBundle(bundle, verificationKey);
+    },
+    async applyRecommendation(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).applyRecommendation(body);
+    },
+    async readActivePack(): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).readActivePack();
     },
     async listRoles(): Promise<
       readonly {

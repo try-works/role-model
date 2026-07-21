@@ -2,7 +2,19 @@
   "schemaVersion": "role-model.product-contracts.v1.1.0",
   "protocolVersion": "1.1.0",
   "defaults": {
-    "production": { "aggregateContribution": "advanced_aggregate_only_after_disclosure" },
+    "production": {
+      "aggregateContribution": "advanced_aggregate_only_after_disclosure",
+      "installed": true,
+      "enabledMode": "active",
+      "crowdsourcedMode": "contributor",
+      "contributionTier": "advanced",
+      "recommendationTier": "advanced",
+      "recommendationAccess": "preview_and_apply",
+      "allowCloudUpload": true,
+      "uploadClass": "aggregates_only",
+      "policySource": "default",
+      "authorizationState": "pending_disclosure"
+    },
     "stage": { "aggregateContribution": "disabled" },
     "development": { "aggregateContribution": "disabled" },
     "unknown": { "aggregateContribution": "disabled" }
@@ -150,7 +162,7 @@
   {
     "id": "crowdsourced-learning",
     "packageClass": "canonical_extension",
-    "lifecycle": "installed_disabled",
+    "lifecycle": "installed_active_pending_disclosure",
     "routingDependency": false,
     "permissions": [
       "aggregate:preview",
