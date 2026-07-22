@@ -21,7 +21,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
-const runtimeStateRoot = path.join(os.tmpdir(), "role-model-runtime-qa");
+const runtimeStateRoot = process.env.RUNTIME_QA_STATE_ROOT
+  ? path.resolve(process.env.RUNTIME_QA_STATE_ROOT)
+  : path.join(os.tmpdir(), "role-model-runtime-qa");
 const scopeId = "runtime-qa";
 const host = "127.0.0.1";
 const port = Number(process.env.RUNTIME_QA_PORT ?? "3456");
@@ -58,6 +60,19 @@ type QaBridgeBackend = Pick<
   | "listProviders"
   | "listRoles"
   | "listModels"
+  | "listExtensions"
+  | "readStorageRetention"
+  | "dryRunStorageRetention"
+  | "updateStorageRetentionPolicy"
+  | "executeStorageRetention"
+  | "cancelStorageRetentionJob"
+  | "rollbackStorageRetention"
+  | "readContributionState"
+  | "updateContributionState"
+  | "listRecommendations"
+  | "downloadRecommendations"
+  | "applyRecommendation"
+  | "readActivePack"
   | "readRolePolicy"
   | "createRolePolicyRole"
   | "updateRolePolicyRole"
@@ -449,6 +464,16 @@ export function createQaServerOptions(
     listExtensions: backend.listExtensions,
     readStorageRetention: backend.readStorageRetention,
     dryRunStorageRetention: backend.dryRunStorageRetention,
+    updateStorageRetentionPolicy: backend.updateStorageRetentionPolicy,
+    executeStorageRetention: backend.executeStorageRetention,
+    cancelStorageRetentionJob: backend.cancelStorageRetentionJob,
+    rollbackStorageRetention: backend.rollbackStorageRetention,
+    readContributionState: backend.readContributionState,
+    updateContributionState: backend.updateContributionState,
+    listRecommendations: backend.listRecommendations,
+    downloadRecommendations: backend.downloadRecommendations,
+    applyRecommendation: backend.applyRecommendation,
+    readActivePack: backend.readActivePack,
     readRolePolicy: backend.readRolePolicy,
     createRolePolicyRole: backend.createRolePolicyRole,
     updateRolePolicyRole: backend.updateRolePolicyRole,
@@ -517,6 +542,11 @@ export async function main(): Promise<void> {
     console.log(`[QA] Seeded placeholder ${qaMoonshotApiKeyEnv} for local UI QA.`);
   }
 
+  if (process.env.RUNTIME_QA_RESET_STATE === "1") {
+    if (!path.basename(runtimeStateRoot).startsWith("role-model-runtime-qa-"))
+      throw new Error("refusing to reset a non-QA runtime state root");
+    await rm(runtimeStateRoot, { recursive: true, force: true });
+  }
   await mkdir(runtimeStateRoot, { recursive: true });
   const unifiedRuntimeConfigPath = createQaRuntimeConfigPath(runtimeStateRoot);
 

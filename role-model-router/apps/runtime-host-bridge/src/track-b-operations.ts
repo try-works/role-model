@@ -101,12 +101,12 @@ type RecommendationRecord = {
   readonly provenance: string;
 };
 const EMPTY_CONTRIBUTION: ContributionState = {
-  mode: "consumer",
-  contributionTier: "none",
+  mode: "contributor",
+  contributionTier: "advanced",
   recommendationTier: "advanced",
   recommendationAccess: "preview_and_apply",
-  allowCloudUpload: false,
-  authorizationState: "none",
+  allowCloudUpload: true,
+  authorizationState: "pending_disclosure",
   revocationEpoch: 0,
   queuedCount: 0,
   managed: false,
@@ -241,6 +241,32 @@ const runtimePlan = (state: BridgeState, sourceRevision: number): RetentionPlan 
   };
 };
 
+const privateRetentionRequest = async (
+  route: string,
+  init: { readonly method?: string; readonly body?: Record<string, unknown> } = {},
+): Promise<unknown | null> => {
+  const endpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim();
+  if (!endpoint) return null;
+  const response = await fetch(new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`), {
+    method: init.method ?? "GET",
+    headers: {
+      ...(init.body ? { "content-type": "application/json" } : {}),
+      ...(process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN
+        ? { authorization: `Bearer ${process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN}` }
+        : {}),
+    },
+    ...(init.body ? { body: JSON.stringify(init.body) } : {}),
+  });
+  const result = (await response.json().catch(() => ({}))) as { readonly error?: unknown };
+  if (!response.ok)
+    throw new Error(
+      typeof result.error === "string"
+        ? result.error
+        : `private retention operation failed with ${response.status}`,
+    );
+  return result;
+};
+
 export function createTrackBOperations({
   statePath,
   catalog,
@@ -271,6 +297,8 @@ export function createTrackBOperations({
       });
     },
     async readStorageRetention(): Promise<unknown> {
+      const remote = await privateRetentionRequest("storage-retention");
+      if (remote) return remote;
       const state = await readState(statePath);
       const categories = state.storageServices.map((row) => ({
         id: row.category,
@@ -297,6 +325,8 @@ export function createTrackBOperations({
       };
     },
     async dryRunStorageRetention(): Promise<unknown> {
+      const remote = await privateRetentionRequest("storage-retention/dry-run", { method: "POST" });
+      if (remote) return remote;
       const state = await readState(statePath);
       if (state.retention.managedPolicy)
         throw new Error("storage retention is controlled by managed policy");
@@ -332,6 +362,11 @@ export function createTrackBOperations({
       return this.readStorageRetention();
     },
     async updateStorageRetentionPolicy(input: Record<string, unknown>): Promise<unknown> {
+      const remote = await privateRetentionRequest("storage-retention/policy", {
+        method: "PUT",
+        body: input,
+      });
+      if (remote) return remote;
       const state = await readState(statePath);
       if (state.retention.managedPolicy)
         throw new Error("storage retention is controlled by managed policy");
@@ -359,6 +394,11 @@ export function createTrackBOperations({
       return this.readStorageRetention();
     },
     async executeStorageRetention(input: Record<string, unknown>): Promise<unknown> {
+      const remote = await privateRetentionRequest("storage-retention/execute", {
+        method: "POST",
+        body: input,
+      });
+      if (remote) return remote;
       const state = await readState(statePath);
       if (state.retention.managedPolicy)
         throw new Error("storage retention is controlled by managed policy");
@@ -400,6 +440,8 @@ export function createTrackBOperations({
       return this.readStorageRetention();
     },
     async cancelStorageRetentionJob(): Promise<unknown> {
+      const remote = await privateRetentionRequest("storage-retention/cancel", { method: "POST" });
+      if (remote) return remote;
       const state = await readState(statePath);
       if (!state.retention.activeJob || state.retention.activeJob.status !== "running")
         throw new Error("no cancellable retention job");
@@ -415,6 +457,11 @@ export function createTrackBOperations({
       return this.readStorageRetention();
     },
     async rollbackStorageRetention(input: Record<string, unknown>): Promise<unknown> {
+      const remote = await privateRetentionRequest("storage-retention/rollback", {
+        method: "POST",
+        body: input,
+      });
+      if (remote) return remote;
       const state = await readState(statePath);
       const source = state.retention.receipts.find(
         (item) => (item as { id?: unknown }).id === input.receiptId,
@@ -438,9 +485,16 @@ export function createTrackBOperations({
       return this.readStorageRetention();
     },
     async readContributionState(): Promise<unknown> {
+      const remote = await privateRetentionRequest("contribution");
+      if (remote) return remote;
       return (await readState(statePath)).contribution;
     },
     async updateContributionState(input: Record<string, unknown>): Promise<unknown> {
+      const remote = await privateRetentionRequest("contribution", {
+        method: "PUT",
+        body: input,
+      });
+      if (remote) return remote;
       const state = await readState(statePath);
       const current = state.contribution ?? EMPTY_CONTRIBUTION;
       const action = String(input.action ?? "");
@@ -484,6 +538,21 @@ export function createTrackBOperations({
       });
       return next;
     },
+    async recordContributionAggregate(input: Record<string, unknown>): Promise<unknown> {
+      const remote = await privateRetentionRequest("contribution/aggregate", {
+        method: "POST",
+        body: input,
+      });
+      return remote ?? { status: "operations_boundary_unconfigured" };
+    },
+    async recordLocalRouteCapture(input: Record<string, unknown>): Promise<unknown> {
+      const endpoint = process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim();
+      if (!endpoint) return { status: "operations_boundary_unconfigured" };
+      const url = new URL(endpoint);
+      if (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(url.hostname))
+        throw new Error("local route capture requires a loopback operations boundary");
+      return privateRetentionRequest("capture/route", { method: "POST", body: input });
+    },
     async listRecommendations(): Promise<readonly RecommendationRecord[]> {
       return (await readState(statePath)).recommendations ?? [];
     },
@@ -495,8 +564,9 @@ export function createTrackBOperations({
       const revision = Number(bundle.revision);
       const sourceRows = bundle.recommendations;
       const provenance = bundle.provenance;
+      const expectedChannel = process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL ?? "production";
       if (
-        bundle.channel !== "production" ||
+        bundle.channel !== expectedChannel ||
         !Number.isInteger(revision) ||
         revision <= (state.recommendationRevision ?? 0) ||
         !Array.isArray(sourceRows) ||

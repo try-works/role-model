@@ -1,5 +1,6 @@
 import { createHmac } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
+import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 
@@ -14,6 +15,10 @@ afterEach(async () => {
   vi.unstubAllGlobals();
   delete process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL;
   delete process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY;
+  delete process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN;
+  delete process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL;
+  delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL;
+  delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN;
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
@@ -208,6 +213,106 @@ describe("Track B operations APIs", () => {
     }
   });
 
+  test("production backend clean start uses the canonical Advanced aggregate defaults", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-production-fresh-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId: "production",
+    });
+    try {
+      expect(await backend.readContributionState()).toEqual({
+        mode: "contributor",
+        contributionTier: "advanced",
+        recommendationTier: "advanced",
+        recommendationAccess: "preview_and_apply",
+        allowCloudUpload: true,
+        authorizationState: "pending_disclosure",
+        revocationEpoch: 0,
+        queuedCount: 0,
+        managed: false,
+        disclosureId: null,
+      });
+    } finally {
+      await backend.shutdown();
+    }
+  });
+
+  test("production request completion reports only aggregate metrics to the private operations boundary", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-production-upload-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const received: Array<{ path: string; authorization?: string; body: Record<string, unknown> }> = [];
+    const operations = createServer(async (request, response) => {
+      const chunks: Buffer[] = [];
+      for await (const chunk of request) chunks.push(Buffer.from(chunk));
+      received.push({
+        path: request.url ?? "",
+        authorization: request.headers.authorization,
+        body: JSON.parse(Buffer.concat(chunks).toString("utf8")),
+      });
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(JSON.stringify({ status: "accepted" }));
+    });
+    await new Promise<void>((resolve, reject) => {
+      operations.once("error", reject);
+      operations.listen(0, "127.0.0.1", resolve);
+    });
+    const address = operations.address();
+    if (!address || typeof address === "string") throw new Error("operations server did not bind");
+    process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL = `http://127.0.0.1:${address.port}`;
+    process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN = "test-operations-token";
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId: "production-upload",
+    });
+    try {
+      const result = await backend.executeChatCompletions(
+        {
+          model: "deepseek/chat-capture-v1",
+          messages: [{ role: "user", content: "private prompt must never cross the boundary" }],
+        },
+        "req-track-b-upload-001",
+      );
+      expect(result.outputText.length).toBeGreaterThan(0);
+      expect(received).toHaveLength(2);
+      const aggregate = received.find((entry) => entry.path === "/contribution/aggregate");
+      const capture = received.find((entry) => entry.path === "/capture/route");
+      expect(aggregate).toMatchObject({
+        path: "/contribution/aggregate",
+        authorization: "Bearer test-operations-token",
+        body: {
+          requestId: "req-track-b-upload-001",
+          routingDecisionId: result.routingDecisionId,
+          endpointId: result.endpointId,
+          inputTokens: result.usage.inputTokens,
+          outputTokens: result.usage.outputTokens,
+          success: true,
+        },
+      });
+      const serialized = JSON.stringify(aggregate?.body);
+      for (const forbidden of ["messages", "prompt", "response", "content", "toolOutput", "providerBody"])
+        expect(serialized).not.toContain(forbidden);
+      expect(capture).toMatchObject({
+        path: "/capture/route",
+        body: {
+          requestId: "req-track-b-upload-001",
+          routingDecisionId: result.routingDecisionId,
+          messages: [{ role: "user", content: "private prompt must never cross the boundary" }],
+          outputText: result.outputText,
+        },
+      });
+    } finally {
+      await backend.shutdown();
+      await new Promise<void>((resolve, reject) =>
+        operations.close((error) => (error ? reject(error) : resolve())),
+      );
+    }
+  });
+
   test("production backend reads and atomically updates real bridge storage state", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-production-state-${Date.now()}`);
     const scopeId = "production";
@@ -378,7 +483,7 @@ describe("Track B operations APIs", () => {
       expect(recommendations).toHaveLength(2);
       await expect(backend.applyRecommendation({ id: "pack-bad" })).rejects.toThrow(/signature/i);
       const unsigned = {
-        channel: "production",
+        channel: "development",
         revision: 1,
         recommendations: [{ id: "pack-downloaded", version: "2", provenance: "cloud:bundle-3" }],
         provenance: { historyAuthority: "r2_sanitized_analytical", generatedFromCount: 1 },
@@ -388,14 +493,19 @@ describe("Track B operations APIs", () => {
         .digest("hex");
       process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = "https://recommendations.example";
       process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = "verification-key";
+      process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = "service-token";
+      process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL = "development";
       vi.stubGlobal(
         "fetch",
         vi.fn(
-          async () =>
-            new Response(JSON.stringify({ ...unsigned, signature }), {
+          async (input, init) => {
+            expect(String(input)).toBe("https://recommendations.example/recommendations?channel=development");
+            expect(new Headers(init?.headers).get("authorization")).toBe("Bearer service-token");
+            return new Response(JSON.stringify({ ...unsigned, signature }), {
               status: 200,
               headers: { "content-type": "application/json" },
-            }),
+            });
+          },
         ),
       );
       const downloaded = (await backend.downloadRecommendations()) as readonly {

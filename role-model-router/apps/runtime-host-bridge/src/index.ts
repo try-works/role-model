@@ -21761,7 +21761,7 @@ export async function createRuntimeBridgeBackend(
           ? []
           : execution.normalized.toolCalls;
 
-        return {
+        const bridgeResult: BridgeChatCompletionsExecutionResult = {
           model: execution.target.modelId,
           endpointId: execution.target.endpointId,
           adapterFamily: responseAdapterFamily,
@@ -21800,6 +21800,39 @@ export async function createRuntimeBridgeBackend(
               }
             : {}),
         };
+        const trackBOperations = createTrackBOperations({
+          statePath: path.join(
+            options.runtimeStateRoot,
+            options.scopeId,
+            "track-b-production-bridge.json",
+          ),
+          catalog: [],
+        });
+        try {
+          await trackBOperations.recordLocalRouteCapture({
+            requestId,
+            routingDecisionId,
+            endpointId: execution.target.endpointId,
+            messages: body.messages,
+            outputText: execution.normalized.outputText,
+            toolExecutions: toolExecutionResult.executions,
+          });
+        } catch {
+          // Local capture degradation is observable but cannot break routing.
+        }
+        try {
+          await trackBOperations.recordContributionAggregate({
+            requestId,
+            routingDecisionId,
+            endpointId: execution.target.endpointId,
+            inputTokens: execution.normalized.usage.inputTokens,
+            outputTokens: execution.normalized.usage.outputTokens,
+            success: true,
+          });
+        } catch {
+          // Contribution is non-routing-critical; its bounded outbox owns retry.
+        }
+        return bridgeResult;
       } catch (error) {
         if (!hasRuntimeTelemetryPersisted(error)) {
           recordChatCompletionFailure(error);
@@ -22474,7 +22507,17 @@ export async function createRuntimeBridgeBackend(
       if (!serviceUrl || !verificationKey)
         throw new Error("recommendation service trust is not configured");
       const baseUrl = serviceUrl.endsWith("/") ? serviceUrl : `${serviceUrl}/`;
-      const response = await fetch(new URL("recommendations", baseUrl));
+      const recommendationUrl = new URL("recommendations", baseUrl);
+      if (process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL)
+        recommendationUrl.searchParams.set(
+          "channel",
+          process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL,
+        );
+      const response = await fetch(recommendationUrl, {
+        headers: process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN
+          ? { authorization: `Bearer ${process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN}` }
+          : {},
+      });
       if (!response.ok) throw new Error(`recommendation download failed with ${response.status}`);
       const bundle = (await response.json()) as Record<string, unknown>;
       return createTrackBOperations({
