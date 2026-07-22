@@ -127,7 +127,7 @@ import {
 } from "./request-capability-inference.js";
 import { readPackagedRuntimeProfile, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { type RuntimeVersionInfoRecord, resolveRuntimeVersionInfo } from "./runtime-version.js";
-import { createTrackBOperations } from "./track-b-operations.js";
+import { createTrackBOperations as createTrackBOperationsFromState } from "./track-b-operations.js";
 
 import {
   type ProviderRequestCapture,
@@ -3115,6 +3115,12 @@ export interface CreateRuntimeBridgeBackendOptions {
   readonly networkFetcher?: typeof fetch;
   readonly fixtureRoot?: string;
   readonly runtimeVendorStartup?: "enabled" | "disabled";
+  readonly trackBOperationsEndpoint?: string;
+  readonly trackBOperationsToken?: string;
+  readonly trackBExtensionHealth?: () => {
+    readonly host?: { readonly extensions?: readonly string[] };
+    readonly supervisor?: Readonly<Record<string, unknown>>;
+  };
   readonly codexAuthAdapter?: CodexAuthAdapter;
   readonly codexExecutionAdapter?: CodexExecutionAdapter;
 }
@@ -15474,6 +15480,13 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
+  const createTrackBOperations = (
+    input: Parameters<typeof createTrackBOperationsFromState>[0],
+  ) => createTrackBOperationsFromState({
+    ...input,
+    operationsEndpoint: options.trackBOperationsEndpoint,
+    operationsToken: options.trackBOperationsToken,
+  });
   const networkFetcher = options.networkFetcher ?? fetch;
   const codexAuthAdapter = options.codexAuthAdapter ?? createSystemCodexAuthAdapter(networkFetcher);
   const codexExecutionAdapter =
@@ -21176,9 +21189,49 @@ export async function createRuntimeBridgeBackend(
             }
           : {}),
       });
+      let artifactRef:
+        | { readonly scopeId: string; readonly artifactId: string; readonly contentHash: string }
+        | undefined;
+      try {
+        const requestBody = executionOptions?.requestBody ?? {};
+        const captureInput = Array.isArray(requestBody.messages)
+          ? requestBody.messages
+          : Array.isArray(requestBody.input)
+            ? requestBody.input
+            : [];
+        const capture = await createTrackBOperations({
+          statePath: path.join(
+            options.runtimeStateRoot,
+            options.scopeId,
+            "track-b-production-bridge.json",
+          ),
+          catalog: [],
+        }).recordLocalRouteCapture({
+          requestId,
+          routingDecisionId,
+          endpointId: execution.target.endpointId,
+          messages: captureInput,
+          outputText: execution.normalized.outputText,
+          toolExecutions: toolExecutionResult.executions,
+        }) as Record<string, unknown>;
+        if (
+          typeof capture.scope === "string" &&
+          typeof capture.rootArtifactId === "string" &&
+          typeof capture.rootArtifactDigest === "string"
+        ) {
+          artifactRef = {
+            scopeId: capture.scope,
+            artifactId: capture.rootArtifactId,
+            contentHash: capture.rootArtifactDigest,
+          };
+        }
+      } catch {
+        // Capture remains non-routing-critical before graph-primary cutover.
+      }
       persistRuntimeObservationBundle({
         databasePath: initialization.databasePath,
         observation: bundle,
+        ...(artifactRef ? { artifactRef } : {}),
       });
       emitTelemetryUpdate(bundle.requestId);
     }
@@ -21809,18 +21862,6 @@ export async function createRuntimeBridgeBackend(
           catalog: [],
         });
         try {
-          await trackBOperations.recordLocalRouteCapture({
-            requestId,
-            routingDecisionId,
-            endpointId: execution.target.endpointId,
-            messages: body.messages,
-            outputText: execution.normalized.outputText,
-            toolExecutions: toolExecutionResult.executions,
-          });
-        } catch {
-          // Local capture degradation is observable but cannot break routing.
-        }
-        try {
           await trackBOperations.recordContributionAggregate({
             requestId,
             routingDecisionId,
@@ -22402,7 +22443,7 @@ export async function createRuntimeBridgeBackend(
           "utf8",
         ),
       ) as { extensions?: readonly Record<string, unknown>[] };
-      return createTrackBOperations({
+      const rows = await createTrackBOperations({
         statePath: path.join(
           options.runtimeStateRoot,
           options.scopeId,
@@ -22410,6 +22451,16 @@ export async function createRuntimeBridgeBackend(
         ),
         catalog: contract.extensions ?? [],
       }).listExtensions();
+      const hostedIds = new Set(options.trackBExtensionHealth?.().host?.extensions ?? []);
+      return (rows as readonly Record<string, unknown>[]).map((row) => hostedIds.has(String(row.id))
+        ? {
+            ...row,
+            installed: true,
+            enabled: true,
+            lifecycle: "ready",
+            health: { available: true, routingDependency: false },
+          }
+        : row);
     },
     async readStorageRetention(): Promise<unknown> {
       return createTrackBOperations({

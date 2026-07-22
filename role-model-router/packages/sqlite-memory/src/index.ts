@@ -9,6 +9,9 @@ import {
 } from "@role-model-router/profile-aggregator";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
+import { resolveRuntimeObservationStoragePayload } from "./legacy-migration.js";
+
+export * from "./legacy-migration.js";
 
 const INITIAL_MIGRATION_ID = "run06-v1-initial-schema";
 const OBSERVATION_METADATA_BACKFILL_MIGRATION_ID = "run62-observation-metadata-backfill-v1";
@@ -607,6 +610,7 @@ export interface RetrievalReceiptRecord {
 export interface PersistRuntimeObservationBundleInput {
   readonly databasePath: string;
   readonly observation: PersistedRuntimeObservationBundle;
+  readonly artifactRef?: import("./legacy-migration.js").GraphArtifactReference;
 }
 
 export interface ReadRuntimeObservationBundleInput {
@@ -3596,7 +3600,11 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
           : observation.observedPerformance?.sample?.source_type === "live_request"
             ? "live_request"
             : null,
-        JSON.stringify(observation),
+        resolveRuntimeObservationStoragePayload({
+          databasePath: input.databasePath,
+          observation: observation as unknown as Readonly<Record<string, unknown>>,
+          ...(input.artifactRef ? { artifactRef: input.artifactRef } : {}),
+        }),
       );
     database
       .prepare(

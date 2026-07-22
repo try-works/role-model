@@ -21,6 +21,7 @@ import { build as buildBundle } from "esbuild";
 
 import { resolveBuildRuntimeChannel, resolveRuntimeChannelProfile } from "./runtime-channel.js";
 import { resolveRuntimeVersionInfo } from "./runtime-version.js";
+import { stageTrackBRuntimeDistribution } from "./track-b-runtime.js";
 
 export interface BuildTarget {
   readonly platform: NodeJS.Platform;
@@ -557,6 +558,13 @@ export async function packageSeaRuntime(): Promise<{
   await injectSeaBlob(outputPath, blobPath);
 
   await stageStandaloneReleaseFiles(releaseDir);
+  const trackBDistributionRoot = process.env.ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT?.trim();
+  const trackBRuntime = trackBDistributionRoot
+    ? await stageTrackBRuntimeDistribution({
+        sourceRoot: path.resolve(trackBDistributionRoot),
+        releaseDir: path.join(releaseDir, "track-b-runtime"),
+      })
+    : null;
   const launcherName = `${profile.name}-launcher.exe`;
   await buildWindowsLauncher(releaseDir, launcherName);
   if (process.platform === "win32") {
@@ -593,6 +601,14 @@ export async function packageSeaRuntime(): Promise<{
         build_date: versionInfo.build_date,
         ...profile,
         endpoint: `http://${profile.host}:${profile.port}`,
+        track_b_runtime: trackBRuntime
+          ? {
+              manifest: "track-b-runtime/track-b-runtime-manifest.json",
+              sidecar: path.relative(releaseDir, trackBRuntime.sidecarPath).replaceAll("\\", "/"),
+              sidecar_sha256: trackBRuntime.sidecarSha256,
+              extension_count: trackBRuntime.extensionCount,
+            }
+          : null,
       },
       null,
       2,

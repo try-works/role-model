@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { readRuntimeObservationBundle, resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
+import { LegacySqliteMigration } from "../../../packages/sqlite-memory/src/legacy-migration.js";
 
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 
@@ -213,6 +215,31 @@ describe("Track B operations APIs", () => {
     }
   });
 
+  test("production backend reports readiness only from the supervised ExtensionHost", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-production-hosted-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId: "production",
+      trackBExtensionHealth: () => ({
+        host: { extensions: ["artifact-store", "event-log"] },
+        supervisor: { "artifact-store": { status: "ready" }, "event-log": { status: "ready" } },
+      }),
+    });
+    try {
+      const rows = (await backend.listExtensions()) as readonly {
+        id: string; installed: boolean; lifecycle: string; health: { available: boolean };
+      }[];
+      expect(rows.filter(row => row.health.available).map(row => row.id).sort()).toEqual(["artifact-store", "event-log"]);
+      expect(rows.find(row => row.id === "artifact-store")).toMatchObject({ installed: true, lifecycle: "ready", health: { available: true } });
+      expect(rows.find(row => row.id === "repository-context")).toMatchObject({ installed: false, lifecycle: "unavailable", health: { available: false } });
+    } finally {
+      await backend.shutdown();
+    }
+  });
+
   test("production backend clean start uses the canonical Advanced aggregate defaults", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-production-fresh-${Date.now()}`);
     roots.push(runtimeStateRoot);
@@ -253,7 +280,9 @@ describe("Track B operations APIs", () => {
         body: JSON.parse(Buffer.concat(chunks).toString("utf8")),
       });
       response.writeHead(200, { "content-type": "application/json" });
-      response.end(JSON.stringify({ status: "accepted" }));
+      response.end(JSON.stringify(request.url === "/capture/route"
+        ? { status: "captured", scope: "tenant:production-upload", rootArtifactId: "artifact-route-capture", rootArtifactDigest: "a".repeat(64) }
+        : { status: "accepted" }));
     });
     await new Promise<void>((resolve, reject) => {
       operations.once("error", reject);
@@ -261,15 +290,28 @@ describe("Track B operations APIs", () => {
     });
     const address = operations.address();
     if (!address || typeof address === "string") throw new Error("operations server did not bind");
-    process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL = `http://127.0.0.1:${address.port}`;
+    const trackBOperationsEndpoint = `http://127.0.0.1:${address.port}`;
+    delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL;
     process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN = "test-operations-token";
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot,
       runtimeStateRoot,
       scopeId: "production-upload",
+      trackBOperationsEndpoint,
     });
     try {
+      const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId: "production-upload" });
+      const migration = new LegacySqliteMigration({
+        databasePath,
+        backupPath: path.join(runtimeStateRoot, "legacy-backup.sqlite"),
+        artifactWriter: ({ contentHash }) => ({ artifactId: contentHash, artifactPath: `artifact://${contentHash}`, contentHash }),
+        routerRoot: path.join(repoRoot, "role-model-router"),
+      });
+      migration.backfill({ scopeId: "tenant:production-upload", batchSize: 10 });
+      migration.enterShadowMirror({ deadlineMs: Date.now() + 10_000 });
+      migration.verifyParity({ backupVerified: true, restoreVerified: true, consumersVerified: true });
+      migration.cutover();
       const result = await backend.executeChatCompletions(
         {
           model: "deepseek/chat-capture-v1",
@@ -303,6 +345,14 @@ describe("Track B operations APIs", () => {
           routingDecisionId: result.routingDecisionId,
           messages: [{ role: "user", content: "private prompt must never cross the boundary" }],
           outputText: result.outputText,
+        },
+      });
+      expect(readRuntimeObservationBundle({ databasePath, requestId: "req-track-b-upload-001" })).toMatchObject({
+        graphPrimary: true,
+        artifactRef: {
+          scopeId: "tenant:production-upload",
+          artifactId: "artifact-route-capture",
+          contentHash: "a".repeat(64),
         },
       });
     } finally {

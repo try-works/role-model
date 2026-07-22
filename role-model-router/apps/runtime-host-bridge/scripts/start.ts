@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 // Production runtime start — no QA mocks, no placeholders
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
+import { createTrackBBridgeServerOptions } from "../src/track-b-runtime.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
@@ -58,9 +59,7 @@ const server = await startBridgeServer({
   listProviders: backend.listProviders,
   listRoles: backend.listRoles,
   listModels: backend.listModels,
-  listExtensions: backend.listExtensions,
-  readStorageRetention: backend.readStorageRetention,
-  dryRunStorageRetention: backend.dryRunStorageRetention,
+  ...createTrackBBridgeServerOptions(backend),
   readRolePolicy: backend.readRolePolicy,
   createRolePolicyRole: backend.createRolePolicyRole,
   updateRolePolicyRole: backend.updateRolePolicyRole,
