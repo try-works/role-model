@@ -355,6 +355,8 @@ describe("Track B operations APIs", () => {
           requestId: "req-track-b-upload-001",
           routingDecisionId: result.routingDecisionId,
           endpointId: result.endpointId,
+          modelId: "deepseek/chat-capture-v1",
+          taskType: "general.chat",
           inputTokens: result.usage.inputTokens,
           outputTokens: result.usage.outputTokens,
           success: true,
@@ -451,6 +453,8 @@ describe("Track B operations APIs", () => {
           requestId: "req-track-b-responses-upload-001",
           routingDecisionId: result.routingDecisionId,
           endpointId: result.endpointId,
+          modelId: "deepseek/chat-capture-v1",
+          taskType: "general.chat",
           inputTokens: result.usage.inputTokens,
           outputTokens: result.usage.outputTokens,
           success: true,
@@ -460,10 +464,12 @@ describe("Track B operations APIs", () => {
       expect(Object.keys(aggregate?.body ?? {}).sort()).toEqual([
         "endpointId",
         "inputTokens",
+        "modelId",
         "outputTokens",
         "requestId",
         "routingDecisionId",
         "success",
+        "taskType",
       ]);
       for (const forbidden of ["messages", "prompt", "content", "toolOutput", "providerBody", "private responses prompt"])
         expect(serialized).not.toContain(forbidden);
