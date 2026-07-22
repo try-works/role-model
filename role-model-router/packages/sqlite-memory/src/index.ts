@@ -9,7 +9,7 @@ import {
 } from "@role-model-router/profile-aggregator";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
-import { resolveRuntimeObservationStoragePayload } from "./legacy-migration.js";
+import { mirrorShadowRuntimeObservation, resolveRuntimeObservationStoragePayload } from "./legacy-migration.js";
 
 export * from "./legacy-migration.js";
 
@@ -3606,6 +3606,10 @@ export function persistRuntimeObservationBundle(input: PersistRuntimeObservation
           ...(input.artifactRef ? { artifactRef: input.artifactRef } : {}),
         }),
       );
+    mirrorShadowRuntimeObservation(database, {
+      observation: observation as unknown as Readonly<Record<string, unknown>>,
+      ...(input.artifactRef ? { artifactRef: input.artifactRef } : {}),
+    });
     database
       .prepare(
         "INSERT OR REPLACE INTO observed_performance_samples (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json) VALUES (?, ?, ?, ?, ?, ?, ?)",

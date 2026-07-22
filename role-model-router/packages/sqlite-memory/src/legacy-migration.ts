@@ -55,6 +55,31 @@ export interface GraphArtifactReference {
   readonly scopeId: string;
   readonly artifactId: string;
   readonly contentHash: string;
+  readonly artifactPath?: string;
+}
+
+/** Records a live production write in the migration target while shadow mirroring is active. */
+export function mirrorShadowRuntimeObservation(
+  database: DatabaseSync,
+  input: { readonly observation: Readonly<Record<string, unknown>>; readonly artifactRef?: GraphArtifactReference },
+): boolean {
+  if (currentState(database) !== "shadow_mirror") return false;
+  const requestId = input.observation.requestId;
+  if (typeof requestId !== "string" || requestId.length === 0 || !input.artifactRef) {
+    throw new Error("shadow mirror requires a graph artifact reference for every live observation");
+  }
+  const source = JSON.stringify(input.observation);
+  const sourceHash = sha256(source);
+  const existing = database.prepare("SELECT source_hash,artifact_id,artifact_content_hash FROM legacy_graph_migration_refs WHERE source_table=? AND source_id=?").get("runtime_observations", requestId) as { source_hash: string; artifact_id: string; artifact_content_hash: string } | undefined;
+  if (existing) {
+    if (existing.source_hash !== sourceHash || existing.artifact_id !== input.artifactRef.artifactId || existing.artifact_content_hash !== input.artifactRef.contentHash) throw new Error("shadow mirror reference conflicts with an existing live observation");
+    return true;
+  }
+  database.prepare(`INSERT INTO legacy_graph_migration_refs
+    (source_table,source_id,source_hash,scope_id,artifact_id,artifact_path,artifact_content_hash,migrated_at_ms)
+    VALUES (?,?,?,?,?,?,?,?)`).run("runtime_observations", requestId, sourceHash, input.artifactRef.scopeId, input.artifactRef.artifactId, input.artifactRef.artifactPath ?? `artifact://${input.artifactRef.artifactId}`, input.artifactRef.contentHash, Date.now());
+  database.prepare("UPDATE legacy_migration_journal SET cursor=?,updated_at_ms=? WHERE migration_id=?").run(requestId, Date.now(), MIGRATION_ID);
+  return true;
 }
 
 const MIGRATION_ID = "tb04-legacy-graph-performance-v1";
