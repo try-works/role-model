@@ -21984,7 +21984,7 @@ export async function createRuntimeBridgeBackend(
         ? []
         : execution.normalized.toolCalls;
 
-      return {
+      const bridgeResult: BridgeResponsesExecutionResult = {
         responseId: extractResponseId(execution.responseCapture.body) ?? "resp-role-model",
         model: execution.target.modelId,
         endpointId: execution.target.endpointId,
@@ -22018,6 +22018,27 @@ export async function createRuntimeBridgeBackend(
             }
           : {}),
       };
+      const trackBOperations = createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      });
+      try {
+        await trackBOperations.recordContributionAggregate({
+          requestId,
+          routingDecisionId,
+          endpointId: execution.target.endpointId,
+          inputTokens: execution.normalized.usage.inputTokens,
+          outputTokens: execution.normalized.usage.outputTokens,
+          success: true,
+        });
+      } catch {
+        // Contribution is non-routing-critical; its bounded outbox owns retry.
+      }
+      return bridgeResult;
     },
     async readRuntimeSummary(): Promise<RuntimeBridgeSummary> {
       const credentialLifecycle = buildCredentialLifecycleSummary();
