@@ -42,4 +42,8 @@ test("operates the packaged Track B runtime and cloud-backed recommendation flow
   await page.getByRole("button", { name: "Rollback" }).last().click();
   await expect(page.getByText("rolled_back", { exact: true }).last()).toBeVisible();
   await expect(page.getByText("rich_trace").first()).toBeVisible();
+  await test.info().attach("run00-live-final", {
+    body: await page.screenshot({ fullPage: true }),
+    contentType: "image/png",
+  });
 });
