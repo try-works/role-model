@@ -477,8 +477,6 @@ export class LegacySqliteMigration {
           'migrated', json('true')
         )
         WHERE request_id IN (SELECT source_id FROM legacy_graph_migration_refs);
-        DELETE FROM observed_profile_snapshots;
-        DELETE FROM observed_profile_snapshots_by_difficulty;
       `);
       this.#setState(database, "legacy_retired");
       database.exec("COMMIT");

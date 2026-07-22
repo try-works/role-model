@@ -60,6 +60,13 @@ function fixture() {
         success: true,
       }),
     );
+  database
+    .prepare(
+      `INSERT INTO observed_profile_snapshots
+       (snapshot_id, endpoint_id, measured_at_ms, profile_json)
+       VALUES (?, ?, ?, ?)`,
+    )
+    .run("profile-snapshot-1", "endpoint-1", 100, JSON.stringify({ profileId: "profile-1" }));
   database.close();
   return { root, databasePath: initialized.databasePath, backupPath, rich };
 }
@@ -149,6 +156,9 @@ describe("TB04 real SQLite legacy migration", () => {
     const ref = database
       .prepare("SELECT source_hash, artifact_id FROM legacy_graph_migration_refs WHERE source_id = ?")
       .get("request-1") as { source_hash: string; artifact_id: string };
+    const profileSnapshot = database
+      .prepare("SELECT profile_json FROM observed_profile_snapshots WHERE snapshot_id = ?")
+      .get("profile-snapshot-1") as { profile_json: string } | undefined;
     database.close();
     expect(JSON.parse(row.observation_json)).toEqual({
       requestId: "request-1",
@@ -156,6 +166,7 @@ describe("TB04 real SQLite legacy migration", () => {
       migrated: true,
     });
     expect(ref.source_hash).toBe(sha256(rich));
+    expect(profileSnapshot).toEqual({ profile_json: JSON.stringify({ profileId: "profile-1" }) });
     expect(readLegacyMigrationJournal(databasePath).state).toBe("legacy_retired");
   });
 
