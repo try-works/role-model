@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -514,6 +515,50 @@ function openBrowser(url: string): void {
   child.unref();
 }
 
+type LauncherConfigValues = Record<string, string | boolean | undefined>;
+
+function readLauncherString(values: LauncherConfigValues, key: string): string | undefined {
+  const value = values[key];
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+export function applyRecommendationServiceLauncherConfig(values: LauncherConfigValues): void {
+  const serviceUrl = readLauncherString(values, "recommendation-service-url");
+  const channel = readLauncherString(values, "recommendation-channel");
+  const verificationKey = readLauncherString(values, "recommendation-verification-key");
+  const serviceToken = readLauncherString(values, "recommendation-service-token");
+  const materialFile = readLauncherString(values, "recommendation-material-file");
+
+  if (serviceUrl) {
+    process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = serviceUrl;
+  }
+  if (channel) {
+    process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL = channel;
+  }
+  if (verificationKey) {
+    process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = verificationKey;
+  }
+  if (serviceToken) {
+    process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = serviceToken;
+  }
+  if (!materialFile) {
+    return;
+  }
+
+  const material = JSON.parse(readFileSync(materialFile, "utf8")) as {
+    readonly recommendationPublicSpkiBase64?: unknown;
+    readonly internalServiceToken?: unknown;
+  };
+  if (typeof material.recommendationPublicSpkiBase64 !== "string" || !material.recommendationPublicSpkiBase64.trim()) {
+    throw new Error("recommendation material file is missing recommendationPublicSpkiBase64");
+  }
+  if (typeof material.internalServiceToken !== "string" || !material.internalServiceToken.trim()) {
+    throw new Error("recommendation material file is missing internalServiceToken");
+  }
+  process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = material.recommendationPublicSpkiBase64.trim();
+  process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = material.internalServiceToken.trim();
+}
+
 export async function main(): Promise<void> {
   const args = parseArgs({
     options: {
@@ -562,8 +607,24 @@ export async function main(): Promise<void> {
       "aggregate-scope": {
         type: "string",
       },
+      "recommendation-service-url": {
+        type: "string",
+      },
+      "recommendation-material-file": {
+        type: "string",
+      },
+      "recommendation-verification-key": {
+        type: "string",
+      },
+      "recommendation-service-token": {
+        type: "string",
+      },
+      "recommendation-channel": {
+        type: "string",
+      },
     },
   });
+  applyRecommendationServiceLauncherConfig(args.values);
 
   const launchedWithoutRuntimeArgs =
     !args.values["repo-root"] && !args.values["runtime-state-root"];

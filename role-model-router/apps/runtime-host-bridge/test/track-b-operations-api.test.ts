@@ -9,6 +9,7 @@ import { readRuntimeObservationBundle, resolveSqliteMemoryLocation } from "@role
 import { LegacySqliteMigration } from "../../../packages/sqlite-memory/src/legacy-migration.js";
 
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
+import { applyRecommendationServiceLauncherConfig } from "../src/cli.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const fixtureRoot = path.join(import.meta.dirname, "fixtures");
@@ -782,5 +783,32 @@ describe("Track B operations APIs", () => {
     } finally {
       await backend.shutdown();
     }
+  });
+
+  test("launcher recommendation material config populates runtime download trust without raw env injection", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-recommendation-material-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const materialPath = path.join(runtimeStateRoot, "recommendation-material.json");
+    await mkdir(runtimeStateRoot, { recursive: true });
+    await writeFile(
+      materialPath,
+      JSON.stringify({
+        recommendationPublicSpkiBase64: "public-spki-fixture",
+        internalServiceToken: "service-token-fixture",
+      }),
+    );
+
+    applyRecommendationServiceLauncherConfig({
+      "recommendation-service-url": "https://recommendations-run00.role-model.dev",
+      "recommendation-material-file": materialPath,
+      "recommendation-channel": "development",
+    });
+
+    expect(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL).toBe(
+      "https://recommendations-run00.role-model.dev",
+    );
+    expect(process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL).toBe("development");
+    expect(process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY).toBe("public-spki-fixture");
+    expect(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN).toBe("service-token-fixture");
   });
 });
