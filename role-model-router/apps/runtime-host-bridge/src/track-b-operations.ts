@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, createPublicKey, timingSafeEqual, verify } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -100,6 +100,13 @@ type RecommendationRecord = {
   readonly policyAllowed: boolean;
   readonly provenance: string;
 };
+type ArtifactBundleImport = {
+  readonly manifest: Record<string, unknown>;
+  readonly manifestText: string;
+  readonly expectedManifestSha256?: string;
+  readonly recordsByPath: Readonly<Record<string, string>>;
+  readonly signature: Record<string, unknown>;
+};
 const EMPTY_CONTRIBUTION: ContributionState = {
   mode: "contributor",
   contributionTier: "advanced",
@@ -200,6 +207,94 @@ const writeState = async (statePath: string, state: BridgeState) => {
   const temporary = `${statePath}.${process.pid}.tmp`;
   await writeFile(temporary, `${JSON.stringify(state, null, 2)}\n`, "utf8");
   await rename(temporary, statePath);
+};
+const sha256 = (value: string | Buffer) => createHash("sha256").update(value).digest("hex");
+const publicKeyFromTrust = (verificationKey: string) => {
+  if (verificationKey.includes("BEGIN PUBLIC KEY")) return createPublicKey(verificationKey);
+  return createPublicKey({ key: Buffer.from(verificationKey, "base64"), format: "der", type: "spki" });
+};
+const importArtifactBundleRecords = (
+  bundle: ArtifactBundleImport,
+  verificationKey: string,
+  state: BridgeState,
+): RecommendationRecord[] => {
+  const manifestSha256 = sha256(bundle.manifestText);
+  if (bundle.expectedManifestSha256 && bundle.expectedManifestSha256 !== manifestSha256)
+    throw new Error("recommendation manifest hash drift");
+  if (
+    bundle.manifest.artifactFormat !== "role-model.artifact-bundle.v1" ||
+    bundle.manifest.contract !== "ServerReturnBundleManifestV1" ||
+    bundle.manifest.lifecycleState !== "sealed" ||
+    bundle.manifest.channel !== (process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL ?? "production")
+  )
+    throw new Error("invalid recommendation Artifact Bundle manifest");
+  const channelSequence = Number(bundle.manifest.channelSequence);
+  if (!Number.isSafeInteger(channelSequence) || channelSequence <= (state.recommendationRevision ?? 0))
+    throw new Error("stale recommendation Artifact Bundle");
+  if (
+    bundle.signature.algorithm !== "ed25519" ||
+    bundle.signature.keyId !== bundle.manifest.signingKeyId ||
+    bundle.signature.manifestSha256 !== manifestSha256 ||
+    typeof bundle.signature.value !== "string"
+  )
+    throw new Error("invalid recommendation signature envelope");
+  const signatureBytes = Buffer.from(bundle.signature.value, "base64");
+  if (
+    !verify(
+      null,
+      Buffer.from(bundle.manifestText),
+      publicKeyFromTrust(verificationKey),
+      signatureBytes,
+    )
+  )
+    throw new Error("recommendation signature validation failed");
+  const contents = bundle.manifest.contents;
+  if (!Array.isArray(contents) || contents.length < 1 || contents.length > 16)
+    throw new Error("recommendation Artifact Bundle content manifest is invalid");
+  const policyAllowed =
+    (state.contribution ?? EMPTY_CONTRIBUTION).recommendationAccess !== "disabled";
+  const rows: RecommendationRecord[] = [];
+  for (const [index, content] of contents.entries()) {
+    if (!content || typeof content !== "object")
+      throw new Error(`recommendation content entry invalid at ${index}`);
+    const entry = content as Record<string, unknown>;
+    const recordPath = String(entry.path ?? "");
+    const bytes = bundle.recordsByPath[recordPath];
+    if (!recordPath || typeof bytes !== "string") throw new Error(`recommendation record missing ${recordPath}`);
+    if (
+      entry.sha256 !== sha256(bytes) ||
+      entry.byteLength !== Buffer.byteLength(bytes) ||
+      !Number.isSafeInteger(entry.recordCount) ||
+      Number(entry.recordCount) < 1
+    )
+      throw new Error(`recommendation record hash or count drift ${recordPath}`);
+    const parsed = bytes
+      .trim()
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as Record<string, unknown>);
+    if (parsed.length !== entry.recordCount) throw new Error(`recommendation record count drift ${recordPath}`);
+    for (const record of parsed) {
+      const envelope = record.envelope as Record<string, unknown> | undefined;
+      if (
+        !envelope?.artifactId ||
+        envelope.privacy &&
+          ((envelope.privacy as Record<string, unknown>).rawContentIncluded !== false ||
+            (envelope.privacy as Record<string, unknown>).redactionApplied !== true)
+      )
+        throw new Error("recommendation record privacy/provenance is incomplete");
+      rows.push({
+        id: String(envelope.artifactId),
+        version: String(record.channelSequence ?? channelSequence),
+        provenance: `cloud:${manifestSha256}`,
+        status: "validated",
+        signatureValid: true,
+        policyAllowed,
+      });
+    }
+  }
+  if (!rows.length || rows.length > 1000) throw new Error("recommendation record cardinality invalid");
+  return rows;
 };
 const runtimePlan = (state: BridgeState, sourceRevision: number): RetentionPlan => {
   const eligible = state.storageServices.filter(
@@ -576,6 +671,8 @@ export function createTrackBOperations({
       bundle: Record<string, unknown>,
       verificationKey: string,
     ): Promise<readonly RecommendationRecord[]> {
+      if (bundle.artifactFormat === "role-model.artifact-bundle.v1")
+        throw new Error("Artifact Bundle imports require signature and record pages");
       const state = await readState(statePath);
       const revision = Number(bundle.revision);
       const sourceRows = bundle.recommendations;
@@ -624,6 +721,22 @@ export function createTrackBOperations({
         generatedAt: new Date().toISOString(),
         recommendations: rows,
         recommendationRevision: revision,
+      });
+      return rows;
+    },
+    async importRecommendationArtifactBundle(
+      bundle: ArtifactBundleImport,
+      verificationKey: string,
+    ): Promise<readonly RecommendationRecord[]> {
+      const state = await readState(statePath);
+      const rows = importArtifactBundleRecords(bundle, verificationKey, state);
+      const channelSequence = Number(bundle.manifest.channelSequence);
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        recommendations: rows,
+        recommendationRevision: channelSequence,
       });
       return rows;
     },

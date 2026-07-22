@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHash, createHmac, createPublicKey, generateKeyPairSync, sign } from "node:crypto";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import os from "node:os";
@@ -12,6 +12,15 @@ import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const fixtureRoot = path.join(import.meta.dirname, "fixtures");
+const canonicalJson = (value: unknown): string =>
+  Array.isArray(value)
+    ? `[${value.map(canonicalJson).join(",")}]`
+    : value && typeof value === "object"
+      ? `{${Object.keys(value)
+          .sort()
+          .map((key) => `${JSON.stringify(key)}:${canonicalJson((value as Record<string, unknown>)[key])}`)
+          .join(",")}}`
+      : JSON.stringify(value);
 const roots: string[] = [];
 afterEach(async () => {
   vi.unstubAllGlobals();
@@ -546,27 +555,103 @@ describe("Track B operations APIs", () => {
       }[];
       expect(recommendations).toHaveLength(2);
       await expect(backend.applyRecommendation({ id: "pack-bad" })).rejects.toThrow(/signature/i);
-      const unsigned = {
-        channel: "development",
-        revision: 1,
-        recommendations: [{ id: "pack-downloaded", version: "2", provenance: "cloud:bundle-3" }],
-        provenance: { historyAuthority: "r2_sanitized_analytical", generatedFromCount: 1 },
+      const { privateKey } = generateKeyPairSync("ed25519");
+      const publicKey = createPublicKey(privateKey)
+        .export({ format: "der", type: "spki" })
+        .toString("base64");
+      const record = {
+        envelope: {
+          artifactId: "recommendation-pack-downloaded",
+          artifactKind: "endpoint_preference",
+          source: { sourceContentHash: "a".repeat(64) },
+          privacy: { rawContentIncluded: false, redactionApplied: true },
+        },
+        snapshotId: "snapshot-pack-downloaded",
+        channelSequence: 2,
+        recommendationEvidenceTier: "advanced",
+        endpointId: "deepseek.run00.dev.global.deepseek-chat",
+        modelId: "deepseek-chat",
+        preferredFor: ["general.chat"],
+        action: "prefer",
+        confidence: 0.92,
       };
-      const signature = createHmac("sha256", "verification-key")
-        .update(JSON.stringify(unsigned))
-        .digest("hex");
+      const recordBytes = `${canonicalJson(record)}\n`;
+      const recordHash = createHash("sha256").update(recordBytes).digest("hex");
+      const manifest = {
+        artifactFormat: "role-model.artifact-bundle.v1",
+        contract: "ServerReturnBundleManifestV1",
+        artifactBundleId: "snapshot-pack-downloaded",
+        snapshotId: "snapshot-pack-downloaded",
+        lifecycleState: "sealed",
+        channel: "development",
+        channelSequence: 2,
+        recommendationTier: "advanced",
+        manifestHash: recordHash,
+        signingKeyId: "role-model-recommendations-run00-dev-v1",
+        signatureRef: "signatures/manifest.sig",
+        scopeId: "standalone-runtime-dev",
+        boundaryProtocolVersion: "1.1",
+        contents: [
+          {
+            path: "records/endpoint-preferences.jsonl",
+            schemaId: "role-model.artifact.endpoint_preference.v1",
+            artifactKinds: ["endpoint_preference"],
+            recordCount: 1,
+            byteLength: Buffer.byteLength(recordBytes),
+            sha256: recordHash,
+          },
+        ],
+      };
+      const manifestBytes = `${canonicalJson(manifest)}\n`;
+      const manifestSha256 = createHash("sha256").update(manifestBytes).digest("hex");
+      const signature = {
+        keyId: "role-model-recommendations-run00-dev-v1",
+        algorithm: "ed25519",
+        value: sign(null, Buffer.from(manifestBytes), privateKey).toString("base64"),
+        manifestSha256,
+      };
       process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_URL = "https://recommendations.example";
-      process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = "verification-key";
+      process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = publicKey;
       process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = "service-token";
       process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL = "development";
       vi.stubGlobal(
         "fetch",
         vi.fn(
           async (input, init) => {
-            expect(String(input)).toBe("https://recommendations.example/recommendations?channel=development");
-            expect(new Headers(init?.headers).get("authorization")).toBe("Bearer service-token");
-            return new Response(JSON.stringify({ ...unsigned, signature }), {
-              status: 200,
+            const url = String(input);
+            if (url === "https://recommendations.example/api/role-model/recommendations/resolve") {
+              expect(init?.method).toBe("POST");
+              expect(new Headers(init?.headers).get("authorization")).toBe("Bearer service-token");
+              return new Response(
+                JSON.stringify({
+                  contract: "RecommendationResolveResponseV1",
+                  channel: "development",
+                  status: "available",
+                  snapshotId: "snapshot-pack-downloaded",
+                  channelSequence: 2,
+                  bundleUri: "https://recommendations.example/snapshots/development/stable/advanced/standalone-runtime-dev/sequence-2/manifest.json",
+                  manifestHash: manifestSha256,
+                }),
+                { status: 200, headers: { "content-type": "application/json" } },
+              );
+            }
+            if (url.endsWith("/manifest.json"))
+              return new Response(manifestBytes, {
+                status: 200,
+                headers: { "content-type": "application/json" },
+              });
+            if (url.endsWith("/records/endpoint-preferences.jsonl"))
+              return new Response(recordBytes, {
+                status: 200,
+                headers: { "content-type": "application/x-ndjson" },
+              });
+            if (url.endsWith("/signatures/manifest.sig"))
+              return new Response(JSON.stringify(signature), {
+                status: 200,
+                headers: { "content-type": "application/json" },
+              });
+            return new Response(JSON.stringify({ error: "unexpected_url", url }), {
+              status: 404,
               headers: { "content-type": "application/json" },
             });
           },
@@ -579,16 +664,18 @@ describe("Track B operations APIs", () => {
       }[];
       expect(downloaded).toEqual([
         {
-          id: "pack-downloaded",
+          id: "recommendation-pack-downloaded",
           version: "2",
-          provenance: "cloud:bundle-3",
+          provenance: `cloud:${manifestSha256}`,
           status: "validated",
           signatureValid: true,
           policyAllowed: true,
         },
       ]);
-      const applied = await backend.applyRecommendation({ id: "pack-downloaded" });
-      expect(applied).toMatchObject({ activePack: { id: "pack-downloaded", version: "2" } });
+      const applied = await backend.applyRecommendation({ id: "recommendation-pack-downloaded" });
+      expect(applied).toMatchObject({
+        activePack: { id: "recommendation-pack-downloaded", version: "2" },
+      });
     } finally {
       await backend.shutdown();
     }

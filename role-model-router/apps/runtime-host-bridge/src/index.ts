@@ -22558,27 +22558,85 @@ export async function createRuntimeBridgeBackend(
       if (!serviceUrl || !verificationKey)
         throw new Error("recommendation service trust is not configured");
       const baseUrl = serviceUrl.endsWith("/") ? serviceUrl : `${serviceUrl}/`;
-      const recommendationUrl = new URL("recommendations", baseUrl);
-      if (process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL)
-        recommendationUrl.searchParams.set(
-          "channel",
-          process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL,
-        );
-      const response = await fetch(recommendationUrl, {
-        headers: process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN
+      const channel = process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL ?? "production";
+      const statePath = path.join(
+        options.runtimeStateRoot,
+        options.scopeId,
+        "track-b-production-bridge.json",
+      );
+      const operations = createTrackBOperations({
+        statePath,
+        catalog: [],
+      });
+      const contribution = (await operations.readContributionState()) as {
+        readonly recommendationTier?: string;
+      };
+      const headers = {
+        "content-type": "application/json",
+        ...(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN
           ? { authorization: `Bearer ${process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN}` }
-          : {},
+          : {}),
+      };
+      const response = await fetch(new URL("api/role-model/recommendations/resolve", baseUrl), {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          contract: "RecommendationResolveRequestV1",
+          channel,
+          runtimeChannel: channel,
+          releaseTrack: "stable",
+          recommendationTier: contribution.recommendationTier ?? "advanced",
+          clientSchemaVersions: ["1.0.0"],
+          activeChannelSequence: 0,
+          identityKind: "anonymous_public",
+          scopeId: options.scopeId,
+          boundaryProtocolVersion: "1.1",
+        }),
       });
       if (!response.ok) throw new Error(`recommendation download failed with ${response.status}`);
-      const bundle = (await response.json()) as Record<string, unknown>;
-      return createTrackBOperations({
-        statePath: path.join(
-          options.runtimeStateRoot,
-          options.scopeId,
-          "track-b-production-bridge.json",
-        ),
-        catalog: [],
-      }).importRecommendationBundle(bundle, verificationKey);
+      const resolved = (await response.json()) as Record<string, unknown>;
+      if (resolved.status === "not_eligible" || resolved.status === "not_modified")
+        return operations.listRecommendations();
+      if (
+        resolved.status !== "available" ||
+        typeof resolved.bundleUri !== "string" ||
+        typeof resolved.manifestHash !== "string"
+      )
+        throw new Error("recommendation resolve response did not include an available bundle");
+      const manifestUrl = new URL(resolved.bundleUri);
+      const manifestResponse = await fetch(manifestUrl);
+      if (!manifestResponse.ok)
+        throw new Error(`recommendation manifest download failed with ${manifestResponse.status}`);
+      const manifestText = await manifestResponse.text();
+      const manifest = JSON.parse(manifestText) as Record<string, unknown>;
+      const contents = manifest.contents;
+      if (!Array.isArray(contents)) throw new Error("recommendation bundle contents missing");
+      const recordsByPath: Record<string, string> = {};
+      for (const content of contents) {
+        if (!content || typeof content !== "object" || typeof (content as Record<string, unknown>).path !== "string")
+          throw new Error("recommendation bundle content path missing");
+        const contentPath = (content as Record<string, unknown>).path as string;
+        const recordResponse = await fetch(new URL(contentPath, manifestUrl));
+        if (!recordResponse.ok)
+          throw new Error(`recommendation record download failed with ${recordResponse.status}`);
+        recordsByPath[contentPath] = await recordResponse.text();
+      }
+      if (typeof manifest.signatureRef !== "string")
+        throw new Error("recommendation bundle signature reference missing");
+      const signatureResponse = await fetch(new URL(manifest.signatureRef, manifestUrl));
+      if (!signatureResponse.ok)
+        throw new Error(`recommendation signature download failed with ${signatureResponse.status}`);
+      const signature = (await signatureResponse.json()) as Record<string, unknown>;
+      return operations.importRecommendationArtifactBundle(
+        {
+          manifest,
+          manifestText,
+          expectedManifestSha256: resolved.manifestHash,
+          recordsByPath,
+          signature,
+        },
+        verificationKey,
+      );
     },
     async applyRecommendation(body: Record<string, unknown>): Promise<unknown> {
       return createTrackBOperations({
