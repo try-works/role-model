@@ -1,8 +1,10 @@
 import { spawn } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
+import { existsSync } from "node:fs";
 import { copyFile, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline";
+import { pathToFileURL } from "node:url";
 
 export interface OwnedTrackBSidecarProcess {
   endpoint: string;
@@ -98,9 +100,58 @@ export interface ProductionExtensionDescriptor {
   readonly capabilities: readonly string[];
 }
 
+export function resolveExtensionHostModuleUrl(options: {
+  readonly moduleUrl?: string;
+  readonly repoRoot?: string;
+} = {}) {
+  const moduleUrl = options.moduleUrl?.trim();
+  if (moduleUrl) {
+    try {
+      return new URL("../../../packages/extension-host/index.mjs", moduleUrl).href;
+    } catch {
+      // Packaged CJS/SEA builds can erase import.meta.url; fall through to explicit roots.
+    }
+  }
+
+  const roots = [
+    options.repoRoot,
+    process.env.ROLE_MODEL_REPO_ROOT,
+    process.cwd(),
+    path.dirname(process.execPath),
+  ].filter((root): root is string => Boolean(root?.trim()));
+  const seen = new Set<string>();
+  for (const root of roots) {
+    const absoluteRoot = path.resolve(root);
+    for (const candidate of [
+      path.join(absoluteRoot, "role-model-router", "packages", "extension-host", "index.mjs"),
+      path.join(absoluteRoot, "packages", "extension-host", "index.mjs"),
+    ]) {
+      const normalized = path.resolve(candidate);
+      if (seen.has(normalized)) continue;
+      seen.add(normalized);
+      if (existsSync(normalized)) return pathToFileURL(normalized).href;
+    }
+  }
+  throw new Error("Track B extension host module could not be resolved from packaged runtime repo root");
+}
+
+export function resolveTrackBNodeExecutable(options: {
+  readonly configured?: string;
+  readonly runtimeExecPath?: string;
+} = {}) {
+  const explicit = options.configured?.trim()
+    || process.env.ROLE_MODEL_TRACK_B_NODE_EXECUTABLE?.trim()
+    || process.env.ROLE_MODEL_NODE_EXECUTABLE?.trim();
+  if (explicit) return explicit;
+  const runtimeExecPath = options.runtimeExecPath?.trim() || process.execPath;
+  const executableName = path.basename(runtimeExecPath).toLowerCase();
+  return executableName === "node.exe" || executableName === "node" ? runtimeExecPath : "node";
+}
+
 export async function createProductionExtensionRuntime(options: {
   readonly stateRoot: string;
   readonly authorizationEpoch: number;
+  readonly repoRoot?: string;
   readonly extensions: readonly {
     readonly descriptor: ProductionExtensionDescriptor;
     readonly modulePath: string;
@@ -116,7 +167,7 @@ export async function createProductionExtensionRuntime(options: {
       throw new Error(`canonical extension integrity verification failed for ${extension.descriptor.id}`);
     }
   }
-  const hostModuleUrl = new URL("../../../packages/extension-host/index.mjs", import.meta.url).href;
+  const hostModuleUrl = resolveExtensionHostModuleUrl({ repoRoot: options.repoRoot });
   const hostModule = await import(hostModuleUrl) as {
     ExtensionHost: new (options: Record<string, unknown>) => {
       registerProcess(descriptor: ProductionExtensionDescriptor, modulePath: string): Promise<void>;
@@ -221,8 +272,9 @@ export function createOwnedTrackBSidecarSpec(options: {
       }
 
       const operationsToken = randomBytes(32).toString("hex");
+      const nodeExecutable = resolveTrackBNodeExecutable();
       const child = spawn(
-        process.execPath,
+        nodeExecutable,
         [
           options.artifactPath,
           "--state-root", options.stateRoot,
@@ -256,10 +308,15 @@ export function createOwnedTrackBSidecarSpec(options: {
         const timer = setTimeout(() => {
           reject(new Error(`Track B sidecar readiness timeout${stderr ? `: ${stderr}` : ""}`));
         }, options.startupTimeoutMs ?? 10_000);
+        const rejectError = (error: Error) => {
+          clearTimeout(timer);
+          reject(new Error(`Track B node worker executable failed: ${error.message}`, { cause: error }));
+        };
         const rejectExit = (code: number | null, signal: NodeJS.Signals | null) => {
           clearTimeout(timer);
           reject(new Error(`Track B sidecar exited before readiness (${code ?? signal})${stderr ? `: ${stderr}` : ""}`));
         };
+        child.once("error", rejectError);
         child.once("exit", rejectExit);
         lines.on("line", (line) => {
           let message: unknown;
@@ -276,6 +333,7 @@ export function createOwnedTrackBSidecarSpec(options: {
           ) {
             ready = true;
             clearTimeout(timer);
+            child.off("error", rejectError);
             child.off("exit", rejectExit);
             resolve((message as { endpoint: string }).endpoint);
           }

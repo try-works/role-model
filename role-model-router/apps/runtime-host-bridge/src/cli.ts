@@ -685,6 +685,7 @@ export async function main(): Promise<void> {
       extensionRuntime = await createProductionExtensionRuntime({
         stateRoot: path.join(trackBStateRoot, "extensions"),
         authorizationEpoch: 1,
+        repoRoot: options.repoRoot,
         extensions: manifest.extensions.map(extension => ({
           ...extension,
           modulePath: path.resolve(distributionRoot, extension.modulePath),

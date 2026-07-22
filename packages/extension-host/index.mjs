@@ -1,19 +1,25 @@
 import { spawn } from "node:child_process";
 import { mkdir, readFile, appendFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { basename, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineExtension, encodeFrame, extractFrames, verifySignedBundle } from "../extension-sdk/index.mjs";
 
 const runtimePath = fileURLToPath(new URL("./worker-runtime.mjs", import.meta.url));
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const normalizeModuleUrl = (value) => value instanceof URL ? value.href : value.startsWith("file:") ? value : pathToFileURL(value).href;
+const resolveNodeWorkerExecutable = (configured = process.env.ROLE_MODEL_EXTENSION_WORKER_NODE) => {
+  const explicit = configured?.trim();
+  if (explicit) return explicit;
+  const executableName = basename(process.execPath).toLowerCase();
+  return executableName === "node.exe" || executableName === "node" ? process.execPath : "node";
+};
 
 class ProcessWorker {
-  constructor(moduleUrl, onExit, startupTimeoutMs) { this.moduleUrl = normalizeModuleUrl(moduleUrl); this.onExit = onExit; this.startupTimeoutMs = startupTimeoutMs; this.pending = new Map(); this.child = null; this.exited = true; this.stopping = false; }
+  constructor(moduleUrl, onExit, startupTimeoutMs, workerExecPath) { this.moduleUrl = normalizeModuleUrl(moduleUrl); this.onExit = onExit; this.startupTimeoutMs = startupTimeoutMs; this.workerExecPath = workerExecPath; this.pending = new Map(); this.child = null; this.exited = true; this.stopping = false; }
   async start() {
     if (this.child && !this.exited) return;
     this.exited = false;
-    this.child = spawn(process.execPath, [runtimePath, this.moduleUrl], { stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
+    this.child = spawn(this.workerExecPath, [runtimePath, this.moduleUrl], { stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
     let bytes = Buffer.alloc(0), settled = false, rejectReady;
     const ready = new Promise((resolve, reject) => {
       rejectReady = reject;
@@ -42,7 +48,7 @@ class ProcessWorker {
 
 export class ExtensionHost {
   #enabled = true; #workers = new Map(); #active = 0; #queue = []; #degradations = []; #restartCount=0;
-  constructor({ protocolVersion, compatibleProtocolVersions = [], authorizationEpoch = 0, timeoutMs = 1_000, startupTimeoutMs = 2_000, maxConcurrent = 8, maxQueued = 64, maxDegradationReceipts = 64, journalPath=null, maxRestarts=3, restartBackoffMs=10 }) {
+  constructor({ protocolVersion, compatibleProtocolVersions = [], authorizationEpoch = 0, timeoutMs = 1_000, startupTimeoutMs = 2_000, maxConcurrent = 8, maxQueued = 64, maxDegradationReceipts = 64, journalPath=null, maxRestarts=3, restartBackoffMs=10, workerExecPath=resolveNodeWorkerExecutable() }) {
     this.protocolVersion = protocolVersion;
     this.protocolVersions = new Set([protocolVersion, ...compatibleProtocolVersions]);
     this.timeoutMs = timeoutMs;
@@ -52,6 +58,7 @@ export class ExtensionHost {
     this.maxQueued = maxQueued;
     this.maxDegradationReceipts = maxDegradationReceipts;
     this.journalPath=journalPath;this.maxRestarts=maxRestarts;this.restartBackoffMs=restartBackoffMs;
+    this.workerExecPath=workerExecPath;
   }
   #validateDescriptor(descriptor){descriptor=defineExtension(descriptor);if(!this.protocolVersions.has(descriptor.protocolVersion))throw new Error("protocol version mismatch");if(this.#workers.has(descriptor.id))throw new Error(`duplicate extension ${descriptor.id}`);return descriptor;}
   async #journal(event){if(!this.journalPath)return;await mkdir(dirname(this.journalPath),{recursive:true});await appendFile(this.journalPath,`${JSON.stringify({...event,at:new Date().toISOString()})}\n`,"utf8");}
@@ -62,7 +69,7 @@ export class ExtensionHost {
   }
   async registerProcess(descriptor, moduleUrl,{journal=true}={}) {
     descriptor=this.#validateDescriptor(descriptor);const normalized=normalizeModuleUrl(moduleUrl);
-    const record={descriptor,moduleUrl:normalized,kind:"process",lifecycle:"starting",restarts:0};record.worker=new ProcessWorker(normalized,()=>{record.lifecycle="exited";},this.startupTimeoutMs);this.#workers.set(descriptor.id,record);
+    const record={descriptor,moduleUrl:normalized,kind:"process",lifecycle:"starting",restarts:0};record.worker=new ProcessWorker(normalized,()=>{record.lifecycle="exited";},this.startupTimeoutMs,this.workerExecPath);this.#workers.set(descriptor.id,record);
     try{await record.worker.start();record.lifecycle="ready";}catch(error){this.#workers.delete(descriptor.id);throw error;}
     if(journal)await this.#journal({type:"installed",descriptor,moduleUrl:normalized});
   }

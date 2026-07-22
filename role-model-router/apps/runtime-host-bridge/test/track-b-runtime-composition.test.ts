@@ -12,6 +12,7 @@ import {
   createTrackBBridgeServerOptions,
   stageTrackBRuntimeDistribution,
   createTrackBProductionRuntime,
+  resolveExtensionHostModuleUrl,
 } from "../src/track-b-runtime.js";
 
 const roots: string[] = [];
@@ -20,10 +21,14 @@ afterEach(async () => {
   delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL;
   delete process.env.EXPECTED_DIGEST_KEY;
   delete process.env.EXPECTED_ENCRYPTION_KEY;
+  delete process.env.ROLE_MODEL_TRACK_B_NODE_EXECUTABLE;
+  delete process.env.ROLE_MODEL_EXTENSION_WORKER_NODE;
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })));
 });
 
 describe("production Track B composition", () => {
+  const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
+
   test("owns and supervises the private operations sidecar without URL injection", async () => {
     const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-track-b-runtime-"));
     roots.push(stateRoot);
@@ -111,6 +116,24 @@ describe("production Track B composition", () => {
     expect(() => createOwnedTrackBSidecarSpec({ artifactPath, artifactSha256, stateRoot, channel: "production" })).toThrow(/managed artifact keys/i);
   });
 
+  test("fails closed when the packaged sidecar cannot launch the configured Node worker executable", async () => {
+    const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-track-b-sidecar-node-"));
+    roots.push(stateRoot);
+    const artifactPath = path.join(stateRoot, "fake-sidecar.mjs");
+    const source = 'process.stdout.write(JSON.stringify({type:"ready",endpoint:"http://127.0.0.1:1"})+"\\n");\n';
+    await writeFile(artifactPath, source, "utf8");
+    process.env.ROLE_MODEL_TRACK_B_NODE_EXECUTABLE = path.join(stateRoot, "missing-node.exe");
+
+    const sidecar = createOwnedTrackBSidecarSpec({
+      artifactPath,
+      artifactSha256: createHash("sha256").update(source).digest("hex"),
+      stateRoot,
+      channel: "development",
+      startupTimeoutMs: 500,
+    });
+    await expect(sidecar.launch()).rejects.toThrow(/node worker executable|ENOENT|spawn/i);
+  });
+
   test("starts the owned sidecar before constructing the public production backend", async () => {
     const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-track-b-composed-"));
     roots.push(stateRoot);
@@ -173,6 +196,7 @@ describe("production Track B composition", () => {
     const runtime = await createProductionExtensionRuntime({
       stateRoot,
       authorizationEpoch: 7,
+      repoRoot,
       extensions,
     });
     expect(runtime.health()).toMatchObject({
@@ -195,8 +219,43 @@ describe("production Track B composition", () => {
     await expect(createProductionExtensionRuntime({
       stateRoot,
       authorizationEpoch: 8,
+      repoRoot,
       extensions: extensions.map((row, index) => index === 0 ? { ...row, artifactSha256: "0".repeat(64) } : row),
     })).rejects.toThrow(/integrity/i);
+  });
+
+  test("resolves the extension host from repo root when packaged CJS has no import.meta.url", async () => {
+    const resolved = resolveExtensionHostModuleUrl({ moduleUrl: "", repoRoot });
+    expect(resolved).toBe(new URL("role-model-router/packages/extension-host/index.mjs", `file:///${repoRoot.replaceAll("\\", "/")}/`).href);
+    const hostModule = await import(resolved) as { ExtensionHost?: unknown; ExtensionSupervisor?: unknown };
+    expect(typeof hostModule.ExtensionHost).toBe("function");
+    expect(typeof hostModule.ExtensionSupervisor).toBe("function");
+  });
+
+  test("fails closed when the extension host cannot launch the configured Node worker executable", async () => {
+    const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-extension-worker-node-"));
+    roots.push(stateRoot);
+    const modulePath = path.join(stateRoot, "extension.mjs");
+    await writeFile(modulePath, "export async function run(){return {ok:true}}\n", "utf8");
+    process.env.ROLE_MODEL_EXTENSION_WORKER_NODE = path.join(stateRoot, "missing-node.exe");
+    const hostModule = await import(resolveExtensionHostModuleUrl({ moduleUrl: "", repoRoot })) as {
+      ExtensionHost: new (options: Record<string, unknown>) => {
+        registerProcess(descriptor: ProductionExtensionDescriptor, modulePath: string): Promise<void>;
+        shutdown(): Promise<void>;
+      };
+    };
+    const host = new hostModule.ExtensionHost({
+      protocolVersion: "1.1.0",
+      compatibleProtocolVersions: ["1.0.0"],
+      authorizationEpoch: 1,
+      startupTimeoutMs: 500,
+    });
+    await expect(host.registerProcess({
+      id: "worker-node-contract",
+      protocolVersion: "1.1.0",
+      capabilities: ["health:probe"],
+    }, modulePath)).rejects.toThrow(/node worker executable|ENOENT|spawn/i);
+    await host.shutdown();
   });
 
   test("exposes every Track B mutation and recommendation operation to the production server", () => {
