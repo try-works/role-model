@@ -256,6 +256,9 @@ export function createOwnedTrackBSidecarSpec(options: {
   channel: "development" | "stage" | "production";
   artifactDigestKeyFile?: string;
   artifactEncryptionKeyFile?: string;
+  trustMaterialFile?: string;
+  aggregateEndpoint?: string;
+  aggregateScope?: string;
   startupTimeoutMs?: number;
 }): OwnedTrackBSidecarSpec {
   if (options.channel === "production" && (!options.artifactDigestKeyFile || !options.artifactEncryptionKeyFile)) {
@@ -283,6 +286,9 @@ export function createOwnedTrackBSidecarSpec(options: {
           "--port", "0",
           ...(options.artifactDigestKeyFile ? ["--artifact-digest-key-file", options.artifactDigestKeyFile] : []),
           ...(options.artifactEncryptionKeyFile ? ["--artifact-encryption-key-file", options.artifactEncryptionKeyFile] : []),
+          ...(options.trustMaterialFile ? ["--trust-material-file", options.trustMaterialFile] : []),
+          ...(options.aggregateEndpoint ? ["--aggregate-endpoint", options.aggregateEndpoint] : []),
+          ...(options.aggregateScope ? ["--aggregate-scope", options.aggregateScope] : []),
         ],
         {
           stdio: ["ignore", "pipe", "pipe"],

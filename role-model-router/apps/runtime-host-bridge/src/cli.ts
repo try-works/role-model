@@ -550,6 +550,15 @@ export async function main(): Promise<void> {
       "artifact-encryption-key-file": {
         type: "string",
       },
+      "destination-trust-material-file": {
+        type: "string",
+      },
+      "aggregate-ingestion-url": {
+        type: "string",
+      },
+      "aggregate-scope": {
+        type: "string",
+      },
     },
   });
 
@@ -700,6 +709,9 @@ export async function main(): Promise<void> {
           channel: packagedProfile?.channel ?? "development",
           artifactDigestKeyFile: args.values["artifact-digest-key-file"] ?? process.env.ROLE_MODEL_ARTIFACT_DIGEST_KEY_FILE,
           artifactEncryptionKeyFile: args.values["artifact-encryption-key-file"] ?? process.env.ROLE_MODEL_ARTIFACT_ENCRYPTION_KEY_FILE,
+          trustMaterialFile: args.values["destination-trust-material-file"] ?? process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE,
+          aggregateEndpoint: args.values["aggregate-ingestion-url"] ?? process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL,
+          aggregateScope: args.values["aggregate-scope"] ?? process.env.ROLE_MODEL_AGGREGATE_SCOPE,
         }),
         createBackend: ({ trackBOperationsEndpoint, trackBOperationsToken }) =>
           createBackend(trackBOperationsEndpoint, trackBOperationsToken),
