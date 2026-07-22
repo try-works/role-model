@@ -137,17 +137,17 @@ function tableExists(database: DatabaseSync, table: string): boolean {
   );
 }
 
-function sourceRows(database: DatabaseSync): Array<{ request_id: string; observation_json: string }> {
-  if (!tableExists(database, "runtime_observations")) return [];
-  return database
-    .prepare(
-      "SELECT request_id, observation_json FROM runtime_observations ORDER BY request_id ASC",
-    )
-    .all() as Array<{ request_id: string; observation_json: string }>;
-}
-
-function aggregateSourceHash(rows: readonly { request_id: string; observation_json: string }[]): string {
-  return sha256(rows.map((row) => `${row.request_id}\0${sha256(row.observation_json)}`).join("\n"));
+function sourceProof(database: DatabaseSync, pageSize = 1_000): { count: number; hash: string } {
+  if (!tableExists(database, "runtime_observations")) return { count: 0, hash: sha256("") };
+  const digest = createHash("sha256"); let cursor = ""; let count = 0;
+  const page = database.prepare("SELECT request_id,observation_json FROM runtime_observations WHERE request_id>? ORDER BY request_id ASC LIMIT ?");
+  for (;;) {
+    const rows = page.all(cursor, pageSize) as Array<{ request_id: string; observation_json: string }>;
+    if (!rows.length) break;
+    for (const row of rows) { if (count) digest.update("\n"); digest.update(`${row.request_id}\0${sha256(row.observation_json)}`); count += 1; }
+    cursor = rows.at(-1)!.request_id;
+  }
+  return { count, hash: digest.digest("hex") };
 }
 
 function currentState(database: DatabaseSync): LegacyMigrationState {
@@ -160,15 +160,15 @@ function currentState(database: DatabaseSync): LegacyMigrationState {
 
 function targetProof(database: DatabaseSync): { count: number; hash: string } {
   if (!tableExists(database, "legacy_graph_migration_refs")) return { count: 0, hash: sha256("") };
-  const rows = database
-    .prepare(
-      "SELECT source_id, source_hash FROM legacy_graph_migration_refs ORDER BY source_id ASC",
-    )
-    .all() as Array<{ source_id: string; source_hash: string }>;
-  return {
-    count: rows.length,
-    hash: sha256(rows.map((row) => `${row.source_id}\0${row.source_hash}`).join("\n")),
-  };
+  const digest = createHash("sha256"); let cursor = ""; let count = 0;
+  const page = database.prepare("SELECT source_id,source_hash FROM legacy_graph_migration_refs WHERE source_id>? ORDER BY source_id ASC LIMIT ?");
+  for (;;) {
+    const rows = page.all(cursor, 1_000) as Array<{ source_id: string; source_hash: string }>;
+    if (!rows.length) break;
+    for (const row of rows) { if (count) digest.update("\n"); digest.update(`${row.source_id}\0${row.source_hash}`); count += 1; }
+    cursor = rows.at(-1)!.source_id;
+  }
+  return { count, hash: digest.digest("hex") };
 }
 
 export function readLegacyMigrationJournal(databasePath: string): LegacyMigrationJournal {
@@ -261,14 +261,12 @@ export class LegacySqliteMigration {
   audit(): LegacyStorageAudit {
     const database = open(this.#databasePath, true);
     try {
-      const rows = sourceRows(database);
+      const proof = sourceProof(database);
       return {
         state: currentState(database),
-        sourceRowCount: rows.length,
-        sourceHash: aggregateSourceHash(rows),
-        externalizationCandidateCount: rows.filter(
-          (row) => Buffer.byteLength(row.observation_json, "utf8") > LEGACY_INLINE_CAP_BYTES,
-        ).length,
+        sourceRowCount: proof.count,
+        sourceHash: proof.hash,
+        externalizationCandidateCount: Number((database.prepare("SELECT COUNT(*) AS count FROM runtime_observations WHERE length(observation_json)>?").get(LEGACY_INLINE_CAP_BYTES) as { count: number }).count),
         inlineCapBytes: LEGACY_INLINE_CAP_BYTES,
       };
     } finally {
@@ -324,14 +322,14 @@ export class LegacySqliteMigration {
       database.exec(migrationSql);
       const postcondition = database.prepare(entry.postconditionQuery).get() as { valid?: number } | undefined;
       if (postcondition?.valid !== 1) throw new Error("migration registry postcondition failed");
-      const auditRows = sourceRows(database);
+      const auditProof = sourceProof(database);
       database
         .prepare(
           `INSERT OR IGNORE INTO legacy_migration_journal
            (migration_id, state, source_count, source_hash, backup_path, updated_at_ms)
            VALUES (?, 'legacy_primary', ?, ?, ?, ?)`,
         )
-        .run(MIGRATION_ID, auditRows.length, aggregateSourceHash(auditRows), this.#backupPath, this.#now());
+        .run(MIGRATION_ID, auditProof.count, auditProof.hash, this.#backupPath, this.#now());
       const state = currentState(database);
       if (state !== "legacy_primary" && state !== "backfill") {
         throw new Error(`backfill is not valid from ${state}`);
@@ -440,12 +438,11 @@ export class LegacySqliteMigration {
     const database = open(this.#databasePath);
     try {
       if (currentState(database) !== "shadow_mirror") throw new Error("shadow mirror required before parity");
-      const rows = sourceRows(database);
-      const sourceHash = aggregateSourceHash(rows);
+      const source = sourceProof(database);
       const target = targetProof(database);
-      if (rows.length !== target.count || sourceHash !== target.hash) throw new Error("first parity mismatch");
+      if (source.count !== target.count || source.hash !== target.hash) throw new Error("first parity mismatch");
       this.#setState(database, "parity_verified");
-      return { sourceCount: rows.length, targetCount: target.count, hash: sourceHash };
+      return { sourceCount: source.count, targetCount: target.count, hash: source.hash };
     } finally {
       database.close();
     }
@@ -476,9 +473,9 @@ export class LegacySqliteMigration {
     const database = open(this.#databasePath);
     try {
       if (currentState(database) !== "legacy_read_hold") throw new Error("legacy read hold required");
-      const rows = sourceRows(database);
+      const source = sourceProof(database);
       const target = targetProof(database);
-      if (rows.length !== target.count || aggregateSourceHash(rows) !== target.hash) {
+      if (source.count !== target.count || source.hash !== target.hash) {
         throw new Error("second parity mismatch");
       }
       database
