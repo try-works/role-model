@@ -7,11 +7,25 @@ test("operates the packaged Track B runtime and cloud-backed recommendation flow
   await expect(page.getByRole("heading", { name: "Contribution, disclosure, and opt-out" })).toBeVisible();
 
   const optOut = page.getByRole("button", { name: "Opt out & clear queue" });
-  if (await optOut.isVisible()) await optOut.click();
+  if (await optOut.isVisible()) {
+    const [response] = await Promise.all([
+      page.waitForResponse((candidate) => candidate.url().includes("/api/role-model/contribution") && candidate.request().method() === "PUT"),
+      optOut.click(),
+    ]);
+    expect(response.ok()).toBeTruthy();
+  }
   await expect(page.getByText("consumer · none")).toBeVisible();
-  await page.getByRole("button", { name: "Re-enable contribution" }).click();
+  const [reenableResponse] = await Promise.all([
+    page.waitForResponse((candidate) => candidate.url().includes("/api/role-model/contribution") && candidate.request().method() === "PUT"),
+    page.getByRole("button", { name: "Re-enable contribution" }).click(),
+  ]);
+  expect(reenableResponse.ok()).toBeTruthy();
   await expect(page.getByText(/pending_disclosure · epoch/)).toBeVisible();
-  await page.getByRole("button", { name: "Review disclosure & authorize" }).click();
+  const [disclosureResponse] = await Promise.all([
+    page.waitForResponse((candidate) => candidate.url().includes("/api/role-model/contribution") && candidate.request().method() === "PUT"),
+    page.getByRole("button", { name: "Review disclosure & authorize" }).click(),
+  ]);
+  expect(disclosureResponse.ok()).toBeTruthy();
   await expect(page.getByText(/active · epoch/)).toBeVisible();
 
   const signatureStatus = page.getByText(/Signature valid · Local policy allows apply/);
@@ -36,7 +50,10 @@ test("operates the packaged Track B runtime and cloud-backed recommendation flow
 
   await page.getByRole("button", { name: "Dry-run" }).click();
   await page.getByRole("button", { name: "Execute plan" }).click();
-  await page.waitForTimeout(300);
+  await expect.poll(async () => {
+    const response = await page.request.get("/api/role-model/storage-retention");
+    return (await response.json()).activeJob?.status;
+  }).toBe("completed");
   await page.reload();
   await expect(page.getByText(/completed · 100%/)).toBeVisible();
   await page.getByRole("button", { name: "Rollback" }).last().click();
@@ -46,4 +63,6 @@ test("operates the packaged Track B runtime and cloud-backed recommendation flow
     body: await page.screenshot({ fullPage: true }),
     contentType: "image/png",
   });
+  if (process.env.RUN00_EVIDENCE_SCREENSHOT)
+    await page.screenshot({ fullPage: true, path: process.env.RUN00_EVIDENCE_SCREENSHOT });
 });
