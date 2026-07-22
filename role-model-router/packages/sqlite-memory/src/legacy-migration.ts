@@ -421,7 +421,8 @@ export class LegacySqliteMigration {
       if (currentState(database) !== "backfill") throw new Error("backfill required before shadow mirror");
       const pending = (database.prepare("SELECT COUNT(*) AS count FROM runtime_observations WHERE request_id NOT IN (SELECT source_id FROM legacy_graph_migration_refs)").get() as { count: number }).count;
       if (pending !== 0) throw new Error("backfill remains incomplete");
-      this.#setState(database, "shadow_mirror");
+      // Persist the live dual-write window so a restart cannot silently extend it.
+      this.#setState(database, "shadow_mirror", { holdUntilMs: input.deadlineMs });
     } finally {
       database.close();
     }
@@ -438,6 +439,10 @@ export class LegacySqliteMigration {
     const database = open(this.#databasePath);
     try {
       if (currentState(database) !== "shadow_mirror") throw new Error("shadow mirror required before parity");
+      const journal = readLegacyMigrationJournal(this.#databasePath);
+      if (journal.holdUntilMs === null || this.#now() > journal.holdUntilMs) {
+        throw new Error("shadow mirror deadline expired; restart backfill before parity");
+      }
       const source = sourceProof(database);
       const target = targetProof(database);
       if (source.count !== target.count || source.hash !== target.hash) throw new Error("first parity mismatch");
@@ -452,6 +457,12 @@ export class LegacySqliteMigration {
     const database = open(this.#databasePath);
     try {
       if (currentState(database) !== "parity_verified") throw new Error("first parity required before cutover");
+      const deadline = database
+        .prepare("SELECT hold_until_ms FROM legacy_migration_journal WHERE migration_id = ?")
+        .get(MIGRATION_ID) as { hold_until_ms: number | null } | undefined;
+      if (!deadline || deadline.hold_until_ms === null || this.#now() > Number(deadline.hold_until_ms)) {
+        throw new Error("shadow mirror deadline expired; cutover is forbidden");
+      }
       this.#setState(database, "graph_primary");
     } finally {
       database.close();

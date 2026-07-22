@@ -657,13 +657,14 @@ export async function main(): Promise<void> {
     if (packagedProfile?.channel === "production" && !trackBManifestText) {
       throw new Error("packaged production runtime is missing its Track B distribution");
     }
-    const createBackend = (trackBOperationsEndpoint?: string) => createRuntimeBridgeBackend({
+    const createBackend = (trackBOperationsEndpoint?: string, trackBOperationsToken?: string) => createRuntimeBridgeBackend({
         fixtureRoot: resolveCliFixtureRoot(options.repoRoot, args.values["fixture-root"]),
         repoRoot: options.repoRoot,
         runtimeStateRoot: options.runtimeStateRoot,
         scopeId: options.scopeId,
         unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
         ...(trackBOperationsEndpoint ? { trackBOperationsEndpoint } : {}),
+        ...(trackBOperationsToken ? { trackBOperationsToken } : {}),
         ...(extensionRuntime ? { trackBExtensionHealth: () => extensionRuntime!.health() } : {}),
       });
     if (trackBManifestText && trackBManifestPath) {
@@ -699,7 +700,8 @@ export async function main(): Promise<void> {
           artifactDigestKeyFile: args.values["artifact-digest-key-file"] ?? process.env.ROLE_MODEL_ARTIFACT_DIGEST_KEY_FILE,
           artifactEncryptionKeyFile: args.values["artifact-encryption-key-file"] ?? process.env.ROLE_MODEL_ARTIFACT_ENCRYPTION_KEY_FILE,
         }),
-        createBackend: ({ trackBOperationsEndpoint }) => createBackend(trackBOperationsEndpoint),
+        createBackend: ({ trackBOperationsEndpoint, trackBOperationsToken }) =>
+          createBackend(trackBOperationsEndpoint, trackBOperationsToken),
       });
       backend = packagedRuntime.backend;
     } else {

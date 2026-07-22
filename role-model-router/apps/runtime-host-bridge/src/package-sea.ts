@@ -7,6 +7,7 @@ import {
   mkdir,
   readFile,
   readdir,
+  rename,
   rm,
   utimes,
   writeFile,
@@ -301,7 +302,20 @@ async function ensureGoCache(): Promise<void> {
 async function gzipAsset(filePath: string): Promise<string> {
   const content = await readFile(filePath);
   const gzPath = `${filePath}.gz`;
-  await writeFile(gzPath, gzipSync(content, { level: 9 }));
+  const tempPath = `${gzPath}.${process.pid}.${Date.now()}.tmp`;
+  await writeFile(tempPath, gzipSync(content, { level: 9 }));
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    try {
+      await rename(tempPath, gzPath);
+      return gzPath;
+    } catch (error) {
+      if (attempt === 9) {
+        await rm(tempPath, { force: true }).catch(() => undefined);
+        throw error;
+      }
+      await delay(50 * (attempt + 1));
+    }
+  }
   return gzPath;
 }
 

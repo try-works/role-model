@@ -38,6 +38,7 @@ describe("production Track B composition", () => {
           lifecycle.push("start");
           return {
             endpoint: "http://127.0.0.1:43123",
+            operationsToken: "a".repeat(64),
             pid: 43123,
             exited: false,
             stop: async () => lifecycle.push("stop"),
@@ -83,7 +84,8 @@ describe("production Track B composition", () => {
     const source = [
       'import http from "node:http";',
       'const required=["--channel","production","--artifact-digest-key-file",process.env.EXPECTED_DIGEST_KEY,"--artifact-encryption-key-file",process.env.EXPECTED_ENCRYPTION_KEY];',
-      'if(required.some(value=>!process.argv.includes(value))){console.error("missing managed production arguments");process.exit(2)}',
+       'if(required.some(value=>!process.argv.includes(value))){console.error("missing managed production arguments");process.exit(2)}',
+       'if(!/^[a-f0-9]{64}$/i.test(process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN||"")){console.error("missing ephemeral operations token");process.exit(3)}',
       'const server=http.createServer((_req,res)=>{res.end("ok")});',
       'server.listen(0,"127.0.0.1",()=>{',
       ' const address=server.address();',
@@ -100,6 +102,7 @@ describe("production Track B composition", () => {
     const child = await sidecar.launch();
     expect(child.pid).toBeGreaterThan(0);
     expect(child.endpoint).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+    expect(child.operationsToken).toMatch(/^[a-f0-9]{64}$/);
     expect(child.exited).toBe(false);
     await child.stop();
 
@@ -119,6 +122,7 @@ describe("production Track B composition", () => {
         lifecycle.push("sidecar:start");
         return {
           endpoint: "http://127.0.0.1:45678",
+          operationsToken: "b".repeat(64),
           pid: 45678,
           exited: false,
           stop: async () => lifecycle.push("sidecar:stop"),
@@ -129,20 +133,21 @@ describe("production Track B composition", () => {
       stateRoot,
       sidecar,
       createBackend: async options => {
-        lifecycle.push(`backend:${options.trackBOperationsEndpoint}`);
+        lifecycle.push(`backend:${options.trackBOperationsEndpoint}:${options.trackBOperationsToken ?? "missing"}`);
+        expect(options.trackBOperationsToken).toMatch(/^[a-f0-9]{64}$/);
         return { close: async () => lifecycle.push("backend:close") };
       },
     });
 
     expect(lifecycle).toEqual([
       "sidecar:start",
-      "backend:http://127.0.0.1:45678",
+      expect.stringMatching(/^backend:http:\/\/127\.0\.0\.1:45678:[a-f0-9]{64}$/),
     ]);
     expect(composed.trackB.health()).toMatchObject({ sidecar: { status: "ready" } });
     await composed.close();
     expect(lifecycle).toEqual([
       "sidecar:start",
-      "backend:http://127.0.0.1:45678",
+      expect.stringMatching(/^backend:http:\/\/127\.0\.0\.1:45678:[a-f0-9]{64}$/),
       "backend:close",
       "sidecar:stop",
     ]);

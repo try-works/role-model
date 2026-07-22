@@ -1,11 +1,13 @@
 import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { copyFile, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { createInterface } from "node:readline";
 
 export interface OwnedTrackBSidecarProcess {
   endpoint: string;
+  /** Ephemeral launcher-issued bearer token; never persisted or logged. */
+  operationsToken: string;
   pid: number;
   exited: boolean;
   stop(): Promise<void>;
@@ -24,6 +26,7 @@ export interface TrackBProductionRuntimeOptions {
 
 export interface PackagedProductionBackendOptions {
   readonly trackBOperationsEndpoint: string;
+  readonly trackBOperationsToken: string;
 }
 
 const trackBServerOperationNames = [
@@ -176,7 +179,10 @@ export async function createPackagedProductionRuntime<Backend extends {
   const started = await trackB.start();
   let backend: Backend;
   try {
-    backend = await options.createBackend({ trackBOperationsEndpoint: started.operationsEndpoint });
+    backend = await options.createBackend({
+      trackBOperationsEndpoint: started.operationsEndpoint,
+      trackBOperationsToken: started.operationsToken,
+    });
   } catch (error) {
     await trackB.stop();
     throw error;
@@ -214,6 +220,7 @@ export function createOwnedTrackBSidecarSpec(options: {
         throw new Error("Track B sidecar integrity verification failed");
       }
 
+      const operationsToken = randomBytes(32).toString("hex");
       const child = spawn(
         process.execPath,
         [
@@ -225,7 +232,14 @@ export function createOwnedTrackBSidecarSpec(options: {
           ...(options.artifactDigestKeyFile ? ["--artifact-digest-key-file", options.artifactDigestKeyFile] : []),
           ...(options.artifactEncryptionKeyFile ? ["--artifact-encryption-key-file", options.artifactEncryptionKeyFile] : []),
         ],
-        { stdio: ["ignore", "pipe", "pipe"], windowsHide: true },
+        {
+          stdio: ["ignore", "pipe", "pipe"],
+          windowsHide: true,
+          env: {
+            ...process.env,
+            ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN: operationsToken,
+          },
+        },
       );
       let exited = false;
       let ready = false;
@@ -274,6 +288,7 @@ export function createOwnedTrackBSidecarSpec(options: {
 
       return {
         endpoint,
+        operationsToken,
         pid: child.pid,
         get exited() {
           return exited;
@@ -314,6 +329,7 @@ export function createTrackBProductionRuntime(options: TrackBProductionRuntimeOp
       if (processHandle && !processHandle.exited) {
         return {
           operationsEndpoint: processHandle.endpoint,
+          operationsToken: processHandle.operationsToken,
           sidecar: { ownedByLauncher: true, supervised: true, pid: processHandle.pid },
         };
       }
@@ -330,6 +346,7 @@ export function createTrackBProductionRuntime(options: TrackBProductionRuntimeOp
         status = "ready";
         return {
           operationsEndpoint: processHandle.endpoint,
+          operationsToken: processHandle.operationsToken,
           sidecar: { ownedByLauncher: true, supervised: true, pid: processHandle.pid },
         };
       } catch (error) {

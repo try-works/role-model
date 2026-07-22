@@ -190,6 +190,33 @@ describe("TB04 real SQLite legacy migration", () => {
     expect(readLegacyMigrationJournal(databasePath).state).toBe("legacy_retired");
   });
 
+  test("persists the bounded shadow deadline and refuses parity after it expires", () => {
+    const { databasePath, backupPath } = fixture();
+    let now = 1_000;
+    const migration = new LegacySqliteMigration({
+      databasePath,
+      backupPath,
+      now: () => now,
+      artifactWriter: ({ sourceId, contentHash }) => ({
+        artifactId: `artifact-${sourceId}`,
+        artifactPath: `artifact://${sourceId}`,
+        contentHash,
+      }),
+    });
+    while (migration.backfill({ scopeId: "scope-1", batchSize: 10 }).pendingCount > 0) {
+      // exhaust the bounded backfill before entering the live shadow window
+    }
+
+    migration.enterShadowMirror({ deadlineMs: 1_500 });
+    expect(readLegacyMigrationJournal(databasePath).holdUntilMs).toBe(1_500);
+    now = 1_501;
+    expect(() => migration.verifyParity({
+      backupVerified: true,
+      restoreVerified: true,
+      consumersVerified: true,
+    })).toThrow(/shadow mirror deadline expired/i);
+  });
+
   test("rollback restores the populated legacy database and removes backfilled artifacts", () => {
     const { databasePath, backupPath, rich } = fixture();
     const artifacts = new Set<string>();

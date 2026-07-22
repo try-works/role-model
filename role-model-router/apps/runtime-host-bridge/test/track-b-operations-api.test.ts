@@ -25,6 +25,21 @@ afterEach(async () => {
 });
 
 describe("Track B operations APIs", () => {
+  test("fails closed instead of issuing unauthenticated calls to an owned operations endpoint", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-operations-auth-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId: "track-b-operations-auth",
+      trackBOperationsEndpoint: "http://127.0.0.1:1",
+    });
+
+    await expect(backend.readStorageRetention()).rejects.toThrow(/launcher-issued authentication token/i);
+    await backend.shutdown();
+  });
+
   test("serves extension lifecycle and storage retention through bounded callbacks", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-operations-${Date.now()}`);
     roots.push(runtimeStateRoot);
@@ -292,7 +307,7 @@ describe("Track B operations APIs", () => {
     if (!address || typeof address === "string") throw new Error("operations server did not bind");
     const trackBOperationsEndpoint = `http://127.0.0.1:${address.port}`;
     delete process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL;
-    process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN = "test-operations-token";
+    process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN = "a".repeat(64);
     const backend = await createRuntimeBridgeBackend({
       repoRoot,
       fixtureRoot,
@@ -325,7 +340,7 @@ describe("Track B operations APIs", () => {
       const capture = received.find((entry) => entry.path === "/capture/route");
       expect(aggregate).toMatchObject({
         path: "/contribution/aggregate",
-        authorization: "Bearer test-operations-token",
+        authorization: `Bearer ${"a".repeat(64)}`,
         body: {
           requestId: "req-track-b-upload-001",
           routingDecisionId: result.routingDecisionId,

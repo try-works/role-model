@@ -248,13 +248,14 @@ const privateRetentionRequest = async (
   init: { readonly method?: string; readonly body?: Record<string, unknown> } = {},
 ): Promise<unknown | null> => {
   if (!endpoint) return null;
+  if (!token || token.trim().length < 24) {
+    throw new Error("Track B private operations boundary requires a launcher-issued authentication token");
+  }
   const response = await fetch(new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`), {
     method: init.method ?? "GET",
     headers: {
       ...(init.body ? { "content-type": "application/json" } : {}),
-      ...(token
-        ? { authorization: `Bearer ${token}` }
-        : {}),
+      authorization: `Bearer ${token}`,
     },
     ...(init.body ? { body: JSON.stringify(init.body) } : {}),
   });
