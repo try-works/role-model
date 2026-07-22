@@ -348,28 +348,31 @@ export class LegacySqliteMigration {
         migratedCount += 1;
       }
       if (tableExists(database, "observed_performance_samples")) {
-        const samples = database
-          .prepare("SELECT sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json FROM observed_performance_samples")
-          .all() as Array<Record<string, string | number | null>>;
+        const sampleForRequest = database.prepare(
+          "SELECT sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json FROM observed_performance_samples WHERE request_id = ? ORDER BY sample_id ASC",
+        );
         const insert = database.prepare(
           `INSERT OR IGNORE INTO normalized_performance_samples_v2
            (sample_id, endpoint_id, model_id, request_id, routing_decision_id, source_type,
             timestamp_ms, latency_ms, success, source_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         );
-        for (const sample of samples) {
-          const parsed = JSON.parse(String(sample.sample_json)) as Record<string, unknown>;
-          insert.run(
-            sample.sample_id,
-            sample.endpoint_id,
-            typeof parsed.model_id === "string" ? parsed.model_id : null,
-            sample.request_id,
-            sample.routing_decision_id,
-            sample.source_type,
-            sample.timestamp_ms,
-            typeof parsed.latency_ms === "number" ? parsed.latency_ms : null,
-            typeof parsed.success === "boolean" ? Number(parsed.success) : null,
-            sha256(String(sample.sample_json)),
-          );
+        for (const row of rows) {
+          const samples = sampleForRequest.all(row.request_id) as Array<Record<string, string | number | null>>;
+          for (const sample of samples) {
+            const parsed = JSON.parse(String(sample.sample_json)) as Record<string, unknown>;
+            insert.run(
+              sample.sample_id,
+              sample.endpoint_id,
+              typeof parsed.model_id === "string" ? parsed.model_id : null,
+              sample.request_id,
+              sample.routing_decision_id,
+              sample.source_type,
+              sample.timestamp_ms,
+              typeof parsed.latency_ms === "number" ? parsed.latency_ms : null,
+              typeof parsed.success === "boolean" ? Number(parsed.success) : null,
+              sha256(String(sample.sample_json)),
+            );
+          }
         }
       }
       const proof = targetProof(database);

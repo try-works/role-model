@@ -62,6 +62,20 @@ function fixture() {
     );
   database
     .prepare(
+      `INSERT INTO runtime_observations
+       (request_id, routing_decision_id, endpoint_id, conversation_id, created_at_ms, observation_json)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+    )
+    .run("request-2", "route-2", "endpoint-2", "conversation-2", 101, JSON.stringify({ requestId: "request-2" }));
+  database
+    .prepare(
+      `INSERT INTO observed_performance_samples
+       (sample_id, endpoint_id, request_id, routing_decision_id, source_type, timestamp_ms, sample_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run("sample-2", "endpoint-2", "request-2", "route-2", "live_request", 101, JSON.stringify({ endpoint_id: "endpoint-2", model_id: "model-2", request_id: "request-2", routing_decision_id: "route-2", source_type: "live_request", timestamp_ms: 101, latency_ms: 30, success: true }));
+  database
+    .prepare(
       `INSERT INTO observed_profile_snapshots
        (snapshot_id, endpoint_id, measured_at_ms, profile_json)
        VALUES (?, ?, ?, ?)`,
@@ -101,11 +115,11 @@ describe("TB04 real SQLite legacy migration", () => {
 
     expect(audit).toMatchObject({
       state: "legacy_primary",
-      sourceRowCount: 1,
+      sourceRowCount: 2,
       externalizationCandidateCount: 1,
       inlineCapBytes: 16 * 1024,
     });
-    expect(audit.sourceHash).toBe(sha256(`request-1\0${sha256(rich)}`));
+    expect(audit.sourceHash).toBe(sha256(`request-1\0${sha256(rich)}\nrequest-2\0${sha256(JSON.stringify({ requestId: "request-2" }))}`));
     expect(readFileSync(databasePath)).toEqual(before);
   });
 
@@ -127,10 +141,16 @@ describe("TB04 real SQLite legacy migration", () => {
     });
 
     const first = migration.backfill({ scopeId: "scope-1", batchSize: 1 });
+    const firstDatabase = new DatabaseSync(databasePath);
+    const firstNormalizedCount = (
+      firstDatabase.prepare("SELECT COUNT(*) AS count FROM normalized_performance_samples_v2").get() as { count: number }
+    ).count;
+    firstDatabase.close();
     const resumed = migration.backfill({ scopeId: "scope-1", batchSize: 1 });
-    expect(first).toMatchObject({ migratedCount: 1, pendingCount: 0 });
-    expect(resumed).toMatchObject({ migratedCount: 0, pendingCount: 0 });
-    expect(artifacts).toHaveLength(1);
+    expect(first).toMatchObject({ migratedCount: 1, pendingCount: 1 });
+    expect(firstNormalizedCount).toBe(1);
+    expect(resumed).toMatchObject({ migratedCount: 1, pendingCount: 0 });
+    expect(artifacts).toHaveLength(2);
 
     migration.enterShadowMirror({ deadlineMs: 2_000 });
     const firstParity = migration.verifyParity({
@@ -184,7 +204,7 @@ describe("TB04 real SQLite legacy migration", () => {
       artifactRollback: ({ artifactId }) => artifacts.delete(artifactId),
     });
     migration.backfill({ scopeId: "scope-1", batchSize: 10 });
-    expect(artifacts.size).toBe(1);
+    expect(artifacts.size).toBe(2);
 
     migration.rollback();
 
