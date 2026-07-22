@@ -420,6 +420,8 @@ export function createTrackBOperations({
       )
         throw new Error("matching hash-bound retention plan required");
       if (plan.blocks.length) throw new Error(`retention plan blocked: ${plan.blocks.join(", ")}`);
+      if (!operationsEndpoint)
+        throw new Error("private operations endpoint is required for retention execution");
       const job: RetentionJob = {
         id: `prune-${plan.manifestHash.slice(0, 12)}`,
         status: "running",
@@ -452,6 +454,8 @@ export function createTrackBOperations({
     async cancelStorageRetentionJob(): Promise<unknown> {
       const remote = await requestPrivate("storage-retention/cancel", { method: "POST" });
       if (remote) return remote;
+      if (!operationsEndpoint)
+        throw new Error("private operations endpoint is required for retention cancellation");
       const state = await readState(statePath);
       if (!state.retention.activeJob || state.retention.activeJob.status !== "running")
         throw new Error("no cancellable retention job");
@@ -472,6 +476,8 @@ export function createTrackBOperations({
         body: input,
       });
       if (remote) return remote;
+      if (!operationsEndpoint)
+        throw new Error("private operations endpoint is required for retention rollback");
       const state = await readState(statePath);
       const source = state.retention.receipts.find(
         (item) => (item as { id?: unknown }).id === input.receiptId,

@@ -507,13 +507,12 @@ describe("Track B operations APIs", () => {
       const replanned = (await backend.dryRunStorageRetention()) as {
         currentPlan: { manifestHash: string };
       };
-      const started = await backend.executeStorageRetention({
-        manifestHash: replanned.currentPlan.manifestHash,
-        scope: "global",
-      });
-      expect(started).toMatchObject({ activeJob: { status: "running", progress: 0 } });
-      const cancelled = await backend.cancelStorageRetentionJob();
-      expect(cancelled).toMatchObject({ activeJob: { status: "cancelled" } });
+      await expect(
+        backend.executeStorageRetention({
+          manifestHash: replanned.currentPlan.manifestHash,
+          scope: "global",
+        }),
+      ).rejects.toThrow(/private operations endpoint/i);
       const contribution = await backend.updateContributionState({ action: "opt_out" });
       expect(contribution).toMatchObject({
         allowCloudUpload: false,
