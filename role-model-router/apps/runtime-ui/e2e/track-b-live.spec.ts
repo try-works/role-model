@@ -28,11 +28,11 @@ test("operates the packaged Track B runtime and cloud-backed recommendation flow
   expect(disclosureResponse.ok()).toBeTruthy();
   await expect(page.getByText(/active · epoch/)).toBeVisible();
 
-  const signatureStatus = page.getByText(/Signature valid · Local policy allows apply/);
+  const signatureStatus = page.getByText(/Signature valid · Local policy allows apply/).first();
   if (!(await signatureStatus.isVisible()))
     await page.getByRole("button", { name: "Download & validate latest" }).click();
   await expect(signatureStatus).toBeVisible();
-  await page.getByRole("button", { name: "Validate & apply" }).click();
+  await page.getByRole("button", { name: "Validate & apply" }).first().click();
   await expect(page.getByText("applied", { exact: true })).toBeVisible();
   await expect(page.getByText("Endpoint").first()).toBeVisible();
   await expect(page.getByText(/deepseek/i).first()).toBeVisible();

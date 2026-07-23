@@ -9,26 +9,8 @@ import {
 } from "react-router";
 
 import "./app.css";
+import { BOOT_THEME_PALETTES } from "./lib/theme";
 import NotFoundRoute from "./routes/not-found";
-
-const bootThemePalettes = {
-  dark: {
-    accent: "#5e6ad2",
-    bg: "#010102",
-    border: "#23252a",
-    fg: "#f7f8f8",
-    secondary: "#d0d6e0",
-    surface: "#0f1011",
-  },
-  light: {
-    accent: "#5e6ad2",
-    bg: "#ffffff",
-    border: "#e3e6ec",
-    fg: "#0f1115",
-    secondary: "#3a4150",
-    surface: "#f7f8f8",
-  },
-} as const;
 
 export const links = () => [
   // Keep the packaged runtime shell self-contained so first paint never waits on remote assets.
@@ -58,7 +40,7 @@ export const links = () => [
 const themeBootstrapScript = `
 (() => {
   try {
-    const palettes = ${JSON.stringify(bootThemePalettes)};
+    const palettes = ${JSON.stringify(BOOT_THEME_PALETTES)};
     const key = "role-model-runtime-theme";
     const stored = window.localStorage.getItem(key);
     const theme =
@@ -66,12 +48,13 @@ const themeBootstrapScript = `
         ? stored
         : "dark";
     const palette = palettes[theme] ?? palettes.dark;
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme;
-    document.documentElement.style.backgroundColor = palette.bg;
-    document.documentElement.style.color = palette.fg;
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme;
+    root.style.backgroundColor = palette.bg;
+    root.style.color = palette.fg;
     for (const [token, value] of Object.entries(palette)) {
-      document.documentElement.style.setProperty(\`--rm-\${token}\`, value);
+      root.style.setProperty(\`--rm-\${token}\`, value);
     }
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
