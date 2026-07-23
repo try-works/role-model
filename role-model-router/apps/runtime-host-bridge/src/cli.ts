@@ -750,7 +750,20 @@ export async function main(): Promise<void> {
         unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
         ...(trackBOperationsEndpoint ? { trackBOperationsEndpoint } : {}),
         ...(trackBOperationsToken ? { trackBOperationsToken } : {}),
-        ...(extensionRuntime ? { trackBExtensionHealth: () => extensionRuntime?.health() } : {}),
+        ...(extensionRuntime
+          ? {
+              trackBExtensionHealth: (() => {
+                const runtime = extensionRuntime;
+                return () => {
+                  const health = runtime.health();
+                  return {
+                    host: health.host as { readonly extensions?: readonly string[] },
+                    supervisor: health.supervisor,
+                  };
+                };
+              })(),
+            }
+          : {}),
       });
     if (trackBManifestText && trackBManifestPath) {
       const manifest = JSON.parse(trackBManifestText) as {
