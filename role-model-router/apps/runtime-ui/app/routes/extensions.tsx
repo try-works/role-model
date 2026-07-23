@@ -228,6 +228,19 @@ export function ExtensionsRouteView() {
                   {row.signatureValid ? "Signature valid" : "Signature invalid"} ·{" "}
                   {row.policyAllowed ? "Local policy allows apply" : "Blocked by local policy"}
                 </p>
+                {row.endpointId || row.modelId || row.preferredFor?.length || row.confidence ? (
+                  <dl className="mt-3 grid gap-x-4 gap-y-2 sm:grid-cols-2">
+                    {row.endpointId ? <Detail label="Endpoint" value={row.endpointId} /> : null}
+                    {row.modelId ? <Detail label="Model" value={row.modelId} /> : null}
+                    {row.preferredFor?.length ? (
+                      <Detail label="Preferred for" value={row.preferredFor.join(", ")} />
+                    ) : null}
+                    {row.action ? <Detail label="Action" value={row.action} /> : null}
+                    {typeof row.confidence === "number" ? (
+                      <Detail label="Confidence" value={row.confidence.toFixed(2)} />
+                    ) : null}
+                  </dl>
+                ) : null}
                 <button
                   className={`${secondaryButtonClassName} mt-3`}
                   disabled={

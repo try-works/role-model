@@ -1,5 +1,5 @@
 import { createHash, createHmac, createPublicKey, generateKeyPairSync, sign } from "node:crypto";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -10,6 +10,7 @@ import { LegacySqliteMigration } from "../../../packages/sqlite-memory/src/legac
 
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 import { applyRecommendationServiceLauncherConfig } from "../src/cli.js";
+import { seedTrackBExtensionBridgeState } from "../src/track-b-operations.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const fixtureRoot = path.join(import.meta.dirname, "fixtures");
@@ -233,6 +234,44 @@ describe("Track B operations APIs", () => {
       expect(
         rows.every(
           (row) => !row.installed && row.lifecycle === "unavailable" && !row.health.available,
+        ),
+      ).toBe(true);
+    } finally {
+      await backend.shutdown();
+    }
+  });
+
+  test("local Track B bridge seed marks catalog extensions ready without ExtensionHost override", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-seeded-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const contract = JSON.parse(
+      await readFile(
+        path.join(repoRoot, "packages", "protocol-types", "generated", "product-contracts.json"),
+        "utf8",
+      ),
+    ) as { extensions: readonly Record<string, unknown>[] };
+    await seedTrackBExtensionBridgeState({
+      statePath: path.join(runtimeStateRoot, "production", "track-b-production-bridge.json"),
+      catalog: contract.extensions,
+    });
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId: "production",
+    });
+    try {
+      const rows = (await backend.listExtensions()) as readonly {
+        id: string;
+        installed: boolean;
+        lifecycle: string;
+        enabled: boolean;
+        health: { available: boolean };
+      }[];
+      expect(rows).toHaveLength(13);
+      expect(
+        rows.every(
+          (row) => row.installed && row.enabled && row.lifecycle === "ready" && row.health.available,
         ),
       ).toBe(true);
     } finally {
@@ -771,6 +810,10 @@ describe("Track B operations APIs", () => {
         id: string;
         status: string;
         signatureValid: boolean;
+        endpointId?: string;
+        modelId?: string;
+        preferredFor?: readonly string[];
+        confidence?: number;
       }[];
       expect(downloaded).toEqual([
         {
@@ -780,7 +823,12 @@ describe("Track B operations APIs", () => {
           status: "validated",
           signatureValid: true,
           policyAllowed: true,
-        },
+        endpointId: "deepseek.run00.dev.global.deepseek-chat",
+        modelId: "deepseek-chat",
+        preferredFor: ["general.chat"],
+        action: "prefer",
+        confidence: 0.92,
+      },
       ]);
       const applied = await backend.applyRecommendation({ id: "recommendation-pack-downloaded" });
       expect(applied).toMatchObject({

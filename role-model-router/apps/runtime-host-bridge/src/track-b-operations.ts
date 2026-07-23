@@ -99,6 +99,11 @@ type RecommendationRecord = {
   readonly signatureValid: boolean;
   readonly policyAllowed: boolean;
   readonly provenance: string;
+  readonly endpointId?: string;
+  readonly modelId?: string;
+  readonly preferredFor?: readonly string[];
+  readonly action?: string;
+  readonly confidence?: number;
 };
 type ArtifactBundleImport = {
   readonly manifest: Record<string, unknown>;
@@ -208,6 +213,50 @@ const writeState = async (statePath: string, state: BridgeState) => {
   await writeFile(temporary, `${JSON.stringify(state, null, 2)}\n`, "utf8");
   await rename(temporary, statePath);
 };
+
+/** Seed local Track B bridge state so Extension boundary reflects registered packages. */
+export async function seedTrackBExtensionBridgeState(options: {
+  readonly statePath: string;
+  readonly catalog: readonly Record<string, unknown>[];
+  readonly channel?: string;
+  readonly scope?: string;
+  readonly authorizationEpoch?: number;
+}): Promise<BridgeState> {
+  const channel = options.channel ?? "production";
+  const scope = options.scope ?? "global";
+  const authorizationEpoch = options.authorizationEpoch ?? 1;
+  const previous = await readState(options.statePath);
+  const byId = new Map(previous.extensions.map((row) => [row.id, row]));
+  const extensions: LifecycleRecord[] = options.catalog.map((entry) => {
+    const id = String(entry.id ?? "");
+    const existing = byId.get(id);
+    if (existing) return existing;
+    return {
+      id,
+      lifecycle: "ready",
+      enabled: true,
+      channel,
+      scope,
+      authorizationEpoch,
+      health: {
+        available: true,
+        routingDependency: Boolean(entry.routingDependency),
+        reason: "local_bridge_seed",
+      },
+    };
+  });
+  const next: BridgeState = {
+    ...previous,
+    schemaVersion: EMPTY_STATE.schemaVersion,
+    protocolVersion: "1.0",
+    revision: Math.max(1, previous.revision + 1),
+    generatedAt: new Date().toISOString(),
+    extensions,
+  };
+  await writeState(options.statePath, validate(next));
+  return next;
+}
+
 const sha256 = (value: string | Buffer) => createHash("sha256").update(value).digest("hex");
 const publicKeyFromTrust = (verificationKey: string) => {
   if (verificationKey.includes("BEGIN PUBLIC KEY")) return createPublicKey(verificationKey);
@@ -290,6 +339,13 @@ const importArtifactBundleRecords = (
         status: "validated",
         signatureValid: true,
         policyAllowed,
+        ...(typeof record.endpointId === "string" ? { endpointId: record.endpointId } : {}),
+        ...(typeof record.modelId === "string" ? { modelId: record.modelId } : {}),
+        ...(Array.isArray(record.preferredFor) && record.preferredFor.every((value) => typeof value === "string")
+          ? { preferredFor: record.preferredFor }
+          : {}),
+        ...(typeof record.action === "string" ? { action: record.action } : {}),
+        ...(typeof record.confidence === "number" ? { confidence: record.confidence } : {}),
       });
     }
   }

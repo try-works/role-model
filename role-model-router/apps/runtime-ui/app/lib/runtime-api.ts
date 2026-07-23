@@ -1525,6 +1525,11 @@ export interface RuntimeRecommendation {
   readonly signatureValid: boolean;
   readonly policyAllowed: boolean;
   readonly provenance: string;
+  readonly endpointId?: string;
+  readonly modelId?: string;
+  readonly preferredFor?: readonly string[];
+  readonly action?: string;
+  readonly confidence?: number;
 }
 export interface RuntimeActivePack {
   readonly id: string;

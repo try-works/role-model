@@ -7,7 +7,7 @@
     ".": {
       "types": "./src/index.ts",
       "runtime": "./dist/index.js",
-      "default": "./src/index.ts"
+      "default": "./dist/index.js"
     }
   },
   "files": ["src", "dist"],

@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,6 +16,7 @@ import {
   createRuntimeBridgeBackend,
   startBridgeServer,
 } from "../src/index.js";
+import { seedTrackBExtensionBridgeState } from "../src/track-b-operations.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -617,6 +618,32 @@ export async function main(): Promise<void> {
 
   await seedQaTelemetry(repoRoot, runtimeStateRoot, scopeId);
   console.log(`[QA] Seeded deterministic telemetry request: ${qaTelemetryRequestIds.measured}`);
+
+  const productContractsPath = path.join(
+    repoRoot,
+    "packages",
+    "protocol-types",
+    "generated",
+    "product-contracts.json",
+  );
+  const productContracts = JSON.parse(await readFile(productContractsPath, "utf8")) as {
+    readonly extensions?: readonly Record<string, unknown>[];
+  };
+  const trackBBridgePath = path.join(
+    runtimeStateRoot,
+    scopeId,
+    "track-b-production-bridge.json",
+  );
+  const seeded = await seedTrackBExtensionBridgeState({
+    statePath: trackBBridgePath,
+    catalog: productContracts.extensions ?? [],
+    channel: "production",
+    scope: "global",
+    authorizationEpoch: 1,
+  });
+  console.log(
+    `[QA] Seeded Track B extension bridge: ${seeded.extensions.length} packages at ${trackBBridgePath}`,
+  );
 
   const backend = await createRuntimeBridgeBackend(
     createQaRuntimeBridgeBackendOptions(repoRoot, runtimeStateRoot, scopeId),

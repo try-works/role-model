@@ -34,7 +34,9 @@ test("operates the packaged Track B runtime and cloud-backed recommendation flow
   await expect(signatureStatus).toBeVisible();
   await page.getByRole("button", { name: "Validate & apply" }).click();
   await expect(page.getByText("applied", { exact: true })).toBeVisible();
-  await expect(page.getByText(/^route-[a-f0-9]{16}$/).first()).toBeVisible();
+  await expect(page.getByText("Endpoint").first()).toBeVisible();
+  await expect(page.getByText(/deepseek/i).first()).toBeVisible();
+  await expect(page.getByText("Preferred for").first()).toBeVisible();
 
   await page.goto("/app/system/storage-retention");
   await expect(page.getByRole("heading", { name: "Retention policy editor" })).toBeVisible();
