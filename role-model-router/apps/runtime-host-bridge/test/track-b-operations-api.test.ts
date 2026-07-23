@@ -4,12 +4,15 @@ import { createServer } from "node:http";
 import os from "node:os";
 import path from "node:path";
 
+import {
+  readRuntimeObservationBundle,
+  resolveSqliteMemoryLocation,
+} from "@role-model-router/sqlite-memory";
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { readRuntimeObservationBundle, resolveSqliteMemoryLocation } from "@role-model-router/sqlite-memory";
 import { LegacySqliteMigration } from "../../../packages/sqlite-memory/src/legacy-migration.js";
 
-import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 import { applyRecommendationServiceLauncherConfig } from "../src/cli.js";
+import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 import { seedTrackBExtensionBridgeState } from "../src/track-b-operations.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
@@ -20,7 +23,10 @@ const canonicalJson = (value: unknown): string =>
     : value && typeof value === "object"
       ? `{${Object.keys(value)
           .sort()
-          .map((key) => `${JSON.stringify(key)}:${canonicalJson((value as Record<string, unknown>)[key])}`)
+          .map(
+            (key) =>
+              `${JSON.stringify(key)}:${canonicalJson((value as Record<string, unknown>)[key])}`,
+          )
           .join(",")}}`
       : JSON.stringify(value);
 const roots: string[] = [];
@@ -47,7 +53,9 @@ describe("Track B operations APIs", () => {
       trackBOperationsEndpoint: "http://127.0.0.1:1",
     });
 
-    await expect(backend.readStorageRetention()).rejects.toThrow(/launcher-issued authentication token/i);
+    await expect(backend.readStorageRetention()).rejects.toThrow(
+      /launcher-issued authentication token/i,
+    );
     await backend.shutdown();
   });
 
@@ -271,7 +279,8 @@ describe("Track B operations APIs", () => {
       expect(rows).toHaveLength(13);
       expect(
         rows.every(
-          (row) => row.installed && row.enabled && row.lifecycle === "ready" && row.health.available,
+          (row) =>
+            row.installed && row.enabled && row.lifecycle === "ready" && row.health.available,
         ),
       ).toBe(true);
     } finally {
@@ -294,11 +303,27 @@ describe("Track B operations APIs", () => {
     });
     try {
       const rows = (await backend.listExtensions()) as readonly {
-        id: string; installed: boolean; lifecycle: string; health: { available: boolean };
+        id: string;
+        installed: boolean;
+        lifecycle: string;
+        health: { available: boolean };
       }[];
-      expect(rows.filter(row => row.health.available).map(row => row.id).sort()).toEqual(["artifact-store", "event-log"]);
-      expect(rows.find(row => row.id === "artifact-store")).toMatchObject({ installed: true, lifecycle: "ready", health: { available: true } });
-      expect(rows.find(row => row.id === "repository-context")).toMatchObject({ installed: false, lifecycle: "unavailable", health: { available: false } });
+      expect(
+        rows
+          .filter((row) => row.health.available)
+          .map((row) => row.id)
+          .sort(),
+      ).toEqual(["artifact-store", "event-log"]);
+      expect(rows.find((row) => row.id === "artifact-store")).toMatchObject({
+        installed: true,
+        lifecycle: "ready",
+        health: { available: true },
+      });
+      expect(rows.find((row) => row.id === "repository-context")).toMatchObject({
+        installed: false,
+        lifecycle: "unavailable",
+        health: { available: false },
+      });
     } finally {
       await backend.shutdown();
     }
@@ -334,7 +359,8 @@ describe("Track B operations APIs", () => {
   test("production request completion reports only aggregate metrics to the private operations boundary", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-production-upload-${Date.now()}`);
     roots.push(runtimeStateRoot);
-    const received: Array<{ path: string; authorization?: string; body: Record<string, unknown> }> = [];
+    const received: Array<{ path: string; authorization?: string; body: Record<string, unknown> }> =
+      [];
     const operations = createServer(async (request, response) => {
       const chunks: Buffer[] = [];
       for await (const chunk of request) chunks.push(Buffer.from(chunk));
@@ -344,9 +370,18 @@ describe("Track B operations APIs", () => {
         body: JSON.parse(Buffer.concat(chunks).toString("utf8")),
       });
       response.writeHead(200, { "content-type": "application/json" });
-      response.end(JSON.stringify(request.url === "/capture/route"
-        ? { status: "captured", scope: "tenant:production-upload", rootArtifactId: "artifact-route-capture", rootArtifactDigest: "a".repeat(64) }
-        : { status: "accepted" }));
+      response.end(
+        JSON.stringify(
+          request.url === "/capture/route"
+            ? {
+                status: "captured",
+                scope: "tenant:production-upload",
+                rootArtifactId: "artifact-route-capture",
+                rootArtifactDigest: "a".repeat(64),
+              }
+            : { status: "accepted" },
+        ),
+      );
     });
     await new Promise<void>((resolve, reject) => {
       operations.once("error", reject);
@@ -365,16 +400,27 @@ describe("Track B operations APIs", () => {
       trackBOperationsEndpoint,
     });
     try {
-      const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId: "production-upload" });
+      const databasePath = resolveSqliteMemoryLocation({
+        runtimeStateRoot,
+        scopeId: "production-upload",
+      });
       const migration = new LegacySqliteMigration({
         databasePath,
         backupPath: path.join(runtimeStateRoot, "legacy-backup.sqlite"),
-        artifactWriter: ({ contentHash }) => ({ artifactId: contentHash, artifactPath: `artifact://${contentHash}`, contentHash }),
+        artifactWriter: ({ contentHash }) => ({
+          artifactId: contentHash,
+          artifactPath: `artifact://${contentHash}`,
+          contentHash,
+        }),
         routerRoot: path.join(repoRoot, "role-model-router"),
       });
       migration.backfill({ scopeId: "tenant:production-upload", batchSize: 10 });
       migration.enterShadowMirror({ deadlineMs: Date.now() + 10_000 });
-      migration.verifyParity({ backupVerified: true, restoreVerified: true, consumersVerified: true });
+      migration.verifyParity({
+        backupVerified: true,
+        restoreVerified: true,
+        consumersVerified: true,
+      });
       migration.cutover();
       const result = await backend.executeChatCompletions(
         {
@@ -402,7 +448,14 @@ describe("Track B operations APIs", () => {
         },
       });
       const serialized = JSON.stringify(aggregate?.body);
-      for (const forbidden of ["messages", "prompt", "response", "content", "toolOutput", "providerBody"])
+      for (const forbidden of [
+        "messages",
+        "prompt",
+        "response",
+        "content",
+        "toolOutput",
+        "providerBody",
+      ])
         expect(serialized).not.toContain(forbidden);
       expect(capture).toMatchObject({
         path: "/capture/route",
@@ -413,7 +466,9 @@ describe("Track B operations APIs", () => {
           outputText: result.outputText,
         },
       });
-      expect(readRuntimeObservationBundle({ databasePath, requestId: "req-track-b-upload-001" })).toMatchObject({
+      expect(
+        readRuntimeObservationBundle({ databasePath, requestId: "req-track-b-upload-001" }),
+      ).toMatchObject({
         graphPrimary: true,
         artifactRef: {
           scopeId: "tenant:production-upload",
@@ -430,9 +485,13 @@ describe("Track B operations APIs", () => {
   });
 
   test("production Responses requests report aggregate metrics through the same private operations boundary", async () => {
-    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-production-responses-upload-${Date.now()}`);
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `track-b-production-responses-upload-${Date.now()}`,
+    );
     roots.push(runtimeStateRoot);
-    const received: Array<{ path: string; authorization?: string; body: Record<string, unknown> }> = [];
+    const received: Array<{ path: string; authorization?: string; body: Record<string, unknown> }> =
+      [];
     const operations = createServer(async (request, response) => {
       const chunks: Buffer[] = [];
       for await (const chunk of request) chunks.push(Buffer.from(chunk));
@@ -442,9 +501,18 @@ describe("Track B operations APIs", () => {
         body: JSON.parse(Buffer.concat(chunks).toString("utf8")),
       });
       response.writeHead(200, { "content-type": "application/json" });
-      response.end(JSON.stringify(request.url === "/capture/route"
-        ? { status: "captured", scope: "tenant:production-responses-upload", rootArtifactId: "artifact-route-capture", rootArtifactDigest: "b".repeat(64) }
-        : { status: "accepted" }));
+      response.end(
+        JSON.stringify(
+          request.url === "/capture/route"
+            ? {
+                status: "captured",
+                scope: "tenant:production-responses-upload",
+                rootArtifactId: "artifact-route-capture",
+                rootArtifactDigest: "b".repeat(64),
+              }
+            : { status: "accepted" },
+        ),
+      );
     });
     await new Promise<void>((resolve, reject) => {
       operations.once("error", reject);
@@ -463,16 +531,27 @@ describe("Track B operations APIs", () => {
       trackBOperationsEndpoint,
     });
     try {
-      const databasePath = resolveSqliteMemoryLocation({ runtimeStateRoot, scopeId: "production-responses-upload" });
+      const databasePath = resolveSqliteMemoryLocation({
+        runtimeStateRoot,
+        scopeId: "production-responses-upload",
+      });
       const migration = new LegacySqliteMigration({
         databasePath,
         backupPath: path.join(runtimeStateRoot, "legacy-responses-backup.sqlite"),
-        artifactWriter: ({ contentHash }) => ({ artifactId: contentHash, artifactPath: `artifact://${contentHash}`, contentHash }),
+        artifactWriter: ({ contentHash }) => ({
+          artifactId: contentHash,
+          artifactPath: `artifact://${contentHash}`,
+          contentHash,
+        }),
         routerRoot: path.join(repoRoot, "role-model-router"),
       });
       migration.backfill({ scopeId: "tenant:production-responses-upload", batchSize: 10 });
       migration.enterShadowMirror({ deadlineMs: Date.now() + 10_000 });
-      migration.verifyParity({ backupVerified: true, restoreVerified: true, consumersVerified: true });
+      migration.verifyParity({
+        backupVerified: true,
+        restoreVerified: true,
+        consumersVerified: true,
+      });
       migration.cutover();
       const result = await backend.executeResponses(
         {
@@ -510,7 +589,14 @@ describe("Track B operations APIs", () => {
         "success",
         "taskType",
       ]);
-      for (const forbidden of ["messages", "prompt", "content", "toolOutput", "providerBody", "private responses prompt"])
+      for (const forbidden of [
+        "messages",
+        "prompt",
+        "content",
+        "toolOutput",
+        "providerBody",
+        "private responses prompt",
+      ])
         expect(serialized).not.toContain(forbidden);
       expect(capture).toMatchObject({
         path: "/capture/route",
@@ -520,7 +606,12 @@ describe("Track B operations APIs", () => {
           outputText: result.outputText,
         },
       });
-      expect(readRuntimeObservationBundle({ databasePath, requestId: "req-track-b-responses-upload-001" })).toMatchObject({
+      expect(
+        readRuntimeObservationBundle({
+          databasePath,
+          requestId: "req-track-b-responses-upload-001",
+        }),
+      ).toMatchObject({
         graphPrimary: true,
         artifactRef: {
           scopeId: "tenant:production-responses-upload",
@@ -765,46 +856,45 @@ describe("Track B operations APIs", () => {
       process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL = "development";
       vi.stubGlobal(
         "fetch",
-        vi.fn(
-          async (input, init) => {
-            const url = String(input);
-            if (url === "https://recommendations.example/api/role-model/recommendations/resolve") {
-              expect(init?.method).toBe("POST");
-              expect(new Headers(init?.headers).get("authorization")).toBe("Bearer service-token");
-              return new Response(
-                JSON.stringify({
-                  contract: "RecommendationResolveResponseV1",
-                  channel: "development",
-                  status: "available",
-                  snapshotId: "snapshot-pack-downloaded",
-                  channelSequence: 2,
-                  bundleUri: "https://recommendations.example/snapshots/development/stable/advanced/standalone-runtime-dev/sequence-2/manifest.json",
-                  manifestHash: manifestSha256,
-                }),
-                { status: 200, headers: { "content-type": "application/json" } },
-              );
-            }
-            if (url.endsWith("/manifest.json"))
-              return new Response(manifestBytes, {
-                status: 200,
-                headers: { "content-type": "application/json" },
-              });
-            if (url.endsWith("/records/endpoint-preferences.jsonl"))
-              return new Response(recordBytes, {
-                status: 200,
-                headers: { "content-type": "application/x-ndjson" },
-              });
-            if (url.endsWith("/signatures/manifest.sig"))
-              return new Response(JSON.stringify(signature), {
-                status: 200,
-                headers: { "content-type": "application/json" },
-              });
-            return new Response(JSON.stringify({ error: "unexpected_url", url }), {
-              status: 404,
+        vi.fn(async (input, init) => {
+          const url = String(input);
+          if (url === "https://recommendations.example/api/role-model/recommendations/resolve") {
+            expect(init?.method).toBe("POST");
+            expect(new Headers(init?.headers).get("authorization")).toBe("Bearer service-token");
+            return new Response(
+              JSON.stringify({
+                contract: "RecommendationResolveResponseV1",
+                channel: "development",
+                status: "available",
+                snapshotId: "snapshot-pack-downloaded",
+                channelSequence: 2,
+                bundleUri:
+                  "https://recommendations.example/snapshots/development/stable/advanced/standalone-runtime-dev/sequence-2/manifest.json",
+                manifestHash: manifestSha256,
+              }),
+              { status: 200, headers: { "content-type": "application/json" } },
+            );
+          }
+          if (url.endsWith("/manifest.json"))
+            return new Response(manifestBytes, {
+              status: 200,
               headers: { "content-type": "application/json" },
             });
-          },
-        ),
+          if (url.endsWith("/records/endpoint-preferences.jsonl"))
+            return new Response(recordBytes, {
+              status: 200,
+              headers: { "content-type": "application/x-ndjson" },
+            });
+          if (url.endsWith("/signatures/manifest.sig"))
+            return new Response(JSON.stringify(signature), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            });
+          return new Response(JSON.stringify({ error: "unexpected_url", url }), {
+            status: 404,
+            headers: { "content-type": "application/json" },
+          });
+        }),
       );
       const downloaded = (await backend.downloadRecommendations()) as readonly {
         id: string;
@@ -823,12 +913,12 @@ describe("Track B operations APIs", () => {
           status: "validated",
           signatureValid: true,
           policyAllowed: true,
-        endpointId: "deepseek.run00.dev.global.deepseek-chat",
-        modelId: "deepseek-chat",
-        preferredFor: ["general.chat"],
-        action: "prefer",
-        confidence: 0.92,
-      },
+          endpointId: "deepseek.run00.dev.global.deepseek-chat",
+          modelId: "deepseek-chat",
+          preferredFor: ["general.chat"],
+          action: "prefer",
+          confidence: 0.92,
+        },
       ]);
       const applied = await backend.applyRecommendation({ id: "recommendation-pack-downloaded" });
       expect(applied).toMatchObject({
@@ -840,7 +930,10 @@ describe("Track B operations APIs", () => {
   });
 
   test("launcher recommendation material config populates runtime download trust without raw env injection", async () => {
-    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-recommendation-material-${Date.now()}`);
+    const runtimeStateRoot = path.join(
+      os.tmpdir(),
+      `track-b-recommendation-material-${Date.now()}`,
+    );
     roots.push(runtimeStateRoot);
     const materialPath = path.join(runtimeStateRoot, "recommendation-material.json");
     await mkdir(runtimeStateRoot, { recursive: true });

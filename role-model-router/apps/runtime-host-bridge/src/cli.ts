@@ -549,13 +549,17 @@ export function applyRecommendationServiceLauncherConfig(values: LauncherConfigV
     readonly recommendationPublicSpkiBase64?: unknown;
     readonly internalServiceToken?: unknown;
   };
-  if (typeof material.recommendationPublicSpkiBase64 !== "string" || !material.recommendationPublicSpkiBase64.trim()) {
+  if (
+    typeof material.recommendationPublicSpkiBase64 !== "string" ||
+    !material.recommendationPublicSpkiBase64.trim()
+  ) {
     throw new Error("recommendation material file is missing recommendationPublicSpkiBase64");
   }
   if (typeof material.internalServiceToken !== "string" || !material.internalServiceToken.trim()) {
     throw new Error("recommendation material file is missing internalServiceToken");
   }
-  process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY = material.recommendationPublicSpkiBase64.trim();
+  process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY =
+    material.recommendationPublicSpkiBase64.trim();
   process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN = material.internalServiceToken.trim();
 }
 
@@ -657,7 +661,9 @@ export async function main(): Promise<void> {
   const staticRoot = args.values["static-root"]?.trim() || options.staticRoot;
   let server: Awaited<ReturnType<typeof startBridgeServer>> | null = null;
   let backend: RuntimeBridgeBackend | null = null;
-  let packagedRuntime: Awaited<ReturnType<typeof createPackagedProductionRuntime<RuntimeBridgeBackend>>> | null = null;
+  let packagedRuntime: Awaited<
+    ReturnType<typeof createPackagedProductionRuntime<RuntimeBridgeBackend>>
+  > | null = null;
   let extensionRuntime: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null = null;
   const bootstrapState: CliBootstrapState = { status: "pending" };
   let shutdownPromise: Promise<void> | null = null;
@@ -717,9 +723,14 @@ export async function main(): Promise<void> {
   });
 
   try {
-    const explicitManifest = args.values["track-b-runtime-manifest"]?.trim()
-      || process.env.ROLE_MODEL_TRACK_B_RUNTIME_MANIFEST?.trim();
-    const packagedManifest = path.join(path.dirname(process.execPath), "track-b-runtime", "track-b-runtime-manifest.json");
+    const explicitManifest =
+      args.values["track-b-runtime-manifest"]?.trim() ||
+      process.env.ROLE_MODEL_TRACK_B_RUNTIME_MANIFEST?.trim();
+    const packagedManifest = path.join(
+      path.dirname(process.execPath),
+      "track-b-runtime",
+      "track-b-runtime-manifest.json",
+    );
     const trackBManifestPath = explicitManifest || (packagedProfile ? packagedManifest : null);
     const trackBManifestText = trackBManifestPath
       ? await readFile(trackBManifestPath, "utf8").catch((error: unknown) => {
@@ -730,7 +741,8 @@ export async function main(): Promise<void> {
     if (packagedProfile?.channel === "production" && !trackBManifestText) {
       throw new Error("packaged production runtime is missing its Track B distribution");
     }
-    const createBackend = (trackBOperationsEndpoint?: string, trackBOperationsToken?: string) => createRuntimeBridgeBackend({
+    const createBackend = (trackBOperationsEndpoint?: string, trackBOperationsToken?: string) =>
+      createRuntimeBridgeBackend({
         fixtureRoot: resolveCliFixtureRoot(options.repoRoot, args.values["fixture-root"]),
         repoRoot: options.repoRoot,
         runtimeStateRoot: options.runtimeStateRoot,
@@ -738,14 +750,18 @@ export async function main(): Promise<void> {
         unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
         ...(trackBOperationsEndpoint ? { trackBOperationsEndpoint } : {}),
         ...(trackBOperationsToken ? { trackBOperationsToken } : {}),
-        ...(extensionRuntime ? { trackBExtensionHealth: () => extensionRuntime!.health() } : {}),
+        ...(extensionRuntime ? { trackBExtensionHealth: () => extensionRuntime?.health() } : {}),
       });
     if (trackBManifestText && trackBManifestPath) {
       const manifest = JSON.parse(trackBManifestText) as {
         readonly schemaVersion: string;
         readonly sidecar: { readonly modulePath: string; readonly artifactSha256: string };
         readonly extensions: readonly {
-          readonly descriptor: { readonly id: string; readonly protocolVersion: string; readonly capabilities: readonly string[] };
+          readonly descriptor: {
+            readonly id: string;
+            readonly protocolVersion: string;
+            readonly capabilities: readonly string[];
+          };
           readonly modulePath: string;
           readonly artifactSha256: string;
         }[];
@@ -759,7 +775,7 @@ export async function main(): Promise<void> {
         stateRoot: path.join(trackBStateRoot, "extensions"),
         authorizationEpoch: 1,
         repoRoot: options.repoRoot,
-        extensions: manifest.extensions.map(extension => ({
+        extensions: manifest.extensions.map((extension) => ({
           ...extension,
           modulePath: path.resolve(distributionRoot, extension.modulePath),
         })),
@@ -771,10 +787,19 @@ export async function main(): Promise<void> {
           artifactSha256: manifest.sidecar.artifactSha256,
           stateRoot: trackBStateRoot,
           channel: packagedProfile?.channel ?? "development",
-          artifactDigestKeyFile: args.values["artifact-digest-key-file"] ?? process.env.ROLE_MODEL_ARTIFACT_DIGEST_KEY_FILE,
-          artifactEncryptionKeyFile: args.values["artifact-encryption-key-file"] ?? process.env.ROLE_MODEL_ARTIFACT_ENCRYPTION_KEY_FILE,
-          trustMaterialFile: args.values["destination-material-file"] ?? args.values["destination-trust-material-file"] ?? process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE,
-          aggregateEndpoint: args.values["aggregate-ingestion-url"] ?? process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL,
+          artifactDigestKeyFile:
+            args.values["artifact-digest-key-file"] ??
+            process.env.ROLE_MODEL_ARTIFACT_DIGEST_KEY_FILE,
+          artifactEncryptionKeyFile:
+            args.values["artifact-encryption-key-file"] ??
+            process.env.ROLE_MODEL_ARTIFACT_ENCRYPTION_KEY_FILE,
+          trustMaterialFile:
+            args.values["destination-material-file"] ??
+            args.values["destination-trust-material-file"] ??
+            process.env.ROLE_MODEL_DESTINATION_AUTH_SECRET_FILE,
+          aggregateEndpoint:
+            args.values["aggregate-ingestion-url"] ??
+            process.env.ROLE_MODEL_AGGREGATE_INGESTION_URL,
           aggregateScope: args.values["aggregate-scope"] ?? process.env.ROLE_MODEL_AGGREGATE_SCOPE,
         }),
         createBackend: ({ trackBOperationsEndpoint, trackBOperationsToken }) =>

@@ -9,7 +9,10 @@ import {
 } from "@role-model-router/profile-aggregator";
 import type { ProviderAccountRecord } from "@role-model-router/provider-account";
 import type { ObservedPerformanceProfile } from "@role-model/protocol-types";
-import { mirrorShadowRuntimeObservation, resolveRuntimeObservationStoragePayload } from "./legacy-migration.js";
+import {
+  mirrorShadowRuntimeObservation,
+  resolveRuntimeObservationStoragePayload,
+} from "./legacy-migration.js";
 
 export * from "./legacy-migration.js";
 

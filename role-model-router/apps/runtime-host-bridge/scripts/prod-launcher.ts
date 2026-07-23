@@ -1,5 +1,5 @@
-import path from "node:path";
 import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
 import {
   createOwnedTrackBSidecarSpec,
@@ -21,7 +21,11 @@ if (!sidecarArtifactPath || !sidecarArtifactSha256 || !extensionManifestPath) {
 const extensionManifest = JSON.parse(await readFile(extensionManifestPath, "utf8")) as {
   readonly schemaVersion: string;
   readonly extensions: readonly {
-    readonly descriptor: { readonly id: string; readonly protocolVersion: string; readonly capabilities: readonly string[] };
+    readonly descriptor: {
+      readonly id: string;
+      readonly protocolVersion: string;
+      readonly capabilities: readonly string[];
+    };
     readonly modulePath: string;
     readonly artifactSha256: string;
   }[];
@@ -32,7 +36,7 @@ if (extensionManifest.schemaVersion !== "role-model.track-b-runtime-distribution
 const extensionRuntime = await createProductionExtensionRuntime({
   stateRoot: path.join(runtimeStateRoot, scopeId, "extensions"),
   authorizationEpoch: 1,
-  extensions: extensionManifest.extensions.map(extension => ({
+  extensions: extensionManifest.extensions.map((extension) => ({
     ...extension,
     modulePath: path.resolve(path.dirname(extensionManifestPath), extension.modulePath),
   })),
@@ -44,14 +48,15 @@ const composed = await createPackagedProductionRuntime({
     artifactSha256: sidecarArtifactSha256,
     stateRoot: path.join(runtimeStateRoot, scopeId, "track-b"),
   }),
-  createBackend: ({ trackBOperationsEndpoint }) => createRuntimeBridgeBackend({
-    repoRoot,
-    runtimeStateRoot,
-    scopeId,
-    runtimeVendorStartup: "enabled",
-    unifiedRuntimeConfigPath: `${runtimeStateRoot}/${scopeId}/runtime-config.yaml`,
-    trackBOperationsEndpoint,
-  }),
+  createBackend: ({ trackBOperationsEndpoint }) =>
+    createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot,
+      scopeId,
+      runtimeVendorStartup: "enabled",
+      unifiedRuntimeConfigPath: `${runtimeStateRoot}/${scopeId}/runtime-config.yaml`,
+      trackBOperationsEndpoint,
+    }),
 });
 const backend = composed.backend;
 

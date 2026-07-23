@@ -15,9 +15,16 @@ export type ProjectionEvidence = {
 export type ProjectionReadiness = "semantic_only" | "token_exact" | "unavailable";
 
 export function deriveProjectionReadiness(evidence: ProjectionEvidence): ProjectionReadiness {
-  if (!evidence.sourceAvailable || !/^sha256:[a-f0-9]{64}$/u.test(evidence.sourceHash)) return "unavailable";
+  if (!evidence.sourceAvailable || !/^sha256:[a-f0-9]{64}$/u.test(evidence.sourceHash))
+    return "unavailable";
   const length = evidence.tokenIds?.length ?? 0;
-  const exact = evidence.renderer && evidence.tokenizer && length > 0 && evidence.sampledMask?.length === length && evidence.contentMask?.length === length && evidence.logprobs?.length === length;
+  const exact =
+    evidence.renderer &&
+    evidence.tokenizer &&
+    length > 0 &&
+    evidence.sampledMask?.length === length &&
+    evidence.contentMask?.length === length &&
+    evidence.logprobs?.length === length;
   return exact ? "token_exact" : "semantic_only";
 }
 

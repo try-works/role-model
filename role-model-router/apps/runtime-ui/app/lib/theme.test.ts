@@ -81,8 +81,7 @@ describe("runtime theme helpers", () => {
     const meta = { getAttribute: vi.fn(), setAttribute: vi.fn() };
     vi.stubGlobal("document", {
       documentElement: root,
-      querySelector: (selector: string) =>
-        selector === 'meta[name="theme-color"]' ? meta : null,
+      querySelector: (selector: string) => (selector === 'meta[name="theme-color"]' ? meta : null),
     });
 
     syncDocumentTheme("light");

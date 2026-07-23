@@ -15480,13 +15480,12 @@ export async function startBridgeServer(options: StartBridgeServerOptions): Prom
 export async function createRuntimeBridgeBackend(
   options: CreateRuntimeBridgeBackendOptions,
 ): Promise<RuntimeBridgeBackend> {
-  const createTrackBOperations = (
-    input: Parameters<typeof createTrackBOperationsFromState>[0],
-  ) => createTrackBOperationsFromState({
-    ...input,
-    operationsEndpoint: options.trackBOperationsEndpoint,
-    operationsToken: options.trackBOperationsToken,
-  });
+  const createTrackBOperations = (input: Parameters<typeof createTrackBOperationsFromState>[0]) =>
+    createTrackBOperationsFromState({
+      ...input,
+      operationsEndpoint: options.trackBOperationsEndpoint,
+      operationsToken: options.trackBOperationsToken,
+    });
   const networkFetcher = options.networkFetcher ?? fetch;
   const codexAuthAdapter = options.codexAuthAdapter ?? createSystemCodexAuthAdapter(networkFetcher);
   const codexExecutionAdapter =
@@ -21199,7 +21198,7 @@ export async function createRuntimeBridgeBackend(
           : Array.isArray(requestBody.input)
             ? requestBody.input
             : [];
-        const capture = await createTrackBOperations({
+        const capture = (await createTrackBOperations({
           statePath: path.join(
             options.runtimeStateRoot,
             options.scopeId,
@@ -21213,7 +21212,7 @@ export async function createRuntimeBridgeBackend(
           messages: captureInput,
           outputText: execution.normalized.outputText,
           toolExecutions: toolExecutionResult.executions,
-        }) as Record<string, unknown>;
+        })) as Record<string, unknown>;
         if (
           typeof capture.scope === "string" &&
           typeof capture.rootArtifactId === "string" &&
@@ -22477,15 +22476,17 @@ export async function createRuntimeBridgeBackend(
         catalog: contract.extensions ?? [],
       }).listExtensions();
       const hostedIds = new Set(options.trackBExtensionHealth?.().host?.extensions ?? []);
-      return (rows as readonly Record<string, unknown>[]).map((row) => hostedIds.has(String(row.id))
-        ? {
-            ...row,
-            installed: true,
-            enabled: true,
-            lifecycle: "ready",
-            health: { available: true, routingDependency: false },
-          }
-        : row);
+      return (rows as readonly Record<string, unknown>[]).map((row) =>
+        hostedIds.has(String(row.id))
+          ? {
+              ...row,
+              installed: true,
+              enabled: true,
+              lifecycle: "ready",
+              health: { available: true, routingDependency: false },
+            }
+          : row,
+      );
     },
     async readStorageRetention(): Promise<unknown> {
       return createTrackBOperations({
@@ -22638,7 +22639,11 @@ export async function createRuntimeBridgeBackend(
       if (!Array.isArray(contents)) throw new Error("recommendation bundle contents missing");
       const recordsByPath: Record<string, string> = {};
       for (const content of contents) {
-        if (!content || typeof content !== "object" || typeof (content as Record<string, unknown>).path !== "string")
+        if (
+          !content ||
+          typeof content !== "object" ||
+          typeof (content as Record<string, unknown>).path !== "string"
+        )
           throw new Error("recommendation bundle content path missing");
         const contentPath = (content as Record<string, unknown>).path as string;
         const recordResponse = await fetch(new URL(contentPath, manifestUrl));
@@ -22650,7 +22655,9 @@ export async function createRuntimeBridgeBackend(
         throw new Error("recommendation bundle signature reference missing");
       const signatureResponse = await fetch(new URL(manifest.signatureRef, manifestUrl));
       if (!signatureResponse.ok)
-        throw new Error(`recommendation signature download failed with ${signatureResponse.status}`);
+        throw new Error(
+          `recommendation signature download failed with ${signatureResponse.status}`,
+        );
       const signature = (await signatureResponse.json()) as Record<string, unknown>;
       return operations.importRecommendationArtifactBundle(
         {

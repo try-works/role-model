@@ -10,9 +10,9 @@ import {
   createPackagedProductionRuntime,
   createProductionExtensionRuntime,
   createTrackBBridgeServerOptions,
-  stageTrackBRuntimeDistribution,
   createTrackBProductionRuntime,
   resolveExtensionHostModuleUrl,
+  stageTrackBRuntimeDistribution,
 } from "../src/track-b-runtime.js";
 
 const roots: string[] = [];
@@ -58,7 +58,10 @@ describe("production Track B composition", () => {
     const started = await runtime.start();
     expect(started.operationsEndpoint).toBe("http://127.0.0.1:43123");
     expect(started.sidecar).toMatchObject({ ownedByLauncher: true, pid: 43123, supervised: true });
-    expect(runtime.health()).toMatchObject({ routingAvailable: true, sidecar: { status: "ready" } });
+    expect(runtime.health()).toMatchObject({
+      routingAvailable: true,
+      sidecar: { status: "ready" },
+    });
     expect(lifecycle).toEqual(["start"]);
 
     await runtime.stop();
@@ -92,13 +95,13 @@ describe("production Track B composition", () => {
     const source = [
       'import http from "node:http";',
       'const required=["--channel","production","--artifact-digest-key-file",process.env.EXPECTED_DIGEST_KEY,"--artifact-encryption-key-file",process.env.EXPECTED_ENCRYPTION_KEY];',
-       'if(required.some(value=>!process.argv.includes(value))){console.error("missing managed production arguments");process.exit(2)}',
-       'if(!/^[a-f0-9]{64}$/i.test(process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN||"")){console.error("missing ephemeral operations token");process.exit(3)}',
+      'if(required.some(value=>!process.argv.includes(value))){console.error("missing managed production arguments");process.exit(2)}',
+      'if(!/^[a-f0-9]{64}$/i.test(process.env.ROLE_MODEL_TRACK_B_OPERATIONS_TOKEN||"")){console.error("missing ephemeral operations token");process.exit(3)}',
       'const server=http.createServer((_req,res)=>{res.end("ok")});',
       'server.listen(0,"127.0.0.1",()=>{',
-      ' const address=server.address();',
+      " const address=server.address();",
       ' process.stdout.write(JSON.stringify({type:"ready",endpoint:`http://127.0.0.1:${address.port}`})+"\\n");',
-      '});',
+      "});",
       'process.on("SIGTERM",()=>server.close(()=>process.exit(0)));',
     ].join("\n");
     await writeFile(artifactPath, source, "utf8");
@@ -106,7 +109,14 @@ describe("production Track B composition", () => {
 
     process.env.EXPECTED_DIGEST_KEY = digestKeyPath;
     process.env.EXPECTED_ENCRYPTION_KEY = encryptionKeyPath;
-    const sidecar = createOwnedTrackBSidecarSpec({ artifactPath, artifactSha256, stateRoot, channel: "production", artifactDigestKeyFile: digestKeyPath, artifactEncryptionKeyFile: encryptionKeyPath });
+    const sidecar = createOwnedTrackBSidecarSpec({
+      artifactPath,
+      artifactSha256,
+      stateRoot,
+      channel: "production",
+      artifactDigestKeyFile: digestKeyPath,
+      artifactEncryptionKeyFile: encryptionKeyPath,
+    });
     const child = await sidecar.launch();
     expect(child.pid).toBeGreaterThan(0);
     expect(child.endpoint).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
@@ -114,9 +124,23 @@ describe("production Track B composition", () => {
     expect(child.exited).toBe(false);
     await child.stop();
 
-    const tampered = createOwnedTrackBSidecarSpec({ artifactPath, artifactSha256: "0".repeat(64), stateRoot, channel: "production", artifactDigestKeyFile: digestKeyPath, artifactEncryptionKeyFile: encryptionKeyPath });
+    const tampered = createOwnedTrackBSidecarSpec({
+      artifactPath,
+      artifactSha256: "0".repeat(64),
+      stateRoot,
+      channel: "production",
+      artifactDigestKeyFile: digestKeyPath,
+      artifactEncryptionKeyFile: encryptionKeyPath,
+    });
     await expect(tampered.launch()).rejects.toThrow(/integrity/i);
-    expect(() => createOwnedTrackBSidecarSpec({ artifactPath, artifactSha256, stateRoot, channel: "production" })).toThrow(/managed artifact keys/i);
+    expect(() =>
+      createOwnedTrackBSidecarSpec({
+        artifactPath,
+        artifactSha256,
+        stateRoot,
+        channel: "production",
+      }),
+    ).toThrow(/managed artifact keys/i);
   });
 
   test("passes cloud contribution trust and aggregate destination into the launcher-owned sidecar", async () => {
@@ -130,16 +154,19 @@ describe("production Track B composition", () => {
     const aggregateScope = "run00-owned-sidecar-cloud";
     await writeFile(digestKeyPath, Buffer.alloc(32, 1));
     await writeFile(encryptionKeyPath, Buffer.alloc(32, 2));
-    await writeFile(trustMaterialFile, JSON.stringify({ destinationPrivateKey: "redacted", destinationPublicKey: "redacted" }));
+    await writeFile(
+      trustMaterialFile,
+      JSON.stringify({ destinationPrivateKey: "redacted", destinationPublicKey: "redacted" }),
+    );
     const source = [
       'import http from "node:http";',
       'const mustInclude=[["--trust-material-file",process.env.EXPECTED_TRUST_MATERIAL],["--aggregate-endpoint",process.env.EXPECTED_AGGREGATE_ENDPOINT],["--aggregate-scope",process.env.EXPECTED_AGGREGATE_SCOPE]];',
-      'for(const [flag,value] of mustInclude){const index=process.argv.indexOf(flag); if(index<0 || process.argv[index+1]!==value){console.error(`missing ${flag}`); process.exit(4)}}',
+      "for(const [flag,value] of mustInclude){const index=process.argv.indexOf(flag); if(index<0 || process.argv[index+1]!==value){console.error(`missing ${flag}`); process.exit(4)}}",
       'const server=http.createServer((_req,res)=>{res.end("ok")});',
       'server.listen(0,"127.0.0.1",()=>{',
-      ' const address=server.address();',
+      " const address=server.address();",
       ' process.stdout.write(JSON.stringify({type:"ready",endpoint:`http://127.0.0.1:${address.port}`})+"\\n");',
-      '});',
+      "});",
       'process.on("SIGTERM",()=>server.close(()=>process.exit(0)));',
     ].join("\n");
     await writeFile(artifactPath, source, "utf8");
@@ -167,7 +194,8 @@ describe("production Track B composition", () => {
     const stateRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-track-b-sidecar-node-"));
     roots.push(stateRoot);
     const artifactPath = path.join(stateRoot, "fake-sidecar.mjs");
-    const source = 'process.stdout.write(JSON.stringify({type:"ready",endpoint:"http://127.0.0.1:1"})+"\\n");\n';
+    const source =
+      'process.stdout.write(JSON.stringify({type:"ready",endpoint:"http://127.0.0.1:1"})+"\\n");\n';
     await writeFile(artifactPath, source, "utf8");
     process.env.ROLE_MODEL_TRACK_B_NODE_EXECUTABLE = path.join(stateRoot, "missing-node.exe");
 
@@ -202,8 +230,10 @@ describe("production Track B composition", () => {
     const composed = await createPackagedProductionRuntime({
       stateRoot,
       sidecar,
-      createBackend: async options => {
-        lifecycle.push(`backend:${options.trackBOperationsEndpoint}:${options.trackBOperationsToken ?? "missing"}`);
+      createBackend: async (options) => {
+        lifecycle.push(
+          `backend:${options.trackBOperationsEndpoint}:${options.trackBOperationsToken ?? "missing"}`,
+        );
         expect(options.trackBOperationsToken).toMatch(/^[a-f0-9]{64}$/);
         return { close: async () => lifecycle.push("backend:close") };
       },
@@ -247,34 +277,54 @@ describe("production Track B composition", () => {
       extensions,
     });
     expect(runtime.health()).toMatchObject({
-      host: { available: true, enabled: true, extensions: extensions.map(row => row.descriptor.id) },
+      host: {
+        available: true,
+        enabled: true,
+        extensions: extensions.map((row) => row.descriptor.id),
+      },
       supervisor: { available: true, readyWorkers: 13 },
     });
-    const results = await Promise.all(extensions.map(row => runtime.invoke(row.descriptor.id, {
-      requestId: `probe:${row.descriptor.id}`,
-      protocolVersion: "1.1.0",
-      channel: "development",
-      scope: "tenant:run00",
-      authorizationEpoch: 7,
-      capability: "health:probe",
-      payload: {},
-    })));
-    expect(new Set(results.map(result => result.workerPid)).size).toBe(13);
+    const results = await Promise.all(
+      extensions.map((row) =>
+        runtime.invoke(row.descriptor.id, {
+          requestId: `probe:${row.descriptor.id}`,
+          protocolVersion: "1.1.0",
+          channel: "development",
+          scope: "tenant:run00",
+          authorizationEpoch: 7,
+          capability: "health:probe",
+          payload: {},
+        }),
+      ),
+    );
+    expect(new Set(results.map((result) => result.workerPid)).size).toBe(13);
     await runtime.close();
     expect(runtime.health().host.enabled).toBe(false);
 
-    await expect(createProductionExtensionRuntime({
-      stateRoot,
-      authorizationEpoch: 8,
-      repoRoot,
-      extensions: extensions.map((row, index) => index === 0 ? { ...row, artifactSha256: "0".repeat(64) } : row),
-    })).rejects.toThrow(/integrity/i);
+    await expect(
+      createProductionExtensionRuntime({
+        stateRoot,
+        authorizationEpoch: 8,
+        repoRoot,
+        extensions: extensions.map((row, index) =>
+          index === 0 ? { ...row, artifactSha256: "0".repeat(64) } : row,
+        ),
+      }),
+    ).rejects.toThrow(/integrity/i);
   });
 
   test("resolves the extension host from repo root when packaged CJS has no import.meta.url", async () => {
     const resolved = resolveExtensionHostModuleUrl({ moduleUrl: "", repoRoot });
-    expect(resolved).toBe(new URL("role-model-router/packages/extension-host/index.mjs", `file:///${repoRoot.replaceAll("\\", "/")}/`).href);
-    const hostModule = await import(resolved) as { ExtensionHost?: unknown; ExtensionSupervisor?: unknown };
+    expect(resolved).toBe(
+      new URL(
+        "role-model-router/packages/extension-host/index.mjs",
+        `file:///${repoRoot.replaceAll("\\", "/")}/`,
+      ).href,
+    );
+    const hostModule = (await import(resolved)) as {
+      ExtensionHost?: unknown;
+      ExtensionSupervisor?: unknown;
+    };
     expect(typeof hostModule.ExtensionHost).toBe("function");
     expect(typeof hostModule.ExtensionSupervisor).toBe("function");
   });
@@ -285,9 +335,16 @@ describe("production Track B composition", () => {
     const modulePath = path.join(stateRoot, "extension.mjs");
     await writeFile(modulePath, "export async function run(){return {ok:true}}\n", "utf8");
     process.env.ROLE_MODEL_EXTENSION_WORKER_NODE = path.join(stateRoot, "missing-node.exe");
-    const hostModule = await import(resolveExtensionHostModuleUrl({ moduleUrl: "", repoRoot })) as {
-      ExtensionHost: new (options: Record<string, unknown>) => {
-        registerProcess(descriptor: ProductionExtensionDescriptor, modulePath: string): Promise<void>;
+    const hostModule = (await import(
+      resolveExtensionHostModuleUrl({ moduleUrl: "", repoRoot })
+    )) as {
+      ExtensionHost: new (
+        options: Record<string, unknown>,
+      ) => {
+        registerProcess(
+          descriptor: ProductionExtensionDescriptor,
+          modulePath: string,
+        ): Promise<void>;
         shutdown(): Promise<void>;
       };
     };
@@ -297,22 +354,36 @@ describe("production Track B composition", () => {
       authorizationEpoch: 1,
       startupTimeoutMs: 500,
     });
-    await expect(host.registerProcess({
-      id: "worker-node-contract",
-      protocolVersion: "1.1.0",
-      capabilities: ["health:probe"],
-    }, modulePath)).rejects.toThrow(/node worker executable|ENOENT|spawn/i);
+    await expect(
+      host.registerProcess(
+        {
+          id: "worker-node-contract",
+          protocolVersion: "1.1.0",
+          capabilities: ["health:probe"],
+        },
+        modulePath,
+      ),
+    ).rejects.toThrow(/node worker executable|ENOENT|spawn/i);
     await host.shutdown();
   });
 
   test("exposes every Track B mutation and recommendation operation to the production server", () => {
     const names = [
-      "listExtensions", "readStorageRetention", "dryRunStorageRetention",
-      "updateStorageRetentionPolicy", "executeStorageRetention", "cancelStorageRetentionJob",
-      "rollbackStorageRetention", "readContributionState", "updateContributionState",
-      "listRecommendations", "downloadRecommendations", "applyRecommendation", "readActivePack",
+      "listExtensions",
+      "readStorageRetention",
+      "dryRunStorageRetention",
+      "updateStorageRetentionPolicy",
+      "executeStorageRetention",
+      "cancelStorageRetentionJob",
+      "rollbackStorageRetention",
+      "readContributionState",
+      "updateContributionState",
+      "listRecommendations",
+      "downloadRecommendations",
+      "applyRecommendation",
+      "readActivePack",
     ] as const;
-    const backend = Object.fromEntries(names.map(name => [name, async () => name]));
+    const backend = Object.fromEntries(names.map((name) => [name, async () => name]));
     const serverOptions = createTrackBBridgeServerOptions(backend);
     expect(Object.keys(serverOptions).sort()).toEqual([...names].sort());
     for (const name of names) expect(serverOptions[name]).toBe(backend[name]);
@@ -326,29 +397,39 @@ describe("production Track B composition", () => {
     await mkdir(path.join(sourceRoot, "extensions"), { recursive: true });
     const sidecar = 'console.log("sidecar")\n';
     await writeFile(path.join(sourceRoot, "runtime-operations-server.mjs"), sidecar);
-    const extensions = await Promise.all(Array.from({ length: 13 }, async (_, index) => {
-      const id = `extension-${index + 1}`;
-      const bytes = `export const id=${JSON.stringify(id)}\n`;
-      const modulePath = `extensions/${id}.mjs`;
-      await writeFile(path.join(sourceRoot, modulePath), bytes);
-      return {
-        descriptor: { id, protocolVersion: "1.1.0", capabilities: [] },
-        modulePath,
-        artifactSha256: createHash("sha256").update(bytes).digest("hex"),
-      };
-    }));
+    const extensions = await Promise.all(
+      Array.from({ length: 13 }, async (_, index) => {
+        const id = `extension-${index + 1}`;
+        const bytes = `export const id=${JSON.stringify(id)}\n`;
+        const modulePath = `extensions/${id}.mjs`;
+        await writeFile(path.join(sourceRoot, modulePath), bytes);
+        return {
+          descriptor: { id, protocolVersion: "1.1.0", capabilities: [] },
+          modulePath,
+          artifactSha256: createHash("sha256").update(bytes).digest("hex"),
+        };
+      }),
+    );
     const manifest = {
       schemaVersion: "role-model.track-b-runtime-distribution.v1",
       protocolVersion: "1.1.0",
-      sidecar: { modulePath: "runtime-operations-server.mjs", artifactSha256: createHash("sha256").update(sidecar).digest("hex") },
+      sidecar: {
+        modulePath: "runtime-operations-server.mjs",
+        artifactSha256: createHash("sha256").update(sidecar).digest("hex"),
+      },
       extensions,
     };
-    await writeFile(path.join(sourceRoot, "track-b-runtime-manifest.json"), JSON.stringify(manifest));
+    await writeFile(
+      path.join(sourceRoot, "track-b-runtime-manifest.json"),
+      JSON.stringify(manifest),
+    );
 
     const staged = await stageTrackBRuntimeDistribution({ sourceRoot, releaseDir });
     expect(staged.extensionCount).toBe(13);
     expect(JSON.parse(await readFile(staged.manifestPath, "utf8"))).toEqual(manifest);
     await writeFile(path.join(sourceRoot, extensions[0].modulePath), "tampered");
-    await expect(stageTrackBRuntimeDistribution({ sourceRoot, releaseDir: path.join(root, "bad") })).rejects.toThrow(/integrity/i);
+    await expect(
+      stageTrackBRuntimeDistribution({ sourceRoot, releaseDir: path.join(root, "bad") }),
+    ).rejects.toThrow(/integrity/i);
   });
 });

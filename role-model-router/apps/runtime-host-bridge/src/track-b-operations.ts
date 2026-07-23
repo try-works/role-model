@@ -260,7 +260,11 @@ export async function seedTrackBExtensionBridgeState(options: {
 const sha256 = (value: string | Buffer) => createHash("sha256").update(value).digest("hex");
 const publicKeyFromTrust = (verificationKey: string) => {
   if (verificationKey.includes("BEGIN PUBLIC KEY")) return createPublicKey(verificationKey);
-  return createPublicKey({ key: Buffer.from(verificationKey, "base64"), format: "der", type: "spki" });
+  return createPublicKey({
+    key: Buffer.from(verificationKey, "base64"),
+    format: "der",
+    type: "spki",
+  });
 };
 const importArtifactBundleRecords = (
   bundle: ArtifactBundleImport,
@@ -278,7 +282,10 @@ const importArtifactBundleRecords = (
   )
     throw new Error("invalid recommendation Artifact Bundle manifest");
   const channelSequence = Number(bundle.manifest.channelSequence);
-  if (!Number.isSafeInteger(channelSequence) || channelSequence <= (state.recommendationRevision ?? 0))
+  if (
+    !Number.isSafeInteger(channelSequence) ||
+    channelSequence <= (state.recommendationRevision ?? 0)
+  )
     throw new Error("stale recommendation Artifact Bundle");
   if (
     bundle.signature.algorithm !== "ed25519" ||
@@ -309,7 +316,8 @@ const importArtifactBundleRecords = (
     const entry = content as Record<string, unknown>;
     const recordPath = String(entry.path ?? "");
     const bytes = bundle.recordsByPath[recordPath];
-    if (!recordPath || typeof bytes !== "string") throw new Error(`recommendation record missing ${recordPath}`);
+    if (!recordPath || typeof bytes !== "string")
+      throw new Error(`recommendation record missing ${recordPath}`);
     if (
       entry.sha256 !== sha256(bytes) ||
       entry.byteLength !== Buffer.byteLength(bytes) ||
@@ -322,14 +330,15 @@ const importArtifactBundleRecords = (
       .split(/\r?\n/)
       .filter(Boolean)
       .map((line) => JSON.parse(line) as Record<string, unknown>);
-    if (parsed.length !== entry.recordCount) throw new Error(`recommendation record count drift ${recordPath}`);
+    if (parsed.length !== entry.recordCount)
+      throw new Error(`recommendation record count drift ${recordPath}`);
     for (const record of parsed) {
       const envelope = record.envelope as Record<string, unknown> | undefined;
       if (
         !envelope?.artifactId ||
-        envelope.privacy &&
+        (envelope.privacy &&
           ((envelope.privacy as Record<string, unknown>).rawContentIncluded !== false ||
-            (envelope.privacy as Record<string, unknown>).redactionApplied !== true)
+            (envelope.privacy as Record<string, unknown>).redactionApplied !== true))
       )
         throw new Error("recommendation record privacy/provenance is incomplete");
       rows.push({
@@ -341,7 +350,8 @@ const importArtifactBundleRecords = (
         policyAllowed,
         ...(typeof record.endpointId === "string" ? { endpointId: record.endpointId } : {}),
         ...(typeof record.modelId === "string" ? { modelId: record.modelId } : {}),
-        ...(Array.isArray(record.preferredFor) && record.preferredFor.every((value) => typeof value === "string")
+        ...(Array.isArray(record.preferredFor) &&
+        record.preferredFor.every((value) => typeof value === "string")
           ? { preferredFor: record.preferredFor }
           : {}),
         ...(typeof record.action === "string" ? { action: record.action } : {}),
@@ -349,7 +359,8 @@ const importArtifactBundleRecords = (
       });
     }
   }
-  if (!rows.length || rows.length > 1000) throw new Error("recommendation record cardinality invalid");
+  if (!rows.length || rows.length > 1000)
+    throw new Error("recommendation record cardinality invalid");
   return rows;
 };
 const runtimePlan = (state: BridgeState, sourceRevision: number): RetentionPlan => {
@@ -400,7 +411,9 @@ const privateRetentionRequest = async (
 ): Promise<unknown | null> => {
   if (!endpoint) return null;
   if (!token || token.trim().length < 24) {
-    throw new Error("Track B private operations boundary requires a launcher-issued authentication token");
+    throw new Error(
+      "Track B private operations boundary requires a launcher-issued authentication token",
+    );
   }
   const response = await fetch(new URL(route, endpoint.endsWith("/") ? endpoint : `${endpoint}/`), {
     method: init.method ?? "GET",
@@ -431,8 +444,10 @@ export function createTrackBOperations({
   readonly operationsEndpoint?: string;
   readonly operationsToken?: string;
 }) {
-  const requestPrivate = (route: string, init?: { readonly method?: string; readonly body?: Record<string, unknown> }) =>
-    privateRetentionRequest(operationsEndpoint, operationsToken, route, init);
+  const requestPrivate = (
+    route: string,
+    init?: { readonly method?: string; readonly body?: Record<string, unknown> },
+  ) => privateRetentionRequest(operationsEndpoint, operationsToken, route, init);
   return {
     async listExtensions(): Promise<readonly unknown[]> {
       const state = await readState(statePath);

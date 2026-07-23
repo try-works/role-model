@@ -1090,14 +1090,37 @@ describe("initializeSqliteMemory", () => {
       runtimeStateRoot,
       scopeId: "workspace-shadow",
     });
-    const history = await readJson<{ byEndpointId: Record<string, Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]> }>("testdata/router-runtime/fixtures/observability-history.json");
-    const policy = await readJson<Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]>("testdata/router-runtime/fixtures/observability-policy.json");
-    const initial = createRuntimeObservationBundle({ decision: validation.decision, routingDiagnostics: validation.routingDiagnostics, retrievalReceipt: validation.retrievalReceipt, contextEnvelope: validation.contextEnvelope, execution: validation.execution, priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [], maintenancePolicy: {}, capturePolicy: policy });
-    persistRuntimeObservationBundle({ databasePath: validation.databasePath, observation: initial });
+    const history = await readJson<{
+      byEndpointId: Record<
+        string,
+        Parameters<typeof createRuntimeObservationBundle>[0]["priorSamples"]
+      >;
+    }>("testdata/router-runtime/fixtures/observability-history.json");
+    const policy = await readJson<
+      Parameters<typeof createRuntimeObservationBundle>[0]["capturePolicy"]
+    >("testdata/router-runtime/fixtures/observability-policy.json");
+    const initial = createRuntimeObservationBundle({
+      decision: validation.decision,
+      routingDiagnostics: validation.routingDiagnostics,
+      retrievalReceipt: validation.retrievalReceipt,
+      contextEnvelope: validation.contextEnvelope,
+      execution: validation.execution,
+      priorSamples: history.byEndpointId[validation.decision.chosen_endpoint_id] ?? [],
+      maintenancePolicy: {},
+      capturePolicy: policy,
+    });
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: initial,
+    });
     const migration = new sqliteMemory.LegacySqliteMigration({
       databasePath: validation.databasePath,
       backupPath: path.join(runtimeStateRoot, "shadow-backup.sqlite"),
-      artifactWriter: ({ sourceId, content, contentHash }) => ({ artifactId: `artifact-${sourceId}`, artifactPath: `graph/${sourceId}`, contentHash }),
+      artifactWriter: ({ sourceId, content, contentHash }) => ({
+        artifactId: `artifact-${sourceId}`,
+        artifactPath: `graph/${sourceId}`,
+        contentHash,
+      }),
     });
     migration.backfill({ scopeId: "workspace-shadow", batchSize: 100 });
     migration.enterShadowMirror({ deadlineMs: Date.now() + 60_000 });
@@ -1106,9 +1129,19 @@ describe("initializeSqliteMemory", () => {
     live.routingDecisionId = `${initial.routingDecisionId}-live`;
     live.observedPerformance.sample.request_id = live.requestId;
     live.observedPerformance.sample.routing_decision_id = live.routingDecisionId;
-    persistRuntimeObservationBundle({ databasePath: validation.databasePath, observation: live, artifactRef: { scopeId: "workspace-shadow", artifactId: "artifact-live", contentHash: "a".repeat(64) } });
+    persistRuntimeObservationBundle({
+      databasePath: validation.databasePath,
+      observation: live,
+      artifactRef: {
+        scopeId: "workspace-shadow",
+        artifactId: "artifact-live",
+        contentHash: "a".repeat(64),
+      },
+    });
     const database = new DatabaseSync(validation.databasePath);
-    const reference = database.prepare("SELECT source_id,artifact_id FROM legacy_graph_migration_refs WHERE source_id=?").get(live.requestId) as { source_id?: string; artifact_id?: string } | undefined;
+    const reference = database
+      .prepare("SELECT source_id,artifact_id FROM legacy_graph_migration_refs WHERE source_id=?")
+      .get(live.requestId) as { source_id?: string; artifact_id?: string } | undefined;
     database.close();
     expect(reference).toEqual({ source_id: live.requestId, artifact_id: "artifact-live" });
   });

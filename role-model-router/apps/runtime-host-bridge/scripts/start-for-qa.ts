@@ -629,11 +629,7 @@ export async function main(): Promise<void> {
   const productContracts = JSON.parse(await readFile(productContractsPath, "utf8")) as {
     readonly extensions?: readonly Record<string, unknown>[];
   };
-  const trackBBridgePath = path.join(
-    runtimeStateRoot,
-    scopeId,
-    "track-b-production-bridge.json",
-  );
+  const trackBBridgePath = path.join(runtimeStateRoot, scopeId, "track-b-production-bridge.json");
   const seeded = await seedTrackBExtensionBridgeState({
     statePath: trackBBridgePath,
     catalog: productContracts.extensions ?? [],

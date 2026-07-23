@@ -32,19 +32,27 @@ export interface PackagedProductionBackendOptions {
 }
 
 const trackBServerOperationNames = [
-  "listExtensions", "readStorageRetention", "dryRunStorageRetention",
-  "updateStorageRetentionPolicy", "executeStorageRetention", "cancelStorageRetentionJob",
-  "rollbackStorageRetention", "readContributionState", "updateContributionState",
-  "listRecommendations", "downloadRecommendations", "applyRecommendation", "readActivePack",
+  "listExtensions",
+  "readStorageRetention",
+  "dryRunStorageRetention",
+  "updateStorageRetentionPolicy",
+  "executeStorageRetention",
+  "cancelStorageRetentionJob",
+  "rollbackStorageRetention",
+  "readContributionState",
+  "updateContributionState",
+  "listRecommendations",
+  "downloadRecommendations",
+  "applyRecommendation",
+  "readActivePack",
 ] as const;
 
-export function createTrackBBridgeServerOptions<Backend extends Record<(typeof trackBServerOperationNames)[number], unknown>>(
-  backend: Backend,
-) {
-  return Object.fromEntries(trackBServerOperationNames.map(name => [name, backend[name]])) as Pick<
-    Backend,
-    (typeof trackBServerOperationNames)[number]
-  >;
+export function createTrackBBridgeServerOptions<
+  Backend extends Record<(typeof trackBServerOperationNames)[number], unknown>,
+>(backend: Backend) {
+  return Object.fromEntries(
+    trackBServerOperationNames.map((name) => [name, backend[name]]),
+  ) as Pick<Backend, (typeof trackBServerOperationNames)[number]>;
 }
 
 export async function stageTrackBRuntimeDistribution(options: {
@@ -62,22 +70,31 @@ export async function stageTrackBRuntimeDistribution(options: {
       readonly artifactSha256: string;
     }[];
   };
-  if (manifest.schemaVersion !== "role-model.track-b-runtime-distribution.v1" || manifest.extensions.length !== 13) {
+  if (
+    manifest.schemaVersion !== "role-model.track-b-runtime-distribution.v1" ||
+    manifest.extensions.length !== 13
+  ) {
     throw new Error("Track B runtime distribution manifest is incomplete");
   }
   const files = [manifest.sidecar, ...manifest.extensions];
-  const verified = await Promise.all(files.map(async file => {
-    const relative = file.modulePath.replaceAll("\\", "/");
-    if (relative.startsWith("/") || relative.split("/").includes("..")) {
-      throw new Error("Track B runtime distribution path is unsafe");
-    }
-    const sourcePath = path.join(options.sourceRoot, relative);
-    const observed = createHash("sha256").update(await readFile(sourcePath)).digest("hex");
-    if (observed !== file.artifactSha256.toLowerCase()) {
-      throw new Error(`Track B runtime distribution integrity verification failed for ${relative}`);
-    }
-    return { relative, sourcePath };
-  }));
+  const verified = await Promise.all(
+    files.map(async (file) => {
+      const relative = file.modulePath.replaceAll("\\", "/");
+      if (relative.startsWith("/") || relative.split("/").includes("..")) {
+        throw new Error("Track B runtime distribution path is unsafe");
+      }
+      const sourcePath = path.join(options.sourceRoot, relative);
+      const observed = createHash("sha256")
+        .update(await readFile(sourcePath))
+        .digest("hex");
+      if (observed !== file.artifactSha256.toLowerCase()) {
+        throw new Error(
+          `Track B runtime distribution integrity verification failed for ${relative}`,
+        );
+      }
+      return { relative, sourcePath };
+    }),
+  );
   await mkdir(options.releaseDir, { recursive: true });
   for (const file of verified) {
     const destination = path.join(options.releaseDir, file.relative);
@@ -100,10 +117,12 @@ export interface ProductionExtensionDescriptor {
   readonly capabilities: readonly string[];
 }
 
-export function resolveExtensionHostModuleUrl(options: {
-  readonly moduleUrl?: string;
-  readonly repoRoot?: string;
-} = {}) {
+export function resolveExtensionHostModuleUrl(
+  options: {
+    readonly moduleUrl?: string;
+    readonly repoRoot?: string;
+  } = {},
+) {
   const moduleUrl = options.moduleUrl?.trim();
   if (moduleUrl) {
     try {
@@ -132,16 +151,21 @@ export function resolveExtensionHostModuleUrl(options: {
       if (existsSync(normalized)) return pathToFileURL(normalized).href;
     }
   }
-  throw new Error("Track B extension host module could not be resolved from packaged runtime repo root");
+  throw new Error(
+    "Track B extension host module could not be resolved from packaged runtime repo root",
+  );
 }
 
-export function resolveTrackBNodeExecutable(options: {
-  readonly configured?: string;
-  readonly runtimeExecPath?: string;
-} = {}) {
-  const explicit = options.configured?.trim()
-    || process.env.ROLE_MODEL_TRACK_B_NODE_EXECUTABLE?.trim()
-    || process.env.ROLE_MODEL_NODE_EXECUTABLE?.trim();
+export function resolveTrackBNodeExecutable(
+  options: {
+    readonly configured?: string;
+    readonly runtimeExecPath?: string;
+  } = {},
+) {
+  const explicit =
+    options.configured?.trim() ||
+    process.env.ROLE_MODEL_TRACK_B_NODE_EXECUTABLE?.trim() ||
+    process.env.ROLE_MODEL_NODE_EXECUTABLE?.trim();
   if (explicit) return explicit;
   const runtimeExecPath = options.runtimeExecPath?.trim() || process.execPath;
   const executableName = path.basename(runtimeExecPath).toLowerCase();
@@ -158,25 +182,34 @@ export async function createProductionExtensionRuntime(options: {
     readonly artifactSha256: string;
   }[];
 }) {
-  if (options.extensions.length !== 13) throw new Error("exactly thirteen canonical extensions are required");
-  const ids = options.extensions.map(row => row.descriptor.id);
+  if (options.extensions.length !== 13)
+    throw new Error("exactly thirteen canonical extensions are required");
+  const ids = options.extensions.map((row) => row.descriptor.id);
   if (new Set(ids).size !== ids.length) throw new Error("canonical extension ids must be unique");
   for (const extension of options.extensions) {
-    const observed = createHash("sha256").update(await readFile(extension.modulePath)).digest("hex");
+    const observed = createHash("sha256")
+      .update(await readFile(extension.modulePath))
+      .digest("hex");
     if (observed !== extension.artifactSha256.toLowerCase()) {
-      throw new Error(`canonical extension integrity verification failed for ${extension.descriptor.id}`);
+      throw new Error(
+        `canonical extension integrity verification failed for ${extension.descriptor.id}`,
+      );
     }
   }
   const hostModuleUrl = resolveExtensionHostModuleUrl({ repoRoot: options.repoRoot });
-  const hostModule = await import(hostModuleUrl) as {
-    ExtensionHost: new (options: Record<string, unknown>) => {
+  const hostModule = (await import(hostModuleUrl)) as {
+    ExtensionHost: new (
+      options: Record<string, unknown>,
+    ) => {
       registerProcess(descriptor: ProductionExtensionDescriptor, modulePath: string): Promise<void>;
       invoke(id: string, envelope: Record<string, unknown>): Promise<Record<string, unknown>>;
       health(): Record<string, unknown>;
       disable(): void;
       shutdown(): Promise<void>;
     };
-    ExtensionSupervisor: new (options: Record<string, unknown>) => {
+    ExtensionSupervisor: new (
+      options: Record<string, unknown>,
+    ) => {
       ensure(id: string): Promise<{ status: string }>;
       stop(id: string): unknown;
       health(): Record<string, unknown>;
@@ -189,7 +222,9 @@ export async function createProductionExtensionRuntime(options: {
     journalPath: path.join(options.stateRoot, "extension-host.journal.ndjson"),
   });
   const supervisor = new hostModule.ExtensionSupervisor({
-    factory: async (id: string) => ({ exited: !((host.health().extensions as string[]).includes(id)) }),
+    factory: async (id: string) => ({
+      exited: !(host.health().extensions as string[]).includes(id),
+    }),
     maxRestarts: 3,
     restartBackoffMs: 10,
   });
@@ -197,7 +232,8 @@ export async function createProductionExtensionRuntime(options: {
     for (const extension of options.extensions) {
       await host.registerProcess(extension.descriptor, extension.modulePath);
       const supervised = await supervisor.ensure(extension.descriptor.id);
-      if (supervised.status !== "ready") throw new Error(`extension supervisor rejected ${extension.descriptor.id}`);
+      if (supervised.status !== "ready")
+        throw new Error(`extension supervisor rejected ${extension.descriptor.id}`);
     }
   } catch (error) {
     await host.shutdown();
@@ -218,14 +254,20 @@ export async function createProductionExtensionRuntime(options: {
   };
 }
 
-export async function createPackagedProductionRuntime<Backend extends {
-  close?(): Promise<void>;
-  shutdown?(): Promise<void>;
-}>(
+export async function createPackagedProductionRuntime<
+  Backend extends {
+    close?(): Promise<void>;
+    shutdown?(): Promise<void>;
+  },
+>(
   options: TrackBProductionRuntimeOptions & {
     readonly createBackend: (options: PackagedProductionBackendOptions) => Promise<Backend>;
   },
-): Promise<{ readonly backend: Backend; readonly trackB: ReturnType<typeof createTrackBProductionRuntime>; close(): Promise<void> }> {
+): Promise<{
+  readonly backend: Backend;
+  readonly trackB: ReturnType<typeof createTrackBProductionRuntime>;
+  close(): Promise<void>;
+}> {
   const trackB = createTrackBProductionRuntime(options);
   const started = await trackB.start();
   let backend: Backend;
@@ -261,7 +303,10 @@ export function createOwnedTrackBSidecarSpec(options: {
   aggregateScope?: string;
   startupTimeoutMs?: number;
 }): OwnedTrackBSidecarSpec {
-  if (options.channel === "production" && (!options.artifactDigestKeyFile || !options.artifactEncryptionKeyFile)) {
+  if (
+    options.channel === "production" &&
+    (!options.artifactDigestKeyFile || !options.artifactEncryptionKeyFile)
+  ) {
     throw new Error("production Track B sidecar requires managed artifact keys");
   }
   return {
@@ -280,13 +325,23 @@ export function createOwnedTrackBSidecarSpec(options: {
         nodeExecutable,
         [
           options.artifactPath,
-          "--state-root", options.stateRoot,
-          "--channel", options.channel,
-          "--host", "127.0.0.1",
-          "--port", "0",
-          ...(options.artifactDigestKeyFile ? ["--artifact-digest-key-file", options.artifactDigestKeyFile] : []),
-          ...(options.artifactEncryptionKeyFile ? ["--artifact-encryption-key-file", options.artifactEncryptionKeyFile] : []),
-          ...(options.trustMaterialFile ? ["--trust-material-file", options.trustMaterialFile] : []),
+          "--state-root",
+          options.stateRoot,
+          "--channel",
+          options.channel,
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "0",
+          ...(options.artifactDigestKeyFile
+            ? ["--artifact-digest-key-file", options.artifactDigestKeyFile]
+            : []),
+          ...(options.artifactEncryptionKeyFile
+            ? ["--artifact-encryption-key-file", options.artifactEncryptionKeyFile]
+            : []),
+          ...(options.trustMaterialFile
+            ? ["--trust-material-file", options.trustMaterialFile]
+            : []),
           ...(options.aggregateEndpoint ? ["--aggregate-endpoint", options.aggregateEndpoint] : []),
           ...(options.aggregateScope ? ["--aggregate-scope", options.aggregateScope] : []),
         ],
@@ -316,11 +371,17 @@ export function createOwnedTrackBSidecarSpec(options: {
         }, options.startupTimeoutMs ?? 10_000);
         const rejectError = (error: Error) => {
           clearTimeout(timer);
-          reject(new Error(`Track B node worker executable failed: ${error.message}`, { cause: error }));
+          reject(
+            new Error(`Track B node worker executable failed: ${error.message}`, { cause: error }),
+          );
         };
         const rejectExit = (code: number | null, signal: NodeJS.Signals | null) => {
           clearTimeout(timer);
-          reject(new Error(`Track B sidecar exited before readiness (${code ?? signal})${stderr ? `: ${stderr}` : ""}`));
+          reject(
+            new Error(
+              `Track B sidecar exited before readiness (${code ?? signal})${stderr ? `: ${stderr}` : ""}`,
+            ),
+          );
         };
         child.once("error", rejectError);
         child.once("exit", rejectExit);
@@ -377,10 +438,13 @@ export function createOwnedTrackBSidecarSpec(options: {
 
 export function createTrackBProductionRuntime(options: TrackBProductionRuntimeOptions) {
   if (process.env.ROLE_MODEL_TRACK_B_OPERATIONS_URL?.trim()) {
-    throw new Error("Externally prestarted Track B operations boundary is forbidden in production composition");
+    throw new Error(
+      "Externally prestarted Track B operations boundary is forbidden in production composition",
+    );
   }
   if (!options.stateRoot?.trim()) throw new Error("Track B state root is required");
-  if (!options.sidecar.artifactPath?.trim()) throw new Error("Track B sidecar artifact path is required");
+  if (!options.sidecar.artifactPath?.trim())
+    throw new Error("Track B sidecar artifact path is required");
   if (!/^[a-f0-9]{64}$/i.test(options.sidecar.artifactSha256)) {
     throw new Error("Track B sidecar artifact SHA-256 is required");
   }
@@ -404,7 +468,10 @@ export function createTrackBProductionRuntime(options: TrackBProductionRuntimeOp
           throw new Error("owned Track B sidecar exited during startup");
         }
         const endpoint = new URL(processHandle.endpoint);
-        if (endpoint.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(endpoint.hostname)) {
+        if (
+          endpoint.protocol !== "http:" ||
+          !["127.0.0.1", "localhost", "[::1]"].includes(endpoint.hostname)
+        ) {
           throw new Error("owned Track B sidecar must bind a loopback HTTP endpoint");
         }
         status = "ready";
@@ -421,7 +488,12 @@ export function createTrackBProductionRuntime(options: TrackBProductionRuntimeOp
     health() {
       return {
         routingAvailable: true,
-        sidecar: { status, ownedByLauncher: true, supervised: true, pid: processHandle?.pid ?? null },
+        sidecar: {
+          status,
+          ownedByLauncher: true,
+          supervised: true,
+          pid: processHandle?.pid ?? null,
+        },
       };
     },
     async stop() {

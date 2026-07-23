@@ -19,8 +19,14 @@ process.stdin.on("data", async (chunk) => {
   const parsed = extractFrames(input);
   input = parsed.remainder;
   for (const message of parsed.values) {
-    if (message.type === "ack") { retained.delete(message.requestId); continue; }
-    if (message.type === "shutdown") { await send({ type: "shutdown-ack" }); process.exit(0); }
+    if (message.type === "ack") {
+      retained.delete(message.requestId);
+      continue;
+    }
+    if (message.type === "shutdown") {
+      await send({ type: "shutdown-ack" });
+      process.exit(0);
+    }
     if (message.type !== "invoke") continue;
     try {
       const result = await extension.run(message.envelope);
@@ -28,7 +34,11 @@ process.stdin.on("data", async (chunk) => {
       retained.set(message.requestId, response);
       await send(response);
     } catch (error) {
-      const response = { type: "error", requestId: message.requestId, error: error?.message ?? String(error) };
+      const response = {
+        type: "error",
+        requestId: message.requestId,
+        error: error?.message ?? String(error),
+      };
       retained.set(message.requestId, response);
       await send(response);
     }
