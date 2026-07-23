@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 
 import {
   CodeBlock,
@@ -16,7 +16,6 @@ import {
   compactTitleClassName,
   inlineTitleClassName,
   metaTextClassName,
-  secondaryButtonClassName,
   supportingTextClassName,
   utilityLabelClassName,
 } from "../lib/design-system";
@@ -570,23 +569,6 @@ export default function RequestDetailRoute() {
           }
         />
       </div>
-
-      <SectionCard
-        title="Adjacent raw-host tools"
-        description="Structured telemetry is canonical here; preserved host surfaces are available when you need raw metrics, captures, or combined logs."
-      >
-        <div className="flex flex-wrap gap-3">
-          <Link className={secondaryButtonClassName} to="/app/observe/requests">
-            Back to request ledger
-          </Link>
-          <Link className={secondaryButtonClassName} to="/app/observe/activity">
-            Host activity & captures
-          </Link>
-          <Link className={secondaryButtonClassName} to="/app/observe/logs">
-            Host logs
-          </Link>
-        </div>
-      </SectionCard>
 
       <SectionCard
         title="Taxonomy classification"

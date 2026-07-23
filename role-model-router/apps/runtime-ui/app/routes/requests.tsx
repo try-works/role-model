@@ -20,7 +20,6 @@ import {
   listRowClassName,
   metaTextClassName,
   mutedPanelClassName,
-  secondaryButtonClassName,
   supportingTextClassName,
 } from "../lib/design-system";
 import { startDeferredLiveRefresh } from "../lib/live-refresh";
@@ -543,23 +542,6 @@ export default function RequestsRoute() {
           </div>
         ))}
       </div>
-
-      <SectionCard
-        title="Adjacent raw-host tools"
-        description="Use preserved host surfaces when you need raw metrics, captures, or combined logs beyond the structured telemetry analytics band."
-      >
-        <div className="flex flex-wrap gap-3">
-          <Link className={secondaryButtonClassName} to="/app/observe/activity">
-            Host activity & captures
-          </Link>
-          <Link className={secondaryButtonClassName} to="/app/observe/logs">
-            Host logs
-          </Link>
-          <Link className={secondaryButtonClassName} to="/app/observe/routing">
-            Routing analytics
-          </Link>
-        </div>
-      </SectionCard>
 
       <SectionCard title="Recent telemetry requests">
         {loading && charts.length === 0 ? (

@@ -393,7 +393,7 @@ const observeRequestsRoute = createRoute({
   template: "ledger-inspector",
   title: "Telemetry request ledger",
   description:
-    "Canonical runtime telemetry rows with direct drill-in to request captures, endpoint profile context, and tooling receipts.",
+    "Canonical runtime telemetry rows with direct drill-in to request captures, endpoint profile context, and tooling receipts. Raw-host Activity and Logs stay in Observe navigation rather than an in-page adjacent-tools card.",
 });
 
 const observeRoutingRoute = createRoute({
@@ -417,7 +417,7 @@ const observeRequestDetailRoute = createRoute({
   template: "ledger-inspector",
   title: "Telemetry request detail",
   description:
-    "Canonical telemetry detail with usage, cache, capture, endpoint profile, and tooling receipts aligned in one inspector.",
+    "Canonical telemetry detail with usage, cache, capture, endpoint profile, and tooling receipts aligned in one inspector. Raw-host Activity and Logs stay in Observe navigation rather than an in-page adjacent-tools card.",
 });
 
 const observeLogsRoute = createRoute({
