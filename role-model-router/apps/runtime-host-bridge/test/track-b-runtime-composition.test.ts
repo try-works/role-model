@@ -317,9 +317,8 @@ describe("production Track B composition", () => {
   test("resolves the extension host from repo root when packaged CJS has no import.meta.url", async () => {
     const resolved = resolveExtensionHostModuleUrl({ moduleUrl: "", repoRoot });
     expect(resolved).toBe(
-      pathToFileURL(
-        path.join(repoRoot, "role-model-router/packages/extension-host/index.mjs"),
-      ).href,
+      pathToFileURL(path.join(repoRoot, "role-model-router/packages/extension-host/index.mjs"))
+        .href,
     );
     const hostModule = (await import(resolved)) as {
       ExtensionHost?: unknown;
