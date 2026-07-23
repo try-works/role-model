@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { afterEach, describe, expect, test } from "vitest";
 
@@ -316,9 +317,8 @@ describe("production Track B composition", () => {
   test("resolves the extension host from repo root when packaged CJS has no import.meta.url", async () => {
     const resolved = resolveExtensionHostModuleUrl({ moduleUrl: "", repoRoot });
     expect(resolved).toBe(
-      new URL(
-        "role-model-router/packages/extension-host/index.mjs",
-        `file:///${repoRoot.replaceAll("\\", "/")}/`,
+      pathToFileURL(
+        path.join(repoRoot, "role-model-router/packages/extension-host/index.mjs"),
       ).href,
     );
     const hostModule = (await import(resolved)) as {
