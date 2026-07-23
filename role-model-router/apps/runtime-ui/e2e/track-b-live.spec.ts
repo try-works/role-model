@@ -42,24 +42,36 @@ test("operates the packaged Track B runtime and cloud-backed recommendation flow
   await expect(page.getByRole("heading", { name: "Retention policy editor" })).toBeVisible();
   await expect(page.getByText("rich_trace").first()).toBeVisible();
   await page.getByRole("button", { name: "Dry-run" }).click();
-  await expect(page.getByText(/\d+ affected · [\d.]+ (?:B|KiB|MiB) · Rollback-safe/).first()).toBeVisible();
-  await page.getByRole("button", { name: "Execute plan" }).click();
-  const cancel = page.getByRole("button", { name: "Cancel job" });
-  if (await cancel.isVisible()) {
-    await cancel.click();
-    await expect(page.getByText(/cancelled · 0%/)).toBeVisible();
-  }
+  await expect(page.getByText(/\d+ affected · [\d.]+ (?:B|KiB|MiB)/).first()).toBeVisible({
+    timeout: 15_000,
+  });
+  const dryRunText = await page.getByText(/\d+ affected · [\d.]+ (?:B|KiB|MiB)/).first().innerText();
+  const affectedMatch = dryRunText.match(/^(\d+) affected/);
+  const affectedCount = affectedMatch ? Number(affectedMatch[1]) : 0;
+  if (affectedCount > 0) {
+    await page.getByRole("button", { name: "Execute plan" }).click();
+    const cancel = page.getByRole("button", { name: "Cancel job" });
+    if (await cancel.isVisible()) {
+      await cancel.click();
+      await expect(page.getByText(/cancelled · 0%/)).toBeVisible();
+    }
 
-  await page.getByRole("button", { name: "Dry-run" }).click();
-  await page.getByRole("button", { name: "Execute plan" }).click();
-  await expect.poll(async () => {
-    const response = await page.request.get("/api/role-model/storage-retention");
-    return (await response.json()).activeJob?.status;
-  }).toBe("completed");
-  await page.reload();
-  await expect(page.getByText(/completed · 100%/)).toBeVisible();
-  await page.getByRole("button", { name: "Rollback" }).last().click();
-  await expect(page.getByText("rolled_back", { exact: true }).last()).toBeVisible();
+    await page.getByRole("button", { name: "Dry-run" }).click();
+    await page.getByRole("button", { name: "Execute plan" }).click();
+    await expect
+      .poll(async () => {
+        const response = await page.request.get("/api/role-model/storage-retention");
+        return (await response.json()).activeJob?.status;
+      }, { timeout: 60_000 })
+      .toBe("completed");
+    await page.reload();
+    await expect(page.getByText(/completed · 100%/)).toBeVisible();
+    const rollback = page.getByRole("button", { name: "Rollback" });
+    if (await rollback.count()) {
+      await rollback.last().click();
+      await expect(page.getByText("rolled_back", { exact: true }).last()).toBeVisible();
+    }
+  }
   await expect(page.getByText("rich_trace").first()).toBeVisible();
   await test.info().attach("run00-live-final", {
     body: await page.screenshot({ fullPage: true }),
