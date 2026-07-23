@@ -329,3 +329,19 @@ describe("startDeferredProvidersBootstrap", () => {
     expect(initialErrors).toEqual([]);
   });
 });
+
+describe("Kimi OAuth verification URL open regression", () => {
+  test("providers route mounts DeviceAuthorizationCard for live oauthState", async () => {
+    // Source-contract guard: pending non-Codex OAuth previously had toast-only UX and no URL card.
+    // Bound by addenda/05-manual-qa.kimi-oauth-verification-url-open.addendum-02.md
+    const source = await import("node:fs/promises").then((fs) =>
+      fs.readFile(new URL("./providers.tsx", import.meta.url), "utf8"),
+    );
+    expect(source).toContain('from "../components/device-authorization-card"');
+    expect(source).toContain("{oauthState ? (");
+    expect(source).toContain("<DeviceAuthorizationCard");
+    expect(source).toContain("onOpenVerificationUrl={() => void openVerificationUrl(oauthState)}");
+    expect(source).toContain('const opened = window.open(verificationUrl, "_blank", "noopener,noreferrer")');
+    expect(source).toContain("Use the Verification URL link below");
+  });
+});

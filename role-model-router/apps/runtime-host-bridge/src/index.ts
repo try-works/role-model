@@ -1,4 +1,3 @@
-import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import {
   appendFileSync,
@@ -179,6 +178,7 @@ import {
   resolveEndpointRoleIds,
 } from "./local-model-role-bindings.js";
 import { resolveOauthCredentialRef } from "./oauth-credential.js";
+import { openUrlInDefaultBrowser } from "./open-external-url.js";
 import {
   type OperatorIntentDiagnostic,
   type OperatorIntentRemoteActivation,
@@ -9557,30 +9557,6 @@ function validateExternalUrl(value: string): string {
   return parsed.toString();
 }
 
-function openUrlInDefaultBrowser(url: string): void {
-  const command =
-    process.platform === "win32"
-      ? {
-          file: "explorer.exe",
-          args: [url],
-        }
-      : process.platform === "darwin"
-        ? {
-            file: "open",
-            args: [url],
-          }
-        : {
-            file: "xdg-open",
-            args: [url],
-          };
-
-  const child = spawn(command.file, command.args, {
-    detached: true,
-    stdio: "ignore",
-    windowsHide: true,
-  });
-  child.unref();
-}
 
 function readStringArray(record: Record<string, unknown>, key: string): string[] | undefined {
   const value = record[key];

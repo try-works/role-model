@@ -82,17 +82,28 @@ export function DeviceAuthorizationCard(input: {
       ) : null}
 
       {verificationUrl && !isCodexSubscription ? (
-        <p className="mt-2 break-all">
-          <span className={bodyStrongTextClassName}>Verification URL:</span>{" "}
-          <a
-            className={inlineLinkClassName}
-            href={verificationUrl}
-            rel="noreferrer"
-            target="_blank"
-          >
-            {verificationUrl}
-          </a>
-        </p>
+        <div className="mt-3 space-y-2">
+          <p className="break-all">
+            <span className={bodyStrongTextClassName}>Verification URL:</span>{" "}
+            <a
+              className={inlineLinkClassName}
+              href={verificationUrl}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {verificationUrl}
+            </a>
+          </p>
+          {input.onOpenVerificationUrl ? (
+            <button
+              className={secondaryButtonClassName}
+              type="button"
+              onClick={input.onOpenVerificationUrl}
+            >
+              Open verification page
+            </button>
+          ) : null}
+        </div>
       ) : null}
 
       {input.session.lastError ? (
