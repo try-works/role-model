@@ -189,7 +189,9 @@ function sourceProof(database: DatabaseSync, pageSize = 1_000): { count: number;
       digest.update(`${row.request_id}\0${sha256(row.observation_json)}`);
       count += 1;
     }
-    cursor = rows.at(-1)?.request_id;
+    const last = rows[rows.length - 1];
+    if (!last) break;
+    cursor = last.request_id;
   }
   return { count, hash: digest.digest("hex") };
 }
@@ -218,7 +220,9 @@ function targetProof(database: DatabaseSync): { count: number; hash: string } {
       digest.update(`${row.source_id}\0${row.source_hash}`);
       count += 1;
     }
-    cursor = rows.at(-1)?.source_id;
+    const last = rows[rows.length - 1];
+    if (!last) break;
+    cursor = last.source_id;
   }
   return { count, hash: digest.digest("hex") };
 }
