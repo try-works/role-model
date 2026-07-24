@@ -22452,17 +22452,42 @@ export async function createRuntimeBridgeBackend(
         catalog: contract.extensions ?? [],
       }).listExtensions();
       const hostedIds = new Set(options.trackBExtensionHealth?.().host?.extensions ?? []);
-      return (rows as readonly Record<string, unknown>[]).map((row) =>
-        hostedIds.has(String(row.id))
-          ? {
-              ...row,
-              installed: true,
-              enabled: true,
-              lifecycle: "ready",
-              health: { available: true, routingDependency: false },
-            }
-          : row,
-      );
+      return (rows as readonly Record<string, unknown>[]).map((row) => {
+        if (!hostedIds.has(String(row.id))) return row;
+        const priorHealth =
+          row.health && typeof row.health === "object"
+            ? (row.health as Record<string, unknown>)
+            : {};
+        const routingDependency = Boolean(
+          row.routingDependency ?? priorHealth.routingDependency ?? false,
+        );
+        const reason =
+          typeof priorHealth.reason === "string" && priorHealth.reason.length > 0
+            ? priorHealth.reason
+            : "hosted_extension_ready";
+        return {
+          ...row,
+          installed: true,
+          enabled: true,
+          lifecycle: "ready",
+          health: {
+            ...priorHealth,
+            available: true,
+            routingDependency,
+            probe:
+              typeof priorHealth.probe === "string" && priorHealth.probe.length > 0
+                ? priorHealth.probe
+                : "hosted_extension_ready",
+            summary:
+              typeof priorHealth.summary === "string" && priorHealth.summary.length > 0
+                ? priorHealth.summary
+                : routingDependency
+                  ? "Hosted extension is ready and marked as a routing dependency."
+                  : "Hosted extension is ready; core routing continues if this worker degrades.",
+            reason,
+          },
+        };
+      });
     },
     async readStorageRetention(): Promise<unknown> {
       return createTrackBOperations({

@@ -26,6 +26,13 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("Authorization epoch");
     expect(routeSource).toContain("Retention");
     expect(routeSource).toContain("Degradation");
+    expect(routeSource).toContain("Routing dependency");
+    expect(routeSource).toContain("Data classes");
+    expect(routeSource).toContain("Health probe");
+    expect(routeSource).toContain("LIFECYCLE_COPY");
+    expect(routeSource).toContain("operatorBoundaryNote");
+    expect(routeSource).toContain("production prompt injection");
+    expect(routeSource).toContain("enable/disable mutation API");
   });
   test("renders the existing design-system loading shell before operational state arrives", () => {
     const html = renderToStaticMarkup(<ExtensionsRouteView />);

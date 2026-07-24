@@ -1357,7 +1357,13 @@ export interface RuntimeExtensionStatus {
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
-  readonly health: { readonly available: boolean; readonly routingDependency: false };
+  readonly health: {
+    readonly available: boolean;
+    readonly routingDependency: boolean;
+    readonly probe?: string;
+    readonly summary?: string;
+    readonly reason?: string;
+  };
   readonly permissions: readonly string[];
   readonly dataClasses: readonly string[];
   readonly retention: string;

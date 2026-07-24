@@ -30,6 +30,78 @@ import {
   updateContributionState,
 } from "../lib/runtime-api";
 
+const LIFECYCLE_COPY: Record<
+  RuntimeExtensionStatus["lifecycle"] | "unavailable",
+  { readonly label: string; readonly routingMeaning: string }
+> = {
+  installed_disabled: {
+    label: "Installed · disabled",
+    routingMeaning:
+      "Package is present but not running. Core routing continues without this worker.",
+  },
+  installed_active_pending_disclosure: {
+    label: "Active · pending disclosure",
+    routingMeaning:
+      "Worker may contribute after disclosure completes; routing remains independent of contribution policy.",
+  },
+  starting: {
+    label: "Starting",
+    routingMeaning: "Lifecycle transition in progress. Routing does not wait on this worker.",
+  },
+  ready: {
+    label: "Ready",
+    routingMeaning:
+      "Worker passed lifecycle and health gates. Local degradation still preserves routing continuity.",
+  },
+  degraded: {
+    label: "Degraded",
+    routingMeaning:
+      "Bounded failure mode is active. See degradation policy; core routing continues.",
+  },
+  stopping: {
+    label: "Stopping",
+    routingMeaning: "Worker is shutting down. Core routing continues without waiting on it.",
+  },
+  stopped: {
+    label: "Stopped",
+    routingMeaning: "Worker is stopped. Core routing continues without this package.",
+  },
+  unavailable: {
+    label: "Unavailable",
+    routingMeaning: "Not registered with the private supervisor bridge for this host.",
+  },
+};
+
+const operatorBoundaryNote = (extensionId: string): string | null => {
+  if (extensionId === "knowledge-worker") {
+    return "Local store and shadow derivation only. Enabling this extension does not activate production prompt injection or live routing of derived knowledge in v1.1.";
+  }
+  if (extensionId === "knowledge-store") {
+    return "Serves last-ready knowledge references. Production activation of knowledge into prompts remains locked off in v1.1.";
+  }
+  return null;
+};
+
+const lifecycleTone = (
+  lifecycle: string,
+): "success" | "warning" | "error" | "neutral" => {
+  if (lifecycle === "ready") return "success";
+  if (lifecycle === "degraded" || lifecycle === "installed_active_pending_disclosure")
+    return "warning";
+  if (lifecycle === "unavailable" || lifecycle === "stopped") return "error";
+  return "neutral";
+};
+
+const healthSummary = (extension: RuntimeExtensionStatus): string => {
+  const health = extension.health;
+  if (health.summary && health.summary.trim().length > 0) return health.summary;
+  if (health.reason && health.reason.trim().length > 0) return health.reason.replaceAll("_", " ");
+  if (!health.available) return "Health probe reports unavailable.";
+  return health.routingDependency
+    ? "Available and marked as a routing dependency."
+    : "Available; not a routing dependency.";
+};
+
 export function ExtensionsRouteView() {
   const [extensions, setExtensions] = useState<readonly RuntimeExtensionStatus[] | null>(null);
   const [contribution, setContribution] = useState<RuntimeContributionState | null>(null);
@@ -133,7 +205,7 @@ export function ExtensionsRouteView() {
       {error ? <ErrorState label={error} /> : null}
       <SectionCard
         title="Contribution, disclosure, and opt-out"
-        description="Aggregate upload is independent from local recommendation use, training, external RL, and rich capture."
+        description="Aggregate upload is independent from local recommendation use, training, external RL, and rich capture. Contribution policy is not extension enablement."
       >
         {contribution === null ? (
           <LoadingState label="Loading contribution policy…" />
@@ -261,7 +333,7 @@ export function ExtensionsRouteView() {
       </SectionCard>
       <SectionCard
         title="Extension boundary"
-        description="Lifecycle state is separate from installation, permissions, contribution tier, upload authorization, training, and export policy."
+        description="Install, enablement, lifecycle, health, and contribution/recommendation policy are separate. Hosted first-party packages do not expose a public enable/disable mutation API in this release; lifecycle is reported from the host bridge."
       >
         {extensions === null ? (
           <LoadingState label="Loading extension lifecycle…" />
@@ -269,43 +341,95 @@ export function ExtensionsRouteView() {
           <EmptyState label="No extension packages are installed." />
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
-            {extensions.map((extension) => (
-              <article className={`${mutedPanelClassName} min-w-0 p-4 md:p-5`} key={extension.id}>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className={compactTitleClassName}>{extension.id}</p>
-                    <p className={`mt-1 ${utilityLabelClassName} text-[var(--rm-muted)]`}>
-                      {extension.packageClass.replaceAll("_", " ")}
-                    </p>
+            {extensions.map((extension) => {
+              const lifecycleKey = String(extension.lifecycle);
+              const lifecycle =
+                LIFECYCLE_COPY[lifecycleKey as keyof typeof LIFECYCLE_COPY] ??
+                ({
+                  label: lifecycleKey.replaceAll("_", " "),
+                  routingMeaning:
+                    "Lifecycle reported by the host. Core routing continuity is independent of this worker unless marked as a routing dependency.",
+                } as const);
+              const boundaryNote = operatorBoundaryNote(extension.id);
+              const degradedOrUnavailable =
+                extension.lifecycle === "degraded" ||
+                !extension.health.available ||
+                lifecycleKey === "unavailable" ||
+                extension.lifecycle === "stopped";
+              return (
+                <article className={`${mutedPanelClassName} min-w-0 p-4 md:p-5`} key={extension.id}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className={compactTitleClassName}>{extension.id}</p>
+                      <p className={`mt-1 ${utilityLabelClassName} text-[var(--rm-muted)]`}>
+                        {extension.packageClass.replaceAll("_", " ")}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      <StatusPill tone={extension.installed ? "success" : "neutral"}>
+                        {extension.installed ? "installed" : "not installed"}
+                      </StatusPill>
+                      <StatusPill tone={extension.enabled ? "success" : "neutral"}>
+                        {extension.enabled ? "enabled" : "disabled"}
+                      </StatusPill>
+                      <StatusPill tone={lifecycleTone(lifecycleKey)}>{lifecycle.label}</StatusPill>
+                    </div>
                   </div>
-                  <StatusPill
-                    tone={
-                      extension.lifecycle === "ready"
-                        ? "success"
-                        : extension.lifecycle === "degraded"
-                          ? "warning"
-                          : "neutral"
-                    }
-                  >
-                    {extension.lifecycle.replaceAll("_", " ")}
-                  </StatusPill>
-                </div>
-                <dl className="mt-5 grid gap-x-4 gap-y-3 sm:grid-cols-2">
-                  <Detail
-                    label="Channel / scope"
-                    value={`${extension.channel} · ${extension.scope}`}
-                  />
-                  <Detail
-                    label="Authorization epoch"
-                    value={String(extension.authorizationEpoch)}
-                  />
-                  <Detail label="Retention" value={extension.retention} />
-                  <Detail label="Degradation" value={extension.degradation} />
-                  <Detail label="Permissions" value={extension.permissions.join(", ") || "none"} />
-                  <Detail label="Compatibility" value={extension.compatibility.join(", ")} />
-                </dl>
-              </article>
-            ))}
+                  <p className={`mt-3 ${supportingTextClassName}`}>{lifecycle.routingMeaning}</p>
+                  {boundaryNote ? (
+                    <p className={`mt-2 ${supportingTextClassName}`}>{boundaryNote}</p>
+                  ) : null}
+                  {degradedOrUnavailable ? (
+                    <div className="mt-3">
+                      <ErrorState
+                        label={
+                          !extension.health.available
+                            ? `Health unavailable: ${healthSummary(extension)}`
+                            : `Worker ${lifecycle.label.toLowerCase()}: ${extension.degradation}`
+                        }
+                      />
+                    </div>
+                  ) : null}
+                  <dl className="mt-5 grid gap-x-4 gap-y-3 sm:grid-cols-2">
+                    <Detail
+                      label="Channel / scope"
+                      value={`${extension.channel} · ${extension.scope}`}
+                    />
+                    <Detail
+                      label="Authorization epoch"
+                      value={String(extension.authorizationEpoch)}
+                    />
+                    <Detail
+                      label="Health"
+                      value={
+                        extension.health.available
+                          ? `available · ${healthSummary(extension)}`
+                          : `unavailable · ${healthSummary(extension)}`
+                      }
+                    />
+                    <Detail
+                      label="Routing dependency"
+                      value={extension.health.routingDependency ? "yes" : "no"}
+                    />
+                    <Detail
+                      label="Health probe"
+                      value={extension.health.probe?.replaceAll("_", " ") ?? "not reported"}
+                    />
+                    <Detail
+                      label="Data classes"
+                      value={extension.dataClasses.join(", ") || "none"}
+                    />
+                    <Detail label="Retention" value={extension.retention} />
+                    <Detail label="Degradation" value={extension.degradation} />
+                    <Detail
+                      label="Permissions"
+                      value={extension.permissions.join(", ") || "none"}
+                    />
+                    <Detail label="Compatibility" value={extension.compatibility.join(", ")} />
+                  </dl>
+                </article>
+              );
+            })}
           </div>
         )}
       </SectionCard>
