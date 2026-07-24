@@ -9557,7 +9557,6 @@ function validateExternalUrl(value: string): string {
   return parsed.toString();
 }
 
-
 function readStringArray(record: Record<string, unknown>, key: string): string[] | undefined {
   const value = record[key];
   if (value === undefined) {

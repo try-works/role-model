@@ -82,9 +82,7 @@ const operatorBoundaryNote = (extensionId: string): string | null => {
   return null;
 };
 
-const lifecycleTone = (
-  lifecycle: string,
-): "success" | "warning" | "error" | "neutral" => {
+const lifecycleTone = (lifecycle: string): "success" | "warning" | "error" | "neutral" => {
   if (lifecycle === "ready") return "success";
   if (lifecycle === "degraded" || lifecycle === "installed_active_pending_disclosure")
     return "warning";

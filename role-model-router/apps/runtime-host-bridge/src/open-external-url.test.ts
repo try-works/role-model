@@ -8,8 +8,7 @@ import { resolveOpenExternalUrlCommand } from "./open-external-url.js";
  * Bound by addenda/05-manual-qa.kimi-oauth-verification-url-open.addendum-02.md
  */
 describe("resolveOpenExternalUrlCommand (Kimi OAuth verification URL regression)", () => {
-  const kimiVerificationUrl =
-    "https://www.kimi.com/code/authorize_device?user_code=ABCD-EFGH";
+  const kimiVerificationUrl = "https://www.kimi.com/code/authorize_device?user_code=ABCD-EFGH";
 
   test("uses cmd start on Windows so query-string OAuth URLs open in the browser", () => {
     expect(resolveOpenExternalUrlCommand("win32", kimiVerificationUrl)).toEqual({

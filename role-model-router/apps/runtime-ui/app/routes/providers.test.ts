@@ -341,7 +341,9 @@ describe("Kimi OAuth verification URL open regression", () => {
     expect(source).toContain("{oauthState ? (");
     expect(source).toContain("<DeviceAuthorizationCard");
     expect(source).toContain("onOpenVerificationUrl={() => void openVerificationUrl(oauthState)}");
-    expect(source).toContain('const opened = window.open(verificationUrl, "_blank", "noopener,noreferrer")');
+    expect(source).toContain(
+      'const opened = window.open(verificationUrl, "_blank", "noopener,noreferrer")',
+    );
     expect(source).toContain("Use the Verification URL link below");
   });
 });
