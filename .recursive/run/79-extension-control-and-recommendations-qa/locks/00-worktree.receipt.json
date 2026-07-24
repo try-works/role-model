@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "e0ee8fdc809af826239532440af30b183f6aef5c24441dcabb89679910d17297",
+  "artifact_path": "D:\\DEV\\role-model\\.worktrees\\79-extension-control-and-recommendations-qa\\.recursive\\run\\79-extension-control-and-recommendations-qa\\00-worktree.md",
+  "locked_at": "2026-07-24T07:29:11Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "921c3135c451cce43b9cf3068f63b31c2864ed8320fd1f3eb60a66e21640fbe4"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "a89cbb375d6162c35aa7cac1ae59017e6aaff00e0fb395161f0bc1723e5eca7c"
+}

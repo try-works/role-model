@@ -33,6 +33,7 @@ export interface PackagedProductionBackendOptions {
 
 const trackBServerOperationNames = [
   "listExtensions",
+  "mutateExtension",
   "readStorageRetention",
   "dryRunStorageRetention",
   "updateStorageRetentionPolicy",
@@ -44,6 +45,7 @@ const trackBServerOperationNames = [
   "listRecommendations",
   "downloadRecommendations",
   "applyRecommendation",
+  "dismissRecommendation",
   "readActivePack",
 ] as const;
 

@@ -43,6 +43,7 @@ type CliBackend = Pick<
   | "listProviders"
   | "listModels"
   | "listExtensions"
+  | "mutateExtension"
   | "readStorageRetention"
   | "dryRunStorageRetention"
   | "updateStorageRetentionPolicy"
@@ -54,6 +55,7 @@ type CliBackend = Pick<
   | "listRecommendations"
   | "downloadRecommendations"
   | "applyRecommendation"
+  | "dismissRecommendation"
   | "readActivePack"
   | "listRoles"
   | "listAccounts"
@@ -296,6 +298,9 @@ export function createCliServerOptions(
     listExtensions: bindBackendMethod(
       "listExtensions",
     ) as StartBridgeServerOptions["listExtensions"],
+    mutateExtension: bindBackendMethod(
+      "mutateExtension",
+    ) as StartBridgeServerOptions["mutateExtension"],
     readStorageRetention: bindBackendMethod(
       "readStorageRetention",
     ) as StartBridgeServerOptions["readStorageRetention"],
@@ -329,6 +334,9 @@ export function createCliServerOptions(
     applyRecommendation: bindBackendMethod(
       "applyRecommendation",
     ) as StartBridgeServerOptions["applyRecommendation"],
+    dismissRecommendation: bindBackendMethod(
+      "dismissRecommendation",
+    ) as StartBridgeServerOptions["dismissRecommendation"],
     readActivePack: bindBackendMethod(
       "readActivePack",
     ) as StartBridgeServerOptions["readActivePack"],

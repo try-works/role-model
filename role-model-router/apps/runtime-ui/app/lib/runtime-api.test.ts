@@ -2921,4 +2921,54 @@ describe("role assignment helpers", () => {
     });
     expect(requests[4]?.body).toEqual({ action: "opt_out" });
   });
+
+  test("run79 posts extension mutate and recommendation dismiss bodies", async () => {
+    const requests: Array<{ url: string; method: string; body: unknown }> = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      requests.push({
+        url,
+        method: init?.method ?? "GET",
+        body: init?.body ? JSON.parse(String(init.body)) : null,
+      });
+      return jsonResponse({
+        extensions: [],
+        recommendations: [],
+        activePack: null,
+      });
+    });
+    await runtimeApiModule.mutateExtension(
+      { id: "event-log", action: "enable", mode: "shadow" },
+      fetcher,
+    );
+    await runtimeApiModule.mutateExtension({ id: "event-log", action: "disable" }, fetcher);
+    await runtimeApiModule.mutateExtension(
+      { id: "event-log", action: "set_mode", mode: "advisory" },
+      fetcher,
+    );
+    await runtimeApiModule.dismissRecommendation("pack-dismiss", fetcher);
+    expect(requests).toEqual([
+      {
+        url: "/api/role-model/extensions/mutate",
+        method: "POST",
+        body: { id: "event-log", action: "enable", mode: "shadow" },
+      },
+      {
+        url: "/api/role-model/extensions/mutate",
+        method: "POST",
+        body: { id: "event-log", action: "disable" },
+      },
+      {
+        url: "/api/role-model/extensions/mutate",
+        method: "POST",
+        body: { id: "event-log", action: "set_mode", mode: "advisory" },
+      },
+      {
+        url: "/api/role-model/recommendations/dismiss",
+        method: "POST",
+        body: { id: "pack-dismiss" },
+      },
+    ]);
+  });
 });

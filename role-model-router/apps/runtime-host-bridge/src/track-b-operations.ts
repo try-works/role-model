@@ -6,6 +6,7 @@ type LifecycleRecord = {
   readonly id: string;
   readonly lifecycle: "ready" | "degraded" | "stopped";
   readonly enabled: boolean;
+  readonly enabledMode?: ExtensionMode;
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
@@ -15,6 +16,27 @@ type LifecycleRecord = {
     readonly reason?: string;
   };
 };
+type ExtensionMode = "disabled" | "shadow" | "advisory" | "bounded" | "active";
+type ExtensionMutationReceipt = {
+  readonly id: string;
+  readonly at: string;
+  readonly who: string;
+  readonly extensionId: string;
+  readonly action: "enable" | "disable" | "set_mode";
+  readonly mode: ExtensionMode;
+  readonly result: "applied";
+};
+const EXTENSION_MODES = new Set<ExtensionMode>([
+  "disabled",
+  "shadow",
+  "advisory",
+  "bounded",
+  "active",
+]);
+const asExtensionMode = (value: unknown, fallback: ExtensionMode = "active"): ExtensionMode =>
+  typeof value === "string" && EXTENSION_MODES.has(value as ExtensionMode)
+    ? (value as ExtensionMode)
+    : fallback;
 type StorageRecord = {
   readonly id: string;
   readonly category: string;
@@ -56,6 +78,7 @@ type BridgeState = {
   readonly contribution?: ContributionState;
   readonly recommendations?: readonly RecommendationRecord[];
   readonly recommendationRevision?: number;
+  readonly extensionMutationReceipts?: readonly ExtensionMutationReceipt[];
   readonly activePack?: {
     readonly id: string;
     readonly version: string;
@@ -95,7 +118,7 @@ type ContributionState = {
 type RecommendationRecord = {
   readonly id: string;
   readonly version: string;
-  readonly status: "downloaded" | "validated" | "applied" | "rejected";
+  readonly status: "downloaded" | "validated" | "applied" | "rejected" | "dismissed";
   readonly signatureValid: boolean;
   readonly policyAllowed: boolean;
   readonly provenance: string;
@@ -141,6 +164,7 @@ const EMPTY_STATE: BridgeState = {
   contribution: EMPTY_CONTRIBUTION,
   recommendations: [],
   recommendationRevision: 0,
+  extensionMutationReceipts: [],
   activePack: null,
 };
 const validate = (value: BridgeState): BridgeState => {
@@ -235,6 +259,7 @@ export async function seedTrackBExtensionBridgeState(options: {
       id,
       lifecycle: "ready",
       enabled: true,
+      enabledMode: "active",
       channel,
       scope,
       authorizationEpoch,
@@ -456,11 +481,17 @@ export function createTrackBOperations({
         const id = String(entry.id ?? "");
         const actual = byId.get(id);
         return actual
-          ? { ...entry, ...actual, installed: true }
+          ? {
+              ...entry,
+              ...actual,
+              installed: true,
+              enabledMode: actual.enabledMode ?? (actual.enabled ? "active" : "disabled"),
+            }
           : {
               ...entry,
               installed: false,
               enabled: false,
+              enabledMode: "disabled",
               lifecycle: "unavailable",
               channel: "production",
               scope: "global",
@@ -472,6 +503,206 @@ export function createTrackBOperations({
               },
             };
       });
+    },
+    async mutateExtension(input: Record<string, unknown>): Promise<unknown> {
+      const id = String(input.id ?? "");
+      const action = String(input.action ?? "");
+      if (!id) throw new Error("extension id is required");
+      if (!["enable", "disable", "set_mode"].includes(action))
+        throw new Error("extension mutation action must be enable, disable, or set_mode");
+      let state = await readState(statePath);
+      const catalogEntry = catalog.find((entry) => String(entry.id ?? "") === id);
+      let index = state.extensions.findIndex((row) => row.id === id);
+      if (!catalogEntry) throw new Error(`extension not found: ${id}`);
+      if (index < 0) {
+        const seeded: LifecycleRecord = {
+          id,
+          lifecycle: "stopped",
+          enabled: false,
+          enabledMode: "disabled",
+          channel: String(catalogEntry.channel ?? "production"),
+          scope: String(catalogEntry.scope ?? "global"),
+          authorizationEpoch: Number(catalogEntry.authorizationEpoch ?? 0) || 0,
+          health: {
+            available: false,
+            routingDependency: Boolean(catalogEntry.routingDependency),
+            reason: "operator_unregistered_pending_mutation",
+          },
+        };
+        state = {
+          ...state,
+          extensions: [...state.extensions, seeded],
+        };
+        index = state.extensions.length - 1;
+      }
+      const current = state.extensions[index]!;
+      let enabled = current.enabled;
+      let enabledMode = asExtensionMode(current.enabledMode, current.enabled ? "active" : "disabled");
+      if (action === "disable") {
+        enabled = false;
+        enabledMode = "disabled";
+      } else if (action === "enable" || action === "set_mode") {
+        const requested = asExtensionMode(
+          input.mode,
+          action === "enable" ? "active" : enabledMode,
+        );
+        if (typeof input.mode === "string" && !EXTENSION_MODES.has(input.mode as ExtensionMode))
+          throw new Error(`illegal extension mode: ${String(input.mode)}`);
+        if (action === "set_mode" && input.mode == null)
+          throw new Error("mode is required for set_mode");
+        const dependsOn = Array.isArray(catalogEntry.dependsOn)
+          ? catalogEntry.dependsOn.map((value) => String(value))
+          : [];
+        const modeDependsOn = Array.isArray(catalogEntry.modeDependsOn)
+          ? catalogEntry.modeDependsOn
+          : [];
+        if (requested !== "disabled" && (dependsOn.length > 0 || modeDependsOn.length > 0)) {
+          const byId = new Map(state.extensions.map((row) => [row.id, row]));
+          const missingHard = dependsOn.filter((depId) => {
+            const dep = byId.get(depId);
+            return !dep || !dep.enabled || (dep.enabledMode ?? "disabled") === "disabled";
+          });
+          if (missingHard.length > 0)
+            throw new Error(
+              `extension dependency not enabled: ${missingHard.join(", ")} required by ${id}`,
+            );
+          const missingMode = modeDependsOn.flatMap((raw) => {
+            if (!raw || typeof raw !== "object") return ["invalid-mode-dependency"];
+            const depId = String((raw as { id?: unknown }).id ?? "");
+            const allowed = Array.isArray((raw as { modes?: unknown }).modes)
+              ? ((raw as { modes: unknown[] }).modes.map((value) => String(value)) as ExtensionMode[])
+              : (["active", "bounded", "advisory", "shadow"] as ExtensionMode[]);
+            const dep = byId.get(depId);
+            if (!dep || !dep.enabled || (dep.enabledMode ?? "disabled") === "disabled")
+              return [depId || "unknown"];
+            const mode = dep.enabledMode ?? "active";
+            if (!allowed.includes(mode)) return [`${depId}:${mode}`];
+            return [];
+          });
+          if (missingMode.length > 0)
+            throw new Error(
+              `extension mode dependency not satisfied: ${missingMode.join(", ")} required by ${id}`,
+            );
+        }
+        enabled = requested !== "disabled";
+        enabledMode = requested;
+      }
+      const lifecycle: LifecycleRecord["lifecycle"] = enabled
+        ? current.lifecycle === "stopped"
+          ? "ready"
+          : current.lifecycle
+        : "stopped";
+      const nextRow: LifecycleRecord = {
+        ...current,
+        enabled,
+        enabledMode,
+        lifecycle,
+        health: {
+          ...current.health,
+          available: enabled && (lifecycle === "ready" || current.health.available),
+          reason: enabled ? current.health.reason : "operator_disabled",
+        },
+      };
+      const extensions = state.extensions.map((row, rowIndex) =>
+        rowIndex === index ? nextRow : row,
+      );
+      // Fix health consistency for validate(): available must match lifecycle === ready
+      const normalized: LifecycleRecord[] = extensions.map((row) => {
+        if (!row.enabled) {
+          return {
+            ...row,
+            enabled: false,
+            enabledMode: "disabled" as const,
+            lifecycle: "stopped" as const,
+            health: {
+              ...row.health,
+              available: false,
+              reason: row.health.reason ?? "operator_disabled",
+            },
+          };
+        }
+        const nextLifecycle = row.lifecycle === "stopped" ? ("ready" as const) : row.lifecycle;
+        return {
+          ...row,
+          enabled: true,
+          enabledMode: row.enabledMode ?? "active",
+          lifecycle: nextLifecycle,
+          health: {
+            ...row.health,
+            available: nextLifecycle === "ready",
+            reason: row.health.reason ?? "operator_enabled",
+          },
+        };
+      });
+      const receipt: ExtensionMutationReceipt = {
+        id: `ext-mut-${createHash("sha256")
+          .update(JSON.stringify([id, action, enabledMode, state.revision + 1]))
+          .digest("hex")
+          .slice(0, 16)}`,
+        at: new Date().toISOString(),
+        who: "local-operator",
+        extensionId: id,
+        action: action as ExtensionMutationReceipt["action"],
+        mode: enabledMode,
+        result: "applied",
+      };
+      const receipts = [...(state.extensionMutationReceipts ?? []), receipt].slice(-100);
+      const next: BridgeState = {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        extensions: normalized,
+        extensionMutationReceipts: receipts,
+      };
+      await writeState(statePath, validate(next));
+      const byId = new Map(normalized.map((row) => [row.id, row]));
+      const listed = catalog.map((entry) => {
+        const entryId = String(entry.id ?? "");
+        const actual = byId.get(entryId);
+        return actual
+          ? {
+              ...entry,
+              ...actual,
+              installed: true,
+              enabledMode: actual.enabledMode ?? (actual.enabled ? "active" : "disabled"),
+            }
+          : {
+              ...entry,
+              installed: false,
+              enabled: false,
+              enabledMode: "disabled",
+              lifecycle: "unavailable",
+              channel: "production",
+              scope: "global",
+              authorizationEpoch: 0,
+              health: {
+                available: false,
+                routingDependency: Boolean(entry.routingDependency),
+                reason: "not_registered_with_private_supervisor",
+              },
+            };
+      });
+      return { extensions: listed, receipts };
+    },
+    async dismissRecommendation(input: Record<string, unknown>): Promise<unknown> {
+      const state = await readState(statePath);
+      const id = String(input.id ?? "");
+      const rows = [...(state.recommendations ?? [])];
+      const index = rows.findIndex((row) => row.id === id);
+      if (index < 0) throw new Error("recommendation not found");
+      const current = rows[index]!;
+      if (current.status === "applied")
+        throw new Error("applied recommendation cannot be dismissed");
+      if (current.status === "dismissed")
+        return { recommendations: rows, activePack: state.activePack ?? null };
+      rows[index] = { ...current, status: "dismissed" };
+      await writeState(statePath, {
+        ...state,
+        revision: state.revision + 1,
+        generatedAt: new Date().toISOString(),
+        recommendations: rows,
+      });
+      return { recommendations: rows, activePack: state.activePack ?? null };
     },
     async readStorageRetention(): Promise<unknown> {
       const remote = await requestPrivate("storage-retention");
@@ -818,6 +1049,10 @@ export function createTrackBOperations({
       const index = rows.findIndex((row) => row.id === id);
       const row = rows[index];
       if (!row) throw new Error("recommendation not found");
+      if (row.status === "dismissed")
+        throw new Error("dismissed recommendation cannot be applied");
+      if (row.status === "rejected")
+        throw new Error("rejected recommendation cannot be applied");
       if (!row.signatureValid) throw new Error("recommendation signature validation failed");
       if (!row.policyAllowed) throw new Error("recommendation application blocked by local policy");
       if ((state.contribution ?? EMPTY_CONTRIBUTION).recommendationAccess !== "preview_and_apply")

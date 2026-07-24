@@ -34,7 +34,14 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("LIFECYCLE_COPY");
     expect(routeSource).toContain("operatorBoundaryNote");
     expect(routeSource).toContain("production prompt injection");
-    expect(routeSource).toContain("enable/disable mutation API");
+    expect(routeSource).not.toContain("do not expose a public enable/disable mutation API");
+    expect(routeSource).toContain("mutateExtension");
+    expect(routeSource).toContain("dismissRecommendation");
+    expect(routeSource).toContain("Enable");
+    expect(routeSource).toContain("Disable");
+    expect(routeSource).toContain("Set mode");
+    expect(routeSource).toContain("Dismiss");
+    expect(routeSource).toContain("confirm(");
   });
   test("renders the existing design-system loading shell before operational state arrives", () => {
     const html = renderToStaticMarkup(<ExtensionsRouteView />);

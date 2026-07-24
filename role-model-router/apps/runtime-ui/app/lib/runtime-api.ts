@@ -1354,6 +1354,7 @@ export interface RuntimeExtensionStatus {
     | "stopped";
   readonly installed: boolean;
   readonly enabled: boolean;
+  readonly enabledMode?: "disabled" | "shadow" | "advisory" | "bounded" | "active";
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
@@ -1375,6 +1376,27 @@ export async function fetchExtensions(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<readonly RuntimeExtensionStatus[]> {
   return fetchJson<RuntimeExtensionStatus[]>("/api/role-model/extensions", fetcher);
+}
+
+export type RuntimeExtensionMode = "disabled" | "shadow" | "advisory" | "bounded" | "active";
+
+export async function mutateExtension(
+  input: {
+    readonly id: string;
+    readonly action: "enable" | "disable" | "set_mode";
+    readonly mode?: RuntimeExtensionMode;
+  },
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{
+  readonly extensions: readonly RuntimeExtensionStatus[];
+  readonly extension?: RuntimeExtensionStatus;
+  readonly receipts?: readonly unknown[];
+}> {
+  return fetchJson("/api/role-model/extensions/mutate", fetcher, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
 }
 
 export interface RuntimeStorageRetentionSummary {
@@ -1562,6 +1584,19 @@ export async function applyRecommendation(
   readonly activePack: RuntimeActivePack;
 }> {
   return fetchJson("/api/role-model/recommendations/apply", fetcher, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+}
+export async function dismissRecommendation(
+  id: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{
+  readonly recommendations: readonly RuntimeRecommendation[];
+  readonly activePack: RuntimeActivePack | null;
+}> {
+  return fetchJson("/api/role-model/recommendations/dismiss", fetcher, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ id }),

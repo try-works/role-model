@@ -19,16 +19,26 @@ import {
 import {
   type RuntimeActivePack,
   type RuntimeContributionState,
+  type RuntimeExtensionMode,
   type RuntimeExtensionStatus,
   type RuntimeRecommendation,
   applyRecommendation,
+  dismissRecommendation,
   downloadRecommendations,
   fetchActivePack,
   fetchContributionState,
   fetchExtensions,
   fetchRecommendations,
+  mutateExtension,
   updateContributionState,
 } from "../lib/runtime-api";
+
+const EXTENSION_MODES: readonly RuntimeExtensionMode[] = [
+  "shadow",
+  "advisory",
+  "bounded",
+  "active",
+];
 
 const LIFECYCLE_COPY: Record<
   RuntimeExtensionStatus["lifecycle"] | "unavailable",
@@ -100,6 +110,9 @@ const healthSummary = (extension: RuntimeExtensionStatus): string => {
     : "Available; not a routing dependency.";
 };
 
+const requiresDangerousModeConfirm = (mode: RuntimeExtensionMode): boolean =>
+  mode === "active" || mode === "bounded";
+
 export function ExtensionsRouteView() {
   const [extensions, setExtensions] = useState<readonly RuntimeExtensionStatus[] | null>(null);
   const [contribution, setContribution] = useState<RuntimeContributionState | null>(null);
@@ -107,6 +120,7 @@ export function ExtensionsRouteView() {
   const [activePack, setActivePack] = useState<RuntimeActivePack | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [modeDraft, setModeDraft] = useState<Record<string, RuntimeExtensionMode>>({});
   const load = useCallback(async () => {
     try {
       const [extensionRows, contributionState, recommendationRows, pack] = await Promise.all([
@@ -163,11 +177,50 @@ export function ExtensionsRouteView() {
       setBusy(false);
     }
   };
+  const dismiss = async (id: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const next = await dismissRecommendation(id);
+      setRecommendations(next.recommendations);
+      setActivePack(next.activePack);
+    } catch (value) {
+      setError(message(value));
+    } finally {
+      setBusy(false);
+    }
+  };
   const download = async () => {
     setBusy(true);
     setError(null);
     try {
       setRecommendations(await downloadRecommendations());
+    } catch (value) {
+      setError(message(value));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const mutate = async (
+    id: string,
+    action: "enable" | "disable" | "set_mode",
+    mode?: RuntimeExtensionMode,
+  ) => {
+    if (
+      mode &&
+      requiresDangerousModeConfirm(mode) &&
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Apply mode "${mode}" to ${id}? This can change network, data, or routing exposure for the extension boundary.`,
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await mutateExtension({ id, action, mode });
+      await load();
     } catch (value) {
       setError(message(value));
     } finally {
@@ -311,20 +364,31 @@ export function ExtensionsRouteView() {
                     ) : null}
                   </dl>
                 ) : null}
-                <button
-                  className={`${secondaryButtonClassName} mt-3`}
-                  disabled={
-                    busy ||
-                    row.status === "applied" ||
-                    !row.signatureValid ||
-                    !row.policyAllowed ||
-                    contribution?.recommendationAccess !== "preview_and_apply"
-                  }
-                  onClick={() => void apply(row.id)}
-                  type="button"
-                >
-                  {row.status === "applied" ? "Applied" : "Validate & apply"}
-                </button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    className={secondaryButtonClassName}
+                    disabled={
+                      busy ||
+                      row.status === "applied" ||
+                      row.status === "dismissed" ||
+                      !row.signatureValid ||
+                      !row.policyAllowed ||
+                      contribution?.recommendationAccess !== "preview_and_apply"
+                    }
+                    onClick={() => void apply(row.id)}
+                    type="button"
+                  >
+                    {row.status === "applied" ? "Applied" : "Validate & apply"}
+                  </button>
+                  <button
+                    className={secondaryButtonClassName}
+                    disabled={busy || row.status === "applied" || row.status === "dismissed"}
+                    onClick={() => void dismiss(row.id)}
+                    type="button"
+                  >
+                    {row.status === "dismissed" ? "Dismissed" : "Dismiss"}
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -332,7 +396,7 @@ export function ExtensionsRouteView() {
       </SectionCard>
       <SectionCard
         title="Extension boundary"
-        description="Install, enablement, lifecycle, health, and contribution/recommendation policy are separate. Hosted first-party packages do not expose a public enable/disable mutation API in this release; lifecycle is reported from the host bridge."
+        description="Install, enablement, lifecycle, health, and contribution/recommendation policy are separate. Use Enable, Disable, and Set mode to mutate hosted packages through the public extension control API; Knowledge Worker productionActivation stays hard-off."
       >
         {extensions === null ? (
           <LoadingState label="Loading extension lifecycle…" />
@@ -355,6 +419,13 @@ export function ExtensionsRouteView() {
                 !extension.health.available ||
                 lifecycleKey === "unavailable" ||
                 extension.lifecycle === "stopped";
+              const draftMode =
+                modeDraft[extension.id] ??
+                (extension.enabledMode && extension.enabledMode !== "disabled"
+                  ? extension.enabledMode
+                  : "shadow");
+              const canEnable = true;
+              const canDisableOrMode = extension.installed || extension.enabled;
               return (
                 <article className={`${mutedPanelClassName} min-w-0 p-4 md:p-5`} key={extension.id}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -389,6 +460,53 @@ export function ExtensionsRouteView() {
                       />
                     </div>
                   ) : null}
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <label className={`${utilityLabelClassName} text-[var(--rm-muted)]`}>
+                      Mode
+                      <select
+                        aria-label={`Mode for ${extension.id}`}
+                        className={`ml-2 rounded border border-[var(--rm-border)] bg-[var(--rm-surface)] px-2 py-1 ${supportingTextClassName}`}
+                        disabled={busy || !canEnable}
+                        onChange={(event) =>
+                          setModeDraft((current) => ({
+                            ...current,
+                            [extension.id]: event.target.value as RuntimeExtensionMode,
+                          }))
+                        }
+                        value={draftMode}
+                      >
+                        {EXTENSION_MODES.map((mode) => (
+                          <option key={mode} value={mode}>
+                            {mode}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button
+                      className={secondaryButtonClassName}
+                      disabled={busy || !canEnable || extension.enabled}
+                      onClick={() => void mutate(extension.id, "enable", draftMode)}
+                      type="button"
+                    >
+                      Enable
+                    </button>
+                    <button
+                      className={secondaryButtonClassName}
+                      disabled={busy || !canDisableOrMode || !extension.enabled}
+                      onClick={() => void mutate(extension.id, "disable")}
+                      type="button"
+                    >
+                      Disable
+                    </button>
+                    <button
+                      className={secondaryButtonClassName}
+                      disabled={busy || !canDisableOrMode || !extension.enabled}
+                      onClick={() => void mutate(extension.id, "set_mode", draftMode)}
+                      type="button"
+                    >
+                      Set mode
+                    </button>
+                  </div>
                   <dl className="mt-5 grid gap-x-4 gap-y-3 sm:grid-cols-2">
                     <Detail
                       label="Channel / scope"
@@ -397,6 +515,10 @@ export function ExtensionsRouteView() {
                     <Detail
                       label="Authorization epoch"
                       value={String(extension.authorizationEpoch)}
+                    />
+                    <Detail
+                      label="Enabled mode"
+                      value={extension.enabledMode ?? (extension.enabled ? "active" : "disabled")}
                     />
                     <Detail
                       label="Health"
