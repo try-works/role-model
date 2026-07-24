@@ -19,6 +19,8 @@ const browserChannel = process.platform === "win32" && !process.env.CI ? "msedge
 export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
+  // Live packaged runtime shares mutable contribution/recommendation state across specs.
+  workers: liveBaseUrl ? 1 : undefined,
   expect: {
     timeout: 10_000,
   },
