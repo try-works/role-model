@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/81-kw-activation-browser-recommendation-evidence/role-model-router/apps/runtime-ui
+
+ Γ£ô app/routes/extensions.test.tsx (2 tests) 48ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  04:15:38
+   Duration  2.74s (transform 520ms, setup 0ms, collect 932ms, tests 48ms, environment 0ms, prepare 423ms)
+
