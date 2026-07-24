@@ -2595,6 +2595,7 @@ export interface StartBridgeServerOptions {
   readonly listProviders?: () => Promise<readonly unknown[]>;
   readonly listModels?: () => Promise<readonly unknown[]>;
   readonly listExtensions?: () => Promise<readonly unknown[]>;
+  readonly mutateExtension?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readStorageRetention?: () => Promise<unknown>;
   readonly dryRunStorageRetention?: () => Promise<unknown>;
   readonly updateStorageRetentionPolicy?: (body: Record<string, unknown>) => Promise<unknown>;
@@ -2606,6 +2607,7 @@ export interface StartBridgeServerOptions {
   readonly listRecommendations?: () => Promise<readonly unknown[]>;
   readonly downloadRecommendations?: () => Promise<readonly unknown[]>;
   readonly applyRecommendation?: (body: Record<string, unknown>) => Promise<unknown>;
+  readonly dismissRecommendation?: (body: Record<string, unknown>) => Promise<unknown>;
   readonly readActivePack?: () => Promise<unknown>;
   readonly listRoles?: () => Promise<readonly unknown[]>;
   readonly listAccounts?: () => Promise<readonly unknown[]>;
@@ -2793,6 +2795,7 @@ export interface RuntimeBridgeBackend {
   >;
   listModels(): Promise<readonly BridgeRuntimeModelRecord[]>;
   listExtensions(): Promise<readonly unknown[]>;
+  mutateExtension(body: Record<string, unknown>): Promise<unknown>;
   readStorageRetention(): Promise<unknown>;
   dryRunStorageRetention(): Promise<unknown>;
   updateStorageRetentionPolicy(body: Record<string, unknown>): Promise<unknown>;
@@ -2804,6 +2807,7 @@ export interface RuntimeBridgeBackend {
   listRecommendations(): Promise<readonly unknown[]>;
   downloadRecommendations(): Promise<readonly unknown[]>;
   applyRecommendation(body: Record<string, unknown>): Promise<unknown>;
+  dismissRecommendation(body: Record<string, unknown>): Promise<unknown>;
   readActivePack(): Promise<unknown>;
   listRoles(): Promise<
     readonly {
@@ -14060,6 +14064,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
             : options.updateContributionState,
         body: request.method !== "GET",
       },
+      "/api/role-model/extensions/mutate": {
+        method: "POST",
+        callback: options.mutateExtension,
+        body: true,
+      },
       "/api/role-model/recommendations": {
         method: "GET",
         callback: options.listRecommendations,
@@ -14073,6 +14082,11 @@ function createRequestHandler(options: StartBridgeServerOptions) {
       "/api/role-model/recommendations/apply": {
         method: "POST",
         callback: options.applyRecommendation,
+        body: true,
+      },
+      "/api/role-model/recommendations/dismiss": {
+        method: "POST",
+        callback: options.dismissRecommendation,
         body: true,
       },
       "/api/role-model/recommendations/active-pack": {
@@ -22460,33 +22474,76 @@ export async function createRuntimeBridgeBackend(
         const routingDependency = Boolean(
           row.routingDependency ?? priorHealth.routingDependency ?? false,
         );
-        const reason =
-          typeof priorHealth.reason === "string" && priorHealth.reason.length > 0
-            ? priorHealth.reason
-            : "hosted_extension_ready";
+        // Unregistered catalog rows default enabled:false; host overlay still marks them
+        // ready unless an installed bridge row explicitly disables them.
+        const enabled = !(row.installed === true && row.enabled === false);
+        const enabledMode =
+          typeof row.enabledMode === "string" && row.enabledMode.length > 0
+            ? row.enabledMode
+            : enabled
+              ? "active"
+              : "disabled";
+        const reason = enabled
+          ? priorHealth.reason === "operator_disabled"
+            ? "hosted_extension_ready"
+            : typeof priorHealth.reason === "string" && priorHealth.reason.length > 0
+              ? priorHealth.reason
+              : "hosted_extension_ready"
+          : "operator_disabled";
+        const probe = enabled
+          ? priorHealth.probe === "operator_disabled"
+            ? "hosted_extension_ready"
+            : typeof priorHealth.probe === "string" && priorHealth.probe.length > 0
+              ? priorHealth.probe
+              : "hosted_extension_ready"
+          : "operator_disabled";
+        const summary = enabled
+          ? typeof priorHealth.summary === "string" &&
+            priorHealth.summary.length > 0 &&
+            !priorHealth.summary.includes("disabled by operator")
+            ? priorHealth.summary
+            : routingDependency
+              ? "Hosted extension is ready and marked as a routing dependency."
+              : "Hosted extension is ready; core routing continues if this worker degrades."
+          : "Extension disabled by operator; core routing continues independently.";
         return {
           ...row,
           installed: true,
-          enabled: true,
-          lifecycle: "ready",
+          enabled,
+          enabledMode,
+          lifecycle: enabled ? "ready" : "stopped",
           health: {
             ...priorHealth,
-            available: true,
+            available: enabled,
             routingDependency,
-            probe:
-              typeof priorHealth.probe === "string" && priorHealth.probe.length > 0
-                ? priorHealth.probe
-                : "hosted_extension_ready",
-            summary:
-              typeof priorHealth.summary === "string" && priorHealth.summary.length > 0
-                ? priorHealth.summary
-                : routingDependency
-                  ? "Hosted extension is ready and marked as a routing dependency."
-                  : "Hosted extension is ready; core routing continues if this worker degrades.",
+            probe,
+            summary,
             reason,
           },
         };
       });
+    },
+    async mutateExtension(body: Record<string, unknown>): Promise<unknown> {
+      const contract = JSON.parse(
+        await readFile(
+          path.join(
+            options.repoRoot,
+            "packages",
+            "protocol-types",
+            "generated",
+            "product-contracts.json",
+          ),
+          "utf8",
+        ),
+      ) as { extensions?: readonly Record<string, unknown>[] };
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: contract.extensions ?? [],
+      }).mutateExtension(body);
     },
     async readStorageRetention(): Promise<unknown> {
       return createTrackBOperations({
@@ -22679,6 +22736,16 @@ export async function createRuntimeBridgeBackend(
         ),
         catalog: [],
       }).applyRecommendation(body);
+    },
+    async dismissRecommendation(body: Record<string, unknown>): Promise<unknown> {
+      return createTrackBOperations({
+        statePath: path.join(
+          options.runtimeStateRoot,
+          options.scopeId,
+          "track-b-production-bridge.json",
+        ),
+        catalog: [],
+      }).dismissRecommendation(body);
     },
     async readActivePack(): Promise<unknown> {
       return createTrackBOperations({

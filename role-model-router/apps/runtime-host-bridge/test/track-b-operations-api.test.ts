@@ -13,7 +13,10 @@ import { LegacySqliteMigration } from "../../../packages/sqlite-memory/src/legac
 
 import { applyRecommendationServiceLauncherConfig } from "../src/cli.js";
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
-import { seedTrackBExtensionBridgeState } from "../src/track-b-operations.js";
+import {
+  createTrackBOperations,
+  seedTrackBExtensionBridgeState,
+} from "../src/track-b-operations.js";
 
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..");
 const fixtureRoot = path.join(import.meta.dirname, "fixtures");
@@ -957,5 +960,255 @@ describe("Track B operations APIs", () => {
     expect(process.env.ROLE_MODEL_RECOMMENDATION_CHANNEL).toBe("development");
     expect(process.env.ROLE_MODEL_RECOMMENDATION_VERIFICATION_KEY).toBe("public-spki-fixture");
     expect(process.env.ROLE_MODEL_RECOMMENDATION_SERVICE_TOKEN).toBe("service-token-fixture");
+  });
+
+  test("run79 mutateExtension upserts catalog rows absent from bridge state", async () => {
+    const root = path.join(os.tmpdir(), `track-b-mutate-upsert-${Date.now()}`);
+    roots.push(root);
+    await mkdir(root, { recursive: true });
+    const statePath = path.join(root, "bridge.json");
+    const ops = createTrackBOperations({
+      statePath,
+      catalog: [
+        {
+          id: "event-log",
+          packageClass: "canonical_extension",
+          dependsOn: [],
+          routingDependency: false,
+        },
+      ],
+    });
+    const enabled = (await ops.mutateExtension({
+      id: "event-log",
+      action: "enable",
+      mode: "shadow",
+    })) as {
+      extensions: readonly { id: string; enabled: boolean; enabledMode?: string }[];
+      receipts: readonly unknown[];
+    };
+    const row = enabled.extensions.find((entry) => entry.id === "event-log");
+    expect(row).toMatchObject({ enabled: true, enabledMode: "shadow" });
+    expect(enabled.receipts).toHaveLength(1);
+  });
+
+  test("run79 mutateExtension enables disables and sets mode with audit receipts", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run79-mutate-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const statePath = path.join(runtimeStateRoot, "track-b-production-bridge.json");
+    const catalog = [
+      {
+        id: "event-log",
+        packageClass: "canonical_extension",
+        routingDependency: true,
+      },
+      {
+        id: "knowledge-worker",
+        packageClass: "canonical_extension",
+        routingDependency: false,
+        dependsOn: ["event-log"],
+        modeDependsOn: [{ id: "event-log", modes: ["active", "bounded"] }],
+      },
+    ];
+    await seedTrackBExtensionBridgeState({ statePath, catalog });
+    const ops = createTrackBOperations({ statePath, catalog });
+    const disabled = (await ops.mutateExtension({
+      id: "knowledge-worker",
+      action: "disable",
+    })) as {
+      extensions: readonly { id: string; enabled: boolean; enabledMode: string }[];
+      receipts: readonly { action: string; extensionId: string }[];
+    };
+    expect(disabled.extensions.find((row) => row.id === "knowledge-worker")).toMatchObject({
+      enabled: false,
+      enabledMode: "disabled",
+    });
+    expect(disabled.receipts.at(-1)).toMatchObject({
+      action: "disable",
+      extensionId: "knowledge-worker",
+      who: "local-operator",
+    });
+    const disabledRow = disabled.extensions.find((row) => row.id === "knowledge-worker") as {
+      health?: { reason?: string; available?: boolean };
+    };
+    expect(disabledRow.health).toMatchObject({
+      available: false,
+      reason: "operator_disabled",
+    });
+    await ops.mutateExtension({ id: "event-log", action: "disable" });
+    await expect(
+      ops.mutateExtension({ id: "knowledge-worker", action: "enable", mode: "active" }),
+    ).rejects.toThrow(/dependenc/i);
+    await ops.mutateExtension({ id: "event-log", action: "enable", mode: "shadow" });
+    await expect(
+      ops.mutateExtension({ id: "knowledge-worker", action: "enable", mode: "active" }),
+    ).rejects.toThrow(/mode dependency/i);
+    await ops.mutateExtension({ id: "event-log", action: "set_mode", mode: "active" });
+    const enabled = (await ops.mutateExtension({
+      id: "knowledge-worker",
+      action: "set_mode",
+      mode: "shadow",
+    })) as {
+      extensions: readonly {
+        id: string;
+        enabled: boolean;
+        enabledMode: string;
+        health?: { reason?: string; available?: boolean };
+      }[];
+    };
+    expect(enabled.extensions.find((row) => row.id === "knowledge-worker")).toMatchObject({
+      enabled: true,
+      enabledMode: "shadow",
+      health: {
+        available: true,
+        reason: "operator_enabled",
+      },
+    });
+    const reenabled = (await ops.mutateExtension({
+      id: "event-log",
+      action: "enable",
+      mode: "active",
+    })) as {
+      extensions: readonly {
+        id: string;
+        health?: { reason?: string; probe?: string; summary?: string };
+      }[];
+    };
+    expect(reenabled.extensions.find((row) => row.id === "event-log")?.health).toMatchObject({
+      reason: expect.not.stringMatching(/operator_disabled/),
+    });
+    await expect(ops.mutateExtension({ id: "missing", action: "enable" })).rejects.toThrow(
+      /not found|unknown/i,
+    );
+    await expect(
+      ops.mutateExtension({ id: "event-log", action: "set_mode", mode: "nope" }),
+    ).rejects.toThrow(/mode|illegal|invalid/i);
+  });
+
+  test("run79 dismissRecommendation marks row dismissed without applying pack", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run79-dismiss-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const statePath = path.join(runtimeStateRoot, "track-b-production-bridge.json");
+    await mkdir(runtimeStateRoot, { recursive: true });
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        schemaVersion: "role-model.track-b-production-bridge.v1",
+        protocolVersion: "1.0",
+        revision: 1,
+        generatedAt: new Date().toISOString(),
+        extensions: [],
+        storageServices: [],
+        retention: { managedPolicy: false, receipts: [], activeJob: null },
+        contribution: {
+          mode: "contributor",
+          contributionTier: "advanced",
+          recommendationTier: "advanced",
+          recommendationAccess: "preview_and_apply",
+          allowCloudUpload: true,
+          authorizationState: "active",
+          revocationEpoch: 0,
+          queuedCount: 0,
+          managed: false,
+        },
+        recommendations: [
+          {
+            id: "pack-dismiss",
+            version: "1",
+            status: "validated",
+            signatureValid: true,
+            policyAllowed: true,
+            provenance: "cloud:bundle-dismiss",
+          },
+        ],
+        recommendationRevision: 1,
+        activePack: null,
+      }),
+    );
+    const ops = createTrackBOperations({ statePath, catalog: [] });
+    const result = (await ops.dismissRecommendation({ id: "pack-dismiss" })) as {
+      recommendations: readonly { id: string; status: string }[];
+      activePack: unknown;
+    };
+    expect(result.recommendations.find((row) => row.id === "pack-dismiss")).toMatchObject({
+      status: "dismissed",
+    });
+    expect(result.activePack).toBeNull();
+    await expect(ops.applyRecommendation({ id: "pack-dismiss" })).rejects.toThrow(/dismissed/i);
+    await expect(ops.dismissRecommendation({ id: "missing" })).rejects.toThrow(/not found/i);
+  });
+
+  test("run79 HTTP exposes extensions mutate and recommendations dismiss routes", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run79-http-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const statePath = path.join(runtimeStateRoot, "production", "track-b-production-bridge.json");
+    const contract = JSON.parse(
+      await readFile(
+        path.join(repoRoot, "packages", "protocol-types", "generated", "product-contracts.json"),
+        "utf8",
+      ),
+    ) as { extensions: readonly Record<string, unknown>[] };
+    await seedTrackBExtensionBridgeState({
+      statePath,
+      catalog: contract.extensions,
+    });
+    await mkdir(path.dirname(statePath), { recursive: true });
+    const existing = JSON.parse(await readFile(statePath, "utf8")) as {
+      recommendations?: unknown[];
+      [key: string]: unknown;
+    };
+    existing.recommendations = [
+      {
+        id: "pack-http-dismiss",
+        version: "1",
+        status: "validated",
+        signatureValid: true,
+        policyAllowed: true,
+        provenance: "cloud:http",
+      },
+    ];
+    await writeFile(statePath, `${JSON.stringify(existing, null, 2)}\n`);
+    const backend = await createRuntimeBridgeBackend({
+      repoRoot,
+      fixtureRoot,
+      runtimeStateRoot,
+      scopeId: "production",
+    });
+    const server = await startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      listExtensions: () => backend.listExtensions(),
+      mutateExtension: (body) => backend.mutateExtension(body),
+      listRecommendations: () => backend.listRecommendations(),
+      dismissRecommendation: (body) => backend.dismissRecommendation(body),
+      applyRecommendation: (body) => backend.applyRecommendation(body),
+    });
+    try {
+      const base = `http://127.0.0.1:${server.port}`;
+      const mutateResponse = await fetch(`${base}/api/role-model/extensions/mutate`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: "artifact-store", action: "disable" }),
+      });
+      expect(mutateResponse.status).toBe(200);
+      const mutateBody = (await mutateResponse.json()) as {
+        extensions: readonly { id: string; enabled: boolean }[];
+      };
+      expect(mutateBody.extensions.find((row) => row.id === "artifact-store")?.enabled).toBe(false);
+      const dismissResponse = await fetch(`${base}/api/role-model/recommendations/dismiss`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: "pack-http-dismiss" }),
+      });
+      expect(dismissResponse.status).toBe(200);
+      const dismissBody = (await dismissResponse.json()) as {
+        recommendations: readonly { id: string; status: string }[];
+      };
+      expect(
+        dismissBody.recommendations.find((row) => row.id === "pack-http-dismiss")?.status,
+      ).toBe("dismissed");
+    } finally {
+      await server.close();
+      await backend.shutdown();
+    }
   });
 });

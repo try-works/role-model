@@ -21,6 +21,9 @@ test("operates disclosure, opt-out, retention, recommendations, and failure isol
   await expect(
     page.getByRole("main").getByRole("heading", { name: "Extension boundary" }),
   ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Enable" }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Disable" }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Set mode" }).first()).toBeVisible();
 
   await page.goto("/app/system/storage-retention");
   await expect(page.getByRole("heading", { name: "Retention policy editor" })).toBeVisible();

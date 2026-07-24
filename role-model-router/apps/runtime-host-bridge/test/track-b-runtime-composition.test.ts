@@ -369,6 +369,7 @@ describe("production Track B composition", () => {
   test("exposes every Track B mutation and recommendation operation to the production server", () => {
     const names = [
       "listExtensions",
+      "mutateExtension",
       "readStorageRetention",
       "dryRunStorageRetention",
       "updateStorageRetentionPolicy",
@@ -380,6 +381,7 @@ describe("production Track B composition", () => {
       "listRecommendations",
       "downloadRecommendations",
       "applyRecommendation",
+      "dismissRecommendation",
       "readActivePack",
     ] as const;
     const backend = Object.fromEntries(names.map((name) => [name, async () => name]));

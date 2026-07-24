@@ -6,6 +6,7 @@ import {
   FactCard,
   LoadingState,
   SectionCard,
+  SelectField,
   StatusPill,
 } from "../components/page-primitives";
 import {
@@ -19,16 +20,30 @@ import {
 import {
   type RuntimeActivePack,
   type RuntimeContributionState,
+  type RuntimeExtensionMode,
   type RuntimeExtensionStatus,
   type RuntimeRecommendation,
   applyRecommendation,
+  dismissRecommendation,
   downloadRecommendations,
   fetchActivePack,
   fetchContributionState,
   fetchExtensions,
   fetchRecommendations,
+  mutateExtension,
   updateContributionState,
 } from "../lib/runtime-api";
+
+const EXTENSION_MODES: readonly RuntimeExtensionMode[] = [
+  "disabled",
+  "shadow",
+  "advisory",
+  "bounded",
+  "active",
+];
+
+const formatModeLabel = (mode: RuntimeExtensionMode): string =>
+  `${mode.charAt(0).toUpperCase()}${mode.slice(1)}`;
 
 const LIFECYCLE_COPY: Record<
   RuntimeExtensionStatus["lifecycle"] | "unavailable",
@@ -100,13 +115,36 @@ const healthSummary = (extension: RuntimeExtensionStatus): string => {
     : "Available; not a routing dependency.";
 };
 
+const requiresDangerousModeConfirm = (mode: RuntimeExtensionMode): boolean =>
+  mode === "active" || mode === "bounded";
+
+const isOperatorDisabled = (extension: RuntimeExtensionStatus): boolean =>
+  !extension.enabled || extension.enabledMode === "disabled";
+
+const appliedMode = (extension: RuntimeExtensionStatus): RuntimeExtensionMode =>
+  !extension.enabled || !extension.enabledMode || extension.enabledMode === "disabled"
+    ? "disabled"
+    : extension.enabledMode;
+
+const lifecyclePillTone = (
+  lifecycle: string,
+  operatorDisabled: boolean,
+): "success" | "warning" | "error" | "neutral" => {
+  if (operatorDisabled && (lifecycle === "stopped" || lifecycle === "installed_disabled")) {
+    return "neutral";
+  }
+  return lifecycleTone(lifecycle);
+};
+
 export function ExtensionsRouteView() {
   const [extensions, setExtensions] = useState<readonly RuntimeExtensionStatus[] | null>(null);
   const [contribution, setContribution] = useState<RuntimeContributionState | null>(null);
   const [recommendations, setRecommendations] = useState<readonly RuntimeRecommendation[]>([]);
   const [activePack, setActivePack] = useState<RuntimeActivePack | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [modeDraft, setModeDraft] = useState<Record<string, RuntimeExtensionMode>>({});
   const load = useCallback(async () => {
     try {
       const [extensionRows, contributionState, recommendationRows, pack] = await Promise.all([
@@ -163,11 +201,52 @@ export function ExtensionsRouteView() {
       setBusy(false);
     }
   };
+  const dismiss = async (id: string) => {
+    setBusy(true);
+    setError(null);
+    try {
+      const next = await dismissRecommendation(id);
+      setRecommendations(next.recommendations);
+      setActivePack(next.activePack);
+    } catch (value) {
+      setError(message(value));
+    } finally {
+      setBusy(false);
+    }
+  };
   const download = async () => {
     setBusy(true);
     setError(null);
     try {
       setRecommendations(await downloadRecommendations());
+    } catch (value) {
+      setError(message(value));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const applyMode = async (id: string, mode: RuntimeExtensionMode) => {
+    if (
+      requiresDangerousModeConfirm(mode) &&
+      typeof window !== "undefined" &&
+      !window.confirm(
+        `Apply mode "${mode}" to ${id}? This can change network, data, or routing exposure for the extension boundary.`,
+      )
+    ) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      await mutateExtension({ id, action: "set_mode", mode });
+      setNotice(
+        mode === "disabled"
+          ? `Set ${id} to disabled. Core routing continues without this worker.`
+          : `Set ${id} mode to ${mode}.`,
+      );
+      setModeDraft((current) => ({ ...current, [id]: mode }));
+      await load();
     } catch (value) {
       setError(message(value));
     } finally {
@@ -201,6 +280,13 @@ export function ExtensionsRouteView() {
         />
       </div>
       {error ? <ErrorState label={error} /> : null}
+      {notice ? (
+        <output
+          className={`${mutedPanelClassName} block border-[var(--rm-border-strong)] p-4 ${supportingTextClassName} text-[var(--rm-fg)]`}
+        >
+          {notice}
+        </output>
+      ) : null}
       <SectionCard
         title="Contribution, disclosure, and opt-out"
         description="Aggregate upload is independent from local recommendation use, training, external RL, and rich capture. Contribution policy is not extension enablement."
@@ -311,20 +397,31 @@ export function ExtensionsRouteView() {
                     ) : null}
                   </dl>
                 ) : null}
-                <button
-                  className={`${secondaryButtonClassName} mt-3`}
-                  disabled={
-                    busy ||
-                    row.status === "applied" ||
-                    !row.signatureValid ||
-                    !row.policyAllowed ||
-                    contribution?.recommendationAccess !== "preview_and_apply"
-                  }
-                  onClick={() => void apply(row.id)}
-                  type="button"
-                >
-                  {row.status === "applied" ? "Applied" : "Validate & apply"}
-                </button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    className={secondaryButtonClassName}
+                    disabled={
+                      busy ||
+                      row.status === "applied" ||
+                      row.status === "dismissed" ||
+                      !row.signatureValid ||
+                      !row.policyAllowed ||
+                      contribution?.recommendationAccess !== "preview_and_apply"
+                    }
+                    onClick={() => void apply(row.id)}
+                    type="button"
+                  >
+                    {row.status === "applied" ? "Applied" : "Validate & apply"}
+                  </button>
+                  <button
+                    className={secondaryButtonClassName}
+                    disabled={busy || row.status === "applied" || row.status === "dismissed"}
+                    onClick={() => void dismiss(row.id)}
+                    type="button"
+                  >
+                    {row.status === "dismissed" ? "Dismissed" : "Dismiss"}
+                  </button>
+                </div>
               </article>
             ))}
           </div>
@@ -332,7 +429,7 @@ export function ExtensionsRouteView() {
       </SectionCard>
       <SectionCard
         title="Extension boundary"
-        description="Install, enablement, lifecycle, health, and contribution/recommendation policy are separate. Hosted first-party packages do not expose a public enable/disable mutation API in this release; lifecycle is reported from the host bridge."
+        description="Install, enablement, lifecycle, health, and contribution/recommendation policy are separate. Choose a mode (including disabled) and click Set mode; Knowledge Worker productionActivation stays hard-off."
       >
         {extensions === null ? (
           <LoadingState label="Loading extension lifecycle…" />
@@ -350,11 +447,15 @@ export function ExtensionsRouteView() {
                     "Lifecycle reported by the host. Core routing continuity is independent of this worker unless marked as a routing dependency.",
                 } as const);
               const boundaryNote = operatorBoundaryNote(extension.id);
-              const degradedOrUnavailable =
-                extension.lifecycle === "degraded" ||
-                !extension.health.available ||
-                lifecycleKey === "unavailable" ||
-                extension.lifecycle === "stopped";
+              const operatorDisabled = isOperatorDisabled(extension);
+              const unexpectedWorkerIssue =
+                !operatorDisabled &&
+                (extension.lifecycle === "degraded" ||
+                  !extension.health.available ||
+                  lifecycleKey === "unavailable");
+              const currentMode = appliedMode(extension);
+              const draftMode = modeDraft[extension.id] ?? currentMode;
+              const modeDirty = draftMode !== currentMode;
               return (
                 <article className={`${mutedPanelClassName} min-w-0 p-4 md:p-5`} key={extension.id}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -371,14 +472,22 @@ export function ExtensionsRouteView() {
                       <StatusPill tone={extension.enabled ? "success" : "neutral"}>
                         {extension.enabled ? "enabled" : "disabled"}
                       </StatusPill>
-                      <StatusPill tone={lifecycleTone(lifecycleKey)}>{lifecycle.label}</StatusPill>
+                      <StatusPill tone={lifecyclePillTone(lifecycleKey, operatorDisabled)}>
+                        {lifecycle.label}
+                      </StatusPill>
                     </div>
                   </div>
                   <p className={`mt-3 ${supportingTextClassName}`}>{lifecycle.routingMeaning}</p>
                   {boundaryNote ? (
                     <p className={`mt-2 ${supportingTextClassName}`}>{boundaryNote}</p>
                   ) : null}
-                  {degradedOrUnavailable ? (
+                  {operatorDisabled ? (
+                    <p className={`mt-3 ${supportingTextClassName}`}>
+                      {extension.health.summary?.trim() ||
+                        "Extension is disabled by the operator. Core routing continues independently."}
+                    </p>
+                  ) : null}
+                  {unexpectedWorkerIssue ? (
                     <div className="mt-3">
                       <ErrorState
                         label={
@@ -388,6 +497,44 @@ export function ExtensionsRouteView() {
                         }
                       />
                     </div>
+                  ) : null}
+                  <div className="mt-4 flex flex-wrap items-end gap-3">
+                    <div className="min-w-[12rem] flex-1 sm:max-w-[16rem]">
+                      <SelectField
+                        className={busy ? "pointer-events-none opacity-60" : undefined}
+                        label="Mode"
+                        onChange={(value) => {
+                          if (busy) {
+                            return;
+                          }
+                          setModeDraft((current) => ({
+                            ...current,
+                            [extension.id]: value as RuntimeExtensionMode,
+                          }));
+                        }}
+                        value={draftMode}
+                      >
+                        {EXTENSION_MODES.map((mode) => (
+                          <option key={mode} value={mode}>
+                            {formatModeLabel(mode)}
+                          </option>
+                        ))}
+                      </SelectField>
+                    </div>
+                    <button
+                      className={modeDirty ? primaryButtonClassName : secondaryButtonClassName}
+                      disabled={busy || !modeDirty}
+                      onClick={() => void applyMode(extension.id, draftMode)}
+                      type="button"
+                    >
+                      Set mode
+                    </button>
+                  </div>
+                  {modeDirty ? (
+                    <p className={`mt-2 ${supportingTextClassName}`}>
+                      Mode draft is {draftMode}; applied mode is {currentMode}. Click Set mode to
+                      apply.
+                    </p>
                   ) : null}
                   <dl className="mt-5 grid gap-x-4 gap-y-3 sm:grid-cols-2">
                     <Detail
@@ -399,11 +546,20 @@ export function ExtensionsRouteView() {
                       value={String(extension.authorizationEpoch)}
                     />
                     <Detail
+                      label="Enabled mode"
+                      value={formatModeLabel(
+                        (extension.enabledMode ??
+                          (extension.enabled ? "active" : "disabled")) as RuntimeExtensionMode,
+                      )}
+                    />
+                    <Detail
                       label="Health"
                       value={
-                        extension.health.available
-                          ? `available · ${healthSummary(extension)}`
-                          : `unavailable · ${healthSummary(extension)}`
+                        operatorDisabled
+                          ? healthSummary(extension)
+                          : extension.health.available
+                            ? `available · ${healthSummary(extension)}`
+                            : `unavailable · ${healthSummary(extension)}`
                       }
                     />
                     <Detail

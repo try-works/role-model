@@ -1224,9 +1224,34 @@ async function fetchJson<TValue>(
 }
 
 const RUNTIME_SUMMARY_RETRY_DELAYS_MS = [150, 300] as const;
+const RUNTIME_INITIALIZING_RETRY_DELAYS_MS = [200, 500, 1000, 2000] as const;
 
 async function sleep(delayMs: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, delayMs));
+}
+
+function isRuntimeInitializingError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("runtime_initializing");
+}
+
+async function withRuntimeInitializingRetry<TValue>(
+  operation: () => Promise<TValue>,
+): Promise<TValue> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RUNTIME_INITIALIZING_RETRY_DELAYS_MS.length; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(RUNTIME_INITIALIZING_RETRY_DELAYS_MS[attempt - 1]);
+    }
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isRuntimeInitializingError(error)) {
+        throw error;
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Runtime API is still initializing.");
 }
 
 async function fetchRuntimeSummaryWithRetry(fetcher: RuntimeFetcher): Promise<RuntimeSummary> {
@@ -1315,13 +1340,17 @@ export async function fetchRuntimeDeviceAuthorizations(
 export async function fetchRuntimeEndpoints(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<readonly RuntimeEndpoint[]> {
-  return fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher);
+  return withRuntimeInitializingRetry(() =>
+    fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher),
+  );
 }
 
 export async function fetchRuntimeRoles(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<readonly RuntimeRoleDefinition[]> {
-  return fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher);
+  return withRuntimeInitializingRetry(() =>
+    fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher),
+  );
 }
 
 export async function fetchRuntimeRequests(
@@ -1354,6 +1383,7 @@ export interface RuntimeExtensionStatus {
     | "stopped";
   readonly installed: boolean;
   readonly enabled: boolean;
+  readonly enabledMode?: "disabled" | "shadow" | "advisory" | "bounded" | "active";
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
@@ -1375,6 +1405,27 @@ export async function fetchExtensions(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<readonly RuntimeExtensionStatus[]> {
   return fetchJson<RuntimeExtensionStatus[]>("/api/role-model/extensions", fetcher);
+}
+
+export type RuntimeExtensionMode = "disabled" | "shadow" | "advisory" | "bounded" | "active";
+
+export async function mutateExtension(
+  input: {
+    readonly id: string;
+    readonly action: "enable" | "disable" | "set_mode";
+    readonly mode?: RuntimeExtensionMode;
+  },
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{
+  readonly extensions: readonly RuntimeExtensionStatus[];
+  readonly extension?: RuntimeExtensionStatus;
+  readonly receipts?: readonly unknown[];
+}> {
+  return fetchJson("/api/role-model/extensions/mutate", fetcher, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
 }
 
 export interface RuntimeStorageRetentionSummary {
@@ -1562,6 +1613,19 @@ export async function applyRecommendation(
   readonly activePack: RuntimeActivePack;
 }> {
   return fetchJson("/api/role-model/recommendations/apply", fetcher, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+}
+export async function dismissRecommendation(
+  id: string,
+  fetcher: RuntimeFetcher = fetch,
+): Promise<{
+  readonly recommendations: readonly RuntimeRecommendation[];
+  readonly activePack: RuntimeActivePack | null;
+}> {
+  return fetchJson("/api/role-model/recommendations/dismiss", fetcher, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ id }),
