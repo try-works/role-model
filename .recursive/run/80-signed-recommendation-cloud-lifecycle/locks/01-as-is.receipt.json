@@ -1,0 +1,12 @@
+{
+  "artifact": "01-as-is.md",
+  "artifact_hash": "56dc46a2260006d6dde8b6aa684bcde26f56bfd8dc2b921a37fc689c05d28def",
+  "artifact_path": "D:\\DEV\\role-model-internal\\.worktrees\\80-signed-recommendation-cloud-lifecycle\\.recursive\\run\\80-signed-recommendation-cloud-lifecycle\\01-as-is.md",
+  "locked_at": "2026-07-24T11:04:42Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "efe0dd456210f8a5802c65dad97af9ffd1dd608b6c3334226d08afac723cca3b",
+    "00-worktree.md": "41b0adb1d5ad80745a035932e9e7150cb5784e33974173dc351342d6401976bd"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "e4c05adc0f6ba499f3cd408e887d3fe947219604cdea1788c152a3ea488564d6"
+}

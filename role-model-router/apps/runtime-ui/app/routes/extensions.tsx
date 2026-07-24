@@ -10,6 +10,8 @@ import {
   StatusPill,
 } from "../components/page-primitives";
 import {
+  compactFieldButtonClassName,
+  compactFieldButtonEmphasisClassName,
   compactTitleClassName,
   mutedPanelClassName,
   primaryButtonClassName,
@@ -522,7 +524,11 @@ export function ExtensionsRouteView() {
                       </SelectField>
                     </div>
                     <button
-                      className={modeDirty ? primaryButtonClassName : secondaryButtonClassName}
+                      className={
+                        modeDirty
+                          ? compactFieldButtonEmphasisClassName
+                          : compactFieldButtonClassName
+                      }
                       disabled={busy || !modeDirty}
                       onClick={() => void applyMode(extension.id, draftMode)}
                       type="button"

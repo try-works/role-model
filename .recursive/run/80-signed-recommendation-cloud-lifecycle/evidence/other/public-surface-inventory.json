@@ -1,0 +1,20 @@
+{
+  "runId": "80-signed-recommendation-cloud-lifecycle",
+  "capturedAt": "2026-07-24T10:55:00Z",
+  "publicApis": {
+    "recommendationsDownload": "POST /api/role-model/recommendations/download",
+    "recommendationsApply": "POST /api/role-model/recommendations/apply",
+    "recommendationsDismiss": "POST /api/role-model/recommendations/dismiss",
+    "recommendationsActivePack": "GET /api/role-model/recommendations/active-pack"
+  },
+  "liveTrackDev": {
+    "recommendationsHost": "https://recommendations-dev.role-model.dev",
+    "channel": "development",
+    "keyId": "role-model-recommendations-dev-v1"
+  },
+  "gaps": [
+    "live SEA download/apply/dismiss against --track=dev not closed",
+    "launch-packaged-runtime defaults production channel and run-00 public root",
+    "no run-80 evidence binder"
+  ]
+}
