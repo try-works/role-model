@@ -1,18 +1,64 @@
+import { readFile } from "node:fs/promises";
 import path from "node:path";
-// Production launcher: uses QA's working approach with production state
 import { createRuntimeBridgeBackend, startBridgeServer } from "../src/index.js";
+import {
+  createOwnedTrackBSidecarSpec,
+  createPackagedProductionRuntime,
+  createProductionExtensionRuntime,
+  createTrackBBridgeServerOptions,
+} from "../src/track-b-runtime.js";
 
 const repoRoot = "D:/DEV/role-model";
 const runtimeStateRoot = "C:/Users/erikb/AppData/Local/Role Model Runtime/state";
 const scopeId = "runtime-host-bridge";
 
-const backend = await createRuntimeBridgeBackend({
-  repoRoot,
-  runtimeStateRoot,
-  scopeId,
-  runtimeVendorStartup: "enabled",
-  unifiedRuntimeConfigPath: `${runtimeStateRoot}/${scopeId}/runtime-config.yaml`,
+const sidecarArtifactPath = process.env.ROLE_MODEL_TRACK_B_SIDECAR_PATH?.trim();
+const sidecarArtifactSha256 = process.env.ROLE_MODEL_TRACK_B_SIDECAR_SHA256?.trim();
+const extensionManifestPath = process.env.ROLE_MODEL_TRACK_B_RUNTIME_MANIFEST?.trim();
+if (!sidecarArtifactPath || !sidecarArtifactSha256 || !extensionManifestPath) {
+  throw new Error("packaged Track B sidecar and extension manifest are required");
+}
+const extensionManifest = JSON.parse(await readFile(extensionManifestPath, "utf8")) as {
+  readonly schemaVersion: string;
+  readonly extensions: readonly {
+    readonly descriptor: {
+      readonly id: string;
+      readonly protocolVersion: string;
+      readonly capabilities: readonly string[];
+    };
+    readonly modulePath: string;
+    readonly artifactSha256: string;
+  }[];
+};
+if (extensionManifest.schemaVersion !== "role-model.track-b-runtime-distribution.v1") {
+  throw new Error("unsupported Track B runtime distribution manifest");
+}
+const extensionRuntime = await createProductionExtensionRuntime({
+  stateRoot: path.join(runtimeStateRoot, scopeId, "extensions"),
+  authorizationEpoch: 1,
+  extensions: extensionManifest.extensions.map((extension) => ({
+    ...extension,
+    modulePath: path.resolve(path.dirname(extensionManifestPath), extension.modulePath),
+  })),
 });
+const composed = await createPackagedProductionRuntime({
+  stateRoot: path.join(runtimeStateRoot, scopeId, "track-b"),
+  sidecar: createOwnedTrackBSidecarSpec({
+    artifactPath: path.resolve(sidecarArtifactPath),
+    artifactSha256: sidecarArtifactSha256,
+    stateRoot: path.join(runtimeStateRoot, scopeId, "track-b"),
+  }),
+  createBackend: ({ trackBOperationsEndpoint }) =>
+    createRuntimeBridgeBackend({
+      repoRoot,
+      runtimeStateRoot,
+      scopeId,
+      runtimeVendorStartup: "enabled",
+      unifiedRuntimeConfigPath: `${runtimeStateRoot}/${scopeId}/runtime-config.yaml`,
+      trackBOperationsEndpoint,
+    }),
+});
+const backend = composed.backend;
 
 const server = await startBridgeServer({
   host: "127.0.0.1",
@@ -39,6 +85,7 @@ const server = await startBridgeServer({
   listProviders: backend.listProviders,
   listRoles: backend.listRoles,
   listModels: backend.listModels,
+  ...createTrackBBridgeServerOptions(backend),
   readRolePolicy: backend.readRolePolicy,
   createRolePolicyRole: backend.createRolePolicyRole,
   updateRolePolicyRole: backend.updateRolePolicyRole,
@@ -96,7 +143,9 @@ const server = await startBridgeServer({
 });
 
 console.log(`Production runtime on http://127.0.0.1:${server.port}`);
-process.on("SIGINT", () => {
-  server.close();
+process.on("SIGINT", async () => {
+  await server.close();
+  await composed.close();
+  await extensionRuntime.close();
   process.exit(0);
 });

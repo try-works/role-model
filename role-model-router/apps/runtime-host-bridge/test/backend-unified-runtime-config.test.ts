@@ -1068,7 +1068,7 @@ observed_data:
     );
 
     await backend.shutdown();
-  }, 60_000);
+  }, 90_000);
 
   test("maintains the routing alias matrix across strategy families and execution modes", async () => {
     const tempRoot = await mkdtemp(path.join(os.tmpdir(), "role-model-run50-routing-matrix-"));

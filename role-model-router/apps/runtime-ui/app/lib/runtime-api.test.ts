@@ -2877,4 +2877,48 @@ describe("role assignment helpers", () => {
       },
     ]);
   });
+
+  test("binds retention, contribution, recommendation, and active-pack operations to production APIs", async () => {
+    const requests: Array<{ url: string; method: string; body: unknown }> = [];
+    const fetcher = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const url =
+        typeof input === "string" ? input : input instanceof URL ? input.pathname : input.url;
+      requests.push({
+        url,
+        method: init?.method ?? "GET",
+        body: init?.body ? JSON.parse(String(init.body)) : null,
+      });
+      return jsonResponse(url.endsWith("/recommendations") ? [] : {});
+    });
+    await runtimeApiModule.updateRetentionPolicy(
+      { policyId: "strict", scope: "global", maxBytes: 100, maxAgeDays: 7 },
+      fetcher,
+    );
+    await runtimeApiModule.executeRetentionPlan("a".repeat(64), "global", fetcher);
+    await runtimeApiModule.cancelRetentionJob(fetcher);
+    await runtimeApiModule.rollbackRetentionReceipt("receipt-1", fetcher);
+    await runtimeApiModule.updateContributionState("opt_out", undefined, fetcher);
+    await runtimeApiModule.fetchRecommendations(fetcher);
+    await runtimeApiModule.downloadRecommendations(fetcher);
+    await runtimeApiModule.applyRecommendation("pack-1", fetcher);
+    await runtimeApiModule.fetchActivePack(fetcher);
+    expect(requests.map(({ url, method }) => [url, method])).toEqual([
+      ["/api/role-model/storage-retention/policy", "PUT"],
+      ["/api/role-model/storage-retention/execute", "POST"],
+      ["/api/role-model/storage-retention/cancel", "POST"],
+      ["/api/role-model/storage-retention/rollback", "POST"],
+      ["/api/role-model/contribution", "PUT"],
+      ["/api/role-model/recommendations", "GET"],
+      ["/api/role-model/recommendations/download", "POST"],
+      ["/api/role-model/recommendations/apply", "POST"],
+      ["/api/role-model/recommendations/active-pack", "GET"],
+    ]);
+    expect(requests[0]?.body).toEqual({
+      policyId: "strict",
+      scope: "global",
+      maxBytes: 100,
+      maxAgeDays: 7,
+    });
+    expect(requests[4]?.body).toEqual({ action: "opt_out" });
+  });
 });

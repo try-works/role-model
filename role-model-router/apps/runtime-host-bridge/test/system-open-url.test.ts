@@ -60,4 +60,47 @@ describe("system open-url API", () => {
       await server.close();
     }
   });
+
+  test("forwards Kimi verification_uri_complete query strings unchanged (OAuth open regression)", async () => {
+    const kimiUrl = "https://auth.kimi.com/device?user_code=ABCD-EFGH";
+    const openExternalUrl = vi.fn(async (body: Record<string, unknown>) => ({
+      opened: true as const,
+      url: String(body.url ?? ""),
+    }));
+
+    const server = await startBridgeServer({
+      host: "127.0.0.1",
+      port: 0,
+      registry: emptyRegistry,
+      executeChatCompletions: async () => {
+        throw new Error("unused");
+      },
+      executeResponses: async () => {
+        throw new Error("unused");
+      },
+      openExternalUrl,
+    });
+
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${server.port}/api/role-model/system/open-url`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ url: kimiUrl }),
+        },
+      );
+
+      expect(response.ok).toBe(true);
+      await expect(response.json()).resolves.toEqual({
+        opened: true,
+        url: kimiUrl,
+      });
+      expect(openExternalUrl).toHaveBeenCalledWith({ url: kimiUrl });
+    } finally {
+      await server.close();
+    }
+  });
 });

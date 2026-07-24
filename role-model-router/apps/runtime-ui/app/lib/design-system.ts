@@ -393,7 +393,7 @@ const observeRequestsRoute = createRoute({
   template: "ledger-inspector",
   title: "Telemetry request ledger",
   description:
-    "Canonical runtime telemetry rows with direct drill-in to request captures, endpoint profile context, and tooling receipts.",
+    "Canonical runtime telemetry rows with direct drill-in to request captures, endpoint profile context, and tooling receipts. Raw-host Activity and Logs stay in Observe navigation rather than an in-page adjacent-tools card.",
 });
 
 const observeRoutingRoute = createRoute({
@@ -417,7 +417,7 @@ const observeRequestDetailRoute = createRoute({
   template: "ledger-inspector",
   title: "Telemetry request detail",
   description:
-    "Canonical telemetry detail with usage, cache, capture, endpoint profile, and tooling receipts aligned in one inspector.",
+    "Canonical telemetry detail with usage, cache, capture, endpoint profile, and tooling receipts aligned in one inspector. Raw-host Activity and Logs stay in Observe navigation rather than an in-page adjacent-tools card.",
 });
 
 const observeLogsRoute = createRoute({
@@ -492,6 +492,30 @@ const systemPeersRoute = createRoute({
     "Peer inventory and policy page for remote model sources, auth posture, timeouts, filters, and peer-backed topology decisions.",
 });
 
+const systemExtensionsRoute = createRoute({
+  id: "system-extensions",
+  to: "/app/system/extensions",
+  label: "Extensions",
+  section: "System",
+  icon: Boxes,
+  template: "system-topology",
+  title: "Extension boundary",
+  description:
+    "Installed package lifecycle, scoped permissions, compatibility, retention, and bounded degradation without making routing depend on private workers.",
+});
+
+const systemStorageRetentionRoute = createRoute({
+  id: "system-storage-retention",
+  to: "/app/system/storage-retention",
+  label: "Storage & retention",
+  section: "System",
+  icon: LayoutGrid,
+  template: "system-topology",
+  title: "Storage & retention",
+  description:
+    "Usage by data class and tier, managed-policy conflicts, dry-run pruning, immutable receipts, progress, and rollback-safe controls.",
+});
+
 const runtimeRouteDefinitions = [
   overviewSummaryRoute,
   studioChatRoute,
@@ -529,6 +553,8 @@ const runtimeRouteDefinitions = [
   systemRuntimeRoute,
   systemSessionReadinessRoute,
   systemPeersRoute,
+  systemExtensionsRoute,
+  systemStorageRetentionRoute,
 ] as const;
 
 export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
@@ -600,6 +626,8 @@ export const runtimeNavigationSections: readonly RuntimeNavigationSection[] = [
       systemRuntimeRoute,
       controlRuntimeConfigRoute,
       systemPeersRoute,
+      systemExtensionsRoute,
+      systemStorageRetentionRoute,
     ],
   },
 ] as const;

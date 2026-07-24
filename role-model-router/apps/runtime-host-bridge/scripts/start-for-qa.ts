@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,12 +16,15 @@ import {
   createRuntimeBridgeBackend,
   startBridgeServer,
 } from "../src/index.js";
+import { seedTrackBExtensionBridgeState } from "../src/track-b-operations.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const repoRoot = path.resolve(__dirname, "..", "..", "..", "..");
-const runtimeStateRoot = path.join(os.tmpdir(), "role-model-runtime-qa");
+const runtimeStateRoot = process.env.RUNTIME_QA_STATE_ROOT
+  ? path.resolve(process.env.RUNTIME_QA_STATE_ROOT)
+  : path.join(os.tmpdir(), "role-model-runtime-qa");
 const scopeId = "runtime-qa";
 const host = "127.0.0.1";
 const port = Number(process.env.RUNTIME_QA_PORT ?? "3456");
@@ -58,6 +61,19 @@ type QaBridgeBackend = Pick<
   | "listProviders"
   | "listRoles"
   | "listModels"
+  | "listExtensions"
+  | "readStorageRetention"
+  | "dryRunStorageRetention"
+  | "updateStorageRetentionPolicy"
+  | "executeStorageRetention"
+  | "cancelStorageRetentionJob"
+  | "rollbackStorageRetention"
+  | "readContributionState"
+  | "updateContributionState"
+  | "listRecommendations"
+  | "downloadRecommendations"
+  | "applyRecommendation"
+  | "readActivePack"
   | "readRolePolicy"
   | "createRolePolicyRole"
   | "updateRolePolicyRole"
@@ -446,6 +462,19 @@ export function createQaServerOptions(
     listProviders: backend.listProviders,
     listRoles: backend.listRoles,
     listModels: backend.listModels,
+    listExtensions: backend.listExtensions,
+    readStorageRetention: backend.readStorageRetention,
+    dryRunStorageRetention: backend.dryRunStorageRetention,
+    updateStorageRetentionPolicy: backend.updateStorageRetentionPolicy,
+    executeStorageRetention: backend.executeStorageRetention,
+    cancelStorageRetentionJob: backend.cancelStorageRetentionJob,
+    rollbackStorageRetention: backend.rollbackStorageRetention,
+    readContributionState: backend.readContributionState,
+    updateContributionState: backend.updateContributionState,
+    listRecommendations: backend.listRecommendations,
+    downloadRecommendations: backend.downloadRecommendations,
+    applyRecommendation: backend.applyRecommendation,
+    readActivePack: backend.readActivePack,
     readRolePolicy: backend.readRolePolicy,
     createRolePolicyRole: backend.createRolePolicyRole,
     updateRolePolicyRole: backend.updateRolePolicyRole,
@@ -514,6 +543,11 @@ export async function main(): Promise<void> {
     console.log(`[QA] Seeded placeholder ${qaMoonshotApiKeyEnv} for local UI QA.`);
   }
 
+  if (process.env.RUNTIME_QA_RESET_STATE === "1") {
+    if (!path.basename(runtimeStateRoot).startsWith("role-model-runtime-qa-"))
+      throw new Error("refusing to reset a non-QA runtime state root");
+    await rm(runtimeStateRoot, { recursive: true, force: true });
+  }
   await mkdir(runtimeStateRoot, { recursive: true });
   const unifiedRuntimeConfigPath = createQaRuntimeConfigPath(runtimeStateRoot);
 
@@ -584,6 +618,28 @@ export async function main(): Promise<void> {
 
   await seedQaTelemetry(repoRoot, runtimeStateRoot, scopeId);
   console.log(`[QA] Seeded deterministic telemetry request: ${qaTelemetryRequestIds.measured}`);
+
+  const productContractsPath = path.join(
+    repoRoot,
+    "packages",
+    "protocol-types",
+    "generated",
+    "product-contracts.json",
+  );
+  const productContracts = JSON.parse(await readFile(productContractsPath, "utf8")) as {
+    readonly extensions?: readonly Record<string, unknown>[];
+  };
+  const trackBBridgePath = path.join(runtimeStateRoot, scopeId, "track-b-production-bridge.json");
+  const seeded = await seedTrackBExtensionBridgeState({
+    statePath: trackBBridgePath,
+    catalog: productContracts.extensions ?? [],
+    channel: "production",
+    scope: "global",
+    authorizationEpoch: 1,
+  });
+  console.log(
+    `[QA] Seeded Track B extension bridge: ${seeded.extensions.length} packages at ${trackBBridgePath}`,
+  );
 
   const backend = await createRuntimeBridgeBackend(
     createQaRuntimeBridgeBackendOptions(repoRoot, runtimeStateRoot, scopeId),

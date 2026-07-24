@@ -1,0 +1,180 @@
+{
+  "schemaVersion": "role-model.product-contracts.v1.1.0",
+  "protocolVersion": "1.1.0",
+  "defaults": {
+    "production": {
+      "aggregateContribution": "advanced_aggregate_only_after_disclosure",
+      "installed": true,
+      "enabledMode": "active",
+      "crowdsourcedMode": "contributor",
+      "contributionTier": "advanced",
+      "recommendationTier": "advanced",
+      "recommendationAccess": "preview_and_apply",
+      "allowCloudUpload": true,
+      "uploadClass": "aggregates_only",
+      "policySource": "default",
+      "authorizationState": "pending_disclosure"
+    },
+    "stage": { "aggregateContribution": "disabled" },
+    "development": { "aggregateContribution": "disabled" },
+    "unknown": { "aggregateContribution": "disabled" }
+  },
+  "permissions": {
+    "trainingExport": "independent_authorization_required",
+    "richCapture": "independent_authorization_required",
+    "externalRl": "independent_authorization_required"
+  },
+  "extensions": [
+    {
+      "id": "artifact-store",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["graph:write", "artifact:read"],
+      "dataClasses": ["rich_artifact", "graph_edge"],
+      "retention": "policy_bound_graph_lifecycle",
+      "degradation": "reject_write_preserve_reads",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "event-log",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["event:append", "event:read"],
+      "dataClasses": ["bounded_causal_fact"],
+      "retention": "bounded_compact_ledger",
+      "degradation": "drop_optional_metadata",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "repository-context",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["repository:read"],
+      "dataClasses": ["repository_reference"],
+      "retention": "request_scoped",
+      "degradation": "omit_context",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "background-evidence-scheduler",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["job:schedule", "artifact:reference"],
+      "dataClasses": ["bounded_job", "dead_letter"],
+      "retention": "bounded_job_ttl",
+      "degradation": "pause_jobs",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "memory-store",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["memory:read", "memory:write"],
+      "dataClasses": ["scoped_memory_reference"],
+      "retention": "policy_bound_reference_ttl",
+      "degradation": "read_only",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "knowledge-store",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["knowledge:read", "knowledge:write"],
+      "dataClasses": ["derived_knowledge_reference"],
+      "retention": "derived_evictable",
+      "degradation": "serve_last_ready",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "evaluation-core",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["evaluation:run"],
+      "dataClasses": ["evaluation_result", "provenance_reference"],
+      "retention": "derived_evictable",
+      "degradation": "disable_evaluation",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "crowdsourced-learning",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_active_pending_disclosure",
+      "routingDependency": false,
+      "permissions": ["aggregate:preview", "aggregate:authorize", "aggregate:send"],
+      "dataClasses": ["allowlisted_aggregate"],
+      "retention": "outbox_until_revoked_or_expired",
+      "degradation": "hold_outbox",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "replay-core",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["replay:plan", "replay:execute"],
+      "dataClasses": ["replay_plan", "artifact_reference"],
+      "retention": "derived_evictable",
+      "degradation": "cancel_replay",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "evaluation-runner-local",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["evaluation:local"],
+      "dataClasses": ["local_evaluation_result"],
+      "retention": "derived_evictable",
+      "degradation": "disable_runner",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "trajectory-signals",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["signals:derive"],
+      "dataClasses": ["bounded_trajectory_signal"],
+      "retention": "derived_evictable",
+      "degradation": "omit_signals",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "profile-learner",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["profile:estimate"],
+      "dataClasses": ["attributed_profile_effect"],
+      "retention": "derived_evictable",
+      "degradation": "serve_no_profile",
+      "compatibility": ["N/N", "N/N-1"]
+    },
+    {
+      "id": "knowledge-worker",
+      "packageClass": "canonical_extension",
+      "lifecycle": "installed_disabled",
+      "routingDependency": false,
+      "permissions": ["knowledge:derive"],
+      "dataClasses": ["reviewed_shadow_candidate"],
+      "retention": "derived_evictable",
+      "degradation": "discard_candidates",
+      "compatibility": ["N/N", "N/N-1"]
+    }
+  ],
+  "requiredEnvelopeFields": [
+    "channel",
+    "scope",
+    "protocolVersion",
+    "authorizationEpoch",
+    "receipt",
+    "retention"
+  ]
+}
