@@ -1,0 +1,18 @@
+{
+  "artifact": "06-decisions-update.md",
+  "artifact_hash": "242d3114c269e358dad66e2275a3ecba830bb4fc6f69205f98def1b4f27fc49d",
+  "artifact_path": "D:\\DEV\\.wt\\81-kw\\.recursive\\run\\81-kw-activation-browser-recommendation-evidence\\06-decisions-update.md",
+  "locked_at": "2026-07-24T21:21:28Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "24b647a5de6c2eb178db8c805cecdae1df6e80425d7fd210eca58fdf0cc67b44",
+    "00-worktree.md": "c7a441b8d2abd8fe1a165bf2caa909972ecd4c3e53880e9386e7401af16e8bf6",
+    "01-as-is.md": "9731da33014e9e2c618c5d58583ccb4e1dd4b2c5f1b840ecc1c8702c6dff9286",
+    "02-to-be-plan.md": "71e856754d9a32995348d26ac7abd5fb4a50ddc8e945c0ae282c013fb1fb8dfb",
+    "03-implementation-summary.md": "03bad86f3ac4313cda721873a9c7f051396c293a1635eb8d99683b62a6f7913b",
+    "03.5-code-review.md": "34003f4b71adccb6debe0963a57b6ebd24438515f53077b391a08e98e447d0de",
+    "04-test-summary.md": "b697563cf9cf3712bd3712ccb81223cb71602764cb43dbdc94ff6432797bb217",
+    "05-manual-qa.md": "f25f9a71fe2619d03185295ebb18e8e81a4a105da2e937b4b4c6d9d748dc22c3"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "de3157adec9250679eaeb3f09839fe7697914ffac86d61749677f89f320b7ecd"
+}

@@ -19,23 +19,19 @@ Control-plane docs are not memory docs:
 - Read this file before loading any other memory docs.
 - Load only the memory docs relevant to the current task.
 - If the task may benefit from prior recursive-mode experiential learnings, use this index to identify the relevant docs under `/.recursive/memory/training/` and `/.recursive/memory/domains/`.
-- If the optional `recursive-training` skill is installed, run `/.recursive/scripts/recursive-training-loader.py` after reading `MEMORY.md` and before planning or implementation whenever the task may benefit from experiential memory.
 - The optional `recursive-training-sync.py` helper is read-only; it prints startup guidance about what to read, but does not modify `MEMORY.md` or the memory plane.
 - If the task plans delegated review, subagent help, review bundles, smoke-harness portability work, or capability-sensitive execution, read `/.recursive/memory/skills/SKILLS.md` and then load the relevant skill-memory shards.
-- Recursive-mode skill package usage, subskill triggers, and file locations for this repo: `/.recursive/memory/skills/usage/recursive-mode-skill-and-subskills.md`
 - If Phase 8 will need to promote durable lessons, first capture run-local skill usage in the run artifact and only then promote generalized conclusions into skill-memory shards.
-- Runtime routing, provider capability metadata, alias-matrix behavior, Codex Subscription lifecycle semantics, cross-provider continuation matrices, and benchmark quality routing: `/.recursive/memory/domains/runtime-routing-and-provider-capabilities.md`. When route-switch rendering or tool-loop parity is in scope, load that shard together with `/docs/architecture/09-runtime-routing-strategy-interactions.md` and `/docs/architecture/14-routed-execution-semantics-and-receipts.md`.
-- Benchmark scoring, suite-contract coherence, deliverable extraction rules, judge tool-call authority, and runtime benchmark closeout expectations: `/.recursive/memory/domains/benchmark-scoring-and-grading-contracts.md`
-- Taxonomy V1 catalog, groups, roles, classification fields, versioning, deprecation, docs generation: `/.recursive/memory/domains/taxonomy-v1.md`
-- Pi package classifier, metadata injection flow, context signals, runtime override, safety boundaries: `/.recursive/memory/domains/pi-role-model-package.md`
-- Benchmark routing display and env credential lessons: `/.recursive/memory/episodes/run-43-benchmark-routing-display.md`
-- GitHub Actions lanes, serialized runtime proof suites, docs deploy, channel candidates, and tag-only releases: `/.recursive/memory/patterns/github-ci-and-release-workflow.md`
-- Git push, ordinary PRs to `dev`, reviewed `dev -> stage -> main` promotions, and hotfix convergence: `/.recursive/memory/patterns/git-push-merge-workflow.md`
 - Prefer `Status: CURRENT` docs for planning and execution.
 - `Status: SUSPECT` docs may be used as leads, but revalidate them before trust.
 - Exclude `STALE` and `DEPRECATED` docs from default retrieval unless doing historical analysis.
 
 ## Registry
+
+- `domains/direct-track-b.md` — Direct Track B v1.1 surfaces, run-79 mutate/dismiss/Set-mode UI, run-80 live `--track=dev` signed recommendation lifecycle, and run-81 gated KW activation + browser recommendation evidence (Source-Runs: `00-direct-track-b-v1-1-implementation`, `79-extension-control-and-recommendations-qa`, `80-signed-recommendation-cloud-lifecycle`, `81-kw-activation-browser-recommendation-evidence`)
+- `episodes/00-direct-track-b-v1-1-implementation.md` — closeout episode for `00-direct-track-b-v1-1-implementation`
+- `skills/usage/review-bundle-citation-requirements.md` — Phase 3.5 review-bundle citation expectations (Source-Runs: `79-extension-control-and-recommendations-qa`, `80-signed-recommendation-cloud-lifecycle`)
+- `skills/issues/anticipatory-phase-docs.md` — Do not author Phase 3–8 docs before that phase’s real work; do not batch-write 3.5–8; reject/reopen anticipatory closeouts (Source-Runs: `80-signed-recommendation-cloud-lifecycle`, `81-kw-activation-browser-recommendation-evidence`)
 
 - `domains/` - stable functional-area knowledge with `Owns-Paths`
 - `patterns/` - reusable playbooks and solution patterns
@@ -47,7 +43,7 @@ Control-plane docs are not memory docs:
 
 ## Freshness Rules
 
-- Durable memory docs must declare the metadata defined in `references/artifact-template.md`.
+- Durable memory docs must declare the metadata defined by the installed `recursive-mode` artifact template.
 - Any doc whose `Owns-Paths` or `Watch-Paths` overlaps final changed code paths must be reviewed in Phase 8.
 - Affected `CURRENT` docs should be downgraded to `SUSPECT` until revalidated against final code, `STATE.md`, and `DECISIONS.md`.
 - If changed paths have no owning domain doc, create one or record the uncovered-path follow-up in `08-memory-impact.md`.

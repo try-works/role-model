@@ -33,6 +33,10 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("Health probe");
     expect(routeSource).toContain("LIFECYCLE_COPY");
     expect(routeSource).toContain("operatorBoundaryNote");
+    expect(routeSource).toContain("productionActivation stays fail-closed by default");
+    expect(routeSource).toContain("gated separately from Set mode");
+    expect(routeSource).toContain("is not productionActivation");
+    expect(routeSource).not.toContain("productionActivation stays hard-off");
     expect(routeSource).toContain("production prompt injection");
     expect(routeSource).not.toContain("do not expose a public enable/disable mutation API");
     expect(routeSource).toContain("mutateExtension");

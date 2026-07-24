@@ -1,0 +1,36 @@
+(node:22452) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö TB10-TEST-UNIT replays deterministically (5.5902ms)
+Γ£ö TB10-TEST-CONTRACT binds evaluation group provenance (4.8909ms)
+Γ£ö TB10-TEST-INTEGRATION derives shadow candidates (3.2725ms)
+Γ£ö TB10-TEST-REGRESSION never activates production (1.8837ms)
+Γ£ö TB10-TEST-MUTATION activation guard is immutable (0.4274ms)
+Γ£ö TB10-TEST-FALSE-SUCCESS rejects holdout failure (1.6384ms)
+Γ£ö TB10-TEST-ROLLBACK discards derived candidates (1.709ms)
+Γ£ö TB10-TEST-HEALTH operates without Verifiers (1.2477ms)
+Γ£ö TB10-TEST-REPLAY-CORE-PACKAGE checkpoints cancellation (0.625ms)
+Γ£ö TB10-TEST-EVALUATION-RUNNER-PACKAGE enforces no egress (1.2818ms)
+Γ£ö TB10-TEST-TRAJECTORY-SIGNALS-PACKAGE emits bounded diagnostics (1.4274ms)
+Γ£ö TB10-TEST-PROFILE-LEARNER-PACKAGE keeps attribution dimensions separate (2.208ms)
+Γ£ö TB10-TEST-KNOWLEDGE-WORKER-PACKAGE requires review and redaction (1.1676ms)
+Γ£ö TB10-TEST-TRACK-A-EXCLUSION packages are reference-only learners (0.2605ms)
+Γ£ö TB10-REVIEW-REPLAY shares immutable prefixes and binds source decision provenance (20.2587ms)
+Γ£ö TB10-REVIEW-REPLAY cancellation resumes from a hash-bound checkpoint (0.8065ms)
+Γ£ö TB10-REVIEW-EVAL runs through Evaluation Core with no external environment (1.9701ms)
+Γ£ö TB10-REVIEW-SIGNALS are provenance-bound uncertain diagnostics, never labels (0.2746ms)
+Γ£ö TB10-REVIEW-PROFILE preserves propensity, bias, confidence, promotion and rollback evidence (1.114ms)
+Γ£ö TB10-REVIEW-KNOWLEDGE requires comparable positive/negative groups and disjoint validation (2.4216ms)
+Γ£ö TB10-REVIEW-SAFETY rejects caller-asserted knowledge and missing diagnostic provenance (1.4747ms)
+Γ£ö TB10-REVIEW-SAFETY executes only trusted registered scorers (1.6492ms)
+Γ£ö TB10-REVIEW-BOUNDARY accepts only finite declarative scorers and complete execution provenance (1.8967ms)
+Γ£ö TB10-REVIEW-RECEIPTS rejects forged profile and knowledge promotion gates (2.0842ms)
+Γ£ö TB10-REVIEW-RECEIPTS bind nested evidence and model fields (0.6885ms)
+Γ£ö TB10-REVIEW-REPLAY uses collision-safe prefix hashes and durable restart checkpoints (32.4338ms)
+Γä╣ tests 26
+Γä╣ suites 0
+Γä╣ pass 26
+Γä╣ fail 0
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 240.4468

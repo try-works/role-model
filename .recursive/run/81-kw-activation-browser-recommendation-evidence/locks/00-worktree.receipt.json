@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "c7a441b8d2abd8fe1a165bf2caa909972ecd4c3e53880e9386e7401af16e8bf6",
+  "artifact_path": "D:\\DEV\\.wt\\81-kw\\.recursive\\run\\81-kw-activation-browser-recommendation-evidence\\00-worktree.md",
+  "locked_at": "2026-07-24T20:17:29Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "24b647a5de6c2eb178db8c805cecdae1df6e80425d7fd210eca58fdf0cc67b44"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "01129e2463fb98f2861e3d47e7d91b7ff7de991d9c1ec20350734f9ce7f86bfd"
+}

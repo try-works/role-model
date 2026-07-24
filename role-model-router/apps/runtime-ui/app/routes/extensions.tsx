@@ -91,7 +91,7 @@ const LIFECYCLE_COPY: Record<
 
 const operatorBoundaryNote = (extensionId: string): string | null => {
   if (extensionId === "knowledge-worker") {
-    return "Local store and shadow derivation only. Enabling this extension does not activate production prompt injection or live routing of derived knowledge in v1.1.";
+    return "Local store and shadow derivation only. Enabling this extension is not productionActivation and does not enable production prompt injection; activation stays fail-closed by default and requires an explicit gated policy (distinct from Set mode).";
   }
   if (extensionId === "knowledge-store") {
     return "Serves last-ready knowledge references. Production activation of knowledge into prompts remains locked off in v1.1.";
@@ -431,7 +431,7 @@ export function ExtensionsRouteView() {
       </SectionCard>
       <SectionCard
         title="Extension boundary"
-        description="Install, enablement, lifecycle, health, and contribution/recommendation policy are separate. Choose a mode (including disabled) and click Set mode; Knowledge Worker productionActivation stays hard-off."
+        description="Install, enablement, lifecycle, health, and contribution/recommendation policy are separate. Choose a mode (including disabled) and click Set mode; Knowledge Worker productionActivation stays fail-closed by default and is gated separately from Set mode."
       >
         {extensions === null ? (
           <LoadingState label="Loading extension lifecycle…" />
