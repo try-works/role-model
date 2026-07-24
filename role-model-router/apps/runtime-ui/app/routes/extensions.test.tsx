@@ -37,11 +37,17 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).not.toContain("do not expose a public enable/disable mutation API");
     expect(routeSource).toContain("mutateExtension");
     expect(routeSource).toContain("dismissRecommendation");
-    expect(routeSource).toContain("Enable");
-    expect(routeSource).toContain("Disable");
+    expect(routeSource).toContain("SelectField");
+    expect(routeSource).toContain("formatModeLabel");
     expect(routeSource).toContain("Set mode");
+    expect(routeSource).not.toMatch(/>\s*Enable\s*</);
+    expect(routeSource).not.toMatch(/>\s*Disable\s*</);
     expect(routeSource).toContain("Dismiss");
     expect(routeSource).toContain("confirm(");
+    expect(routeSource).toContain("isOperatorDisabled");
+    expect(routeSource).toContain("lifecyclePillTone");
+    expect(routeSource).toContain("Mode draft is");
+    expect(routeSource).toContain("applyMode");
   });
   test("renders the existing design-system loading shell before operational state arrives", () => {
     const html = renderToStaticMarkup(<ExtensionsRouteView />);

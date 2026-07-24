@@ -1027,6 +1027,13 @@ describe("Track B operations APIs", () => {
       extensionId: "knowledge-worker",
       who: "local-operator",
     });
+    const disabledRow = disabled.extensions.find((row) => row.id === "knowledge-worker") as {
+      health?: { reason?: string; available?: boolean };
+    };
+    expect(disabledRow.health).toMatchObject({
+      available: false,
+      reason: "operator_disabled",
+    });
     await ops.mutateExtension({ id: "event-log", action: "disable" });
     await expect(
       ops.mutateExtension({ id: "knowledge-worker", action: "enable", mode: "active" }),
@@ -1041,11 +1048,33 @@ describe("Track B operations APIs", () => {
       action: "set_mode",
       mode: "shadow",
     })) as {
-      extensions: readonly { id: string; enabled: boolean; enabledMode: string }[];
+      extensions: readonly {
+        id: string;
+        enabled: boolean;
+        enabledMode: string;
+        health?: { reason?: string; available?: boolean };
+      }[];
     };
     expect(enabled.extensions.find((row) => row.id === "knowledge-worker")).toMatchObject({
       enabled: true,
       enabledMode: "shadow",
+      health: {
+        available: true,
+        reason: "operator_enabled",
+      },
+    });
+    const reenabled = (await ops.mutateExtension({
+      id: "event-log",
+      action: "enable",
+      mode: "active",
+    })) as {
+      extensions: readonly {
+        id: string;
+        health?: { reason?: string; probe?: string; summary?: string };
+      }[];
+    };
+    expect(reenabled.extensions.find((row) => row.id === "event-log")?.health).toMatchObject({
+      reason: expect.not.stringMatching(/operator_disabled/),
     });
     await expect(ops.mutateExtension({ id: "missing", action: "enable" })).rejects.toThrow(
       /not found|unknown/i,
@@ -1164,9 +1193,7 @@ describe("Track B operations APIs", () => {
       const mutateBody = (await mutateResponse.json()) as {
         extensions: readonly { id: string; enabled: boolean }[];
       };
-      expect(mutateBody.extensions.find((row) => row.id === "artifact-store")?.enabled).toBe(
-        false,
-      );
+      expect(mutateBody.extensions.find((row) => row.id === "artifact-store")?.enabled).toBe(false);
       const dismissResponse = await fetch(`${base}/api/role-model/recommendations/dismiss`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -1176,9 +1203,9 @@ describe("Track B operations APIs", () => {
       const dismissBody = (await dismissResponse.json()) as {
         recommendations: readonly { id: string; status: string }[];
       };
-      expect(dismissBody.recommendations.find((row) => row.id === "pack-http-dismiss")?.status).toBe(
-        "dismissed",
-      );
+      expect(
+        dismissBody.recommendations.find((row) => row.id === "pack-http-dismiss")?.status,
+      ).toBe("dismissed");
     } finally {
       await server.close();
       await backend.shutdown();

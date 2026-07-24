@@ -673,6 +673,9 @@ export async function main(): Promise<void> {
     ReturnType<typeof createPackagedProductionRuntime<RuntimeBridgeBackend>>
   > | null = null;
   let extensionRuntime: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null = null;
+  const extensionRuntimeRef: {
+    current: Awaited<ReturnType<typeof createProductionExtensionRuntime>> | null;
+  } = { current: null };
   const bootstrapState: CliBootstrapState = { status: "pending" };
   let shutdownPromise: Promise<void> | null = null;
   const shutdown = async (): Promise<void> => {
@@ -758,20 +761,20 @@ export async function main(): Promise<void> {
         unifiedRuntimeConfigPath: options.unifiedRuntimeConfigPath,
         ...(trackBOperationsEndpoint ? { trackBOperationsEndpoint } : {}),
         ...(trackBOperationsToken ? { trackBOperationsToken } : {}),
-        ...(extensionRuntime
-          ? {
-              trackBExtensionHealth: (() => {
-                const runtime = extensionRuntime;
-                return () => {
-                  const health = runtime.health();
-                  return {
-                    host: health.host as { readonly extensions?: readonly string[] },
-                    supervisor: health.supervisor,
-                  };
-                };
-              })(),
-            }
-          : {}),
+        trackBExtensionHealth: () => {
+          const runtime = extensionRuntimeRef.current;
+          if (!runtime) {
+            return {
+              host: { extensions: [] as const },
+              supervisor: {},
+            };
+          }
+          const health = runtime.health();
+          return {
+            host: health.host as { readonly extensions?: readonly string[] },
+            supervisor: health.supervisor,
+          };
+        },
       });
     if (trackBManifestText && trackBManifestPath) {
       const manifest = JSON.parse(trackBManifestText) as {
@@ -792,7 +795,10 @@ export async function main(): Promise<void> {
       }
       const distributionRoot = path.dirname(trackBManifestPath);
       const trackBStateRoot = path.join(options.runtimeStateRoot, options.scopeId, "track-b");
-      extensionRuntime = await createProductionExtensionRuntime({
+      // Start extension-host registration in parallel with sidecar/backend bring-up, but
+      // mark core APIs ready as soon as the packaged backend exists. Waiting on all
+      // packaged extensions previously kept /api/role-model/* at 503 runtime_initializing.
+      const extensionRuntimePromise = createProductionExtensionRuntime({
         stateRoot: path.join(trackBStateRoot, "extensions"),
         authorizationEpoch: 1,
         repoRoot: options.repoRoot,
@@ -827,15 +833,25 @@ export async function main(): Promise<void> {
           createBackend(trackBOperationsEndpoint, trackBOperationsToken),
       });
       backend = packagedRuntime.backend;
+      bootstrapState.status = "ready";
+      delete bootstrapState.message;
+      try {
+        extensionRuntime = await extensionRuntimePromise;
+        extensionRuntimeRef.current = extensionRuntime;
+      } catch (error) {
+        console.error("[role-model] extension host failed after core runtime was ready:", error);
+      }
     } else {
       backend = await createBackend();
+      bootstrapState.status = "ready";
+      delete bootstrapState.message;
     }
-    bootstrapState.status = "ready";
-    delete bootstrapState.message;
   } catch (error) {
-    bootstrapState.status = "failed";
-    bootstrapState.message =
-      error instanceof Error ? error.message : "runtime backend initialization failed";
+    if (bootstrapState.status !== "ready") {
+      bootstrapState.status = "failed";
+      bootstrapState.message =
+        error instanceof Error ? error.message : "runtime backend initialization failed";
+    }
     console.error("runtime backend initialization failed", error);
   }
 }

@@ -1224,9 +1224,34 @@ async function fetchJson<TValue>(
 }
 
 const RUNTIME_SUMMARY_RETRY_DELAYS_MS = [150, 300] as const;
+const RUNTIME_INITIALIZING_RETRY_DELAYS_MS = [200, 500, 1000, 2000] as const;
 
 async function sleep(delayMs: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, delayMs));
+}
+
+function isRuntimeInitializingError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("runtime_initializing");
+}
+
+async function withRuntimeInitializingRetry<TValue>(
+  operation: () => Promise<TValue>,
+): Promise<TValue> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= RUNTIME_INITIALIZING_RETRY_DELAYS_MS.length; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(RUNTIME_INITIALIZING_RETRY_DELAYS_MS[attempt - 1]);
+    }
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isRuntimeInitializingError(error)) {
+        throw error;
+      }
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Runtime API is still initializing.");
 }
 
 async function fetchRuntimeSummaryWithRetry(fetcher: RuntimeFetcher): Promise<RuntimeSummary> {
@@ -1315,13 +1340,17 @@ export async function fetchRuntimeDeviceAuthorizations(
 export async function fetchRuntimeEndpoints(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<readonly RuntimeEndpoint[]> {
-  return fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher);
+  return withRuntimeInitializingRetry(() =>
+    fetchJson<RuntimeEndpoint[]>("/api/role-model/endpoints", fetcher),
+  );
 }
 
 export async function fetchRuntimeRoles(
   fetcher: RuntimeFetcher = fetch,
 ): Promise<readonly RuntimeRoleDefinition[]> {
-  return fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher);
+  return withRuntimeInitializingRetry(() =>
+    fetchJson<RuntimeRoleDefinition[]>("/api/role-model/roles", fetcher),
+  );
 }
 
 export async function fetchRuntimeRequests(

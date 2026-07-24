@@ -22483,12 +22483,29 @@ export async function createRuntimeBridgeBackend(
             : enabled
               ? "active"
               : "disabled";
-        const reason =
-          typeof priorHealth.reason === "string" && priorHealth.reason.length > 0
-            ? priorHealth.reason
-            : enabled
-              ? "hosted_extension_ready"
-              : "operator_disabled";
+        const reason = enabled
+          ? priorHealth.reason === "operator_disabled"
+            ? "hosted_extension_ready"
+            : typeof priorHealth.reason === "string" && priorHealth.reason.length > 0
+              ? priorHealth.reason
+              : "hosted_extension_ready"
+          : "operator_disabled";
+        const probe = enabled
+          ? priorHealth.probe === "operator_disabled"
+            ? "hosted_extension_ready"
+            : typeof priorHealth.probe === "string" && priorHealth.probe.length > 0
+              ? priorHealth.probe
+              : "hosted_extension_ready"
+          : "operator_disabled";
+        const summary = enabled
+          ? typeof priorHealth.summary === "string" &&
+            priorHealth.summary.length > 0 &&
+            !priorHealth.summary.includes("disabled by operator")
+            ? priorHealth.summary
+            : routingDependency
+              ? "Hosted extension is ready and marked as a routing dependency."
+              : "Hosted extension is ready; core routing continues if this worker degrades."
+          : "Extension disabled by operator; core routing continues independently.";
         return {
           ...row,
           installed: true,
@@ -22499,20 +22516,8 @@ export async function createRuntimeBridgeBackend(
             ...priorHealth,
             available: enabled,
             routingDependency,
-            probe:
-              typeof priorHealth.probe === "string" && priorHealth.probe.length > 0
-                ? priorHealth.probe
-                : enabled
-                  ? "hosted_extension_ready"
-                  : "operator_disabled",
-            summary:
-              typeof priorHealth.summary === "string" && priorHealth.summary.length > 0
-                ? priorHealth.summary
-                : enabled
-                  ? routingDependency
-                    ? "Hosted extension is ready and marked as a routing dependency."
-                    : "Hosted extension is ready; core routing continues if this worker degrades."
-                  : "Extension disabled by operator; core routing continues independently.",
+            probe,
+            summary,
             reason,
           },
         };

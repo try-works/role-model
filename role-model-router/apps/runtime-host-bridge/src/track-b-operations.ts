@@ -535,17 +535,18 @@ export function createTrackBOperations({
         };
         index = state.extensions.length - 1;
       }
-      const current = state.extensions[index]!;
+      const current = state.extensions[index];
+      if (!current) throw new Error(`extension state missing for ${id}`);
       let enabled = current.enabled;
-      let enabledMode = asExtensionMode(current.enabledMode, current.enabled ? "active" : "disabled");
+      let enabledMode = asExtensionMode(
+        current.enabledMode,
+        current.enabled ? "active" : "disabled",
+      );
       if (action === "disable") {
         enabled = false;
         enabledMode = "disabled";
       } else if (action === "enable" || action === "set_mode") {
-        const requested = asExtensionMode(
-          input.mode,
-          action === "enable" ? "active" : enabledMode,
-        );
+        const requested = asExtensionMode(input.mode, action === "enable" ? "active" : enabledMode);
         if (typeof input.mode === "string" && !EXTENSION_MODES.has(input.mode as ExtensionMode))
           throw new Error(`illegal extension mode: ${String(input.mode)}`);
         if (action === "set_mode" && input.mode == null)
@@ -570,7 +571,9 @@ export function createTrackBOperations({
             if (!raw || typeof raw !== "object") return ["invalid-mode-dependency"];
             const depId = String((raw as { id?: unknown }).id ?? "");
             const allowed = Array.isArray((raw as { modes?: unknown }).modes)
-              ? ((raw as { modes: unknown[] }).modes.map((value) => String(value)) as ExtensionMode[])
+              ? ((raw as { modes: unknown[] }).modes.map((value) =>
+                  String(value),
+                ) as ExtensionMode[])
               : (["active", "bounded", "advisory", "shadow"] as ExtensionMode[]);
             const dep = byId.get(depId);
             if (!dep || !dep.enabled || (dep.enabledMode ?? "disabled") === "disabled")
@@ -600,7 +603,11 @@ export function createTrackBOperations({
         health: {
           ...current.health,
           available: enabled && (lifecycle === "ready" || current.health.available),
-          reason: enabled ? current.health.reason : "operator_disabled",
+          reason: enabled
+            ? current.health.reason === "operator_disabled"
+              ? "operator_enabled"
+              : (current.health.reason ?? "operator_enabled")
+            : "operator_disabled",
         },
       };
       const extensions = state.extensions.map((row, rowIndex) =>
@@ -630,7 +637,10 @@ export function createTrackBOperations({
           health: {
             ...row.health,
             available: nextLifecycle === "ready",
-            reason: row.health.reason ?? "operator_enabled",
+            reason:
+              row.health.reason === "operator_disabled"
+                ? "operator_enabled"
+                : (row.health.reason ?? "operator_enabled"),
           },
         };
       });
@@ -690,7 +700,8 @@ export function createTrackBOperations({
       const rows = [...(state.recommendations ?? [])];
       const index = rows.findIndex((row) => row.id === id);
       if (index < 0) throw new Error("recommendation not found");
-      const current = rows[index]!;
+      const current = rows[index];
+      if (!current) throw new Error("recommendation not found");
       if (current.status === "applied")
         throw new Error("applied recommendation cannot be dismissed");
       if (current.status === "dismissed")
@@ -1049,10 +1060,8 @@ export function createTrackBOperations({
       const index = rows.findIndex((row) => row.id === id);
       const row = rows[index];
       if (!row) throw new Error("recommendation not found");
-      if (row.status === "dismissed")
-        throw new Error("dismissed recommendation cannot be applied");
-      if (row.status === "rejected")
-        throw new Error("rejected recommendation cannot be applied");
+      if (row.status === "dismissed") throw new Error("dismissed recommendation cannot be applied");
+      if (row.status === "rejected") throw new Error("rejected recommendation cannot be applied");
       if (!row.signatureValid) throw new Error("recommendation signature validation failed");
       if (!row.policyAllowed) throw new Error("recommendation application blocked by local policy");
       if ((state.contribution ?? EMPTY_CONTRIBUTION).recommendationAccess !== "preview_and_apply")
