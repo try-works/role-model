@@ -1,0 +1,65 @@
+{
+  "contract": "Run80EvidenceBinderV1",
+  "runId": "80-signed-recommendation-cloud-lifecycle",
+  "finishedAt": "2026-07-24T11:44:10.542Z",
+  "pins": {
+    "privateBaseline": "739ef35bcc2d3c747696c4a22d74e4718cf1229b",
+    "publicBaseline": "420770884be5999267992666a5f71913adb5a7c8",
+    "note": "working-tree feature branches recursive/80-signed-recommendation-cloud-lifecycle"
+  },
+  "rebuild": {
+    "privateBuildRun00": {
+      "command": "pnpm build:run00-runtime",
+      "exitCode": 0,
+      "log": "evidence/logs/rebuild-private-run00.log",
+      "dist": "dist/run00-dev"
+    },
+    "publicPackageSea": {
+      "command": "ROLE_MODEL_TRACK_B_DISTRIBUTION_ROOT=<private>/dist/run00-dev pnpm runtime:package-sea",
+      "exitCode": 0,
+      "log": "evidence/logs/rebuild-public-sea.log",
+      "artifactPath": "D:/DEV/role-model/.worktrees/80-signed-recommendation-cloud-lifecycle/role-model-router/dist/release/win32-x64/role-model-dev.exe",
+      "sha256": "825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84"
+    }
+  },
+  "trackDev": {
+    "host": "https://recommendations-dev.role-model.dev",
+    "channel": "development",
+    "scopeId": "run80-dev",
+    "keyId": "role-model-recommendations-dev-v1",
+    "seedLog": "evidence/logs/live-dev-seed-run80-scope.log",
+    "materialProbe": "evidence/other/material-probe-dev.json"
+  },
+  "liveHops": {
+    "runtime": "rebuilt role-model-dev.exe on http://127.0.0.1:34583",
+    "scopeId": "run80-dev",
+    "downloadApply": {
+      "downloadStatus": 200,
+      "applyStatus": 200,
+      "activePackId": "recommendation-7f764e25a078716f1d3935f35d58ca1b"
+    },
+    "downloadDismiss": {
+      "downloadStatus": 200,
+      "dismissStatus": 200,
+      "dismissId": "recommendation-aec9c8596b18bebbe231be7dbe396be0"
+    },
+    "historicalPcrNotSubstituted": true,
+    "evidence": "evidence/logs/live-dev-lifecycle-pass.json"
+  },
+  "tdd": {
+    "mode": "strict",
+    "red": [
+      "evidence/logs/red/sp1-launch-track.log"
+    ],
+    "green": [
+      "evidence/logs/green/sp1-launch-track.log",
+      "evidence/logs/green/sp2-optout.log"
+    ]
+  },
+  "offline": {
+    "bindingsTests": "tests/track-b/run80-recommendation-bindings.test.mjs",
+    "optOutTest": "role-model-router/apps/runtime-host-bridge/test/track-b-operations-api.test.ts (run80 contribution opt-out)",
+    "tb10Baseline": "evidence/other/tb10-baseline.log"
+  },
+  "secretsOmitted": true
+}

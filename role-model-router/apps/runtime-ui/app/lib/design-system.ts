@@ -1020,6 +1020,13 @@ export const primaryButtonClassName =
 export const secondaryButtonClassName =
   "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-pill)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-[22px] py-[11px] text-[15px] font-semibold leading-5 tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
 
+/** Companion control beside SelectField — match select trigger height/radius, not pill CTAs. */
+export const compactFieldButtonClassName =
+  "inline-flex h-10 min-h-[40px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-border-strong)] bg-[var(--rm-panel)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[var(--rm-accent-ink)] transition hover:border-[var(--rm-accent)] hover:bg-[var(--rm-accent-ghost)] hover:text-[var(--rm-accent-ink)] active:scale-95 disabled:opacity-60";
+
+export const compactFieldButtonEmphasisClassName =
+  "inline-flex h-10 min-h-[40px] items-center justify-center rounded-[var(--rm-radius-field)] border border-[var(--rm-accent)] bg-[var(--rm-accent)] px-4 text-[13px] font-semibold leading-[18px] tracking-[-0.01em] text-[color:var(--rm-on-primary)] transition hover:border-[var(--rm-accent-focus)] hover:bg-[var(--rm-accent-focus)] active:scale-95 disabled:opacity-60";
+
 export const utilityButtonClassName =
   "inline-flex min-h-[44px] items-center justify-center rounded-[var(--rm-radius-md)] border border-[var(--rm-border)] bg-[var(--rm-surface)] px-[15px] py-2 text-[13px] font-semibold leading-4 tracking-[-0.01em] text-[var(--rm-fg)] transition hover:border-[var(--rm-border-strong)] hover:bg-[var(--rm-panel)]";
 

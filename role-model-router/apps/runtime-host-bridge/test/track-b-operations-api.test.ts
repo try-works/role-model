@@ -1137,6 +1137,58 @@ describe("Track B operations APIs", () => {
     await expect(ops.dismissRecommendation({ id: "missing" })).rejects.toThrow(/not found/i);
   });
 
+  test("run80 contribution opt-out does not revoke imported eligible recommendation", async () => {
+    const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run80-optout-${Date.now()}`);
+    roots.push(runtimeStateRoot);
+    const statePath = path.join(runtimeStateRoot, "track-b-production-bridge.json");
+    await mkdir(runtimeStateRoot, { recursive: true });
+    await writeFile(
+      statePath,
+      JSON.stringify({
+        schemaVersion: "role-model.track-b-production-bridge.v1",
+        protocolVersion: "1.0",
+        revision: 1,
+        generatedAt: new Date().toISOString(),
+        extensions: [],
+        storageServices: [],
+        retention: { managedPolicy: false, receipts: [], activeJob: null },
+        contribution: {
+          mode: "contributor",
+          contributionTier: "advanced",
+          recommendationTier: "advanced",
+          recommendationAccess: "preview_and_apply",
+          allowCloudUpload: false,
+          authorizationState: "revoked",
+          revocationEpoch: 1,
+          queuedCount: 0,
+          managed: false,
+        },
+        recommendations: [
+          {
+            id: "pack-optout",
+            version: "1",
+            status: "validated",
+            signatureValid: true,
+            policyAllowed: true,
+            provenance: "cloud:bundle-optout",
+          },
+        ],
+        recommendationRevision: 3,
+        activePack: null,
+      }),
+    );
+    const ops = createTrackBOperations({ statePath, catalog: [] });
+    const listed = await ops.listRecommendations();
+    expect(listed.find((row) => row.id === "pack-optout")).toMatchObject({
+      status: "validated",
+      signatureValid: true,
+    });
+    const applied = (await ops.applyRecommendation({ id: "pack-optout" })) as {
+      activePack: { id: string };
+    };
+    expect(applied.activePack.id).toBe("pack-optout");
+  });
+
   test("run79 HTTP exposes extensions mutate and recommendations dismiss routes", async () => {
     const runtimeStateRoot = path.join(os.tmpdir(), `track-b-run79-http-${Date.now()}`);
     roots.push(runtimeStateRoot);

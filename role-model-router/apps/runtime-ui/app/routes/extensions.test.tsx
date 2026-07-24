@@ -38,6 +38,12 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("mutateExtension");
     expect(routeSource).toContain("dismissRecommendation");
     expect(routeSource).toContain("SelectField");
+    expect(routeSource).toContain("Set mode");
+    expect(routeSource).toContain("compactFieldButtonClassName");
+    expect(routeSource).toContain("compactFieldButtonEmphasisClassName");
+    expect(routeSource).not.toMatch(
+      /Set mode[\s\S]{0,200}primaryButtonClassName|modeDirty \? primaryButtonClassName/,
+    );
     expect(routeSource).toContain("formatModeLabel");
     expect(routeSource).toContain("Set mode");
     expect(routeSource).not.toMatch(/>\s*Enable\s*</);
