@@ -30,5 +30,8 @@ test("operates disclosure, opt-out, retention, recommendations, and failure isol
   await page.getByRole("button", { name: "Dry-run" }).click();
   await expect(page.getByText(/0 affected · 0 B ·/)).toBeVisible();
   await page.getByRole("button", { name: "Execute plan" }).click();
-  await expect(page.getByText(/running · 0%|completed · 100%/)).toBeVisible();
+  // QA bridge has no private operations sidecar; execute must fail closed (same boundary as unit tests).
+  await expect(
+    page.getByText(/private operations endpoint is required for retention execution/i),
+  ).toBeVisible();
 });

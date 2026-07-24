@@ -20,6 +20,8 @@ describe("ExtensionsRoute", () => {
       "Opt out & clear queue",
       "Active pack",
       "Download & validate latest",
+      "Validate & apply",
+      "Applied",
       "secondaryButtonClassName",
     ])
       expect(routeSource).toContain(token);

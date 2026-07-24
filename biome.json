@@ -35,7 +35,8 @@
       "**/testdata/catalog/models-dev-snapshot.json",
       "**/vendor/**",
       "**/target/**",
-      "**/runtime-output/**"
+      "**/runtime-output/**",
+      "**/test-results/**"
     ]
   },
   "overrides": [

@@ -315,6 +315,7 @@ export function ExtensionsRouteView() {
                   className={`${secondaryButtonClassName} mt-3`}
                   disabled={
                     busy ||
+                    row.status === "applied" ||
                     !row.signatureValid ||
                     !row.policyAllowed ||
                     contribution?.recommendationAccess !== "preview_and_apply"
@@ -322,7 +323,7 @@ export function ExtensionsRouteView() {
                   onClick={() => void apply(row.id)}
                   type="button"
                 >
-                  Validate & apply
+                  {row.status === "applied" ? "Applied" : "Validate & apply"}
                 </button>
               </article>
             ))}
