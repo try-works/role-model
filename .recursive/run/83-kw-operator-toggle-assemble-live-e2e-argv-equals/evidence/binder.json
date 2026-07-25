@@ -1,0 +1,88 @@
+{
+  "runId": "83-kw-operator-toggle-assemble-live-e2e-argv-equals",
+  "verifiedAt": "2026-07-25T05:22:00Z",
+  "secretsOmitted": true,
+  "privateBaseline": "6fd8c68e89d8d2aa1a06681bf8ff4d3552a34755",
+  "publicBaseline": "d72fc2a19c0849c4adf2ad15931d515c5ea37f8d",
+  "privateWorktree": "D:/DEV/.wt/83-kw",
+  "publicWorktree": "D:/DEV/role-model/.worktrees/83-kw-operator-toggle-assemble-live-e2e-argv-equals",
+  "privateProductTip": "3b097ed0cf7ae9a1a63604d2f95b58418b190cf0",
+  "publicProductTip": "b5482d7c081340572d5cabbea9492ff0e916e82d",
+  "productPinPrivate": "3b097ed0cf7ae9a1a63604d2f95b58418b190cf0",
+  "productPinPublic": "b03d82a2fe8adc317c9fdaecad838beac3ed74a8",
+  "tddMode": "strict",
+  "serverChange": "not-required",
+  "publicChange": "required",
+  "kwToggle": {
+    "default": "shadow-ready",
+    "softOff": "shadow-ready",
+    "ceremonyOn": "digest(policy.receipt)===validationReceiptHash",
+    "probe": "evidence/other/kw-packaged-activation-probe.json",
+    "redLog": "evidence/logs/red/sp1-tb10-shadow-soft-off.log",
+    "greenLog": "evidence/logs/green/sp1-tb10-shadow-soft-off.log"
+  },
+  "equalsFormArgv": {
+    "helper": "scripts/track-b/packaged-launch-scope.mjs",
+    "phase5Argv": "--track=dev --scope-id=run83-dev",
+    "redLog": "evidence/logs/red/sp2-equals-form-scope.log",
+    "greenLog": "evidence/logs/green/sp2-equals-form-scope.log"
+  },
+  "assemble": {
+    "mode": "full-playwright",
+    "log": "evidence/logs/phase5/assemble-run00-live-e2e.log",
+    "rebindHelper": "evidence/other/rebind-live-e2e-source-revisions.mjs"
+  },
+  "freeze": {
+    "pinFreezeLog": "evidence/logs/ship-ci/private-pin-freeze-after-rebind.log",
+    "tb11Log": "evidence/logs/ship-ci/private-tb11-after-pin.log",
+    "systemProofLog": "evidence/logs/ship-ci/private-system-proof-after-pin.log"
+  },
+  "rebuild": {
+    "receipt": "evidence/other/rebuild-receipt.json",
+    "seaSha256": "825f9b4f2e17f5102605b24943b974efa435133452f0cfa5867b389c14927f84",
+    "listenUrl": "http://127.0.0.1:34568",
+    "scopeId": "run83-dev",
+    "track": "dev"
+  },
+  "recommendationHop": {
+    "track": "dev",
+    "scopeId": "run83-dev",
+    "summary": "evidence/other/api-recommendation-lifecycle-summary.json",
+    "log": "evidence/logs/phase5/api-recommendation-lifecycle.log",
+    "verdict": "PASS"
+  },
+  "cloudE2e": {
+    "track": "dev",
+    "log": "evidence/logs/phase5/cloud-track-e2e-dev.log",
+    "receipt": "evidence/other/cloud-track-dev.json"
+  },
+  "piStorage": {
+    "receipt": "evidence/other/pi-storage-correctness.json",
+    "localRuntime": "evidence/live-e2e/local-runtime-and-pi.json"
+  },
+  "decisions": {
+    "public": "evidence/other/public-change-decision.json",
+    "server": "evidence/other/server-change-decision.json"
+  },
+  "requirements": {
+    "R1": "assemble",
+    "R2": "freeze",
+    "R3": "kwToggle",
+    "R4": "kwToggle",
+    "R5": "publicChange",
+    "R6": "kwToggle",
+    "R7": "kwToggle",
+    "R8": "kwToggle",
+    "R9": "equalsFormArgv",
+    "R10": "kwToggle",
+    "R11": "rebuild",
+    "R12": "kwToggle",
+    "R13": "decisions",
+    "R14": "tddMode",
+    "R15": "rebuild",
+    "R16": "cloudE2e",
+    "R17": "piStorage",
+    "R18": "binder",
+    "R19": "paired-delivery-pending-ship"
+  }
+}
