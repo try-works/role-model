@@ -5,14 +5,14 @@ Status: CURRENT
 Scope: recursive-mode phase authoring discipline
 Owns-Paths:
 Watch-Paths: .recursive/run/; .agents/skills/recursive-mode/
-Source-Runs: 80-signed-recommendation-cloud-lifecycle; 81-kw-activation-browser-recommendation-evidence
-Validated-At-Commit: working-tree run-81 Phase 8 closeout
-Last-Validated: 2026-07-24
+Source-Runs: 80-signed-recommendation-cloud-lifecycle; 81-kw-activation-browser-recommendation-evidence; 82-tb00-pin-refreeze-kw-digest-bind-launch-scope; 83-kw-operator-toggle-assemble-live-e2e-argv-equals
+Validated-At-Commit: working-tree run-83 Phase 8 closeout
+Last-Validated: 2026-07-25
 Tags: recursive-mode, phase-docs, closeout, falsification
 
 ## Issue
 
-Authoring Phase 3–8 artifacts (or locking them) before that phase’s real work completes falsifies the workflow. Anticipatory “PASS” docs for unfinished implementation, review, tests, or QA must be deleted/reopened; control-plane DECISIONS/STATE/memory must not be updated early. Batch-writing Phases 3.5–8 in one shot is the same failure mode even if earlier phases already passed.
+Authoring Phase 3–8 artifacts (or locking them) before that phase’s real work completes falsifies the workflow. Anticipatory “PASS” docs for unfinished implementation, review, tests, or QA must be deleted/reopened; control-plane DECISIONS/STATE/memory must not be updated early. Batch-writing Phases 3.5–8 in one shot is the same failure mode even if earlier phases already passed. Documenting polluted foreign-run evidence as intentional also falsifies the record—restore/fix repo reality first.
 
 ## Guidance
 
@@ -22,4 +22,4 @@ Authoring Phase 3–8 artifacts (or locking them) before that phase’s real wor
 - Write `06`/`07`/`08` only after updating DECISIONS/STATE/memory respectively; never pre-author those receipts.
 - Phases 6–8 own DECISIONS/STATE/memory and must update those docs as part of their real work, then leave concise delta receipts.
 - If a subagent recreates anticipatory closeout docs, stop it, delete/reopen, and continue controller-authored receipts from disk evidence.
-- Run 81 confirmed: user-enforced serial authoring after real work per phase is the correct closeout path.
+- Runs 81–83 confirmed: user-enforced serial authoring after real work per phase is the correct closeout path; run 83 also confirmed restore polluted foreign-run evidence before claiming Phase 3 audit PASS.

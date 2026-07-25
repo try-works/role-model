@@ -28,10 +28,29 @@ Control-plane docs are not memory docs:
 
 ## Registry
 
-- `domains/direct-track-b.md` — Direct Track B v1.1 surfaces, run-79 mutate/dismiss/Set-mode UI, run-80 live `--track=dev` signed recommendation lifecycle, and run-81 gated KW activation + browser recommendation evidence (Source-Runs: `00-direct-track-b-v1-1-implementation`, `79-extension-control-and-recommendations-qa`, `80-signed-recommendation-cloud-lifecycle`, `81-kw-activation-browser-recommendation-evidence`)
+<!-- RECURSIVE-TRAINING-REGISTRY:START -->
+## Training Extraction Registry
+
+- `domains/-recursive.md` — .recursive (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
+- `domains/direct-track-b.md` — Direct Track B domain memory (Source-Runs: 00-direct-track-b-v1-1-implementation; 79-extension-control-and-recommendations-qa; 80-signed-recommendation-cloud-lifecycle; 81-kw-activation-browser-recommendation-evidence)
+- `domains/role-model-router.md` — role-model-router (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
+- `training/closeout-workflow.md` — Training Memory: closeout-workflow (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
+- `training/code-review.md` — Training Memory: code-review (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
+- `training/extension-policy.md` — Training Memory: extension-policy (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
+- `training/frontend-implementation.md` — Training Memory: frontend-implementation (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
+- `training/packaging-verification.md` — Training Memory: packaging-verification (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
+- `training/phase-authoring.md` — Training Memory: phase-authoring (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
+- `training/qa-verification.md` — Training Memory: qa-verification (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
+- `training/requirements-scoping.md` — Training Memory: requirements-scoping (Source-Runs: 81-kw-activation-browser-recommendation-evidence, 79-extension-control-and-recommendations-qa)
+- `training/test-validation.md` — Training Memory: test-validation (Source-Runs: 79-extension-control-and-recommendations-qa, 80-signed-recommendation-cloud-lifecycle)
+<!-- RECURSIVE-TRAINING-REGISTRY:END -->
+
+- `domains/direct-track-b.md` — Direct Track B v1.1 surfaces, run-79 mutate/dismiss/Set-mode UI, run-80 live `--track=dev` signed recommendation lifecycle, run-81 gated KW activation + browser recommendation evidence, run-82 pin re-freeze + digest-bound KW + launch scope, and run-83 KW soft toggle + equals-form argv + evidence-root + full Playwright assemble (Source-Runs: `00-direct-track-b-v1-1-implementation`, `79-extension-control-and-recommendations-qa`, `80-signed-recommendation-cloud-lifecycle`, `81-kw-activation-browser-recommendation-evidence`, `82-tb00-pin-refreeze-kw-digest-bind-launch-scope`, `83-kw-operator-toggle-assemble-live-e2e-argv-equals`)
+- `domains/role-model-router.md` — GRPO-extracted role-model-router domain notes (Source-Runs: `79-extension-control-and-recommendations-qa`, `81-kw-activation-browser-recommendation-evidence`)
 - `episodes/00-direct-track-b-v1-1-implementation.md` — closeout episode for `00-direct-track-b-v1-1-implementation`
 - `skills/usage/review-bundle-citation-requirements.md` — Phase 3.5 review-bundle citation expectations (Source-Runs: `79-extension-control-and-recommendations-qa`, `80-signed-recommendation-cloud-lifecycle`)
-- `skills/issues/anticipatory-phase-docs.md` — Do not author Phase 3–8 docs before that phase’s real work; do not batch-write 3.5–8; reject/reopen anticipatory closeouts (Source-Runs: `80-signed-recommendation-cloud-lifecycle`, `81-kw-activation-browser-recommendation-evidence`)
+- `skills/issues/anticipatory-phase-docs.md` — Do not author Phase 3–8 docs before that phase’s real work; do not batch-write 3.5–8; reject/reopen anticipatory closeouts (Source-Runs: `80-signed-recommendation-cloud-lifecycle`, `81-kw-activation-browser-recommendation-evidence`, `82-tb00-pin-refreeze-kw-digest-bind-launch-scope`, `83-kw-operator-toggle-assemble-live-e2e-argv-equals`)
+- `skills/issues/launch-packaged-runtime-argv-equals.md` — Equals-form and discrete argv both bind; non-run80 scopes require `--evidence-root` (Source-Runs: `82-tb00-pin-refreeze-kw-digest-bind-launch-scope`, `83-kw-operator-toggle-assemble-live-e2e-argv-equals`)
 
 - `domains/` - stable functional-area knowledge with `Owns-Paths`
 - `patterns/` - reusable playbooks and solution patterns
