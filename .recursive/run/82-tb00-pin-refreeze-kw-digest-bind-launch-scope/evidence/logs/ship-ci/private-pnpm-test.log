@@ -1,0 +1,59 @@
+
+> @role-model/internal@1.1.0 test D:\DEV\.wt\82-tb00
+> node --test tests/track-b/*.test.mjs
+
+Γ£ö all 134 assurance fixtures exist and bind executable scenario inputs (67.4916ms)
+Γ£ö assurance commands reject a fixture marker that has no post-assertion execution receipt (909.1864ms)
+Γ£ö all thirteen canonical packages implement the process-host run contract (123.5226ms)
+(node:17068) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö scheduler persists leases and bounded dead letters (44.9031ms)
+Γ£ö scheduler resource guard pauses without claiming work (3.3665ms)
+Γ£ö scheduler owns retention holds only for the duration of hot-row work (1.4978ms)
+(node:33416) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö evaluation core durably owns jobs, cases, leases, scores and comparisons (199.3901ms)
+Γ£ö local runner claims through Evaluation Core and never writes score storage directly (7.5629ms)
+Γ£ö evaluation judge policy caps scores and rejects recursive sampling (2.1029ms)
+Γ£ö knowledge lifecycle requires evidence and excludes tombstones (107.3088ms)
+Γ£ö knowledge worker applies scope and repository filters before ranking (45.5046ms)
+Γ£ö memory receipts produce capped operational priors and invalidate incompatible repositories (10.898ms)
+Γ£ö route-only replay invokes no provider and hands score-free subjects to evaluation (15.3014ms)
+Γ£ö trajectory detector taxonomy emits bounded diagnostics and evaluation priority (3.0468ms)
+Γ£ö profile lifecycle separates evidence planes and rollback restores active snapshot (5.7514ms)
+Γ£ö profile sparse contexts shrink to an explicit broader fallback (1.4704ms)
+Γ£ö repository fingerprints are keyed, stable and resettable without exposing raw identity (4.0038ms)
+{"event":"ingest_rejected","level":"warn","reason":"unauthorized","runtimeChannel":"production","service":"aggregate-ingestion"}
+Γ£ö PCR2 pre-disclosure / unauthorized aggregate is rejected by local cloud (245.741ms)
+{"channel":"production","event":"ingest_rejected","level":"warn","reason":"invalid_aggregate_shape","runtimeChannel":"production","service":"aggregate-ingestion"}
+Γ£ö PCR2 raw fields fail closed before accept (39.2705ms)
+{"event":"ingest_accepted","key":"history/production/tenant%3Arun00-remediation/0/0-agg-ok.parquet","level":"info","manifestId":"history-4f1d7e288f457d7379c18dc047b8297318cad483528f899314d9beb8fab890f9","runtimeChannel":"production","scope":"tenant:run00-remediation","service":"aggregate-ingestion"}
+{"event":"ingest_duplicate","key":"history/production/tenant%3Arun00-remediation/0/0-agg-ok.parquet","level":"info","runtimeChannel":"production","scope":"tenant:run00-remediation","service":"aggregate-ingestion"}
+{"event":"recommendation_publish_http","level":"info","publicationCount":1,"runtimeChannel":"production","selectedCount":1,"service":"recommendation-service","status":"published"}
+Γ£ö PCR2 disclosureΓåÆauthorizeΓåÆupload is accepted, listed in history, idempotent, and revocable (117.3567ms)
+{"event":"recommendation_resolve","level":"info","runtimeChannel":"production","scopeId":"packaged-run00","service":"recommendation-service","snapshotId":"snapshot-c45273b683796165ea0bb6908fff2edd","status":"available"}
+Γ£ö PCR7 local cloud publishes signed deepseek recommendation bundle and resolves it (61.498ms)
+(node:31088) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö PCR4 evaluation-core run() supports score and create-job capabilities (158.9239ms)
+Γ£ö PCR4 background-evidence-scheduler run() schedules and executes durable work (19.2726ms)
+Γ£ö PCR4 crowdsourced-learning run() supports preview/disclose/send/revoke (19.4222ms)
+Γ£ö PCR4 replay-core and trajectory-signals run() expose production capabilities (6.0919ms)
+Γ£ö PCR4 profile-learner and evaluation-runner-local run() expose production capabilities (6.8802ms)
+Γ£ö PCR1 package-registry declares release machine fields for every package (30.0367ms)
+Γ£ö packaged launch scope defaults to packaged-run00 (3.0784ms)
+Γ£ö packaged launch scope accepts explicit --scope-id (0.4431ms)
+Γ£ö packaged launch scope accepts env override when flag omitted (0.349ms)
+Γ£ö packaged launch scope prefers CLI over env (0.4637ms)
+Γ£ö PCR8 pin-freeze gate tracks dual HEADs and TB11 rewrite eligibility from Phase 3 state (1459.8974ms)
+Γ£ö R19 review and verification maps exist under run evidence (14.1394ms)
+Γ£ö R19 maps report PASS with 2979 obligations (268.6969ms)
+Γ£ö run80 RED/GREEN: --track=dev maps channel to development (not production) (3.1077ms)
+Γ£ö run80: explicit channel wins over track mapping (1.1687ms)
+Γ£ö run80: production track is refused for live lifecycle (3.5976ms)
+Γ£ö run80: public root required and prefers explicit arg (0.721ms)
+Γ£ö run80: track=dev defaults recommendation service URL to permanent-dev host (0.5018ms)
+(node:1208) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£ö run81 KW activation probe proves default-off, refuse, gated success, rollback (16.0039ms)
+Γ£ö built runtime distribution contains thirteen integrity-bound process extensions (2871.2554ms)

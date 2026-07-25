@@ -1,0 +1,20 @@
+{
+  "artifact": "08-memory-impact.md",
+  "artifact_hash": "614770c4551cce47cf260be9a6f70b5d2352f597dd5a92451fac2ba463bcda0c",
+  "artifact_path": "D:\\DEV\\.wt\\82-tb00\\.recursive\\run\\82-tb00-pin-refreeze-kw-digest-bind-launch-scope\\08-memory-impact.md",
+  "locked_at": "2026-07-24T23:35:23Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "6ea874319a4140bd69247e63a5b1386cd4c87299a4a83e4037b832f8588be2c9",
+    "00-worktree.md": "690d5fa7d5bad56322839f291f0eeb7dfcecdfe584f2ab3dd512a98e7f6712c0",
+    "01-as-is.md": "c139ae20f3bf2242677b5d7b197efe75314ca1d65064609d0445dc88b65de381",
+    "02-to-be-plan.md": "a68e88ccd30241c4310e1435feba107f21be06590afa8bcf17ed3cf159601148",
+    "03-implementation-summary.md": "107a37c694099630eb995cb2daff5621a8670363eb00f84684a7f0582529e216",
+    "03.5-code-review.md": "5855021d78af11685b4715fb819719e8ce28b2b2fdd96497bd749f19572ea8e2",
+    "04-test-summary.md": "fb62cee849ba18ab7140a6b64649af042c3aba5cb8ddd1bfe4b33b4f272d0ea0",
+    "05-manual-qa.md": "e61fa241268f6a92935c15da5e1f80f6bd91a6fe9600f3c18539c5350c7a80ba",
+    "06-decisions-update.md": "49fc4cc7babaf34befce7d36be01284c966e02eaa52356244ff34b5c0e1abe7f",
+    "07-state-update.md": "825691e17d626517f56f53f6eb5774afb3f066b1ac292d5274ba9300b9153e32"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "a7713c8442f0f54834a716aaae2c4e4dd77144e15bd46c05aecebe000ec9f873"
+}
