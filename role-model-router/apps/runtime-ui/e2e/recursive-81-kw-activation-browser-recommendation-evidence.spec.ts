@@ -11,9 +11,7 @@ test.describe("@recursive:81-kw-activation-browser-recommendation-evidence @brow
       page.getByRole("main").getByRole("heading", { name: "Signed recommendations" }),
     ).toBeVisible({ timeout: 60_000 });
 
-    await expect(
-      page.getByText(/productionActivation stays fail-closed by default/i),
-    ).toBeVisible();
+    await expect(page.getByText(/shadow-ready by default/i)).toBeVisible();
 
     const download = page.getByRole("button", { name: "Download & validate latest" });
     await expect(download).toBeEnabled();

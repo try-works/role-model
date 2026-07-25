@@ -33,7 +33,10 @@ describe("ExtensionsRoute", () => {
     expect(routeSource).toContain("Health probe");
     expect(routeSource).toContain("LIFECYCLE_COPY");
     expect(routeSource).toContain("operatorBoundaryNote");
-    expect(routeSource).toContain("productionActivation stays fail-closed by default");
+    expect(routeSource).toContain("shadow-ready by default");
+    expect(routeSource).toContain("ceremony-bound ON");
+    expect(routeSource).toContain("soft OFF returns to shadow-ready");
+    expect(routeSource).toContain("KW works when on");
     expect(routeSource).toContain("gated separately from Set mode");
     expect(routeSource).toContain("is not productionActivation");
     expect(routeSource).not.toContain("productionActivation stays hard-off");
