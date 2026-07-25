@@ -1,0 +1,16 @@
+{
+  "artifact": "05-manual-qa.md",
+  "artifact_hash": "fa5dc41b9aa299c0713a3bd1923ad3cdc85fef9e1c25e8bd4b92745ba9e55daf",
+  "artifact_path": "D:\\DEV\\.wt\\83-kw\\.recursive\\run\\83-kw-operator-toggle-assemble-live-e2e-argv-equals\\05-manual-qa.md",
+  "locked_at": "2026-07-25T06:03:56Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "9c9cbabf404223b3ce1416457ffd9b4cf9f736fe73270efb0e953baec62beebd",
+    "00-worktree.md": "b1bb1bbe08b417af63683d42ef06072e6a46d973c4666460c564d01b7e3de230",
+    "01-as-is.md": "9db4c78b1192ccfdbf18ba2e46c374a6c3e8132bec2f42db9e895a02a4a7e12d",
+    "02-to-be-plan.md": "9aa6195572cfe3d80aff503cd7fe682594ffcee295cf7bdd993f582dee22b597",
+    "03-implementation-summary.md": "74d0b213a5c736eafa3f1786f9d284078c3b01f81df3441d0cdd89014721360e",
+    "04-test-summary.md": "e5db7923012b8cce4b02fa27e310377af8b1cef004010662e1088ed75a17c24c"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "88d3230b5de8d12fec78837909cf5df968f78bedebf55c18bf12e24bed59be52"
+}
