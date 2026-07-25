@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "role-model.run83.recommendation-material-fingerprint.v1",
+  "secretsOmitted": true,
+  "recommendationScopeId": "run83-dev",
+  "recommendationKeyId": "role-model-recommendations-dev-v1",
+  "recommendationChannel": "development",
+  "recommendationPublicSpkiSha256Prefix": "78f17800",
+  "note": "Verification SPKI and service token live only under TEMP secret-material.json; never commit raw tokens."
+}

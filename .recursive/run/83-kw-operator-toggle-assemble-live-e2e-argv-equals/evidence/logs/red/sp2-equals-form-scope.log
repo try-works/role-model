@@ -1,0 +1,86 @@
+Γ£ö packaged launch scope defaults to packaged-run00 (1.7915ms)
+Γ£ö packaged launch scope accepts explicit --scope-id (0.457ms)
+Γ£ö packaged launch scope accepts env override when flag omitted (0.3444ms)
+Γ£ö packaged launch scope prefers CLI over env (0.3701ms)
+Γ£û packaged launch scope accepts equals-form --scope-id= (1.7029ms)
+Γ£û packaged launch scope equals-form prefers CLI over env (0.5052ms)
+Γ£û resolveFlagValue binds equals-form --track= (0.3591ms)
+Γ£ö resolveFlagValue binds discrete --track (0.207ms)
+Γä╣ tests 8
+Γä╣ suites 0
+Γä╣ pass 5
+Γä╣ fail 3
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 210.356
+
+Γ£û failing tests:
+
+test at tests\track-b\packaged-launch-scope.test.mjs:36:1
+Γ£û packaged launch scope accepts equals-form --scope-id= (1.7029ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'packaged-run00'
+  - 'run83-dev'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/83-kw/tests/track-b/packaged-launch-scope.test.mjs:37:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'packaged-run00',
+    expected: 'run83-dev',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\packaged-launch-scope.test.mjs:43:1
+Γ£û packaged launch scope equals-form prefers CLI over env (0.5052ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + 'run83-env'
+  - 'run83-cli'
+           ^
+  
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/83-kw/tests/track-b/packaged-launch-scope.test.mjs:44:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: 'run83-env',
+    expected: 'run83-cli',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests\track-b\packaged-launch-scope.test.mjs:53:1
+Γ£û resolveFlagValue binds equals-form --track= (0.3591ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  
+  '' !== 'dev'
+  
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/83-kw/tests/track-b/packaged-launch-scope.test.mjs:54:10)
+      at Test.runInAsyncScope (node:async_hooks:214:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: 'dev',
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

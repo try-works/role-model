@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/83-kw-operator-toggle-assemble-live-e2e-argv-equals/role-model-router/apps/runtime-ui
+
+ Γ£ô app/routes/extensions.test.tsx (2 tests) 36ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  09:18:26
+   Duration  1.55s (transform 288ms, setup 0ms, collect 603ms, tests 36ms, environment 0ms, prepare 243ms)
+

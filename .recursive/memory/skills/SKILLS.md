@@ -43,6 +43,7 @@ Keep this file concise. Link to child docs instead of duplicating them.
 - `/.recursive/memory/skills/usage/direct-track-b-closeout-self-audit.md`
 - `/.recursive/memory/skills/usage/review-bundle-citation-requirements.md`
 - `/.recursive/memory/skills/issues/anticipatory-phase-docs.md`
+- `/.recursive/memory/skills/issues/launch-packaged-runtime-argv-equals.md` (equals-form binds; foreign scopes require `--evidence-root`; Source-Runs include run 83)
 
 - `/.recursive/memory/skills/usage/skill-discovery-and-evaluation.md`
 - `/.recursive/memory/skills/patterns/delegated-verification-and-refresh.md`

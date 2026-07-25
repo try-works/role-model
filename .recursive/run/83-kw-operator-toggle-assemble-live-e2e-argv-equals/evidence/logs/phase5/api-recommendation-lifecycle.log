@@ -1,0 +1,45 @@
+{
+  "track": "dev",
+  "channel": "development",
+  "serviceUrl": "https://recommendations-dev.role-model.dev",
+  "scopeId": "run83-dev",
+  "keyId": "role-model-recommendations-dev-v1",
+  "seeds": {
+    "a": {
+      "ingest": 202,
+      "publish": 202,
+      "publishStatus": "published",
+      "resolve": "available",
+      "channelSequence": 5,
+      "bundleUri": "https://recommendations-dev.role-model.dev/snapshots/development/stable/advanced/run83-dev/sequence-5/manifest.json"
+    },
+    "b": {
+      "ingest": 202,
+      "publish": 202,
+      "publishStatus": "published",
+      "resolve": "available",
+      "channelSequence": 6,
+      "bundleUri": "https://recommendations-dev.role-model.dev/snapshots/development/stable/advanced/run83-dev/sequence-6/manifest.json"
+    }
+  },
+  "verdict": "PASS",
+  "finishedAt": "2026-07-25T01:55:30.426Z"
+}
+{
+  "track": "dev",
+  "channel": "development",
+  "serviceUrl": "https://recommendations-dev.role-model.dev",
+  "baseUrl": "http://127.0.0.1:34568",
+  "scopeId": "run83-dev",
+  "recommendationIds": [
+    "recommendation-c7138575d6beefbf3ecab38e3b1a1c65"
+  ],
+  "downloadStatus": 200,
+  "applyStatus": 200,
+  "dismissStatus": 200,
+  "dismissId": "recommendation-c46af987e4bc67c7c49d4d6fb7673eca",
+  "activePackId": "recommendation-c7138575d6beefbf3ecab38e3b1a1c65",
+  "activePackPresent": true,
+  "verdict": "PASS",
+  "finishedAt": "2026-07-25T01:55:32.454Z"
+}

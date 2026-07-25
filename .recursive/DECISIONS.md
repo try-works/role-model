@@ -6,6 +6,112 @@
 - `79-extension-control-and-recommendations-qa` - Public extension enable/disable mutation API, Extensions UI wiring, recommendation dismiss, packaged-runtime QA (Phases 0-8). Folder: `.recursive/run/79-extension-control-and-recommendations-qa/`. Soft-closes the prior “blocked mutation API / diagnostics-only UI” limitation from run `00`.
 - `80-signed-recommendation-cloud-lifecycle` - Live `--track=dev` signed recommendation download/apply/dismiss on rebuilt packaged SEA (Phases 0-8). Folder: `.recursive/run/80-signed-recommendation-cloud-lifecycle/`. Soft-closes run 79’s deferred live signed-material follow-up.
 - `81-kw-activation-browser-recommendation-evidence` - Gated KW `productionActivation` policy lifecycle + Extensions UI honesty + mandatory browser recommendation evidence on rebuilt SEA (Phases 0-8). Folder: `.recursive/run/81-kw-activation-browser-recommendation-evidence/`. Soft-closes run 80’s dedicated KW policy/lifecycle follow-up and optional browser UI residual.
+- `82-tb00-pin-refreeze-kw-digest-bind-launch-scope` - TB00 private pin re-freeze + live-e2e coherence, digest-bound KW activation, parameterized packaged launch `--scope-id`, Phase 5 rebuilt-runtime API hop on `run82-dev` (Phases 0-8). Folder: `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/`. Soft-closes run 81 residuals F1 (digest bind) and F3 (launch scope hardcode), and restores pin-freeze/TB11 CI honesty.
+- `83-kw-operator-toggle-assemble-live-e2e-argv-equals` - KW shadow-ready default + soft OFF + ceremony-retained ON, equals-form launch argv, evidence-root fail-closed, full Playwright assemble + private pin tip `3d6c4f7`, Phase 5 hops on `run83-dev` (Phases 0-8). Folder: `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/`. Soft-closes run 82 equals-form argv residual and optional full Playwright assemble follow-up.
+
+## Run: `83-kw-operator-toggle-assemble-live-e2e-argv-equals`
+
+Date: `2026-07-25`
+
+### What changed
+
+- Knowledge Worker defaults to shadow-ready; soft OFF returns shadow-ready; ceremony ON retains `digest(receipt)===validationReceiptHash`; destructive rollback unchanged; packaged probe covers the toggle matrix.
+- Packaged launch accepts equals-form and discrete argv for `--track` / `--scope-id` via shared `resolveFlagValue`.
+- Fail-closed evidence-root binding: non-run80 scopes must pass `--evidence-root` (or env) so hops cannot overwrite historical run-80 receipts; restored polluted run-00/run-80 evidence to baseline.
+- Full Playwright assemble refreshed live-e2e; private TB00 product pin advanced to `3d6c4f74a6198287277471f0afc7e8950a6123d8`; public freeze pin left at `b03d82a2…`.
+- Public Extensions honesty copy updated (`publicChange: required`); public tip `b5482d7c081340572d5cabbea9492ff0e916e82d`.
+- Agent-operated Phase 5 on rebuilt SEA sha `825f9b4f…` with equals-form launch `run83-dev`, packaged KW probe, recommendation apply+dismiss, live cloud-track-dev, and pi storage; binder `secretsOmitted: true`.
+- Server change `not-required`.
+
+### Why
+
+- Close run-82 equals-form argv and full-assemble follow-ups; ship operator-togglable KW with ceremony retained; keep freeze/TB11 CI honesty after product tip advance; prevent foreign-run evidence falsification.
+
+### How
+
+- Strict TDD for KW toggle, equals-form argv, evidence-root guard, and public honesty; full Playwright assemble (not proof-only-only); serial phase docs after real work; private worktree `D:/DEV/.wt/83-kw`; Phase 5 agent-operated hops with SEA sha recheck.
+
+### What was not done (OOS)
+
+- Ungated always-on / ambient KW activation.
+- Public freeze pin retarget.
+- Permanent-dev recommendation worker / server product changes.
+- Origin/`dev` merge of feature branches remains operator-requested (`R19`).
+- Live `--track=production`.
+
+### Soft-close of prior decision
+
+- Soft-closes run `82-tb00-pin-refreeze-kw-digest-bind-launch-scope` Known issues: equals-form argv parsing; optional full Playwright assemble path.
+- Soft-closes the run-80 evidence overwrite risk by restoring polluted receipts and fail-closing evidence-root defaults for foreign scopes.
+
+### Known issues / follow-ups
+
+- Feature-branch merge to origin `dev` is operator-requested (`R19`).
+- Non-run80 scopes must pass `--evidence-root` / env for launch and lifecycle helpers; do not write under `.recursive/run/80-…` for later-run hops.
+
+### Artifact references
+
+- `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/00-requirements.md`
+- `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/00-worktree.md`
+- `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/01-as-is.md`
+- `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/02-to-be-plan.md`
+- `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/03-implementation-summary.md`
+- `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/04-test-summary.md`
+- `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/05-manual-qa.md`
+- `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/evidence/binder.json`
+- `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/evidence/logs/phase5/qa-artifact-recheck.txt`
+
+## Run: `82-tb00-pin-refreeze-kw-digest-bind-launch-scope`
+
+
+Date: `2026-07-25`
+
+### What changed
+
+- Re-froze private TB00 product pin to `05e7729e8d0f55850fc93ee985b0f20d0ee35da2` with coherent live-e2e/release evidence (proof-only rebind when full Playwright assemble was blocked) so pin-freeze gate + TB11 validate pass without exclusions; public product pin left at `b03d82a2…` (`publicChange: not-required`).
+- Hardened gated KW activation: successful `activate(policy)` now requires `digest(policy.receipt) === candidate.validationReceiptHash` (closes run-81 F1); static/class `productionActivation` remains `false`.
+- Parameterized packaged launch `--scope-id` via `scripts/track-b/packaged-launch-scope.mjs` (CLI > env > default `packaged-run00`); Phase 5 launched and verified with explicit `run82-dev`.
+- Agent-operated Phase 5 on freshly rebuilt private dist + public SEA: packaged/dist KW digest probes PASS; API recommendation apply+dismiss on `--track=dev` / `run82-dev` PASS; binder `secretsOmitted: true`.
+- Server change `not-required`.
+
+### Why
+
+- Restore CI-honest TB00 freeze after runs 79–81 product drift; close run-81 digest-binding and launch-scope honesty residuals without ungated KW unlock or stage/main auto-promotion.
+
+### How
+
+- Strict TDD for digest bind, probe, and launch-scope (RED/GREEN); serial phase docs after real work; private short worktree `D:/DEV/.wt/82-tb00`; Phase 5 API hop preferred over browser contingency.
+
+### What was not done (OOS)
+
+- Ungated always-on / ambient KW activation.
+- Public product pin retarget / public product source changes.
+- Permanent-dev recommendation worker / server product changes.
+- Origin/`dev` merge of feature branches remains operator-requested.
+- Full Playwright `assemble-run00-live-e2e` path (FD12 proof-only rebind used for freeze coherence).
+
+### Soft-close of prior decision
+
+- Soft-closes run `81-kw-activation-browser-recommendation-evidence` residuals: (F1) receipt↔candidate digest binding and (F3) launch `--scope-id` hardcode.
+- Soft-closes the matching pin-freeze/TB11 CI honesty gap called out for shipping after runs 79–81 product tips drifted past the frozen private pin.
+
+### Known issues / follow-ups
+
+- Feature-branch merge to origin `dev` is operator-requested.
+- Equals-form argv and full Playwright assemble follow-ups closed by run `83-kw-operator-toggle-assemble-live-e2e-argv-equals`.
+
+### Artifact references
+
+- `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/00-requirements.md`
+- `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/00-worktree.md`
+- `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/01-as-is.md`
+- `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/02-to-be-plan.md`
+- `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/03-implementation-summary.md`
+- `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/03.5-code-review.md`
+- `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/04-test-summary.md`
+- `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/05-manual-qa.md`
+- `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/evidence/binder.json`
+- `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/evidence/logs/phase5/api-recommendation-lifecycle.log`
 
 ## Run: `81-kw-activation-browser-recommendation-evidence`
 
@@ -42,9 +148,9 @@ Date: `2026-07-24`
 
 ### Known issues / follow-ups
 
-- Future hardening: bind verified activation receipt digest to the shadow candidate’s `validationReceiptHash`.
-- Optional harness: parameterize packaged SEA `--scope-id` (today hardcoded `packaged-run00`).
-- Feature-branch merge to origin `dev` is operator-requested.
+- ~~Future hardening: bind verified activation receipt digest to the shadow candidate’s `validationReceiptHash`.~~ Closed by run `82-tb00-pin-refreeze-kw-digest-bind-launch-scope`.
+- ~~Optional harness: parameterize packaged SEA `--scope-id` (today hardcoded `packaged-run00`).~~ Closed by run `82-tb00-pin-refreeze-kw-digest-bind-launch-scope`.
+- Feature-branch merge to origin `dev` is operator-requested (run 81 branch; run 82 also operator-requested).
 
 ### Artifact references
 

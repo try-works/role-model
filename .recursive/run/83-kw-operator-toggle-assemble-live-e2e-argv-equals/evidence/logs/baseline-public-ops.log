@@ -1,0 +1,23 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/83-kw-operator-toggle-assemble-live-e2e-argv-equals/role-model-router/apps/runtime-host-bridge
+
+(node:21684) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ Γ£ô test/track-b-operations-api.test.ts (16 tests) 9760ms
+   Γ£ô Track B operations APIs > fails closed instead of issuing unauthenticated calls to an owned operations endpoint  971ms
+   Γ£ô Track B operations APIs > serves extension lifecycle and storage retention through bounded callbacks  1015ms
+   Γ£ô Track B operations APIs > fails closed when an operations capability is not wired  855ms
+   Γ£ô Track B operations APIs > production backend never infers extension health from the catalog  682ms
+   Γ£ô Track B operations APIs > local Track B bridge seed marks catalog extensions ready without ExtensionHost override  663ms
+   Γ£ô Track B operations APIs > production backend reports readiness only from the supervised ExtensionHost  633ms
+   Γ£ô Track B operations APIs > production backend clean start uses the canonical Advanced aggregate defaults  656ms
+   Γ£ô Track B operations APIs > production request completion reports only aggregate metrics to the private operations boundary  964ms
+   Γ£ô Track B operations APIs > production Responses requests report aggregate metrics through the same private operations boundary  932ms
+   Γ£ô Track B operations APIs > production backend reads and atomically updates real bridge storage state  971ms
+   Γ£ô Track B operations APIs > run79 HTTP exposes extensions mutate and recommendations dismiss routes  1352ms
+
+ Test Files  1 passed (1)
+      Tests  16 passed (16)
+   Start at  08:57:00
+   Duration  13.34s (transform 1.93s, setup 0ms, collect 2.66s, tests 9.76s, environment 0ms, prepare 235ms)
+
