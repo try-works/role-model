@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "mismatchRefuse": true,
+  "activated": true,
+  "rolledBack": true,
+  "module": "dist/run00-dev/extensions/knowledge-worker.mjs",
+  "probe": "run82_dist_kw_digest"
+}

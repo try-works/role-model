@@ -1,0 +1,11 @@
+{
+  "artifact": "00-worktree.md",
+  "artifact_hash": "690d5fa7d5bad56322839f291f0eeb7dfcecdfe584f2ab3dd512a98e7f6712c0",
+  "artifact_path": "D:\\DEV\\.wt\\82-tb00\\.recursive\\run\\82-tb00-pin-refreeze-kw-digest-bind-launch-scope\\00-worktree.md",
+  "locked_at": "2026-07-24T22:31:20Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "6ea874319a4140bd69247e63a5b1386cd4c87299a4a83e4037b832f8588be2c9"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "9ef8d0982fb7f2688fda5415544318036f3033e7af897cd66f67537f4fc46e30"
+}

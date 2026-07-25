@@ -1,0 +1,32 @@
+(node:33212) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Γ£û run81 KW activation probe proves default-off, refuse, gated success, rollback (9.7375ms)
+Γä╣ tests 1
+Γä╣ suites 0
+Γä╣ pass 0
+Γä╣ fail 1
+Γä╣ cancelled 0
+Γä╣ skipped 0
+Γä╣ todo 0
+Γä╣ duration_ms 189.1131
+
+Γ£û failing tests:
+
+test at tests\track-b\run81-kw-activation-probe.test.mjs:5:1
+Γ£û run81 KW activation probe proves default-off, refuse, gated success, rollback (9.7375ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - true
+  
+      at TestContext.<anonymous> (file:///D:/DEV/.wt/82-tb00/tests/track-b/run81-kw-activation-probe.test.mjs:10:10)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
