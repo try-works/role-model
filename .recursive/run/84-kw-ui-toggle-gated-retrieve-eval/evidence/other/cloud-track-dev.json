@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "role-model.cloud-track-e2e.v1",
+  "track": "dev",
+  "startedAt": "2026-07-25T01:55:59.959Z",
+  "hosts": {
+    "ingest": "https://ingest-dev.role-model.dev/",
+    "history": "https://history-dev.role-model.dev/history",
+    "recommendations": "https://recommendations-dev.role-model.dev",
+    "channel": "development",
+    "keyId": "role-model-recommendations-dev-v1"
+  },
+  "materialPath": "C:\\Users\\erikb\\AppData\\Local\\Temp\\role-model-dev-secrets\\secret-material.json",
+  "scope": "tenant:dev-e2e-1784944559959",
+  "steps": {
+    "ingest": {
+      "status": 202,
+      "body": {
+        "status": "accepted",
+        "key": "history/development/tenant%3Adev-e2e-1784944559959/0/0-agg-dev-1784944559959.parquet"
+      },
+      "text": "{\"status\":\"accepted\",\"key\":\"history/development/tenant%3Adev-e2e-1784944559959/0/0-agg-dev-1784944559959.parquet\"}"
+    },
+    "duplicate": {
+      "status": 200,
+      "body": {
+        "status": "duplicate",
+        "key": "history/development/tenant%3Adev-e2e-1784944559959/0/0-agg-dev-1784944559959.parquet"
+      },
+      "text": "{\"status\":\"duplicate\",\"key\":\"history/development/tenant%3Adev-e2e-1784944559959/0/0-agg-dev-1784944559959.parquet\"}"
+    },
+    "history": {
+      "status": 200,
+      "matchingCount": 1,
+      "matching": [
+        {
+          "manifestId": "history-6a5741b579b5a52df57f18ecfe46f970ff0754ab8c32e486a8f19c7fe0fbc63b",
+          "objectKey": "history/development/tenant%3Adev-e2e-1784944559959/0/0-agg-dev-1784944559959.parquet",
+          "payloadHash": "6a5741b579b5a52df57f18ecfe46f970ff0754ab8c32e486a8f19c7fe0fbc63b"
+        }
+      ],
+      "attempt": 7
+    },
+    "publish": {
+      "status": 202,
+      "body": {
+        "status": "published",
+        "publications": [
+          {
+            "snapshotId": "snapshot-2b7c4a0c351866329655dbc8e905b4c2",
+            "channelKey": "development:stable:advanced:tenant:dev-e2e-1784944559959",
+            "sequence": 1,
+            "manifestSha256": "fa4327c240f989de53f5eb33922832df11d9327fbd28e7d6f78530dfab9db089",
+            "bundleUri": "https://recommendations-dev.role-model.dev/snapshots/development/stable/advanced/tenant%3Adev-e2e-1784944559959/sequence-1/manifest.json",
+            "expiresAt": "2026-08-24T01:56:15.710Z",
+            "keyId": "role-model-recommendations-dev-v1",
+            "tier": "advanced",
+            "runtimeChannel": "development",
+            "scopeId": "tenant:dev-e2e-1784944559959",
+            "createdAtMs": 1784944575710
+          }
+        ]
+      },
+      "text": "{\"status\":\"published\",\"publications\":[{\"snapshotId\":\"snapshot-2b7c4a0c351866329655dbc8e905b4c2\",\"channelKey\":\"development:stable:advanced:tenant:dev-e2e-1784944559959\",\"sequence\":1,\"manifestSha256\":\"fa4327c240f989de53f5eb33922832df11d9327fbd28e7d6f78530dfab9db089\",\"bundleUri\":\"https://recommendations-dev.role-model.dev/snapshots/development/stable/advanced/tenant%3Adev-e2e-1784944559959/sequence-1/manifest.json\",\"expiresAt\":\"2026-08-24T01:56:15.710Z\",\"keyId\":\"role-model-recommendations-dev-v1\",\""
+    },
+    "resolve": {
+      "status": 200,
+      "body": {
+        "contract": "RecommendationResolveResponseV1",
+        "channel": "development",
+        "channelSequence": 1,
+        "keyringVersion": 1,
+        "serverTime": "2026-07-25T01:56:17.304Z",
+        "runtimeChannel": "development",
+        "scopeId": "tenant:dev-e2e-1784944559959",
+        "boundaryProtocolVersion": "1.1",
+        "status": "available",
+        "snapshotId": "snapshot-2b7c4a0c351866329655dbc8e905b4c2",
+        "bundleUri": "https://recommendations-dev.role-model.dev/snapshots/development/stable/advanced/tenant%3Adev-e2e-1784944559959/sequence-1/manifest.json",
+        "manifestHash": "fa4327c240f989de53f5eb33922832df11d9327fbd28e7d6f78530dfab9db089",
+        "expiresAt": "2026-08-24T01:56:15.710Z"
+      },
+      "text": "{\"contract\":\"RecommendationResolveResponseV1\",\"channel\":\"development\",\"channelSequence\":1,\"keyringVersion\":1,\"serverTime\":\"2026-07-25T01:56:17.304Z\",\"runtimeChannel\":\"development\",\"scopeId\":\"tenant:dev-e2e-1784944559959\",\"boundaryProtocolVersion\":\"1.1\",\"status\":\"available\",\"snapshotId\":\"snapshot-2b7c4a0c351866329655dbc8e905b4c2\",\"bundleUri\":\"https://recommendations-dev.role-model.dev/snapshots/development/stable/advanced/tenant%3Adev-e2e-1784944559959/sequence-1/manifest.json\",\"manifestHash\":\"fa"
+    },
+    "signature": {
+      "status": 200,
+      "keyId": "role-model-recommendations-dev-v1",
+      "algorithm": "ed25519"
+    },
+    "crossChannel": {
+      "status": 400,
+      "body": {
+        "error": "invalid_aggregate_shape"
+      },
+      "text": "{\"error\":\"invalid_aggregate_shape\"}"
+    },
+    "workersDev": [
+      {
+        "name": "role-model-aggregate-ingestion-dev",
+        "url": "https://role-model-aggregate-ingestion-dev.ambiens.workers.dev/",
+        "status": 404,
+        "closed": true
+      },
+      {
+        "name": "role-model-parquet-encoder-dev",
+        "url": "https://role-model-parquet-encoder-dev.ambiens.workers.dev/",
+        "status": 404,
+        "closed": true
+      },
+      {
+        "name": "role-model-recommendation-signer-dev",
+        "url": "https://role-model-recommendation-signer-dev.ambiens.workers.dev/",
+        "status": 404,
+        "closed": true
+      }
+    ]
+  },
+  "finishedAt": "2026-07-25T01:56:21.620Z",
+  "verdict": "PASS"
+}

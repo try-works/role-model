@@ -10,11 +10,30 @@ type LifecycleRecord = {
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
+  readonly productionActivation?: boolean;
   readonly health: {
     readonly available: boolean;
     readonly routingDependency: boolean;
     readonly reason?: string;
+    readonly productionActivation?: boolean;
+    readonly knowledgeWorkerBootstrap?: KnowledgeWorkerBootstrap;
   };
+};
+type KnowledgeValidationReceipt = {
+  readonly payload: {
+    readonly kind: "knowledge_validation";
+    readonly reviewed: true;
+    readonly safetyReviewed: true;
+    readonly redacted: true;
+    readonly holdoutPassed: true;
+    readonly [key: string]: unknown;
+  };
+  readonly signature: string;
+  readonly [key: string]: unknown;
+};
+type KnowledgeWorkerBootstrap = {
+  readonly receipt: KnowledgeValidationReceipt;
+  readonly groupDigest: string;
 };
 type ExtensionMode = "disabled" | "shadow" | "advisory" | "bounded" | "active";
 type ExtensionMutationReceipt = {
@@ -22,7 +41,13 @@ type ExtensionMutationReceipt = {
   readonly at: string;
   readonly who: string;
   readonly extensionId: string;
-  readonly action: "enable" | "disable" | "set_mode";
+  readonly action:
+    | "enable"
+    | "disable"
+    | "set_mode"
+    | "bootstrap_shadow_ready"
+    | "activate_production"
+    | "deactivate_production";
   readonly mode: ExtensionMode;
   readonly result: "applied";
 };
@@ -37,6 +62,28 @@ const asExtensionMode = (value: unknown, fallback: ExtensionMode = "active"): Ex
   typeof value === "string" && EXTENSION_MODES.has(value as ExtensionMode)
     ? (value as ExtensionMode)
     : fallback;
+const asKnowledgeValidationReceipt = (value: unknown): KnowledgeValidationReceipt => {
+  const receipt =
+    value && typeof value === "object" ? (value as Record<string, unknown>) : undefined;
+  const payload =
+    receipt?.payload && typeof receipt.payload === "object"
+      ? (receipt.payload as Record<string, unknown>)
+      : undefined;
+  if (
+    payload?.kind !== "knowledge_validation" ||
+    payload.reviewed !== true ||
+    payload.safetyReviewed !== true ||
+    payload.redacted !== true ||
+    payload.holdoutPassed !== true ||
+    typeof receipt?.signature !== "string" ||
+    !/^[a-f0-9]{64}$/.test(receipt.signature)
+  ) {
+    throw new Error("knowledge-worker production activation refused: invalid ceremony receipt");
+  }
+  // Full HMAC verification remains private Knowledge Worker authority. The public
+  // host enforces the v1 structural ceremony before exposing its durable UI/API axis.
+  return receipt as KnowledgeValidationReceipt;
+};
 type StorageRecord = {
   readonly id: string;
   readonly category: string;
@@ -263,10 +310,12 @@ export async function seedTrackBExtensionBridgeState(options: {
       channel,
       scope,
       authorizationEpoch,
+      ...(id === "knowledge-worker" ? { productionActivation: false } : {}),
       health: {
         available: true,
         routingDependency: Boolean(entry.routingDependency),
         reason: "local_bridge_seed",
+        ...(id === "knowledge-worker" ? { productionActivation: false } : {}),
       },
     };
   });
@@ -486,6 +535,16 @@ export function createTrackBOperations({
               ...actual,
               installed: true,
               enabledMode: actual.enabledMode ?? (actual.enabled ? "active" : "disabled"),
+              ...(id === "knowledge-worker"
+                ? {
+                    productionActivation: actual.productionActivation ?? false,
+                    health: {
+                      ...actual.health,
+                      productionActivation:
+                        actual.health.productionActivation ?? actual.productionActivation ?? false,
+                    },
+                  }
+                : {}),
             }
           : {
               ...entry,
@@ -496,10 +555,12 @@ export function createTrackBOperations({
               channel: "production",
               scope: "global",
               authorizationEpoch: 0,
+              ...(id === "knowledge-worker" ? { productionActivation: false } : {}),
               health: {
                 available: false,
                 routingDependency: Boolean(entry.routingDependency),
                 reason: "not_registered_with_private_supervisor",
+                ...(id === "knowledge-worker" ? { productionActivation: false } : {}),
               },
             };
       });
@@ -508,8 +569,19 @@ export function createTrackBOperations({
       const id = String(input.id ?? "");
       const action = String(input.action ?? "");
       if (!id) throw new Error("extension id is required");
-      if (!["enable", "disable", "set_mode"].includes(action))
-        throw new Error("extension mutation action must be enable, disable, or set_mode");
+      if (
+        ![
+          "enable",
+          "disable",
+          "set_mode",
+          "bootstrap_shadow_ready",
+          "activate_production",
+          "deactivate_production",
+        ].includes(action)
+      )
+        throw new Error(
+          "extension mutation action must be enable, disable, set_mode, bootstrap_shadow_ready, activate_production, or deactivate_production",
+        );
       let state = await readState(statePath);
       const catalogEntry = catalog.find((entry) => String(entry.id ?? "") === id);
       let index = state.extensions.findIndex((row) => row.id === id);
@@ -523,10 +595,12 @@ export function createTrackBOperations({
           channel: String(catalogEntry.channel ?? "production"),
           scope: String(catalogEntry.scope ?? "global"),
           authorizationEpoch: Number(catalogEntry.authorizationEpoch ?? 0) || 0,
+          ...(id === "knowledge-worker" ? { productionActivation: false } : {}),
           health: {
             available: false,
             routingDependency: Boolean(catalogEntry.routingDependency),
             reason: "operator_unregistered_pending_mutation",
+            ...(id === "knowledge-worker" ? { productionActivation: false } : {}),
           },
         };
         state = {
@@ -542,6 +616,16 @@ export function createTrackBOperations({
         current.enabledMode,
         current.enabled ? "active" : "disabled",
       );
+      let productionActivation = current.productionActivation ?? false;
+      let knowledgeWorkerBootstrap = current.health.knowledgeWorkerBootstrap;
+      if (
+        ["bootstrap_shadow_ready", "activate_production", "deactivate_production"].includes(
+          action,
+        ) &&
+        id !== "knowledge-worker"
+      ) {
+        throw new Error(`${action} is supported only for knowledge-worker`);
+      }
       if (action === "disable") {
         enabled = false;
         enabledMode = "disabled";
@@ -589,6 +673,26 @@ export function createTrackBOperations({
         }
         enabled = requested !== "disabled";
         enabledMode = requested;
+      } else if (action === "bootstrap_shadow_ready") {
+        const receipt = asKnowledgeValidationReceipt(input.receipt);
+        const groupDigest = String(input.groupDigest ?? "");
+        if (!/^[a-f0-9]{64}$/.test(groupDigest))
+          throw new Error(
+            "knowledge-worker shadow-ready bootstrap refused: groupDigest must be 64-hex",
+          );
+        knowledgeWorkerBootstrap = { receipt, groupDigest };
+      } else if (action === "activate_production") {
+        if (
+          input.activationPolicyVersion !== 1 ||
+          input.operatorAttestation !== "activate-production"
+        )
+          throw new Error(
+            "knowledge-worker production activation refused: v1 ceremony policy and operator attestation are required",
+          );
+        asKnowledgeValidationReceipt(input.receipt ?? knowledgeWorkerBootstrap?.receipt);
+        productionActivation = true;
+      } else if (action === "deactivate_production") {
+        productionActivation = false;
       }
       const lifecycle: LifecycleRecord["lifecycle"] = enabled
         ? current.lifecycle === "stopped"
@@ -600,6 +704,7 @@ export function createTrackBOperations({
         enabled,
         enabledMode,
         lifecycle,
+        ...(id === "knowledge-worker" ? { productionActivation } : {}),
         health: {
           ...current.health,
           available: enabled && (lifecycle === "ready" || current.health.available),
@@ -608,6 +713,12 @@ export function createTrackBOperations({
               ? "operator_enabled"
               : (current.health.reason ?? "operator_enabled")
             : "operator_disabled",
+          ...(id === "knowledge-worker"
+            ? {
+                productionActivation,
+                ...(knowledgeWorkerBootstrap ? { knowledgeWorkerBootstrap } : {}),
+              }
+            : {}),
         },
       };
       const extensions = state.extensions.map((row, rowIndex) =>
@@ -675,6 +786,16 @@ export function createTrackBOperations({
               ...actual,
               installed: true,
               enabledMode: actual.enabledMode ?? (actual.enabled ? "active" : "disabled"),
+              ...(entryId === "knowledge-worker"
+                ? {
+                    productionActivation: actual.productionActivation ?? false,
+                    health: {
+                      ...actual.health,
+                      productionActivation:
+                        actual.health.productionActivation ?? actual.productionActivation ?? false,
+                    },
+                  }
+                : {}),
             }
           : {
               ...entry,
@@ -685,10 +806,12 @@ export function createTrackBOperations({
               channel: "production",
               scope: "global",
               authorizationEpoch: 0,
+              ...(entryId === "knowledge-worker" ? { productionActivation: false } : {}),
               health: {
                 available: false,
                 routingDependency: Boolean(entry.routingDependency),
                 reason: "not_registered_with_private_supervisor",
+                ...(entryId === "knowledge-worker" ? { productionActivation: false } : {}),
               },
             };
       });

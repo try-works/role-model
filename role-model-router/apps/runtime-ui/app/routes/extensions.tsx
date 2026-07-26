@@ -13,6 +13,7 @@ import {
   compactFieldButtonClassName,
   compactFieldButtonEmphasisClassName,
   compactTitleClassName,
+  fieldClassName,
   mutedPanelClassName,
   primaryButtonClassName,
   secondaryButtonClassName,
@@ -20,12 +21,15 @@ import {
   utilityLabelClassName,
 } from "../lib/design-system";
 import {
+  type KnowledgeValidationReceipt,
   type RuntimeActivePack,
   type RuntimeContributionState,
   type RuntimeExtensionMode,
   type RuntimeExtensionStatus,
   type RuntimeRecommendation,
+  activateKnowledgeWorkerProduction,
   applyRecommendation,
+  deactivateKnowledgeWorkerProduction,
   dismissRecommendation,
   downloadRecommendations,
   fetchActivePack,
@@ -33,6 +37,7 @@ import {
   fetchExtensions,
   fetchRecommendations,
   mutateExtension,
+  prepareKnowledgeWorkerShadowReady,
   updateContributionState,
 } from "../lib/runtime-api";
 
@@ -91,7 +96,7 @@ const LIFECYCLE_COPY: Record<
 
 const operatorBoundaryNote = (extensionId: string): string | null => {
   if (extensionId === "knowledge-worker") {
-    return "Default posture is shadow-ready by default (validated knowledge as shadow candidate(s) while productionActivation stays off). Enabling this extension is not productionActivation and does not enable production prompt injection. Ceremony-bound ON requires a verified unlock policy; soft OFF returns to shadow-ready; KW works when on. Distinct from Set mode.";
+    return "Default posture is shadow-ready by default while productionActivation stays off. Production retrieve is gated and useful only after ceremony-bound ON; KW works when on. Enabling this extension is not productionActivation and does not enable production prompt injection. Soft OFF returns to shadow-ready. Production activation is separate from Set mode and recommendation apply, gated separately from Set mode.";
   }
   if (extensionId === "knowledge-store") {
     return "Serves last-ready knowledge references. Production activation of knowledge into prompts remains locked off in v1.1.";
@@ -147,6 +152,8 @@ export function ExtensionsRouteView() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [modeDraft, setModeDraft] = useState<Record<string, RuntimeExtensionMode>>({});
+  const [bootstrapReceiptJson, setBootstrapReceiptJson] = useState("");
+  const [bootstrapGroupDigest, setBootstrapGroupDigest] = useState("");
   const load = useCallback(async () => {
     try {
       const [extensionRows, contributionState, recommendationRows, pack] = await Promise.all([
@@ -249,6 +256,46 @@ export function ExtensionsRouteView() {
       );
       setModeDraft((current) => ({ ...current, [id]: mode }));
       await load();
+    } catch (value) {
+      setError(message(value));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const prepareKnowledgeWorker = async () => {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const receipt = JSON.parse(bootstrapReceiptJson) as KnowledgeValidationReceipt;
+      const next = await prepareKnowledgeWorkerShadowReady({
+        receipt,
+        groupDigest: bootstrapGroupDigest.trim(),
+      });
+      setExtensions(next.extensions);
+      setNotice(
+        "Knowledge Worker shadow-ready ceremony material stored. Production remains OFF until explicit activation.",
+      );
+    } catch (value) {
+      setError(message(value));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const setKnowledgeWorkerProduction = async (active: boolean) => {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const next = active
+        ? await activateKnowledgeWorkerProduction()
+        : await deactivateKnowledgeWorkerProduction();
+      setExtensions(next.extensions);
+      setNotice(
+        active
+          ? "Knowledge Worker production activation is ON. Gated production retrieve is available."
+          : "Knowledge Worker production activation is OFF. Shadow-ready material is retained.",
+      );
     } catch (value) {
       setError(message(value));
     } finally {
@@ -458,6 +505,10 @@ export function ExtensionsRouteView() {
               const currentMode = appliedMode(extension);
               const draftMode = modeDraft[extension.id] ?? currentMode;
               const modeDirty = draftMode !== currentMode;
+              const isKnowledgeWorker = extension.id === "knowledge-worker";
+              const productionActivation =
+                extension.productionActivation ?? extension.health.productionActivation ?? false;
+              const bootstrapReady = Boolean(extension.health.knowledgeWorkerBootstrap);
               return (
                 <article className={`${mutedPanelClassName} min-w-0 p-4 md:p-5`} key={extension.id}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -498,6 +549,83 @@ export function ExtensionsRouteView() {
                             : `Worker ${lifecycle.label.toLowerCase()}: ${extension.degradation}`
                         }
                       />
+                    </div>
+                  ) : null}
+                  {isKnowledgeWorker ? (
+                    <div
+                      className={`${mutedPanelClassName} mt-4 border-[var(--rm-border-strong)] p-4`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className={compactTitleClassName}>Production retrieve gate</p>
+                          <p className={`mt-1 ${supportingTextClassName}`}>
+                            Ceremony-backed production activation is separate from Set mode.
+                            Production prompt injection remains locked.
+                          </p>
+                        </div>
+                        <StatusPill tone={productionActivation ? "success" : "neutral"}>
+                          {productionActivation ? "Production ON" : "Production OFF"}
+                        </StatusPill>
+                      </div>
+                      {!bootstrapReady && !productionActivation ? (
+                        <div className="mt-4 grid gap-3">
+                          <label className={utilityLabelClassName}>
+                            Knowledge validation receipt JSON
+                            <textarea
+                              className={`${fieldClassName} mt-1 min-h-24 font-mono`}
+                              onChange={(event) => setBootstrapReceiptJson(event.target.value)}
+                              placeholder='{"payload":{"kind":"knowledge_validation",…},"signature":"…"}'
+                              value={bootstrapReceiptJson}
+                            />
+                          </label>
+                          <label className={utilityLabelClassName}>
+                            Shadow group digest
+                            <input
+                              className={`${fieldClassName} mt-1 font-mono`}
+                              onChange={(event) => setBootstrapGroupDigest(event.target.value)}
+                              placeholder="64-hex digest"
+                              value={bootstrapGroupDigest}
+                            />
+                          </label>
+                          <button
+                            className={secondaryButtonClassName}
+                            disabled={
+                              busy ||
+                              !extension.installed ||
+                              bootstrapReceiptJson.trim().length === 0 ||
+                              !/^[a-f0-9]{64}$/.test(bootstrapGroupDigest.trim())
+                            }
+                            onClick={() => void prepareKnowledgeWorker()}
+                            type="button"
+                          >
+                            Prepare shadow-ready
+                          </button>
+                        </div>
+                      ) : null}
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          className={primaryButtonClassName}
+                          disabled={
+                            busy ||
+                            productionActivation ||
+                            !extension.installed ||
+                            !extension.enabled ||
+                            !bootstrapReady
+                          }
+                          onClick={() => void setKnowledgeWorkerProduction(true)}
+                          type="button"
+                        >
+                          Production ON
+                        </button>
+                        <button
+                          className={secondaryButtonClassName}
+                          disabled={busy || !productionActivation}
+                          onClick={() => void setKnowledgeWorkerProduction(false)}
+                          type="button"
+                        >
+                          Soft OFF
+                        </button>
+                      </div>
                     </div>
                   ) : null}
                   <div className="mt-4 flex flex-wrap items-end gap-3">

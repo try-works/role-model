@@ -1387,12 +1387,18 @@ export interface RuntimeExtensionStatus {
   readonly channel: string;
   readonly scope: string;
   readonly authorizationEpoch: number;
+  readonly productionActivation?: boolean;
   readonly health: {
     readonly available: boolean;
     readonly routingDependency: boolean;
     readonly probe?: string;
     readonly summary?: string;
     readonly reason?: string;
+    readonly productionActivation?: boolean;
+    readonly knowledgeWorkerBootstrap?: {
+      readonly receipt: KnowledgeValidationReceipt;
+      readonly groupDigest: string;
+    };
   };
   readonly permissions: readonly string[];
   readonly dataClasses: readonly string[];
@@ -1408,12 +1414,34 @@ export async function fetchExtensions(
 }
 
 export type RuntimeExtensionMode = "disabled" | "shadow" | "advisory" | "bounded" | "active";
+export interface KnowledgeValidationReceipt {
+  readonly payload: {
+    readonly kind: "knowledge_validation";
+    readonly reviewed: true;
+    readonly safetyReviewed: true;
+    readonly redacted: true;
+    readonly holdoutPassed: true;
+    readonly [key: string]: unknown;
+  };
+  readonly signature: string;
+  readonly [key: string]: unknown;
+}
 
 export async function mutateExtension(
   input: {
     readonly id: string;
-    readonly action: "enable" | "disable" | "set_mode";
+    readonly action:
+      | "enable"
+      | "disable"
+      | "set_mode"
+      | "bootstrap_shadow_ready"
+      | "activate_production"
+      | "deactivate_production";
     readonly mode?: RuntimeExtensionMode;
+    readonly activationPolicyVersion?: 1;
+    readonly operatorAttestation?: "activate-production";
+    readonly receipt?: KnowledgeValidationReceipt;
+    readonly groupDigest?: string;
   },
   fetcher: RuntimeFetcher = fetch,
 ): Promise<{
@@ -1426,6 +1454,46 @@ export async function mutateExtension(
     headers: { "content-type": "application/json" },
     body: JSON.stringify(input),
   });
+}
+
+type ExtensionMutationResult = Awaited<ReturnType<typeof mutateExtension>>;
+
+export async function prepareKnowledgeWorkerShadowReady(
+  bootstrap: {
+    readonly receipt: KnowledgeValidationReceipt;
+    readonly groupDigest: string;
+  },
+  fetcher: RuntimeFetcher = fetch,
+): Promise<ExtensionMutationResult> {
+  return mutateExtension(
+    {
+      id: "knowledge-worker",
+      action: "bootstrap_shadow_ready",
+      receipt: bootstrap.receipt,
+      groupDigest: bootstrap.groupDigest,
+    },
+    fetcher,
+  );
+}
+
+export async function activateKnowledgeWorkerProduction(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<ExtensionMutationResult> {
+  return mutateExtension(
+    {
+      id: "knowledge-worker",
+      action: "activate_production",
+      activationPolicyVersion: 1,
+      operatorAttestation: "activate-production",
+    },
+    fetcher,
+  );
+}
+
+export async function deactivateKnowledgeWorkerProduction(
+  fetcher: RuntimeFetcher = fetch,
+): Promise<ExtensionMutationResult> {
+  return mutateExtension({ id: "knowledge-worker", action: "deactivate_production" }, fetcher);
 }
 
 export interface RuntimeStorageRetentionSummary {

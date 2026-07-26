@@ -8,6 +8,58 @@
 - `81-kw-activation-browser-recommendation-evidence` - Gated KW `productionActivation` policy lifecycle + Extensions UI honesty + mandatory browser recommendation evidence on rebuilt SEA (Phases 0-8). Folder: `.recursive/run/81-kw-activation-browser-recommendation-evidence/`. Soft-closes run 80’s dedicated KW policy/lifecycle follow-up and optional browser UI residual.
 - `82-tb00-pin-refreeze-kw-digest-bind-launch-scope` - TB00 private pin re-freeze + live-e2e coherence, digest-bound KW activation, parameterized packaged launch `--scope-id`, Phase 5 rebuilt-runtime API hop on `run82-dev` (Phases 0-8). Folder: `.recursive/run/82-tb00-pin-refreeze-kw-digest-bind-launch-scope/`. Soft-closes run 81 residuals F1 (digest bind) and F3 (launch scope hardcode), and restores pin-freeze/TB11 CI honesty.
 - `83-kw-operator-toggle-assemble-live-e2e-argv-equals` - KW shadow-ready default + soft OFF + ceremony-retained ON, equals-form launch argv, evidence-root fail-closed, full Playwright assemble + private pin tip `3d6c4f7`, Phase 5 hops on `run83-dev` (Phases 0-8). Folder: `.recursive/run/83-kw-operator-toggle-assemble-live-e2e-argv-equals/`. Soft-closes run 82 equals-form argv residual and optional full Playwright assemble follow-up.
+- `84-kw-ui-toggle-gated-retrieve-eval` - Extensions UI Prepare/ON/Soft OFF + host mutate actions, production retrieve gate + first-party eval consumer, durable session activation, repaired full Playwright assemble, Phase 5 hops on `run84-dev` (Phases 0-8). Folder: `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/`. Soft-closes run 83 deferred Extensions UI control gap and records gated production retrieve usefulness.
+
+## Run: `84-kw-ui-toggle-gated-retrieve-eval`
+
+Date: `2026-07-26`
+
+### What changed
+
+- Public Extensions UI exposes Prepare (shadow-ready), Production ON, and Soft OFF for Knowledge Worker via host mutate actions `bootstrap_shadow_ready` / `activate_production` / `deactivate_production`, with honest status distinct from Set mode.
+- Private KW production retrieve is gated while OFF (versioned `query.plane` vocabulary + refuse codes); ON unlocks production retrieve and first-party `evaluateWithProductionKnowledge` consumer usefulness; durable `sessionId` activation persists within a session and defaults OFF for a new session/process.
+- Ceremony-retained ON and soft OFF → shadow-ready remain; ungated ambient always-on stays OOS.
+- Packaged probe covers retrieve/consumer matrix; rebuilt SEA sha `aeb2204310e1675e3559fc72176423e46c0891ebff8dcf7ecf26dc238ffc457e`; Phase 5 agent-operated hops on `run84-dev` (UI Playwright, packaged probe, live `--track=dev` recommendation apply/dismiss, live `pi` storage); binder `secretsOmitted: true`.
+- Full Playwright assemble repaired (enabled-control selector + live base URL preference) and PASS; post-assemble TB11/system-proof/pin-freeze PASS. Private pin remains `3d6c4f74a6198287277471f0afc7e8950a6123d8`; public freeze pin leave-as-is `b03d82a2fe8adc317c9fdaecad838beac3ed74a8`.
+- Private feature worktree relocated in-parent to `D:/DEV/role-model-internal/.worktrees/84-kw-ui-toggle-gated-retrieve-eval` (addendum; no Phase 0 reopen).
+- Server change `not-required`; `publicChange: required`.
+
+### Why
+
+- Soft-close run-83 deferred operator UI control for KW toggle; make “KW useful when ON” an observable gated production retrieve + consumer proof rather than readiness-only honesty.
+
+### How
+
+- Strict TDD (private TB10/probe + public host/UI); rebuilt SEA with Track B distribution; agent-operated Phase 5; serial Phase 6–8 after real work; dual-repo feature branches `recursive/84-kw-ui-toggle-gated-retrieve-eval`.
+
+### What was not done (OOS)
+
+- Ungated always-on / ambient KW activation; ceremony removal.
+- Full router prompt-inject / training unlock.
+- Stage/main auto-promotion; live `--track=production`.
+- Origin/`dev` merge remains operator-requested unless authorized separately.
+
+### Soft-close of prior decision
+
+- Soft-closes run `83-kw-operator-toggle-assemble-live-e2e-argv-equals` deferred Extensions UI control / honesty-only KW toggle gap (`U1`).
+- Records gated production retrieve + consumer usefulness as the observable ON proof.
+
+### Known issues / follow-ups
+
+- Feature-branch merge to origin `dev` is operator-requested (`R22` ship/merge).
+- Private feature worktrees must live under parent `.worktrees/` (not external `D:/DEV/.wt/`).
+
+### Artifact references
+
+- `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/00-requirements.md`
+- `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/00-worktree.md`
+- `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/00-worktree-relocation-addendum.md`
+- `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/01-as-is.md`
+- `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/02-to-be-plan.md`
+- `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/03-implementation-summary.md`
+- `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/04-test-summary.md`
+- `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/05-manual-qa.md`
+- `.recursive/run/84-kw-ui-toggle-gated-retrieve-eval/evidence/binder.json`
 
 ## Run: `83-kw-operator-toggle-assemble-live-e2e-argv-equals`
 
@@ -48,6 +100,7 @@ Date: `2026-07-25`
 
 - Feature-branch merge to origin `dev` is operator-requested (`R19`).
 - Non-run80 scopes must pass `--evidence-root` / env for launch and lifecycle helpers; do not write under `.recursive/run/80-…` for later-run hops.
+- Deferred Extensions UI operator control for KW toggle (`U1` / honesty-only residual) is soft-closed by run `84-kw-ui-toggle-gated-retrieve-eval`.
 
 ### Artifact references
 

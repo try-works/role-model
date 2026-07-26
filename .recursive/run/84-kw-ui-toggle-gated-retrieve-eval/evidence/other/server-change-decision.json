@@ -1,0 +1,6 @@
+{
+  "secretsOmitted": true,
+  "rationale": "No Cloudflare Workers contract change; live --track=dev hop only",
+  "schemaVersion": "role-model.run84.server-change-decision.v1",
+  "serverChange": "not-required"
+}

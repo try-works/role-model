@@ -1,0 +1,10 @@
+
+ RUN  v3.2.4 D:/DEV/role-model/.worktrees/84-kw-ui-toggle-gated-retrieve-eval/role-model-router/apps/runtime-ui
+
+ Γ£ô app/routes/extensions.test.tsx (2 tests) 37ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  19:13:59
+   Duration  1.81s (transform 293ms, setup 0ms, collect 623ms, tests 37ms, environment 0ms, prepare 398ms)
+

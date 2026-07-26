@@ -1,0 +1,14 @@
+{
+  "artifact": "03-implementation-summary.md",
+  "artifact_hash": "694182eff00605325891c322cc24c34e09a13a85cf33c90aaafb2dc9e2f7799c",
+  "artifact_path": "D:\\DEV\\.wt\\84-kw\\.recursive\\run\\84-kw-ui-toggle-gated-retrieve-eval\\03-implementation-summary.md",
+  "locked_at": "2026-07-25T11:51:45Z",
+  "prerequisite_hashes": {
+    "00-requirements.md": "7590782dbf4fe6c39395ee8f294354280a3cddc6e7bb9eb01944a950f5795e83",
+    "00-worktree.md": "9bafe6f5b670abc7532bf88a405f0d39e45a38bfe4ffbd2885fc3d54de7aee73",
+    "01-as-is.md": "24844c8d774692971d6771d14d8525b08a68c34947db65d35d57704831600d2f",
+    "02-to-be-plan.md": "4d9c67ec90dd80dffae05b38d7fc6c77489b3f081540980e390d19dd3a3948e7"
+  },
+  "previous_receipt_hash": null,
+  "receipt_hash": "5d984f4009006b7aca1d5f4541846724a0357841493a04f5816cfc256d8a46b9"
+}

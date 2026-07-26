@@ -1,0 +1,130 @@
+{
+  "contract": "Run80LiveRecommendationLifecycleV1",
+  "track": "dev",
+  "channel": "development",
+  "serviceUrl": "https://recommendations-dev.role-model.dev",
+  "baseUrl": "http://127.0.0.1:34570",
+  "scopeId": "run84-dev",
+  "materialPathPresent": true,
+  "materialPublicKeyPresent": true,
+  "startedAt": "2026-07-25T11:39:37.261Z",
+  "steps": {
+    "download": {
+      "status": 200,
+      "body": [
+        {
+          "id": "recommendation-278ad087c773edc21778258e9bac1f3e",
+          "version": "2",
+          "provenance": "cloud:dd946315dfc9b8f406fa0b2acb3c998b893913151dbf2f18e2976624df0fffdf",
+          "status": "validated",
+          "signatureValid": true,
+          "policyAllowed": true,
+          "endpointId": "endpoint:candidate-b",
+          "modelId": "model:candidate-b",
+          "preferredFor": [
+            "coding"
+          ],
+          "action": "prefer",
+          "confidence": 0.8
+        }
+      ],
+      "text": "[{\"id\":\"recommendation-278ad087c773edc21778258e9bac1f3e\",\"version\":\"2\",\"provenance\":\"cloud:dd946315dfc9b8f406fa0b2acb3c998b893913151dbf2f18e2976624df0fffdf\",\"status\":\"validated\",\"signatureValid\":true,\"policyAllowed\":true,\"endpointId\":\"endpoint:candidate-b\",\"modelId\":\"model:candidate-b\",\"preferredFor\":[\"coding\"],\"action\":\"prefer\",\"confidence\":0.8}]\n"
+    },
+    "apply": {
+      "status": 200,
+      "body": {
+        "recommendations": [
+          {
+            "id": "recommendation-278ad087c773edc21778258e9bac1f3e",
+            "version": "2",
+            "provenance": "cloud:dd946315dfc9b8f406fa0b2acb3c998b893913151dbf2f18e2976624df0fffdf",
+            "status": "applied",
+            "signatureValid": true,
+            "policyAllowed": true,
+            "endpointId": "endpoint:candidate-b",
+            "modelId": "model:candidate-b",
+            "preferredFor": [
+              "coding"
+            ],
+            "action": "prefer",
+            "confidence": 0.8
+          }
+        ],
+        "activePack": {
+          "id": "recommendation-278ad087c773edc21778258e9bac1f3e",
+          "version": "2",
+          "appliedAt": "2026-07-25T11:39:40.561Z"
+        }
+      },
+      "text": "{\"recommendations\":[{\"id\":\"recommendation-278ad087c773edc21778258e9bac1f3e\",\"version\":\"2\",\"provenance\":\"cloud:dd946315dfc9b8f406fa0b2acb3c998b893913151dbf2f18e2976624df0fffdf\",\"status\":\"applied\",\"signatureValid\":true,\"policyAllowed\":true,\"endpointId\":\"endpoint:candidate-b\",\"modelId\":\"model:candidate-b\",\"preferredFor\":[\"coding\"],\"action\":\"prefer\",\"confidence\":0.8}],\"activePack\":{\"id\":\"recommendation-278ad087c773edc21778258e9bac1f3e\",\"version\":\"2\",\"appliedAt\":\"2026-07-25T11:39:40.561Z\"}}\n"
+    },
+    "activePack": {
+      "status": 200,
+      "body": {
+        "id": "recommendation-278ad087c773edc21778258e9bac1f3e",
+        "version": "2",
+        "appliedAt": "2026-07-25T11:39:40.561Z"
+      },
+      "text": "{\"id\":\"recommendation-278ad087c773edc21778258e9bac1f3e\",\"version\":\"2\",\"appliedAt\":\"2026-07-25T11:39:40.561Z\"}\n"
+    },
+    "reseed": {
+      "exitCode": 0,
+      "stdoutTail": "serviceUrl\": \"https://recommendations-dev.role-model.dev\",\n  \"scopeId\": \"run84-dev\",\n  \"keyId\": \"role-model-recommendations-dev-v1\",\n  \"seeds\": {\n    \"a\": {\n      \"ingest\": 202,\n      \"publish\": 202,\n      \"publishStatus\": \"published\",\n      \"resolve\": \"available\",\n      \"channelSequence\": 3,\n      \"bundleUri\": \"https://recommendations-dev.role-model.dev/snapshots/development/stable/advanced/run84-dev/sequence-3/manifest.json\"\n    },\n    \"b\": {\n      \"ingest\": 202,\n      \"publish\": 202,\n      \"publishStatus\": \"published\",\n      \"resolve\": \"available\",\n      \"channelSequence\": 4,\n      \"bundleUri\": \"https://recommendations-dev.role-model.dev/snapshots/development/stable/advanced/run84-dev/sequence-4/manifest.json\"\n    }\n  },\n  \"verdict\": \"PASS\",\n  \"finishedAt\": \"2026-07-25T11:40:17.250Z\"\n}\n"
+    },
+    "redownload": {
+      "status": 200,
+      "body": [
+        {
+          "id": "recommendation-ab1024beeeb5a4fe199147943979e8a5",
+          "version": "4",
+          "provenance": "cloud:a43f553ca90591b8fa8b2c3e32b88f11022dbbf0c3d492e479b75b266cb2493a",
+          "status": "validated",
+          "signatureValid": true,
+          "policyAllowed": true,
+          "endpointId": "endpoint:candidate-b",
+          "modelId": "model:candidate-b",
+          "preferredFor": [
+            "coding"
+          ],
+          "action": "prefer",
+          "confidence": 0.8
+        }
+      ],
+      "text": "[{\"id\":\"recommendation-ab1024beeeb5a4fe199147943979e8a5\",\"version\":\"4\",\"provenance\":\"cloud:a43f553ca90591b8fa8b2c3e32b88f11022dbbf0c3d492e479b75b266cb2493a\",\"status\":\"validated\",\"signatureValid\":true,\"policyAllowed\":true,\"endpointId\":\"endpoint:candidate-b\",\"modelId\":\"model:candidate-b\",\"preferredFor\":[\"coding\"],\"action\":\"prefer\",\"confidence\":0.8}]\n"
+    },
+    "dismiss": {
+      "status": 200,
+      "body": {
+        "recommendations": [
+          {
+            "id": "recommendation-ab1024beeeb5a4fe199147943979e8a5",
+            "version": "4",
+            "provenance": "cloud:a43f553ca90591b8fa8b2c3e32b88f11022dbbf0c3d492e479b75b266cb2493a",
+            "status": "dismissed",
+            "signatureValid": true,
+            "policyAllowed": true,
+            "endpointId": "endpoint:candidate-b",
+            "modelId": "model:candidate-b",
+            "preferredFor": [
+              "coding"
+            ],
+            "action": "prefer",
+            "confidence": 0.8
+          }
+        ],
+        "activePack": {
+          "id": "recommendation-278ad087c773edc21778258e9bac1f3e",
+          "version": "2",
+          "appliedAt": "2026-07-25T11:39:40.561Z"
+        }
+      },
+      "text": "{\"recommendations\":[{\"id\":\"recommendation-ab1024beeeb5a4fe199147943979e8a5\",\"version\":\"4\",\"provenance\":\"cloud:a43f553ca90591b8fa8b2c3e32b88f11022dbbf0c3d492e479b75b266cb2493a\",\"status\":\"dismissed\",\"signatureValid\":true,\"policyAllowed\":true,\"endpointId\":\"endpoint:candidate-b\",\"modelId\":\"model:candidate-b\",\"preferredFor\":[\"coding\"],\"action\":\"prefer\",\"confidence\":0.8}],\"activePack\":{\"id\":\"recommendation-278ad087c773edc21778258e9bac1f3e\",\"version\":\"2\",\"appliedAt\":\"2026-07-25T11:39:40.561Z\"}}\n"
+    }
+  },
+  "recommendationIds": [
+    "recommendation-278ad087c773edc21778258e9bac1f3e"
+  ],
+  "dismissId": "recommendation-ab1024beeeb5a4fe199147943979e8a5",
+  "verdict": "PASS",
+  "finishedAt": "2026-07-25T11:40:20.266Z"
+}
